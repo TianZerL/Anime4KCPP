@@ -1,13 +1,27 @@
 #include "Anime4K.h"
 
-Anime4K::Anime4K(int passes, double strengthColor, double strengthGradient, bool fastMode) :
-    ps(passes), sc(strengthColor), sg(strengthGradient), fm(fastMode), 
-    B(0),G(1),R(2),A(3)
+Anime4K::Anime4K(int passes, double strengthColor, double strengthGradient, double zoomFactor, bool fastMode, bool videoMode) :
+    ps(passes), sc(strengthColor), sg(strengthGradient), zf(zoomFactor),
+    fm(fastMode), vm(videoMode),
+    B(0), G(1), R(2), A(3)
 {
     orgH = orgW = H = W = 0;
+    fps = 0;
 }
 
-void Anime4K::loadImage(const std::string srcFile)
+void Anime4K::loadVideo(const std::string &dstFile)
+{
+    video.open(dstFile);
+    if(!video.isOpened())
+        throw "Fail to load file, file may not exist or decoder did'n been installed.";
+    orgH = video.get(cv::CAP_PROP_FRAME_HEIGHT);
+    orgW = video.get(cv::CAP_PROP_FRAME_WIDTH);
+    fps = video.get(cv::CAP_PROP_FPS);
+    H = zf * orgH;
+    W = zf * orgW;
+}
+
+void Anime4K::loadImage(const std::string &srcFile)
 {
     orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
     if (orgImg.empty())
@@ -15,23 +29,30 @@ void Anime4K::loadImage(const std::string srcFile)
     orgH = orgImg.rows;
     orgW = orgImg.cols;
 
-    cv::resize(orgImg, dstImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
+    cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
     if (dstImg.channels() == 3)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
     H = dstImg.rows;
     W = dstImg.cols;
 }
 
-void Anime4K::saveImage(const std::string dstFile)
+void Anime4K::setVideiSaveInfo(const std::string &dstFile)
+{
+    if(!videoWriter.open(dstFile, cv::VideoWriter::fourcc('a','v','c','1'), fps, cv::Size(W, H)))
+        throw "Fail to initial video writer.";
+}
+
+void Anime4K::saveImage(const std::string &dstFile)
 {
     cv::imwrite(dstFile, dstImg);
 }
 
 void Anime4K::showInfo()
 {
-    std::cout << "Width: " << orgW << ", " << "Height: " << orgH << std::endl;
+    std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Passes: " << ps << std::endl
+        << "Video Mode: " << std::boolalpha << vm << std::endl
         << "Fast Mode: " << std::boolalpha << fm << std::endl
         << "Strength Color: " << sc << std::endl
         << "Strength Gradient: " << sg << std::endl;
@@ -46,13 +67,40 @@ void Anime4K::showImg()
 
 void Anime4K::process()
 {
-    for (int i = 0; i < ps; i++)
+    if (!vm)
     {
-        getGray();
-        pushColor();
-        getGradient();
-        pushGradient();
+        for (int i = 0; i < ps; i++)
+        {
+            getGray();
+            pushColor();
+            getGradient();
+            pushGradient();
+        }
     }
+    else
+    {
+        while (true)
+        {
+            if (!video.read(orgImg))
+                break;
+            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+            if (dstImg.channels() == 3)
+                cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+            for (int i = 0; i < ps; i++)
+            {
+                getGray();
+                pushColor();
+                getGradient();
+                pushGradient();
+            }
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+            videoWriter.write(dstImg);
+        }
+        //release the video
+        videoWriter.release();
+        video.release();
+    }
+
 }
 
 void Anime4K::getGray()

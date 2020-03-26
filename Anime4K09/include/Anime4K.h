@@ -3,6 +3,7 @@
 #include<functional>
 
 #include<opencv2/opencv.hpp>
+#include<opencv2/videoio.hpp>
 #include<opencv2/core/hal/interface.h>
 
 typedef unsigned char* RGBA;
@@ -11,9 +12,11 @@ typedef unsigned char* Line;
 class Anime4K
 {
 public:
-    Anime4K(int passes = 2, double strengthColor = 0.3, double strengthGradient = 1, bool fastMode = false);
-    void loadImage(const std::string srcFile);
-    void saveImage(const std::string dstFile);
+    Anime4K(int passes = 2, double strengthColor = 0.3, double strengthGradient = 1.0, double zoomFactor = 2.0, bool fastMode = false, bool videoMode = false);
+    void loadVideo(const std::string &srcFile);
+    void loadImage(const std::string &srcFile);
+    void setVideiSaveInfo(const std::string &dstFile);
+    void saveImage(const std::string &dstFile);
     void showInfo();
     void showImg();
     void process();
@@ -30,10 +33,13 @@ private:
     uint8_t unFloat(double n);
 private:
     const int B, G, R, A;
-    int ps;
-    double sc, sg;
-    bool fm;
     int orgH, orgW, H, W;
     cv::Mat orgImg, dstImg;
+    cv::VideoCapture video;
+    cv::VideoWriter videoWriter;
+private://arguments
+    int ps;
+    double sc, sg, zf, fps;
+    bool fm, vm;
 };
 
