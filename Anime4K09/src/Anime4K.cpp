@@ -1,12 +1,12 @@
 #include "Anime4K.h"
 
-Anime4K::Anime4K(int passes, double strengthColor, double strengthGradient, double zoomFactor, bool fastMode, bool videoMode) :
+Anime4K::Anime4K(int passes, double strengthColor, double strengthGradient, double zoomFactor, bool fastMode, bool videoMode, unsigned int maxThreads) :
     ps(passes), sc(strengthColor), sg(strengthGradient), zf(zoomFactor),
     fm(fastMode), vm(videoMode),
-    B(0), G(1), R(2), A(3)
+    mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
-    fps = 0;
+    frameCount = totalFrameCount = fps = 0;
 }
 
 void Anime4K::loadVideo(const std::string &dstFile)
@@ -17,6 +17,7 @@ void Anime4K::loadVideo(const std::string &dstFile)
     orgH = video.get(cv::CAP_PROP_FRAME_HEIGHT);
     orgW = video.get(cv::CAP_PROP_FRAME_WIDTH);
     fps = video.get(cv::CAP_PROP_FPS);
+    totalFrameCount = video.get(cv::CAP_PROP_FRAME_COUNT);
     H = zf * orgH;
     W = zf * orgW;
 }
@@ -47,11 +48,24 @@ void Anime4K::saveImage(const std::string &dstFile)
     cv::imwrite(dstFile, dstImg);
 }
 
+void Anime4K::saveVideo()
+{
+    videoWriter.release();
+    video.release();
+}
+
 void Anime4K::showInfo()
 {
+    std::cout << "----------------------------------------------" << std::endl;
+    if (vm)
+    {
+        std::cout << "Threads: " << mt << std::endl;
+        std::cout << "Total frame: " << totalFrameCount << std::endl;
+    }  
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Passes: " << ps << std::endl
+        << "zoom Factor: " << zf << std::endl
         << "Video Mode: " << std::boolalpha << vm << std::endl
         << "Fast Mode: " << std::boolalpha << fm << std::endl
         << "Strength Color: " << sc << std::endl
@@ -71,54 +85,76 @@ void Anime4K::process()
     {
         for (int i = 0; i < ps; i++)
         {
-            getGray();
-            pushColor();
-            getGradient();
-            pushGradient();
+            getGray(dstImg);
+            pushColor(dstImg);
+            getGradient(dstImg);
+            pushGradient(dstImg);
         }
     }
     else
     {
+        cv::Mat orgFrame, dstFrame;
+        ThreadPool pool(mt);
+        size_t curFrame = 0;
         while (true)
         {
-            if (!video.read(orgImg))
-                break;
-            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
-            if (dstImg.channels() == 3)
-                cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
-            for (int i = 0; i < ps; i++)
+            curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
+            if (!video.read(orgFrame))
             {
-                getGray();
-                pushColor();
-                getGradient();
-                pushGradient();
+                while (frameCount < totalFrameCount)
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                break;
             }
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-            videoWriter.write(dstImg);
+            
+            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame]()mutable
+            {
+                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+                if (dstFrame.channels() == 3)
+                    cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
+                for (int i = 0; i < ps; i++)
+                {
+                    getGray(dstFrame);
+                    pushColor(dstFrame);
+                    getGradient(dstFrame);
+                    pushGradient(dstFrame);
+                }
+                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
+                std::unique_lock<std::mutex> lock(videoMtx);
+                while (true)
+                {
+                    if (curFrame == frameCount)
+                    {
+                        videoWriter.write(dstFrame);
+                        frameCount++;
+                        break;
+                    }
+                    else
+                    {
+                        cnd.wait(lock);
+                    }
+                }
+                cnd.notify_all();
+            });
         }
-        //release the video
-        videoWriter.release();
-        video.release();
     }
-
 }
 
-void Anime4K::getGray()
+void Anime4K::getGray(cv::InputArray img)
 {
-    changEachPixel(dstImg, [&](int i, int j, RGBA pixel, Line curLine) {
+    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         pixel[A] = 0.299 * pixel[R] + 0.587 * pixel[G] + 0.114 * pixel[B];
         });
 }
 
-void Anime4K::pushColor()
+void Anime4K::pushColor(cv::InputArray img)
 {
-    changEachPixel(dstImg, [&](int i, int j, RGBA pixel, Line curLine) {
+    int lineStep = W * 4;
+    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         int jp = j < (W - 1) * 4 ? 4 : 0;;
         int jn = j > 4 ? -4 : 0;
-        
-        Line pLineData = i < H - 1? curLine + dstImg.step : curLine;
+        Line pLineData = i < H - 1? curLine + lineStep : curLine;
         Line cLineData = curLine;
-        Line nLineData = i > 0 ? curLine - dstImg.step : curLine;
+        Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
         RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
         RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
@@ -180,16 +216,17 @@ void Anime4K::pushColor()
         });
 }
 
-void Anime4K::getGradient()
+void Anime4K::getGradient(cv::InputArray img)
 {
     if (!fm) 
     {
-        changEachPixel(dstImg, [&](int i, int j, RGBA pixel, Line curLine) {
+        int lineStep = W * 4;
+        changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
             if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
                 return;
-            Line pLineData = curLine + dstImg.step;
+            Line pLineData = curLine + lineStep;
             Line cLineData = curLine;
-            Line nLineData = curLine - dstImg.step;
+            Line nLineData = curLine - lineStep;
             int jp = 4, jn = -4;
             double GradX = 
                 (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
@@ -208,7 +245,7 @@ void Anime4K::getGradient()
         cv::Mat gradX(H, W, CV_8UC1), gradY(H, W, CV_8UC1), alpha(H, W, CV_8UC1);
 
         int fromTo_get[] = { A,0 };
-        cv::mixChannels(dstImg, alpha, fromTo_get, 1);
+        cv::mixChannels(img, alpha, fromTo_get, 1);
 
         cv::Sobel(alpha, tmpGradX, CV_16SC1, 1, 0);
         cv::Sobel(alpha, tmpGradY, CV_16SC1, 0, 1);
@@ -217,19 +254,20 @@ void Anime4K::getGradient()
         cv::addWeighted(gradX, 0.5, gradY, 0.5, 0, alpha);
 
         int fromTo_set[] = { 0,A };
-        cv::mixChannels(255 - alpha, dstImg, fromTo_set, 1);
+        cv::mixChannels(255 - alpha, img.getMat(), fromTo_set, 1);
     }
 }
 
-void Anime4K::pushGradient()
+void Anime4K::pushGradient(cv::InputArray img)
 {
-    changEachPixel(dstImg, [&](int i, int j, RGBA pixel, Line curLine) {
+    int lineStep = W*4;
+    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         int jp = j < (W - 1) * 4 ? 4 : 0;;
         int jn = j > 4 ? -4 : 0;
 
-        Line pLineData = i < H - 1 ? curLine + dstImg.step : curLine;
+        Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
         Line cLineData = curLine;
-        Line nLineData = i > 0 ? curLine - dstImg.step : curLine;
+        Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
         RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
         RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
@@ -288,7 +326,7 @@ void Anime4K::pushGradient()
 }
 
 void Anime4K::changEachPixel(cv::InputArray _src,
-    const std::function<void(int, int, RGBA, Line)>& callBack)
+    const std::function<void(int, int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();
     cv::Mat tmp;
@@ -299,13 +337,13 @@ void Anime4K::changEachPixel(cv::InputArray _src,
 
     for (int i = 0; i < H; i++)
     {
-        lineData = src.data + i * src.step;
-        tmpLineData = tmp.data + i * tmp.step;
+        lineData = src.data + i * W*4;
+        tmpLineData = tmp.data + i * W*4;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     } 
 
-    tmp.copyTo(dstImg);
+    tmp.copyTo(src);
 }
 
 void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)

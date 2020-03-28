@@ -32,6 +32,7 @@ int main(int argc,char *argv[])
     opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
     opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
+    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1, int(4 * std::thread::hardware_concurrency())));
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
@@ -44,12 +45,13 @@ int main(int argc,char *argv[])
     double strengthColor = opt.get<double>("strengthColor");
     double strengthGradient = opt.get<double>("strengthGradient");
     double zoomFactor = opt.get<double>("zoomFactor");
+    unsigned int threads = opt.get<unsigned int>("threads");
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
 
     //Anime4K
-    Anime4K anime4k(passes, strengthColor, strengthGradient, zoomFactor, fastMode, videoMode);
+    Anime4K anime4k(passes, strengthColor, strengthGradient, zoomFactor, fastMode, videoMode, threads);
     if (!videoMode)//Image
     {
         try
@@ -100,6 +102,8 @@ int main(int argc,char *argv[])
         time_t e = std::clock();
         std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC / 60 << " min" << std::endl;
         
+        anime4k.saveVideo();
+
         if (ffmpeg && mergrAudio2Video(output, input))
         {
 #ifdef _WIN32
