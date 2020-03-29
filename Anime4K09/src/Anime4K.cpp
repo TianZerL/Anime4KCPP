@@ -139,14 +139,14 @@ void Anime4K::process()
     }
 }
 
-void Anime4K::getGray(cv::InputArray img)
+inline void Anime4K::getGray(cv::InputArray img)
 {
     changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         pixel[A] = 0.299 * pixel[R] + 0.587 * pixel[G] + 0.114 * pixel[B];
         });
 }
 
-void Anime4K::pushColor(cv::InputArray img)
+inline void Anime4K::pushColor(cv::InputArray img)
 {
     int lineStep = W * 4;
     changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
@@ -216,7 +216,7 @@ void Anime4K::pushColor(cv::InputArray img)
         });
 }
 
-void Anime4K::getGradient(cv::InputArray img)
+inline void Anime4K::getGradient(cv::InputArray img)
 {
     if (!fm) 
     {
@@ -258,7 +258,7 @@ void Anime4K::getGradient(cv::InputArray img)
     }
 }
 
-void Anime4K::pushGradient(cv::InputArray img)
+inline void Anime4K::pushGradient(cv::InputArray img)
 {
     int lineStep = W*4;
     changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
@@ -325,7 +325,7 @@ void Anime4K::pushGradient(cv::InputArray img)
         });
 }
 
-void Anime4K::changEachPixel(cv::InputArray _src,
+inline void Anime4K::changEachPixel(cv::InputArray _src,
     const std::function<void(int, int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();
@@ -346,7 +346,7 @@ void Anime4K::changEachPixel(cv::InputArray _src,
     tmp.copyTo(src);
 }
 
-void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)
+inline void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)
 {
     mc[R] = mc[R] * (1 - sc) + ((a[R] + b[R] + c[R]) / 3.0) * sc;
     mc[G] = mc[G] * (1 - sc) + ((a[G] + b[G] + c[G]) / 3.0) * sc;
@@ -354,7 +354,7 @@ void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)
     mc[A] = mc[A] * (1 - sc) + ((a[A] + b[A] + c[A]) / 3.0) * sc;
 }
 
-void Anime4K::getAverage(RGBA mc, RGBA a, RGBA b, RGBA c)
+inline void Anime4K::getAverage(RGBA mc, RGBA a, RGBA b, RGBA c)
 {
     mc[R] = mc[R] * (1 - sg) + ((a[R] + b[R] + c[R]) / 3.0) * sg;
     mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg;
@@ -362,17 +362,17 @@ void Anime4K::getAverage(RGBA mc, RGBA a, RGBA b, RGBA c)
     mc[A] = 255;
 }
 
-uint8_t Anime4K::max(uint8_t a, uint8_t b, uint8_t c)
+inline uint8_t Anime4K::max(uint8_t a, uint8_t b, uint8_t c)
 {
     return a > b && a > c ? a : (b > c ? b : c);
 }
 
-uint8_t Anime4K::min(uint8_t a, uint8_t b, uint8_t c)
+inline uint8_t Anime4K::min(uint8_t a, uint8_t b, uint8_t c)
 {
     return a < b && a < c ? a : (b < c ? b : c);
 }
 
-uint8_t Anime4K::unFloat(double n)
+inline uint8_t Anime4K::unFloat(double n)
 {
     n += 0.5;
     if (n >= 255)
