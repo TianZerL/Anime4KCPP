@@ -23,11 +23,11 @@ public:
     void showInfo();
     void showImg();
     void process();
+private:
     void getGray(cv::InputArray img);
     void pushColor(cv::InputArray img);
     void getGradient(cv::InputArray img);
     void pushGradient(cv::InputArray img);
-private:
     void changEachPixel(cv::InputArray _src, const std::function<void(int, int, RGBA,Line)>&& callBack);
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
@@ -49,4 +49,3 @@ private://arguments
     double sc, sg, zf, fps;
     bool fm, vm;
 };
-
