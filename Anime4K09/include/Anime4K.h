@@ -17,11 +17,11 @@ public:
     Anime4K(int passes = 2, double strengthColor = 0.3, double strengthGradient = 1.0, double zoomFactor = 2.0, bool fastMode = false, bool videoMode = false, unsigned int maxThreads = std::thread::hardware_concurrency());
     void loadVideo(const std::string &srcFile);
     void loadImage(const std::string &srcFile);
-    void setVideiSaveInfo(const std::string &dstFile);
+    void setVideoSaveInfo(const std::string &dstFile);
     void saveImage(const std::string &dstFile);
     void saveVideo();
     void showInfo();
-    void showImg();
+    void showImage();
     void process();
 private:
     void getGray(cv::InputArray img);

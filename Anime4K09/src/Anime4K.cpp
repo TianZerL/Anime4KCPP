@@ -37,7 +37,7 @@ void Anime4K::loadImage(const std::string &srcFile)
     W = dstImg.cols;
 }
 
-void Anime4K::setVideiSaveInfo(const std::string &dstFile)
+void Anime4K::setVideoSaveInfo(const std::string &dstFile)
 {
     if(!videoWriter.open(dstFile, cv::VideoWriter::fourcc('a','v','c','1'), fps, cv::Size(W, H)))
         throw "Fail to initial video writer.";
@@ -73,7 +73,7 @@ void Anime4K::showInfo()
     std::cout << "----------------------------------------------" << std::endl;
 }
 
-void Anime4K::showImg()
+void Anime4K::showImage()
 {
     cv::imshow("dstImg", dstImg);
     cv::waitKey();

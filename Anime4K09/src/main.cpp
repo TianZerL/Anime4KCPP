@@ -73,7 +73,7 @@ int main(int argc,char *argv[])
         std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC << " s" << std::endl;
 
         if(preview)
-            anime4k.showImg();
+            anime4k.showImage();
         anime4k.saveImage(output);
     }
     else//Video
@@ -87,7 +87,7 @@ int main(int argc,char *argv[])
         try
         {
             anime4k.loadVideo(input);
-            anime4k.setVideiSaveInfo(outputTmpName);
+            anime4k.setVideoSaveInfo(outputTmpName);
         }
         catch (const char* err)
         {
