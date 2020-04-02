@@ -108,7 +108,7 @@ int main(int argc,char *argv[])
         {
 #ifdef _WIN32
             std::string command("del /q " + outputTmpName);
-#elif defined(_linux)
+#elif defined(__linux)
             std::string command("rm " + outputTmpName);
 #endif // SYSTEM
             system(command.data());
