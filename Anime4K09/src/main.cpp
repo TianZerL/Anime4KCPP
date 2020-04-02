@@ -78,12 +78,18 @@ int main(int argc,char *argv[])
     }
     else//Video
     {
+        //Suffix check
+        if (output.substr(output.size() - 3) == "png")
+            output.replace(output.size() - 3, 3, "mp4");
+
         bool ffmpeg = checkFFmpeg();
         std::string outputTmpName = output;
+
         if (!ffmpeg)
             std::cout<<"Please install ffmpeg, otherwise the output file will be silent."<<std::endl;
         else 
             outputTmpName = "tmp_out.mp4";
+
         try
         {
             anime4k.loadVideo(input);
