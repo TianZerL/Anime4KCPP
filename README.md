@@ -4,6 +4,9 @@ This project is for learning and the exploration task of algorithm course in SWJ
 
 ***NOTICE: Thanks for the high performance of pointer, the C++ version will be very fast. It is about 6.5 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 650 times faster than [Python version](https://github.com/TianZerL/Anime4KPython), but please understand, this is executed in CPU, for video preprocessing, it will take a while. Therefore, if your graphic card is good enough, I recommend you to use the real-time process version by [bloc97](https://github.com/bloc97/Anime4K), if your CPU is powerful or you want higher quality, just try this.***
 
+# pyanime4k
+[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
+
 # About Anime4K
 Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing.
 
