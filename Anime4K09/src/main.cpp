@@ -42,7 +42,7 @@ int main(int argc,char *argv[])
 median blur=00001, mean blur=00010, gaussian blur=00100, bilateral filter=01000, bilateral filter faster=10000, \
 you can freely combine them, eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100 = 12(D), \
 so you can put 12 to enable gaussian blur and bilateral filter, which also is what I recommend for image, \
-and for performance i recommend to use 20 for video", 
+and for performance I recommend to use 20 for video", 
         false, 12, cmdline::range(1, 31));
     
     opt.parse_check(argc, argv);

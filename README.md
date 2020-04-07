@@ -44,11 +44,10 @@ Enable filters can make the result like better, now Anime4kCPP support 5 filters
   - bilateral filter [01000]
   - bilateral filter faster [10000]
 
-you can freely combine them by their binary.  
+You can freely combine them by their binary.  
 eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100(B)= 12(D)  
 
-Easily use ```-a``` to enable filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 12.
-You can use command like this to enable gaussian blur and bilateral filter:
+Easily use ```-a``` to enable filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 12.You can use command like this to enable gaussian blur and bilateral filter:
 
     Anime4K_09.exe -i input.png -o output.png -a -e 12
 
