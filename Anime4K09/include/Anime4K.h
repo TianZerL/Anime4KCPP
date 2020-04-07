@@ -7,6 +7,7 @@
 #include<opencv2/core/hal/interface.h>
 
 #include"threadpool.h"
+#include"postprocessing.h"
 
 typedef unsigned char* RGBA;
 typedef unsigned char* Line;
@@ -14,13 +15,23 @@ typedef unsigned char* Line;
 class Anime4K
 {
 public:
-    Anime4K(int passes = 2, double strengthColor = 0.3, double strengthGradient = 1.0, double zoomFactor = 2.0, bool fastMode = false, bool videoMode = false, unsigned int maxThreads = std::thread::hardware_concurrency());
+    Anime4K(
+        int passes = 2, 
+        double strengthColor = 0.3, 
+        double strengthGradient = 1.0, 
+        double zoomFactor = 2.0, 
+        bool fastMode = false, 
+        bool videoMode = false, 
+        bool postProcessing = false,
+        uint8_t filters = 12,
+        unsigned int maxThreads = std::thread::hardware_concurrency());
     void loadVideo(const std::string &srcFile);
     void loadImage(const std::string &srcFile);
     void setVideoSaveInfo(const std::string &dstFile);
     void saveImage(const std::string &dstFile);
     void saveVideo();
     void showInfo();
+    void showFiltersInfo();
     void showImage();
     void process();
 private:
@@ -47,5 +58,6 @@ private://arguments
     unsigned int mt;
     int ps;
     double sc, sg, zf, fps;
-    bool fm, vm;
+    bool fm, vm, pp;
+    uint8_t fl;
 };

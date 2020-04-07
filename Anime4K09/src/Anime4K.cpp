@@ -1,9 +1,20 @@
 #include "Anime4K.h"
 
-Anime4K::Anime4K(int passes, double strengthColor, double strengthGradient, double zoomFactor, bool fastMode, bool videoMode, unsigned int maxThreads) :
-    ps(passes), sc(strengthColor), sg(strengthGradient), zf(zoomFactor),
+Anime4K::Anime4K(
+    int passes,
+    double strengthColor,
+    double strengthGradient,
+    double zoomFactor,
+    bool fastMode,
+    bool videoMode,
+    bool postProcessing,
+    uint8_t filters,
+    unsigned int maxThreads
+) :
+    ps(passes), sc(strengthColor),
+    sg(strengthGradient), zf(zoomFactor),
     fm(fastMode), vm(videoMode),
-    mt(maxThreads)
+    pp(postProcessing), fl(filters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
     frameCount = totalFrameCount = fps = 0;
@@ -29,12 +40,8 @@ void Anime4K::loadImage(const std::string &srcFile)
         throw "Fail to load file, file may not exist.";
     orgH = orgImg.rows;
     orgW = orgImg.cols;
-
-    cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
-    if (dstImg.channels() == 3)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
-    H = dstImg.rows;
-    W = dstImg.cols;
+    H = zf * orgH;
+    W = zf * orgW;
 }
 
 void Anime4K::setVideoSaveInfo(const std::string &dstFile)
@@ -73,6 +80,31 @@ void Anime4K::showInfo()
     std::cout << "----------------------------------------------" << std::endl;
 }
 
+void Anime4K::showFiltersInfo()
+{
+    std::cout << "----------------------------------------------" << std::endl;
+    std::cout << "Post processing filters list:" << std::endl;
+    std::cout << "----------------------------------------------" << std::endl;
+    if (!pp)
+    {
+        std::cout << "Post processing disable" << std::endl;
+    }
+    else
+    {
+        if (fl & MEDIAN_BLUR)
+            std::cout << "Median blur" << std::endl;
+        if (fl & MEAN_BLUR)
+            std::cout << "Mean blur" << std::endl;
+        if (fl & GAUSSIAN_BLUR)
+            std::cout << "Gaussian blur" << std::endl;
+        if (fl & BILATERAL_FILTER)
+            std::cout << "Bilateral filter" << std::endl;
+        else if (fl & BILATERAL_FILTER_FAST)
+            std::cout << "Bilateral filter faster" << std::endl;
+    }
+    std::cout << "----------------------------------------------" << std::endl;
+}
+
 void Anime4K::showImage()
 {
     cv::imshow("dstImg", dstImg);
@@ -83,13 +115,23 @@ void Anime4K::process()
 {
     if (!vm)
     {
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+        if (dstImg.channels() == 3)
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
         for (int i = 0; i < ps; i++)
         {
             getGray(dstImg);
-            pushColor(dstImg);
+            if(sc)
+                pushColor(dstImg);
             getGradient(dstImg);
             pushGradient(dstImg);
         }
+        if (pp)//PostProcessing
+        {
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+            PostProcessor(dstImg, fl).process();
+        }
+
     }
     else
     {
@@ -114,11 +156,14 @@ void Anime4K::process()
                 for (int i = 0; i < ps; i++)
                 {
                     getGray(dstFrame);
-                    pushColor(dstFrame);
+                    if (sc)
+                        pushColor(dstFrame);
                     getGradient(dstFrame);
                     pushGradient(dstFrame);
                 }
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
+                if (pp)//PostProcessing
+                    PostProcessor(dstFrame, fl).process();
                 std::unique_lock<std::mutex> lock(videoMtx);
                 while (true)
                 {

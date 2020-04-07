@@ -36,7 +36,15 @@ int main(int argc,char *argv[])
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
-
+    opt.add("postProcessing", 'a', "Enable post processing");
+    opt.add<unsigned int>("filters", 'e', 
+        "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
+median blur=00001, mean blur=00010, gaussian blur=00100, bilateral filter=01000, bilateral filter faster=10000, \
+you can freely combine them, eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100 = 12(D), \
+so you can put 12 to enable gaussian blur and bilateral filter, which also is what I recommend for image, \
+and for performance i recommend to use 20 for video", 
+        false, 12, cmdline::range(1, 31));
+    
     opt.parse_check(argc, argv);
 
     std::string input = opt.get<std::string>("input");
@@ -45,13 +53,25 @@ int main(int argc,char *argv[])
     double strengthColor = opt.get<double>("strengthColor");
     double strengthGradient = opt.get<double>("strengthGradient");
     double zoomFactor = opt.get<double>("zoomFactor");
+    uint8_t filters = (uint8_t)opt.get<unsigned int>("filters");
     unsigned int threads = opt.get<unsigned int>("threads");
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
+    bool postProcessing = opt.exist("postProcessing");
 
     //Anime4K
-    Anime4K anime4k(passes, strengthColor, strengthGradient, zoomFactor, fastMode, videoMode, threads);
+    Anime4K anime4k(
+        passes, 
+        strengthColor, 
+        strengthGradient, 
+        zoomFactor, 
+        fastMode,
+        videoMode,
+        postProcessing,
+        filters,
+        threads
+    );
     if (!videoMode)//Image
     {
         try
@@ -65,6 +85,7 @@ int main(int argc,char *argv[])
         }
 
         anime4k.showInfo();
+        anime4k.showFiltersInfo();
 
         std::cout << "Processing..." << std::endl;
         time_t s = std::clock();
@@ -101,6 +122,7 @@ int main(int argc,char *argv[])
             return 0;
         }
         anime4k.showInfo();
+        anime4k.showFiltersInfo();
 
         std::cout << "Processing..." << std::endl;
         time_t s = std::clock();

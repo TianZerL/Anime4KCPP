@@ -31,7 +31,29 @@ This project uses [cmake](https://cmake.org) to build.
       -f, --fastMode            Faster but maybe low quality
       -v, --videoMode           Video process
       -s, --preview             Preview image
+      -a, --postProcessing      Enable post processing
+      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:median blur=00001, mean blur=00010, gaussian blur=00100, bilateral filter=01000, bilateral filter faster=10000, you can freely combine them, eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100 = 12(D), so you can put 12 to enable gaussian blur and bilateral filter, which also is what I recommend for image, and for performance i recommend to use 20 for video (unsigned int [=12])
       -?, --help                print this message
+
+# Filters
+Enable filters can make the result like better, now Anime4kCPP support 5 filters include:
+
+  - median blur [00001]
+  - mean blur [00010]
+  - gaussian blur [00100]
+  - bilateral filter [01000]
+  - bilateral filter faster [10000]
+
+you can freely combine them by their binary.  
+eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100(B)= 12(D)  
+
+Easily use ```-a``` to enable filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 12.
+You can use command like this to enable gaussian blur and bilateral filter:
+
+    Anime4K_09.exe -i input.png -o output.png -a -e 12
+
+I recommend use 12(gaussian blur + bilateral filter) for image, and 20 for video(gaussian blur + bilateral filter faster).
+
 
 # Other implementations
 - Python
