@@ -31,7 +31,8 @@ This project uses [cmake](https://cmake.org) to build.
       -f, --fastMode            Faster but maybe low quality
       -v, --videoMode           Video process
       -s, --preview             Preview image
-      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, you can freely combine them, eg: gaussian blur weak + bilateral filter = 000100 & 010000 = 010100 = 20(D), so you can put 20 to enable gaussian blur weak and bilateral filter, which also is what I recommend for image that < 1080P, 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P (unsigned int [=20])
+      -a, --postProcessing      Enable post processing
+      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 & 010000 = 010100 = 20(D), so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P (unsigned int [=20])
       -?, --help                print this message
 
 # Filters
