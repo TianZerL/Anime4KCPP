@@ -95,7 +95,9 @@ void Anime4K::showFiltersInfo()
             std::cout << "Median blur" << std::endl;
         if (fl & MEAN_BLUR)
             std::cout << "Mean blur" << std::endl;
-        if (fl & GAUSSIAN_BLUR)
+        if (fl & GAUSSIAN_BLUR_WEAK)
+            std::cout << "Gaussian blur weak" << std::endl;
+        else if (fl & GAUSSIAN_BLUR)
             std::cout << "Gaussian blur" << std::endl;
         if (fl & BILATERAL_FILTER)
             std::cout << "Bilateral filter" << std::endl;

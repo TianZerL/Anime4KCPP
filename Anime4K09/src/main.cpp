@@ -39,11 +39,11 @@ int main(int argc,char *argv[])
     opt.add("postProcessing", 'a', "Enable post processing");
     opt.add<unsigned int>("filters", 'e', 
         "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
-median blur=00001, mean blur=00010, gaussian blur=00100, bilateral filter=01000, bilateral filter faster=10000, \
-you can freely combine them, eg: gaussian blur + bilateral filter = 00100 & 01000 = 01100 = 12(D), \
-so you can put 12 to enable gaussian blur and bilateral filter, which also is what I recommend for image, \
-and for performance I recommend to use 20 for video", 
-        false, 12, cmdline::range(1, 31));
+median blur=000001, mean blur=000010, gaussian blur weak=000100, gaussian blur=001000, bilateral filter=010000, bilateral filter faster=100000, \
+you can freely combine them, eg: gaussian blur weak + bilateral filter = 000100 & 010000 = 010100 = 20(D), \
+so you can put 20 to enable gaussian blur weak and bilateral filter, which also is what I recommend for image that < 1080P, \
+24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P", 
+        false, 20, cmdline::range(1, 63));
     
     opt.parse_check(argc, argv);
 
