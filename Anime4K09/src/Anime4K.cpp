@@ -64,6 +64,8 @@ void Anime4K::saveVideo()
 void Anime4K::showInfo()
 {
     std::cout << "----------------------------------------------" << std::endl;
+    std::cout << "Welcome to use Anime4KCPP" << std::endl;
+    std::cout << "----------------------------------------------" << std::endl;
     if (vm)
     {
         std::cout << "Threads: " << mt << std::endl;
@@ -72,7 +74,7 @@ void Anime4K::showInfo()
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Passes: " << ps << std::endl
-        << "zoom Factor: " << zf << std::endl
+        << "Zoom Factor: " << zf << std::endl
         << "Video Mode: " << std::boolalpha << vm << std::endl
         << "Fast Mode: " << std::boolalpha << fm << std::endl
         << "Strength Color: " << sc << std::endl
@@ -210,53 +212,53 @@ inline void Anime4K::pushColor(cv::InputArray img)
         uint8_t maxD, minL;
 
         //top and bottom
-        maxD = max(bl[A], bc[A], br[A]);
-        minL = min(tl[A], tc[A], tr[A]);
+        maxD = MAX3(bl[A], bc[A], br[A]);
+        minL = MIN3(tl[A], tc[A], tr[A]);
         if (minL > mc[A] && mc[A] > maxD)
             getLightest(mc, tl, tc, tr);
         else
         {
-            maxD = max(tl[A], tc[A], tr[A]);
-            minL = min(bl[A], bc[A], br[A]);
+            maxD = MAX3(tl[A], tc[A], tr[A]);
+            minL = MIN3(bl[A], bc[A], br[A]);
             if (minL > mc[A] && mc[A] > maxD)
                 getLightest(mc, bl, bc, br);
         }
 
         //sundiagonal
-        maxD = max(ml[A], mc[A], bc[A]);
-        minL = min(tc[A], tr[A], mr[A]);
+        maxD = MAX3(ml[A], mc[A], bc[A]);
+        minL = MIN3(tc[A], tr[A], mr[A]);
         if (minL > maxD)
             getLightest(mc, tc, tr, mr);
         else
         {
-            maxD = max(tc[A], mc[A], mr[A]);
-            minL = min(ml[A], bl[A], bc[A]);
+            maxD = MAX3(tc[A], mc[A], mr[A]);
+            minL = MIN3(ml[A], bl[A], bc[A]);
             if (minL > maxD)
                 getLightest(mc, ml, bl, bc);
         }
 
         //left and right
-        maxD = max(tl[A], ml[A], bl[A]);
-        minL = min(tr[A], mr[A], br[A]);
+        maxD = MAX3(tl[A], ml[A], bl[A]);
+        minL = MIN3(tr[A], mr[A], br[A]);
         if (minL > mc[A] && mc[A] > maxD)
             getLightest(mc, tr, mr, br);
         else
         {
-            maxD = max(tr[A], mr[A], br[A]);
-            minL = min(tl[A], ml[A], bl[A]);
+            maxD = MAX3(tr[A], mr[A], br[A]);
+            minL = MIN3(tl[A], ml[A], bl[A]);
             if (minL > mc[A] && mc[A] > maxD)
                 getLightest(mc, tl, ml, bl);
         }
 
         //diagonal
-        maxD = max(tc[A], mc[A], ml[A]);
-        minL = min(mr[A], br[A], bc[A]);
+        maxD = MAX3(tc[A], mc[A], ml[A]);
+        minL = MIN3(mr[A], br[A], bc[A]);
         if (minL > maxD)
             getLightest(mc, mr, br, bc);
         else
         {
-            maxD = max(bc[A], mc[A], mr[A]);
-            minL = min(ml[A], tl[A], tc[A]);
+            maxD = MAX3(bc[A], mc[A], mr[A]);
+            minL = MIN3(ml[A], tl[A], tc[A]);
             if (minL > maxD)
                 getLightest(mc, ml, tl, tc);
         }
@@ -283,7 +285,7 @@ inline void Anime4K::getGradient(cv::InputArray img)
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
             double Grad = sqrt(GradX * GradX + GradY * GradY);
 
-            pixel[A] = 255 - unFloat(Grad);
+            pixel[A] = 255 - UNFLOAT(Grad);
             });
     }
     else
@@ -323,48 +325,48 @@ inline void Anime4K::pushGradient(cv::InputArray img)
         uint8_t maxD, minL;
 
         //top and bottom
-        maxD = max(bl[A], bc[A], br[A]);
-        minL = min(tl[A], tc[A], tr[A]);
+        maxD = MAX3(bl[A], bc[A], br[A]);
+        minL = MIN3(tl[A], tc[A], tr[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tl, tc, tr);
 
-        maxD = max(tl[A], tc[A], tr[A]);
-        minL = min(bl[A], bc[A], br[A]);
+        maxD = MAX3(tl[A], tc[A], tr[A]);
+        minL = MIN3(bl[A], bc[A], br[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, bl, bc, br);
 
         //sundiagonal
-        maxD = max(ml[A], mc[A], bc[A]);
-        minL = min(tc[A], tr[A], mr[A]);
+        maxD = MAX3(ml[A], mc[A], bc[A]);
+        minL = MIN3(tc[A], tr[A], mr[A]);
         if (minL > maxD)
             return getAverage(mc, tc, tr, mr);
 
-        maxD = max(tc[A], mc[A], mr[A]);
-        minL = min(ml[A], bl[A], bc[A]);
+        maxD = MAX3(tc[A], mc[A], mr[A]);
+        minL = MIN3(ml[A], bl[A], bc[A]);
         if (minL > maxD)
             return getAverage(mc, ml, bl, bc);
  
 
         //left and right
-        maxD = max(tl[A], ml[A], bl[A]);
-        minL = min(tr[A], mr[A], br[A]);
+        maxD = MAX3(tl[A], ml[A], bl[A]);
+        minL = MIN3(tr[A], mr[A], br[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tr, mr, br);
   
-        maxD = max(tr[A], mr[A], br[A]);
-        minL = min(tl[A], ml[A], bl[A]);
+        maxD = MAX3(tr[A], mr[A], br[A]);
+        minL = MIN3(tl[A], ml[A], bl[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tl, ml, bl);
  
 
         //diagonal
-        maxD = max(tc[A], mc[A], ml[A]);
-        minL = min(mr[A], br[A], bc[A]);
+        maxD = MAX3(tc[A], mc[A], ml[A]);
+        minL = MIN3(mr[A], br[A], bc[A]);
         if (minL > maxD)
             return getAverage(mc, mr, br, bc);
 
-        maxD = max(bc[A], mc[A], mr[A]);
-        minL = min(ml[A], tl[A], tc[A]);
+        maxD = MAX3(bc[A], mc[A], mr[A]);
+        minL = MIN3(ml[A], tl[A], tc[A]);
         if (minL > maxD)
             return getAverage(mc, ml, tl, tc);
 
@@ -407,24 +409,4 @@ inline void Anime4K::getAverage(RGBA mc, RGBA a, RGBA b, RGBA c)
     mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg;
     mc[B] = mc[B] * (1 - sg) + ((a[B] + b[B] + c[B]) / 3.0) * sg;
     mc[A] = 255;
-}
-
-inline uint8_t Anime4K::max(uint8_t a, uint8_t b, uint8_t c)
-{
-    return a > b && a > c ? a : (b > c ? b : c);
-}
-
-inline uint8_t Anime4K::min(uint8_t a, uint8_t b, uint8_t c)
-{
-    return a < b && a < c ? a : (b < c ? b : c);
-}
-
-inline uint8_t Anime4K::unFloat(double n)
-{
-    n += 0.5;
-    if (n >= 255)
-        return 255;
-    else if (n <= 0)
-        return 0;
-    return uint8_t(n);
 }

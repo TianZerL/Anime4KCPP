@@ -9,8 +9,13 @@
 #include"threadpool.h"
 #include"postprocessing.h"
 
+#define MAX3(a, b, c) (a > b && a > c ? a : (b > c ? b : c))
+#define MIN3(a, b, c) (a < b && a < c ? a : (b < c ? b : c))
+#define UNFLOAT(n) (n >= 255 ? 255 : (n <= 0 ? 0 : uint8_t(n + 0.5)))
+
 typedef unsigned char* RGBA;
 typedef unsigned char* Line;
+
 
 class Anime4K
 {
@@ -42,9 +47,6 @@ private:
     void changEachPixel(cv::InputArray _src, const std::function<void(int, int, RGBA,Line)>&& callBack);
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
-    uint8_t max(uint8_t a, uint8_t b, uint8_t c);
-    uint8_t min(uint8_t a, uint8_t b, uint8_t c);
-    uint8_t unFloat(double n);
 private:
     const static int B = 0, G = 1, R = 2, A = 3;
     int orgH, orgW, H, W;
