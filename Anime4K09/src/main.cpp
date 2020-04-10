@@ -12,7 +12,7 @@ bool checkFFmpeg()
     return false;
 }
 
-bool mergrAudio2Video(const std::string &output, const std::string &srcFile)
+bool mergrAudio2Video(const std::string& output, const std::string& srcFile)
 {
     std::string command("ffmpeg -i \"tmp_out.mp4\" -i \"" + srcFile + "\" -c copy -map 0 -map 1:1 -y \"" + output + "\"");
     std::cout << command << std::endl;
@@ -22,7 +22,7 @@ bool mergrAudio2Video(const std::string &output, const std::string &srcFile)
     return false;
 }
 
-int main(int argc,char *argv[]) 
+int main(int argc, char* argv[])
 {
     //Options
     cmdline::parser opt;
@@ -37,14 +37,14 @@ int main(int argc,char *argv[])
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
     opt.add("postProcessing", 'a', "Enable post processing");
-    opt.add<unsigned int>("filters", 'e', 
+    opt.add<unsigned int>("filters", 'e',
         "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
 Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, \
 you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 & 010000 = 010100 = 20(D), \
 so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
-24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P", 
-        false, 20, cmdline::range(1, 63));
-    
+24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P",
+false, 20, cmdline::range(1, 63));
+
     opt.parse_check(argc, argv);
 
     std::string input = opt.get<std::string>("input");
@@ -62,10 +62,10 @@ so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also 
 
     //Anime4K
     Anime4K anime4k(
-        passes, 
-        strengthColor, 
-        strengthGradient, 
-        zoomFactor, 
+        passes,
+        strengthColor,
+        strengthGradient,
+        zoomFactor,
         fastMode,
         videoMode,
         postProcessing,
@@ -93,7 +93,7 @@ so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also 
         time_t e = std::clock();
         std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC << " s" << std::endl;
 
-        if(preview)
+        if (preview)
             anime4k.showImage();
         anime4k.saveImage(output);
     }
@@ -107,8 +107,8 @@ so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also 
         std::string outputTmpName = output;
 
         if (!ffmpeg)
-            std::cout<<"Please install ffmpeg, otherwise the output file will be silent."<<std::endl;
-        else 
+            std::cout << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
+        else
             outputTmpName = "tmp_out.mp4";
 
         try
@@ -129,7 +129,7 @@ so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also 
         anime4k.process();
         time_t e = std::clock();
         std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC / 60 << " min" << std::endl;
-        
+
         anime4k.saveVideo();
 
         if (ffmpeg && mergrAudio2Video(output, input))
@@ -140,8 +140,8 @@ so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also 
             std::string command("rm " + outputTmpName);
 #endif // SYSTEM
             system(command.data());
-        }       
+        }
     }
-    
+
     return 0;
 }

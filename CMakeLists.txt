@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 project(Anime4KCPP)
 
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "-std=c++17 -O2")
+    set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -fopenmp")
 else()
-    set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -lpthread")
+    set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -lpthread -fopenmp")
 endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

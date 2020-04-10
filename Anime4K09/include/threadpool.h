@@ -15,7 +15,7 @@ public:
         for (size_t i = 0; i < maxThreadCount; i++)
         {
             std::thread(
-                [pool = this->pool] {
+                [pool = this->pool]{
                     std::unique_lock<std::mutex> lock(pool->mtx);
                     while (true)
                     {

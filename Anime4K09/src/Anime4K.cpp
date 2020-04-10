@@ -20,10 +20,10 @@ Anime4K::Anime4K(
     frameCount = totalFrameCount = fps = 0;
 }
 
-void Anime4K::loadVideo(const std::string &dstFile)
+void Anime4K::loadVideo(const std::string& dstFile)
 {
     video.open(dstFile);
-    if(!video.isOpened())
+    if (!video.isOpened())
         throw "Fail to load file, file may not exist or decoder did'n been installed.";
     orgH = video.get(cv::CAP_PROP_FRAME_HEIGHT);
     orgW = video.get(cv::CAP_PROP_FRAME_WIDTH);
@@ -33,7 +33,7 @@ void Anime4K::loadVideo(const std::string &dstFile)
     W = zf * orgW;
 }
 
-void Anime4K::loadImage(const std::string &srcFile)
+void Anime4K::loadImage(const std::string& srcFile)
 {
     orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
     if (orgImg.empty())
@@ -44,13 +44,13 @@ void Anime4K::loadImage(const std::string &srcFile)
     W = zf * orgW;
 }
 
-void Anime4K::setVideoSaveInfo(const std::string &dstFile)
+void Anime4K::setVideoSaveInfo(const std::string& dstFile)
 {
-    if(!videoWriter.open(dstFile, cv::VideoWriter::fourcc('a','v','c','1'), fps, cv::Size(W, H)))
+    if (!videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H)))
         throw "Fail to initial video writer.";
 }
 
-void Anime4K::saveImage(const std::string &dstFile)
+void Anime4K::saveImage(const std::string& dstFile)
 {
     cv::imwrite(dstFile, dstImg);
 }
@@ -70,7 +70,7 @@ void Anime4K::showInfo()
     {
         std::cout << "Threads: " << mt << std::endl;
         std::cout << "Total frame: " << totalFrameCount << std::endl;
-    }  
+    }
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Passes: " << ps << std::endl
@@ -125,7 +125,7 @@ void Anime4K::process()
         for (int i = 0; i < ps; i++)
         {
             getGray(dstImg);
-            if(sc)
+            if (sc)
                 pushColor(dstImg);
             getGradient(dstImg);
             pushGradient(dstImg);
@@ -148,10 +148,10 @@ void Anime4K::process()
             if (!video.read(orgFrame))
             {
                 while (frameCount < totalFrameCount)
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                    std::this_thread::yield();
                 break;
             }
-            
+
             pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame]()mutable
             {
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
@@ -201,7 +201,7 @@ inline void Anime4K::pushColor(cv::InputArray img)
     changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         int jp = j < (W - 1) * 4 ? 4 : 0;;
         int jn = j > 4 ? -4 : 0;
-        Line pLineData = i < H - 1? curLine + lineStep : curLine;
+        Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
         Line cLineData = curLine;
         Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
@@ -267,7 +267,7 @@ inline void Anime4K::pushColor(cv::InputArray img)
 
 inline void Anime4K::getGradient(cv::InputArray img)
 {
-    if (!fm) 
+    if (!fm)
     {
         int lineStep = W * 4;
         changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
@@ -277,10 +277,10 @@ inline void Anime4K::getGradient(cv::InputArray img)
             Line cLineData = curLine;
             Line nLineData = curLine - lineStep;
             int jp = 4, jn = -4;
-            double GradX = 
+            double GradX =
                 (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
                 (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
-            double GradY = 
+            double GradY =
                 (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
             double Grad = sqrt(GradX * GradX + GradY * GradY);
@@ -309,7 +309,7 @@ inline void Anime4K::getGradient(cv::InputArray img)
 
 inline void Anime4K::pushGradient(cv::InputArray img)
 {
-    int lineStep = W*4;
+    int lineStep = W * 4;
     changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
         int jp = j < (W - 1) * 4 ? 4 : 0;;
         int jn = j > 4 ? -4 : 0;
@@ -345,19 +345,19 @@ inline void Anime4K::pushGradient(cv::InputArray img)
         minL = MIN3(ml[A], bl[A], bc[A]);
         if (minL > maxD)
             return getAverage(mc, ml, bl, bc);
- 
+
 
         //left and right
         maxD = MAX3(tl[A], ml[A], bl[A]);
         minL = MIN3(tr[A], mr[A], br[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tr, mr, br);
-  
+
         maxD = MAX3(tr[A], mr[A], br[A]);
         minL = MIN3(tl[A], ml[A], bl[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tl, ml, bl);
- 
+
 
         //diagonal
         maxD = MAX3(tc[A], mc[A], ml[A]);
@@ -381,16 +381,24 @@ inline void Anime4K::changEachPixel(cv::InputArray _src,
     cv::Mat tmp;
     src.copyTo(tmp);
 
-    Line lineData,tmpLineData;
     int jMAX = W * 4;
-
-    for (int i = 0; i < H; i++)
-    {
-        lineData = src.data + i * W*4;
-        tmpLineData = tmp.data + i * W*4;
+#ifdef _MSC_VER //let's do something crazy
+    Concurrency::parallel_for(0, H, [&](int i) {
+        Line lineData = src.data + i * W * 4;
+        Line tmpLineData = tmp.data + i * W * 4;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
-    } 
+        });
+#else //for gcc and others
+#pragma omp parallel for
+    for (int i = 0; i < H; i++)
+    {
+        Line lineData = src.data + i * W * 4;
+        Line tmpLineData = tmp.data + i * W * 4;
+        for (int j = 0; j < jMAX; j += 4)
+            callBack(i, j, tmpLineData + j, lineData);
+    }
+#endif //something crazy
 
     tmp.copyTo(src);
 }
