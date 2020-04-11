@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     opt.add<std::string>("input", 'i', "File for loading", false, "./pic/p1.png");
     opt.add<std::string>("output", 'o', "File for outputting", false, "output.png");
     opt.add<int>("passes", 'p', "Passes for processing", false, 2);
+    opt.add<int>("pushColorCount", 'n', "Limit the number of color pushes", false, 2);
     opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
     opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
     opt.add<unsigned int>("filters", 'e',
         "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
 Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, \
-you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 & 010000 = 010100 = 20(D), \
+you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D), \
 so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P",
 false, 20, cmdline::range(1, 63));
@@ -50,6 +51,7 @@ false, 20, cmdline::range(1, 63));
     std::string input = opt.get<std::string>("input");
     std::string output = opt.get<std::string>("output");
     int passes = opt.get<int>("passes");
+    int pushColorCount = opt.get<int>("pushColorCount");
     double strengthColor = opt.get<double>("strengthColor");
     double strengthGradient = opt.get<double>("strengthGradient");
     double zoomFactor = opt.get<double>("zoomFactor");
@@ -63,6 +65,7 @@ false, 20, cmdline::range(1, 63));
     //Anime4K
     Anime4K anime4k(
         passes,
+        pushColorCount,
         strengthColor,
         strengthGradient,
         zoomFactor,

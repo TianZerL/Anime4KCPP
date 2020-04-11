@@ -28,6 +28,7 @@ class Anime4K
 public:
     Anime4K(
         int passes = 2,
+        int pushColorCount = 2,
         double strengthColor = 0.3,
         double strengthGradient = 1.0,
         double zoomFactor = 2.0,
@@ -56,6 +57,7 @@ private:
 private:
     const static int B = 0, G = 1, R = 2, A = 3;
     int orgH, orgW, H, W;
+    double fps;
     size_t totalFrameCount, frameCount;
     cv::Mat orgImg, dstImg;
     cv::VideoCapture video;
@@ -64,8 +66,8 @@ private:
     std::condition_variable cnd;
 private://arguments
     unsigned int mt;
-    int ps;
-    double sc, sg, zf, fps;
+    int ps, pcc;
+    double sc, sg, zf;
     bool fm, vm, pp;
     uint8_t fl;
 };

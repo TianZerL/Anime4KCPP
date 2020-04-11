@@ -2,6 +2,7 @@
 
 Anime4K::Anime4K(
     int passes,
+    int pushColorCount,
     double strengthColor,
     double strengthGradient,
     double zoomFactor,
@@ -11,9 +12,9 @@ Anime4K::Anime4K(
     uint8_t filters,
     unsigned int maxThreads
 ) :
-    ps(passes), sc(strengthColor),
-    sg(strengthGradient), zf(zoomFactor),
-    fm(fastMode), vm(videoMode),
+    ps(passes), pcc(pushColorCount),
+    sc(strengthColor), sg(strengthGradient), 
+    zf(zoomFactor), fm(fastMode), vm(videoMode),
     pp(postProcessing), fl(filters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
@@ -74,6 +75,7 @@ void Anime4K::showInfo()
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Passes: " << ps << std::endl
+        << "pushColorCount: " << pcc << std::endl
         << "Zoom Factor: " << zf << std::endl
         << "Video Mode: " << std::boolalpha << vm << std::endl
         << "Fast Mode: " << std::boolalpha << fm << std::endl
@@ -125,7 +127,7 @@ void Anime4K::process()
         for (int i = 0; i < ps; i++)
         {
             getGray(dstImg);
-            if (sc)
+            if (sc && (pcc-- > 0))
                 pushColor(dstImg);
             getGradient(dstImg);
             pushGradient(dstImg);
@@ -135,7 +137,6 @@ void Anime4K::process()
             cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
             PostProcessor(dstImg, fl).process();
         }
-
     }
     else
     {
@@ -152,7 +153,7 @@ void Anime4K::process()
                 break;
             }
 
-            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame]()mutable
+            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, pcc = this->pcc]()mutable
             {
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
                 if (dstFrame.channels() == 3)
@@ -160,7 +161,7 @@ void Anime4K::process()
                 for (int i = 0; i < ps; i++)
                 {
                     getGray(dstFrame);
-                    if (sc)
+                    if (sc && (pcc-- > 0))
                         pushColor(dstFrame);
                     getGradient(dstFrame);
                     pushGradient(dstFrame);

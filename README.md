@@ -2,7 +2,7 @@
 This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9 and some optimizations have been made, it can process both image and video.
 This project is for learning and the exploration task of algorithm course in SWJTU.  
 
-***NOTICE: Thanks for the high performance of pointer, the C++ version will be very fast. It is about 6.5 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 650 times faster than [Python version](https://github.com/TianZerL/Anime4KPython), but please understand, this is executed in CPU, for video preprocessing, it will take a while. Therefore, if your graphic card is good enough, I recommend you to use the real-time process version by [bloc97](https://github.com/bloc97/Anime4K), if your CPU is powerful or you want higher quality, just try this.***
+***NOTICE: Thanks for the high performance of pointer and parallel, the C++ version will be very fast. It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython), just try this for higher quality and speed.***
 
 # pyanime4k
 [pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
@@ -24,6 +24,7 @@ This project uses [cmake](https://cmake.org) to build.
       -i, --input               File for loading (string [=./pic/p1.png])
       -o, --output              File for outputting (string [=output.png])
       -p, --passes              Passes for processing (int [=2])
+      -n, --pushColorCount      Limit the number of color pushes (int [=2])
       -c, --strengthColor       Strength for pushing color,range 0 to 1,higher for thinner (double [=0.3])
       -g, --strengthGradient    Strength for pushing gradient,range 0 to 1,higher for sharper (double [=1])
       -z, --zoomFactor          zoom factor for resizing (double [=2])
@@ -32,7 +33,7 @@ This project uses [cmake](https://cmake.org) to build.
       -v, --videoMode           Video process
       -s, --preview             Preview image
       -a, --postProcessing      Enable post processing
-      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 & 010000 = 010100 = 20(D), so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P (unsigned int [=20])
+      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D), so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P (unsigned int [=20])
       -?, --help                print this message
 
 # Filters
@@ -46,7 +47,7 @@ Enable filters can make the result like better, now Anime4kCPP support 5 filters
   - Bilateral filter faster [100000]
 
 You can freely combine them by their binary.  
-eg: Gaussian blur weak + Bilateral filter = 000100 & 010000 = 010100(B)= 20(D)  
+eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100(B)= 20(D)  
 
 Easily use ```-a``` to enable filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 20. You can use command like this to enable Gaussian blur and Bilateral filter:
 
