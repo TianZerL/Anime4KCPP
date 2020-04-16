@@ -32,28 +32,38 @@ This project uses [cmake](https://cmake.org) to build.
       -f, --fastMode            Faster but maybe low quality
       -v, --videoMode           Video process
       -s, --preview             Preview image
+      -b, --preProcessing       Enable pre processing
       -a, --postProcessing      Enable post processing
-      -e, --filters             Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D), so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P (unsigned int [=20])
+      -r, --preFilters          Enhancement filter, only working when preProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D) (unsigned int [=4])
+      -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
       -?, --help                print this message
 
 # Filters
 Enable filters can make the result like better, now Anime4kCPP support 5 filters include:
 
-  - Median blur [000001]
-  - Mean blur [000010]
-  - Gaussian blur weak [000100]
-  - Gaussian blur [001000]
-  - Bilateral filter [010000]
-  - Bilateral filter faster [100000]
+  - Median blur [0000001]
+  - Mean blur [0000010]
+  - CAS Sharpening [0000100]
+  - Gaussian blur weak [0001000]
+  - Gaussian blur [0010000]
+  - Bilateral filter [0100000]
+  - Bilateral filter faster [1000000]
 
 You can freely combine them by their binary.  
-eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100(B)= 20(D)  
+eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000(B)= 40(D)  
 
-Easily use ```-a``` to enable filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 20. You can use command like this to enable Gaussian blur and Bilateral filter:
+you can use ```-b``` to enable pre processing filters function, and then use ```-r``` to custom your own combination, normally, if you don't specify the ```-r``` manually it will be 4. You can use command like this:
 
-    Anime4KCPP -i input.png -o output.png -a -e 24
+    Anime4KCPP -i input.png -o output.png -b -r 44
 
-I recommend use 20(Gaussian blur weak + Bilateral filter) for image that < 1080P, 24(Gaussian blur + Bilateral filter) for image that >= 1080P, and 36(Gaussian blur weak + Bilateral filter faster) for video that < 1080P, 40(Gaussian blur + Bilateral filter faster) for video that >=1080P.
+
+Easily use ```-a``` to enable post processing filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 40. You can use command like this to enable Gaussian blur and Bilateral filter:
+
+    Anime4KCPP -i input.png -o output.png -a -e 48
+
+I recommend use 40(Gaussian blur weak + Bilateral filter) for image that < 1080P, 48(Gaussian blur + Bilateral filter) for image that >= 1080P, and 72(Gaussian blur weak + Bilateral filter faster) for video that < 1080P, 80(Gaussian blur + Bilateral filter faster) for video that >=1080P.
+
+It is not sure which will be better between pre and post processing, it depends on the specific image, you can try different combination for best quality.
 
 
 # Other implementations

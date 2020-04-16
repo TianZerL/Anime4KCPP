@@ -7,7 +7,7 @@
 #include<opencv2/core/hal/interface.h>
 
 #include"threadpool.h"
-#include"postprocessing.h"
+#include"filterprocessor.h"
 
 #ifdef _MSC_VER
 #include<ppl.h>
@@ -34,8 +34,10 @@ public:
         double zoomFactor = 2.0,
         bool fastMode = false,
         bool videoMode = false,
+        bool PreProcessing = false,
         bool postProcessing = false,
-        uint8_t filters = 12,
+        uint8_t preFilters = 40,
+        uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency());
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
@@ -51,7 +53,7 @@ private:
     void pushColor(cv::InputArray img);
     void getGradient(cv::InputArray img);
     void pushGradient(cv::InputArray img);
-    void changEachPixel(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
+    void changEachPixelBGRA(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
 private:
@@ -68,6 +70,6 @@ private://arguments
     unsigned int mt;
     int ps, pcc;
     double sc, sg, zf;
-    bool fm, vm, pp;
-    uint8_t fl;
+    bool fm, vm, pre, post;
+    uint8_t pref, postf;
 };

@@ -37,14 +37,20 @@ int main(int argc, char* argv[])
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
+    opt.add("preProcessing", 'b', "Enable pre processing");
     opt.add("postProcessing", 'a', "Enable post processing");
-    opt.add<unsigned int>("filters", 'e',
+    opt.add<unsigned int>("preFilters", 'r',
+        "Enhancement filter, only working when preProcessing is true,there are 5 options by binary:\
+Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, \
+you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D)",
+false, 4, cmdline::range(1, 127));
+    opt.add<unsigned int>("postFilters", 'e',
         "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
-Median blur=000001, Mean blur=000010, Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000, \
-you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D), \
-so you can put 20 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
-24 for image that >= 1080P, and for performance I recommend to use 36 for video that < 1080P, 40 for video that >=1080P",
-false, 20, cmdline::range(1, 63));
+Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, \
+you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), \
+so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
+48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
+false, 40, cmdline::range(1, 127));
 
     opt.parse_check(argc, argv);
 
@@ -55,11 +61,13 @@ false, 20, cmdline::range(1, 63));
     double strengthColor = opt.get<double>("strengthColor");
     double strengthGradient = opt.get<double>("strengthGradient");
     double zoomFactor = opt.get<double>("zoomFactor");
-    uint8_t filters = (uint8_t)opt.get<unsigned int>("filters");
+    uint8_t preFilters = (uint8_t)opt.get<unsigned int>("preFilters");
+    uint8_t postFilters = (uint8_t)opt.get<unsigned int>("postFilters");
     unsigned int threads = opt.get<unsigned int>("threads");
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
+    bool preProcessing = opt.exist("preProcessing");
     bool postProcessing = opt.exist("postProcessing");
 
     //Anime4K
@@ -71,8 +79,10 @@ false, 20, cmdline::range(1, 63));
         zoomFactor,
         fastMode,
         videoMode,
+        preProcessing,
         postProcessing,
-        filters,
+        preFilters,
+        postFilters,
         threads
     );
     if (!videoMode)//Image

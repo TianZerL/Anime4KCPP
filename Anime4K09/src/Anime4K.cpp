@@ -8,14 +8,17 @@ Anime4K::Anime4K(
     double zoomFactor,
     bool fastMode,
     bool videoMode,
+    bool PreProcessing,
     bool postProcessing,
-    uint8_t filters,
+    uint8_t preFilters,
+    uint8_t postFilters,
     unsigned int maxThreads
 ) :
     ps(passes), pcc(pushColorCount),
-    sc(strengthColor), sg(strengthGradient), 
-    zf(zoomFactor), fm(fastMode), vm(videoMode),
-    pp(postProcessing), fl(filters), mt(maxThreads)
+    sc(strengthColor), sg(strengthGradient),
+    zf(zoomFactor), fm(fastMode), vm(videoMode), 
+    pre(PreProcessing), post(postProcessing), pref(preFilters), 
+    postf(postFilters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
     frameCount = totalFrameCount = fps = 0;
@@ -87,25 +90,51 @@ void Anime4K::showInfo()
 void Anime4K::showFiltersInfo()
 {
     std::cout << "----------------------------------------------" << std::endl;
+    std::cout << "Pre processing filters list:" << std::endl;
+    std::cout << "----------------------------------------------" << std::endl;
+    if (!pre)
+    {
+        std::cout << "Pre processing disable" << std::endl;
+    }
+    else
+    {
+        if (pref & MEDIAN_BLUR)
+            std::cout << "Median blur" << std::endl;
+        if (pref & MEAN_BLUR)
+            std::cout << "Mean blur" << std::endl;
+        if (pref & CAS_SHARPENING)
+            std::cout << "CAS Sharpening" << std::endl;
+        if (pref & GAUSSIAN_BLUR_WEAK)
+            std::cout << "Gaussian blur weak" << std::endl;
+        else if (pref & GAUSSIAN_BLUR)
+            std::cout << "Gaussian blur" << std::endl;
+        if (pref & BILATERAL_FILTER)
+            std::cout << "Bilateral filter" << std::endl;
+        else if (pref & BILATERAL_FILTER_FAST)
+            std::cout << "Bilateral filter faster" << std::endl;
+    }
+    std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Post processing filters list:" << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
-    if (!pp)
+    if (!post)
     {
         std::cout << "Post processing disable" << std::endl;
     }
     else
     {
-        if (fl & MEDIAN_BLUR)
+        if (postf & MEDIAN_BLUR)
             std::cout << "Median blur" << std::endl;
-        if (fl & MEAN_BLUR)
+        if (postf & MEAN_BLUR)
             std::cout << "Mean blur" << std::endl;
-        if (fl & GAUSSIAN_BLUR_WEAK)
+        if (postf & CAS_SHARPENING)
+            std::cout << "CAS Sharpening" << std::endl;
+        if (postf & GAUSSIAN_BLUR_WEAK)
             std::cout << "Gaussian blur weak" << std::endl;
-        else if (fl & GAUSSIAN_BLUR)
+        else if (postf & GAUSSIAN_BLUR)
             std::cout << "Gaussian blur" << std::endl;
-        if (fl & BILATERAL_FILTER)
+        if (postf & BILATERAL_FILTER)
             std::cout << "Bilateral filter" << std::endl;
-        else if (fl & BILATERAL_FILTER_FAST)
+        else if (postf & BILATERAL_FILTER_FAST)
             std::cout << "Bilateral filter faster" << std::endl;
     }
     std::cout << "----------------------------------------------" << std::endl;
@@ -122,6 +151,12 @@ void Anime4K::process()
     if (!vm)
     {
         cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+        if (pre)
+        {
+            if (dstImg.channels() == 4)
+                cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+            FilterProcessor(dstImg, pref).process();
+        }
         if (dstImg.channels() == 3)
             cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
         for (int i = 0; i < ps; i++)
@@ -132,10 +167,10 @@ void Anime4K::process()
             getGradient(dstImg);
             pushGradient(dstImg);
         }
-        if (pp)//PostProcessing
+        if (post)//PostProcessing
         {
             cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-            PostProcessor(dstImg, fl).process();
+            FilterProcessor(dstImg, postf).process();
         }
     }
     else
@@ -156,6 +191,12 @@ void Anime4K::process()
             pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, pcc = this->pcc]()mutable
             {
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+                if (pre)
+                {
+                    if (dstFrame.channels() == 4)
+                        cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
+                    FilterProcessor(dstFrame, pref).process();
+                }
                 if (dstFrame.channels() == 3)
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
                 for (int i = 0; i < ps; i++)
@@ -167,8 +208,8 @@ void Anime4K::process()
                     pushGradient(dstFrame);
                 }
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-                if (pp)//PostProcessing
-                    PostProcessor(dstFrame, fl).process();
+                if (post)//PostProcessing
+                    FilterProcessor(dstFrame, postf).process();
                 std::unique_lock<std::mutex> lock(videoMtx);
                 while (true)
                 {
@@ -191,7 +232,7 @@ void Anime4K::process()
 
 inline void Anime4K::getGray(cv::InputArray img)
 {
-    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
+    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
         pixel[A] = 0.299 * pixel[R] + 0.587 * pixel[G] + 0.114 * pixel[B];
         });
 }
@@ -199,8 +240,8 @@ inline void Anime4K::getGray(cv::InputArray img)
 inline void Anime4K::pushColor(cv::InputArray img)
 {
     int lineStep = W * 4;
-    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        int jp = j < (W - 1) * 4 ? 4 : 0;;
+    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
+        int jp = j < (W - 1) * 4 ? 4 : 0;
         int jn = j > 4 ? -4 : 0;
         Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
         Line cLineData = curLine;
@@ -271,20 +312,20 @@ inline void Anime4K::getGradient(cv::InputArray img)
     if (!fm)
     {
         int lineStep = W * 4;
-        changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
+        changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
             if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
                 return;
             Line pLineData = curLine + lineStep;
             Line cLineData = curLine;
             Line nLineData = curLine - lineStep;
             int jp = 4, jn = -4;
-            double GradX =
+            float GradX =
                 (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
                 (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
-            double GradY =
+            float GradY =
                 (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
-            double Grad = sqrt(GradX * GradX + GradY * GradY);
+            float Grad = sqrt(GradX * GradX + GradY * GradY);
 
             pixel[A] = 255 - UNFLOAT(Grad);
             });
@@ -311,8 +352,8 @@ inline void Anime4K::getGradient(cv::InputArray img)
 inline void Anime4K::pushGradient(cv::InputArray img)
 {
     int lineStep = W * 4;
-    changEachPixel(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        int jp = j < (W - 1) * 4 ? 4 : 0;;
+    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
+        int jp = j < (W - 1) * 4 ? 4 : 0;
         int jn = j > 4 ? -4 : 0;
 
         Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
@@ -375,7 +416,7 @@ inline void Anime4K::pushGradient(cv::InputArray img)
         });
 }
 
-inline void Anime4K::changEachPixel(cv::InputArray _src,
+inline void Anime4K::changEachPixelBGRA(cv::InputArray _src,
     const std::function<void(int, int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();
