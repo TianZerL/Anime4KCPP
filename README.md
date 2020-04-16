@@ -39,11 +39,11 @@ This project uses [cmake](https://cmake.org) to build.
       -?, --help                print this message
 
 # Filters
-Enable filters can make the result like better, now Anime4kCPP support 5 filters include:
+Enable filters can make the result be better, now Anime4kCPP support 6 filters:
 
   - Median blur [0000001]
   - Mean blur [0000010]
-  - CAS Sharpening [0000100]
+  - [CAS Sharpening](https://gpuopen.com/gaming-product/fidelityfx) [0000100]
   - Gaussian blur weak [0001000]
   - Gaussian blur [0010000]
   - Bilateral filter [0100000]
@@ -65,6 +65,7 @@ I recommend use 40(Gaussian blur weak + Bilateral filter) for image that < 1080P
 
 It is not sure which will be better between pre and post processing, it depends on the specific image, you can try different combination for best quality.
 
+CAS is an adaptive sharpening technology which is open source by AMD, simple but efficient.
 
 # Other implementations
 - Python
