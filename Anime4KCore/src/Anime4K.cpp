@@ -39,7 +39,7 @@ void Anime4K::loadVideo(const std::string& dstFile)
 
 void Anime4K::loadImage(const std::string& srcFile)
 {
-    orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
+    orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
     if (orgImg.empty())
         throw "Fail to load file, file may not exist.";
     orgH = orgImg.rows;
@@ -152,13 +152,8 @@ void Anime4K::process()
     {
         cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
         if (pre)
-        {
-            if (dstImg.channels() == 4)
-                cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
             FilterProcessor(dstImg, pref).process();
-        }
-        if (dstImg.channels() == 3)
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
         for (int i = 0; i < ps; i++)
         {
             getGray(dstImg);
@@ -167,11 +162,9 @@ void Anime4K::process()
             getGradient(dstImg);
             pushGradient(dstImg);
         }
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
         if (post)//PostProcessing
-        {
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
             FilterProcessor(dstImg, postf).process();
-        }
     }
     else
     {
@@ -193,13 +186,8 @@ void Anime4K::process()
             {
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
                 if (pre)
-                {
-                    if (dstFrame.channels() == 4)
-                        cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
                     FilterProcessor(dstFrame, pref).process();
-                }
-                if (dstFrame.channels() == 3)
-                    cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
+                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
                 for (int i = 0; i < ps; i++)
                 {
                     getGray(dstFrame);
