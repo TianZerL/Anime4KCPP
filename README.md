@@ -39,7 +39,7 @@ This project uses [cmake](https://cmake.org) to build.
       -?, --help                print this message
 
 # Filters
-Enable filters can make the result be better, now Anime4kCPP support 6 filters:
+Enable filters can make the result be better, now Anime4kCPP support following filters:
 
   - Median blur [0000001]
   - Mean blur [0000010]
