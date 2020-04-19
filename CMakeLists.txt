@@ -9,6 +9,8 @@ endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 macro(SUBDIRLIST result curdir)
     file(GLOB children RELATIVE ${curdir} ${curdir}/*)

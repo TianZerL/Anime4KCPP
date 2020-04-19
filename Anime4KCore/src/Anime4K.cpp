@@ -1,3 +1,5 @@
+#define DLL
+
 #include "Anime4K.h"
 
 Anime4K::Anime4K(
@@ -22,6 +24,11 @@ Anime4K::Anime4K(
 {
     orgH = orgW = H = W = 0;
     frameCount = totalFrameCount = fps = 0;
+}
+
+void Anime4K::setVideoMode(const bool flag)
+{
+    vm = flag;
 }
 
 void Anime4K::loadVideo(const std::string& dstFile)
@@ -138,6 +145,85 @@ void Anime4K::showFiltersInfo()
             std::cout << "Bilateral filter faster" << std::endl;
     }
     std::cout << "----------------------------------------------" << std::endl;
+}
+
+std::string Anime4K::getInfo()
+{
+    std::ostringstream oss;
+    oss << "----------------------------------------------" << std::endl;
+    oss << "Welcome to use Anime4KCPP" << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    if (vm)
+    {
+        oss << "Threads: " << mt << std::endl;
+        oss << "Total frame: " << totalFrameCount << std::endl;
+    }
+    oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    oss << "Passes: " << ps << std::endl
+        << "pushColorCount: " << pcc << std::endl
+        << "Zoom Factor: " << zf << std::endl
+        << "Video Mode: " << std::boolalpha << vm << std::endl
+        << "Fast Mode: " << std::boolalpha << fm << std::endl
+        << "Strength Color: " << sc << std::endl
+        << "Strength Gradient: " << sg << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    return std::string(oss.str());
+}
+
+std::string Anime4K::getFiltersInfo()
+{
+    std::ostringstream oss;
+    oss << "----------------------------------------------" << std::endl;
+    oss << "Pre processing filters list:" << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    if (!pre)
+    {
+        oss << "Pre processing disable" << std::endl;
+    }
+    else
+    {
+        if (pref & MEDIAN_BLUR)
+            oss << "Median blur" << std::endl;
+        if (pref & MEAN_BLUR)
+            oss << "Mean blur" << std::endl;
+        if (pref & CAS_SHARPENING)
+            oss << "CAS Sharpening" << std::endl;
+        if (pref & GAUSSIAN_BLUR_WEAK)
+            oss << "Gaussian blur weak" << std::endl;
+        else if (pref & GAUSSIAN_BLUR)
+            oss << "Gaussian blur" << std::endl;
+        if (pref & BILATERAL_FILTER)
+            oss << "Bilateral filter" << std::endl;
+        else if (pref & BILATERAL_FILTER_FAST)
+            oss << "Bilateral filter faster" << std::endl;
+    }
+    oss << "----------------------------------------------" << std::endl;
+    oss << "Post processing filters list:" << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    if (!post)
+    {
+        oss << "Post processing disable" << std::endl;
+    }
+    else
+    {
+        if (postf & MEDIAN_BLUR)
+            oss << "Median blur" << std::endl;
+        if (postf & MEAN_BLUR)
+            oss << "Mean blur" << std::endl;
+        if (postf & CAS_SHARPENING)
+            oss << "CAS Sharpening" << std::endl;
+        if (postf & GAUSSIAN_BLUR_WEAK)
+            oss << "Gaussian blur weak" << std::endl;
+        else if (postf & GAUSSIAN_BLUR)
+            oss << "Gaussian blur" << std::endl;
+        if (postf & BILATERAL_FILTER)
+            oss << "Bilateral filter" << std::endl;
+        else if (postf & BILATERAL_FILTER_FAST)
+            oss << "Bilateral filter faster" << std::endl;
+    }
+    oss << "----------------------------------------------" << std::endl;
+    return std::string(oss.str());
 }
 
 void Anime4K::showImage()

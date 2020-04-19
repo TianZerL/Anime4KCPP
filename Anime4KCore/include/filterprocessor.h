@@ -7,11 +7,11 @@
 #include<omp.h>
 #endif
 
-#define MAX5(a, b, c, d, e) (a > b && a > c && a > d && a > e ? a : (b > c && b > d && b > e ? b : (c > d && c > e ? c : ( d > e ? d : e))))
-#define MIN5(a, b, c, d, e) (a < b && a < c && a < d && a < e ? a : (b < c && b < d && b < e ? b : (c < d && c < e ? c : ( d < e ? d : e))))
+#define MAX5(a, b, c, d, e) std::max({a, b, c, d, e})
+#define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})
 #define LERP(x, y, w) ((x) * (1 - (w)) + (y) * (w))
 #define REC(n) ((n) < 1 ? 1.0 : 1.0 / (n))
-#define UNFLOAT(n) (n >= 255 ? 255 : (n <= 0 ? 0 : uint8_t(n + 0.5)))
+#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
 
 typedef unsigned char* RGBA;
 typedef unsigned char* Line;

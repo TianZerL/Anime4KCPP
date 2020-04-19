@@ -32,7 +32,7 @@ void FilterProcessor::process()
         cv::bilateralFilter(img, tmpImg, 5, 35, 35);
 }
 
-void FilterProcessor::CASSharpening(cv::InputArray img)
+inline void FilterProcessor::CASSharpening(cv::InputArray img)
 {
     int lineStep = W * 3;
     changEachPixelBGR(img, [&](int i, int j, RGBA pixel, Line curLine) {
@@ -68,7 +68,7 @@ void FilterProcessor::CASSharpening(cv::InputArray img)
         });
 }
 
-void FilterProcessor::changEachPixelBGR(cv::InputArray _src,
+inline void FilterProcessor::changEachPixelBGR(cv::InputArray _src,
     const std::function<void(int, int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();

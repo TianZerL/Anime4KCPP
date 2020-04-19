@@ -1,5 +1,6 @@
 #pragma once
 #include<iostream>
+#include<sstream>
 #include<functional>
 
 #include<opencv2/opencv.hpp>
@@ -15,15 +16,32 @@
 #include<omp.h>
 #endif
 
-#define MAX3(a, b, c) (a > b && a > c ? a : (b > c ? b : c))
-#define MIN3(a, b, c) (a < b && a < c ? a : (b < c ? b : c))
-#define UNFLOAT(n) (n >= 255 ? 255 : (n <= 0 ? 0 : uint8_t(n + 0.5)))
+#ifdef _MSC_VER
+#ifndef DLL
+#define DLL __declspec(dllimport)
+#else
+#undef DLL
+#define DLL __declspec(dllexport)
+#endif
+#else
+#ifndef DLL
+#define DLL
+#endif
+#endif
+
+#define MAX3(a, b, c) std::max({a, b, c})
+#define MIN3(a, b, c) std::min({a, b, c})
+#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
 
 typedef unsigned char* RGBA;
 typedef unsigned char* Line;
 
+enum BGRA
+{
+    B = 0, G = 1, R = 2, A = 3
+};
 
-class Anime4K
+class DLL Anime4K
 {
 public:
     Anime4K(
@@ -39,6 +57,7 @@ public:
         uint8_t preFilters = 40,
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency());
+    void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
     void setVideoSaveInfo(const std::string& dstFile);
@@ -46,6 +65,8 @@ public:
     void saveVideo();
     void showInfo();
     void showFiltersInfo();
+    std::string getInfo();
+    std::string getFiltersInfo();
     void showImage();
     void process();
 private:
@@ -57,7 +78,6 @@ private:
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
 private:
-    const static int B = 0, G = 1, R = 2, A = 3;
     int orgH, orgW, H, W;
     double fps;
     size_t totalFrameCount, frameCount;
@@ -67,9 +87,9 @@ private:
     std::mutex videoMtx;
     std::condition_variable cnd;
 private://arguments
-    unsigned int mt;
     int ps, pcc;
     double sc, sg, zf;
     bool fm, vm, pre, post;
     uint8_t pref, postf;
+    unsigned int mt;
 };
