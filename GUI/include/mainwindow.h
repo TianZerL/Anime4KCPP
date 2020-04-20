@@ -15,6 +15,8 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QMutex>
 #include <QMetaType>
+#include <QClipboard>
+#include <QSettings>
 
 #define CORE_VERSION "1.3"
 #define VERSION "0.9"
@@ -22,6 +24,18 @@
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+
+enum Language
+{
+    en = 0, zh_cn = 1
+};
+
+enum ErrorType
+{
+    INPUT_NONASCII = 0, PROCESSING_LIST_EMPTY=1,
+    FILE_NOT_EXIST = 2, TYPE_NOT_IMAGE = 3,
+    TYPE_NOT_ADD = 4
+};
 
 enum FileType
 {
@@ -42,12 +56,18 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
+    void readConfig(QSettings *conf);
+    void writeConfig(QSettings *conf);
+    Language getLanguage(QString &lang);
+    QString getLanguage(Language lang);
+    void errorHandler(ErrorType err);
     void initTextBrowser();
     bool checkFFmpeg();
     QString formatSuffixList(const QString &&type, QString str);
     void initAnime4K(Anime4K *&anime4K);
     void releaseAnime4K(Anime4K *&anime4K);
     FileType fileType(QFileInfo &file);
+    QString getOutputPrefix();
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
@@ -90,14 +110,24 @@ private slots:
 
     void on_actionEnglish_triggered();
 
+    void on_pushButtonClearText_clicked();
+
+    void on_spinBoxFontSize_valueChanged(int arg1);
+
+    void on_fontComboBox_currentFontChanged(const QFont &f);
+
+    void on_pushButtonCopyText_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
     QStandardItemModel *tableModel;
     QMutex *mutex;
+    QSettings *config;
     quint64 totalTime;
     int imageCount;
     int videoCount;
     bool ffmpeg;
+    Language currLanguage;
 };
 #endif // MAINWINDOW_H

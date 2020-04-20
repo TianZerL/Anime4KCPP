@@ -20,49 +20,26 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
-      <widget class="QWidget" name="tabIndex">
+      <widget class="QWidget" name="tabHome">
        <attribute name="title">
-        <string>Index</string>
+        <string>Home</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
-         <widget class="QGroupBox" name="groupBoxOutput">
-          <property name="title">
-           <string>Output</string>
-          </property>
-          <layout class="QVBoxLayout" name="verticalLayout">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayoutOutput">
-             <item>
-              <widget class="QLabel" name="labelOutputPath">
-               <property name="text">
-                <string>output path:</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="lineEditOutputPath"/>
-             </item>
-             <item>
-              <widget class="QPushButton" name="pushButtonOutputPath">
-               <property name="text">
-                <string>pick</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="1" column="0">
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="1" column="0" colspan="3">
          <widget class="QGroupBox" name="groupBoxProcessingList">
           <property name="title">
            <string>processing list</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
            <item row="0" column="0" colspan="3">
-            <widget class="QTableView" name="tableViewProcessingList"/>
+            <widget class="QTableView" name="tableViewProcessingList">
+             <property name="toolTip">
+              <string>Drag and drop files here</string>
+             </property>
+             <property name="statusTip">
+              <string>Drag and drop files here(image or video)</string>
+             </property>
+            </widget>
            </item>
            <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutListControl">
@@ -112,60 +89,180 @@
           </layout>
          </widget>
         </item>
-        <item row="2" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayoutProcessing">
-          <item>
-           <widget class="QGroupBox" name="groupBoxProcessing">
-            <property name="title">
-             <string>processing</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <item>
-              <widget class="QPushButton" name="pushButtonStart">
+        <item row="2" column="0" rowspan="3">
+         <widget class="QGroupBox" name="groupBoxProcessing">
+          <property name="title">
+           <string>processing</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
+            <widget class="QPushButton" name="pushButtonStart">
+             <property name="statusTip">
+              <string>start processing</string>
+             </property>
+             <property name="text">
+              <string>start</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QGridLayout" name="gridLayoutLevel">
+             <item row="0" column="0">
+              <widget class="QRadioButton" name="radioButtonFast">
+               <property name="statusTip">
+                <string>fast preset, 2x upscaling</string>
+               </property>
                <property name="text">
-                <string>start</string>
+                <string>fast</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QRadioButton" name="radioButtonBalance">
+               <property name="statusTip">
+                <string>balance preset, 2x upscaling</string>
+               </property>
+               <property name="text">
+                <string>balance</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QRadioButton" name="radioButtonQuality">
+               <property name="statusTip">
+                <string>quality preset, 2x upscaling</string>
+               </property>
+               <property name="text">
+                <string>quality</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QRadioButton" name="radioButtonCustom">
+               <property name="text">
+                <string>custom</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="1" rowspan="3">
+         <widget class="QTextBrowser" name="textBrowserInfoOut">
+          <property name="statusTip">
+           <string>Log display</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <layout class="QVBoxLayout" name="verticalLayoutFont">
+          <item>
+           <widget class="QLabel" name="labelFontSize">
+            <property name="text">
+             <string>font size</string>
+            </property>
+            <property name="buddy">
+             <cstring>spinBoxFontSize</cstring>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinBoxFontSize"/>
+          </item>
+          <item>
+           <widget class="QFontComboBox" name="fontComboBox"/>
+          </item>
+         </layout>
+        </item>
+        <item row="3" column="2">
+         <spacer name="verticalSpacerFont">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>13</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="4" column="2">
+         <layout class="QHBoxLayout" name="horizontalLayoutTextButton">
+          <item>
+           <widget class="QPushButton" name="pushButtonClearText">
+            <property name="statusTip">
+             <string>Clear logs</string>
+            </property>
+            <property name="text">
+             <string>clear</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButtonCopyText">
+            <property name="statusTip">
+             <string>Copy logs</string>
+            </property>
+            <property name="text">
+             <string>copy</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="0" column="0" colspan="3">
+         <widget class="QGroupBox" name="groupBoxOutput">
+          <property name="title">
+           <string>Output</string>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutOutput">
+             <item>
+              <widget class="QLabel" name="labelOutputPath">
+               <property name="statusTip">
+                <string>Path for the output files</string>
+               </property>
+               <property name="text">
+                <string>output path:</string>
                </property>
               </widget>
              </item>
              <item>
-              <layout class="QGridLayout" name="gridLayoutLevel">
-               <item row="0" column="0">
-                <widget class="QRadioButton" name="radioButtonFast">
-                 <property name="text">
-                  <string>fast</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QRadioButton" name="radioButtonBalance">
-                 <property name="text">
-                  <string>balance</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QRadioButton" name="radioButtonQuality">
-                 <property name="text">
-                  <string>quality</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QRadioButton" name="radioButtonCustom">
-                 <property name="text">
-                  <string>custom</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
+              <widget class="QLineEdit" name="lineEditOutputPath"/>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonOutputPath">
+               <property name="text">
+                <string>pick</string>
+               </property>
+              </widget>
              </item>
             </layout>
-           </widget>
-          </item>
-          <item>
-           <widget class="QTextBrowser" name="textBrowserInfoOut"/>
-          </item>
-         </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutOutputPrefix">
+             <item>
+              <widget class="QLabel" name="labelOutputPrefix">
+               <property name="text">
+                <string>output prefix:</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditOutputPrefix">
+               <property name="statusTip">
+                <string>Prefix for the output files</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -190,7 +287,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEditImageSuffix"/>
+              <widget class="QLineEdit" name="lineEditImageSuffix">
+               <property name="statusTip">
+                <string>Image suffix</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -204,7 +305,11 @@
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="lineEditVideoSuffix"/>
+              <widget class="QLineEdit" name="lineEditVideoSuffix">
+               <property name="statusTip">
+                <string>Video suffix</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -219,6 +324,9 @@
           <layout class="QGridLayout" name="gridLayout_6">
            <item row="0" column="0">
             <widget class="QTabWidget" name="tabWidgetFilters">
+             <property name="statusTip">
+              <string/>
+             </property>
              <property name="currentIndex">
               <number>1</number>
              </property>
@@ -229,6 +337,9 @@
               <layout class="QVBoxLayout" name="verticalLayout_5">
                <item>
                 <widget class="QCheckBox" name="checkBoxEnablePreprocessing">
+                 <property name="statusTip">
+                  <string>Apply filters for the origin</string>
+                 </property>
                  <property name="text">
                   <string>enable preprocessing</string>
                  </property>
@@ -251,6 +362,9 @@
                 <layout class="QVBoxLayout" name="verticalLayoutPreprocessing">
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreMedian">
+                   <property name="statusTip">
+                    <string>anti-aliasing, denoise</string>
+                   </property>
                    <property name="text">
                     <string>Median blur</string>
                    </property>
@@ -258,6 +372,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreMean">
+                   <property name="statusTip">
+                    <string>anti-aliasing, denoise</string>
+                   </property>
                    <property name="text">
                     <string>Mean blur</string>
                    </property>
@@ -265,6 +382,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreCAS">
+                   <property name="statusTip">
+                    <string>adaptive sharpening(recommend)</string>
+                   </property>
                    <property name="text">
                     <string>CAS Sharpening</string>
                    </property>
@@ -272,6 +392,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreGaussianWeak">
+                   <property name="statusTip">
+                    <string>anti-aliasing</string>
+                   </property>
                    <property name="text">
                     <string>Gaussian blur weak</string>
                    </property>
@@ -279,6 +402,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreGaussian">
+                   <property name="statusTip">
+                    <string>anti-aliasing</string>
+                   </property>
                    <property name="text">
                     <string>Gaussian blur</string>
                    </property>
@@ -286,6 +412,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreBilateral">
+                   <property name="statusTip">
+                    <string>denoise</string>
+                   </property>
                    <property name="text">
                     <string>Bilateral filter</string>
                    </property>
@@ -293,6 +422,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPreBilateralFaster">
+                   <property name="statusTip">
+                    <string>denoise</string>
+                   </property>
                    <property name="text">
                     <string>Bilateral filter faster</string>
                    </property>
@@ -309,8 +441,11 @@
               <layout class="QVBoxLayout" name="verticalLayout_6">
                <item>
                 <widget class="QCheckBox" name="checkBoxEnablePostprocessing">
+                 <property name="statusTip">
+                  <string>Apply filters for the result</string>
+                 </property>
                  <property name="text">
-                  <string>enable preprocessing</string>
+                  <string>enable postprocessing</string>
                  </property>
                 </widget>
                </item>
@@ -331,6 +466,9 @@
                 <layout class="QVBoxLayout" name="verticalLayoutPostprocessing">
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostMedian">
+                   <property name="statusTip">
+                    <string>anti-aliasing, denoise</string>
+                   </property>
                    <property name="text">
                     <string>Median blur</string>
                    </property>
@@ -338,6 +476,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostMean">
+                   <property name="statusTip">
+                    <string>anti-aliasing, denoise</string>
+                   </property>
                    <property name="text">
                     <string>Mean blur</string>
                    </property>
@@ -345,6 +486,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostCAS">
+                   <property name="statusTip">
+                    <string>adaptive sharpening</string>
+                   </property>
                    <property name="text">
                     <string>CAS Sharpening</string>
                    </property>
@@ -352,6 +496,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostGaussianWeak">
+                   <property name="statusTip">
+                    <string>anti-aliasing(recommend, for files &lt;1080p)</string>
+                   </property>
                    <property name="text">
                     <string>Gaussian blur weak</string>
                    </property>
@@ -359,6 +506,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostGaussian">
+                   <property name="statusTip">
+                    <string>anti-aliasing(recommend, for files &gt;=1080p)</string>
+                   </property>
                    <property name="text">
                     <string>Gaussian blur</string>
                    </property>
@@ -366,6 +516,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostBilateral">
+                   <property name="statusTip">
+                    <string>denoise(recommend, for image)</string>
+                   </property>
                    <property name="text">
                     <string>Bilateral filter</string>
                    </property>
@@ -373,6 +526,9 @@
                  </item>
                  <item>
                   <widget class="QCheckBox" name="checkBoxPostBilateralFaster">
+                   <property name="statusTip">
+                    <string>denoise(recommend, for video)</string>
+                   </property>
                    <property name="text">
                     <string>Bilateral filter faster</string>
                    </property>
@@ -397,6 +553,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutPasses">
              <item>
               <widget class="QLabel" name="labelPasses">
+               <property name="statusTip">
+                <string>Passes for processing</string>
+               </property>
                <property name="text">
                 <string>passes</string>
                </property>
@@ -411,6 +570,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutPushColorCount">
              <item>
               <widget class="QLabel" name="labelPushColorCount">
+               <property name="statusTip">
+                <string>Limit the number of color pushes</string>
+               </property>
                <property name="text">
                 <string>push color count</string>
                </property>
@@ -425,6 +587,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutPushColorStrength">
              <item>
               <widget class="QLabel" name="labelPushColorStrength">
+               <property name="statusTip">
+                <string>Strength for pushing color,range 0 to 1,higher for thinner edge</string>
+               </property>
                <property name="text">
                 <string>push color strength</string>
                </property>
@@ -439,6 +604,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutPushGradientStrength">
              <item>
               <widget class="QLabel" name="labelPushPushGradientStrength">
+               <property name="statusTip">
+                <string>Strength for pushing gradient,range 0 to 1,higher for sharper edge</string>
+               </property>
                <property name="text">
                 <string>push gradient strength</string>
                </property>
@@ -453,6 +621,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutZoomFactor">
              <item>
               <widget class="QLabel" name="labelZoomFactor">
+               <property name="statusTip">
+                <string>Upscaling ratio for resizing</string>
+               </property>
                <property name="text">
                 <string>upscaling ratio</string>
                </property>
@@ -467,6 +638,9 @@
             <layout class="QHBoxLayout" name="horizontalLayoutThreads">
              <item>
               <widget class="QLabel" name="labelThreads">
+               <property name="statusTip">
+                <string>Theads for video processing</string>
+               </property>
                <property name="text">
                 <string>threads count</string>
                </property>
@@ -479,6 +653,9 @@
            </item>
            <item>
             <widget class="QCheckBox" name="checkBoxFastMode">
+             <property name="statusTip">
+              <string>Faster but maybe low quality</string>
+             </property>
              <property name="text">
               <string>fast mode</string>
              </property>
@@ -490,7 +667,7 @@
         <item row="2" column="0" colspan="2">
          <widget class="QGroupBox" name="groupBoxPreview">
           <property name="title">
-           <string>preview</string>
+           <string>preview for test</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
            <item row="0" column="0">
@@ -507,6 +684,9 @@
              </item>
              <item>
               <widget class="QPushButton" name="pushButtonPreview">
+               <property name="statusTip">
+                <string>Quickly preview for testing arguments</string>
+               </property>
                <property name="text">
                 <string>preview</string>
                </property>
@@ -546,8 +726,21 @@
     <addaction name="actionEnglish"/>
     <addaction name="actionChinese"/>
    </widget>
+   <widget class="QMenu" name="menuOption">
+    <property name="title">
+     <string>Option</string>
+    </property>
+    <widget class="QMenu" name="menuGUI">
+     <property name="title">
+      <string>GUI</string>
+     </property>
+     <addaction name="actionQuit_confirmation"/>
+    </widget>
+    <addaction name="menuGUI"/>
+   </widget>
    <addaction name="menuMenu"/>
    <addaction name="menuLanguage"/>
+   <addaction name="menuOption"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout">
@@ -568,6 +761,17 @@
   <action name="actionChinese">
    <property name="text">
     <string>Chinese</string>
+   </property>
+  </action>
+  <action name="actionQuit_confirmation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Quit confirmation</string>
    </property>
   </action>
  </widget>
