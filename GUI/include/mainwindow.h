@@ -13,13 +13,14 @@
 #include <QFileInfo>
 #include <QMimeData>
 #include <QtConcurrent/QtConcurrent>
-#include <QMutex>
 #include <QMetaType>
 #include <QClipboard>
 #include <QSettings>
 
-#define CORE_VERSION "1.3"
-#define VERSION "0.9"
+#include <opencv2/opencv.hpp>
+
+#define CORE_VERSION "1.3.2"
+#define VERSION "1.1"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -39,7 +40,7 @@ enum ErrorType
 
 enum FileType
 {
-    IMAGE = 0, VIDEO = 1, ERROR=2
+    IMAGE = 0, VIDEO = 1, ERROR_TYPE=2
 };
 
 class MainWindow : public QMainWindow
@@ -118,16 +119,22 @@ private slots:
 
     void on_pushButtonCopyText_clicked();
 
+    void on_pushButtonPreviewOrgin_clicked();
+
+    void on_pushButtonPreviewOnlyResize_clicked();
+
+    void on_pushButtonPickFolder_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
     QStandardItemModel *tableModel;
-    QMutex *mutex;
     QSettings *config;
     quint64 totalTime;
     int imageCount;
     int videoCount;
     bool ffmpeg;
+    unsigned int totalTaskCount;
     Language currLanguage;
 };
 #endif // MAINWINDOW_H

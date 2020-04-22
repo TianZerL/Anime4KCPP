@@ -1,4 +1,4 @@
-project(Anime4KCLI)
+project(Anime4KCPP_CLI)
 
 aux_source_directory(src SOURCE)
 

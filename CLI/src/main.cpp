@@ -2,7 +2,6 @@
 #include<cmdline.h>
 
 #include<iostream>
-#include<ctime>
 
 
 bool checkFFmpeg()
@@ -101,10 +100,10 @@ false, 40, cmdline::range(1, 127));
         anime4k.showFiltersInfo();
 
         std::cout << "Processing..." << std::endl;
-        time_t s = std::clock();
+        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
         anime4k.process();
-        time_t e = std::clock();
-        std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC << " s" << std::endl;
+        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
 
         if (preview)
             anime4k.showImage();
@@ -138,10 +137,10 @@ false, 40, cmdline::range(1, 127));
         anime4k.showFiltersInfo();
 
         std::cout << "Processing..." << std::endl;
-        time_t s = std::clock();
+        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
         anime4k.process();
-        time_t e = std::clock();
-        std::cout << "Total process time: " << double(e - s) / CLOCKS_PER_SEC / 60 << " min" << std::endl;
+        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
         anime4k.saveVideo();
 

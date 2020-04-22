@@ -34,34 +34,34 @@ void FilterProcessor::process()
 
 inline void FilterProcessor::CASSharpening(cv::InputArray img)
 {
-    int lineStep = W * 3;
-    changEachPixelBGR(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        int jp = j < (W - 1) * 3 ? 3 : 0;
-        int jn = j > 3 ? -3 : 0;
+    const int lineStep = W * 3;
+    changEachPixelBGR(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
+        const int jp = j < (W - 1) * 3 ? 3 : 0;
+        const int jn = j > 3 ? -3 : 0;
 
-        Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
-        Line cLineData = curLine;
-        Line nLineData = i > 0 ? curLine - lineStep : curLine;
+        const Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const Line cLineData = curLine;
+        const Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        RGBA tc = nLineData + j;
-        RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-        RGBA bc = pLineData + j;
+        const RGBA tc = nLineData + j;
+        const RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const RGBA bc = pLineData + j;
 
-        uint8_t minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-        uint8_t maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-        uint8_t minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-        uint8_t maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-        uint8_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-        uint8_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
+        const uint8_t minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
+        const uint8_t maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
+        const uint8_t minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
+        const uint8_t maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
+        const uint8_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
+        const uint8_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
 
-        float peak = LERP(-0.125, -0.2, 1);
-        float wR = peak * sqrt(float(MIN(minR, 255 - maxR)) * REC(maxR));
-        float wG = peak * sqrt(float(MIN(minG, 255 - maxG)) * REC(maxG));
-        float wB = peak * sqrt(float(MIN(minB, 255 - maxB)) * REC(maxB));
+        const float peak = LERP(-0.125, -0.2, 1);
+        const float wR = peak * sqrt(float(MIN(minR, 255 - maxR)) * REC(maxR));
+        const float wG = peak * sqrt(float(MIN(minG, 255 - maxG)) * REC(maxG));
+        const float wB = peak * sqrt(float(MIN(minB, 255 - maxB)) * REC(maxB));
 
-        float r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1 + 4 * wR);
-        float g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1 + 4 * wG);
-        float b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1 + 4 * wB);
+        const float r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1 + 4 * wR);
+        const float g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1 + 4 * wG);
+        const float b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1 + 4 * wB);
         pixel[R] = UNFLOAT(r);
         pixel[G] = UNFLOAT(g);
         pixel[B] = UNFLOAT(b);
@@ -69,7 +69,7 @@ inline void FilterProcessor::CASSharpening(cv::InputArray img)
 }
 
 inline void FilterProcessor::changEachPixelBGR(cv::InputArray _src,
-    const std::function<void(int, int, RGBA, Line)>&& callBack)
+    const std::function<void(const int, const int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();
     cv::Mat tmp;

@@ -28,25 +28,22 @@
         <item row="1" column="0" colspan="3">
          <widget class="QGroupBox" name="groupBoxProcessingList">
           <property name="title">
-           <string>processing list</string>
+           <string>Processing list</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
-           <item row="0" column="0" colspan="3">
-            <widget class="QTableView" name="tableViewProcessingList">
-             <property name="toolTip">
-              <string>Drag and drop files here</string>
-             </property>
-             <property name="statusTip">
-              <string>Drag and drop files here(image or video)</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutListControl">
              <item>
               <widget class="QPushButton" name="pushButtonInputPath">
                <property name="text">
                 <string>pick files</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonPickFolder">
+               <property name="text">
+                <string>pick folder</string>
                </property>
               </widget>
              </item>
@@ -79,10 +76,27 @@
              </property>
             </spacer>
            </item>
-           <item row="1" column="2">
+           <item row="0" column="0" colspan="4">
+            <widget class="QTableView" name="tableViewProcessingList">
+             <property name="toolTip">
+              <string>Drag and drop files here</string>
+             </property>
+             <property name="statusTip">
+              <string>Drag and drop files here(image or video), and you can edit the ouput file name or path here</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
             <widget class="QProgressBar" name="progressBarProcessingList">
              <property name="value">
               <number>24</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="labelTotalTaskCount">
+             <property name="text">
+              <string>Total: 0 </string>
              </property>
             </widget>
            </item>
@@ -92,7 +106,7 @@
         <item row="2" column="0" rowspan="3">
          <widget class="QGroupBox" name="groupBoxProcessing">
           <property name="title">
-           <string>processing</string>
+           <string>Processing</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
            <item>
@@ -274,7 +288,7 @@
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupBoxSuffix">
           <property name="title">
-           <string>suffix</string>
+           <string>Suffix</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
@@ -319,7 +333,7 @@
         <item row="0" column="1" rowspan="2">
          <widget class="QGroupBox" name="groupBoxFilters">
           <property name="title">
-           <string>filters</string>
+           <string>Filters</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_6">
            <item row="0" column="0">
@@ -546,7 +560,7 @@
         <item row="1" column="0">
          <widget class="QGroupBox" name="groupBoxArguments">
           <property name="title">
-           <string>arguments</string>
+           <string>Arguments</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_12">
            <item>
@@ -667,7 +681,7 @@
         <item row="2" column="0" colspan="2">
          <widget class="QGroupBox" name="groupBoxPreview">
           <property name="title">
-           <string>preview for test</string>
+           <string>Preview for test</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
            <item row="0" column="0">
@@ -689,6 +703,20 @@
                </property>
                <property name="text">
                 <string>preview</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonPreviewOnlyResize">
+               <property name="text">
+                <string>only resize</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonPreviewOrgin">
+               <property name="text">
+                <string>orgin image</string>
                </property>
               </widget>
              </item>

@@ -307,24 +307,24 @@ void Anime4K::process()
 
 inline void Anime4K::getGray(cv::InputArray img)
 {
-    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        pixel[A] = 0.299 * pixel[R] + 0.587 * pixel[G] + 0.114 * pixel[B];
+    changEachPixelBGRA(img, [](const int i, const int j, RGBA pixel, Line curLine) {
+        pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
         });
 }
 
 inline void Anime4K::pushColor(cv::InputArray img)
 {
-    int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        int jp = j < (W - 1) * 4 ? 4 : 0;
-        int jn = j > 4 ? -4 : 0;
-        Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
-        Line cLineData = curLine;
-        Line nLineData = i > 0 ? curLine - lineStep : curLine;
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
+        const int jp = j < (W - 1) * 4 ? 4 : 0;
+        const int jn = j > 4 ? -4 : 0;
+        const Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const Line cLineData = curLine;
+        const Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
-        RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-        RGBA bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+        const RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
+        const RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const RGBA bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
 
         uint8_t maxD, minL;
 
@@ -386,21 +386,22 @@ inline void Anime4K::getGradient(cv::InputArray img)
 {
     if (!fm)
     {
-        int lineStep = W * 4;
-        changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
+        const int lineStep = W * 4;
+        changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
             if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
                 return;
-            Line pLineData = curLine + lineStep;
-            Line cLineData = curLine;
-            Line nLineData = curLine - lineStep;
-            int jp = 4, jn = -4;
-            float GradX =
+            const Line pLineData = curLine + lineStep;
+            const Line cLineData = curLine;
+            const Line nLineData = curLine - lineStep;
+            const int jp = 4, jn = -4;
+
+            int gradX =
                 (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
                 (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
-            float GradY =
+            int gradY =
                 (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
-            float Grad = sqrt(GradX * GradX + GradY * GradY);
+            float Grad = sqrt(gradX * gradX + gradY * gradY);
 
             pixel[A] = 255 - UNFLOAT(Grad);
             });
@@ -426,18 +427,18 @@ inline void Anime4K::getGradient(cv::InputArray img)
 
 inline void Anime4K::pushGradient(cv::InputArray img)
 {
-    int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](int i, int j, RGBA pixel, Line curLine) {
-        int jp = j < (W - 1) * 4 ? 4 : 0;
-        int jn = j > 4 ? -4 : 0;
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
+        const int jp = j < (W - 1) * 4 ? 4 : 0;
+        const int jn = j > 4 ? -4 : 0;
 
-        Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
-        Line cLineData = curLine;
-        Line nLineData = i > 0 ? curLine - lineStep : curLine;
+        const Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const Line cLineData = curLine;
+        const Line nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
-        RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-        RGBA bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+        const RGBA tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
+        const RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const RGBA bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
 
         uint8_t maxD, minL;
 
@@ -492,7 +493,7 @@ inline void Anime4K::pushGradient(cv::InputArray img)
 }
 
 inline void Anime4K::changEachPixelBGRA(cv::InputArray _src,
-    const std::function<void(int, int, RGBA, Line)>&& callBack)
+    const std::function<void(const int, const int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();
     cv::Mat tmp;
@@ -520,7 +521,7 @@ inline void Anime4K::changEachPixelBGRA(cv::InputArray _src,
     tmp.copyTo(src);
 }
 
-inline void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)
+inline void Anime4K::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
     mc[R] = mc[R] * (1 - sc) + ((a[R] + b[R] + c[R]) / 3.0) * sc;
     mc[G] = mc[G] * (1 - sc) + ((a[G] + b[G] + c[G]) / 3.0) * sc;
@@ -528,7 +529,7 @@ inline void Anime4K::getLightest(RGBA mc, RGBA a, RGBA b, RGBA c)
     mc[A] = mc[A] * (1 - sc) + ((a[A] + b[A] + c[A]) / 3.0) * sc;
 }
 
-inline void Anime4K::getAverage(RGBA mc, RGBA a, RGBA b, RGBA c)
+inline void Anime4K::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
     mc[R] = mc[R] * (1 - sg) + ((a[R] + b[R] + c[R]) / 3.0) * sg;
     mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg;

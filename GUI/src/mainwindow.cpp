@@ -10,25 +10,21 @@ MainWindow::MainWindow(QWidget *parent)
     translator = new QTranslator(this);
     //inital textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
+    ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
     ui->spinBoxFontSize->setRange(9,30);
-    ui->spinBoxFontSize->setValue(11);
+    ui->spinBoxFontSize->setValue(9);
     initTextBrowser();
     //accept drops
     this->setAcceptDrops(true);
-//    //set quality check
-//    ui->radioButtonQuality->click();
     //inital tableView
     tableModel = new QStandardItemModel(this);
     tableModel->setColumnCount(5);
     tableModel->setHorizontalHeaderLabels({"Input file",
                                            "Output file",
-                                           "full path",
-                                           "output path",
+                                           "Full path",
+                                           "Output path",
                                            "State"});
     ui->tableViewProcessingList->setModel(tableModel);
-//    //inital suffix processing
-//    ui->lineEditImageSuffix->setText("png:jpg:jpeg:bmp");
-//    ui->lineEditVideoSuffix->setText("mp4:mkv:avi:m4v:flv:3gp:wmv:mov");
     //inital processBar
     ui->progressBarProcessingList->reset();
     ui->progressBarProcessingList->setRange(0, 100);
@@ -38,10 +34,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->doubleSpinBoxPushColorStrength->setRange(0.0,1.0);
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0,1.0);
     ui->doubleSpinBoxZoomFactor->setRange(1.0,10.0);
-    //inital mutex
-    mutex = new QMutex;
     //inital time and count
-    totalTime = imageCount = videoCount = 0;
+    totalTaskCount = totalTime = imageCount = videoCount = 0;
     //inital ffmpeg
     ffmpeg = checkFFmpeg();
     //inital config
@@ -54,7 +48,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete mutex;
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -114,7 +107,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     {
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo)==ERROR){
+        if (fileType(fileInfo)==ERROR_TYPE){
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
@@ -131,17 +124,24 @@ void MainWindow::dropEvent(QDropEvent *event)
         else
             outputPath = new QStandardItem(ui->lineEditOutputPath->text());
         tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+
+        totalTaskCount++;
     }
+
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 
     if (flag)
     {
         errorHandler(INPUT_NONASCII);
     }
+
 }
 
 void MainWindow::readConfig(QSettings *conf)
 {
     QString language = conf->value("/GUI/language","en").toString();
+    bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom","en").toBool();
+
     QString imageSuffix = conf->value("/Suffix/image","png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video","mp4:mkv:avi:m4v:flv:3gp:wmv:mov").toString();
     QString outputPath = conf->value("/Output/path",QApplication::applicationDirPath()+"/output").toString();
@@ -173,6 +173,7 @@ void MainWindow::readConfig(QSettings *conf)
     bool postBilateral = conf->value("/Postprocessing/BilateralFilter",true).toBool();
     bool postBilateralFaster = conf->value("/Postprocessing/BilateralFilterFaster",false).toBool();
 
+    //GUI options
     //set language
     switch (getLanguage(language))
     {
@@ -183,6 +184,7 @@ void MainWindow::readConfig(QSettings *conf)
         on_actionChinese_triggered();
         break;
     }
+    ui->actionQuit_confirmation->setChecked(quitConfirmatiom);
     //suffix
     ui->lineEditImageSuffix->setText(imageSuffix);
     ui->lineEditVideoSuffix->setText(videoSuffix);
@@ -220,6 +222,8 @@ void MainWindow::readConfig(QSettings *conf)
 void MainWindow::writeConfig(QSettings *conf)
 {
     QString language = getLanguage(currLanguage);
+    bool quitConfirmatiom = ui->actionQuit_confirmation->isChecked();
+
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
     QString outputPath = ui->lineEditOutputPath->text();
@@ -252,6 +256,8 @@ void MainWindow::writeConfig(QSettings *conf)
     bool postBilateralFaster = ui->checkBoxPostBilateralFaster->isChecked();
 
     conf->setValue("/GUI/language",language);
+    conf->setValue("/GUI/quitConfirmatiom",quitConfirmatiom);
+
     conf->setValue("/Suffix/image",imageSuffix);
     conf->setValue("/Suffix/video",videoSuffix);
     conf->setValue("/Output/path",outputPath);
@@ -456,7 +462,7 @@ FileType MainWindow::fileType(QFileInfo &file)
         return IMAGE;
     if (videoSuffix.contains(file.suffix(), Qt::CaseInsensitive))
         return VIDEO;
-    return ERROR;
+    return ERROR_TYPE;
 }
 
 QString MainWindow::getOutputPrefix()
@@ -543,7 +549,7 @@ void MainWindow::on_pushButtonInputPath_clicked()
 
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo)==ERROR){
+        if (fileType(fileInfo)==ERROR_TYPE){
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
@@ -560,12 +566,18 @@ void MainWindow::on_pushButtonInputPath_clicked()
         else
             outputPath = new QStandardItem(ui->lineEditOutputPath->text());
         tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+
+        totalTaskCount++;
     }
+
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 
     if (flag)
     {
         errorHandler(INPUT_NONASCII);
     }
+
+
 }
 
 void MainWindow::on_pushButtonOutputPath_clicked()
@@ -576,11 +588,17 @@ void MainWindow::on_pushButtonOutputPath_clicked()
 void MainWindow::on_pushButtonClear_clicked()
 {
     tableModel->removeRows(0, tableModel->rowCount());
+
+    totalTaskCount = 0;
+    ui->labelTotalTaskCount->setText("Total: 0 ");
 }
 
 void MainWindow::on_pushButtonDelete_clicked()
 {
     tableModel->removeRow(ui->tableViewProcessingList->currentIndex().row());
+
+    totalTaskCount--;
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 }
 
 void MainWindow::on_radioButtonFast_clicked()
@@ -618,11 +636,24 @@ void MainWindow::on_radioButtonQuality_clicked()
     ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
+    //preprocessing
     ui->checkBoxEnablePreprocessing->setChecked(true);
+    ui->checkBoxPreMedian->setChecked(false);
+    ui->checkBoxPreMean->setChecked(false);
     ui->checkBoxPreCAS->setChecked(true);
+    ui->checkBoxPreGaussianWeak->setChecked(false);
+    ui->checkBoxPreGaussian->setChecked(false);
+    ui->checkBoxPreBilateral->setChecked(false);
+    ui->checkBoxPreBilateralFaster->setChecked(false);
+    //postprocessing
     ui->checkBoxEnablePostprocessing->setChecked(true);
+    ui->checkBoxPostMedian->setChecked(false);
+    ui->checkBoxPostMean->setChecked(false);
+    ui->checkBoxPostCAS->setChecked(false);
     ui->checkBoxPostGaussianWeak->setChecked(true);
+    ui->checkBoxPostGaussian->setChecked(false);
     ui->checkBoxPostBilateral->setChecked(true);
+    ui->checkBoxPostBilateralFaster->setChecked(false);
 }
 
 void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
@@ -697,7 +728,7 @@ void MainWindow::on_pushButtonPreview_clicked()
     case VIDEO:
         errorHandler(TYPE_NOT_IMAGE);
         break;
-    case ERROR:
+    case ERROR_TYPE:
         errorHandler(TYPE_NOT_ADD);
         break;
     }
@@ -709,10 +740,15 @@ void MainWindow::on_pushButtonPreview_clicked()
 
 void MainWindow::on_pushButtonPreviewPick_clicked()
 {
-    ui->lineEditPreview->setText(QFileDialog::getOpenFileName(this, tr("pick files"), "./",
-                                                              formatSuffixList(tr("image"),ui->lineEditImageSuffix->text())+
-                                                              formatSuffixList(tr("video"),ui->lineEditVideoSuffix->text()))
-                                 );
+    QString fileName = QFileDialog::getOpenFileName(this, tr("pick files"), "./",
+                                                    formatSuffixList(tr("image"),ui->lineEditImageSuffix->text())+
+                                                    formatSuffixList(tr("video"),ui->lineEditVideoSuffix->text()));
+    if (fileName.contains(QRegExp("[^\\x00-\\xff]")))
+    {
+        errorHandler(INPUT_NONASCII);
+        return;
+    }
+    ui->lineEditPreview->setText(fileName);
 }
 
 void MainWindow::on_pushButtonStart_clicked()
@@ -803,11 +839,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 emit cm.done(image.second, 1.0-((imageCount-1)/imageTotal),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
-                {
-                    QMutexLocker locker(mutex);
-                    imageCount--;
-                }
-
+                imageCount--;
             }
         }
         if (videoCount)
@@ -829,6 +861,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 {
                     emit cm.error(video.second,QString(err));
                 }
+
                 if(ffmpeg)
                 {
                     if(!QProcess::execute("ffmpeg -i \"tmp_out.mp4\" -i \"" + video.first.first + "\" -c copy -map 0 -map 1:1 -y \"" + video.first.second + "\""))
@@ -837,7 +870,7 @@ void MainWindow::on_pushButtonStart_clicked()
                         const char* command = "del /q tmp_out.mp4";
 #elif defined(__linux)
                         const char* command = "rm tmp_out.mp4";
-#endif // SYSTEM
+#endif // CURRENT SYSTEM
                         system(command);
                     }
                 }
@@ -845,11 +878,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 emit cm.done(video.second, 1.0-((videoCount-1)/videoTotal),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
-                {
-                    QMutexLocker locker(mutex);
-                    videoCount--;
-                }
-
+                videoCount--;
             }
         }
 
@@ -914,4 +943,84 @@ void MainWindow::on_pushButtonCopyText_clicked()
                             tr("Notice"),
                             tr("Log has been copied to the clipboard"),
                             QMessageBox::Ok);
+}
+
+void MainWindow::on_pushButtonPreviewOrgin_clicked()
+{
+    QString filePath =  ui->lineEditPreview->text();
+    if (filePath.isEmpty())
+    {
+        errorHandler(FILE_NOT_EXIST);
+        return;
+    }
+    QPixmap orginImage(filePath);
+    QWidget *orginImageWidget = new QWidget(this,Qt::Window);
+    orginImageWidget->setAttribute(Qt::WA_DeleteOnClose);
+    QLabel *orginImageLable = new QLabel(orginImageWidget);
+    orginImageLable->setPixmap(orginImage);
+    orginImageWidget->setWindowTitle("orgin image");
+    orginImageWidget->setFixedSize(orginImage.size());
+    orginImageWidget->show();
+}
+
+void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
+{
+    QString filePath =  ui->lineEditPreview->text();
+    if (filePath.isEmpty())
+    {
+        errorHandler(FILE_NOT_EXIST);
+        return;
+    }
+    //read image by opencv for resizing by CUBIC
+    double factor = ui->doubleSpinBoxZoomFactor->value();
+    cv::Mat orgImg = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
+    cv::resize(orgImg, orgImg, cv::Size(0,0), factor,factor, cv::INTER_CUBIC);
+    //convert to QImage
+    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, QImage::Format_BGR888);
+    QPixmap resizedImage(QPixmap::fromImage(orginImage));
+    //show
+    QWidget *resizedImageWidget = new QWidget(this,Qt::Window);
+    resizedImageWidget->setAttribute(Qt::WA_DeleteOnClose);
+    QLabel *resizedImageLable = new QLabel(resizedImageWidget);
+    resizedImageLable->setPixmap(resizedImage);
+    resizedImageWidget->setWindowTitle("resized image");
+    resizedImageWidget->setFixedSize(resizedImage.size());
+    resizedImageWidget->show();
+}
+
+void MainWindow::on_pushButtonPickFolder_clicked()
+{
+    QString folderPath = QFileDialog::getExistingDirectory(this,tr("output directory"),"./");
+    QDir folder(folderPath);
+    QFileInfoList fileInfoList = folder.entryInfoList(QDir::Files);
+
+    QStandardItem *inputFile;
+    QStandardItem *outputFile;
+    QStandardItem *inputPath;
+    QStandardItem *outputPath;
+    QStandardItem *state;
+
+    for (QFileInfo &fileInfo : fileInfoList)
+    {
+        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (fileType(fileInfo) != ERROR_TYPE))
+        {
+            inputFile = new QStandardItem(fileInfo.fileName());
+            if(fileType(fileInfo)==VIDEO)
+                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mp4");
+            else
+                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
+            inputPath = new QStandardItem(fileInfo.filePath());
+            state = new QStandardItem(tr("ready"));
+            if (ui->lineEditOutputPath->text().isEmpty())
+                outputPath = new QStandardItem(QDir::currentPath());
+            else
+                outputPath = new QStandardItem(ui->lineEditOutputPath->text());
+            tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+
+            totalTaskCount++;
+        }
+    }
+
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
+
 }
