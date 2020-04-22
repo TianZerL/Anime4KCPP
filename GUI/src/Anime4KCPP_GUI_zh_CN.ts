@@ -453,7 +453,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="776"/>
-        <location filename="mainwindow.cpp" line="894"/>
+        <location filename="mainwindow.cpp" line="895"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
@@ -513,7 +513,7 @@
     <message>
         <location filename="mainwindow.cpp" line="121"/>
         <location filename="mainwindow.cpp" line="563"/>
-        <location filename="mainwindow.cpp" line="1013"/>
+        <location filename="mainwindow.cpp" line="1014"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
@@ -559,12 +559,12 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="502"/>
-        <location filename="mainwindow.cpp" line="943"/>
+        <location filename="mainwindow.cpp" line="944"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="944"/>
+        <location filename="mainwindow.cpp" line="945"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日志已拷贝至剪切板</translation>
     </message>
@@ -596,7 +596,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="585"/>
-        <location filename="mainwindow.cpp" line="993"/>
+        <location filename="mainwindow.cpp" line="994"/>
         <source>output directory</source>
         <translation>输出文件夹</translation>
     </message>

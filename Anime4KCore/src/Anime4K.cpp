@@ -236,6 +236,7 @@ void Anime4K::process()
 {
     if (!vm)
     {
+        int tmpPcc = this->pcc;
         cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
         if (pre)
             FilterProcessor(dstImg, pref).process();
@@ -243,7 +244,7 @@ void Anime4K::process()
         for (int i = 0; i < ps; i++)
         {
             getGray(dstImg);
-            if (sc && (pcc-- > 0))
+            if (sc && (tmpPcc-- > 0))
                 pushColor(dstImg);
             getGradient(dstImg);
             pushGradient(dstImg);
@@ -268,7 +269,7 @@ void Anime4K::process()
                 break;
             }
 
-            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, pcc = this->pcc]()mutable
+            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, tmpPcc = this->pcc]()mutable
             {
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
                 if (pre)
@@ -277,7 +278,7 @@ void Anime4K::process()
                 for (int i = 0; i < ps; i++)
                 {
                     getGray(dstFrame);
-                    if (sc && (pcc-- > 0))
+                    if (sc && (tmpPcc-- > 0))
                         pushColor(dstFrame);
                     getGradient(dstFrame);
                     pushGradient(dstFrame);

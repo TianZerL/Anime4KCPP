@@ -510,7 +510,7 @@ void MainWindow::solt_allDone_remindUser()
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
     ui->pushButtonStart->setEnabled(true);
-    tableModel->removeRows(0, tableModel->rowCount());
+    on_pushButtonClear_clicked();
 }
 
 void MainWindow::solt_showInfo_renewTextBrowser(std::string info)
@@ -802,8 +802,7 @@ void MainWindow::on_pushButtonStart_clicked()
             }
         }
 
-        double imageTotal = imageCount;
-        double videoTotal = videoCount;
+        double total = imageCount + videoCount;
 
         Communicator cm;
         connect(&cm,SIGNAL(done(int, double, quint64)),this,SLOT(solt_done_renewState(int, double, quint64)));
@@ -836,10 +835,11 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.error(image.second,QString(err));
                 }
 
-                emit cm.done(image.second, 1.0-((imageCount-1)/imageTotal),
+                imageCount--;
+
+                emit cm.done(image.second, 1.0-((imageCount + videoCount) / total),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
-                imageCount--;
             }
         }
         if (videoCount)
@@ -850,7 +850,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 try
                 {
                     anime4k->loadVideo(video.first.first.toStdString());
-                    anime4k->setVideoSaveInfo("tmp_out.mp4");
+                    anime4k->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4");
                     emit cm.showInfo(anime4k->getInfo()+"processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     anime4k->process();
@@ -864,21 +864,22 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 if(ffmpeg)
                 {
-                    if(!QProcess::execute("ffmpeg -i \"tmp_out.mp4\" -i \"" + video.first.first + "\" -c copy -map 0 -map 1:1 -y \"" + video.first.second + "\""))
+                    if(!QProcess::execute("ffmpeg -i \"" + video.first.second + "_tmp_out.mp4""\" -i \"" + video.first.first + "\" -c copy -map 0 -map 1:1 -y \"" + video.first.second + "\""))
                     {
 #ifdef _WIN32
-                        const char* command = "del /q tmp_out.mp4";
+                        const char* command = ("del /q " + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4")).toLatin1();
 #elif defined(__linux)
-                        const char* command = "rm tmp_out.mp4";
+                        const char* command = ("rm " + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4")).toLatin1();
 #endif // CURRENT SYSTEM
                         system(command);
                     }
                 }
 
-                emit cm.done(video.second, 1.0-((videoCount-1)/videoTotal),
+                videoCount--;
+
+                emit cm.done(video.second, 1.0-(videoCount / total),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
-                videoCount--;
             }
         }
 
