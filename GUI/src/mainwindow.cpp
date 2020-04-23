@@ -137,7 +137,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 }
 
-void MainWindow::readConfig(QSettings *conf)
+void MainWindow::readConfig(const QSettings *conf)
 {
     QString language = conf->value("/GUI/language","en").toString();
     bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom","en").toBool();
@@ -290,7 +290,7 @@ void MainWindow::writeConfig(QSettings *conf)
     conf->setValue("/Postprocessing/BilateralFilterFaster",postBilateralFaster);
 }
 
-Language MainWindow::getLanguage(QString &lang)
+Language MainWindow::getLanguage(const QString &lang)
 {
     QMap<QString,Language> selector;
     selector["eh"]=en;
@@ -298,7 +298,7 @@ Language MainWindow::getLanguage(QString &lang)
     return selector[lang];
 }
 
-QString MainWindow::getLanguage(Language lang)
+QString MainWindow::getLanguage(const Language lang)
 {
     switch (lang)
     {
@@ -310,7 +310,7 @@ QString MainWindow::getLanguage(Language lang)
     return "unknown";
 }
 
-inline void MainWindow::errorHandler(ErrorType err)
+void MainWindow::errorHandler(const ErrorType err)
 {
     switch (err)
     {
@@ -347,7 +347,7 @@ inline void MainWindow::errorHandler(ErrorType err)
     }
 }
 
-inline void MainWindow::initTextBrowser()
+void MainWindow::initTextBrowser()
 {
     ui->textBrowserInfoOut->setText(
                 "----------------------------------------------\n"
@@ -360,7 +360,7 @@ inline void MainWindow::initTextBrowser()
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
-inline bool MainWindow::checkFFmpeg()
+bool MainWindow::checkFFmpeg()
 {
     if (!QProcess::execute("ffmpeg -version"))
     {
@@ -449,12 +449,12 @@ void MainWindow::initAnime4K(Anime4K *&anime4K)
                           threads);
 }
 
-void MainWindow::releaseAnime4K(Anime4K *&anime4K)
+inline void MainWindow::releaseAnime4K(Anime4K *&anime4K)
 {
     delete anime4K;
 }
 
-FileType MainWindow::fileType(QFileInfo &file)
+FileType MainWindow::fileType(const QFileInfo &file)
 {
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();

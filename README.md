@@ -4,19 +4,38 @@ This project is for learning and the exploration task of algorithm course in SWJ
 
 ***NOTICE: Thanks for the high performance of pointer and parallel, the C++ version will be very fast. It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython), just try this for higher quality and speed.***
 
-# pyanime4k
-[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
-
 # About Anime4K
 Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing.
 
-# Video processing
+# Result
+![examples](images/examples.png)
+
+# Performance
+CPU: AMD Ryzen 3500U  
+RAM: 16G  
+Anime4K Settings: balance 
+
+    Image:
+    256x256 -> 512x512:   0.025s  
+    1080P   -> 4k:        0.65s  
+
+    Video(Length: 1 min 32 seconds):
+    480P -> 1080P :       3  min 13 seconds
+    1080P -> 4K :         19 min 9  seconds
+
+# GUI
+Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!
+***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***
+![GUI](images/GUI.png)
+
+# CLI
+## Video processing
 For video processing, all you need do is to add the argument ```-v```, and waiting. The video processing supports multithreading, and by default uses all CPU threads, but you can adjust it manually by ```-t``` to specify the number of threads for processing.  For performance, I recommend only do one pass for video processing, and don't make ```zoomFactor``` too large.
 
-# Usage
+## Usage
 Please install [OpenCV Library](https://opencv.org) before building, and the [release version](https://github.com/TianZerL/Anime4KCPP/releases) have already included OpenCV runtime.  
 
-If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder V1.8.0](https://github.com/cisco/openh264/releases) for encoding.
+If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder](https://github.com/cisco/openh264/releases) for encoding.
 
 This project uses [cmake](https://cmake.org) to build.
 
@@ -38,7 +57,7 @@ This project uses [cmake](https://cmake.org) to build.
       -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
       -?, --help                print this message
 
-# Filters
+## Filters
 Enable filters can make the result be better, now Anime4kCPP support following filters:
 
   - Median blur [0000001]
@@ -52,12 +71,12 @@ Enable filters can make the result be better, now Anime4kCPP support following f
 You can freely combine them by their binary.  
 eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000(B)= 40(D)  
 
-you can use ```-b``` to enable pre processing filters function, and then use ```-r``` to custom your own combination, normally, if you don't specify the ```-r``` manually it will be 4. You can use command like this:
+you can use ```-b``` to enable preprocessing filters function, and then use ```-r``` to custom your own combination, normally, if you don't specify the ```-r``` manually it will be 4. You can use command like this:
 
     Anime4KCPP -i input.png -o output.png -b -r 44
 
 
-Easily use ```-a``` to enable post processing filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 40. You can use command like this to enable Gaussian blur and Bilateral filter:
+Easily use ```-a``` to enable postprocessing filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 40. You can use command like this to enable Gaussian blur and Bilateral filter:
 
     Anime4KCPP -i input.png -o output.png -a -e 48
 
@@ -66,6 +85,10 @@ I recommend use 40(Gaussian blur weak + Bilateral filter) for image that < 1080P
 It is not sure which will be better between pre and post processing, it depends on the specific image, you can try different combination for best quality.
 
 CAS is an adaptive sharpening technology which is open source by AMD, simple but efficient.
+
+# pyanime4k
+[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
+
 
 # Other implementations
 - Python
@@ -79,3 +102,6 @@ CAS is an adaptive sharpening technology which is open source by AMD, simple but
   - [bloc97/Anime4K](https://github.com/bloc97/Anime4K)
 - Rust
   - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)
+
+# Acknowledgement
+All images are drawn by my friend ***King of learner*** and authorized to use, only for demonstration, do not use without permission.

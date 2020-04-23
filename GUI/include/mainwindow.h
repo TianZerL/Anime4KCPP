@@ -57,17 +57,17 @@ protected:
     void dropEvent(QDropEvent *event);
 
 private:
-    void readConfig(QSettings *conf);
+    void readConfig(const QSettings *conf);
     void writeConfig(QSettings *conf);
-    Language getLanguage(QString &lang);
-    QString getLanguage(Language lang);
-    void errorHandler(ErrorType err);
+    Language getLanguage(const QString &lang);
+    QString getLanguage(const Language lang);
+    void errorHandler(const ErrorType err);
     void initTextBrowser();
     bool checkFFmpeg();
     QString formatSuffixList(const QString &&type, QString str);
     void initAnime4K(Anime4K *&anime4K);
     void releaseAnime4K(Anime4K *&anime4K);
-    FileType fileType(QFileInfo &file);
+    FileType fileType(const QFileInfo &file);
     QString getOutputPrefix();
 
 private slots:

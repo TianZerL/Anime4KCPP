@@ -18,8 +18,8 @@ Anime4K::Anime4K(
 ) :
     ps(passes), pcc(pushColorCount),
     sc(strengthColor), sg(strengthGradient),
-    zf(zoomFactor), fm(fastMode), vm(videoMode), 
-    pre(PreProcessing), post(postProcessing), pref(preFilters), 
+    zf(zoomFactor), fm(fastMode), vm(videoMode),
+    pre(PreProcessing), post(postProcessing), pref(preFilters),
     postf(postFilters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
@@ -465,7 +465,6 @@ inline void Anime4K::pushGradient(cv::InputArray img)
         if (minL > maxD)
             return getAverage(mc, ml, bl, bc);
 
-
         //left and right
         maxD = MAX3(tl[A], ml[A], bl[A]);
         minL = MIN3(tr[A], mr[A], br[A]);
@@ -476,7 +475,6 @@ inline void Anime4K::pushGradient(cv::InputArray img)
         minL = MIN3(tl[A], ml[A], bl[A]);
         if (minL > mc[A] && mc[A] > maxD)
             return getAverage(mc, tl, ml, bl);
-
 
         //diagonal
         maxD = MAX3(tc[A], mc[A], ml[A]);
