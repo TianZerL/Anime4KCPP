@@ -2,11 +2,10 @@
 #include "Anime4K.h"
 
 #include<fstream>
-#include<queue>
 
 #include<CL/cl.h>
 
-class Anime4KGPU :
+class DLL Anime4KGPU :
     public Anime4K
 {
 public:
@@ -29,7 +28,6 @@ public:
     virtual void process();
 protected:
     void runKernel(cv::InputArray img);
-    void runKernelForVideo(std::queue<cv::Mat> &frames, std::queue<cv::Mat>& results);
     void initOpenCL();
     void releaseOpenCL();
     std::string readKernel(const std::string &fileName);
@@ -38,10 +36,6 @@ private:
     cl_command_queue commandQueue;
     cl_program program;
     cl_device_id device;
-    cl_kernel kernelGetGray;
-    cl_kernel kernelPushColor;
-    cl_kernel kernelGetGradient;
-    cl_kernel kernelPushGradient;
 
     cl_image_format format;
     cl_image_desc desc;

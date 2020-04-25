@@ -1,4 +1,5 @@
 #include "Anime4K.h"
+#include "Anime4KGPU.h"
 #include<cmdline.h>
 
 #include<iostream>
@@ -50,6 +51,7 @@ you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000
 so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
 false, 40, cmdline::range(1, 127));
+    opt.add("GPUMode", 'q', "Enable GPU acceleration");
 
     opt.parse_check(argc, argv);
 
@@ -68,92 +70,117 @@ false, 40, cmdline::range(1, 127));
     bool preview = opt.exist("preview");
     bool preProcessing = opt.exist("preProcessing");
     bool postProcessing = opt.exist("postProcessing");
+    bool GPU = opt.exist("GPUMode");
 
-    //Anime4K
-    Anime4K anime4k(
-        passes,
-        pushColorCount,
-        strengthColor,
-        strengthGradient,
-        zoomFactor,
-        fastMode,
-        videoMode,
-        preProcessing,
-        postProcessing,
-        preFilters,
-        postFilters,
-        threads
-    );
-    if (!videoMode)//Image
+    Anime4K* anime4k;
+    try
     {
-        try
+        if (GPU)
         {
-            anime4k.loadImage(input);
+            std::cout << "GPU mode" << std::endl;
+            anime4k = new Anime4KGPU(
+                passes,
+                pushColorCount,
+                strengthColor,
+                strengthGradient,
+                zoomFactor,
+                fastMode,
+                videoMode,
+                preProcessing,
+                postProcessing,
+                preFilters,
+                postFilters,
+                threads
+            );
         }
-        catch (const char* err)
-        {
-            std::cout << err << std::endl;
-            return 0;
-        }
-
-        anime4k.showInfo();
-        anime4k.showFiltersInfo();
-
-        std::cout << "Processing..." << std::endl;
-        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-        anime4k.process();
-        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
-
-        if (preview)
-            anime4k.showImage();
-        anime4k.saveImage(output);
-    }
-    else//Video
-    {
-        //Suffix check
-        if (output.substr(output.size() - 3) == "png")
-            output.replace(output.size() - 3, 3, "mp4");
-
-        bool ffmpeg = checkFFmpeg();
-        std::string outputTmpName = output;
-
-        if (!ffmpeg)
-            std::cout << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
         else
-            outputTmpName = "tmp_out.mp4";
-
-        try
         {
-            anime4k.loadVideo(input);
-            anime4k.setVideoSaveInfo(outputTmpName);
+            std::cout << "CPU mode" << std::endl;
+            anime4k = new Anime4K(
+                passes,
+                pushColorCount,
+                strengthColor,
+                strengthGradient,
+                zoomFactor,
+                fastMode,
+                videoMode,
+                preProcessing,
+                postProcessing,
+                preFilters,
+                postFilters,
+                threads
+            );
         }
-        catch (const char* err)
+
+        if (!videoMode)//Image
         {
-            std::cout << err << std::endl;
-            return 0;
+            anime4k->loadImage(input);
+            anime4k->showInfo();
+            anime4k->showFiltersInfo();
+
+            std::cout << "Processing..." << std::endl;
+            std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+            anime4k->process();
+            std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+            std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
+
+            if (preview)
+                anime4k->showImage();
+            anime4k->saveImage(output);
         }
-        anime4k.showInfo();
-        anime4k.showFiltersInfo();
-
-        std::cout << "Processing..." << std::endl;
-        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-        anime4k.process();
-        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
-
-        anime4k.saveVideo();
-
-        if (ffmpeg && mergrAudio2Video(output, input))
+        else//Video
         {
+            //Suffix check
+            if (output.substr(output.size() - 3) == "png")
+                output.replace(output.size() - 3, 3, "mp4");
+
+            bool ffmpeg = checkFFmpeg();
+            std::string outputTmpName = output;
+
+            if (!ffmpeg)
+                std::cout << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
+            else
+                outputTmpName = "tmp_out.mp4";
+
+            try
+            {
+                anime4k->loadVideo(input);
+                anime4k->setVideoSaveInfo(outputTmpName);
+            }
+            catch (const char* err)
+            {
+                std::cout << err << std::endl;
+                return 0;
+            }
+            anime4k->showInfo();
+            anime4k->showFiltersInfo();
+
+            std::cout << "Processing..." << std::endl;
+            std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+            anime4k->process();
+            std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+            std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+
+            anime4k->saveVideo();
+
+            if (ffmpeg && mergrAudio2Video(output, input))
+            {
 #ifdef _WIN32
-            std::string command("del /q " + outputTmpName);
+                std::string command("del /q " + outputTmpName);
 #elif defined(__linux)
-            std::string command("rm " + outputTmpName);
+                std::string command("rm " + outputTmpName);
 #endif // SYSTEM
-            system(command.data());
+                system(command.data());
+            }
         }
     }
-
+    catch (const char* err)
+    {
+        std::cout << err << std::endl;
+        return 0;
+}
+    
+    delete anime4k;
+    
     return 0;
 }

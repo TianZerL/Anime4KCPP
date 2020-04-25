@@ -79,6 +79,7 @@ void Anime4K::showInfo()
     std::cout << "----------------------------------------------" << std::endl;
     if (vm)
     {
+        std::cout << "FPS: " << fps << std::endl;
         std::cout << "Threads: " << mt << std::endl;
         std::cout << "Total frame: " << totalFrameCount << std::endl;
     }
@@ -155,6 +156,7 @@ std::string Anime4K::getInfo()
     oss << "----------------------------------------------" << std::endl;
     if (vm)
     {
+        oss << "FPS: " << fps << std::endl;
         oss << "Threads: " << mt << std::endl;
         oss << "Total frame: " << totalFrameCount << std::endl;
     }
@@ -255,9 +257,10 @@ void Anime4K::process()
     }
     else
     {
+        unsigned int count = mt;
         cv::Mat orgFrame, dstFrame;
         ThreadPool pool(mt);
-        size_t curFrame = 0;
+        size_t curFrame = 0,curFrameCount = 0;
         while (true)
         {
             curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
@@ -292,6 +295,7 @@ void Anime4K::process()
                     if (curFrame == frameCount)
                     {
                         videoWriter.write(dstFrame);
+                        dstFrame.release();
                         frameCount++;
                         break;
                     }
@@ -302,6 +306,16 @@ void Anime4K::process()
                 }
                 cnd.notify_all();
             });
+
+            if (!(--count))
+            {
+                while (frameCount <= curFrameCount)
+                {
+                    std::this_thread::yield();
+                }
+                count += frameCount - curFrameCount;
+                curFrameCount = frameCount;
+            } 
         }
     }
 }

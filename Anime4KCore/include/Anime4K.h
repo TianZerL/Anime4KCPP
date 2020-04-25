@@ -56,7 +56,8 @@ public:
         bool postProcessing = false,
         uint8_t preFilters = 40,
         uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency());
+        unsigned int maxThreads = std::thread::hardware_concurrency()
+    );
     void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
@@ -68,16 +69,17 @@ public:
     std::string getInfo();
     std::string getFiltersInfo();
     void showImage();
-    void process();
-private:
+    virtual void process();
+protected:
     void getGray(cv::InputArray img);
     void pushColor(cv::InputArray img);
     void getGradient(cv::InputArray img);
     void pushGradient(cv::InputArray img);
+private:
     void changEachPixelBGRA(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
-private:
+protected:
     int orgH, orgW, H, W;
     double fps;
     size_t totalFrameCount, frameCount;
@@ -86,7 +88,7 @@ private:
     cv::VideoWriter videoWriter;
     std::mutex videoMtx;
     std::condition_variable cnd;
-private://arguments
+protected://arguments
     int ps, pcc;
     double sc, sg, zf;
     bool fm, vm, pre, post;

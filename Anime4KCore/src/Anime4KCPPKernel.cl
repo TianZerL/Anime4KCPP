@@ -28,9 +28,8 @@ __kernel void getGray(__read_only image2d_t srcImg, __write_only image2d_t dstIm
     write_imagef(dstImg, coord, BGRA);
 }
 
-__kernel void pushColor(__read_only image2d_t srcImg, __write_only image2d_t dstImg)
+__kernel void pushColor(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float strength)
 {
-    const float strength = 0.3f;
     const int x = get_global_id(0), y = get_global_id(1);
     int2 coord = (int2)(x, y);
 
@@ -125,9 +124,8 @@ __kernel void getGradient(__read_only image2d_t srcImg, __write_only image2d_t d
     write_imagef(dstImg, coord, mc);
 }
 
-__kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t dstImg)
+__kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float strength)
 {
-    const float strength = 1.0f;
     const int x = get_global_id(0), y = get_global_id(1);
     int2 coord = (int2)(x, y);
 
