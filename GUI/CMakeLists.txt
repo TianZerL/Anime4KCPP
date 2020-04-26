@@ -6,9 +6,6 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 set(TS_FILES ./src/Anime4KCPP_GUI_zh_CN.ts)
 set(UI_FILE ./src/mainwindow.ui)
 
@@ -27,8 +24,9 @@ add_executable(Anime4KCPP_GUI
 
 find_package(Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(OpenCL REQUIRED)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS})
 
 target_link_libraries(Anime4KCPP_GUI PRIVATE Qt5::Widgets)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCV_LIBS})

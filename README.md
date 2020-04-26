@@ -7,22 +7,44 @@ This project is for learning and the exploration task of algorithm course in SWJ
 # About Anime4K
 Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing.
 
+# Why Anime4KCPP
+- Cross-platform, building have already tested in Windows and Linux, MACOS is also supported.
+- Wide compatibility, support both CPU and GPU.
+- easy to use with GUI or CLI.
+- High performance.
+- GPU acceleration support, use it to process your image or video in a short time.
+- More arguments for you, you can get a better quality than real-time playback.
+- Filters support, use them to denoise or anti-aliasing.
+
 # Result
 ![examples](images/examples.png)
 
+# GPU acceleration
+Anime4KCPP now supports GPU acceleration, which is implement by original OpenCL for high performance, it can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
+
 # Performance
 CPU: AMD Ryzen 3500U  
+GPU: AMD Vege 8 Graphics
 RAM: 16G  
 Anime4K Settings: balance 
 
+    CPU:
     Image:
     256x256 -> 512x512:   0.025s  
     1080P   -> 4k:        0.65s  
 
     Video(Length: 1 min 32 seconds):
-    480P -> 1080P :       3  min 13 seconds
+    480P  -> 1080P :       3  min 13 seconds
     1080P -> 4K :         19 min 9  seconds
 
+    GPU:
+    Image:
+    256x256 -> 512x512:   0.008s  
+    1080P   -> 4k:        0.1s  
+
+    Video(Length: 1 min 32 seconds):
+    480P  -> 1080P :       0  min 51 seconds
+    1080P -> 4K :         4  min 30 seconds
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***
@@ -55,6 +77,7 @@ This project uses [cmake](https://cmake.org) to build.
       -a, --postProcessing      Enable post processing
       -r, --preFilters          Enhancement filter, only working when preProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D) (unsigned int [=4])
       -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
+      -q, --GPUMode             Enable GPU acceleration
       -?, --help                print this message
 
 ## Filters

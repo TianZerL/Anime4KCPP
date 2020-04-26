@@ -20,8 +20,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#define CORE_VERSION "1.3.2"
-#define VERSION "1.1"
+#define CORE_VERSION "1.5.0"
+#define VERSION "1.2.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
