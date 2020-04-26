@@ -78,6 +78,16 @@ false, 40, cmdline::range(1, 127));
         if (GPU)
         {
             std::cout << "GPU mode" << std::endl;
+            std::pair<bool, std::string> ret = Anime4KGPU::checkGPUSupport();
+            if (!ret.first)
+            {
+                std::cout << ret.second << std::endl;
+                return 0;
+            }
+            else
+            {
+                std::cout << ret.second << std::endl;
+            }
             anime4k = new Anime4KGPU(
                 passes,
                 pushColorCount,

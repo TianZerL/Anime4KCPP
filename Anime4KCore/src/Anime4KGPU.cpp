@@ -123,13 +123,80 @@ void Anime4KGPU::process()
     }
 }
 
+std::pair<bool, std::string> Anime4KGPU::checkGPUSupport()
+{
+    cl_int err = 0;
+    cl_uint plateforms = 0;
+    cl_uint devices = 0;
+    cl_platform_id firstPlatform = nullptr;
+    cl_device_id device = nullptr;
+
+    size_t platformNameLength = 0;
+    size_t DeviceNameLength = 0;
+    char* platformName = nullptr;
+    char* DeviceName = nullptr;
+
+    err = clGetPlatformIDs(1, &firstPlatform, &plateforms);
+    if (err != CL_SUCCESS || !plateforms)
+        return std::pair<bool, std::string>(false, "No suppoted platform");
+
+    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
+    if (err != CL_SUCCESS)
+        return std::pair<bool, std::string>(false, "Failed to get platform name length infomation");
+
+    platformName = new char[platformNameLength];
+    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        delete[] platformName;
+        return std::pair<bool, std::string>(false, "Failed to get platform name infomation");
+    }
+
+
+    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, 1, &device, &devices);
+    if (err != CL_SUCCESS || !devices)
+    {
+        delete[] platformName;
+        return std::pair<bool, std::string>(false, "No supported GPU");
+    }
+        
+
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
+    if (err != CL_SUCCESS)
+    {
+        delete[] platformName;
+        clReleaseDevice(device);
+        return std::pair<bool, std::string>(false, "Failed to get device name length infomation");
+    }
+
+
+    DeviceName = new char[DeviceNameLength];
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        delete[] DeviceName;
+        delete[] platformName;
+        clReleaseDevice(device);
+        return std::pair<bool, std::string>(false, "Failed to get device name infomation");
+    }
+
+    std::pair<bool, std::string> ret(true,
+        std::string("Plateform: ") + platformName + "\n" + "Device: " + DeviceName);
+
+    delete[] DeviceName;
+    delete[] platformName;
+    clReleaseDevice(device);
+
+    return ret;
+}
+
 void Anime4KGPU::runKernel(cv::InputArray img)
 {
     cl_int err;
     int i;
     const size_t orgin[3] = { 0,0,0 };
-    const size_t region[3] = { W,H,1 };
-    const size_t size[2] = { W,H };
+    const size_t region[3] = { size_t(W),size_t(H),1 };
+    const size_t size[2] = { size_t(W),size_t(H) };
     const float pushColorStrength = sc;
     const float pushGradientStrength = sg;
     cv::Mat image = img.getMat();

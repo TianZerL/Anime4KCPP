@@ -3,7 +3,12 @@
 
 #include<fstream>
 
+#ifdef __APPLE__
+#include<OpenCL/opencl.h>
+#else
 #include<CL/cl.h>
+#endif // __APPLE__
+
 
 class DLL Anime4KGPU :
     public Anime4K
@@ -24,8 +29,8 @@ public:
         unsigned int maxThreads = std::thread::hardware_concurrency()
     );
     ~Anime4KGPU();
-
     virtual void process();
+    static std::pair<bool,std::string> checkGPUSupport();
 protected:
     void runKernel(cv::InputArray img);
     void initOpenCL();
