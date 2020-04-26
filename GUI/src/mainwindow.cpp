@@ -41,6 +41,11 @@ MainWindow::MainWindow(QWidget *parent)
     //inital config
     config = new QSettings("settings.ini", QSettings::IniFormat, this);
     readConfig(config);
+    //inital Anime4KCoreForCPU
+    mainAnime4kCPU = new Anime4K;
+    mainAnime4kGPU = nullptr;
+    //inital GPU
+    GPU = GPUMODE_UNINITIALZED;
     //Register
     qRegisterMetaType<std::string>("std::string");
 }
@@ -48,6 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+    releaseMainAnime4K();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -435,7 +441,11 @@ void MainWindow::initAnime4K(Anime4K *&anime4K)
         if (ui->checkBoxPostBilateralFaster->isChecked())
             postfilters|=64;
     }
-    anime4K = new Anime4K(passes,
+    if(ui->checkBoxGPUMode->isChecked())
+        anime4K = mainAnime4kGPU;
+    else
+        anime4K = mainAnime4kCPU;
+    anime4K->setArguments(passes,
                           pushColorCount,
                           pushColorStrength,
                           pushGradientStrength,
@@ -449,9 +459,11 @@ void MainWindow::initAnime4K(Anime4K *&anime4K)
                           threads);
 }
 
-inline void MainWindow::releaseAnime4K(Anime4K *&anime4K)
+inline void MainWindow::releaseMainAnime4K()
 {
-    delete anime4K;
+    delete mainAnime4kCPU;
+    if(mainAnime4kGPU!=nullptr)
+        delete mainAnime4kGPU;
 }
 
 FileType MainWindow::fileType(const QFileInfo &file)
@@ -733,8 +745,6 @@ void MainWindow::on_pushButtonPreview_clicked()
         break;
     }
 
-    releaseAnime4K(anime4k);
-
     ui->pushButtonPreview->setEnabled(true);
 }
 
@@ -753,6 +763,21 @@ void MainWindow::on_pushButtonPreviewPick_clicked()
 
 void MainWindow::on_pushButtonStart_clicked()
 {
+    if(ui->checkBoxGPUMode->isChecked() && (ui->checkBoxEnablePreprocessing->isChecked() || ui->checkBoxEnablePostprocessing->isChecked()))
+    {
+        if (QMessageBox::Yes == QMessageBox::information(this,
+                                 tr("Notice"),
+                                 tr("You are using GPU acceleration but still enabled"
+                                    "preprocessing or postprocessing, which is not GPU acceletation yet, "
+                                    "and may slow down processing for GPU (usually still faster than CPU), close them?"),
+                                 QMessageBox::Yes | QMessageBox::No,
+                                 QMessageBox::Yes))
+        {
+            ui->checkBoxEnablePreprocessing->setChecked(false);
+            ui->checkBoxEnablePostprocessing->setChecked(false);
+        }
+    }
+
     int rows = tableModel->rowCount();
     if(!rows)
     {
@@ -883,7 +908,6 @@ void MainWindow::on_pushButtonStart_clicked()
             }
         }
 
-        releaseAnime4K(anime4k);
         emit cm.allDone();
     });
 
@@ -1024,4 +1048,44 @@ void MainWindow::on_pushButtonPickFolder_clicked()
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 
+}
+
+void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
+{
+    if((state == Qt::Checked) && (GPU == GPUMODE_UNINITIALZED))
+    {
+        if(QMessageBox::Yes == QMessageBox::information(this,
+                                 tr("Notice"),
+                                 tr("You are trying to enable GPU acceleration, "
+                                    "which is an experimental function, check and inital GPU?"),
+                                 QMessageBox::Yes | QMessageBox::No,
+                                 QMessageBox::No))
+        {
+            std::pair<bool,std::string> ret = Anime4KGPU::checkGPUSupport();
+            if(!ret.first)
+            {
+                QMessageBox::warning(this,
+                                     tr("Warning"),
+                                     QString::fromStdString(ret.second),
+                                     QMessageBox::Ok);
+                GPU = GPUMODE_UNSUPPORT;
+            }
+            else
+            {
+                mainAnime4kGPU = new Anime4KGPU;
+                GPU = GPUMODE_INITIALZED;
+                QMessageBox::information(this,
+                                     tr("Notice"),
+                                     "Inital successful!\n" +
+                                     QString::fromStdString(ret.second),
+                                     QMessageBox::Ok);
+                ui->textBrowserInfoOut->insertPlainText("GPU inital successful!\n" + QString::fromStdString(ret.second) + "\n");
+                ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
+            }
+        }
+        else
+        {
+            ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+        }
+    }
 }

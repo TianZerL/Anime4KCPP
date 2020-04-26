@@ -58,6 +58,21 @@ public:
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()
     );
+    virtual ~Anime4K();
+    void setArguments(
+        int passes = 2,
+        int pushColorCount = 2,
+        double strengthColor = 0.3,
+        double strengthGradient = 1.0,
+        double zoomFactor = 2.0,
+        bool fastMode = false,
+        bool videoMode = false,
+        bool PreProcessing = false,
+        bool postProcessing = false,
+        uint8_t preFilters = 40,
+        uint8_t postFilters = 40,
+        unsigned int maxThreads = std::thread::hardware_concurrency()
+    );
     void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);

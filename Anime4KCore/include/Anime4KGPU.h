@@ -7,7 +7,7 @@
 #include<OpenCL/opencl.h>
 #else
 #include<CL/cl.h>
-#endif // __APPLE__
+#endif // SPECIAL OS
 
 
 class DLL Anime4KGPU :
@@ -28,7 +28,7 @@ public:
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()
     );
-    ~Anime4KGPU();
+    virtual ~Anime4KGPU();
     virtual void process();
     static std::pair<bool,std::string> checkGPUSupport();
 protected:

@@ -15,13 +15,52 @@ Anime4K::Anime4K(
     uint8_t preFilters,
     uint8_t postFilters,
     unsigned int maxThreads
-) :
-    ps(passes), pcc(pushColorCount),
+) : ps(passes), pcc(pushColorCount),
     sc(strengthColor), sg(strengthGradient),
     zf(zoomFactor), fm(fastMode), vm(videoMode),
     pre(PreProcessing), post(postProcessing), pref(preFilters),
     postf(postFilters), mt(maxThreads)
 {
+    orgH = orgW = H = W = 0;
+    frameCount = totalFrameCount = fps = 0;
+}
+
+Anime4K::~Anime4K()
+{
+    orgImg.release();
+    dstImg.release();
+    videoWriter.release();
+    video.release();
+}
+
+void Anime4K::setArguments(
+    int passes, 
+    int pushColorCount, 
+    double strengthColor, 
+    double strengthGradient, 
+    double zoomFactor, 
+    bool fastMode, 
+    bool videoMode, 
+    bool PreProcessing, 
+    bool postProcessing, 
+    uint8_t preFilters, 
+    uint8_t postFilters, 
+    unsigned int maxThreads
+)
+{
+    ps = passes;
+    pcc = pushColorCount;
+    sc = strengthColor;
+    sg = strengthGradient;
+    zf = zoomFactor;
+    fm = fastMode;
+    vm = videoMode;
+    pre = PreProcessing;
+    post = postProcessing;
+    pref = preFilters;
+    postf = postFilters;
+    mt = maxThreads;
+
     orgH = orgW = H = W = 0;
     frameCount = totalFrameCount = fps = 0;
 }

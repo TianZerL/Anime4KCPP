@@ -562,7 +562,7 @@
           <property name="title">
            <string>Arguments</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_12">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
             <layout class="QHBoxLayout" name="horizontalLayoutPasses">
              <item>
@@ -666,14 +666,28 @@
             </layout>
            </item>
            <item>
-            <widget class="QCheckBox" name="checkBoxFastMode">
-             <property name="statusTip">
-              <string>Faster but maybe low quality</string>
-             </property>
-             <property name="text">
-              <string>fast mode</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout">
+             <item>
+              <widget class="QCheckBox" name="checkBoxFastMode">
+               <property name="statusTip">
+                <string>Faster but maybe low quality</string>
+               </property>
+               <property name="text">
+                <string>fast mode</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBoxGPUMode">
+               <property name="statusTip">
+                <string>Enable GPU acceleration</string>
+               </property>
+               <property name="text">
+                <string>GPU acceleration</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>

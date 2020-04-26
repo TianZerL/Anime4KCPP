@@ -3,6 +3,7 @@
 
 #include "communicator.h"
 #include "Anime4K.h"
+#include "Anime4KGPU.h"
 
 #include <QMainWindow>
 #include <QTranslator>
@@ -43,6 +44,11 @@ enum FileType
     IMAGE = 0, VIDEO = 1, ERROR_TYPE=2
 };
 
+enum GPUMode
+{
+    GPUMODE_INITIALZED = 0, GPUMODE_UNINITIALZED = 1, GPUMODE_UNSUPPORT = 3
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -66,7 +72,7 @@ private:
     bool checkFFmpeg();
     QString formatSuffixList(const QString &&type, QString str);
     void initAnime4K(Anime4K *&anime4K);
-    void releaseAnime4K(Anime4K *&anime4K);
+    void releaseMainAnime4K();
     FileType fileType(const QFileInfo &file);
     QString getOutputPrefix();
 
@@ -125,6 +131,8 @@ private slots:
 
     void on_pushButtonPickFolder_clicked();
 
+    void on_checkBoxGPUMode_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
@@ -136,5 +144,9 @@ private:
     bool ffmpeg;
     unsigned int totalTaskCount;
     Language currLanguage;
+
+    GPUMode GPU;
+    Anime4K *mainAnime4kCPU;
+    Anime4K *mainAnime4kGPU;
 };
 #endif // MAINWINDOW_H
