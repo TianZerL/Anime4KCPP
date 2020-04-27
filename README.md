@@ -20,11 +20,11 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 ![examples](images/examples.png)
 
 # GPU acceleration
-Anime4KCPP now supports GPU acceleration, which is implement by original OpenCL for high performance, it can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
+Anime4KCPP now supports GPU acceleration, which is implemented by original OpenCL for high performance, it supports any graphic card that implemented OpenCL 2.0(Lower version may support but didn't test), and can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
 
 # Performance
 CPU: AMD Ryzen 3500U  
-GPU: AMD Vege 8 Graphics
+GPU: AMD Vege 8 Graphics  
 RAM: 16G  
 Anime4K Settings: balance 
 
@@ -35,7 +35,7 @@ Anime4K Settings: balance
 
     Video(Length: 1 min 32 seconds):
     480P  -> 1080P :       3  min 13 seconds
-    1080P -> 4K :         19 min 9  seconds
+    1080P -> 4K :          19 min 9  seconds
 
     GPU:
     Image:
@@ -44,10 +44,10 @@ Anime4K Settings: balance
 
     Video(Length: 1 min 32 seconds):
     480P  -> 1080P :       0  min 51 seconds
-    1080P -> 4K :         4  min 30 seconds
+    1080P -> 4K :          4  min 30 seconds
 # GUI
-Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!
-***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***
+Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
+***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
 ![GUI](images/GUI.png)
 
 # CLI

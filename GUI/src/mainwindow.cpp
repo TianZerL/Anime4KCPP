@@ -1069,6 +1069,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                                      QString::fromStdString(ret.second),
                                      QMessageBox::Ok);
                 GPU = GPUMODE_UNSUPPORT;
+                ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
             }
             else
             {
@@ -1087,5 +1088,13 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
         }
+    }
+    else if((state == Qt::Checked) && (GPU == GPUMODE_UNSUPPORT))
+    {
+        QMessageBox::warning(this,
+                             tr("Warning"),
+                             tr("Unsupport GPU acceleration in this platform"),
+                             QMessageBox::Ok);
+        ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
     }
 }

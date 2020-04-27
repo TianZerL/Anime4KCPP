@@ -367,7 +367,7 @@
     <message>
         <location filename="mainwindow.ui" line="622"/>
         <source>Strength for pushing gradient,range 0 to 1,higher for sharper edge</source>
-        <translation>处理强度，范围0-1，越大的值边缘约锐利，以提高放大后图像的观感</translation>
+        <translation>处理强度，范围0-1，越大的值边缘越锐利，以提高放大后图像的观感</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="625"/>
@@ -408,7 +408,7 @@
     <message>
         <location filename="mainwindow.ui" line="683"/>
         <source>Enable GPU acceleration</source>
-        <translation type="unfinished"></translation>
+        <translation>开启GPU加速</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="686"/>
@@ -549,6 +549,7 @@
     <message>
         <location filename="mainwindow.cpp" line="381"/>
         <location filename="mainwindow.cpp" line="1068"/>
+        <location filename="mainwindow.cpp" line="1095"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -573,7 +574,7 @@
         <location filename="mainwindow.cpp" line="769"/>
         <location filename="mainwindow.cpp" line="968"/>
         <location filename="mainwindow.cpp" line="1058"/>
-        <location filename="mainwindow.cpp" line="1078"/>
+        <location filename="mainwindow.cpp" line="1079"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -593,6 +594,11 @@
         <source>You are trying to enable GPU acceleration, which is an experimental function, check and inital GPU?</source>
         <oldsource>You are trying to enable GPU accelaretion, which is an experimental function, check and inital GPU?</oldsource>
         <translation>您正在尝试启用GPU加速，这还是一个实验性功能，检查兼容性并初始化吗？</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1096"/>
+        <source>Unsupport GPU acceleration in this platform</source>
+        <translation>本平台不支持GPU加速</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="338"/>
