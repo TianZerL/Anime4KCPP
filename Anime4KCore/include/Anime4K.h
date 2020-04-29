@@ -97,7 +97,7 @@ private:
 protected:
     int orgH, orgW, H, W;
     double fps;
-    size_t totalFrameCount, frameCount;
+    uint64_t totalFrameCount, frameCount;
     cv::Mat orgImg, dstImg;
     cv::VideoCapture video;
     cv::VideoWriter videoWriter;

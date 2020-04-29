@@ -32,7 +32,7 @@ public:
     virtual void process();
     static std::pair<bool,std::string> checkGPUSupport();
 protected:
-    void runKernel(cv::InputArray img);
+    void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     void initOpenCL();
     void releaseOpenCL();
     std::string readKernel(const std::string &fileName);
@@ -43,6 +43,12 @@ private:
     cl_device_id device;
 
     cl_image_format format;
-    cl_image_desc desc;
+    cl_image_desc dstDesc;
+    cl_image_desc orgDesc;
+
+    uint64_t frameGPUDoneCount;
+
+    double nWidth;
+    double nHeight;
 };
 

@@ -22,7 +22,8 @@ Anime4K::Anime4K(
     postf(postFilters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
-    frameCount = totalFrameCount = fps = 0;
+    fps = 0.0;
+    frameCount = totalFrameCount = 0;
 }
 
 Anime4K::~Anime4K()
@@ -62,7 +63,8 @@ void Anime4K::setArguments(
     mt = maxThreads;
 
     orgH = orgW = H = W = 0;
-    frameCount = totalFrameCount = fps = 0;
+    fps = 0.0;
+    frameCount = totalFrameCount = 0;
 }
 
 void Anime4K::setVideoMode(const bool flag)
@@ -96,7 +98,14 @@ void Anime4K::loadImage(const std::string& srcFile)
 
 void Anime4K::setVideoSaveInfo(const std::string& dstFile)
 {
-    if (!videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H)))
+#ifdef _WIN32 //DXVA encoding for windows
+    videoWriter.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), std::ceil(fps), cv::Size(W, H));
+    if (!videoWriter.isOpened())
+        videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
+#elif
+    videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
+#endif // __WIN32
+    if (!videoWriter.isOpened())
         throw "Fail to initial video writer.";
 }
 
@@ -296,10 +305,11 @@ void Anime4K::process()
     }
     else
     {
-        unsigned int count = mt;
+        uint64_t count = mt;
         cv::Mat orgFrame, dstFrame;
         ThreadPool pool(mt);
-        size_t curFrame = 0,curFrameCount = 0;
+        uint64_t curFrame = 0,doneFrameCount = 0;
+        frameCount = 0;
         while (true)
         {
             curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
@@ -345,16 +355,14 @@ void Anime4K::process()
                 }
                 cnd.notify_all();
             });
-
+            //limit RAM usage
             if (!(--count))
             {
-                while (frameCount <= curFrameCount)
-                {
+                while (frameCount == doneFrameCount)
                     std::this_thread::yield();
-                }
-                count += frameCount - curFrameCount;
-                curFrameCount = frameCount;
-            } 
+                count = frameCount - doneFrameCount;
+                doneFrameCount = frameCount;
+            }
         }
     }
 }
@@ -575,16 +583,16 @@ inline void Anime4K::changEachPixelBGRA(cv::InputArray _src,
 
 inline void Anime4K::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
-    mc[R] = mc[R] * (1 - sc) + ((a[R] + b[R] + c[R]) / 3.0) * sc;
-    mc[G] = mc[G] * (1 - sc) + ((a[G] + b[G] + c[G]) / 3.0) * sc;
-    mc[B] = mc[B] * (1 - sc) + ((a[B] + b[B] + c[B]) / 3.0) * sc;
-    mc[A] = mc[A] * (1 - sc) + ((a[A] + b[A] + c[A]) / 3.0) * sc;
+    mc[R] = mc[R] * (1 - sc) + ((a[R] + b[R] + c[R]) / 3.0) * sc + 0.5;
+    mc[G] = mc[G] * (1 - sc) + ((a[G] + b[G] + c[G]) / 3.0) * sc + 0.5;
+    mc[B] = mc[B] * (1 - sc) + ((a[B] + b[B] + c[B]) / 3.0) * sc + 0.5;
+    mc[A] = mc[A] * (1 - sc) + ((a[A] + b[A] + c[A]) / 3.0) * sc + 0.5;
 }
 
 inline void Anime4K::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
-    mc[R] = mc[R] * (1 - sg) + ((a[R] + b[R] + c[R]) / 3.0) * sg;
-    mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg;
-    mc[B] = mc[B] * (1 - sg) + ((a[B] + b[B] + c[B]) / 3.0) * sg;
+    mc[R] = mc[R] * (1 - sg) + ((a[R] + b[R] + c[R]) / 3.0) * sg + 0.5;
+    mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg + 0.5;
+    mc[B] = mc[B] * (1 - sg) + ((a[B] + b[B] + c[B]) / 3.0) * sg + 0.5;
     mc[A] = 255;
 }

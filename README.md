@@ -26,7 +26,8 @@ Anime4KCPP now supports GPU acceleration, which is implemented by original OpenC
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
-Anime4K Settings: balance 
+Anime4KCPP Version : 1.5.0
+Anime4KCPP Settings: balance 
 
     CPU:
     Image:

@@ -1,7 +1,8 @@
 #define MAX3(a, b, c) fmax(fmax(a,b),c)
 #define MIN3(a, b, c) fmin(fmin(a,b),c)
 
-__constant sampler_t samplers = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+__constant sampler_t samplerL = CLK_NORMALIZED_COORDS_TRUE  | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
 inline void getLightest(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
 {
@@ -11,21 +12,23 @@ inline void getLightest(float4 *mc, float4 *a, float4 *b, float4 *c, float stren
 inline void getAVerage(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
 {
     (*mc).xyz = mad((native_divide((*a).xyz + (*b).xyz + (*c).xyz, 3.0) - (*mc).xyz), strength, (*mc).xyz);
-    (*mc).w = 1.0f;
+    (*mc).w = 0.299 * (*mc).z + 0.587 * (*mc).y + 0.114 * (*mc).x;
 }
 
-__kernel void getGray(__read_only image2d_t srcImg, __write_only image2d_t dstImg) 
+__kernel void getGray(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float nWidth, float nHeight) 
 {
     const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(srcImg) || y >= get_image_height(srcImg))
+    if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
         return;
 
-    int2 coord = (int2)(x, y);
-    float4 BGRA = read_imagef(srcImg, samplers, coord);
+    const int2 coord = (int2)(x, y);
 
-    BGRA.w = 0.299 * BGRA.z  + 0.587 * BGRA.y  + 0.114 * BGRA.x ;
+    float4 mc = read_imagef(srcImg, samplerL, (convert_float2(coord) + 0.5f) * (float2)(nWidth, nHeight));
 
-    write_imagef(dstImg, coord, BGRA);
+    //gray
+    mc.w = 0.299 * mc.z  + 0.587 * mc.y  + 0.114 * mc.x;
+
+    write_imagef(dstImg, coord, mc);
 }
 
 __kernel void pushColor(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float strength)
@@ -36,15 +39,15 @@ __kernel void pushColor(__read_only image2d_t srcImg, __write_only image2d_t dst
 
     int2 coord = (int2)(x, y);
 
-    float4 tl = read_imagef(srcImg, samplers, (int2)(x-1,y-1));
-    float4 tc = read_imagef(srcImg, samplers, (int2)(x,y-1));
-    float4 tr = read_imagef(srcImg, samplers, (int2)(x+1,y-1));
-    float4 ml = read_imagef(srcImg, samplers, (int2)(x-1,y));
-    float4 mc = read_imagef(srcImg, samplers, coord);
-    float4 mr = read_imagef(srcImg, samplers, (int2)(x+1,y));
-    float4 bl = read_imagef(srcImg, samplers, (int2)(x-1,y+1));
-    float4 bc = read_imagef(srcImg, samplers, (int2)(x,y+1));
-    float4 br = read_imagef(srcImg, samplers, (int2)(x+1,y+1));
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 mc = read_imagef(srcImg, samplerN, coord);
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
 
     float maxD,minL;
 
@@ -111,15 +114,15 @@ __kernel void getGradient(__read_only image2d_t srcImg, __write_only image2d_t d
 
     int2 coord = (int2)(x, y);
 
-    float4 tl = read_imagef(srcImg, samplers, (int2)(x-1,y-1));
-    float4 tc = read_imagef(srcImg, samplers, (int2)(x,y-1));
-    float4 tr = read_imagef(srcImg, samplers, (int2)(x+1,y-1));
-    float4 ml = read_imagef(srcImg, samplers, (int2)(x-1,y));
-    float4 mc = read_imagef(srcImg, samplers, coord);
-    float4 mr = read_imagef(srcImg, samplers, (int2)(x+1,y));
-    float4 bl = read_imagef(srcImg, samplers, (int2)(x-1,y+1));
-    float4 bc = read_imagef(srcImg, samplers, (int2)(x,y+1));
-    float4 br = read_imagef(srcImg, samplers, (int2)(x+1,y+1));
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 mc = read_imagef(srcImg, samplerN, coord);
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
 
     const float gradX = tr.w + mr.w + mr.w + br.w - tl.w - ml.w - ml.w - bl.w;
     const float gradY = tl.w + tc.w + tc.w + tr.w - bl.w - bc.w - bc.w - br.w;
@@ -138,15 +141,15 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
 
     int2 coord = (int2)(x, y);
 
-    float4 tl = read_imagef(srcImg, samplers, (int2)(x-1,y-1));
-    float4 tc = read_imagef(srcImg, samplers, (int2)(x,y-1));
-    float4 tr = read_imagef(srcImg, samplers, (int2)(x+1,y-1));
-    float4 ml = read_imagef(srcImg, samplers, (int2)(x-1,y));
-    float4 mc = read_imagef(srcImg, samplers, coord);
-    float4 mr = read_imagef(srcImg, samplers, (int2)(x+1,y));
-    float4 bl = read_imagef(srcImg, samplers, (int2)(x-1,y+1));
-    float4 bc = read_imagef(srcImg, samplers, (int2)(x,y+1));
-    float4 br = read_imagef(srcImg, samplers, (int2)(x+1,y+1));
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 mc = read_imagef(srcImg, samplerN, coord);
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
 
     float maxD,minL;
 
@@ -158,7 +161,7 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
         getAVerage(&mc, &tl, &tc, &tr, strength);
         write_imagef(dstImg, coord, mc);
         return;
-    }    
+    }   
 
     maxD = MAX3(tl.w, tc.w, tr.w);
     minL = MIN3(bl.w, bc.w, br.w);
@@ -215,7 +218,7 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
         getAVerage(&mc, &mr, &br, &bc, strength);
         write_imagef(dstImg, coord, mc);
         return;
-    }    
+    }
     maxD = MAX3(bc.w, mc.w, mr.w);
     minL = MIN3(ml.w, tl.w, tc.w);
     if (minL > maxD)
@@ -224,4 +227,7 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
         write_imagef(dstImg, coord, mc);
         return;
     }
+
+    mc.w = 0.299 * mc.z + 0.587 * mc.y + 0.114 * mc.x;
+    write_imagef(dstImg, coord, mc);
 }
