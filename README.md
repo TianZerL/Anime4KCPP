@@ -26,8 +26,8 @@ Anime4KCPP now supports GPU acceleration, which is implemented by original OpenC
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
-Anime4KCPP Version : 1.5.0
-Anime4KCPP Settings: balance 
+Anime4KCPP Version : 1.5.0  
+Anime4KCPP Settings: balance  
 
     CPU:
     Image:
@@ -46,6 +46,7 @@ Anime4KCPP Settings: balance
     Video(Length: 1 min 32 seconds):
     480P  -> 1080P :       0  min 51 seconds
     1080P -> 4K :          4  min 30 seconds
+
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  

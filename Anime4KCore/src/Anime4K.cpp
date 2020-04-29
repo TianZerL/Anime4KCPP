@@ -101,12 +101,17 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile)
 #ifdef _WIN32 //DXVA encoding for windows
     videoWriter.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), std::ceil(fps), cv::Size(W, H));
     if (!videoWriter.isOpened())
+    {
         videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+            throw "Fail to initial video writer.";
+    }
 #elif
     videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
-#endif // __WIN32
     if (!videoWriter.isOpened())
         throw "Fail to initial video writer.";
+#endif // DXVA
+
 }
 
 void Anime4K::saveImage(const std::string& dstFile)

@@ -892,9 +892,9 @@ void MainWindow::on_pushButtonStart_clicked()
                     if(!QProcess::execute("ffmpeg -i \"" + video.first.second + "_tmp_out.mp4""\" -i \"" + video.first.first + "\" -c copy -map 0 -map 1:1 -y \"" + video.first.second + "\""))
                     {
 #ifdef _WIN32
-                        const char* command = ("del /q " + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4")).toLatin1();
+                        const char* command = ("del /q \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
 #elif defined(__linux)
-                        const char* command = ("rm " + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4")).toLatin1();
+                        const char* command = ("rm \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
 #endif // CURRENT SYSTEM
                         system(command);
                     }
