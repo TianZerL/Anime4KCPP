@@ -1,11 +1,13 @@
+[中文文档](README.cn.md)
+
 # Anime4KCPP
-This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9 and some optimizations have been made, it can process both image and video.
+This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and try to optimize it to provide better quality, it aims to be a high performance pretreatment tools to process both image and video.  
 This project is for learning and the exploration task of algorithm course in SWJTU.  
 
-***NOTICE: Thanks for the high performance of pointer and parallel, the C++ version will be very fast. It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython), just try this for higher quality and speed.***
+***NOTICE: With CPU, it is fast enough to process normal image, It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython). With GPU acceleration, it can be more than 10 times faster than CPU (depends on your graphic card), so it is suitable for video processing, just try this for higher quality and speed.***
 
 # About Anime4K
-Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing.
+Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
 
 # Why Anime4KCPP
 - Cross-platform, building have already tested in Windows and Linux, MACOS is also supported.
@@ -54,14 +56,21 @@ Anime4KCPP now provides a GUI interface, upscale your image or video by an easie
 
 # CLI
 ## Video processing
-For video processing, all you need do is to add the argument ```-v```, and waiting. The video processing supports multithreading, and by default uses all CPU threads, but you can adjust it manually by ```-t``` to specify the number of threads for processing.  For performance, I recommend only do one pass for video processing, and don't make ```zoomFactor``` too large.
+For video processing, all you need do is to add the argument ```-v```, and waiting. The video processing supports multithreading, and by default uses all CPU threads, but you can adjust it manually by ```-t``` to specify the number of threads for processing.
 
 ## Usage
+### building
 Please install [OpenCV Library](https://opencv.org) before building, and the [release version](https://github.com/TianZerL/Anime4KCPP/releases) have already included OpenCV runtime.  
+
+You need get a OpenCL SDK from your graphic card provider, this is [the one](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases) that provided by AMD.
+
+And you need Qt open source version for building GUI.
 
 If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder](https://github.com/cisco/openh264/releases) for encoding.
 
 This project uses [cmake](https://cmake.org) to build.
+
+### arguments
 
     options:
       -i, --input               File for loading (string [=./pic/p1.png])
