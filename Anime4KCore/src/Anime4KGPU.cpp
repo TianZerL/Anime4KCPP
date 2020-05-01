@@ -64,8 +64,16 @@ void Anime4KGPU::process()
     dstDesc.num_samples = 0;
     dstDesc.buffer = nullptr;
 
-    nWidth = 1.0 / double(W);
-    nHeight = 1.0 / double(H);
+    if (zf == 2.0)
+    {
+        nWidth = 1.0 / double(W);
+        nHeight = 1.0 / double(H);
+    }
+    else
+    {
+        nWidth = double(orgW) / double(W);
+        nHeight = double(orgH) / double(H);
+    }
 
     if (!vm)
     {
@@ -222,7 +230,11 @@ void Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
     cv::Mat dstImage = dstImg.getMat();
 
     //kernel for each thread
-    cl_kernel kernelGetGray = clCreateKernel(program, "getGray", &err);
+    cl_kernel kernelGetGray = nullptr;
+    if (zf == 2.0)
+        kernelGetGray = clCreateKernel(program, "getGray", &err);
+    else
+        kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
     if (err != CL_SUCCESS)
     {
         throw"Failed to create OpenCL kernel getGray";
@@ -395,7 +407,13 @@ inline void Anime4KGPU::initOpenCL()
     err = clBuildProgram(program, 1, &device, nullptr, nullptr, nullptr);
     if (err != CL_SUCCESS)
     {
+        size_t buildErrorSize = 0;
+        clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+        char* buildError = new char[buildErrorSize];
+        clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
         releaseOpenCL();
+        std::cout << buildError << std::endl;
+        delete[] buildError;
         throw"Kernel build error";
     }
 

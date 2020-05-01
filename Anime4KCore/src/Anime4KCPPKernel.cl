@@ -1,18 +1,65 @@
 #define MAX3(a, b, c) fmax(fmax(a,b),c)
 #define MIN3(a, b, c) fmin(fmin(a,b),c)
 
+#define RANGE 12.56637061436
+
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 __constant sampler_t samplerL = CLK_NORMALIZED_COORDS_TRUE  | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_LINEAR;
 
-inline void getLightest(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
+inline static void getLightest(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
 {
     (*mc) = mad((native_divide((*a) + (*b) + (*c), 3.0) - (*mc)), strength, (*mc));
 }
 
-inline void getAVerage(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
+inline static void getAVerage(float4 *mc, float4 *a, float4 *b, float4 *c, float strength)
 {
     (*mc).xyz = mad((native_divide((*a).xyz + (*b).xyz + (*c).xyz, 3.0) - (*mc).xyz), strength, (*mc).xyz);
     (*mc).w = 0.299 * (*mc).z + 0.587 * (*mc).y + 0.114 * (*mc).x;
+}
+
+inline static float Lanczos4(float x)
+{
+    if(x == 0.0f)
+        return 1.0f;
+    x *= M_PI;
+    if(x >= -RANGE && x < RANGE)
+        return native_divide(4.0f * native_sin(x) * native_sin(x * 0.25), x * x);
+    else
+        return 0.0f;
+}
+
+__kernel void getGrayLanczos4(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float nWidth, float nHeight) 
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
+        return;
+
+    const int2 coord = (int2)(x, y);
+    const float2 scale = (float2)(nWidth, nHeight);
+    const float2 xy = ((convert_float2(coord) + 0.5f) * scale) - 0.5f;
+    const float2 fxy = floor(xy);
+
+    float4 mc = (0.0f);
+
+    #pragma unroll 8
+    for(float sx = fxy.x - 3.0f; sx <= fxy.x + 4.0f; sx++)
+    {
+        float coeffX = Lanczos4(xy.x - sx);
+        mc += 
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y - 3.0f)) * coeffX * Lanczos4(xy.y - fxy.y + 3.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y - 2.0f)) * coeffX * Lanczos4(xy.y - fxy.y + 2.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y - 1.0f)) * coeffX * Lanczos4(xy.y - fxy.y + 1.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y - 0.0f)) * coeffX * Lanczos4(xy.y - fxy.y + 0.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y + 1.0f)) * coeffX * Lanczos4(xy.y - fxy.y - 1.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y + 2.0f)) * coeffX * Lanczos4(xy.y - fxy.y - 2.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y + 3.0f)) * coeffX * Lanczos4(xy.y - fxy.y - 3.0f) +
+        read_imagef(srcImg, samplerN, (float2)(sx, fxy.y + 4.0f)) * coeffX * Lanczos4(xy.y - fxy.y - 4.0f);
+    }
+
+    //gray
+    mc.w = 0.299 * mc.z  + 0.587 * mc.y  + 0.114 * mc.x;
+
+    write_imagef(dstImg, coord, mc);
 }
 
 __kernel void getGray(__read_only image2d_t srcImg, __write_only image2d_t dstImg, float nWidth, float nHeight) 

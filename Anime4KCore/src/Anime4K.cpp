@@ -292,7 +292,10 @@ void Anime4K::process()
     if (!vm)
     {
         int tmpPcc = this->pcc;
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+        if (zf == 2.0)
+            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
+        else
+            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
         if (pre)
             FilterProcessor(dstImg, pref).process();
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
@@ -328,7 +331,10 @@ void Anime4K::process()
 
             pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, tmpPcc = this->pcc]()mutable
             {
-                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
+                if (zf == 2.0)
+                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
+                else
+                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
                 if (pre)
                     FilterProcessor(dstFrame, pref).process();
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
