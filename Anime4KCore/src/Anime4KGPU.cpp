@@ -238,7 +238,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KGPU::listGPUs()
                 delete[] platform;
                 return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get device name infomation");
             }
-            GPUInfo << "Device " << i << ": " << DeviceName << std::endl;
+            GPUInfo << "Device " << j << ": " << DeviceName << std::endl;
 
             delete[] DeviceName;
             clReleaseDevice(device[j]);

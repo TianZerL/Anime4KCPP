@@ -52,6 +52,7 @@ Anime4KCPP Settings: balance
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
+***This picture is out of date***
 ![GUI](images/GUI.png)
 
 # CLI

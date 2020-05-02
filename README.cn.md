@@ -49,6 +49,7 @@ Anime4KCPP 设置: 平衡
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
 **注意: 在处理视频前请安装 [ffmpeg](https://ffmpeg.org) 否则处理结果将没有音轨**  
+**该界面已过时，请以新版为准**
 
 ![GUI](images/GUI.png)
 
