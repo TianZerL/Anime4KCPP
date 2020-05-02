@@ -842,7 +842,7 @@ void MainWindow::on_pushButtonStart_clicked()
         initAnime4K(anime4k);
         emit cm.showInfo(anime4k->getFiltersInfo());
 
-        std::chrono::steady_clock::time_point startTime,endTime;
+        std::chrono::steady_clock::time_point startTime, endTime;
 
         if (imageCount)
         {
@@ -865,7 +865,7 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 imageCount--;
 
-                emit cm.done(image.second, 1.0-((imageCount + videoCount) / total),
+                emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
             }
@@ -905,7 +905,7 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 videoCount--;
 
-                emit cm.done(video.second, 1.0-(videoCount / total),
+                emit cm.done(video.second, 1.0 - (videoCount / total),
                              std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
             }

@@ -42,7 +42,7 @@ __kernel void getGrayLanczos4(__read_only image2d_t srcImg, __write_only image2d
     float4 mc = (0.0f);
 
     #pragma unroll 8
-    for(float sx = fxy.x - 3.0f; sx <= fxy.x + 4.0f; sx++)
+    for(float sx = fxy.x - 3.0f; sx <= fxy.x + 4.0f; sx += 1.0f)
     {
         float coeffX = Lanczos4(xy.x - sx);
         mc += 

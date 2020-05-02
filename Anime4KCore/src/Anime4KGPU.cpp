@@ -107,7 +107,7 @@ void Anime4KGPU::process()
                 break;
             }
 
-            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), this, curFrame, tmpPcc = this->pcc]()mutable
+            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), this, curFrame]()mutable
             {
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 if (pre)
