@@ -1064,7 +1064,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                                  QMessageBox::Yes | QMessageBox::No,
                                  QMessageBox::No))
         {
-            int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
+            unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
             std::pair<bool,std::string> ret = Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
             if(!ret.first)
             {
@@ -1077,17 +1077,31 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             }
             else
             {
-                mainAnime4kGPU = new Anime4KGPU(2, 2, 0.3, 1.0, 2.0,
-                                                false, false, false, false,
-                                                40, 40, std::thread::hardware_concurrency(),
-                                                currPlatFormID, currDeviceID);
+                try
+                {
+                    mainAnime4kGPU = new Anime4KGPU(2, 2, 0.3, 1.0, 2.0,
+                                                    false, false, false, false,
+                                                    40, 40, std::thread::hardware_concurrency(),
+                                                    currPlatFormID, currDeviceID);
+                }
+                catch (const char* error)
+                {
+                    QMessageBox::warning(this,
+                                         tr("Warning"),
+                                         QString(error),
+                                         QMessageBox::Ok);
+
+                    ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+                    return;
+                }
+
                 GPU = GPUMODE_INITIALZED;
                 QMessageBox::information(this,
                                      tr("Notice"),
                                      "Inital successful!\n" +
                                      QString::fromStdString(ret.second),
                                      QMessageBox::Ok);
-                ui->textBrowserInfoOut->insertPlainText("GPU inital successful!\n" + QString::fromStdString(ret.second) + "\n");
+                ui->textBrowserInfoOut->insertPlainText("GPU inital successfully!\n" + QString::fromStdString(ret.second) + "\n");
                 ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
                 ui->spinBoxPlatformID->setEnabled(false);
                 ui->spinBoxDeviceID->setEnabled(false);

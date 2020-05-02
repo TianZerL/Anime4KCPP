@@ -399,7 +399,7 @@
         <location filename="mainwindow.ui" line="703"/>
         <source>Faster but maybe low quality (Only for CPU)</source>
         <oldsource>Faster but maybe low quality</oldsource>
-        <translation>更快但可能降低质量</translation>
+        <translation type="unfinished">更快但可能降低质量(仅支持CPU)</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="706"/>
@@ -591,8 +591,9 @@
     <message>
         <location filename="mainwindow.cpp" line="384"/>
         <location filename="mainwindow.cpp" line="1072"/>
-        <location filename="mainwindow.cpp" line="1104"/>
-        <location filename="mainwindow.cpp" line="1122"/>
+        <location filename="mainwindow.cpp" line="1090"/>
+        <location filename="mainwindow.cpp" line="1118"/>
+        <location filename="mainwindow.cpp" line="1136"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -617,8 +618,8 @@
         <location filename="mainwindow.cpp" line="772"/>
         <location filename="mainwindow.cpp" line="971"/>
         <location filename="mainwindow.cpp" line="1061"/>
-        <location filename="mainwindow.cpp" line="1086"/>
-        <location filename="mainwindow.cpp" line="1128"/>
+        <location filename="mainwindow.cpp" line="1100"/>
+        <location filename="mainwindow.cpp" line="1142"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -640,8 +641,8 @@
         <translation>您正在尝试启用GPU加速，这还是一个实验性功能，检查兼容性并初始化吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1105"/>
-        <location filename="mainwindow.cpp" line="1123"/>
+        <location filename="mainwindow.cpp" line="1119"/>
+        <location filename="mainwindow.cpp" line="1137"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平台不支持GPU加速</translation>
     </message>
