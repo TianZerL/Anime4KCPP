@@ -14,7 +14,9 @@ Anime4KGPU::Anime4KGPU(
     bool postProcessing,
     uint8_t preFilters,
     uint8_t postFilters,
-    unsigned int maxThreads
+    unsigned int maxThreads,
+    unsigned int platformID,
+    unsigned int deviceID
 ) :Anime4K(
     passes,
     pushColorCount,
@@ -30,7 +32,8 @@ Anime4KGPU::Anime4KGPU(
     maxThreads
 ),
 context(nullptr), commandQueue(nullptr),
-program(nullptr), device(nullptr), frameGPUDoneCount(0)
+program(nullptr), device(nullptr), frameGPUDoneCount(0),
+pID(platformID), dID(deviceID)
 {
     initOpenCL();
 }
@@ -144,10 +147,116 @@ void Anime4KGPU::process()
     }
 }
 
-std::pair<bool, std::string> Anime4KGPU::checkGPUSupport()
+std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KGPU::listGPUs()
 {
     cl_int err = 0;
-    cl_uint plateforms = 0;
+    cl_uint platforms = 0;
+    cl_uint devices = 0;
+    cl_platform_id* platform = nullptr;
+    cl_device_id* device = nullptr;
+
+    size_t platformNameLength = 0;
+    size_t DeviceNameLength = 0;
+    char* platformName = nullptr;
+    char* DeviceName = nullptr;
+
+    std::ostringstream GPUInfo;
+
+    std::vector<int> devicesVector;
+
+    err = clGetPlatformIDs(0, nullptr, &platforms);
+    if (err != CL_SUCCESS || !platforms)
+        return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "No suppoted platform");
+
+    platform = new cl_platform_id[platforms];
+    err = clGetPlatformIDs(platforms, platform, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        delete[] platform;
+        return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "inital platform error");
+    }
+
+    for (cl_uint i = 0; i < platforms; i++)
+    {
+        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
+        if (err != CL_SUCCESS)
+        {
+            delete[] platform;
+            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get platform name length infomation");
+        }
+
+
+        platformName = new char[platformNameLength];
+        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            delete[] platformName;
+            delete[] platform;
+            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get platform name infomation");
+        }
+        GPUInfo << "Platform " << i << ": " << platformName << std::endl;
+
+        delete[] platformName;
+
+        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
+        if (err != CL_SUCCESS || !devices)
+        {
+            delete[] platform;
+            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "No supported GPU");
+        }
+
+        devicesVector.push_back(devices);
+
+        device = new cl_device_id[devices];
+        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, devices, device, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            delete[] device;
+            delete[] platform;
+            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "inital GPU error");
+        }
+
+        for (cl_uint j = 0; j < devices; j++)
+        {
+            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
+            if (err != CL_SUCCESS)
+            {
+                clReleaseDevice(device[j]);
+                delete[] device;
+                delete[] platform;
+                return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get device name length infomation");
+            }
+
+
+            DeviceName = new char[DeviceNameLength];
+            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
+            if (err != CL_SUCCESS)
+            {
+                clReleaseDevice(device[j]);
+                delete[] DeviceName;
+                delete[] device;
+                delete[] platform;
+                return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get device name infomation");
+            }
+            GPUInfo << "Device " << i << ": " << DeviceName << std::endl;
+
+            delete[] DeviceName;
+            clReleaseDevice(device[j]);
+        }
+        delete[] device;
+    }
+
+    std::pair<std::pair<int, std::vector<int>>, std::string> ret({platforms, devicesVector}, std::string(GPUInfo.str()));
+
+    delete[] platform;
+
+    return ret;
+}
+
+std::pair<bool, std::string> Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
+{
+    cl_int err = 0;
+    cl_uint platforms = 0;
     cl_uint devices = 0;
     cl_platform_id firstPlatform = nullptr;
     cl_device_id device = nullptr;
@@ -157,9 +266,25 @@ std::pair<bool, std::string> Anime4KGPU::checkGPUSupport()
     char* platformName = nullptr;
     char* DeviceName = nullptr;
 
-    err = clGetPlatformIDs(1, &firstPlatform, &plateforms);
-    if (err != CL_SUCCESS || !plateforms)
+    err = clGetPlatformIDs(0, nullptr, &platforms);
+    if (err != CL_SUCCESS || !platforms)
         return std::pair<bool, std::string>(false, "No suppoted platform");
+
+    cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
+    err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        delete[] tmpPlatform;
+        return std::pair<bool, std::string>(false, "inital platform error");
+    }
+
+
+    if (pID >= 0 && pID < platforms)
+        firstPlatform = tmpPlatform[pID];
+    else
+        firstPlatform = tmpPlatform[0];
+
+    delete[] tmpPlatform;
 
     err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
     if (err != CL_SUCCESS)
@@ -174,13 +299,28 @@ std::pair<bool, std::string> Anime4KGPU::checkGPUSupport()
     }
 
 
-    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, 1, &device, &devices);
+    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
     if (err != CL_SUCCESS || !devices)
     {
         delete[] platformName;
         return std::pair<bool, std::string>(false, "No supported GPU");
     }
-        
+
+    cl_device_id* tmpDevice = new cl_device_id[devices];
+    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        delete[] platformName;
+        delete[] tmpDevice;
+        return std::pair<bool, std::string>(false, "No supported GPU");
+    }
+
+    if (dID >= 0 && dID < devices)
+        device = tmpDevice[dID];
+    else
+        device = tmpDevice[0];
+
+    delete[] tmpDevice;
 
     err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
     if (err != CL_SUCCESS)
@@ -202,7 +342,7 @@ std::pair<bool, std::string> Anime4KGPU::checkGPUSupport()
     }
 
     std::pair<bool, std::string> ret(true,
-        std::string("Plateform: ") + platformName + "\n" + "Device: " + DeviceName);
+        std::string("Platform: ") + platformName + "\n" + "Device: " + DeviceName);
 
     delete[] DeviceName;
     delete[] platformName;
@@ -362,33 +502,89 @@ void Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
 inline void Anime4KGPU::initOpenCL()
 {
     cl_int err = 0;
-    cl_uint plateforms = 0;
-    cl_platform_id currentPlateform = nullptr;
+    cl_uint platforms = 0;
+    cl_uint devices = 0;
+    cl_platform_id currentplatform = nullptr;
 
-    //init plateform
-    err = clGetPlatformIDs(1, &currentPlateform, &plateforms);
-    if (err != CL_SUCCESS || !plateforms)
-        throw"Failed to find OpenCL plateform";
+    //init platform
+    err = clGetPlatformIDs(0, nullptr, &platforms);
+    if (err != CL_SUCCESS || !platforms)
+    {
+        std::cout << err << std::endl;
+        throw"Failed to find OpenCL platform";
+    }
+        
+    cl_platform_id *tmpPlatform = new cl_platform_id[platforms];
+    err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        std::cout << err << std::endl;
+        delete[] tmpPlatform;
+        throw"Failed to get OpenCL platform";
+    }
+
+
+    if (pID >= 0 && pID < platforms)
+        currentplatform = tmpPlatform[pID];
+    else
+        currentplatform = tmpPlatform[0];
+
+    delete[] tmpPlatform;
 
     //init device
-    err = clGetDeviceIDs(currentPlateform, CL_DEVICE_TYPE_GPU, 1, &device, nullptr);
+    err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
+    if (err != CL_SUCCESS || !devices)
+    {
+        std::cout << err << std::endl;
+        throw"Failed to find supported GPU";
+    }
+
+    cl_device_id* tmpDevice = new cl_device_id[devices];
+    err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
     if (err != CL_SUCCESS)
-        throw"Unsupport GPU";
+    {
+        std::cout << err << std::endl;
+        delete[] tmpDevice;
+        throw"inital GPU error";
+    }
+
+    if (dID >= 0 && dID < devices)
+        device = tmpDevice[dID];
+    else
+        device = tmpDevice[0];
+
+    delete[] tmpDevice;
 
     //init context
     context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &err);
     if (err != CL_SUCCESS)
     {
+        std::cout << err << std::endl;
         releaseOpenCL();
         throw"Failed to create context";
     }
 
     //init command queue
-    commandQueue = clCreateCommandQueueWithProperties(context, device, 0, nullptr);
-    if (commandQueue == nullptr)
+    commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+    if (err != CL_SUCCESS)
     {
-        releaseOpenCL();
-        throw"Failed to create command queue";
+        if (err == CL_INVALID_DEVICE)
+        {
+#pragma warning(disable:4996)
+            commandQueue = clCreateCommandQueue(context, device, 0, &err);
+            if (err != CL_SUCCESS)
+            {
+                std::cout << err << std::endl;
+                releaseOpenCL();
+                throw"Failed to create command queue";
+            }
+        }
+        else
+        {
+            std::cout << err << std::endl;
+            releaseOpenCL();
+            throw"Failed to create command queue";
+        }
     }
 
     //read kernel files
@@ -396,9 +592,10 @@ inline void Anime4KGPU::initOpenCL()
     const char* Anime4KCPPKernelSource = Anime4KCPPKernelSourceString.c_str();
 
     //create program
-    program = clCreateProgramWithSource(context, 1, &Anime4KCPPKernelSource, nullptr, nullptr);
-    if (program == nullptr)
+    program = clCreateProgramWithSource(context, 1, &Anime4KCPPKernelSource, nullptr, &err);
+    if (err != CL_SUCCESS)
     {
+        std::cout << err << std::endl;
         releaseOpenCL();
         throw"Failed to create OpenCL program";
     }
@@ -412,6 +609,7 @@ inline void Anime4KGPU::initOpenCL()
         char* buildError = new char[buildErrorSize];
         clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
         releaseOpenCL();
+        //print build info
         std::cout << buildError << std::endl;
         delete[] buildError;
         throw"Kernel build error";

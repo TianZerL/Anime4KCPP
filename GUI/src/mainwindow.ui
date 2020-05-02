@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1042</width>
-    <height>529</height>
+    <height>560</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -243,6 +243,9 @@
                <property name="text">
                 <string>output path:</string>
                </property>
+               <property name="buddy">
+                <cstring>lineEditOutputPath</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -263,6 +266,9 @@
               <widget class="QLabel" name="labelOutputPrefix">
                <property name="text">
                 <string>output prefix:</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEditOutputPrefix</cstring>
                </property>
               </widget>
              </item>
@@ -298,6 +304,9 @@
                <property name="text">
                 <string>image</string>
                </property>
+               <property name="buddy">
+                <cstring>lineEditImageSuffix</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -315,6 +324,9 @@
               <widget class="QLabel" name="labelVideoSuffix">
                <property name="text">
                 <string>video</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEditVideoSuffix</cstring>
                </property>
               </widget>
              </item>
@@ -573,6 +585,9 @@
                <property name="text">
                 <string>passes</string>
                </property>
+               <property name="buddy">
+                <cstring>spinBoxPasses</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -589,6 +604,9 @@
                </property>
                <property name="text">
                 <string>push color count</string>
+               </property>
+               <property name="buddy">
+                <cstring>spinBoxPushColorCount</cstring>
                </property>
               </widget>
              </item>
@@ -607,6 +625,9 @@
                <property name="text">
                 <string>push color strength</string>
                </property>
+               <property name="buddy">
+                <cstring>doubleSpinBoxPushColorStrength</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -623,6 +644,9 @@
                </property>
                <property name="text">
                 <string>push gradient strength</string>
+               </property>
+               <property name="buddy">
+                <cstring>doubleSpinBoxPushGradientStrength</cstring>
                </property>
               </widget>
              </item>
@@ -641,6 +665,9 @@
                <property name="text">
                 <string>upscaling ratio</string>
                </property>
+               <property name="buddy">
+                <cstring>doubleSpinBoxZoomFactor</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -658,6 +685,9 @@
                <property name="text">
                 <string>threads count</string>
                </property>
+               <property name="buddy">
+                <cstring>spinBoxThreads</cstring>
+               </property>
               </widget>
              </item>
              <item>
@@ -670,7 +700,7 @@
              <item>
               <widget class="QCheckBox" name="checkBoxFastMode">
                <property name="statusTip">
-                <string>Faster but maybe low quality</string>
+                <string>Faster but maybe low quality (Only for CPU)</string>
                </property>
                <property name="text">
                 <string>fast mode</string>
@@ -684,6 +714,62 @@
                </property>
                <property name="text">
                 <string>GPU acceleration</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutIDs">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayoutPlatformID">
+               <item>
+                <widget class="QLabel" name="labelPlatformID">
+                 <property name="text">
+                  <string>platform id</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>spinBoxPlatformID</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBoxPlatformID">
+                 <property name="statusTip">
+                  <string>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayoutDeviceID">
+               <item>
+                <widget class="QLabel" name="labelDeviceID">
+                 <property name="text">
+                  <string>device id</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>spinBoxDeviceID</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBoxDeviceID">
+                 <property name="statusTip">
+                  <string>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonListGPUs">
+               <property name="statusTip">
+                <string>List platforms and devices</string>
+               </property>
+               <property name="text">
+                <string>list GPUs</string>
                </property>
               </widget>
              </item>
@@ -778,7 +864,14 @@
      </property>
      <addaction name="actionQuit_confirmation"/>
     </widget>
+    <widget class="QMenu" name="menuGPU">
+     <property name="title">
+      <string>GPU</string>
+     </property>
+     <addaction name="actionList_GPUs"/>
+    </widget>
     <addaction name="menuGUI"/>
+    <addaction name="menuGPU"/>
    </widget>
    <addaction name="menuMenu"/>
    <addaction name="menuLanguage"/>
@@ -814,6 +907,11 @@
    </property>
    <property name="text">
     <string>Quit confirmation</string>
+   </property>
+  </action>
+  <action name="actionList_GPUs">
+   <property name="text">
+    <string>List GPUs</string>
    </property>
   </action>
  </widget>

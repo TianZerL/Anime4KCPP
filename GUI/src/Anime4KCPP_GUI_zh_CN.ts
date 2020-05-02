@@ -14,8 +14,8 @@
         <translation>输出路径:</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="254"/>
-        <location filename="mainwindow.ui" line="709"/>
+        <location filename="mainwindow.ui" line="257"/>
+        <location filename="mainwindow.ui" line="795"/>
         <source>pick</source>
         <translation>打开</translation>
     </message>
@@ -35,7 +35,7 @@
         <translation>主页</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="265"/>
+        <location filename="mainwindow.ui" line="268"/>
         <source>output prefix:</source>
         <translation>输出前缀:</translation>
     </message>
@@ -159,333 +159,375 @@
         <translation>文件输出路径</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="272"/>
+        <location filename="mainwindow.ui" line="278"/>
         <source>Prefix for the output files</source>
         <translation>输出文件前缀</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="285"/>
+        <location filename="mainwindow.ui" line="291"/>
         <source>Settings</source>
         <translation>设置</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="291"/>
+        <location filename="mainwindow.ui" line="297"/>
         <source>Suffix</source>
         <oldsource>suffix</oldsource>
         <translation>后缀</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="299"/>
-        <location filename="mainwindow.cpp" line="542"/>
-        <location filename="mainwindow.cpp" line="754"/>
+        <location filename="mainwindow.ui" line="305"/>
+        <location filename="mainwindow.cpp" line="545"/>
+        <location filename="mainwindow.cpp" line="757"/>
         <source>image</source>
         <translation>图像</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="306"/>
+        <location filename="mainwindow.ui" line="315"/>
         <source>Image suffix</source>
         <translation>图像后缀</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="317"/>
-        <location filename="mainwindow.cpp" line="543"/>
-        <location filename="mainwindow.cpp" line="755"/>
+        <location filename="mainwindow.ui" line="326"/>
+        <location filename="mainwindow.cpp" line="546"/>
+        <location filename="mainwindow.cpp" line="758"/>
         <source>video</source>
         <translation>视频</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="324"/>
+        <location filename="mainwindow.ui" line="336"/>
         <source>Video suffix</source>
         <translation>视频后缀</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="336"/>
+        <location filename="mainwindow.ui" line="348"/>
         <source>Filters</source>
         <oldsource>filters</oldsource>
         <translation>滤镜</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="349"/>
+        <location filename="mainwindow.ui" line="361"/>
         <source>preprocessing</source>
         <translation>预处理</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="355"/>
+        <location filename="mainwindow.ui" line="367"/>
         <source>Apply filters for the origin</source>
         <translation>对原始图像使用滤镜</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="358"/>
+        <location filename="mainwindow.ui" line="370"/>
         <source>enable preprocessing</source>
         <translation>启用预处理</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="380"/>
-        <location filename="mainwindow.ui" line="390"/>
-        <location filename="mainwindow.ui" line="484"/>
-        <location filename="mainwindow.ui" line="494"/>
+        <location filename="mainwindow.ui" line="392"/>
+        <location filename="mainwindow.ui" line="402"/>
+        <location filename="mainwindow.ui" line="496"/>
+        <location filename="mainwindow.ui" line="506"/>
         <source>anti-aliasing, denoise</source>
         <translation>抗锯齿并降噪</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="383"/>
-        <location filename="mainwindow.ui" line="487"/>
+        <location filename="mainwindow.ui" line="395"/>
+        <location filename="mainwindow.ui" line="499"/>
         <source>Median blur</source>
         <translation>中值滤波</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="393"/>
-        <location filename="mainwindow.ui" line="497"/>
+        <location filename="mainwindow.ui" line="405"/>
+        <location filename="mainwindow.ui" line="509"/>
         <source>Mean blur</source>
         <translation>均值滤波</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="400"/>
+        <location filename="mainwindow.ui" line="412"/>
         <source>adaptive sharpening(recommend)</source>
         <translation>自适应锐化(推荐)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="403"/>
-        <location filename="mainwindow.ui" line="507"/>
+        <location filename="mainwindow.ui" line="415"/>
+        <location filename="mainwindow.ui" line="519"/>
         <source>CAS Sharpening</source>
         <translation>CAS自适应锐化</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="410"/>
-        <location filename="mainwindow.ui" line="420"/>
+        <location filename="mainwindow.ui" line="422"/>
+        <location filename="mainwindow.ui" line="432"/>
         <source>anti-aliasing</source>
         <translation>抗锯齿</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="413"/>
-        <location filename="mainwindow.ui" line="517"/>
+        <location filename="mainwindow.ui" line="425"/>
+        <location filename="mainwindow.ui" line="529"/>
         <source>Gaussian blur weak</source>
         <translation>高斯滤波(弱)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="423"/>
-        <location filename="mainwindow.ui" line="527"/>
+        <location filename="mainwindow.ui" line="435"/>
+        <location filename="mainwindow.ui" line="539"/>
         <source>Gaussian blur</source>
         <translation>高斯滤波</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="430"/>
-        <location filename="mainwindow.ui" line="440"/>
+        <location filename="mainwindow.ui" line="442"/>
+        <location filename="mainwindow.ui" line="452"/>
         <source>denoise</source>
         <translation>降噪</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="433"/>
-        <location filename="mainwindow.ui" line="537"/>
+        <location filename="mainwindow.ui" line="445"/>
+        <location filename="mainwindow.ui" line="549"/>
         <source>Bilateral filter</source>
         <translation>双边滤波</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="443"/>
-        <location filename="mainwindow.ui" line="547"/>
+        <location filename="mainwindow.ui" line="455"/>
+        <location filename="mainwindow.ui" line="559"/>
         <source>Bilateral filter faster</source>
         <translation>快速双边滤波</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="453"/>
+        <location filename="mainwindow.ui" line="465"/>
         <source>postprocessing</source>
         <translation>后处理</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="459"/>
+        <location filename="mainwindow.ui" line="471"/>
         <source>Apply filters for the result</source>
         <translation>对处理结果应用滤镜</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="462"/>
+        <location filename="mainwindow.ui" line="474"/>
         <source>enable postprocessing</source>
         <translation>开启后处理</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="504"/>
+        <location filename="mainwindow.ui" line="516"/>
         <source>adaptive sharpening</source>
         <translation>自适应锐化</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="514"/>
+        <location filename="mainwindow.ui" line="526"/>
         <source>anti-aliasing(recommend, for files &lt;1080p)</source>
         <oldsource>anti-aliasing(recommend, for files &lt;1080p) </oldsource>
         <translation>抗锯齿(推荐，适用于小于1080p的文件)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="524"/>
+        <location filename="mainwindow.ui" line="536"/>
         <source>anti-aliasing(recommend, for files &gt;=1080p)</source>
         <oldsource>anti-aliasing(recommend, for files &gt;=1080p) </oldsource>
         <translation>抗锯齿(推荐，适用于大于等于1080p的文件)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="534"/>
+        <location filename="mainwindow.ui" line="546"/>
         <source>denoise(recommend, for image)</source>
         <translation>降噪(推荐，适用于图像)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="544"/>
+        <location filename="mainwindow.ui" line="556"/>
         <source>denoise(recommend, for video)</source>
         <translation>降噪(推荐，适用于视频)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="563"/>
+        <location filename="mainwindow.ui" line="575"/>
         <source>Arguments</source>
         <oldsource>arguments</oldsource>
         <translation>参数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="571"/>
+        <location filename="mainwindow.ui" line="583"/>
         <source>Passes for processing</source>
         <translation>Anime4KCPP处理次数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="574"/>
+        <location filename="mainwindow.ui" line="586"/>
         <source>passes</source>
         <translation>处理次数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="588"/>
+        <location filename="mainwindow.ui" line="603"/>
         <source>Limit the number of color pushes</source>
         <translation>限制边缘细化次数以防止边缘过细</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="591"/>
+        <location filename="mainwindow.ui" line="606"/>
         <source>push color count</source>
         <translation>边缘细化最大次数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="605"/>
+        <location filename="mainwindow.ui" line="623"/>
         <source>Strength for pushing color,range 0 to 1,higher for thinner edge</source>
         <translation>边缘细化强度，范围0-1，越大的值边缘越细，以提高放大后图像的观感</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="608"/>
+        <location filename="mainwindow.ui" line="626"/>
         <source>push color strength</source>
         <translation>边缘细化强度</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="622"/>
+        <location filename="mainwindow.ui" line="643"/>
         <source>Strength for pushing gradient,range 0 to 1,higher for sharper edge</source>
         <translation>处理强度，范围0-1，越大的值边缘越锐利，以提高放大后图像的观感</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="625"/>
+        <location filename="mainwindow.ui" line="646"/>
         <source>push gradient strength</source>
         <oldsource>push gardient strength</oldsource>
         <translation>处理强度</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="639"/>
+        <location filename="mainwindow.ui" line="663"/>
         <source>Upscaling ratio for resizing</source>
         <translation>放大倍率</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="642"/>
+        <location filename="mainwindow.ui" line="666"/>
         <source>upscaling ratio</source>
         <translation>放大倍率</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="656"/>
+        <location filename="mainwindow.ui" line="683"/>
         <source>Theads for video processing</source>
         <translation>用于视频处理的线程数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="659"/>
+        <location filename="mainwindow.ui" line="686"/>
         <source>threads count</source>
         <translation>使用线程数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="673"/>
-        <source>Faster but maybe low quality</source>
+        <location filename="mainwindow.ui" line="703"/>
+        <source>Faster but maybe low quality (Only for CPU)</source>
+        <oldsource>Faster but maybe low quality</oldsource>
         <translation>更快但可能降低质量</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="676"/>
+        <location filename="mainwindow.ui" line="706"/>
         <source>fast mode</source>
         <translation>快速模式</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="683"/>
+        <location filename="mainwindow.ui" line="713"/>
         <source>Enable GPU acceleration</source>
         <translation>开启GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="686"/>
+        <location filename="mainwindow.ui" line="716"/>
         <source>GPU acceleration</source>
         <translation>GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="698"/>
+        <location filename="mainwindow.ui" line="729"/>
+        <source>platform id</source>
+        <oldsource>plateform id</oldsource>
+        <translation>平台ID</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="739"/>
+        <source>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
+        <translation>指定平台ID，若您已经开启过GPU加速则需要重启Anime4KCPP以修改此值</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="760"/>
+        <source>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
+        <translation>指定设备ID，若您已经开启过GPU加速则需要重启Anime4KCPP以修改此值</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="750"/>
+        <source>device id</source>
+        <translation>设备ID</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="769"/>
+        <source>List platforms and devices</source>
+        <translation>列出所有平台以及设备</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="784"/>
         <source>Preview for test</source>
         <oldsource>preview for test</oldsource>
         <translation>快速预览</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="716"/>
+        <location filename="mainwindow.ui" line="802"/>
         <source>Quickly preview for testing arguments</source>
         <translation>快速预览以测试参数</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="719"/>
+        <location filename="mainwindow.ui" line="805"/>
         <source>preview</source>
         <translation>预览</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="726"/>
+        <location filename="mainwindow.ui" line="812"/>
         <source>only resize</source>
         <translation>仅放大</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="733"/>
+        <location filename="mainwindow.ui" line="819"/>
         <source>orgin image</source>
         <translation>原图</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="759"/>
+        <location filename="mainwindow.ui" line="845"/>
         <source>Menu</source>
         <translation>菜单</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="766"/>
+        <location filename="mainwindow.ui" line="852"/>
         <source>Language</source>
         <translation>语言</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="773"/>
+        <location filename="mainwindow.ui" line="859"/>
         <source>Option</source>
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="777"/>
+        <location filename="mainwindow.ui" line="863"/>
         <source>GUI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="790"/>
-        <location filename="mainwindow.cpp" line="919"/>
+        <location filename="mainwindow.ui" line="869"/>
+        <source>GPU</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="883"/>
+        <location filename="mainwindow.cpp" line="922"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="795"/>
+        <location filename="mainwindow.ui" line="888"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="800"/>
+        <location filename="mainwindow.ui" line="893"/>
         <source>English</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="805"/>
+        <location filename="mainwindow.ui" line="898"/>
         <source>Chinese</source>
         <translation>中文</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="816"/>
+        <location filename="mainwindow.ui" line="909"/>
         <source>Quit confirmation</source>
         <translation>退出时确认</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="914"/>
+        <source>List GPUs</source>
+        <translation>列出GPU设备</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="772"/>
+        <source>list GPUs</source>
+        <translation>列出GPU设备</translation>
     </message>
     <message>
         <source>Input file</source>
@@ -511,97 +553,100 @@
         <translation type="vanished">状态</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="68"/>
+        <location filename="mainwindow.cpp" line="71"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="69"/>
+        <location filename="mainwindow.cpp" line="72"/>
         <source>Do you really want to exit?</source>
         <translation>确认退出?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="127"/>
-        <location filename="mainwindow.cpp" line="575"/>
-        <location filename="mainwindow.cpp" line="1038"/>
+        <location filename="mainwindow.cpp" line="130"/>
+        <location filename="mainwindow.cpp" line="578"/>
+        <location filename="mainwindow.cpp" line="1041"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="325"/>
-        <location filename="mainwindow.cpp" line="331"/>
-        <location filename="mainwindow.cpp" line="337"/>
-        <location filename="mainwindow.cpp" line="343"/>
-        <location filename="mainwindow.cpp" line="349"/>
+        <location filename="mainwindow.cpp" line="328"/>
+        <location filename="mainwindow.cpp" line="334"/>
+        <location filename="mainwindow.cpp" line="340"/>
+        <location filename="mainwindow.cpp" line="346"/>
+        <location filename="mainwindow.cpp" line="352"/>
         <source>Error</source>
         <translation>错误</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="326"/>
+        <location filename="mainwindow.cpp" line="329"/>
         <source>Only ASCII encoding is supported</source>
         <translation>仅支持英文文件名</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="344"/>
+        <location filename="mainwindow.cpp" line="347"/>
         <source>File type error, only image support</source>
         <translation>文件类型错误，仅支持图像</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="381"/>
-        <location filename="mainwindow.cpp" line="1068"/>
-        <location filename="mainwindow.cpp" line="1095"/>
+        <location filename="mainwindow.cpp" line="384"/>
+        <location filename="mainwindow.cpp" line="1072"/>
+        <location filename="mainwindow.cpp" line="1104"/>
+        <location filename="mainwindow.cpp" line="1122"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="381"/>
+        <location filename="mainwindow.cpp" line="384"/>
         <source>FFmpeg did not fount</source>
         <translation>未发现FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="495"/>
+        <location filename="mainwindow.cpp" line="498"/>
         <source>done</source>
         <translation>完成</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="504"/>
-        <location filename="mainwindow.cpp" line="506"/>
+        <location filename="mainwindow.cpp" line="507"/>
+        <location filename="mainwindow.cpp" line="509"/>
         <source>error</source>
         <translation>出错</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="514"/>
-        <location filename="mainwindow.cpp" line="769"/>
-        <location filename="mainwindow.cpp" line="968"/>
-        <location filename="mainwindow.cpp" line="1058"/>
-        <location filename="mainwindow.cpp" line="1079"/>
+        <location filename="mainwindow.cpp" line="517"/>
+        <location filename="mainwindow.cpp" line="772"/>
+        <location filename="mainwindow.cpp" line="971"/>
+        <location filename="mainwindow.cpp" line="1061"/>
+        <location filename="mainwindow.cpp" line="1086"/>
+        <location filename="mainwindow.cpp" line="1128"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="770"/>
+        <location filename="mainwindow.cpp" line="773"/>
         <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
         <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
         <translation>您正在使用GPU加速模式，但依然启用了预处理或者后处理，这可能会拖慢GPU的处理速度(通常依然快于CPU)，关闭他们吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="969"/>
+        <location filename="mainwindow.cpp" line="972"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日志已拷贝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1059"/>
+        <location filename="mainwindow.cpp" line="1062"/>
         <source>You are trying to enable GPU acceleration, which is an experimental function, check and inital GPU?</source>
         <oldsource>You are trying to enable GPU accelaretion, which is an experimental function, check and inital GPU?</oldsource>
         <translation>您正在尝试启用GPU加速，这还是一个实验性功能，检查兼容性并初始化吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1096"/>
+        <location filename="mainwindow.cpp" line="1105"/>
+        <location filename="mainwindow.cpp" line="1123"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平台不支持GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="338"/>
+        <location filename="mainwindow.cpp" line="341"/>
         <source>File does not exists</source>
         <translation>文件不存在</translation>
     </message>
@@ -610,25 +655,25 @@
         <translation type="vanished">文件类型错误，仅支持图片</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="350"/>
+        <location filename="mainwindow.cpp" line="353"/>
         <source>File type error, you can add it manually</source>
         <translation>文件类型错误，可手动添加后缀</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="332"/>
+        <location filename="mainwindow.cpp" line="335"/>
         <source>Processing list empty</source>
         <translation>处理列表为空</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="39"/>
-        <location filename="mainwindow.cpp" line="541"/>
-        <location filename="mainwindow.cpp" line="753"/>
+        <location filename="mainwindow.cpp" line="544"/>
+        <location filename="mainwindow.cpp" line="756"/>
         <source>pick files</source>
         <translation>打开文件</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="597"/>
-        <location filename="mainwindow.cpp" line="1018"/>
+        <location filename="mainwindow.cpp" line="600"/>
+        <location filename="mainwindow.cpp" line="1021"/>
         <source>output directory</source>
         <translation>输出文件夹</translation>
     </message>

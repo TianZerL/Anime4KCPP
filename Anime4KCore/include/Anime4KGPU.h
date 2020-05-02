@@ -26,11 +26,14 @@ public:
         bool postProcessing = false,
         uint8_t preFilters = 40,
         uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency()
+        unsigned int maxThreads = std::thread::hardware_concurrency(),
+        unsigned int platformID = 0,
+        unsigned int deviceID = 0
     );
     virtual ~Anime4KGPU();
     virtual void process();
-    static std::pair<bool,std::string> checkGPUSupport();
+    static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
+    static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
 protected:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     void initOpenCL();
@@ -50,5 +53,8 @@ private:
 
     double nWidth;
     double nHeight;
+
+    const unsigned int pID;
+    const unsigned int dID;
 };
 

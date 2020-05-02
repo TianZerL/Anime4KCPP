@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
     opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
-    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1, int(4 * std::thread::hardware_concurrency())));
+    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1, int(32 * std::thread::hardware_concurrency())));
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
@@ -52,6 +52,9 @@ so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also 
 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
 false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
+    opt.add("listGPUs", 'l', "list GPUs");
+    opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
+    opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
 
     opt.parse_check(argc, argv);
 
@@ -71,6 +74,18 @@ false, 40, cmdline::range(1, 127));
     bool preProcessing = opt.exist("preProcessing");
     bool postProcessing = opt.exist("postProcessing");
     bool GPU = opt.exist("GPUMode");
+    bool listGPUs = opt.exist("listGPUs");
+    unsigned int pID = opt.get<unsigned int>("platformID");
+    unsigned int dID = opt.get<unsigned int>("deviceID");
+
+    if (listGPUs)
+    {
+        std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KGPU::listGPUs();
+        if (ret.first.first == 0)
+            std::cout << "Error:" << std::endl;
+        std::cout << ret.second << std::endl;
+        return 0;
+    }
 
     Anime4K* anime4k;
     try
@@ -78,7 +93,7 @@ false, 40, cmdline::range(1, 127));
         if (GPU)
         {
             std::cout << "GPU mode" << std::endl;
-            std::pair<bool, std::string> ret = Anime4KGPU::checkGPUSupport();
+            std::pair<bool, std::string> ret = Anime4KGPU::checkGPUSupport(pID, dID);
             if (!ret.first)
             {
                 std::cout << ret.second << std::endl;
@@ -100,7 +115,9 @@ false, 40, cmdline::range(1, 127));
                 postProcessing,
                 preFilters,
                 postFilters,
-                threads
+                threads,
+                pID,
+                dID
             );
         }
         else
@@ -177,7 +194,7 @@ false, 40, cmdline::range(1, 127));
             {
 #ifdef _WIN32
                 std::string command("del /q " + outputTmpName);
-#elif defined(__linux)
+#elif
                 std::string command("rm " + outputTmpName);
 #endif // SYSTEM
                 system(command.data());

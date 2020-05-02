@@ -46,6 +46,9 @@ MainWindow::MainWindow(QWidget *parent)
     mainAnime4kGPU = nullptr;
     //inital GPU
     GPU = GPUMODE_UNINITIALZED;
+    ui->spinBoxPlatformID->setMinimum(0);
+    ui->spinBoxDeviceID->setMinimum(0);
+    platforms = 0;
     //Register
     qRegisterMetaType<std::string>("std::string");
 }
@@ -1061,7 +1064,8 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                                  QMessageBox::Yes | QMessageBox::No,
                                  QMessageBox::No))
         {
-            std::pair<bool,std::string> ret = Anime4KGPU::checkGPUSupport();
+            int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
+            std::pair<bool,std::string> ret = Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
             if(!ret.first)
             {
                 QMessageBox::warning(this,
@@ -1073,7 +1077,10 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             }
             else
             {
-                mainAnime4kGPU = new Anime4KGPU;
+                mainAnime4kGPU = new Anime4KGPU(2, 2, 0.3, 1.0, 2.0,
+                                                false, false, false, false,
+                                                40, 40, std::thread::hardware_concurrency(),
+                                                currPlatFormID, currDeviceID);
                 GPU = GPUMODE_INITIALZED;
                 QMessageBox::information(this,
                                      tr("Notice"),
@@ -1082,6 +1089,8 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                                      QMessageBox::Ok);
                 ui->textBrowserInfoOut->insertPlainText("GPU inital successful!\n" + QString::fromStdString(ret.second) + "\n");
                 ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
+                ui->spinBoxPlatformID->setEnabled(false);
+                ui->spinBoxDeviceID->setEnabled(false);
             }
         }
         else
@@ -1097,4 +1106,35 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                              QMessageBox::Ok);
         ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
     }
+}
+
+void MainWindow::on_actionList_GPUs_triggered()
+{
+    on_pushButtonListGPUs_clicked();
+}
+
+void MainWindow::on_pushButtonListGPUs_clicked()
+{
+    std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KGPU::listGPUs();
+    if(ret.first.first == 0)
+    {
+        QMessageBox::warning(this,
+                             tr("Warning"),
+                             tr("Unsupport GPU acceleration in this platform"),
+                             QMessageBox::Ok);
+         return;
+    }
+    QMessageBox::information(this,
+                         tr("Notice"),
+                         QString::fromStdString(ret.second),
+                         QMessageBox::Ok);
+    platforms = ret.first.first;
+    devices = ret.first.second;
+    ui->spinBoxPlatformID->setRange(0, ret.first.first - 1);
+}
+
+void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
+{
+    if(value < int(devices.size()))
+        ui->spinBoxDeviceID->setRange(0, devices[value] - 1);
 }

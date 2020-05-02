@@ -133,6 +133,12 @@ private slots:
 
     void on_checkBoxGPUMode_stateChanged(int arg1);
 
+    void on_actionList_GPUs_triggered();
+
+    void on_pushButtonListGPUs_clicked();
+
+    void on_spinBoxPlatformID_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
@@ -148,5 +154,8 @@ private:
     GPUMode GPU;
     Anime4K *mainAnime4kCPU;
     Anime4K *mainAnime4kGPU;
+
+    std::vector<int> devices;
+    int platforms;
 };
 #endif // MAINWINDOW_H
