@@ -94,7 +94,8 @@ This project uses [cmake](https://cmake.org) to build.
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
       -?, --help                print this message
-
+## About GPU acceleration
+Use ```-q``` to enable GPU acceleration, and then use ```-l``` to list the platform ids and device ids, ```-h``` for specifying platform id, ```-d``` for specifying device id.
 ## Filters
 Enable filters can make the result be better, now Anime4kCPP support following filters:
 
