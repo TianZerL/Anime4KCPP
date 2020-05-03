@@ -41,6 +41,10 @@ enum BGRA
     B = 0, G = 1, R = 2, A = 3
 };
 
+enum CODEC {
+    OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
+};
+
 class DLL Anime4K
 {
 public:
@@ -76,7 +80,7 @@ public:
     void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
-    void setVideoSaveInfo(const std::string& dstFile);
+    void setVideoSaveInfo(const std::string& dstFile,const CODEC codec = MP4V);
     void saveImage(const std::string& dstFile);
     void saveVideo();
     void showInfo();

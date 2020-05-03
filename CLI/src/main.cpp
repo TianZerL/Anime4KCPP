@@ -22,6 +22,26 @@ bool mergrAudio2Video(const std::string& output, const std::string& srcFile)
     return false;
 }
 
+CODEC string2Codec(const std::string codec)
+{
+    if (codec == "mp4v")
+        return MP4V;
+    else if (codec == "dxva")
+        return DXVA;
+    else if (codec == "avc1")
+        return AVC1;
+    else if (codec == "vp09")
+        return VP09;
+    else if (codec == "hevc")
+        return HEVC;
+    else if (codec == "av01")
+        return AV01;
+    else if (codec == "other")
+        return OTHER;
+    else
+        return MP4V;
+}
+
 int main(int argc, char* argv[])
 {
     //Options
@@ -55,6 +75,8 @@ false, 40, cmdline::range(1, 127));
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
+    opt.add<std::string>("codec", 'x', "Specify the codec for encoding from mp4v(recommended), dxva(for Windows), avc1(H264), vp09(very slow), hevc(not support in Windowds), \
+av01(not support in Windowds)", false, "mp4v");
 
     opt.parse_check(argc, argv);
 
@@ -77,6 +99,8 @@ false, 40, cmdline::range(1, 127));
     bool listGPUs = opt.exist("listGPUs");
     unsigned int pID = opt.get<unsigned int>("platformID");
     unsigned int dID = opt.get<unsigned int>("deviceID");
+    std::string codec = opt.get<std::string>("codec");
+
 
     if (listGPUs)
     {
@@ -172,7 +196,7 @@ false, 40, cmdline::range(1, 127));
             try
             {
                 anime4k->loadVideo(input);
-                anime4k->setVideoSaveInfo(outputTmpName);
+                anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
             }
             catch (const char* err)
             {

@@ -96,22 +96,76 @@ void Anime4K::loadImage(const std::string& srcFile)
     W = zf * orgW;
 }
 
-void Anime4K::setVideoSaveInfo(const std::string& dstFile)
+void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
 {
-#ifdef _WIN32 //DXVA encoding for windows
-    videoWriter.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), std::ceil(fps), cv::Size(W, H));
-    if (!videoWriter.isOpened())
+    switch (codec)
     {
-        videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
+    case MP4V:
+        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+#ifdef _WIN32 //DXVA encoding for windows
+    case DXVA:
+        videoWriter.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), std::ceil(fps), cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+#endif
+    case AVC1:
+        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+    case VP09:
+        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+    case HEVC:
+        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+    case AV01:
+        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+        {
+            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
+            if (!videoWriter.isOpened())
+                throw "Fail to initial video writer.";
+        }
+        break;
+    case OTHER:
+        videoWriter.open(dstFile, -1, fps, cv::Size(W, H));
+        if (!videoWriter.isOpened())
+            throw "Fail to initial video writer.";
+        break;
+    default:
+        videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
         if (!videoWriter.isOpened())
             throw "Fail to initial video writer.";
     }
-#elif
-    videoWriter.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
-    if (!videoWriter.isOpened())
-        throw "Fail to initial video writer.";
-#endif // DXVA
-
 }
 
 void Anime4K::saveImage(const std::string& dstFile)
