@@ -17,6 +17,7 @@
 #include <QMetaType>
 #include <QClipboard>
 #include <QSettings>
+#include <QDesktopServices>
 
 #include <opencv2/opencv.hpp>
 
@@ -35,8 +36,8 @@ enum Language
 enum ErrorType
 {
     INPUT_NONASCII = 0, PROCESSING_LIST_EMPTY=1,
-    FILE_NOT_EXIST = 2, TYPE_NOT_IMAGE = 3,
-    TYPE_NOT_ADD = 4
+    FILE_NOT_EXIST = 2, DIR_NOT_EXIST=3,
+    TYPE_NOT_IMAGE = 4, TYPE_NOT_ADD = 5
 };
 
 enum FileType
@@ -75,6 +76,7 @@ private:
     void releaseMainAnime4K();
     FileType fileType(const QFileInfo &file);
     QString getOutputPrefix();
+    CODEC getCodec(const QString &codec);
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
@@ -139,6 +141,8 @@ private slots:
 
     void on_spinBoxPlatformID_valueChanged(int arg1);
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
@@ -157,5 +161,8 @@ private:
 
     std::vector<int> devices;
     int platforms;
+
+    QHash<QString,Language> languageSelector;
+    QHash<QString,CODEC> codecSelector;
 };
 #endif // MAINWINDOW_H

@@ -205,11 +205,11 @@ void Anime4K::showInfo()
 void Anime4K::showFiltersInfo()
 {
     std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Pre processing filters list:" << std::endl;
+    std::cout << "Preprocessing filters list:" << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     if (!pre)
     {
-        std::cout << "Pre processing disable" << std::endl;
+        std::cout << "Preprocessing disable" << std::endl;
     }
     else
     {
@@ -229,11 +229,11 @@ void Anime4K::showFiltersInfo()
             std::cout << "Bilateral filter faster" << std::endl;
     }
     std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Post processing filters list:" << std::endl;
+    std::cout << "Postprocessing filters list:" << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     if (!post)
     {
-        std::cout << "Post processing disable" << std::endl;
+        std::cout << "Postprocessing disable" << std::endl;
     }
     else
     {
@@ -284,11 +284,11 @@ std::string Anime4K::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << std::endl;
-    oss << "Pre processing filters list:" << std::endl;
+    oss << "Preprocessing filters list:" << std::endl;
     oss << "----------------------------------------------" << std::endl;
     if (!pre)
     {
-        oss << "Pre processing disable" << std::endl;
+        oss << "Preprocessing disable" << std::endl;
     }
     else
     {
@@ -308,11 +308,11 @@ std::string Anime4K::getFiltersInfo()
             oss << "Bilateral filter faster" << std::endl;
     }
     oss << "----------------------------------------------" << std::endl;
-    oss << "Post processing filters list:" << std::endl;
+    oss << "Postprocessing filters list:" << std::endl;
     oss << "----------------------------------------------" << std::endl;
     if (!post)
     {
-        oss << "Post processing disable" << std::endl;
+        oss << "Postprocessing disable" << std::endl;
     }
     else
     {

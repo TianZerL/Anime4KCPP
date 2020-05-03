@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1042</width>
-    <height>560</height>
+    <height>590</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -255,6 +255,13 @@
               <widget class="QPushButton" name="pushButtonOutputPath">
                <property name="text">
                 <string>pick</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButton">
+               <property name="text">
+                <string>open</string>
                </property>
               </widget>
              </item>
@@ -692,6 +699,74 @@
              </item>
              <item>
               <widget class="QSpinBox" name="spinBoxThreads"/>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayoutCodec">
+             <item>
+              <widget class="QLabel" name="labelCodec">
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string>Codec for encoding</string>
+               </property>
+               <property name="whatsThis">
+                <string/>
+               </property>
+               <property name="text">
+                <string>codec</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBoxCodec">
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string>mp4v is recommended, Windows only support mp4v, dxva(HW, only for Windows), avc1(H264) and vp09(very slow), other is for tesing.</string>
+               </property>
+               <property name="currentText">
+                <string notr="true">mp4v</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string notr="true" comment="recommended in Windows" extracomment="recommended in Windows">mp4v</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true" comment="only for Windows" extracomment="only for Windows">dxva</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true" comment="H264, recommended in Linux" extracomment="H264, recommended in Linux">avc1</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true" comment="very slow" extracomment="very slow">vp09</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true">hevc</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true">av01</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true">other</string>
+                </property>
+               </item>
+              </widget>
              </item>
             </layout>
            </item>

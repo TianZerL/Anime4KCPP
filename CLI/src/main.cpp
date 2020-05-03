@@ -22,7 +22,7 @@ bool mergrAudio2Video(const std::string& output, const std::string& srcFile)
     return false;
 }
 
-CODEC string2Codec(const std::string codec)
+CODEC string2Codec(const std::string& codec)
 {
     if (codec == "mp4v")
         return MP4V;
@@ -75,8 +75,8 @@ false, 40, cmdline::range(1, 127));
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
-    opt.add<std::string>("codec", 'x', "Specify the codec for encoding from mp4v(recommended), dxva(for Windows), avc1(H264), vp09(very slow), hevc(not support in Windowds), \
-av01(not support in Windowds)", false, "mp4v");
+    opt.add<std::string>("codec", 'x', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
+hevc(not support in Windowds), av01(not support in Windowds)", false, "mp4v");
 
     opt.parse_check(argc, argv);
 

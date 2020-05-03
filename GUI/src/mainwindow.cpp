@@ -8,6 +8,16 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     //inital translator
     translator = new QTranslator(this);
+    languageSelector["en"] = en;
+    languageSelector["zh_cn"] = zh_cn;
+    //inital codec
+    codecSelector["mp4v"] = MP4V;
+    codecSelector["dxva"] = DXVA;
+    codecSelector["avc1"] = AVC1;
+    codecSelector["vp09"] = VP09;
+    codecSelector["hevc"] = HEVC;
+    codecSelector["av01"] = AV01;
+    codecSelector["other"] = OTHER;
     //inital textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
     ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
@@ -299,15 +309,12 @@ void MainWindow::writeConfig(QSettings *conf)
     conf->setValue("/Postprocessing/BilateralFilterFaster",postBilateralFaster);
 }
 
-Language MainWindow::getLanguage(const QString &lang)
+inline Language MainWindow::getLanguage(const QString &lang)
 {
-    QMap<QString,Language> selector;
-    selector["eh"]=en;
-    selector["zh_cn"]=zh_cn;
-    return selector[lang];
+    return languageSelector[lang];
 }
 
-QString MainWindow::getLanguage(const Language lang)
+inline QString MainWindow::getLanguage(const Language lang)
 {
     switch (lang)
     {
@@ -339,6 +346,12 @@ void MainWindow::errorHandler(const ErrorType err)
         QMessageBox::information(this,
                                  tr("Error"),
                                  tr("File does not exists"),
+                                 QMessageBox::Ok);
+        break;
+    case DIR_NOT_EXIST:
+        QMessageBox::information(this,
+                                 tr("Error"),
+                                 tr("Dir does not exists"),
                                  QMessageBox::Ok);
         break;
     case TYPE_NOT_IMAGE:
@@ -491,6 +504,11 @@ QString MainWindow::getOutputPrefix()
         return "output_anime4kcpp_";
     }
     return ui->lineEditOutputPrefix->text();
+}
+
+inline CODEC MainWindow::getCodec(const QString &codec)
+{
+    return codecSelector[codec];
 }
 
 void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
@@ -878,7 +896,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 try
                 {
                     anime4k->loadVideo(video.first.first.toStdString());
-                    anime4k->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4");
+                    anime4k->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4", getCodec(ui->comboBoxCodec->currentText()));
                     emit cm.showInfo(anime4k->getInfo()+"processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     anime4k->process();
@@ -1151,4 +1169,15 @@ void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
 {
     if(value < int(devices.size()))
         ui->spinBoxDeviceID->setRange(0, devices[value] - 1);
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    QDir outputPath(ui->lineEditOutputPath->text());
+    if (!outputPath.exists())
+    {
+        errorHandler(DIR_NOT_EXIST);
+        return;
+    }
+    QDesktopServices::openUrl(QUrl("file:///" + outputPath.absolutePath(), QUrl::TolerantMode));
 }
