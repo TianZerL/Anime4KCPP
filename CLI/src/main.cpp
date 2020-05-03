@@ -218,7 +218,7 @@ av01(not support in Windowds)", false, "mp4v");
             {
 #ifdef _WIN32
                 std::string command("del /q " + outputTmpName);
-#elif
+#else
                 std::string command("rm " + outputTmpName);
 #endif // SYSTEM
                 system(command.data());
