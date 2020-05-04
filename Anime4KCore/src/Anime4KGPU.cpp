@@ -545,7 +545,7 @@ inline void Anime4KGPU::initOpenCL()
     {
         std::cout << err << std::endl;
         delete[] tmpDevice;
-        throw"inital GPU error";
+        throw"GPU initialization error";
     }
 
     if (dID >= 0 && dID < devices)

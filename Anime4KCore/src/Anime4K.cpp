@@ -76,7 +76,7 @@ void Anime4K::loadVideo(const std::string& dstFile)
 {
     video.open(dstFile);
     if (!video.isOpened())
-        throw "Fail to load file, file may not exist or decoder did'n been installed.";
+        throw "Failed to load file: file doesn't not exist or decoder isn't installed.";
     orgH = video.get(cv::CAP_PROP_FRAME_HEIGHT);
     orgW = video.get(cv::CAP_PROP_FRAME_WIDTH);
     fps = video.get(cv::CAP_PROP_FPS);
@@ -89,7 +89,7 @@ void Anime4K::loadImage(const std::string& srcFile)
 {
     orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
     if (orgImg.empty())
-        throw "Fail to load file, file may not exist.";
+        throw "Failed to load file: file doesn't not exist or incorrect file format.";
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = zf * orgH;
@@ -106,7 +106,7 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
 #ifdef _WIN32 //DXVA encoding for windows
@@ -116,7 +116,7 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
 #endif
@@ -126,7 +126,7 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
     case VP09:
@@ -135,7 +135,7 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
     case HEVC:
@@ -144,7 +144,7 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
     case AV01:
@@ -153,18 +153,18 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
         {
             videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
             if (!videoWriter.isOpened())
-                throw "Fail to initial video writer.";
+                throw "Failed to initialize video writer.";
         }
         break;
     case OTHER:
         videoWriter.open(dstFile, -1, fps, cv::Size(W, H));
         if (!videoWriter.isOpened())
-            throw "Fail to initial video writer.";
+            throw "Failed to initialize video writer.";
         break;
     default:
         videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
         if (!videoWriter.isOpened())
-            throw "Fail to initial video writer.";
+            throw "Failed to initialize video writer.";
     }
 }
 
@@ -182,13 +182,13 @@ void Anime4K::saveVideo()
 void Anime4K::showInfo()
 {
     std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Welcome to use Anime4KCPP" << std::endl;
+    std::cout << "Welcome to Anime4KCPP" << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
     if (vm)
     {
         std::cout << "FPS: " << fps << std::endl;
         std::cout << "Threads: " << mt << std::endl;
-        std::cout << "Total frame: " << totalFrameCount << std::endl;
+        std::cout << "Total frames: " << totalFrameCount << std::endl;
     }
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
@@ -209,7 +209,7 @@ void Anime4K::showFiltersInfo()
     std::cout << "----------------------------------------------" << std::endl;
     if (!pre)
     {
-        std::cout << "Preprocessing disable" << std::endl;
+        std::cout << "Preprocessing disabled" << std::endl;
     }
     else
     {
@@ -233,7 +233,7 @@ void Anime4K::showFiltersInfo()
     std::cout << "----------------------------------------------" << std::endl;
     if (!post)
     {
-        std::cout << "Postprocessing disable" << std::endl;
+        std::cout << "Postprocessing disabled" << std::endl;
     }
     else
     {
@@ -259,13 +259,13 @@ std::string Anime4K::getInfo()
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << std::endl;
-    oss << "Welcome to use Anime4KCPP" << std::endl;
+    oss << "Welcome to Anime4KCPP" << std::endl;
     oss << "----------------------------------------------" << std::endl;
     if (vm)
     {
         oss << "FPS: " << fps << std::endl;
         oss << "Threads: " << mt << std::endl;
-        oss << "Total frame: " << totalFrameCount << std::endl;
+        oss << "Total frames: " << totalFrameCount << std::endl;
     }
     oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     oss << "----------------------------------------------" << std::endl;
@@ -288,7 +288,7 @@ std::string Anime4K::getFiltersInfo()
     oss << "----------------------------------------------" << std::endl;
     if (!pre)
     {
-        oss << "Preprocessing disable" << std::endl;
+        oss << "Preprocessing disabled" << std::endl;
     }
     else
     {
@@ -312,7 +312,7 @@ std::string Anime4K::getFiltersInfo()
     oss << "----------------------------------------------" << std::endl;
     if (!post)
     {
-        oss << "Postprocessing disable" << std::endl;
+        oss << "Postprocessing disabled" << std::endl;
     }
     else
     {
