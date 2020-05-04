@@ -938,6 +938,7 @@
       <string>GUI</string>
      </property>
      <addaction name="actionQuit_confirmation"/>
+     <addaction name="actionCheck_FFmpeg"/>
     </widget>
     <widget class="QMenu" name="menuGPU">
      <property name="title">
@@ -987,6 +988,14 @@
   <action name="actionList_GPUs">
    <property name="text">
     <string>List GPUs</string>
+   </property>
+  </action>
+  <action name="actionCheck_FFmpeg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Check FFmpeg</string>
    </property>
   </action>
  </widget>

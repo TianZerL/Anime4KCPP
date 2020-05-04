@@ -6,11 +6,11 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    //inital translator
+    //initialize translator
     translator = new QTranslator(this);
     languageSelector["en"] = en;
     languageSelector["zh_cn"] = zh_cn;
-    //inital codec
+    //initialize codec
     codecSelector["mp4v"] = MP4V;
     codecSelector["dxva"] = DXVA;
     codecSelector["avc1"] = AVC1;
@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent)
     codecSelector["hevc"] = HEVC;
     codecSelector["av01"] = AV01;
     codecSelector["other"] = OTHER;
-    //inital textBrowser
+    //initialize textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
     ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
     ui->spinBoxFontSize->setRange(9,30);
@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     initTextBrowser();
     //accept drops
     this->setAcceptDrops(true);
-    //inital tableView
+    //initialize tableView
     tableModel = new QStandardItemModel(this);
     tableModel->setColumnCount(5);
     tableModel->setHorizontalHeaderLabels({"Input file",
@@ -35,26 +35,27 @@ MainWindow::MainWindow(QWidget *parent)
                                            "Output path",
                                            "State"});
     ui->tableViewProcessingList->setModel(tableModel);
-    //inital processBar
+    //initialize processBar
     ui->progressBarProcessingList->reset();
     ui->progressBarProcessingList->setRange(0, 100);
     ui->progressBarProcessingList->setEnabled(false);
-    //inital arguments
+    //initialize arguments
     ui->spinBoxThreads->setMinimum(1);
     ui->doubleSpinBoxPushColorStrength->setRange(0.0,1.0);
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0,1.0);
     ui->doubleSpinBoxZoomFactor->setRange(1.0,10.0);
-    //inital time and count
+    //initialize time and count
     totalTaskCount = totalTime = imageCount = videoCount = 0;
-    //inital ffmpeg
-    ffmpeg = checkFFmpeg();
-    //inital config
+    //initialize config
     config = new QSettings("settings.ini", QSettings::IniFormat, this);
     readConfig(config);
-    //inital Anime4KCoreForCPU
+    //initialize ffmpeg
+    if (ui->actionCheck_FFmpeg->isChecked())
+        ffmpeg = checkFFmpeg();
+    //initialize Anime4KCoreForCPU
     mainAnime4kCPU = new Anime4K;
     mainAnime4kGPU = nullptr;
-    //inital GPU
+    //initialize GPU
     GPU = GPUMODE_UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
     ui->spinBoxDeviceID->setMinimum(0);
@@ -122,7 +123,7 @@ void MainWindow::dropEvent(QDropEvent *event)
     QStandardItem *outputPath;
     QStandardItem *state;
 
-    for(QString &file:files)
+    for (QString &file:files)
     {
         QFileInfo fileInfo(file);
 
@@ -159,7 +160,8 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::readConfig(const QSettings *conf)
 {
     QString language = conf->value("/GUI/language","en").toString();
-    bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom","en").toBool();
+    bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom",true).toBool();
+    bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg",true).toBool();
 
     QString imageSuffix = conf->value("/Suffix/image","png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video","mp4:mkv:avi:m4v:flv:3gp:wmv:mov").toString();
@@ -204,6 +206,7 @@ void MainWindow::readConfig(const QSettings *conf)
         break;
     }
     ui->actionQuit_confirmation->setChecked(quitConfirmatiom);
+    ui->actionCheck_FFmpeg->setChecked(checkFFmpegOnStart);
     //suffix
     ui->lineEditImageSuffix->setText(imageSuffix);
     ui->lineEditVideoSuffix->setText(videoSuffix);
@@ -242,6 +245,7 @@ void MainWindow::writeConfig(QSettings *conf)
 {
     QString language = getLanguage(currLanguage);
     bool quitConfirmatiom = ui->actionQuit_confirmation->isChecked();
+    bool checkFFmpegOnStart = ui->actionCheck_FFmpeg->isChecked();
 
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
@@ -276,6 +280,7 @@ void MainWindow::writeConfig(QSettings *conf)
 
     conf->setValue("/GUI/language",language);
     conf->setValue("/GUI/quitConfirmatiom",quitConfirmatiom);
+    conf->setValue("/GUI/checkFFmpeg",checkFFmpegOnStart);
 
     conf->setValue("/Suffix/image",imageSuffix);
     conf->setValue("/Suffix/video",videoSuffix);
@@ -1078,7 +1083,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         if(QMessageBox::Yes == QMessageBox::information(this,
                                  tr("Notice"),
                                  tr("You are trying to enable GPU acceleration, "
-                                    "which is an experimental function, check and inital GPU?"),
+                                    "which is an experimental function, check and initialize GPU?"),
                                  QMessageBox::Yes | QMessageBox::No,
                                  QMessageBox::No))
         {
@@ -1116,10 +1121,10 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 GPU = GPUMODE_INITIALZED;
                 QMessageBox::information(this,
                                      tr("Notice"),
-                                     "Inital successful!\n" +
+                                     "initialize successful!\n" +
                                      QString::fromStdString(ret.second),
                                      QMessageBox::Ok);
-                ui->textBrowserInfoOut->insertPlainText("GPU inital successfully!\n" + QString::fromStdString(ret.second) + "\n");
+                ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
                 ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
                 ui->spinBoxPlatformID->setEnabled(false);
                 ui->spinBoxDeviceID->setEnabled(false);
