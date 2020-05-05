@@ -811,7 +811,7 @@
                <item>
                 <widget class="QSpinBox" name="spinBoxPlatformID">
                  <property name="statusTip">
-                  <string>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</string>
+                  <string>Specify platform id</string>
                  </property>
                 </widget>
                </item>
@@ -832,7 +832,7 @@
                <item>
                 <widget class="QSpinBox" name="spinBoxDeviceID">
                  <property name="statusTip">
-                  <string>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</string>
+                  <string>Specify device id</string>
                  </property>
                 </widget>
                </item>
@@ -845,6 +845,16 @@
                </property>
                <property name="text">
                 <string>list GPUs</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonReleaseGPU">
+               <property name="statusTip">
+                <string>Release GPU in order to specify anoher GPU</string>
+               </property>
+               <property name="text">
+                <string>release GPU</string>
                </property>
               </widget>
              </item>

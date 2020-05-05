@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     GPU = GPUMODE_UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
     ui->spinBoxDeviceID->setMinimum(0);
+    ui->pushButtonReleaseGPU->setEnabled(false);
     platforms = 0;
     //Register
     qRegisterMetaType<std::string>("std::string");
@@ -378,7 +379,7 @@ void MainWindow::initTextBrowser()
 {
     ui->textBrowserInfoOut->setText(
                 "----------------------------------------------\n"
-                "        Welcome to use Anime4KCPP GUI         \n"
+                "           Welcome to Anime4KCPP GUI          \n"
                 "----------------------------------------------\n"+
         QString("         Anime4K GUI v%1                 \n"
                 "         Anime4K Core v%2                \n"
@@ -483,7 +484,7 @@ void MainWindow::initAnime4K(Anime4K *&anime4K)
 inline void MainWindow::releaseMainAnime4K()
 {
     delete mainAnime4kCPU;
-    if(mainAnime4kGPU!=nullptr)
+    if(mainAnime4kGPU != nullptr)
         delete mainAnime4kGPU;
 }
 
@@ -1102,10 +1103,10 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             {
                 try
                 {
-                    mainAnime4kGPU = new Anime4KGPU(2, 2, 0.3, 1.0, 2.0,
-                                                    false, false, false, false,
-                                                    40, 40, std::thread::hardware_concurrency(),
-                                                    currPlatFormID, currDeviceID);
+                    if (mainAnime4kGPU != nullptr)
+                        mainAnime4kGPU->initGPU();
+                    else
+                        mainAnime4kGPU = new Anime4KGPU(true, currPlatFormID, currDeviceID);
                 }
                 catch (const char* error)
                 {
@@ -1128,6 +1129,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
                 ui->spinBoxPlatformID->setEnabled(false);
                 ui->spinBoxDeviceID->setEnabled(false);
+                ui->pushButtonReleaseGPU->setEnabled(true);
             }
         }
         else
@@ -1185,4 +1187,21 @@ void MainWindow::on_pushButton_clicked()
         return;
     }
     QDesktopServices::openUrl(QUrl("file:///" + outputPath.absolutePath(), QUrl::TolerantMode));
+}
+
+void MainWindow::on_pushButtonReleaseGPU_clicked()
+{
+    if(mainAnime4kGPU != nullptr && GPU == GPUMODE_INITIALZED)
+    {
+        mainAnime4kGPU->releaseGPU();
+        GPU = GPUMODE_UNINITIALZED;
+        QMessageBox::information(this,
+                                 tr("Notice"),
+                                 tr("Successfully release GPU"),
+                                 QMessageBox::Ok);
+        ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+        ui->spinBoxPlatformID->setEnabled(true);
+        ui->spinBoxDeviceID->setEnabled(true);
+        ui->pushButtonReleaseGPU->setEnabled(false);
+    }
 }

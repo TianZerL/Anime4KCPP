@@ -16,7 +16,8 @@ Anime4KGPU::Anime4KGPU(
     uint8_t postFilters,
     unsigned int maxThreads,
     unsigned int platformID,
-    unsigned int deviceID
+    unsigned int deviceID,
+    bool initGPU
 ) :Anime4K(
     passes,
     pushColorCount,
@@ -31,11 +32,30 @@ Anime4KGPU::Anime4KGPU(
     postFilters,
     maxThreads
 ),
-context(nullptr), commandQueue(nullptr),
+isInitialized(false), context(nullptr), commandQueue(nullptr),
 program(nullptr), device(nullptr), frameGPUDoneCount(0),
+format(), dstDesc(), orgDesc(), nHeight(0.0), nWidth(0.0),
 pID(platformID), dID(deviceID)
 {
-    initOpenCL();
+    if (initGPU)
+    {
+        initOpenCL();
+        isInitialized = true;
+    }
+}
+
+Anime4KGPU::Anime4KGPU(bool initGPU, unsigned int platformID, unsigned int deviceID) :
+    Anime4K(2, 2, 0.3, 1.0, 2.0, false, false, false, false, 4, 40, std::thread::hardware_concurrency()),
+    isInitialized(false), context(nullptr), commandQueue(nullptr),
+    program(nullptr), device(nullptr), frameGPUDoneCount(0),
+    format(), dstDesc(), orgDesc(), nHeight(0.0), nWidth(0.0),
+    pID(platformID), dID(deviceID)
+{
+    if (initGPU)
+    {
+        initOpenCL();
+        isInitialized = true;
+    }
 }
 
 Anime4KGPU::~Anime4KGPU()
@@ -145,6 +165,33 @@ void Anime4KGPU::process()
             }
         }
     }
+}
+
+inline void Anime4KGPU::initGPU()
+{
+    if (!isInitialized)
+    {
+        initOpenCL();
+        isInitialized = true;
+    }
+}
+
+void Anime4KGPU::releaseGPU()
+{
+    if (isInitialized)
+    {
+        releaseOpenCL();
+        context = nullptr;
+        commandQueue = nullptr;
+        program = nullptr;
+        device = nullptr;
+        isInitialized = false;
+    }
+}
+
+inline bool Anime4KGPU::isInitializedGPU()
+{
+    return isInitialized;
 }
 
 std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KGPU::listGPUs()

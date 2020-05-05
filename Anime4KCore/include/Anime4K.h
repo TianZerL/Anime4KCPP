@@ -58,7 +58,7 @@ public:
         bool videoMode = false,
         bool PreProcessing = false,
         bool postProcessing = false,
-        uint8_t preFilters = 40,
+        uint8_t preFilters = 4,
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()
     );

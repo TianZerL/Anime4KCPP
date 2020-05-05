@@ -21,8 +21,8 @@
 
 #include <opencv2/opencv.hpp>
 
-#define CORE_VERSION "1.6.0"
-#define VERSION "1.3.0"
+#define CORE_VERSION "1.7.0"
+#define VERSION "1.4.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -143,6 +143,8 @@ private slots:
 
     void on_pushButton_clicked();
 
+    void on_pushButtonReleaseGPU_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
@@ -157,7 +159,7 @@ private:
 
     GPUMode GPU;
     Anime4K *mainAnime4kCPU;
-    Anime4K *mainAnime4kGPU;
+    Anime4KGPU *mainAnime4kGPU;
 
     std::vector<int> devices;
     int platforms;
