@@ -546,6 +546,7 @@ void MainWindow::solt_allDone_remindUser()
     ui->progressBarProcessingList->setEnabled(false);
     ui->progressBarProcessingList->reset();
     ui->pushButtonInputPath->setEnabled(true);
+    ui->pushButtonPickFolder->setEnabled(true);
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
     ui->pushButtonStart->setEnabled(true);
@@ -816,6 +817,7 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonClear->setEnabled(false);
     ui->pushButtonDelete->setEnabled(false);
     ui->pushButtonInputPath->setEnabled(false);
+    ui->pushButtonPickFolder->setEnabled(false);
     ui->progressBarProcessingList->setEnabled(true);
     ui->tableViewProcessingList->setEnabled(false);
 
