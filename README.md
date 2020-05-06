@@ -71,6 +71,48 @@ If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstl
 
 This project uses [cmake](https://cmake.org) to build.
 
+### building on macOS
+
+We need to install all the aforementioned dependencies via brew (excpet OpenCL which is provided by Apple):
+
+```
+brew install opencv qt ffmpeg openh264 cmake
+```
+
+For brew's qt to work you need to set these (see latest instructions by `brew info qt`):
+
+```
+If you need to have qt first in your PATH run:
+  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
+
+For compilers to find qt you may need to set:
+  export LDFLAGS="-L/usr/local/opt/qt/lib"
+  export CPPFLAGS="-I/usr/local/opt/qt/include"
+
+For pkg-config to find qt you may need to set:
+  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
+```
+
+Now we need to fix macOS libomp problem (copied from [here](https://stackoverflow.com/a/54715120/1410221)):
+
+* Install LLVM with openmp and libomp with brew
+
+    ```
+     brew update
+     brew install llvm libomp
+    ```
+
+* Run CMake with the new compilers
+
+    ```
+     # in repo's root
+     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
+    ```
+
+Now we just run `make`. The binaries should have been installed to `./bin/`.
+
+Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
+
 ### arguments
 
     options:
