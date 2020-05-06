@@ -10,7 +10,7 @@ This project is for learning and the exploration task of algorithm course in SWJ
 Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
 
 # Why Anime4KCPP
-- Cross-platform, building have already tested in Windows and Linux, MACOS is also supported.
+- Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).
 - Wide compatibility, support both CPU and GPU.
 - easy to use with GUI or CLI.
 - High performance.
@@ -141,6 +141,7 @@ Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), 
 
 ## About GPU acceleration
 Use ```-q``` to enable GPU acceleration, and then use ```-l``` to list the platform ids and device ids, ```-h``` for specifying platform id, ```-d``` for specifying device id.
+
 ## Filters
 Enable filters can make the result be better, now Anime4kCPP support following filters:
 

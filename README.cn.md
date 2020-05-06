@@ -7,7 +7,7 @@ Anime4KCPP是Anime4K的C++实现，它基于[bloc97的Anime4K](https://github.co
 Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，它并不使用机器学习，因此速度非常快，可用于实时处理和预处理。    
 
 # 为什么选择Anime4KCPP
-- 跨平台支持，已在Windows和Linux上通过编译测试，MacOS同样也支持。
+- 跨平台支持，已在Windows，Linux和macOS (感谢[NightMachinary](https://github.com/NightMachinary))上通过编译测试。
 - 广泛的兼容性，同时支持CPU和GPU，GPU只要求支持OpenCL即可，并不限制任何品牌。
 - 提供易于使用的GUI和CLI程序。
 - 高性能。
@@ -68,6 +68,48 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
 若您想处理视频, 请先安装 [ffmpeg](https://ffmpeg.org), 否则您的视频将没有音轨。您可能还需要一个开源编解码器 [OpenH264 encoder](https://github.com/cisco/openh264/releases)。
 
 该项目使用 [cmake](https://cmake.org) 进行构建。
+
+### 在macOS进行编译
+我们首先通过brew安装上述依赖 (除了OpenCL，其由Apple提供):
+
+```
+brew install opencv qt ffmpeg openh264 cmake
+```
+
+为了使得brew的qt工作您需要进行如下设置(输入`brew info qt`查看最新说明):
+
+```
+如果您需要添加Qt到环境变量，运行:
+  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
+
+为了使得编译器能够找到Qt您需要设置:
+  export LDFLAGS="-L/usr/local/opt/qt/lib"
+  export CPPFLAGS="-I/usr/local/opt/qt/include"
+
+为了使得pkg-config能够找到Qt您需要设置:
+  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
+```
+
+现在我们需要修复macOS libomp 库的问题 (引用自[这里](https://stackoverflow.com/a/54715120/1410221)):
+
+* 安装带有openmp和libomp的LLVM通过brew
+
+    ```
+     brew update
+     brew install llvm libomp
+    ```
+
+* 运行CMake，指定新的编译器
+
+    ```
+     # in repo's root
+     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
+    ```
+
+最后运行 `make`. 所有二进制文件都将被安装至 `./bin/`.
+
+请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
+
 ### 参数
 
     options:
@@ -96,6 +138,7 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
 
 ## GPU加速相关
 使用 ```-q``` 开启GPU加速，然后使用 ```-l``` 列出可用的GPU平台ID及其对应设备ID，参数 ```-h``` 指定平台ID，```-d``` 指定设备ID。
+
 ## 滤镜
 启用滤镜可以使得处理后的图像看起来更舒服，目前支持以下五种滤镜：
 
