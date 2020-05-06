@@ -923,7 +923,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     {
 #ifdef _WIN32
                         const char* command = ("del /q \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
-#elif defined(__linux)
+#else
                         const char* command = ("rm \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
 #endif // CURRENT SYSTEM
                         system(command);
@@ -1035,7 +1035,8 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     cv::Mat orgImg = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
     cv::resize(orgImg, orgImg, cv::Size(0,0), factor,factor, cv::INTER_CUBIC);
     //convert to QImage
-    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, QImage::Format_BGR888);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
+    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, orgImg.step, QImage::Format_RGB888);
     QPixmap resizedImage(QPixmap::fromImage(orginImage));
     //show
     QWidget *resizedImageWidget = new QWidget(this,Qt::Window);
