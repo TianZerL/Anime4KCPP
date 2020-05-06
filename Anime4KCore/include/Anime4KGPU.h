@@ -4,7 +4,6 @@
 #include<fstream>
 
 #ifdef __APPLE__
-#define clCreateCommandQueueWithProperties clCreateCommandQueue
 #include<OpenCL/opencl.h>
 #else
 #include<CL/cl.h>

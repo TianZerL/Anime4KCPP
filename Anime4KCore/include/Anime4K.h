@@ -29,7 +29,7 @@
 #endif
 #endif
 
-#define ANIME4KCPP_CORE_VERSION "1.7.0"
+#define ANIME4KCPP_CORE_VERSION "1.7.1"
 
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})
