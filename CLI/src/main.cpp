@@ -90,7 +90,7 @@ false, 40, cmdline::range(1, 127));
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
-hevc(not support in Windowds), av01(not support in Windowds)", false, "mp4v");
+hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add("version", 'V', "print version information");
 
     opt.parse_check(argc, argv);

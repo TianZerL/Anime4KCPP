@@ -93,7 +93,7 @@ This project uses [cmake](https://cmake.org) to build.
       -l, --listGPUs            list GPUs
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
-      -C, --codec               Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windowds), av01(not support in Windowds) (string [=mp4v])
+      -C, --codec               Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windows), av01(not support in Windows) (string [=mp4v])
       -V, --version             print version information
       -?, --help                print this message
 
