@@ -1,8 +1,12 @@
 #include "Anime4K.h"
 #include "Anime4KGPU.h"
-#include<cmdline.h>
+#include <cmdline.h>
 
-#include<iostream>
+#include <iostream>
+
+#ifndef COMPILER
+#define COMPILER "Unknown"
+#endif // !COMPILER
 
 
 bool checkFFmpeg()
@@ -42,6 +46,16 @@ CODEC string2Codec(const std::string& codec)
         return MP4V;
 }
 
+inline void showVersionInfo()
+{
+    std::cerr 
+        << "Anime4KCLI" << std::endl
+        << "Anime4KCPP core version: " << ANIME4KCPP_CORE_VERSION << std::endl
+        << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
+        << "Compiler: " << COMPILER << std::endl
+        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
+}
+
 int main(int argc, char* argv[])
 {
     //Options
@@ -57,8 +71,8 @@ int main(int argc, char* argv[])
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
-    opt.add("preProcessing", 'b', "Enable pre processing");
-    opt.add("postProcessing", 'a', "Enable post processing");
+    opt.add("preprocessing", 'b', "Enable preprocessing");
+    opt.add("postprocessing", 'a', "Enable postprocessing");
     opt.add<unsigned int>("preFilters", 'r',
         "Enhancement filter, only working when preProcessing is true,there are 5 options by binary:\
 Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, \
@@ -75,8 +89,9 @@ false, 40, cmdline::range(1, 127));
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
-    opt.add<std::string>("codec", 'x', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
+    opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
 hevc(not support in Windowds), av01(not support in Windowds)", false, "mp4v");
+    opt.add("version", 'V', "print version information");
 
     opt.parse_check(argc, argv);
 
@@ -93,14 +108,20 @@ hevc(not support in Windowds), av01(not support in Windowds)", false, "mp4v");
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
-    bool preProcessing = opt.exist("preProcessing");
-    bool postProcessing = opt.exist("postProcessing");
+    bool preProcessing = opt.exist("preprocessing");
+    bool postProcessing = opt.exist("postprocessing");
     bool GPU = opt.exist("GPUMode");
     bool listGPUs = opt.exist("listGPUs");
     unsigned int pID = opt.get<unsigned int>("platformID");
     unsigned int dID = opt.get<unsigned int>("deviceID");
     std::string codec = opt.get<std::string>("codec");
+    bool version = opt.exist("version");
 
+    if (version)
+    {
+        showVersionInfo();
+        return 0;
+    }
 
     if (listGPUs)
     {

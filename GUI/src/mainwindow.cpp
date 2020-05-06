@@ -383,7 +383,8 @@ void MainWindow::initTextBrowser()
                 "----------------------------------------------\n"+
         QString("         Anime4K GUI v%1                 \n"
                 "         Anime4K Core v%2                \n"
-                "----------------------------------------------\n").arg(VERSION, CORE_VERSION)
+                "----------------------------------------------\n").arg(ANIME4KCPP_GUI_VERSION,
+                                                                        ANIME4KCPP_CORE_VERSION)
                 );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
@@ -949,7 +950,11 @@ void MainWindow::on_actionAbout_triggered()
                              QString("Anime4KCPP GUI\n\n"
                                      "Anime4K GUI v%1\n"
                                      "Anime4K Core v%2\n\n"
-                                     "Copyright (c) 2020 TianZerL").arg(VERSION, CORE_VERSION),
+                                     "Build on %3 %4\n\n"
+                                     "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
+                                     "Copyright (c) 2020 TianZerL").arg(ANIME4KCPP_GUI_VERSION,
+                                                                        ANIME4KCPP_CORE_VERSION,
+                                                                        __DATE__, __TIME__),
                              QMessageBox::Ok);
 }
 

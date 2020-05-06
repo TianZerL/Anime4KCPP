@@ -29,6 +29,8 @@
 #endif
 #endif
 
+#define ANIME4KCPP_CORE_VERSION "1.7.0"
+
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})
 #define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))

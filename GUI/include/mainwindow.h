@@ -21,8 +21,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define CORE_VERSION "1.7.0"
-#define VERSION "1.4.0"
+#define ANIME4KCPP_GUI_VERSION "1.4.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
