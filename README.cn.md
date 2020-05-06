@@ -25,7 +25,7 @@ Anime4KCPP现已支持GPU加速，通过原生OpenCL实现，可提供高性能�
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
-Anime4KCPP 版本 : 1.6.0  
+Anime4KCPP 版本 : 1.7.0  
 Anime4KCPP 设置: 平衡  
 
     CPU:
@@ -34,8 +34,8 @@ Anime4KCPP 设置: 平衡
     1080P   -> 4k:        0.650秒  
 
     视频(长度: 1 分 32 秒):
-    480P  -> 1080P :       3  分 13 秒
-    1080P -> 4K :          19 分 09  秒
+    480P  -> 1080P :       03 分 13 秒
+    1080P -> 4K :          19 分 09 秒
 
     GPU:
     图像:
@@ -43,8 +43,8 @@ Anime4KCPP 设置: 平衡
     1080P   -> 4k:        0.090秒  
 
     视频(长度: 1 分 32 秒):
-    480P  -> 1080P :       0  分 31 秒
-    1080P -> 4K :          3  分 00 秒
+    480P  -> 1080P :       00 分 29 秒
+    1080P -> 4K :          02 分 55 秒
 
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
@@ -90,6 +90,8 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
       -l, --listGPUs            列出GPU平台与设备
       -h, --platformID          指定平台ID (unsigned int [=0])
       -d, --deviceID            指定设备ID (unsigned int [=0])
+      -C, --codec               指定编码器，包括 mp4v(推荐用于Windows), dxva(仅支持Windows), avc1(H264, 推荐用于Linux), vp09(非常慢), hevc(不支持Windows), av01(不支持Windows) (string [=mp4v])
+      -V, --version             显示版本信息
       -?, --help                显示帮助信息
 
 ## GPU加速相关
@@ -140,6 +142,10 @@ CAS是AMD开源的自适应锐化技术。
   - [bloc97/Anime4K](https://github.com/bloc97/Anime4K)
 - Rust
   - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)
+
+# 使用Anime4KCPP的项目
+- [AaronFeng753/Waifu2x-Extension-GUI](https://github.com/AaronFeng753/Waifu2x-Extension-GUI)
+- [k4yt3x/video2x](https://github.com/k4yt3x/video2x)
 
 # 致谢
 项目中引用的所有动漫图像均由我的朋友 ***King of learner*** 绘制并授权使用，请勿在未经许可的情况下使用它们。

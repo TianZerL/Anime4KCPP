@@ -381,8 +381,8 @@ void MainWindow::initTextBrowser()
                 "----------------------------------------------\n"
                 "           Welcome to Anime4KCPP GUI          \n"
                 "----------------------------------------------\n"+
-        QString("         Anime4K GUI v%1                 \n"
-                "         Anime4K Core v%2                \n"
+        QString("         Anime4KCPP GUI v%1                 \n"
+                "         Anime4KCPP Core v%2                \n"
                 "----------------------------------------------\n").arg(ANIME4KCPP_GUI_VERSION,
                                                                         ANIME4KCPP_CORE_VERSION)
                 );
@@ -948,8 +948,8 @@ void MainWindow::on_actionAbout_triggered()
     QMessageBox::information(this,
                              tr("About"),
                              QString("Anime4KCPP GUI\n\n"
-                                     "Anime4K GUI v%1\n"
-                                     "Anime4K Core v%2\n\n"
+                                     "Anime4KCPP GUI v%1\n"
+                                     "Anime4KCPP core v%2\n\n"
                                      "Build on %3 %4\n\n"
                                      "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
                                      "Copyright (c) 2020 TianZerL").arg(ANIME4KCPP_GUI_VERSION,

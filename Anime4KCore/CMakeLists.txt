@@ -1,4 +1,4 @@
-project(Anime4KCore)
+project(Anime4KCPPCore)
 
 aux_source_directory(src SOURCE)
 

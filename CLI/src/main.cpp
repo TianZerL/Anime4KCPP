@@ -48,8 +48,8 @@ CODEC string2Codec(const std::string& codec)
 
 inline void showVersionInfo()
 {
-    std::cerr 
-        << "Anime4KCLI" << std::endl
+    std::cerr
+        << "Anime4KCPPCLI" << std::endl
         << "Anime4KCPP core version: " << ANIME4KCPP_CORE_VERSION << std::endl
         << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
         << "Compiler: " << COMPILER << std::endl
@@ -250,9 +250,9 @@ hevc(not support in Windowds), av01(not support in Windowds)", false, "mp4v");
     {
         std::cout << err << std::endl;
         return 0;
-}
-    
+    }
+
     delete anime4k;
-    
+
     return 0;
 }

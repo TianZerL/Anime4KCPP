@@ -28,7 +28,7 @@ Anime4KCPP now supports GPU acceleration, which is implemented by original OpenC
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
-Anime4KCPP Version : 1.6.0  
+Anime4KCPP Version : 1.7.0  
 Anime4KCPP Settings: balance  
 
     CPU:
@@ -37,7 +37,7 @@ Anime4KCPP Settings: balance
     1080P   -> 4k:        0.650s  
 
     Video(Length: 1 min 32 seconds):
-    480P  -> 1080P :       3  min 13 seconds
+    480P  -> 1080P :       03 min 13 seconds
     1080P -> 4K :          19 min 09 seconds
 
     GPU:
@@ -46,8 +46,8 @@ Anime4KCPP Settings: balance
     1080P   -> 4k:        0.090s  
 
     Video(Length: 1 min 32 seconds):
-    480P  -> 1080P :       0  min 31 seconds
-    1080P -> 4K :          3  min 00 seconds
+    480P  -> 1080P :       00 min 29 seconds
+    1080P -> 4K :          02 min 55 seconds
 
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
@@ -85,15 +85,18 @@ This project uses [cmake](https://cmake.org) to build.
       -f, --fastMode            Faster but maybe low quality
       -v, --videoMode           Video process
       -s, --preview             Preview image
-      -b, --preProcessing       Enable pre processing
-      -a, --postProcessing      Enable post processing
+      -b, --preprocessing       Enable preprocessing
+      -a, --postprocessing      Enable postprocessing
       -r, --preFilters          Enhancement filter, only working when preProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D) (unsigned int [=4])
       -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
       -q, --GPUMode             Enable GPU acceleration
       -l, --listGPUs            list GPUs
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
+      -C, --codec               Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windowds), av01(not support in Windowds) (string [=mp4v])
+      -V, --version             print version information
       -?, --help                print this message
+
 ## About GPU acceleration
 Use ```-q``` to enable GPU acceleration, and then use ```-l``` to list the platform ids and device ids, ```-h``` for specifying platform id, ```-d``` for specifying device id.
 ## Filters
@@ -142,5 +145,9 @@ CAS is an adaptive sharpening technology which is open source by AMD, simple but
 - Rust
   - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)
 
+# Projects that use Anime4KCPP
+- [AaronFeng753/Waifu2x-Extension-GUI](https://github.com/AaronFeng753/Waifu2x-Extension-GUI)
+- [k4yt3x/video2x](https://github.com/k4yt3x/video2x)
+  
 # Acknowledgement
 All images are drawn by my friend ***King of learner*** and authorized to use, only for demonstration, do not use without permission.
