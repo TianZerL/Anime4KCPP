@@ -14,6 +14,7 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 - Wide compatibility, support both CPU and GPU.
 - easy to use with GUI or CLI.
 - High performance.
+- Low memory usage, usually less than 1G even in processing 1080P videos.
 - GPU acceleration support, use it to process your image or video in a short time.
 - More arguments for you, you can get a better quality than real-time playback.
 - Filters support, use them to denoise or anti-aliasing.

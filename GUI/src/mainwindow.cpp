@@ -1033,10 +1033,10 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     //read image by opencv for resizing by CUBIC
     double factor = ui->doubleSpinBoxZoomFactor->value();
     cv::Mat orgImg = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
-    cv::resize(orgImg, orgImg, cv::Size(0,0), factor,factor, cv::INTER_CUBIC);
+    cv::resize(orgImg, orgImg, cv::Size(0,0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
-    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, orgImg.step, QImage::Format_RGB888);
+    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888);
     QPixmap resizedImage(QPixmap::fromImage(orginImage));
     //show
     QWidget *resizedImageWidget = new QWidget(this,Qt::Window);
