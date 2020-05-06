@@ -167,7 +167,7 @@ void Anime4KGPU::process()
     }
 }
 
-inline void Anime4KGPU::initGPU()
+/*inline*/ void Anime4KGPU::initGPU()
 {
     if (!isInitialized)
     {
@@ -612,7 +612,12 @@ inline void Anime4KGPU::initOpenCL()
     }
 
     //init command queue
+#ifdef __APPLE__
+    commandQueue = clCreateCommandQueue(context, device, 0, &err);
+#else
     commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+#endif // SPECIAL OS
+
     if (err != CL_SUCCESS)
     {
         if (err == CL_INVALID_DEVICE)

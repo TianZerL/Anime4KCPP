@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.0)
 project(Anime4KCPP)
 
+if(APPLE)
+    # using brew's llvm (see https://stackoverflow.com/a/54715120/1410221)
+    include_directories("/usr/local/include" "/usr/local/opt/llvm/include")
+    link_directories("/usr/local/lib" "/usr/local/opt/llvm/lib")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

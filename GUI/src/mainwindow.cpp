@@ -923,7 +923,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     {
 #ifdef _WIN32
                         const char* command = ("del /q \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
-#elif defined(__linux)
+#else
                         const char* command = ("rm \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
 #endif // CURRENT SYSTEM
                         system(command);
