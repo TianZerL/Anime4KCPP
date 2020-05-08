@@ -1,12 +1,16 @@
-project(Anime4KCPP_CLI)
+project(Anime4KCPP_CLI LANGUAGES CXX)
 
-find_package(OpenCL REQUIRED)
+if(Build_CLI)
 
-aux_source_directory(src SOURCE)
+    find_package(OpenCL REQUIRED)
 
-include_directories(../Anime4KCore/include ../ThirdParty/include ${OpenCL_INCLUDE_DIRS})
+    aux_source_directory(src SOURCE)
 
-add_compile_definitions(COMPILER="${CMAKE_CXX_COMPILER_ID}")
+    include_directories(../Anime4KCore/include ../ThirdParty/include ${OpenCL_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} ${SOURCE})
-target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
+    add_compile_definitions(COMPILER="${CMAKE_CXX_COMPILER_ID}")
+
+    add_executable(${PROJECT_NAME} ${SOURCE})
+    target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
+
+endif()

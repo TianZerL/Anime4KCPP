@@ -1,4 +1,4 @@
-project(Anime4KCPPCore)
+project(Anime4KCPPCore LANGUAGES CXX)
 
 aux_source_directory(src SOURCE)
 
