@@ -623,7 +623,10 @@ void MainWindow::on_pushButtonInputPath_clicked()
 
 void MainWindow::on_pushButtonOutputPath_clicked()
 {
-    ui->lineEditOutputPath->setText(QFileDialog::getExistingDirectory(this,tr("output directory"),"./"));
+    QString outputPath = QFileDialog::getExistingDirectory(this,tr("output directory"),"./");
+    if(outputPath.isEmpty())
+        return;
+    ui->lineEditOutputPath->setText(outputPath);
 }
 
 void MainWindow::on_pushButtonClear_clicked()
