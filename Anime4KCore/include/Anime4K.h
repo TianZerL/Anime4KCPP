@@ -58,8 +58,8 @@ public:
         double zoomFactor = 2.0,
         bool fastMode = false,
         bool videoMode = false,
-        bool PreProcessing = false,
-        bool postProcessing = false,
+        bool preprocessing = false,
+        bool postprocessing = false,
         uint8_t preFilters = 4,
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()
@@ -73,8 +73,8 @@ public:
         double zoomFactor = 2.0,
         bool fastMode = false,
         bool videoMode = false,
-        bool PreProcessing = false,
-        bool postProcessing = false,
+        bool preprocessing = false,
+        bool postprocessing = false,
         uint8_t preFilters = 40,
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()

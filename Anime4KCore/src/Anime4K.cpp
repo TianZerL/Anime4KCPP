@@ -10,15 +10,15 @@ Anime4K::Anime4K(
     double zoomFactor,
     bool fastMode,
     bool videoMode,
-    bool PreProcessing,
-    bool postProcessing,
+    bool preprocessing,
+    bool postprocessing,
     uint8_t preFilters,
     uint8_t postFilters,
     unsigned int maxThreads
 ) : ps(passes), pcc(pushColorCount),
     sc(strengthColor), sg(strengthGradient),
     zf(zoomFactor), fm(fastMode), vm(videoMode),
-    pre(PreProcessing), post(postProcessing), pref(preFilters),
+    pre(preprocessing), post(postprocessing), pref(preFilters),
     postf(postFilters), mt(maxThreads)
 {
     orgH = orgW = H = W = 0;
@@ -42,8 +42,8 @@ void Anime4K::setArguments(
     double zoomFactor, 
     bool fastMode, 
     bool videoMode, 
-    bool PreProcessing, 
-    bool postProcessing, 
+    bool preprocessing, 
+    bool postprocessing, 
     uint8_t preFilters, 
     uint8_t postFilters, 
     unsigned int maxThreads
@@ -56,8 +56,8 @@ void Anime4K::setArguments(
     zf = zoomFactor;
     fm = fastMode;
     vm = videoMode;
-    pre = PreProcessing;
-    post = postProcessing;
+    pre = preprocessing;
+    post = postprocessing;
     pref = preFilters;
     postf = postFilters;
     mt = maxThreads;

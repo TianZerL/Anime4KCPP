@@ -22,8 +22,8 @@ public:
         double zoomFactor = 2.0,
         bool fastMode = false,
         bool videoMode = false,
-        bool PreProcessing = false,
-        bool postProcessing = false,
+        bool preprocessing = false,
+        bool postprocessing = false,
         uint8_t preFilters = 4,
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency(),
@@ -63,5 +63,10 @@ private:
 
     const unsigned int pID;
     const unsigned int dID;
+
+#ifdef BUILT_IN_KERNEL
+    static const std::string Anime4KCPPKernelSourceString;
+#endif // BUILT_IN_KERNEL
+
 };
 
