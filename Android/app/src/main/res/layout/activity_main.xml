@@ -1,0 +1,541 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <ListView
+        android:id="@+id/processingList"
+        android:layout_width="392dp"
+        android:layout_height="179dp"
+        android:layout_margin="4dp"
+        android:choiceMode="multipleChoice"
+        app:layout_constraintBottom_toTopOf="@+id/scrollView3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </ListView>
+
+    <ScrollView
+        android:id="@+id/scrollView3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/processingList">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="3dp">
+
+            <LinearLayout
+                style="?android:attr/buttonBarStyle"
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/buttonPick"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="onClickButtonPick"
+                    android:text="@string/pick"
+                    android:textColor="#E91E63" />
+
+                <Button
+                    android:id="@+id/buttonDelete"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="onClickButtonDelete"
+                    android:text="@string/delete"
+                    android:textColor="#E91E63" />
+
+                <Button
+                    android:id="@+id/buttonClear"
+                    style="?android:attr/buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="onClickButtonClear"
+                    android:text="@string/clear"
+                    android:textColor="#E91E63" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="98dp"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/buttonStart"
+                    style="@style/Widget.AppCompat.Button.Colored"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#E91E63"
+                    android:onClick="onClickButtonStart"
+                    android:text="@string/start" />
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp" />
+
+                <View
+                    android:id="@+id/viewLine11"
+                    android:layout_width="match_parent"
+                    android:layout_height="3dp"
+                    android:layout_margin="3dp"
+                    android:background="#8E8E8E"
+                    android:padding="1dp" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewState"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:gravity="center_horizontal|center_vertical"
+                android:text="@string/waitting"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textColor="#E91E63" />
+
+            <View
+                android:id="@+id/viewLine"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#FF0000"
+                android:padding="1dp" />
+
+            <TextView
+                android:id="@+id/textViewSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="4dp"
+                android:text="@string/settings"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#E91E63" />
+
+            <View
+                android:id="@+id/viewLine2"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <Switch
+                android:id="@+id/switchGPUMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/gpumode" />
+
+            <Switch
+                android:id="@+id/switchFastMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/fastmode" />
+
+            <View
+                android:id="@+id/viewLine3"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <RadioGroup
+                android:id="@+id/radioGroupSettings"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="4dp">
+
+                <RadioButton
+                    android:id="@+id/radioButtonFast"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fast" />
+
+                <RadioButton
+                    android:id="@+id/radioButtonBalance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/balance" />
+
+                <RadioButton
+                    android:id="@+id/radioButtonQuality"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/quality" />
+
+                <RadioButton
+                    android:id="@+id/radioButtonCustom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/custom" />
+
+            </RadioGroup>
+
+            <View
+                android:id="@+id/viewLine4"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <TextView
+                android:id="@+id/textViewOutputPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextZoomFactor"
+                android:text="@string/output_path" />
+
+            <EditText
+                android:id="@+id/editTextOutputPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName"
+                android:text="@string/anime4kcpp_output_path" />
+
+            <TextView
+                android:id="@+id/textViewOutputPrefix"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextOutputPrefix"
+                android:text="@string/output_prefix" />
+
+            <EditText
+                android:id="@+id/editTextOutputPrefix"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName"
+                android:text="@string/anime4kcpp_output_prefix" />
+
+            <TextView
+                android:id="@+id/textViewSuffixImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextSuffixImage"
+                android:text="@string/image_suffix" />
+
+            <EditText
+                android:id="@+id/editTextSuffixImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName"
+                android:text="@string/default_suffixImage" />
+
+            <TextView
+                android:id="@+id/textViewSuffixVideo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextSuffixVideo"
+                android:text="@string/video_suffix" />
+
+            <EditText
+                android:id="@+id/editTextSuffixVideo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="textPersonName"
+                android:text="@string/default_suffixVideo" />
+
+            <View
+                android:id="@+id/viewLine5"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#FF0000"
+                android:padding="1dp" />
+
+            <TextView
+                android:id="@+id/textViewAdvancedSettings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:padding="4dp"
+                android:text="@string/advanced_settings"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#E91E63" />
+
+            <View
+                android:id="@+id/viewLine6"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <TextView
+                android:id="@+id/textViewZoomFactor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextOutputPath"
+                android:text="@string/upscaling_ration" />
+
+            <EditText
+                android:id="@+id/editTextZoomFactor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal"
+                android:text="@string/default_zoomFactor"
+                tools:text="2" />
+
+            <TextView
+                android:id="@+id/textViewPasses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextPasses"
+                android:text="@string/passes" />
+
+            <EditText
+                android:id="@+id/editTextPasses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:text="@string/default_passes"
+                tools:text="2" />
+
+            <TextView
+                android:id="@+id/textViewPushColorCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextPushColorCount"
+                android:text="@string/push_color_count" />
+
+            <EditText
+                android:id="@+id/editTextPushColorCount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:text="@string/default_pushColorCount"
+                tools:text="2" />
+
+            <TextView
+                android:id="@+id/textViewStrengthColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextStrengthColor"
+                android:text="@string/push_color_strength_0_1" />
+
+            <EditText
+                android:id="@+id/editTextStrengthColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal"
+                android:text="@string/default_StrengthColor"
+                tools:text="0.3" />
+
+            <TextView
+                android:id="@+id/textViewStrengthGradien"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextStrengthGradien"
+                android:text="@string/push_gradient_strength_0_1" />
+
+            <EditText
+                android:id="@+id/editTextStrengthGradien"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal"
+                android:text="@string/default_strengthGradient"
+                tools:text="1.0" />
+
+            <View
+                android:id="@+id/viewLine7"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <Switch
+                android:id="@+id/switchPreprocessing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/preprocessing" />
+
+            <View
+                android:id="@+id/viewLine10"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="1dp"
+                android:background="#C1C1C1"
+                android:padding="1dp" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingMedianBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/median_blur" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingMeanBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/mean_blur" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingCAS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/cas_sharpening" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingGaussianBlurWeak"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/gaussian_blur_weak" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingGaussianBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/gaussian_blur" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingBilateralFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/bilateral_filter" />
+
+            <Switch
+                android:id="@+id/switchPreprocessingBilateralFilterFaster"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/bilateral_filter_faster" />
+
+            <View
+                android:id="@+id/viewLine8"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#8E8E8E"
+                android:padding="1dp" />
+
+            <Switch
+                android:id="@+id/switchPostprocessing"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/postprocessing" />
+
+            <View
+                android:id="@+id/viewLine9"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="1dp"
+                android:background="#C1C1C1"
+                android:padding="1dp" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingMedianBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/median_blur" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingMeanBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/mean_blur" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingCAS"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/cas_sharpening" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingGaussianBlurWeak"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/gaussian_blur_weak" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingGaussianBlur"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/gaussian_blur" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingBilateralFilter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/bilateral_filter" />
+
+            <Switch
+                android:id="@+id/switchPostprocessingBilateralFilterFaster"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/bilateral_filter_faster" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
