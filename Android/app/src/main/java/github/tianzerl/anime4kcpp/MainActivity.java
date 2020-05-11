@@ -1,20 +1,12 @@
 package github.tianzerl.anime4kcpp;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.media.Image;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Pair;
-import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,9 +18,13 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
 import android.widget.Switch;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,12 +33,11 @@ import java.util.List;
 import me.rosuh.filepicker.bean.FileItemBeanImpl;
 import me.rosuh.filepicker.config.AbstractFileFilter;
 import me.rosuh.filepicker.config.FilePickerManager;
-import me.rosuh.filepicker.filetype.RasterImageFileType;
 
 public class MainActivity extends AppCompatActivity {
 
     private enum Error {
-        Anime4KCPPError, UnsupportedFileType
+        Anime4KCPPError, FailedToCreateFolders
     }
 
     private enum GPUState {
@@ -55,8 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
     AbstractFileFilter fileFilter = new AbstractFileFilter() {
         @Override
-        public ArrayList<FileItemBeanImpl> doFilter(ArrayList<FileItemBeanImpl> arrayList) {
-            ArrayList<FileItemBeanImpl> newArrayList = new ArrayList<FileItemBeanImpl>();
+        public @NonNull ArrayList<FileItemBeanImpl> doFilter(@NonNull ArrayList<FileItemBeanImpl> arrayList) {
+            ArrayList<FileItemBeanImpl> newArrayList = new ArrayList<>();
             for (FileItemBeanImpl file: arrayList)
             {
                 //disable video processing for now
@@ -76,10 +71,18 @@ public class MainActivity extends AppCompatActivity {
     private GPUState GPU = GPUState.UnInitialized;
     private Anime4KCPPGPU mainAnime4KCPPGPU;
 
-    private Handler handler = new Handler(new Handler.Callback() {
+    private Handler anime4KCPPHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(@NonNull Message msg) {
             errorHandler(Error.Anime4KCPPError, new Exception((String)msg.obj));
+            return false;
+        }
+    });
+
+    private Handler otherErrorHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            errorHandler((Error) msg.obj,null);
             return false;
         }
     });
@@ -92,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         mainProgressBar = findViewById(R.id.progressBar);
         textViewState = findViewById(R.id.textViewState);
 
-        adapterForProcessingList = new ArrayAdapter<String>(
+        adapterForProcessingList = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_list_item_multiple_choice,
                 new ArrayList<String>()
@@ -149,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onClickButtonDelete(View v) {
-        List<String> readyToRemove = new ArrayList<String>();
+        List<String> readyToRemove = new ArrayList<>();
         for (int i = 0; i< processingList.getCount(); i++) {
             if(processingList.isItemChecked(i))
                 readyToRemove.add(adapterForProcessingList.getItem(i));
@@ -189,12 +192,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private FileType getFileType(String src) {
+    private FileType getFileType(@NonNull String src) {
         String imageSuffix = ((EditText)findViewById(R.id.editTextSuffixImage)).getText().toString();
         String VideoSuffix = ((EditText)findViewById(R.id.editTextSuffixVideo)).getText().toString();
-        if(imageSuffix.indexOf(src.substring(src.lastIndexOf('.') + 1))!=-1)
+        if(imageSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
             return FileType.Image;
-        if(VideoSuffix.indexOf(src.substring(src.lastIndexOf('.') + 1))!=-1)
+        if(VideoSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
             return FileType.Video;
         return FileType.Unknown;
     }
@@ -246,19 +249,20 @@ public class MainActivity extends AppCompatActivity {
         return sw.isChecked();
     }
 
-    private void errorHandler(Error errorType, Exception exp) {
+    private void errorHandler(@NonNull Error errorType,@Nullable Exception exp) {
         switch (errorType) {
             case Anime4KCPPError:
+                assert exp != null;
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage(exp.getMessage())
                         .setPositiveButton("OK",null)
                         .show();
                 break;
-            case UnsupportedFileType:
+            case FailedToCreateFolders:
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
-                        .setMessage("Unsupported File Type")
+                        .setMessage("Failed to create folders")
                         .setPositiveButton("OK",null)
                         .show();
                 break;
@@ -272,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
         double strengthGradient = 1;
         double zoomFactor=2;
         boolean fastMode = getSwitchSate(R.id.switchFastMode);
-        boolean videoMode = false;
         boolean preprocessing = false;
         boolean postprocessing = false;
         byte preFilters=0;
@@ -349,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
                     strengthGradient,
                     zoomFactor,
                     fastMode,
-                    videoMode,
+                    false,
                     preprocessing,
                     postprocessing,
                     preFilters,
@@ -366,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
                     strengthGradient,
                     zoomFactor,
                     fastMode,
-                    videoMode,
+                    false,
                     preprocessing,
                     postprocessing,
                     preFilters,
@@ -390,20 +393,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected Double doInBackground(String... strings) {
+        protected Double doInBackground(@NonNull String... strings) {
             String prefix = strings[0], dst = strings[1];
             long totalTime = 0;
             int taskCount = adapterForProcessingList.getCount();
-            File dstPath = new File(dst);
-            if(!dstPath.exists())
-                dstPath.mkdirs();
 
-            List<Pair<String,Integer>> images = new ArrayList<Pair<String,Integer>>();
-            List<Pair<String,Integer>> videos = new ArrayList<Pair<String,Integer>>();
+            File dstPath = new File(dst);
+            if(!dstPath.exists() && !dstPath.mkdirs())
+             {
+                 Message message = new Message();
+                 message.obj = Error.FailedToCreateFolders;
+                 otherErrorHandler.sendMessage(message);
+             }
+
+            List<Pair<String,Integer>> images = new ArrayList<>();
+            List<Pair<String,Integer>> videos = new ArrayList<>();
 
             for(int i = 0; i < taskCount; i++)
             {
                 String filePath = adapterForProcessingList.getItem(i);
+                assert filePath != null;
                 FileType fileType = getFileType(filePath);
                 if(fileType == FileType.Image)
                     images.add(Pair.create(filePath,i));
@@ -446,12 +455,12 @@ public class MainActivity extends AppCompatActivity {
                     anime4KCPP.saveVideo();
 
                     totalTime += end - start;
-                    publishProgress((++videoCount) * 100 / taskCount, video.second);
+                    publishProgress((++videoCount + imageCount) * 100 / taskCount, video.second);
                 }
             } catch (Exception exp) {
                 Message message = new Message();
                 message.obj = exp.getMessage();
-                handler.sendMessage(message);
+                anime4KCPPHandler.sendMessage(message);
                 return 0.0;
             }
 
@@ -459,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
+        protected void onProgressUpdate(@NonNull Integer... values) {
             mainProgressBar.setProgress(values[0]);
             processingList.setItemChecked(values[1], true);
         }
@@ -469,7 +478,10 @@ public class MainActivity extends AppCompatActivity {
             buttonStart.setEnabled(true);
 
             if (aDouble==0.0)
+            {
+                mainProgressBar.setProgress(0);
                 return;
+            }
 
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("NOTICE")

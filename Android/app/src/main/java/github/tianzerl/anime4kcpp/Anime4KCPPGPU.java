@@ -3,19 +3,11 @@ package github.tianzerl.anime4kcpp;
 public class Anime4KCPPGPU extends Anime4KCPP {
 
     public static boolean checkGPUSupport() {
-        try {
-            return checkGPUSupportAnime4KCPPGPU();
-        } catch (Exception exp) {
-            throw exp;
-        }
+        return checkGPUSupportAnime4KCPPGPU();
     }
 
     public Anime4KCPPGPU() {
-        try {
-            anime4k = createAnime4KCPPGPU();
-        } catch (Exception exp) {
-            throw exp;
-        }
+        anime4k = createAnime4KCPPGPU();
     }
 
     public Anime4KCPPGPU(
@@ -30,23 +22,19 @@ public class Anime4KCPPGPU extends Anime4KCPP {
             boolean postprocessing,
             byte preFilters,
             byte postFilters) {
-        try {
-            anime4k = createAnime4KCPPGPUByArgs(
-                    passes,
-                    pushColorCount,
-                    strengthColor,
-                    strengthGradient,
-                    zoomFactor,
-                    fastMode,
-                    videoMode,
-                    preprocessing,
-                    postprocessing,
-                    preFilters,
-                    postFilters
-            );
-        } catch (Exception exp) {
-            throw exp;
-        }
+        anime4k = createAnime4KCPPGPUByArgs(
+                passes,
+                pushColorCount,
+                strengthColor,
+                strengthGradient,
+                zoomFactor,
+                fastMode,
+                videoMode,
+                preprocessing,
+                postprocessing,
+                preFilters,
+                postFilters
+        );
     }
 
     @Override

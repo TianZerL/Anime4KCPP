@@ -7,10 +7,9 @@ android {
    splits {
        abi {
            enable true
-           universalApk false
+           universalApk true
            reset()
-           //Make sure your OpenCL lib support that AVI
-           include 'armeabi-v7a' // , 'x86', 'x86_64', 'arm64-v8a'
+           include 'armeabi-v7a', 'arm64-v8a'// , 'x86', 'x86_64'
        }
    }
 
@@ -25,7 +24,8 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17 -frtti -fexceptions"
+                cppFlags "-std=c++17 -frtti -fexceptions -O2 -fopenmp -static-openmp"
+                arguments "-DANDROID_STL=c++_shared", "-DANDROID_ARM_NEON=TRUE"
             }
         }
     }

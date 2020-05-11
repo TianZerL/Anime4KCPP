@@ -161,11 +161,15 @@ JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_Anime4KCPPGPU_createAnime4KCPPGPU(
         JNIEnv *env,
         jobject /* this */) {
+    jlong ptrAnime4KCPPGPU = (jlong)nullptr;
+
     try {
-        return (jlong)(new Anime4KGPU(true));
+        ptrAnime4KCPPGPU = (jlong)(new Anime4KGPU(true));
     } catch(const char* err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err);
     }
+
+    return ptrAnime4KCPPGPU;
 }
 
 JNIEXPORT jlong JNICALL
@@ -183,25 +187,29 @@ Java_github_tianzerl_anime4kcpp_Anime4KCPPGPU_createAnime4KCPPGPUByArgs(
         jboolean postprocessing,
         jbyte preFilters,
         jbyte postFilters) {
+    jlong ptrAnime4KCPPGPU = (jlong)nullptr;
+
     try {
-        return (jlong)(new Anime4KGPU(
-                passes,
-                pushColorCount,
-                strengthColor,
-                strengthGradient,
-                zoomFactor,
-                fastMode,
-                videoMode,
-                preprocessing,
-                postprocessing,
-                preFilters,
-                postFilters,
-                std::thread::hardware_concurrency(),
-                0,0, true)
+        ptrAnime4KCPPGPU = (jlong)(new Anime4KGPU(
+            passes,
+            pushColorCount,
+            strengthColor,
+            strengthGradient,
+            zoomFactor,
+            fastMode,
+            videoMode,
+            preprocessing,
+            postprocessing,
+            preFilters,
+            postFilters,
+            std::thread::hardware_concurrency(),
+            0,0, true)
         );
     } catch (const char* err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err);
     }
+
+    return ptrAnime4KCPPGPU;
 }
 
 JNIEXPORT void JNICALL

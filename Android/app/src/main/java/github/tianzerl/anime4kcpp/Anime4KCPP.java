@@ -3,7 +3,7 @@ package github.tianzerl.anime4kcpp;
 public class Anime4KCPP {
 
     static {
-        System.loadLibrary("Anime4KCPP");
+        System.loadLibrary("Anime4KCPPCore");
     }
 
     public static String getCoreVersion() {
@@ -71,29 +71,15 @@ public class Anime4KCPP {
     }
 
     public void loadImage(final String src) {
-        try {
-            loadImageAnime4KCPP(anime4k, src);
-        } catch (Exception exp) {
-            throw exp;
-        }
-
+        loadImageAnime4KCPP(anime4k, src);
     }
 
     public void loadVideo(final String src) {
-        try {
-            loadVideoAnime4KCPP(anime4k, src);
-        } catch (Exception exp) {
-            throw exp;
-        }
+        loadVideoAnime4KCPP(anime4k, src);
     }
 
     public void setVideoSaveInfo(final String dst) {
-        try {
-            setVideoSaveInfoAnime4KCPP(anime4k, dst);
-        } catch (Exception exp) {
-            throw exp;
-        }
-
+        setVideoSaveInfoAnime4KCPP(anime4k, dst);
     }
 
     public void process() {
@@ -108,7 +94,7 @@ public class Anime4KCPP {
         saveVideoAnime4KCPP(anime4k);
     }
 
-    protected long anime4k;
+    long anime4k;
 
     @Override
     protected void finalize() throws Throwable {
