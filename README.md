@@ -26,6 +26,7 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 Anime4KCPP now supports GPU acceleration, which is implemented by original OpenCL for high performance, it supports any graphic card that implemented OpenCL 1.2 or newer, and can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
 
 # Performance
+### Desktop
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
@@ -50,70 +51,38 @@ Anime4KCPP Settings: balance
     480P  -> 1080P :       00 min 29 seconds
     1080P -> 4K :          02 min 55 seconds
 
+### Android
+SOC: Snapdragon 855  
+RAM: 8G  
+Anime4KCPP Version : 1.7.1  
+Anime4KCPP Settings: balance  
+
+    CPU:  
+    Image:  
+    256x256 -> 512x512:   0.045s  
+    1080P   -> 4k:        0.544s (That's even faster than R5 3500U, Amazing!)  
+
+    GPU:  
+    Image:  
+    256x256 -> 512x512:   0.008s  
+    1080P   -> 4k:        0.158s  
+
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
 ***This picture is out of date***
 ![GUI](images/GUI.png)
 
+# Android
+Anime4KCPP now provides a Android version, upscale your image by your phone as fast as your computer!  
+***NOTICE: Android version doesn't support video processing for now***  
+![Android](images/Android.png)
+
 # CLI
 ## Video processing
 For video processing, all you need do is to add the argument ```-v```, and waiting. The video processing supports multithreading, and by default uses all CPU threads, but you can adjust it manually by ```-t``` to specify the number of threads for processing.
 
 ## Usage
-### building
-Please install [OpenCV Library](https://opencv.org) before building, and the [release version](https://github.com/TianZerL/Anime4KCPP/releases) have already included OpenCV runtime.  
-
-You need get a OpenCL SDK from your graphic card provider, this is [the one](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases) that provided by AMD.
-
-And you need Qt open source version for building GUI.
-
-If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder](https://github.com/cisco/openh264/releases) for encoding.
-
-This project uses [cmake](https://cmake.org) to build.
-
-### building on macOS
-
-We need to install all the aforementioned dependencies via brew (excpet OpenCL which is provided by Apple):
-
-```
-brew install opencv qt ffmpeg openh264 cmake
-```
-
-For brew's qt to work you need to set these (see latest instructions by `brew info qt`):
-
-```
-If you need to have qt first in your PATH run:
-  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
-
-For compilers to find qt you may need to set:
-  export LDFLAGS="-L/usr/local/opt/qt/lib"
-  export CPPFLAGS="-I/usr/local/opt/qt/include"
-
-For pkg-config to find qt you may need to set:
-  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
-```
-
-Now we need to fix macOS libomp problem (copied from [here](https://stackoverflow.com/a/54715120/1410221)):
-
-* Install LLVM with openmp and libomp with brew
-
-    ```
-     brew update
-     brew install llvm libomp
-    ```
-
-* Run CMake with the new compilers
-
-    ```
-     # in repo's root
-     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
-    ```
-
-Now we just run `make`. The binaries should have been installed to `./bin/`.
-
-Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
-
 ### arguments
 
     options:
@@ -171,6 +140,61 @@ I recommend use 40(Gaussian blur weak + Bilateral filter) for image that < 1080P
 It is not sure which will be better between pre and post processing, it depends on the specific image, you can try different combination for best quality.
 
 CAS is an adaptive sharpening technology which is open source by AMD, simple but efficient.
+
+# Building
+## building on Windows or Linux
+Please install [OpenCV Library](https://opencv.org) before building, and the [release version](https://github.com/TianZerL/Anime4KCPP/releases) have already included OpenCV runtime.  
+
+You need get a OpenCL SDK from your graphic card provider, this is [the one](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases) that provided by AMD.
+
+And you need Qt open source version for building GUI.
+
+If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder](https://github.com/cisco/openh264/releases) for encoding.
+
+This project uses [cmake](https://cmake.org) to build.
+
+## building on macOS
+
+We need to install all the aforementioned dependencies via brew (excpet OpenCL which is provided by Apple):
+
+```
+brew install opencv qt ffmpeg openh264 cmake
+```
+
+For brew's qt to work you need to set these (see latest instructions by `brew info qt`):
+
+```
+If you need to have qt first in your PATH run:
+  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
+
+For compilers to find qt you may need to set:
+  export LDFLAGS="-L/usr/local/opt/qt/lib"
+  export CPPFLAGS="-I/usr/local/opt/qt/include"
+
+For pkg-config to find qt you may need to set:
+  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
+```
+
+Now we need to fix macOS libomp problem (copied from [here](https://stackoverflow.com/a/54715120/1410221)):
+
+* Install LLVM with openmp and libomp with brew
+
+    ```
+     brew update
+     brew install llvm libomp
+    ```
+
+* Run CMake with the new compilers
+
+    ```
+     # in repo's root
+     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
+    ```
+
+Now we just run `make`. The binaries should have been installed to `./bin/`.
+
+Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
+
 
 # pyanime4k
 [pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 

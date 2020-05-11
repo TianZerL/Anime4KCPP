@@ -23,6 +23,7 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 Anime4KCPP现已支持GPU加速，通过原生OpenCL实现，可提供高性能与跨平台性，只要您的显卡支持OpenCL 1.2或者更高版本，即可开启。在*AMD Vege 8 Graphics* (*AMD Ryzen 3500U*的核显) 上可以在0.1秒内完成1080 -> 4K图像处理。  
 
 # 性能
+### 桌面
 CPU: AMD Ryzen 3500U  
 GPU: AMD Vege 8 Graphics  
 RAM: 16G  
@@ -47,6 +48,22 @@ Anime4KCPP 设置: 平衡
     480P  -> 1080P :       00 分 29 秒
     1080P -> 4K :          02 分 55 秒
 
+### Android
+SOC: 高通骁龙855  
+RAM: 8G  
+Anime4KCPP 版本 : 1.7.1  
+Anime4KCPP 设置: 平衡  
+
+    CPU:  
+    图像:  
+    256x256 -> 512x512:   0.045秒  
+    1080P   -> 4k:        0.544秒 (比R5 3500U还要快，厉害！)  
+
+    GPU:  
+    图像:  
+    256x256 -> 512x512:   0.008秒  
+    1080P   -> 4k:        0.158秒  
+
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
 **注意: 在处理视频前请安装 [ffmpeg](https://ffmpeg.org) 否则处理结果将没有音轨**  
@@ -54,63 +71,17 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
 
 ![GUI](images/GUI.png)
 
+# Android
+Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就像PC那样快!  
+***NOTICE: Android版本现在还不支持视屏处理***  
+
+![Android](images/Android.png)
+
 # CLI
 ## 视频处理
 添加参数 ```-v``` 以开启视频处理。视频处理支持多线程并默认使用所有线程，您可使用参数 ```-t``` 来手动指定使用线程的数量。
 
 ## 使用方法
-### 编译
-在编译之前请安装 [OpenCV](https://opencv.org)。 ( [release](https://github.com/TianZerL/Anime4KCPP/releases) 已包含OpenCV运行时库。)
-
-您还需要一个OpenCL SDK实现，您通常可以从您的显卡提供商的网站上找到它，例如[这个](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases)是AMD提供的一个OpenCL SDK实现。
-
-您需要Qt开源版本以构建GUI界面。
-
-若您想处理视频, 请先安装 [ffmpeg](https://ffmpeg.org), 否则您的视频将没有音轨。您可能还需要一个开源编解码器 [OpenH264 encoder](https://github.com/cisco/openh264/releases)。
-
-该项目使用 [cmake](https://cmake.org) 进行构建。
-
-### 在macOS进行编译
-我们首先通过brew安装上述依赖 (除了OpenCL，其由Apple提供):
-
-```
-brew install opencv qt ffmpeg openh264 cmake
-```
-
-为了使得brew的qt工作您需要进行如下设置(输入`brew info qt`查看最新说明):
-
-```
-如果您需要添加Qt到环境变量，运行:
-  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
-
-为了使得编译器能够找到Qt您需要设置:
-  export LDFLAGS="-L/usr/local/opt/qt/lib"
-  export CPPFLAGS="-I/usr/local/opt/qt/include"
-
-为了使得pkg-config能够找到Qt您需要设置:
-  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
-```
-
-现在我们需要修复macOS libomp 库的问题 (引用自[这里](https://stackoverflow.com/a/54715120/1410221)):
-
-* 安装带有openmp和libomp的LLVM通过brew
-
-    ```
-     brew update
-     brew install llvm libomp
-    ```
-
-* 运行CMake，指定新的编译器
-
-    ```
-     # in repo's root
-     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
-    ```
-
-最后运行 `make`. 所有二进制文件都将被安装至 `./bin/`.
-
-请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
-
 ### 参数
 
     options:
@@ -170,6 +141,60 @@ brew install opencv qt ffmpeg openh264 cmake
 预处理一般启用CAS即可。
 
 CAS是AMD开源的自适应锐化技术。
+
+# 编译
+## 在Window或者Linux进行编译
+在编译之前请安装 [OpenCV](https://opencv.org)。 ( [release](https://github.com/TianZerL/Anime4KCPP/releases) 已包含OpenCV运行时库。)
+
+您还需要一个OpenCL SDK实现，您通常可以从您的显卡提供商的网站上找到它，例如[这个](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases)是AMD提供的一个OpenCL SDK实现。
+
+您需要Qt开源版本以构建GUI界面。
+
+若您想处理视频, 请先安装 [ffmpeg](https://ffmpeg.org), 否则您的视频将没有音轨。您可能还需要一个开源编解码器 [OpenH264 encoder](https://github.com/cisco/openh264/releases)。
+
+该项目使用 [cmake](https://cmake.org) 进行构建。
+
+## 在macOS进行编译
+我们首先通过brew安装上述依赖 (除了OpenCL，其由Apple提供):
+
+```
+brew install opencv qt ffmpeg openh264 cmake
+```
+
+为了使得brew的qt工作您需要进行如下设置(输入`brew info qt`查看最新说明):
+
+```
+如果您需要添加Qt到环境变量，运行:
+  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
+
+为了使得编译器能够找到Qt您需要设置:
+  export LDFLAGS="-L/usr/local/opt/qt/lib"
+  export CPPFLAGS="-I/usr/local/opt/qt/include"
+
+为了使得pkg-config能够找到Qt您需要设置:
+  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
+```
+
+现在我们需要修复macOS libomp 库的问题 (引用自[这里](https://stackoverflow.com/a/54715120/1410221)):
+
+* 安装带有openmp和libomp的LLVM通过brew
+
+    ```
+     brew update
+     brew install llvm libomp
+    ```
+
+* 运行CMake，指定新的编译器
+
+    ```
+     # in repo's root
+     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
+    ```
+
+最后运行 `make`. 所有二进制文件都将被安装至 `./bin/`.
+
+请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
+
 # pyanime4k
 [pyanime4k](https://github.com/TianZerL/pyanime4k) 是一个在python中使用Anime4K的简单方式，它基于Anime4KCPP。 
 
