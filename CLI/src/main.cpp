@@ -215,7 +215,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
                     anime4k->process();
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                     std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
-                    
+
                     anime4k->saveImage(currOnputPath);
                 }
             }
@@ -313,7 +313,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         std::cout << err << std::endl;
     }
 
-    if(anime4k!=nullptr)
+    if (anime4k != nullptr)
         delete anime4k;
 
     return 0;

@@ -1,4 +1,4 @@
-# Anime4KCPP
+# 关于Anime4KCPP
 Anime4KCPP是Anime4K的C++实现，它基于[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，并对其进行优化以提供更佳的图像质量。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
 
 **注意: 使用CPU处理已经足够快，足以处理普通图像，其性能大约是[Go语言实现](https://github.com/TianZerL/Anime4KGo)的12倍，[Python实现](https://github.com/TianZerL/Anime4KPython)的1300倍。若使用GPU加速，一般情况下速度是CPU的10倍以上（取决于您的显卡），因此GPU加速很适合用于处理视频，尝试Anime4KCPP以获得更好的质量和高性能。**  
