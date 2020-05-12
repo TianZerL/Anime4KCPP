@@ -2,16 +2,17 @@
   <img src="./images/Logo.png">
 </div>
 
-<h2 align="center">
+<h1 align="center">
   Anime4KCPP
   </br>
   <a href="https://github.com/TianZerL/Anime4KCPP/releases"><img alt="Latest GitHub release" src="https://img.shields.io/github/v/release/TianZerL/Anime4KCPP?color=red&label=Latest%20release&style=flat-square"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-blue?style=flat-square">
   <img alt="License" src="https://img.shields.io/github/license/TianZerL/Anime4KCPP?style=flat-square">
-</h2>
+</h1>
 
 
-[**中文文档**](README.cn.md)
+### [**中文文档**](README.cn.md)
+### [**📁Download**](https://github.com/TianZerL/Anime4KCPP/releases)
 
 # About Anime4KCPP
 This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and try to optimize it to provide better quality, it aims to be a high performance pretreatment tools to process both image and video.  

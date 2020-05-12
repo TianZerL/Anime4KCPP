@@ -1,3 +1,5 @@
+### [**📁下载**](https://github.com/TianZerL/Anime4KCPP/releases)
+
 # 关于Anime4KCPP
 Anime4KCPP是Anime4K的C++实现，它基于[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，并对其进行优化以提供更佳的图像质量。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
 
