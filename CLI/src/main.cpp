@@ -3,6 +3,7 @@
 #include <cmdline.h>
 
 #include <iostream>
+#include <filesystem>
 
 #ifndef COMPILER
 #define COMPILER "Unknown"
@@ -16,9 +17,9 @@ bool checkFFmpeg()
     return false;
 }
 
-bool mergrAudio2Video(const std::string& output, const std::string& srcFile)
+bool mergrAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
-    std::string command("ffmpeg -i \"tmp_out.mp4\" -i \"" + srcFile + "\" -c copy -map 0 -map 1:1 -y \"" + output + "\"");
+    std::string command("ffmpeg -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0 -map 1:1 -y \"" + dstFile + "\"");
     std::cout << command << std::endl;
 
     if (!system(command.data()))
@@ -132,6 +133,13 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         return 0;
     }
 
+    std::filesystem::path inputPah(input), outputPath(output);
+    if (!std::filesystem::exists(inputPah))
+    {
+        std::cerr << "input file or directory does not exist." << std::endl;
+        return 0;
+    }
+
     Anime4K* anime4k;
     try
     {
@@ -186,19 +194,47 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
         if (!videoMode)//Image
         {
-            anime4k->loadImage(input);
-            anime4k->showInfo();
-            anime4k->showFiltersInfo();
+            if (std::filesystem::is_directory(inputPah))
+            {
+                if (!std::filesystem::is_directory(outputPath))
+                    outputPath = outputPath.parent_path().append(outputPath.stem().native());
+                std::filesystem::create_directories(outputPath);
+                std::filesystem::directory_iterator currDir(inputPah);
+                for (auto& file : currDir)
+                {
+                    if (file.is_directory())
+                        continue;
+                    std::string currInputPath = file.path().u8string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().u8string() + ".png")).u8string();
+                    anime4k->loadImage(file.path().u8string());
+                    anime4k->showInfo();
+                    anime4k->showFiltersInfo();
 
-            std::cout << "Processing..." << std::endl;
-            std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-            anime4k->process();
-            std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-            std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
+                    std::cout << "Processing..." << std::endl;
+                    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+                    anime4k->process();
+                    std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                    std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
+                    
+                    anime4k->saveImage(currOnputPath);
+                }
+            }
+            else
+            {
+                anime4k->loadImage(input);
+                anime4k->showInfo();
+                anime4k->showFiltersInfo();
 
-            if (preview)
-                anime4k->showImage();
-            anime4k->saveImage(output);
+                std::cout << "Processing..." << std::endl;
+                std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+                anime4k->process();
+                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
+
+                if (preview)
+                    anime4k->showImage();
+                anime4k->saveImage(output);
+            }
         }
         else//Video
         {
@@ -214,35 +250,55 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             else
                 outputTmpName = "tmp_out.mp4";
 
-            try
+            if (std::filesystem::is_directory(inputPah))
+            {
+                if (!std::filesystem::is_directory(outputPath))
+                    outputPath = outputPath.parent_path().append(outputPath.stem().native());
+                std::filesystem::create_directories(outputPath);
+                std::filesystem::directory_iterator currDir(inputPah);
+                for (auto& file : currDir)
+                {
+                    if (file.is_directory())
+                        continue;
+                    std::string currInputPath = file.path().u8string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().u8string() + ".mp4")).u8string();
+
+                    anime4k->loadVideo(currInputPath);
+                    anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
+
+                    anime4k->showInfo();
+                    anime4k->showFiltersInfo();
+
+                    std::cout << "Processing..." << std::endl;
+                    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+                    anime4k->process();
+                    std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                    std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+
+                    anime4k->saveVideo();
+
+                    if (ffmpeg && mergrAudio2Video(currOnputPath, currInputPath, outputTmpName))
+                        std::filesystem::remove(outputTmpName);
+                }
+            }
+            else
             {
                 anime4k->loadVideo(input);
                 anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
-            }
-            catch (const char* err)
-            {
-                std::cout << err << std::endl;
-                return 0;
-            }
-            anime4k->showInfo();
-            anime4k->showFiltersInfo();
 
-            std::cout << "Processing..." << std::endl;
-            std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-            anime4k->process();
-            std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-            std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+                anime4k->showInfo();
+                anime4k->showFiltersInfo();
 
-            anime4k->saveVideo();
+                std::cout << "Processing..." << std::endl;
+                std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+                anime4k->process();
+                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
-            if (ffmpeg && mergrAudio2Video(output, input))
-            {
-#ifdef _WIN32
-                std::string command("del /q " + outputTmpName);
-#else
-                std::string command("rm " + outputTmpName);
-#endif // SYSTEM
-                system(command.data());
+                anime4k->saveVideo();
+
+                if (ffmpeg && mergrAudio2Video(output, input, outputTmpName))
+                    std::filesystem::remove(outputTmpName);
             }
         }
     }

@@ -74,7 +74,7 @@ Anime4KCPP now provides a GUI interface, upscale your image or video by an easie
 ![GUI](images/GUI.png)
 
 # Android
-Anime4KCPP now provides a Android version, upscale your image by your phone as fast as your computer!  
+Anime4KCPP now provides an Android version, upscale your image by your phone as fast as your computer!  
 ***NOTICE: Android version doesn't support video processing for now***  
 ![Android](images/Android.png)
 

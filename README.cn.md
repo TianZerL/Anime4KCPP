@@ -73,7 +73,7 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
 
 # Android
 Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就像PC那样快!  
-***NOTICE: Android版本现在还不支持视屏处理***  
+***NOTICE: Android版本现在还不支持视频处理***  
 
 ![Android](images/Android.png)
 
