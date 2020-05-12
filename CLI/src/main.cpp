@@ -133,14 +133,14 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         return 0;
     }
 
-    std::filesystem::path inputPah(input), outputPath(output);
-    if (!std::filesystem::exists(inputPah))
+    std::filesystem::path inputPath(input), outputPath(output);
+    if (!std::filesystem::exists(inputPath))
     {
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;
     }
 
-    Anime4K* anime4k;
+    Anime4K* anime4k = nullptr;
     try
     {
         if (GPU)
@@ -194,12 +194,12 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
         if (!videoMode)//Image
         {
-            if (std::filesystem::is_directory(inputPah))
+            if (std::filesystem::is_directory(inputPath))
             {
                 if (!std::filesystem::is_directory(outputPath))
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
                 std::filesystem::create_directories(outputPath);
-                std::filesystem::directory_iterator currDir(inputPah);
+                std::filesystem::directory_iterator currDir(inputPath);
                 for (auto& file : currDir)
                 {
                     if (file.is_directory())
@@ -221,7 +221,10 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                anime4k->loadImage(input);
+                std::string currInputPath = inputPath.u8string();
+                std::string currOnputPath = outputPath.u8string();
+
+                anime4k->loadImage(currInputPath);
                 anime4k->showInfo();
                 anime4k->showFiltersInfo();
 
@@ -233,14 +236,14 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
                 if (preview)
                     anime4k->showImage();
-                anime4k->saveImage(output);
+
+                anime4k->saveImage(currOnputPath);
             }
         }
         else//Video
         {
             //Suffix check
-            if (output.substr(output.size() - 3) == "png")
-                output.replace(output.size() - 3, 3, "mp4");
+            outputPath.replace_extension(".mp4");
 
             bool ffmpeg = checkFFmpeg();
             std::string outputTmpName = output;
@@ -250,12 +253,12 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             else
                 outputTmpName = "tmp_out.mp4";
 
-            if (std::filesystem::is_directory(inputPah))
+            if (std::filesystem::is_directory(inputPath))
             {
                 if (!std::filesystem::is_directory(outputPath))
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
                 std::filesystem::create_directories(outputPath);
-                std::filesystem::directory_iterator currDir(inputPah);
+                std::filesystem::directory_iterator currDir(inputPath);
                 for (auto& file : currDir)
                 {
                     if (file.is_directory())
@@ -283,7 +286,10 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                anime4k->loadVideo(input);
+                std::string currInputPath = inputPath.u8string();
+                std::string currOnputPath = outputPath.u8string();
+
+                anime4k->loadVideo(currInputPath);
                 anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
 
                 anime4k->showInfo();
@@ -297,7 +303,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
                 anime4k->saveVideo();
 
-                if (ffmpeg && mergrAudio2Video(output, input, outputTmpName))
+                if (ffmpeg && mergrAudio2Video(currOnputPath, currInputPath, outputTmpName))
                     std::filesystem::remove(outputTmpName);
             }
         }
@@ -305,10 +311,10 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     catch (const char* err)
     {
         std::cout << err << std::endl;
-        return 0;
     }
 
-    delete anime4k;
+    if(anime4k!=nullptr)
+        delete anime4k;
 
     return 0;
 }
