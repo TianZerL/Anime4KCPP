@@ -87,11 +87,45 @@ void Anime4K::loadVideo(const std::string& dstFile)
 
 void Anime4K::loadImage(const std::string& srcFile)
 {
-    orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
+    dstImg = orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
     if (orgImg.empty())
         throw "Failed to load file: file doesn't not exist or incorrect file format.";
     orgH = orgImg.rows;
     orgW = orgImg.cols;
+    H = zf * orgH;
+    W = zf * orgW;
+}
+
+void Anime4K::loadImage(const cv::InputArray srcImage)
+{
+    dstImg = orgImg = srcImage.getMat();
+    if (orgImg.empty()||orgImg.type()!=CV_8UC3)
+        throw "Empty image or it is not a BGR image data.";
+    orgH = orgImg.rows;
+    orgW = orgImg.cols;
+    H = zf * orgH;
+    W = zf * orgW;
+}
+
+void Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine)
+{
+    dstImg = orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+    orgH = rows;
+    orgW = cols;
+    H = zf * orgH;
+    W = zf * orgW;
+}
+
+void Anime4K::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b)
+{
+    cv::merge(std::vector{
+        cv::Mat(rows, cols, CV_8UC1, b),
+        cv::Mat(rows, cols, CV_8UC1, g),
+        cv::Mat(rows, cols, CV_8UC1, r) },
+        orgImg);
+    dstImg = orgImg;
+    orgH = rows;
+    orgW = cols;
     H = zf * orgH;
     W = zf * orgW;
 }
@@ -171,6 +205,32 @@ void Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
 void Anime4K::saveImage(const std::string& dstFile)
 {
     cv::imwrite(dstFile, dstImg);
+}
+
+void Anime4K::saveImage(cv::Mat& dstImage)
+{
+    dstImage = dstImg;
+}
+
+void Anime4K::saveImage(unsigned char*& data)
+{
+    if (data == nullptr)
+        throw "Pointer can not be nullptr";
+    size_t size = dstImg.step * H;
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2RGB);
+    memcpy(data, dstImg.data, size);
+}
+
+void Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b)
+{
+    if(r == nullptr || g == nullptr || b == nullptr)
+        throw "Pointers can not be nullptr";
+    size_t size = (size_t)W * (size_t)H;
+    std::vector<cv::Mat> bgr(3);
+    cv::split(dstImg, bgr);
+    memcpy(r, bgr[R].data, size);
+    memcpy(g, bgr[G].data, size);
+    memcpy(b, bgr[B].data, size);
 }
 
 void Anime4K::saveVideo()

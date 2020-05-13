@@ -82,8 +82,14 @@ public:
     void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
+    void loadImage(const cv::InputArray srcImage);
+    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0Ui64);
+    void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b);
     void setVideoSaveInfo(const std::string& dstFile,const CODEC codec = MP4V);
     void saveImage(const std::string& dstFile);
+    void saveImage(cv::Mat& dstImage);
+    void saveImage(unsigned char*& data);
+    void saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b);
     void saveVideo();
     void showInfo();
     void showFiltersInfo();
