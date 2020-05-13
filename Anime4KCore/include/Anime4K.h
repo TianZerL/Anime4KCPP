@@ -95,6 +95,8 @@ public:
     void showFiltersInfo();
     std::string getInfo();
     std::string getFiltersInfo();
+    size_t getResultDataLength();
+    size_t getResultDataPerChannelLength();
     void showImage();
     virtual void process();
 protected:

@@ -395,6 +395,16 @@ std::string Anime4K::getFiltersInfo()
     return std::string(oss.str());
 }
 
+size_t Anime4K::getResultDataLength()
+{
+    return dstImg.step * (size_t)H;
+}
+
+size_t Anime4K::getResultDataPerChannelLength()
+{
+    return (size_t)W * (size_t)H;
+}
+
 void Anime4K::showImage()
 {
     cv::imshow("dstImg", dstImg);
