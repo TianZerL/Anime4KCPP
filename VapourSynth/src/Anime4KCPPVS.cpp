@@ -16,6 +16,7 @@ typedef struct {
 
 static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSNode* node, VSCore* core, const VSAPI* vsapi)
 {
+    Anime4KGPU::initGPU();
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
@@ -79,6 +80,7 @@ static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* 
     Anime4KCPPData* data = (Anime4KCPPData*)instanceData;
     vsapi->freeNode(data->node);
     delete data;
+    Anime4KGPU::releaseGPU();
 }
 
 static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)

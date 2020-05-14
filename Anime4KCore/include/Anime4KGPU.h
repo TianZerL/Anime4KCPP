@@ -34,23 +34,48 @@ public:
     Anime4KGPU(bool initGPU, unsigned int platformID = 0, unsigned int deviceID = 0);
     virtual ~Anime4KGPU();
     virtual void process();
+#ifndef PARALLEL_SUPPORTS
     void initGPU();
     void releaseGPU();
+#else
+    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
+    static void releaseGPU();
+#endif // !PARALLEL_SUPPORTS
     bool isInitializedGPU();
     static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
     static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
 protected:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
+#ifndef PARALLEL_SUPPORTS
     void initOpenCL();
     void releaseOpenCL();
+#else
+    static void initOpenCL();
+    static void releaseOpenCL();
+#endif // !PARALLEL_SUPPORTS
     std::string readKernel(const std::string &fileName);
 private:
+#ifndef PARALLEL_SUPPORTS
     bool isInitialized;
 
     cl_context context;
     cl_command_queue commandQueue;
     cl_program program;
     cl_device_id device;
+
+    const unsigned int pID;
+    const unsigned int dID;
+#else
+    static bool isInitialized;
+
+    static cl_context context;
+    static cl_command_queue commandQueue;
+    static cl_program program;
+    static cl_device_id device;
+
+    static unsigned int pID;
+    static unsigned int dID;
+#endif // !PARALLEL_SUPPORTS
 
     uint64_t frameGPUDoneCount;
 
@@ -61,12 +86,8 @@ private:
     double nWidth;
     double nHeight;
 
-    const unsigned int pID;
-    const unsigned int dID;
-
 #ifdef BUILT_IN_KERNEL
     static const std::string Anime4KCPPKernelSourceString;
 #endif // BUILT_IN_KERNEL
 
 };
-
