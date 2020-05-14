@@ -7,6 +7,7 @@ typedef struct {
     VSNodeRef* node;
     VSVideoInfo vi;
     int passes;
+    int pushColorCount;
     double strengthColor;
     double strengthGradient;
     double zoomFactor;
@@ -28,11 +29,11 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
     else if (activationReason == arAllFramesReady)
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
-        const VSFormat* fi = data->vi.format;
+
         int h = vsapi->getFrameHeight(src, 0);
         int w = vsapi->getFrameWidth(src, 0);
 
-        VSFrameRef* dst = vsapi->newVideoFrame(fi, data->vi.width, data->vi.height, src, core);
+        VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
         int srcSrtide = vsapi->getStride(src, 0);
 
@@ -47,9 +48,19 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
         Anime4K* anime4kcpp;
 
         if (data->GPU)
-            anime4kcpp = new Anime4KGPU(data->passes, 2, data->strengthColor, data->strengthGradient, data->zoomFactor);
+            anime4kcpp = new Anime4KGPU(
+                data->passes, 
+                data->pushColorCount, 
+                data->strengthColor, 
+                data->strengthGradient, 
+                data->zoomFactor);
         else
-            anime4kcpp = new Anime4K(data->passes, 2, data->strengthColor, data->strengthGradient, data->zoomFactor);
+            anime4kcpp = new Anime4K(
+                data->passes, 
+                data->pushColorCount, 
+                data->strengthColor, 
+                data->strengthGradient, 
+                data->zoomFactor);
         
         anime4kcpp->loadImage(h, srcSrtide, srcR, srcG, srcB);
         anime4kcpp->process();
@@ -60,7 +71,7 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 
         return dst;
     }
-    return 0;
+    return nullptr;
 }
 
 static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* vsapi)
@@ -89,6 +100,10 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         tmpData.passes = 2;
 
+    tmpData.pushColorCount = vsapi->propGetInt(in, "pushColorCount", 0, &err);
+    if (err)
+        tmpData.pushColorCount = 2;
+
     tmpData.strengthColor = vsapi->propGetFloat(in, "strengthColor", 0, &err);
     if (err)
         tmpData.strengthColor = 0.3;
@@ -97,9 +112,15 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         tmpData.strengthGradient = 1.0;
 
-    tmpData.zoomFactor = vsapi->propGetFloat(in, "upscale", 0, &err);
+    tmpData.zoomFactor = vsapi->propGetInt(in, "zoomFactor", 0, &err);
+    if (tmpData.zoomFactor < 1)
+    {
+        vsapi->setError(out, "Anime4KCPP: zoomFactor must be an integer which >= 1");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
     if (err)
-        tmpData.zoomFactor = 2;
+        tmpData.zoomFactor = 2.0;
 
     tmpData.GPU = vsapi->propGetInt(in, "GPUMode", 0, &err);
     if (err)
@@ -108,11 +129,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (tmpData.zoomFactor != 1)
     {
         if (tmpData.vi.width % 32 != 0)//32-byte alignment
-            tmpData.vi.width = 32 * (tmpData.vi.width / 32 + 1);
+            tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
         tmpData.vi.width *= tmpData.zoomFactor;
         tmpData.vi.height *= tmpData.zoomFactor;
-        if (tmpData.vi.width % 32 != 0)//32-byte alignment
-            tmpData.vi.width = 32 * (tmpData.vi.width / 32 + 1);
     }
 
     Anime4KCPPData* data = new Anime4KCPPData;
@@ -128,9 +147,10 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
     registerFunc("Anime4KCPP", 
         "src:clip;"
         "passes:int:opt;"
+        "pushColorCount:int:opt;"
         "strengthColor:float:opt;"
         "strengthGradient:float:opt;"
-        "upscale:float:opt;"
+        "zoomFactor:int:opt;"
         "GPUMode:int:opt;"
         , Anime4KCPPCreate, 0, plugin);
 }
