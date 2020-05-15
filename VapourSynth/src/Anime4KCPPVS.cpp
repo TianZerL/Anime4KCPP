@@ -12,12 +12,14 @@ typedef struct {
     double strengthGradient;
     double zoomFactor;
     bool GPU;
+    unsigned int pID, dID;
 }Anime4KCPPData;
 
 static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSNode* node, VSCore* core, const VSAPI* vsapi)
 {
-    Anime4KGPU::initGPU();
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
+    if (data->GPU)
+        Anime4KGPU::initGPU(data->pID, data->dID);
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
 
@@ -78,9 +80,10 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)instanceData;
+    if(data->GPU)
+        Anime4KGPU::releaseGPU();
     vsapi->freeNode(data->node);
     delete data;
-    Anime4KGPU::releaseGPU();
 }
 
 static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
@@ -126,9 +129,51 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     tmpData.GPU = vsapi->propGetInt(in, "GPUMode", 0, &err);
     if (err)
-        tmpData.passes = false;
+        tmpData.GPU = false;
 
-    if (tmpData.zoomFactor != 1)
+    tmpData.pID = vsapi->propGetInt(in, "platformID", 0, &err);
+    if (err || !tmpData.GPU)
+        tmpData.pID = 0;
+
+    tmpData.dID = vsapi->propGetInt(in, "deviceID", 0, &err);
+    if (err || !tmpData.GPU)
+        tmpData.dID = 0;
+
+    if (tmpData.GPU)
+    {
+        std::pair<std::pair<int, std::vector<int>>, std::string> GPUinfo = Anime4KGPU::listGPUs();
+        if (tmpData.pID >= static_cast<unsigned int>(GPUinfo.first.first) || 
+            tmpData.dID >= static_cast<unsigned int>(GPUinfo.first.second[tmpData.pID]))
+        {
+            std::ostringstream err;
+            err << "Platform ID or device ID index out of range" << std::endl
+                << "Run core.anim4kcpp.listGPUs for available platforms and devices" << std::endl
+                << "Your input is: " << std::endl
+                << "    platform ID: " << tmpData.pID << std::endl
+                << "    device ID: " << tmpData.dID << std::endl;
+            vsapi->setError(out, err.str().c_str());
+            vsapi->freeNode(tmpData.node);
+            return;
+        }
+        std::pair<bool,std::string> ret = 
+            Anime4KGPU::checkGPUSupport(tmpData.pID, tmpData.dID);
+        if (!ret.first)
+        {
+            std::ostringstream err;
+            err << "The current device is unavailable" << std::endl
+                << "Your input is: " << std::endl
+                << "    platform ID: " << tmpData.pID << std::endl
+                << "    device ID: " << tmpData.dID << std::endl
+                << "Error: " << std::endl
+                << "    " + ret.second << std::endl;
+            vsapi->setError(out, err.str().c_str());
+            vsapi->freeNode(tmpData.node);
+            return;
+        }
+        vsapi->logMessage(mtDebug, ("Current GPU infomation: \n" + ret.second).c_str());
+    }
+
+    if (tmpData.zoomFactor != 1.0)
     {
         if (tmpData.vi.width % 32 != 0)//32-byte alignment
             tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
@@ -142,11 +187,15 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame, Anime4KCPPFree, fmParallel, 0, data, core);
 }
 
+static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
+{
+    vsapi->logMessage(mtDebug, Anime4KGPU::listGPUs().second.c_str());
+}
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin* plugin)
 {
     configFunc("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VAPOURSYNTH_API_VERSION, 1, plugin);
-    registerFunc("Anime4KCPP", 
+    registerFunc("Anime4KCPP",
         "src:clip;"
         "passes:int:opt;"
         "pushColorCount:int:opt;"
@@ -154,6 +203,10 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "strengthGradient:float:opt;"
         "zoomFactor:int:opt;"
         "GPUMode:int:opt;"
-        , Anime4KCPPCreate, 0, plugin);
+        "platformID:int:opt;"
+        "deviceID:int:opt",
+        Anime4KCPPCreate, nullptr, plugin);
+
+    registerFunc("listGPUs", "", Anime4KCPPListGPUs, nullptr, plugin);
 }
 
