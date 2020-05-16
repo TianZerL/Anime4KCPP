@@ -120,7 +120,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.zoomFactor = vsapi->propGetInt(in, "zoomFactor", 0, &err);
     if (err)
         tmpData.zoomFactor = 1.0;
-    if (tmpData.zoomFactor < 1.0)
+    else if (tmpData.zoomFactor < 1.0)
     {
         vsapi->setError(out, "Anime4KCPP: zoomFactor must be an integer which >= 1");
         vsapi->freeNode(tmpData.node);
@@ -176,7 +176,11 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (tmpData.zoomFactor != 1.0)
     {
         if (tmpData.vi.width % 32 != 0)//32-byte alignment
+        {
             tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
+            vsapi->logMessage(mtWarning, 
+                "The width of the input video is not a multiple of 32(required by VapourSynth), there will be black edge of output video, please cut it manually.");
+        }
         tmpData.vi.width *= tmpData.zoomFactor;
         tmpData.vi.height *= tmpData.zoomFactor;
     }
