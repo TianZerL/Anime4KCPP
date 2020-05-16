@@ -66,6 +66,9 @@ Anime4KCPP 设置: 平衡
     256x256 -> 512x512:   0.008秒  
     1080P   -> 4k:        0.158秒  
 
+# VapourSynth插件
+Anime4KCPP现已提供VapourSynth插件。
+
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
 **注意: 在处理视频前请安装 [ffmpeg](https://ffmpeg.org) 否则处理结果将没有音轨**  
@@ -75,7 +78,7 @@ Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!
 
 # Android
 Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就像PC那样快!  
-***NOTICE: Android版本现在还不支持视频处理***  
+***NOTICE: Android版本是全功能的***  
 
 ![Android](images/Android.png)
 

@@ -81,6 +81,9 @@ Anime4KCPP Settings: balance
     256x256 -> 512x512:   0.008s  
     1080P   -> 4k:        0.158s  
 
+# VapourSynth plugin
+Anime4KCPP now provides VapourSynth plugin.  
+
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
@@ -89,7 +92,8 @@ Anime4KCPP now provides a GUI interface, upscale your image or video by an easie
 
 # Android
 Anime4KCPP now provides an Android version, upscale your image by your phone as fast as your computer!  
-***NOTICE: Android version doesn't support video processing for now***  
+***NOTICE: Android version is full feature***  
+
 ![Android](images/Android.png)
 
 # CLI
