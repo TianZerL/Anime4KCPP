@@ -204,9 +204,9 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
                 {
                     if (file.is_directory())
                         continue;
-                    std::string currInputPath = file.path().u8string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().u8string() + ".png")).u8string();
-                    anime4k->loadImage(file.path().u8string());
+                    std::string currInputPath = file.path().string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".png")).string();
+                    anime4k->loadImage(file.path().string());
                     anime4k->showInfo();
                     anime4k->showFiltersInfo();
 
@@ -221,8 +221,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                std::string currInputPath = inputPath.u8string();
-                std::string currOnputPath = outputPath.u8string();
+                std::string currInputPath = inputPath.string();
+                std::string currOnputPath = outputPath.string();
 
                 anime4k->loadImage(currInputPath);
                 anime4k->showInfo();
@@ -263,8 +263,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
                 {
                     if (file.is_directory())
                         continue;
-                    std::string currInputPath = file.path().u8string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().u8string() + ".mp4")).u8string();
+                    std::string currInputPath = file.path().string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".mp4")).string();
 
                     anime4k->loadVideo(currInputPath);
                     anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
@@ -286,8 +286,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                std::string currInputPath = inputPath.u8string();
-                std::string currOnputPath = outputPath.u8string();
+                std::string currInputPath = inputPath.string();
+                std::string currOnputPath = outputPath.string();
 
                 anime4k->loadVideo(currInputPath);
                 anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));

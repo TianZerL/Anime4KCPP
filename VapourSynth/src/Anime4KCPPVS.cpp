@@ -118,14 +118,14 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         tmpData.strengthGradient = 1.0;
 
     tmpData.zoomFactor = vsapi->propGetInt(in, "zoomFactor", 0, &err);
-    if (tmpData.zoomFactor < 1)
+    if (err)
+        tmpData.zoomFactor = 1.0;
+    if (tmpData.zoomFactor < 1.0)
     {
         vsapi->setError(out, "Anime4KCPP: zoomFactor must be an integer which >= 1");
         vsapi->freeNode(tmpData.node);
         return;
     }
-    if (err)
-        tmpData.zoomFactor = 2.0;
 
     tmpData.GPU = vsapi->propGetInt(in, "GPUMode", 0, &err);
     if (err)
