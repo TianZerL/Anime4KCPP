@@ -6,8 +6,8 @@
     <string name="clear">CLEAR</string>
     <string name="start">START</string>
     <string name="settings">Settings</string>
-    <string name="waitting">Waitting</string>
-    <string name="processing">Processing</string>
+    <string name="waitting">Waitting…</string>
+    <string name="processing">Processing…</string>
     <string name="gpumode">GPUMode</string>
     <string name="fastmode">FastMode</string>
     <string name="fast">Fast</string>

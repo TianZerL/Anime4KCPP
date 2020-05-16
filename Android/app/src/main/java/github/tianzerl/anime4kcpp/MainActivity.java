@@ -10,6 +10,7 @@ import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -37,7 +38,7 @@ import me.rosuh.filepicker.config.FilePickerManager;
 public class MainActivity extends AppCompatActivity {
 
     private enum Error {
-        Anime4KCPPError, FailedToCreateFolders
+        Anime4KCPPError, FailedToCreateFolders, FailedToDeleteTmpFile
     }
 
     private enum GPUState {
@@ -54,9 +55,7 @@ public class MainActivity extends AppCompatActivity {
             ArrayList<FileItemBeanImpl> newArrayList = new ArrayList<>();
             for (FileItemBeanImpl file: arrayList)
             {
-                //disable video processing for now
-                /*if(file.isDir() || getFileType(file.getFilePath()) != FileType.Unknown)*/
-                if(file.isDir() || getFileType(file.getFilePath()) == FileType.Image)
+                if(file.isDir() || getFileType(file.getFilePath()) != FileType.Unknown)
                     newArrayList.add(file);
             }
             return newArrayList;
@@ -109,9 +108,8 @@ public class MainActivity extends AppCompatActivity {
 
         setSwitches();
 
-        //disable video suffix
-        EditText editTextVideoSuffix = findViewById(R.id.editTextSuffixVideo);
-        editTextVideoSuffix.setEnabled(false);
+        //Keep screen on
+        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
@@ -191,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     private FileType getFileType(@NonNull String src) {
         String imageSuffix = ((EditText)findViewById(R.id.editTextSuffixImage)).getText().toString();
         String VideoSuffix = ((EditText)findViewById(R.id.editTextSuffixVideo)).getText().toString();
@@ -263,6 +260,13 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to create folders")
+                        .setPositiveButton("OK",null)
+                        .show();
+                break;
+            case FailedToDeleteTmpFile:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("ERROR")
+                        .setMessage("Failed to delete Temporary output video file, delete it manually.")
                         .setPositiveButton("OK",null)
                         .show();
                 break;
@@ -444,9 +448,11 @@ public class MainActivity extends AppCompatActivity {
                 anime4KCPP.setVideoMode(true);
                 for (Pair<String,Integer> video: videos) {
                     File srcFile = new File(video.first);
+                    String tmpOutputPath = dst+"/" + "tmpOutput" + videoCount +".mp4";
+                    String OutputPath = dst+"/" + prefix+srcFile.getName() + ".mp4";
 
                     anime4KCPP.loadVideo(srcFile.getPath());
-                    anime4KCPP.setVideoSaveInfo(dst+"/"+prefix+srcFile.getName());
+                    anime4KCPP.setVideoSaveInfo(tmpOutputPath);
 
                     long start = System.currentTimeMillis();
                     anime4KCPP.process();
@@ -454,6 +460,14 @@ public class MainActivity extends AppCompatActivity {
 
                     anime4KCPP.saveVideo();
 
+                    new VideoAudioProcessor(srcFile.getPath(), tmpOutputPath, OutputPath).merge();
+
+                    if (!(new File(tmpOutputPath).delete()))
+                    {
+                        Message message = new Message();
+                        message.obj = Error.FailedToDeleteTmpFile;
+                        otherErrorHandler.sendMessage(message);
+                    }
                     totalTime += end - start;
                     publishProgress((++videoCount + imageCount) * 100 / taskCount, video.second);
                 }

@@ -96,7 +96,7 @@ void Anime4K::loadImage(const std::string& srcFile)
     W = zf * orgW;
 }
 
-void Anime4K::loadImage(const cv::InputArray srcImage)
+void Anime4K::loadImage(cv::InputArray srcImage)
 {
     dstImg = orgImg = srcImage.getMat();
     if (orgImg.empty()||orgImg.type()!=CV_8UC3)

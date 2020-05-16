@@ -70,15 +70,15 @@ public class Anime4KCPP {
         setVideoModeAnime4KCPP(anime4k, flag);
     }
 
-    public void loadImage(final String src) {
+    public void loadImage(final String src) throws Exception {
         loadImageAnime4KCPP(anime4k, src);
     }
 
-    public void loadVideo(final String src) {
+    public void loadVideo(final String src) throws Exception {
         loadVideoAnime4KCPP(anime4k, src);
     }
 
-    public void setVideoSaveInfo(final String dst) {
+    public void setVideoSaveInfo(final String dst) throws Exception {
         setVideoSaveInfoAnime4KCPP(anime4k, dst);
     }
 
@@ -130,9 +130,9 @@ public class Anime4KCPP {
                                                  byte postFilters);
 
     protected native void setVideoModeAnime4KCPP(long ptr, boolean flag);
-    protected native void loadImageAnime4KCPP(long ptr, final String src);
-    protected native void loadVideoAnime4KCPP(long ptr, final String src);
-    protected native void setVideoSaveInfoAnime4KCPP(long ptr, final String dst);
+    protected native void loadImageAnime4KCPP(long ptr, final String src) throws Exception;
+    protected native void loadVideoAnime4KCPP(long ptr, final String src) throws Exception;
+    protected native void setVideoSaveInfoAnime4KCPP(long ptr, final String dst) throws Exception;
     protected native void processAnime4KCPP(long ptr);
     protected native void saveImageAnime4KCPP(long ptr, final String dst);
     protected native void saveVideoAnime4KCPP(long ptr);

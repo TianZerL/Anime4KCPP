@@ -29,7 +29,7 @@
 #endif
 #endif
 
-#define ANIME4KCPP_CORE_VERSION "1.7.1"
+#define ANIME4KCPP_CORE_VERSION "1.8.0"
 
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})
@@ -82,7 +82,7 @@ public:
     void setVideoMode(const bool flag);
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
-    void loadImage(const cv::InputArray srcImage);
+    void loadImage(cv::InputArray srcImage);
     void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL);
     void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b);
     void setVideoSaveInfo(const std::string& dstFile,const CODEC codec = MP4V);

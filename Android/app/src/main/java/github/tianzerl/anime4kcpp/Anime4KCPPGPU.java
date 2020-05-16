@@ -6,7 +6,7 @@ public class Anime4KCPPGPU extends Anime4KCPP {
         return checkGPUSupportAnime4KCPPGPU();
     }
 
-    public Anime4KCPPGPU() {
+    public Anime4KCPPGPU() throws Exception {
         anime4k = createAnime4KCPPGPU();
     }
 
@@ -21,7 +21,7 @@ public class Anime4KCPPGPU extends Anime4KCPP {
             boolean preprocessing,
             boolean postprocessing,
             byte preFilters,
-            byte postFilters) {
+            byte postFilters) throws Exception {
         anime4k = createAnime4KCPPGPUByArgs(
                 passes,
                 pushColorCount,
@@ -43,7 +43,7 @@ public class Anime4KCPPGPU extends Anime4KCPP {
         releaseAnime4KCPPGPU(anime4k);
     }
 
-    private native long createAnime4KCPPGPU();
+    private native long createAnime4KCPPGPU() throws Exception;
     private native long createAnime4KCPPGPUByArgs(int passes,
                                                int pushColorCount,
                                                double strengthColor,
@@ -54,7 +54,7 @@ public class Anime4KCPPGPU extends Anime4KCPP {
                                                boolean preprocessing,
                                                boolean postProcessing,
                                                byte preFilters,
-                                               byte postFilters);
+                                               byte postFilters) throws Exception;
     private native void releaseAnime4KCPPGPU(long ptr);
     protected native static boolean checkGPUSupportAnime4KCPPGPU();
 }
