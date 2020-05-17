@@ -12,6 +12,8 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 - 跨平台支持，已在Windows，Linux和macOS (感谢[NightMachinary](https://github.com/NightMachinary))上通过编译测试。
 - 广泛的兼容性，同时支持CPU和GPU，GPU只要求支持OpenCL即可，并不限制任何品牌。
 - 提供易于使用的GUI和CLI程序。
+- 支持Android
+- 支持VapourSynth插件
 - 高性能。
 - 低内存占用，在处理1080P视频时通常情况下也不会超过1G。
 - 支持GPU加速，在短时间内处理图像和视频。
@@ -68,6 +70,7 @@ Anime4KCPP 设置: 平衡
 
 # VapourSynth插件
 Anime4KCPP现已提供VapourSynth插件。
+详见[wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
 
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  

@@ -27,6 +27,8 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 - Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).
 - Wide compatibility, support both CPU and GPU.
 - easy to use with GUI or CLI.
+- Android supports.
+- VapourSynth plugin supports.
 - High performance.
 - Low memory usage, usually less than 1G even in processing 1080P videos.
 - GPU acceleration support, use it to process your image or video in a short time.
@@ -83,11 +85,13 @@ Anime4KCPP Settings: balance
 
 # VapourSynth plugin
 Anime4KCPP now provides VapourSynth plugin.  
+For detail, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
 
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
 ***This picture is out of date***
+
 ![GUI](images/GUI.png)
 
 # Android
