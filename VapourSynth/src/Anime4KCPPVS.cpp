@@ -94,7 +94,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.node = vsapi->propGetNode(in, "src", 0, 0);
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
 
-    if (!isConstantFormat(&tmpData.vi) || tmpData.vi.format->colorFamily != cmRGB)
+    if (!isConstantFormat(&tmpData.vi) || tmpData.vi.format->id != pfRGB24)
     {
         vsapi->setError(out, "Anime4KCPP: only RGB24 supported");
         vsapi->freeNode(tmpData.node);
@@ -179,7 +179,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         {
             tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
             vsapi->logMessage(mtWarning, 
-                "The width of the input video is not a multiple of 32(required by VapourSynth), there will be black edge of output video, please cut it manually.");
+                "The width of the input video is not a multiple of 32 (required by VapourSynth), "
+                "there will be black border of output video, please cut it off manually.");
         }
         tmpData.vi.width *= tmpData.zoomFactor;
         tmpData.vi.height *= tmpData.zoomFactor;
