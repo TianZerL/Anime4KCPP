@@ -112,10 +112,22 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.strengthColor = vsapi->propGetFloat(in, "strengthColor", 0, &err);
     if (err)
         tmpData.strengthColor = 0.3;
+    else if(tmpData.strengthColor < 0.0 || tmpData.strengthColor > 1.0)
+    {
+        vsapi->setError(out, "Anime4KCPP: strengthColor must range from 0 to 1");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
 
     tmpData.strengthGradient = vsapi->propGetFloat(in, "strengthGradient", 0, &err);
     if (err)
         tmpData.strengthGradient = 1.0;
+    else if(tmpData.strengthGradient < 0.0 || tmpData.strengthGradient > 1.0)
+    {
+        vsapi->setError(out, "Anime4KCPP: strengthGradient must range from 0 to 1");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
 
     tmpData.zoomFactor = vsapi->propGetInt(in, "zoomFactor", 0, &err);
     if (err)
