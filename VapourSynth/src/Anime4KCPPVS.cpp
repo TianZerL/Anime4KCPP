@@ -1,5 +1,4 @@
-#include "Anime4K.h"
-#include "Anime4KGPU.h"
+#include "Anime4KCPP.h"
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
@@ -13,13 +12,16 @@ typedef struct {
     double zoomFactor;
     bool GPU;
     unsigned int pID, dID;
+    Anime4KCPP::Anime4KCreator* anime4KCreator;
 }Anime4KCPPData;
 
 static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSNode* node, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
     if (data->GPU)
-        Anime4KGPU::initGPU(data->pID, data->dID);
+        data->anime4KCreator = new Anime4KCPP::Anime4KCreator(true, data->pID, data->dID);
+    else
+        data->anime4KCreator = new Anime4KCPP::Anime4KCreator(false);
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
 
@@ -48,28 +50,26 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
         unsigned char* dstG = vsapi->getWritePtr(dst, 1);
         unsigned char* dstB = vsapi->getWritePtr(dst, 2);
 
-        Anime4K* anime4kcpp;
+        Anime4KCPP::Anime4K* anime4K;
+
+        Anime4KCPP::Parameters parameters(
+            data->passes,
+            data->pushColorCount,
+            data->strengthColor,
+            data->strengthGradient,
+            data->zoomFactor
+        );
 
         if (data->GPU)
-            anime4kcpp = new Anime4KGPU(
-                data->passes, 
-                data->pushColorCount, 
-                data->strengthColor, 
-                data->strengthGradient, 
-                data->zoomFactor);
+            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPU);
         else
-            anime4kcpp = new Anime4K(
-                data->passes, 
-                data->pushColorCount, 
-                data->strengthColor, 
-                data->strengthGradient, 
-                data->zoomFactor);
+            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPU);
         
-        anime4kcpp->loadImage(h, srcSrtide, srcR, srcG, srcB);
-        anime4kcpp->process();
-        anime4kcpp->saveImage(dstR, dstG, dstB);
+        anime4K->loadImage(h, srcSrtide, srcR, srcG, srcB);
+        anime4K->process();
+        anime4K->saveImage(dstR, dstG, dstB);
 
-        delete anime4kcpp;
+        data->anime4KCreator->release(anime4K);
         vsapi->freeFrame(src);
 
         return dst;
@@ -80,8 +80,7 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)instanceData;
-    if(data->GPU)
-        Anime4KGPU::releaseGPU();
+    delete data->anime4KCreator;
     vsapi->freeNode(data->node);
     delete data;
 }
@@ -153,7 +152,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     if (tmpData.GPU)
     {
-        std::pair<std::pair<int, std::vector<int>>, std::string> GPUinfo = Anime4KGPU::listGPUs();
+        std::pair<std::pair<int, std::vector<int>>, std::string> GPUinfo = Anime4KCPP::Anime4KGPU::listGPUs();
         if (tmpData.pID >= static_cast<unsigned int>(GPUinfo.first.first) || 
             tmpData.dID >= static_cast<unsigned int>(GPUinfo.first.second[tmpData.pID]))
         {
@@ -167,8 +166,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->freeNode(tmpData.node);
             return;
         }
-        std::pair<bool,std::string> ret = 
-            Anime4KGPU::checkGPUSupport(tmpData.pID, tmpData.dID);
+        std::pair<bool, std::string> ret =
+            Anime4KCPP::Anime4KGPU::checkGPUSupport(tmpData.pID, tmpData.dID);
         if (!ret.first)
         {
             std::ostringstream err;
@@ -206,7 +205,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
 static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
 {
-    vsapi->logMessage(mtDebug, Anime4KGPU::listGPUs().second.c_str());
+    vsapi->logMessage(mtDebug, Anime4KCPP::Anime4KGPU::listGPUs().second.c_str());
 }
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin* plugin)
@@ -226,4 +225,3 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
 
     registerFunc("listGPUs", "", Anime4KCPPListGPUs, nullptr, plugin);
 }
-

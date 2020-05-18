@@ -1,5 +1,4 @@
-#include "Anime4K.h"
-#include "Anime4KGPU.h"
+#include "Anime4KCPP.h"
 #include <cmdline.h>
 
 #include <iostream>
@@ -27,24 +26,24 @@ bool mergrAudio2Video(const std::string& dstFile, const std::string& srcFile, co
     return false;
 }
 
-CODEC string2Codec(const std::string& codec)
+Anime4KCPP::CODEC string2Codec(const std::string& codec)
 {
     if (codec == "mp4v")
-        return MP4V;
+        return Anime4KCPP::CODEC::MP4V;
     else if (codec == "dxva")
-        return DXVA;
+        return Anime4KCPP::CODEC::DXVA;
     else if (codec == "avc1")
-        return AVC1;
+        return Anime4KCPP::CODEC::AVC1;
     else if (codec == "vp09")
-        return VP09;
+        return Anime4KCPP::CODEC::VP09;
     else if (codec == "hevc")
-        return HEVC;
+        return Anime4KCPP::CODEC::HEVC;
     else if (codec == "av01")
-        return AV01;
+        return Anime4KCPP::CODEC::AV01;
     else if (codec == "other")
-        return OTHER;
+        return Anime4KCPP::CODEC::OTHER;
     else
-        return MP4V;
+        return Anime4KCPP::CODEC::MP4V;
 }
 
 inline void showVersionInfo()
@@ -126,7 +125,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
     if (listGPUs)
     {
-        std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KGPU::listGPUs();
+        std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
         if (ret.first.first == 0)
             std::cout << "Error:" << std::endl;
         std::cout << ret.second << std::endl;
@@ -140,13 +139,29 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         return 0;
     }
 
-    Anime4K* anime4k = nullptr;
+    Anime4KCPP::Anime4KCreator creator(GPU, pID, dID);
+    Anime4KCPP::Anime4K* anime4k = nullptr;
+    Anime4KCPP::Parameters parameters(
+        passes,
+        pushColorCount,
+        strengthColor,
+        strengthGradient,
+        zoomFactor,
+        fastMode,
+        videoMode,
+        preProcessing,
+        postProcessing,
+        preFilters,
+        postFilters,
+        threads
+    );
+
     try
     {
         if (GPU)
         {
             std::cout << "GPU mode" << std::endl;
-            std::pair<bool, std::string> ret = Anime4KGPU::checkGPUSupport(pID, dID);
+            std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
             if (!ret.first)
             {
                 std::cout << ret.second << std::endl;
@@ -156,40 +171,12 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             {
                 std::cout << ret.second << std::endl;
             }
-            anime4k = new Anime4KGPU(
-                passes,
-                pushColorCount,
-                strengthColor,
-                strengthGradient,
-                zoomFactor,
-                fastMode,
-                videoMode,
-                preProcessing,
-                postProcessing,
-                preFilters,
-                postFilters,
-                threads,
-                pID,
-                dID
-            );
+            anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::GPU);
         }
         else
         {
             std::cout << "CPU mode" << std::endl;
-            anime4k = new Anime4K(
-                passes,
-                pushColorCount,
-                strengthColor,
-                strengthGradient,
-                zoomFactor,
-                fastMode,
-                videoMode,
-                preProcessing,
-                postProcessing,
-                preFilters,
-                postFilters,
-                threads
-            );
+            anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPU);
         }
 
         if (!videoMode)//Image
@@ -313,8 +300,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         std::cout << err << std::endl;
     }
 
-    if (anime4k != nullptr)
-        delete anime4k;
+    creator.release(anime4k);
 
     return 0;
 }

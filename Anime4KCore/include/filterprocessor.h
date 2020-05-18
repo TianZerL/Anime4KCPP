@@ -1,5 +1,6 @@
 #pragma once
-#include<opencv2/opencv.hpp>
+
+#include"Anime4K.h"
 
 #ifdef _MSC_VER
 #include<ppl.h>
@@ -13,25 +14,19 @@
 #define REC(n) ((n) < 1 ? 1.0 : 1.0 / (n))
 #define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
 
-typedef unsigned char* RGBA;
-typedef unsigned char* Line;
-
-enum FilterType : uint8_t
+namespace Anime4KCPP
 {
-    MEDIAN_BLUR = 1, MEAN_BLUR = 2, CAS_SHARPENING = 4,
-    GAUSSIAN_BLUR_WEAK = 8, GAUSSIAN_BLUR = 16,
-    BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
-};
+    class FilterProcessor;
+}
 
-
-class FilterProcessor
+class Anime4KCPP::FilterProcessor
 {
 public:
     FilterProcessor(cv::InputArray srcImg, uint8_t _filters);
     void process();
 private:
     void CASSharpening(cv::InputArray src);
-    void changEachPixelBGR(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
+    void changEachPixelBGR(cv::InputArray _src, const std::function<void(const int, const int, RGBA, Line)>&& callBack);
 private:
     const static int B = 0, G = 1, R = 2, A = 3;
     int H, W;

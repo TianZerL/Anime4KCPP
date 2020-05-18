@@ -31,6 +31,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import github.tianzerl.anime4kcpp.warpper.Anime4K;
+import github.tianzerl.anime4kcpp.warpper.Anime4KCreator;
+import github.tianzerl.anime4kcpp.warpper.Anime4KGPU;
+import github.tianzerl.anime4kcpp.warpper.Parameters;
+import github.tianzerl.anime4kcpp.warpper.ProcessorType;
 import me.rosuh.filepicker.bean.FileItemBeanImpl;
 import me.rosuh.filepicker.config.AbstractFileFilter;
 import me.rosuh.filepicker.config.FilePickerManager;
@@ -68,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewState;
 
     private GPUState GPU = GPUState.UnInitialized;
-    private Anime4KCPPGPU mainAnime4KCPPGPU;
+    private Anime4KCreator anime4KCreator = new Anime4KCreator(false);
 
     private Handler anime4KCPPHandler = new Handler(new Handler.Callback() {
         @Override
@@ -125,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ABOUT")
                         .setMessage("Anime4KCPP for Android\n\n"
-                                +"Anime4KCPP core version: "+Anime4KCPP.getCoreVersion()
+                                +"Anime4KCPP core version: "+ Anime4K.getCoreVersion()
                                 +"\n\nGitHub: https://github.com/TianZerL/Anime4KCPP")
                         .setPositiveButton("OK",null)
                         .show();
@@ -207,10 +212,10 @@ public class MainActivity extends AppCompatActivity {
                 if (isChecked && GPU == GPUState.UnInitialized)
                 {
                     try {
-                        if (Anime4KCPPGPU.checkGPUSupport())
+                        if (!Anime4KGPU.isInitializedGPU() && Anime4KGPU.checkGPUSupport())
                         {
                             Toast.makeText(MainActivity.this,"GPU Mode enabled",Toast.LENGTH_SHORT).show();
-                            mainAnime4KCPPGPU = new Anime4KCPPGPU();
+                            Anime4KGPU.initGPU();
                             GPU = GPUState.Initialized;
                         }
                         else
@@ -273,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Anime4KCPP initAnime4KCPP() {
+    private Anime4K initAnime4KCPP() {
         int passes = 2;
         int pushColorCount=2;
         double strengthColor = 0.3;
@@ -345,40 +350,27 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
-
+        Parameters parameters = new Parameters(
+            passes,
+            pushColorCount,
+            strengthColor,
+            strengthGradient,
+            zoomFactor,
+            fastMode,
+            false,
+            preprocessing,
+            postprocessing,
+            preFilters,
+            postFilters
+        );
 
         if (getSwitchSate(R.id.switchGPUMode))
         {
-            mainAnime4KCPPGPU.setArguments(
-                    passes,
-                    pushColorCount,
-                    strengthColor,
-                    strengthGradient,
-                    zoomFactor,
-                    fastMode,
-                    false,
-                    preprocessing,
-                    postprocessing,
-                    preFilters,
-                    postFilters
-            );
-            return mainAnime4KCPPGPU;
+            return anime4KCreator.create(parameters, ProcessorType.GPU);
         }
         else
         {
-            return new Anime4KCPP(
-                    passes,
-                    pushColorCount,
-                    strengthColor,
-                    strengthGradient,
-                    zoomFactor,
-                    fastMode,
-                    false,
-                    preprocessing,
-                    postprocessing,
-                    preFilters,
-                    postFilters
-            );
+            return anime4KCreator.create(parameters, ProcessorType.CPU);
         }
     }
 
@@ -424,41 +416,40 @@ public class MainActivity extends AppCompatActivity {
                     videos.add(Pair.create(filePath,i));
             }
 
-            Anime4KCPP anime4KCPP = initAnime4KCPP();
+            Anime4K anime4K = initAnime4KCPP();
 
             int imageCount = 0, videoCount = 0;
 
             try {
-                anime4KCPP.setVideoMode(false);
+                anime4K.setVideoMode(false);
                 for (Pair<String,Integer> image: images) {
                     File srcFile = new File(image.first);
-
-                    anime4KCPP.loadImage(srcFile.getPath());
+                    anime4K.loadImage(srcFile.getPath());
 
                     long start = System.currentTimeMillis();
-                    anime4KCPP.process();
+                    anime4K.process();
                     long end = System.currentTimeMillis();
 
-                    anime4KCPP.saveImage(dst+"/"+prefix+srcFile.getName());
+                    anime4K.saveImage(dst+"/"+prefix+srcFile.getName());
 
                     totalTime += end - start;
                     publishProgress((++imageCount) * 100 / taskCount, image.second);
                 }
 
-                anime4KCPP.setVideoMode(true);
+                anime4K.setVideoMode(true);
                 for (Pair<String,Integer> video: videos) {
                     File srcFile = new File(video.first);
                     String tmpOutputPath = dst+"/" + "tmpOutput" + videoCount +".mp4";
                     String OutputPath = dst+"/" + prefix+srcFile.getName() + ".mp4";
 
-                    anime4KCPP.loadVideo(srcFile.getPath());
-                    anime4KCPP.setVideoSaveInfo(tmpOutputPath);
+                    anime4K.loadVideo(srcFile.getPath());
+                    anime4K.setVideoSaveInfo(tmpOutputPath);
 
                     long start = System.currentTimeMillis();
-                    anime4KCPP.process();
+                    anime4K.process();
                     long end = System.currentTimeMillis();
 
-                    anime4KCPP.saveVideo();
+                    anime4K.saveVideo();
 
                     new VideoAudioProcessor(srcFile.getPath(), tmpOutputPath, OutputPath).merge();
 

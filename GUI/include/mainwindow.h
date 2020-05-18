@@ -2,8 +2,7 @@
 #define MAINWINDOW_H
 
 #include "communicator.h"
-#include "Anime4K.h"
-#include "Anime4KGPU.h"
+#include "Anime4KCPP.h"
 
 #include <QMainWindow>
 #include <QTranslator>
@@ -71,11 +70,11 @@ private:
     void initTextBrowser();
     bool checkFFmpeg();
     QString formatSuffixList(const QString &&type, QString str);
-    void initAnime4K(Anime4K *&anime4K);
-    void releaseMainAnime4K();
+    void initAnime4K(Anime4KCPP::Anime4K *&anime4K);
+    void releaseAnime4K(Anime4KCPP::Anime4K *&anime4K);
     FileType fileType(const QFileInfo &file);
     QString getOutputPrefix();
-    CODEC getCodec(const QString &codec);
+    Anime4KCPP::CODEC getCodec(const QString &codec);
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
@@ -157,13 +156,12 @@ private:
     Language currLanguage;
 
     GPUMode GPU;
-    Anime4K *mainAnime4kCPU;
-    Anime4KGPU *mainAnime4kGPU;
+    Anime4KCPP::Anime4KCreator anime4KCreator;
 
     std::vector<int> devices;
     int platforms;
 
     QHash<QString,Language> languageSelector;
-    QHash<QString,CODEC> codecSelector;
+    QHash<QString,Anime4KCPP::CODEC> codecSelector;
 };
 #endif // MAINWINDOW_H

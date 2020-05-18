@@ -1,4 +1,5 @@
 #pragma once
+
 #include<iostream>
 #include<sstream>
 #include<functional>
@@ -8,13 +9,6 @@
 #include<opencv2/core/hal/interface.h>
 
 #include"threadpool.h"
-#include"filterprocessor.h"
-
-#ifdef _MSC_VER
-#include<ppl.h>
-#else
-#include<omp.h>
-#endif
 
 #ifdef _MSC_VER
 #ifndef DLL
@@ -29,28 +23,49 @@
 #endif
 #endif
 
-#define ANIME4KCPP_CORE_VERSION "1.8.0"
-
-#define MAX3(a, b, c) std::max({a, b, c})
-#define MIN3(a, b, c) std::min({a, b, c})
-#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
-
-typedef unsigned char* RGBA;
-typedef unsigned char* Line;
-
-enum BGRA
+namespace Anime4KCPP
 {
-    B = 0, G = 1, R = 2, A = 3
-};
+    struct DLL Parameters;
+    class DLL Anime4K;
 
-enum CODEC {
-    OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
-};
+    enum class ProcessorType;
 
-class DLL Anime4K
+    enum class CODEC;
+
+    enum BGRA
+    {
+        B = 0, G = 1, R = 2, A = 3
+    };
+
+    enum FilterType : uint8_t
+    {
+        MEDIAN_BLUR = 1, MEAN_BLUR = 2, CAS_SHARPENING = 4,
+        GAUSSIAN_BLUR_WEAK = 8, GAUSSIAN_BLUR = 16,
+        BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
+    };
+
+    typedef unsigned char* RGBA;
+    typedef unsigned char* Line;
+}
+
+struct Anime4KCPP::Parameters
 {
-public:
-    Anime4K(
+    int passes;
+    int pushColorCount;
+    double strengthColor;
+    double strengthGradient;
+    double zoomFactor;
+    bool fastMode;
+    bool videoMode;
+    bool preprocessing;
+    bool postprocessing;
+    uint8_t preFilters;
+    uint8_t postFilters;
+    unsigned int maxThreads;
+
+    void reset();
+
+    Parameters(
         int passes = 2,
         int pushColorCount = 2,
         double strengthColor = 0.3,
@@ -64,50 +79,50 @@ public:
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency()
     );
+};
+
+enum class Anime4KCPP::CODEC {
+    OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
+};
+
+enum class Anime4KCPP::ProcessorType
+{
+    CPU, GPU
+};
+
+class Anime4KCPP::Anime4K
+{
+public:
+    Anime4K(const Parameters& parameters);
     virtual ~Anime4K();
-    void setArguments(
-        int passes = 2,
-        int pushColorCount = 2,
-        double strengthColor = 0.3,
-        double strengthGradient = 1.0,
-        double zoomFactor = 2.0,
-        bool fastMode = false,
-        bool videoMode = false,
-        bool preprocessing = false,
-        bool postprocessing = false,
-        uint8_t preFilters = 40,
-        uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency()
-    );
+
+    void setArguments(const Parameters& parameters);
     void setVideoMode(const bool flag);
+
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
     void loadImage(cv::InputArray srcImage);
     void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL);
     void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b);
-    void setVideoSaveInfo(const std::string& dstFile,const CODEC codec = MP4V);
+
+    void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V);
     void saveImage(const std::string& dstFile);
     void saveImage(cv::Mat& dstImage);
     void saveImage(unsigned char*& data);
     void saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b);
     void saveVideo();
+
     void showInfo();
     void showFiltersInfo();
+
     std::string getInfo();
     std::string getFiltersInfo();
     size_t getResultDataLength();
     size_t getResultDataPerChannelLength();
+
     void showImage();
-    virtual void process();
-protected:
-    void getGray(cv::InputArray img);
-    void pushColor(cv::InputArray img);
-    void getGradient(cv::InputArray img);
-    void pushGradient(cv::InputArray img);
-private:
-    void changEachPixelBGRA(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
-    void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
-    void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
+    virtual void process() = 0;
+
 protected:
     int orgH, orgW, H, W;
     double fps;
@@ -117,6 +132,7 @@ protected:
     cv::VideoWriter videoWriter;
     std::mutex videoMtx;
     std::condition_variable cnd;
+
 protected://arguments
     int ps, pcc;
     double sc, sg, zf;
@@ -124,3 +140,4 @@ protected://arguments
     uint8_t pref, postf;
     unsigned int mt;
 };
+

@@ -1,6 +1,6 @@
 #include "filterprocessor.h"
 
-FilterProcessor::FilterProcessor(cv::InputArray srcImg, uint8_t _filters) :
+Anime4KCPP::FilterProcessor::FilterProcessor(cv::InputArray srcImg, uint8_t _filters) :
     filters(_filters)
 {
     if (!((filters & BILATERAL_FILTER) || (filters & BILATERAL_FILTER_FAST)))
@@ -14,7 +14,7 @@ FilterProcessor::FilterProcessor(cv::InputArray srcImg, uint8_t _filters) :
     W = img.cols;
 }
 
-void FilterProcessor::process()
+void Anime4KCPP::FilterProcessor::process()
 {
     if (filters & MEDIAN_BLUR)
         cv::medianBlur(img, img, 3);
@@ -32,7 +32,7 @@ void FilterProcessor::process()
         cv::bilateralFilter(img, tmpImg, 5, 35, 35);
 }
 
-inline void FilterProcessor::CASSharpening(cv::InputArray img)
+inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::InputArray img)
 {
     const int lineStep = W * 3;
     changEachPixelBGR(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
@@ -68,7 +68,7 @@ inline void FilterProcessor::CASSharpening(cv::InputArray img)
         });
 }
 
-inline void FilterProcessor::changEachPixelBGR(cv::InputArray _src,
+inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::InputArray _src, 
     const std::function<void(const int, const int, RGBA, Line)>&& callBack)
 {
     cv::Mat src = _src.getMat();

@@ -2,80 +2,12 @@
 
 #include "Anime4KGPU.h"
 
-Anime4KGPU::Anime4KGPU(
-    int passes,
-    int pushColorCount,
-    double strengthColor,
-    double strengthGradient,
-    double zoomFactor,
-    bool fastMode,
-    bool videoMode,
-    bool preprocessing,
-    bool postprocessing,
-    uint8_t preFilters,
-    uint8_t postFilters,
-    unsigned int maxThreads,
-    unsigned int platformID,
-    unsigned int deviceID,
-    bool initGPU
-) :Anime4K(
-    passes,
-    pushColorCount,
-    strengthColor,
-    strengthGradient,
-    zoomFactor,
-    fastMode,
-    videoMode,
-    preprocessing,
-    postprocessing,
-    preFilters,
-    postFilters,
-    maxThreads
-),
-#ifndef PARALLEL_SUPPORTS
-isInitialized(false), context(nullptr), commandQueue(nullptr),
-program(nullptr), device(nullptr), 
-pID(platformID), dID(deviceID),
-#endif // !PARALLEL_SUPPORTS
-frameGPUDoneCount(0), format(), dstDesc(),
-orgDesc(), nHeight(0.0), nWidth(0.0)
-{
-#ifndef PARALLEL_SUPPORTS
-    if (initGPU)
-    {
-        initOpenCL();
-        isInitialized = true;
-    }
-#endif // !PARALLEL_SUPPORTS
-}
-
-Anime4KGPU::Anime4KGPU(bool initGPU, unsigned int platformID, unsigned int deviceID) :
-    Anime4K(2, 2, 0.3, 1.0, 2.0, false, false, false, false, 4, 40, std::thread::hardware_concurrency()),
-#ifndef PARALLEL_SUPPORTS
-    isInitialized(false), context(nullptr), commandQueue(nullptr),
-    program(nullptr), device(nullptr), 
-    pID(platformID), dID(deviceID),
-#endif // !PARALLEL_SUPPORTS
+Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
+    Anime4K(parameters),
     frameGPUDoneCount(0), format(), dstDesc(),
-    orgDesc(), nHeight(0.0), nWidth(0.0)
-{
-#ifndef PARALLEL_SUPPORTS
-    if (initGPU)
-    {
-        initOpenCL();
-        isInitialized = true;
-    }
-#endif // !PARALLEL_SUPPORTS
-}
+    orgDesc(), nWidth(0.0), nHeight(0.0) {}
 
-Anime4KGPU::~Anime4KGPU()
-{
-#ifndef PARALLEL_SUPPORTS
-    releaseOpenCL();
-#endif // !PARALLEL_SUPPORTS
-}
-
-void Anime4KGPU::process()
+void Anime4KCPP::Anime4KGPU::process()
 {
     //init
     format.image_channel_data_type = CL_UNORM_INT8;
@@ -179,30 +111,7 @@ void Anime4KGPU::process()
     }
 }
 
-#ifndef PARALLEL_SUPPORTS
-void Anime4KGPU::initGPU()
-{
-    if (!isInitialized)
-    {
-        initOpenCL();
-        isInitialized = true;
-    }
-}
-
-void Anime4KGPU::releaseGPU()
-{
-    if (isInitialized)
-    {
-        releaseOpenCL();
-        context = nullptr;
-        commandQueue = nullptr;
-        program = nullptr;
-        device = nullptr;
-        isInitialized = false;
-    }
-}
-#else
-void Anime4KGPU::initGPU(unsigned int platformID, unsigned int deviceID)
+void Anime4KCPP::Anime4KGPU::initGPU(unsigned int platformID, unsigned int deviceID)
 {
     if (!isInitialized)
     {
@@ -213,7 +122,7 @@ void Anime4KGPU::initGPU(unsigned int platformID, unsigned int deviceID)
     }
 }
 
-void Anime4KGPU::releaseGPU()
+void Anime4KCPP::Anime4KGPU::releaseGPU()
 {
     if (isInitialized)
     {
@@ -225,14 +134,13 @@ void Anime4KGPU::releaseGPU()
         isInitialized = false;
     }
 }
-#endif // !PARALLEL_SUPPORTS
 
-bool Anime4KGPU::isInitializedGPU()
+bool Anime4KCPP::Anime4KGPU::isInitializedGPU()
 {
     return isInitialized;
 }
 
-std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KGPU::listGPUs()
+std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU::listGPUs()
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -338,7 +246,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KGPU::listGPUs()
     return ret;
 }
 
-std::pair<bool, std::string> Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
+std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -436,7 +344,7 @@ std::pair<bool, std::string> Anime4KGPU::checkGPUSupport(unsigned int pID, unsig
     return ret;
 }
 
-void Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
+void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
 {
     cl_int err;
     int i;
@@ -584,7 +492,7 @@ void Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
     clReleaseKernel(kernelPushGradient);
 }
 
-void Anime4KGPU::initOpenCL()
+void Anime4KCPP::Anime4KGPU::initOpenCL()
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -717,7 +625,7 @@ void Anime4KGPU::initOpenCL()
     }
 }
 
-void Anime4KGPU::releaseOpenCL()
+void Anime4KCPP::Anime4KGPU::releaseOpenCL()
 {
     if (program != nullptr)
         clReleaseProgram(program);
@@ -729,7 +637,7 @@ void Anime4KGPU::releaseOpenCL()
         clReleaseDevice(device);
 }
 
-std::string Anime4KGPU::readKernel(const std::string& fileName)
+std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
 {
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
@@ -739,18 +647,17 @@ std::string Anime4KGPU::readKernel(const std::string& fileName)
     return std::string(source.str());
 }
 
-#ifdef PARALLEL_SUPPORTS
-bool Anime4KGPU::isInitialized = false;
-cl_context Anime4KGPU::context = nullptr;
-cl_command_queue Anime4KGPU::commandQueue = nullptr;
-cl_program Anime4KGPU::program = nullptr;
-cl_device_id Anime4KGPU::device = nullptr;
-unsigned int Anime4KGPU::pID = 0;
-unsigned int Anime4KGPU::dID = 0;
-#endif // PARALLEL_SUPPORTS
+//init OpenCL arguments
+bool Anime4KCPP::Anime4KGPU::isInitialized = false;
+cl_context Anime4KCPP::Anime4KGPU::context = nullptr;
+cl_command_queue Anime4KCPP::Anime4KGPU::commandQueue = nullptr;
+cl_program Anime4KCPP::Anime4KGPU::program = nullptr;
+cl_device_id Anime4KCPP::Anime4KGPU::device = nullptr;
+unsigned int Anime4KCPP::Anime4KGPU::pID = 0;
+unsigned int Anime4KCPP::Anime4KGPU::dID = 0;
 
 #ifdef BUILT_IN_KERNEL
-const std::string Anime4KGPU::Anime4KCPPKernelSourceString =
+const std::string Anime4KCPP::Anime4KGPU::Anime4KCPPKernelSourceString =
 R"(#define MAX3(a, b, c) fmax(fmax(a,b),c)
 #define MIN3(a, b, c) fmin(fmin(a,b),c)
 

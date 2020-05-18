@@ -1,5 +1,7 @@
 #pragma once
-#include "Anime4K.h"
+
+#include"Anime4K.h"
+#include"filterprocessor.h"
 
 #include<fstream>
 
@@ -9,63 +11,28 @@
 #include<CL/cl.h>
 #endif // SPECIAL OS
 
+namespace Anime4KCPP
+{
+    class DLL Anime4KGPU;
+}
 
-class DLL Anime4KGPU :
-    public Anime4K
+class Anime4KCPP::Anime4KGPU :public Anime4K
 {
 public:
-    Anime4KGPU(
-        int passes = 2,
-        int pushColorCount = 2,
-        double strengthColor = 0.3,
-        double strengthGradient = 1.0,
-        double zoomFactor = 2.0,
-        bool fastMode = false,
-        bool videoMode = false,
-        bool preprocessing = false,
-        bool postprocessing = false,
-        uint8_t preFilters = 4,
-        uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency(),
-        unsigned int platformID = 0,
-        unsigned int deviceID = 0,
-        bool initGPU = true
-    );
-    Anime4KGPU(bool initGPU, unsigned int platformID = 0, unsigned int deviceID = 0);
-    virtual ~Anime4KGPU();
+    Anime4KGPU(const Parameters& parameters = Parameters());
+    virtual ~Anime4KGPU() = default;
     virtual void process();
-#ifndef PARALLEL_SUPPORTS
-    void initGPU();
-    void releaseGPU();
-#else
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
     static void releaseGPU();
-#endif // !PARALLEL_SUPPORTS
-    bool isInitializedGPU();
+    static bool isInitializedGPU();
     static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
     static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
-protected:
+private:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
-#ifndef PARALLEL_SUPPORTS
-    void initOpenCL();
-    void releaseOpenCL();
-#else
     static void initOpenCL();
     static void releaseOpenCL();
-#endif // !PARALLEL_SUPPORTS
-    std::string readKernel(const std::string &fileName);
+    static std::string readKernel(const std::string &fileName);
 private:
-#ifndef PARALLEL_SUPPORTS
-    bool isInitialized;
-
-    cl_context context;
-    cl_command_queue commandQueue;
-    cl_program program;
-    cl_device_id device;
-
-    const unsigned int pID;
-    const unsigned int dID;
-#else
     static bool isInitialized;
 
     static cl_context context;
@@ -75,7 +42,6 @@ private:
 
     static unsigned int pID;
     static unsigned int dID;
-#endif // !PARALLEL_SUPPORTS
 
     uint64_t frameGPUDoneCount;
 
