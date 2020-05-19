@@ -52,9 +52,9 @@ struct Anime4KCPP::Parameters
 {
     int passes;
     int pushColorCount;
-    double strengthColor;
-    double strengthGradient;
-    double zoomFactor;
+    float strengthColor;
+    float strengthGradient;
+    float zoomFactor;
     bool fastMode;
     bool videoMode;
     bool preprocessing;
@@ -68,9 +68,9 @@ struct Anime4KCPP::Parameters
     Parameters(
         int passes = 2,
         int pushColorCount = 2,
-        double strengthColor = 0.3,
-        double strengthGradient = 1.0,
-        double zoomFactor = 2.0,
+        float strengthColor = 0.3F,
+        float strengthGradient = 1.0F,
+        float zoomFactor = 2.0F,
         bool fastMode = false,
         bool videoMode = false,
         bool preprocessing = false,
@@ -135,7 +135,7 @@ protected:
 
 protected://arguments
     int ps, pcc;
-    double sc, sg, zf;
+    float sc, sg, zf;
     bool fm, vm, pre, post;
     uint8_t pref, postf;
     unsigned int mt;

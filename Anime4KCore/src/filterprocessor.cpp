@@ -54,7 +54,7 @@ inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::InputArray img)
         const uint8_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
         const uint8_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
 
-        const float peak = LERP(-0.125, -0.2, 1);
+        const float peak = LERP(-0.125F, -0.2F, 1);
         const float wR = peak * sqrt(float(MIN(minR, 255 - maxR)) * REC(maxR));
         const float wG = peak * sqrt(float(MIN(minG, 255 - maxG)) * REC(maxG));
         const float wB = peak * sqrt(float(MIN(minB, 255 - maxB)) * REC(maxB));
@@ -78,8 +78,8 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::InputArray _src,
     int jMAX = W * 3;
 #ifdef _MSC_VER
     Concurrency::parallel_for(0, H, [&](int i) {
-        Line lineData = src.data + i * W * 3;
-        Line tmpLineData = tmp.data + i * W * 3;
+        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         for (int j = 0; j < jMAX; j += 3)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -87,8 +87,8 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::InputArray _src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        Line lineData = src.data + i * W * 3;
-        Line tmpLineData = tmp.data + i * W * 3;
+        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         for (int j = 0; j < jMAX; j += 3)
             callBack(i, j, tmpLineData + j, lineData);
     }

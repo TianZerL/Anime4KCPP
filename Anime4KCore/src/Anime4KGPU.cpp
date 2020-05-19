@@ -33,13 +33,13 @@ void Anime4KCPP::Anime4KGPU::process()
 
     if (zf == 2.0)
     {
-        nWidth = 1.0 / double(W);
-        nHeight = 1.0 / double(H);
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
     }
     else
     {
-        nWidth = double(orgW) / double(W);
-        nHeight = double(orgH) / double(H);
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
     }
 
     if (!vm)
@@ -653,8 +653,8 @@ cl_context Anime4KCPP::Anime4KGPU::context = nullptr;
 cl_command_queue Anime4KCPP::Anime4KGPU::commandQueue = nullptr;
 cl_program Anime4KCPP::Anime4KGPU::program = nullptr;
 cl_device_id Anime4KCPP::Anime4KGPU::device = nullptr;
-unsigned int Anime4KCPP::Anime4KGPU::pID = 0;
-unsigned int Anime4KCPP::Anime4KGPU::dID = 0;
+unsigned int Anime4KCPP::Anime4KGPU::pID = 0U;
+unsigned int Anime4KCPP::Anime4KGPU::dID = 0U;
 
 #ifdef BUILT_IN_KERNEL
 const std::string Anime4KCPP::Anime4KGPU::Anime4KCPPKernelSourceString =

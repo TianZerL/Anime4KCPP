@@ -291,8 +291,8 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
     int jMAX = W * 4;
 #ifdef _MSC_VER //let's do something crazy
     Concurrency::parallel_for(0, H, [&](int i) {
-        Line lineData = src.data + i * W * 4;
-        Line tmpLineData = tmp.data + i * W * 4;
+        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -300,8 +300,8 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        Line lineData = src.data + i * W * 4;
-        Line tmpLineData = tmp.data + i * W * 4;
+        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -312,16 +312,16 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
 
 inline void Anime4KCPP::Anime4KCPU::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
-    mc[R] = mc[R] * (1 - sc) + ((a[R] + b[R] + c[R]) / 3.0) * sc + 0.5;
-    mc[G] = mc[G] * (1 - sc) + ((a[G] + b[G] + c[G]) / 3.0) * sc + 0.5;
-    mc[B] = mc[B] * (1 - sc) + ((a[B] + b[B] + c[B]) / 3.0) * sc + 0.5;
-    mc[A] = mc[A] * (1 - sc) + ((a[A] + b[A] + c[A]) / 3.0) * sc + 0.5;
+    //RGBA
+    for (int i = 0; i <= 3; i++)
+        mc[i] = mc[i] * (1 - sc) + (static_cast<float>(a[i] + b[i] + c[i]) / 3.0F) * sc + 0.5F;
 }
 
 inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
 {
-    mc[R] = mc[R] * (1 - sg) + ((a[R] + b[R] + c[R]) / 3.0) * sg + 0.5;
-    mc[G] = mc[G] * (1 - sg) + ((a[G] + b[G] + c[G]) / 3.0) * sg + 0.5;
-    mc[B] = mc[B] * (1 - sg) + ((a[B] + b[B] + c[B]) / 3.0) * sg + 0.5;
+    //RGB
+    for (int i = 0; i <= 2; i++)
+        mc[i] = mc[i] * (1 - sg) + (static_cast<float>(a[i] + b[i] + c[i]) / 3.0F) * sg + 0.5F;
+
     mc[A] = 255;
 }

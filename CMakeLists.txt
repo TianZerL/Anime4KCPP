@@ -11,9 +11,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "-O2 -fopenmp")
+    set(CMAKE_CXX_FLAGS "-O3 -fopenmp")
 else()
-    set(CMAKE_CXX_FLAGS "-O2 -lpthread -fopenmp")
+    set(CMAKE_CXX_FLAGS "-O3 -lpthread -fopenmp")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")

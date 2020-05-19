@@ -398,9 +398,9 @@ void Anime4KCPP::Parameters::reset()
 {
     passes = 2;
     pushColorCount = 2;
-    strengthColor = 0.3;
-    strengthGradient = 1.0;
-    zoomFactor = 2.0;
+    strengthColor = 0.3F;
+    strengthGradient = 1.0F;
+    zoomFactor = 2.0F;
     fastMode = false;
     videoMode = false;
     preprocessing = false;
@@ -413,9 +413,9 @@ void Anime4KCPP::Parameters::reset()
 Anime4KCPP::Parameters::Parameters(
     int passes,
     int pushColorCount,
-    double strengthColor,
-    double strengthGradient,
-    double zoomFactor,
+    float strengthColor,
+    float strengthGradient,
+    float zoomFactor,
     bool fastMode,
     bool videoMode,
     bool preprocessing,
