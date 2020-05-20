@@ -3,6 +3,7 @@
 #include<iostream>
 #include<sstream>
 #include<functional>
+#include<atomic>
 
 #include<opencv2/opencv.hpp>
 #include<opencv2/videoio.hpp>
@@ -126,7 +127,8 @@ public:
 protected:
     int orgH, orgW, H, W;
     double fps;
-    uint64_t totalFrameCount, frameCount;
+    uint64_t totalFrameCount;
+    std::atomic<uint64_t> frameCount;
     cv::Mat orgImg, dstImg;
     cv::VideoCapture video;
     cv::VideoWriter videoWriter;

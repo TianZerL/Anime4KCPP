@@ -5,10 +5,10 @@
 #include<functional>
 #include<queue>
 
-typedef std::function<void()> Task;
-
 class ThreadPool
 {
+    typedef std::function<void()> Task;
+
 public:
     explicit ThreadPool(size_t maxThreadCount) :pool(std::make_shared<Pool>())
     {

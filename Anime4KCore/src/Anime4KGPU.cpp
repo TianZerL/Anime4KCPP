@@ -4,32 +4,12 @@
 
 Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
     Anime4K(parameters),
-    frameGPUDoneCount(0), format(), dstDesc(),
-    orgDesc(), nWidth(0.0), nHeight(0.0) {}
+    format(), dstDesc(), orgDesc(),
+    nWidth(0.0), nHeight(0.0) {}
 
 void Anime4KCPP::Anime4KGPU::process()
 {
-    //init
-    format.image_channel_data_type = CL_UNORM_INT8;
-    format.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgH;
-    orgDesc.image_width = orgW;
-    orgDesc.image_row_pitch = 0;
-    orgDesc.image_slice_pitch = 0;
-    orgDesc.num_mip_levels = 0;
-    orgDesc.num_samples = 0;
-    orgDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = H;
-    dstDesc.image_width = W;
-    dstDesc.image_row_pitch = 0;
-    dstDesc.image_slice_pitch = 0;
-    dstDesc.num_mip_levels = 0;
-    dstDesc.num_samples = 0;
-    dstDesc.buffer = nullptr;
+    initProcess();
 
     if (zf == 2.0)
     {
@@ -59,7 +39,7 @@ void Anime4KCPP::Anime4KGPU::process()
         cv::Mat orgFrame;
         ThreadPool pool(mt);
         uint64_t curFrame = 0, doneFrameCount = 0;
-        frameGPUDoneCount = frameCount = 0;
+        frameCount = 0;
         while (true)
         {
             curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
@@ -82,7 +62,6 @@ void Anime4KCPP::Anime4KGPU::process()
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
                 std::unique_lock<std::mutex> lock(videoMtx);
-                frameGPUDoneCount++;
                 while (true)
                 {
                     if (curFrame == frameCount)
@@ -102,10 +81,10 @@ void Anime4KCPP::Anime4KGPU::process()
             //limit RAM usage
             if (!(--count))
             {
-                while (frameGPUDoneCount == doneFrameCount)
+                while (frameCount == doneFrameCount)
                     std::this_thread::yield();
-                count = frameGPUDoneCount - doneFrameCount;
-                doneFrameCount = frameGPUDoneCount;
+                count = frameCount - doneFrameCount;
+                doneFrameCount = frameCount;
             }
         }
     }
@@ -342,6 +321,31 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
     clReleaseDevice(device);
 
     return ret;
+}
+
+inline void Anime4KCPP::Anime4KGPU::initProcess()
+{
+    //init
+    format.image_channel_data_type = CL_UNORM_INT8;
+    format.image_channel_order = CL_RGBA;
+
+    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    orgDesc.image_height = orgH;
+    orgDesc.image_width = orgW;
+    orgDesc.image_row_pitch = 0;
+    orgDesc.image_slice_pitch = 0;
+    orgDesc.num_mip_levels = 0;
+    orgDesc.num_samples = 0;
+    orgDesc.buffer = nullptr;
+
+    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    dstDesc.image_height = H;
+    dstDesc.image_width = W;
+    dstDesc.image_row_pitch = 0;
+    dstDesc.image_slice_pitch = 0;
+    dstDesc.num_mip_levels = 0;
+    dstDesc.num_samples = 0;
+    dstDesc.buffer = nullptr;
 }
 
 void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
