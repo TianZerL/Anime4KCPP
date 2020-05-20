@@ -10,7 +10,7 @@ void Anime4KCPP::Anime4KCPU::process()
     if (!vm)
     {
         int tmpPcc = this->pcc;
-        if (zf == 2.0)
+        if (zf == 2.0F)
             cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
         else
             cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
@@ -67,19 +67,21 @@ void Anime4KCPP::Anime4KCPU::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
-                std::unique_lock<std::mutex> lock(videoMtx);
-                while (true)
                 {
-                    if (curFrame == frameCount)
+                    std::unique_lock<std::mutex> lock(videoMtx);
+                    while (true)
                     {
-                        videoWriter.write(dstFrame);
-                        dstFrame.release();
-                        frameCount++;
-                        break;
-                    }
-                    else
-                    {
-                        cnd.wait(lock);
+                        if (curFrame == frameCount)
+                        {
+                            videoWriter.write(dstFrame);
+                            dstFrame.release();
+                            frameCount++;
+                            break;
+                        }
+                        else
+                        {
+                            cnd.wait(lock);
+                        }
                     }
                 }
                 cnd.notify_all();

@@ -28,7 +28,6 @@ public:
     static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
     static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
 private:
-    void initProcess();
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     static void initOpenCL();
     static void releaseOpenCL();
@@ -43,10 +42,6 @@ private:
 
     static unsigned int pID;
     static unsigned int dID;
-
-    cl_image_format format;
-    cl_image_desc dstDesc;
-    cl_image_desc orgDesc;
 
     double nWidth;
     double nHeight;

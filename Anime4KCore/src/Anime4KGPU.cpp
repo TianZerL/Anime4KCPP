@@ -4,13 +4,10 @@
 
 Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
     Anime4K(parameters),
-    format(), dstDesc(), orgDesc(),
     nWidth(0.0), nHeight(0.0) {}
 
 void Anime4KCPP::Anime4KGPU::process()
 {
-    initProcess();
-
     if (zf == 2.0)
     {
         nWidth = 1.0 / static_cast<double>(W);
@@ -61,19 +58,21 @@ void Anime4KCPP::Anime4KGPU::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
-                std::unique_lock<std::mutex> lock(videoMtx);
-                while (true)
                 {
-                    if (curFrame == frameCount)
+                    std::unique_lock<std::mutex> lock(videoMtx);
+                    while (true)
                     {
-                        videoWriter.write(dstFrame);
-                        dstFrame.release();
-                        frameCount++;
-                        break;
-                    }
-                    else
-                    {
-                        cnd.wait(lock);
+                        if (curFrame == frameCount)
+                        {
+                            videoWriter.write(dstFrame);
+                            dstFrame.release();
+                            frameCount++;
+                            break;
+                        }
+                        else
+                        {
+                            cnd.wait(lock);
+                        }
                     }
                 }
                 cnd.notify_all();
@@ -323,9 +322,29 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
     return ret;
 }
 
-inline void Anime4KCPP::Anime4KGPU::initProcess()
+void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
 {
-    //init
+    cl_int err;
+    int i;
+
+    const size_t orgin[3] = { 0,0,0 };
+    const size_t orgRegion[3] = { size_t(orgW),size_t(orgH),1 };
+    const size_t dstRegion[3] = { size_t(W),size_t(H),1 };
+    const size_t size[2] = { size_t(W),size_t(H) };
+
+    const cl_float pushColorStrength = sc;
+    const cl_float pushGradientStrength = sg;
+    const cl_float normalizedWidth = cl_float(nWidth);
+    const cl_float normalizedHeight = cl_float(nHeight);
+
+    cv::Mat orgImage = orgImg.getMat();
+    cv::Mat dstImage = dstImg.getMat();
+
+    cl_image_format format;
+    cl_image_desc dstDesc;
+    cl_image_desc orgDesc;
+
+    //init frame
     format.image_channel_data_type = CL_UNORM_INT8;
     format.image_channel_order = CL_RGBA;
 
@@ -346,29 +365,10 @@ inline void Anime4KCPP::Anime4KGPU::initProcess()
     dstDesc.num_mip_levels = 0;
     dstDesc.num_samples = 0;
     dstDesc.buffer = nullptr;
-}
-
-void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
-{
-    cl_int err;
-    int i;
-
-    const size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { size_t(orgW),size_t(orgH),1 };
-    const size_t dstRegion[3] = { size_t(W),size_t(H),1 };
-    const size_t size[2] = { size_t(W),size_t(H) };
-
-    const cl_float pushColorStrength = sc;
-    const cl_float pushGradientStrength = sg;
-    const cl_float normalizedWidth = cl_float(nWidth);
-    const cl_float normalizedHeight = cl_float(nHeight);
-
-    cv::Mat orgImage = orgImg.getMat();
-    cv::Mat dstImage = dstImg.getMat();
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (zf == 2.0)
+    if (zf == 2.0F)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
