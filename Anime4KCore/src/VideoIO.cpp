@@ -30,10 +30,10 @@ void Anime4KCPP::VideoIO::process()
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
                 std::unordered_map<size_t, cv::Mat>::iterator it;
-                while (true)
+                for (;;)
                 {
                     it = frameMap.find(i);
-                    if(it==frameMap.end())
+                    if (it == frameMap.end())
                         cndWrite.wait(lock);
                     else
                         break;

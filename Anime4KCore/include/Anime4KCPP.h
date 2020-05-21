@@ -3,7 +3,7 @@
 #include "Anime4KCPU.h"
 #include "Anime4KGPU.h"
 
-#define ANIME4KCPP_CORE_VERSION "1.9.0"
+#define ANIME4KCPP_CORE_VERSION "1.9.5"
 
 namespace Anime4KCPP
 {

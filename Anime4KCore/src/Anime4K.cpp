@@ -18,8 +18,7 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters)
     mt = parameters.maxThreads;
 
     orgH = orgW = H = W = 0;
-    fps = 0.0;
-    totalFrameCount = 0;
+    totalFrameCount = fps = 0.0;
 }
 
 Anime4KCPP::Anime4K::~Anime4K()
@@ -45,7 +44,7 @@ void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
 
     orgH = orgW = H = W = 0;
     fps = 0.0;
-    totalFrameCount = 0;
+    totalFrameCount = fps = 0.0;
 }
 
 void Anime4KCPP::Anime4K::setVideoMode(const bool flag)

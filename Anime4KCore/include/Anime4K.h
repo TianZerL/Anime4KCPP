@@ -121,7 +121,7 @@ public:
 protected:
     int orgH, orgW, H, W;
     double fps;
-    uint64_t totalFrameCount;
+    double totalFrameCount;
     cv::Mat orgImg, dstImg;
 
 protected://arguments
