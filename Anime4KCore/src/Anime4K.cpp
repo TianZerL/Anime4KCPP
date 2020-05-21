@@ -19,15 +19,13 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters)
 
     orgH = orgW = H = W = 0;
     fps = 0.0;
-    frameCount = totalFrameCount = 0;
+    totalFrameCount = 0;
 }
 
 Anime4KCPP::Anime4K::~Anime4K()
 {
     orgImg.release();
     dstImg.release();
-    videoWriter.release();
-    video.release();
 }
 
 void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
@@ -47,7 +45,7 @@ void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
 
     orgH = orgW = H = W = 0;
     fps = 0.0;
-    frameCount = totalFrameCount = 0;
+    totalFrameCount = 0;
 }
 
 void Anime4KCPP::Anime4K::setVideoMode(const bool flag)
@@ -57,13 +55,12 @@ void Anime4KCPP::Anime4K::setVideoMode(const bool flag)
 
 void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
 {
-    video.open(srcFile);
-    if (!video.isOpened())
+    if (!VideoIO::instance().openReader(srcFile))
         throw "Failed to load file: file doesn't not exist or decoder isn't installed.";
-    orgH = video.get(cv::CAP_PROP_FRAME_HEIGHT);
-    orgW = video.get(cv::CAP_PROP_FRAME_WIDTH);
-    fps = video.get(cv::CAP_PROP_FPS);
-    totalFrameCount = video.get(cv::CAP_PROP_FRAME_COUNT);
+    orgH = VideoIO::instance().get(cv::CAP_PROP_FRAME_HEIGHT);
+    orgW = VideoIO::instance().get(cv::CAP_PROP_FRAME_WIDTH);
+    fps = VideoIO::instance().get(cv::CAP_PROP_FPS);
+    totalFrameCount = VideoIO::instance().get(cv::CAP_PROP_FRAME_COUNT);
     H = zf * orgH;
     W = zf * orgW;
 }
@@ -115,74 +112,8 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
 
 void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
 {
-    switch (codec)
-    {
-    case CODEC::MP4V:
-        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-#ifdef _WIN32 //DXVA encoding for windows
-    case CODEC::DXVA:
-        videoWriter.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), std::ceil(fps), cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-#endif
-    case CODEC::AVC1:
-        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-    case CODEC::VP09:
-        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-    case CODEC::HEVC:
-        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-    case CODEC::AV01:
-        videoWriter.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-        {
-            videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-            if (!videoWriter.isOpened())
-                throw "Failed to initialize video writer.";
-        }
-        break;
-    case CODEC::OTHER:
-        videoWriter.open(dstFile, -1, fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-            throw "Failed to initialize video writer.";
-        break;
-    default:
-        videoWriter.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, cv::Size(W, H));
-        if (!videoWriter.isOpened())
-            throw "Failed to initialize video writer.";
-    }
+    if(!VideoIO::instance().openWriter(dstFile, codec, cv::Size(W, H)))
+        throw "Failed to initialize video writer.";
 }
 
 void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
@@ -218,8 +149,7 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsign
 
 void Anime4KCPP::Anime4K::saveVideo()
 {
-    videoWriter.release();
-    video.release();
+    VideoIO::instance().release();
 }
 
 void Anime4KCPP::Anime4K::showInfo()

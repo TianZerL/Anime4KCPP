@@ -32,24 +32,11 @@ void Anime4KCPP::Anime4KGPU::process()
     }
     else
     {
-        uint64_t count = mt;
-        cv::Mat orgFrame;
-        ThreadPool pool(mt);
-        uint64_t curFrame = 0, doneFrameCount = 0;
-        frameCount = 0;
-        while (true)
-        {
-            curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
-            if (!video.read(orgFrame))
+        VideoIO::instance().init(
+            [this]()
             {
-                while (frameCount < totalFrameCount)
-                    std::this_thread::yield();
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                break;
-            }
-
-            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), this, curFrame]()mutable
-            {
+                Frame frame = VideoIO::instance().read();
+                cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 if (pre)
                     FilterProcessor(orgFrame, pref).process();
@@ -58,34 +45,11 @@ void Anime4KCPP::Anime4KGPU::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
-                {
-                    std::unique_lock<std::mutex> lock(videoMtx);
-                    while (true)
-                    {
-                        if (curFrame == frameCount)
-                        {
-                            videoWriter.write(dstFrame);
-                            dstFrame.release();
-                            frameCount++;
-                            break;
-                        }
-                        else
-                        {
-                            cnd.wait(lock);
-                        }
-                    }
-                }
-                cnd.notify_all();
-            });
-            //limit RAM usage
-            if (!(--count))
-            {
-                while (frameCount == doneFrameCount)
-                    std::this_thread::yield();
-                count = frameCount - doneFrameCount;
-                doneFrameCount = frameCount;
+                frame.first = dstFrame;
+                VideoIO::instance().write(frame);
             }
-        }
+            , mt
+                ).process();
     }
 }
 

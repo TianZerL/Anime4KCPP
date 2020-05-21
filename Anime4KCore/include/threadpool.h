@@ -4,67 +4,64 @@
 #include<condition_variable>
 #include<functional>
 #include<queue>
+#include<vector>
 
 class ThreadPool
 {
-    typedef std::function<void()> Task;
-
 public:
-    explicit ThreadPool(size_t maxThreadCount) :pool(std::make_shared<Pool>())
-    {
-        for (size_t i = 0; i < maxThreadCount; i++)
-        {
-            std::thread(
-                [pool = this->pool]{
-                    std::unique_lock<std::mutex> lock(pool->mtx);
-                    while (true)
-                    {
-                        if (!pool->tasks.empty())
-                        {
-                            Task curTask = pool->tasks.front();
-                            pool->tasks.pop();
-                            lock.unlock();
-                            curTask();
-                            lock.lock();
-                        }
-                        else if (pool->isShutdown)
-                            break;
-                        else
-                            pool->cv.wait(lock);
-                    }
-                }
-            ).detach();
-        }
-    }
-
-    ~ThreadPool()
-    {
-        if (bool(pool))
-        {
-            {
-                std::lock_guard<std::mutex> lock(pool->mtx);
-                pool->isShutdown = true;
-            }
-            pool->cv.notify_all();
-        }
-    }
-
+    ThreadPool(size_t maxThreadCount);
+    ~ThreadPool();
     template<typename F>
-    void exec(F&& task) {
-        {
-            std::lock_guard<std::mutex> lock(pool->mtx);
-            pool->tasks.emplace(std::forward<F>(task));
-        }
-        pool->cv.notify_one();
-    }
+    void exec(F&& task);
 private:
-    struct Pool
-    {
-        std::mutex mtx;
-        std::condition_variable cv;
-        bool isShutdown = false;
-        std::queue<Task> tasks;
-    };
-
-    std::shared_ptr<Pool> pool;
+    std::vector<std::thread> threads;
+    std::queue<std::function<void()>> tasks;
+    std::condition_variable cnd;
+    std::mutex mtx;
+    bool stop;
 };
+
+inline ThreadPool::ThreadPool(size_t maxThreadCount)
+    :stop(false)
+{
+    for (int i = 0; i < maxThreadCount; i++)
+        threads.emplace_back([this]()
+            {
+                for (;;)
+                {
+                    std::function<void()> task;
+                    {
+                        std::unique_lock<std::mutex> lock(mtx);
+                        cnd.wait(lock, [this]
+                            {
+                                return stop || !tasks.empty();
+                            });
+                        if (stop && tasks.empty())
+                            return;
+                        task = std::move(tasks.front());
+                        tasks.pop();
+                    }
+                    task();
+                }
+            });
+}
+
+inline ThreadPool::~ThreadPool()
+{
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        stop = true;
+    }
+    cnd.notify_all();
+    std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
+}
+
+template<typename F>
+void ThreadPool::exec(F&& f)
+{
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        tasks.emplace(std::forward<F>(f));
+    }
+    cnd.notify_one();
+}

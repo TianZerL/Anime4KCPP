@@ -9,7 +9,7 @@
 #include<opencv2/videoio.hpp>
 #include<opencv2/core/hal/interface.h>
 
-#include"threadpool.h"
+#include"VideoIO.h"
 
 #ifdef _MSC_VER
 #ifndef DLL
@@ -30,8 +30,6 @@ namespace Anime4KCPP
     class DLL Anime4K;
 
     enum class ProcessorType;
-
-    enum class CODEC;
 
     enum BGRA
     {
@@ -82,10 +80,6 @@ struct Anime4KCPP::Parameters
     );
 };
 
-enum class Anime4KCPP::CODEC {
-    OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
-};
-
 enum class Anime4KCPP::ProcessorType
 {
     CPU, GPU
@@ -128,12 +122,7 @@ protected:
     int orgH, orgW, H, W;
     double fps;
     uint64_t totalFrameCount;
-    std::atomic<uint64_t> frameCount;
     cv::Mat orgImg, dstImg;
-    cv::VideoCapture video;
-    cv::VideoWriter videoWriter;
-    std::mutex videoMtx;
-    std::condition_variable cnd;
 
 protected://arguments
     int ps, pcc;

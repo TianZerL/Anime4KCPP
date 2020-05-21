@@ -31,31 +31,20 @@ void Anime4KCPP::Anime4KCPU::process()
     }
     else
     {
-        uint64_t count = mt;
-        cv::Mat orgFrame, dstFrame;
-        ThreadPool pool(mt);
-        uint64_t curFrame = 0,doneFrameCount = 0;
-        frameCount = 0;
-        while (true)
-        {
-            curFrame = video.get(cv::CAP_PROP_POS_FRAMES);
-            if (!video.read(orgFrame))
+        VideoIO::instance().init(
+            [this]()
             {
-                while (frameCount < totalFrameCount)
-                    std::this_thread::yield();
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                break;
-            }
-
-            pool.exec<std::function<void()>>([orgFrame = orgFrame.clone(), dstFrame = dstFrame.clone(), this, curFrame, tmpPcc = this->pcc]()mutable
-            {
-                if (zf == 2.0)
+                Frame frame = VideoIO::instance().read();
+                cv::Mat orgFrame = frame.first;
+                cv::Mat dstFrame(H, W, CV_8UC4);
+                int tmpPcc = this->pcc;
+                if (pre)
+                    FilterProcessor(orgFrame, pref).process();
+                cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
+                if (zf == 2.0F)
                     cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
                 else
                     cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
-                if (pre)
-                    FilterProcessor(dstFrame, pref).process();
-                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGR2BGRA);
                 for (int i = 0; i < ps; i++)
                 {
                     getGray(dstFrame);
@@ -67,34 +56,11 @@ void Anime4KCPP::Anime4KCPU::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
-                {
-                    std::unique_lock<std::mutex> lock(videoMtx);
-                    while (true)
-                    {
-                        if (curFrame == frameCount)
-                        {
-                            videoWriter.write(dstFrame);
-                            dstFrame.release();
-                            frameCount++;
-                            break;
-                        }
-                        else
-                        {
-                            cnd.wait(lock);
-                        }
-                    }
-                }
-                cnd.notify_all();
-            });
-            //limit RAM usage
-            if (!(--count))
-            {
-                while (frameCount == doneFrameCount)
-                    std::this_thread::yield();
-                count = frameCount - doneFrameCount;
-                doneFrameCount = frameCount;
+                frame.first = dstFrame;
+                VideoIO::instance().write(frame);
             }
-        }
+        , mt
+            ).process();
     }
 }
 
