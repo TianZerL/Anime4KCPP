@@ -11,8 +11,9 @@
 </h1>
 
 
-### [**中文文档**](README.cn.md)
+### [**📄中文文档**](README.cn.md)
 ### [**📁Download**](https://github.com/TianZerL/Anime4KCPP/releases)
+### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # About Anime4KCPP
 This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and try to optimize it to provide better quality, it aims to be a high performance pretreatment tools to process both image and video.  
@@ -70,7 +71,7 @@ Anime4KCPP Settings: balance
 ### Android
 SOC: Snapdragon 855  
 RAM: 8G  
-Anime4KCPP Version : 1.7.1  
+Anime4KCPP Version : 1.8.1  
 Anime4KCPP Settings: balance  
 
     CPU:  
@@ -82,6 +83,9 @@ Anime4KCPP Settings: balance
     Image:  
     256x256 -> 512x512:   0.008s  
     1080P   -> 4k:        0.158s  
+
+    Video(Length: 1 min 32 seconds):
+    480P  -> 1080P :       01 min 04 seconds
 
 # VapourSynth plugin
 Anime4KCPP now provides VapourSynth plugin.  
