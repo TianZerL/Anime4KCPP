@@ -11,7 +11,7 @@ if(Build_GUI)
     set(TS_FILES ./src/Anime4KCPP_GUI_zh_CN.ts)
     set(UI_FILE ./src/mainwindow.ui)
 
-    include_directories(include ../Anime4KCore/include)
+    include_directories(include ${TOP_DIR}/Anime4KCore/include)
     file(GLOB INCLUDE include/*.h)
 
     aux_source_directory(src SOURCE)
@@ -24,7 +24,7 @@ if(Build_GUI)
         ${UI_FILE}
     )
 
-    include(../cmake/ThirdPartyForGUI.cmake)
+    include(${TOP_DIR}/cmake/ThirdPartyForGUI.cmake)
 
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 

@@ -156,7 +156,7 @@ Anime4KCPP::Frame Anime4KCPP::VideoIO::read()
         rawFrames.pop();
     }
     cndRead.notify_all();
-    return ret;
+    return std::move(ret);
 }
 
 void Anime4KCPP::VideoIO::write(const Frame& frame)

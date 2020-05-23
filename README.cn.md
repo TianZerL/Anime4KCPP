@@ -69,6 +69,10 @@ Anime4KCPP 设置: 平衡
     256x256 -> 512x512:   0.008秒  
     1080P   -> 4k:        0.158秒  
 
+    视频(Length: 1 min 32 seconds):
+    480P  -> 1080P :       01 min 04 seconds
+
+
 # VapourSynth插件
 Anime4KCPP现已提供VapourSynth插件。
 详见[wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)

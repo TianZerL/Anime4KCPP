@@ -2,6 +2,7 @@
 
 #include<opencv2/opencv.hpp>
 #include<queue>
+#include<unordered_map>
 
 #include"threadpool.h"
 

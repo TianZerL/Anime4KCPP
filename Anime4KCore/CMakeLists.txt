@@ -11,4 +11,4 @@ endif()
 
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
-include(../cmake/ThirdPartyForCore.cmake)
+include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
