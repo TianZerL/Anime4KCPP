@@ -31,8 +31,7 @@ include_directories(${TOP_DIR}/ThirdParty/include ${OpenCL_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
 
-if(NOT WIN32)
-target_link_libraries(${PROJECT_NAME} stdc++fs)
+# Just for G++-8 to enable filesystem
+if(CMAKE_CXX_COMPILE_ID MATCHES "GNU")
+    target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()
-
-
