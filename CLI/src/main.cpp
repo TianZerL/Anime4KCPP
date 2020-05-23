@@ -16,7 +16,7 @@ bool checkFFmpeg()
     return false;
 }
 
-bool mergrAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
+bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
     std::string command("ffmpeg -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0 -map 1:1 -y \"" + dstFile + "\"");
     std::cout << command << std::endl;
@@ -267,7 +267,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
                     anime4k->saveVideo();
 
-                    if (ffmpeg && mergrAudio2Video(currOnputPath, currInputPath, outputTmpName))
+                    if (ffmpeg && mergeAudio2Video(currOnputPath, currInputPath, outputTmpName))
                         std::filesystem::remove(outputTmpName);
                 }
             }
@@ -290,7 +290,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
                 anime4k->saveVideo();
 
-                if (ffmpeg && mergrAudio2Video(currOnputPath, currInputPath, outputTmpName))
+                if (ffmpeg && mergeAudio2Video(currOnputPath, currInputPath, outputTmpName))
                     std::filesystem::remove(outputTmpName);
             }
         }

@@ -23,10 +23,11 @@ void Anime4KCPP::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
     size_t totalFrameCount = reader.get(cv::CAP_PROP_FRAME_COUNT);
+    stop = totalFrameCount;
 
     pool.exec([this, totalFrameCount]()
         {
-            for (size_t i = 0; i < totalFrameCount; i++)
+            for (size_t i = 0; i < totalFrameCount && i < stop; i++)
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
                 std::unordered_map<size_t, cv::Mat>::iterator it;
@@ -46,7 +47,11 @@ void Anime4KCPP::VideoIO::process()
     for (size_t i = 0; i < totalFrameCount; i++)
     {
         cv::Mat frame;
-        reader.read(frame);
+        if(!reader.read(frame))
+        {    
+            stop = i;
+            break;
+        }
         {
             std::unique_lock<std::mutex> lock(mtxRead);
             while (rawFrames.size() >= threads)
@@ -59,7 +64,9 @@ void Anime4KCPP::VideoIO::process()
 
 bool Anime4KCPP::VideoIO::openReader(const std::string& srcFile)
 {
-    return reader.open(srcFile);
+    if (!reader.open(srcFile, cv::CAP_FFMPEG))
+        return reader.open(srcFile);
+    return reader.isOpened();
 }
 
 bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, CODEC codec, const cv::Size& size)

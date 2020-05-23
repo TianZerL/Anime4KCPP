@@ -1,6 +1,7 @@
 #pragma once
 
 #include<opencv2/opencv.hpp>
+#include<atomic>
 #include<queue>
 #include<unordered_map>
 
@@ -36,7 +37,8 @@ public:
 private:
     VideoIO() = default;
 private:
-    size_t threads=0;
+    size_t threads = 0;
+    std::atomic<size_t> stop = 0;
     std::function<void()> processor;
     cv::VideoCapture reader;
     cv::VideoWriter writer;
