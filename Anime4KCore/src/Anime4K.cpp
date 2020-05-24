@@ -88,7 +88,9 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
 
 void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine)
 {
-    dstImg = orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+    orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_RGB2BGR);
+    dstImg = orgImg;
     orgH = rows;
     orgW = cols;
     H = zf * orgH;
