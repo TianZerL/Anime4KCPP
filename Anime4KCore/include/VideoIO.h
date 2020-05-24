@@ -38,7 +38,6 @@ private:
     VideoIO() = default;
 private:
     size_t threads = 0;
-    std::atomic<size_t> stop = 0;
     std::function<void()> processor;
     cv::VideoCapture reader;
     cv::VideoWriter writer;

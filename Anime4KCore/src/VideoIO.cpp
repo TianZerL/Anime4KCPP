@@ -22,12 +22,11 @@ Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t
 void Anime4KCPP::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
-    size_t totalFrameCount = reader.get(cv::CAP_PROP_FRAME_COUNT);
-    stop = totalFrameCount;
+    std::atomic<size_t> stop = reader.get(cv::CAP_PROP_FRAME_COUNT);
 
-    pool.exec([this, totalFrameCount]()
+    pool.exec([this, &stop]()
         {
-            for (size_t i = 0; i < totalFrameCount && i < stop; i++)
+            for (size_t i = 0; i < stop; i++)
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
                 std::unordered_map<size_t, cv::Mat>::iterator it;
@@ -44,7 +43,7 @@ void Anime4KCPP::VideoIO::process()
             }
         });
 
-    for (size_t i = 0; i < totalFrameCount; i++)
+    for (size_t i = 0; i < stop; i++)
     {
         cv::Mat frame;
         if(!reader.read(frame))
