@@ -1,6 +1,16 @@
 #include <avisynth.h>
 #include "Anime4KCPP.h"
 
+#ifdef _MSC_VER
+#define AC_STDCALL __stdcall
+#define AC_CDECL __cdecl
+#define AC_DLL __declspec(dllexport)
+#else
+#define AC_STDCALL __attribute__((__stdcall__))
+#define AC_CDECL __attribute__((__cdecl__))
+#define AC_DLL
+#endif
+
 enum AC_Parameters
 {
     AC_passes = 1,
@@ -53,9 +63,8 @@ Anime4KCPPF::Anime4KCPPF(
     vi.width *= inputs.zoomFactor;
 }
 
-PVideoFrame __stdcall Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
+PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 {
-
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
@@ -87,8 +96,7 @@ PVideoFrame __stdcall Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     anime4K->loadImage(srcH, srcL / 3, srcData);
     anime4K->process();
 
-    size_t bytes = anime4K->getResultDataLength();
-    unsigned char* dstData = new unsigned char[bytes];
+    unsigned char* dstData = new unsigned char[anime4K->getResultDataLength()];
     anime4K->saveImage(dstData);
 
     for (int y = 0; y < dstH; y++)
@@ -104,7 +112,7 @@ PVideoFrame __stdcall Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     return dst;
 }
 
-AVSValue __cdecl createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
     Anime4KCPP::Parameters inputs(
         args[AC_passes].AsInt(),
@@ -174,7 +182,7 @@ AVSValue __cdecl createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviron
     );
 }
 
-AVSValue __cdecl listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
     env->ThrowError(Anime4KCPP::Anime4KGPU::listGPUs().second.c_str());
     return AVSValue();
@@ -182,11 +190,11 @@ AVSValue __cdecl listGPUs(AVSValue args, void* user_data, IScriptEnvironment* en
 
 const AVS_Linkage* AVS_linkage = 0;
 
-extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
+extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
 {
     AVS_linkage = vectors;
     env->AddFunction("listGPUs", "", listGPUs, 0);
-    env->AddFunction("Anime4KCPP", 
+    env->AddFunction("Anime4KCPP",
         "[src]c"
         "[passes]i"
         "[pushColorCount]i"
@@ -195,7 +203,7 @@ extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScri
         "[zoomFactor]i"
         "[GPUMode]b"
         "[platformID]i"
-        "[deviceID]i", 
+        "[deviceID]i",
         createAnime4KCPP, 0);
     return "Anime4KCPP plugin for AviSynthPlus";
 }
