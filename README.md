@@ -87,9 +87,11 @@ Anime4KCPP Settings: balance
     Video(Length: 1 min 32 seconds):
     480P  -> 1080P :       01 min 04 seconds
 
-# VapourSynth plugin
-Anime4KCPP now provides VapourSynth plugin.  
-For detail, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+# VapourSynth and AviSynthPlus plugin
+Anime4KCPP now provides VapourSynth and AviSynthPlus plugin.  
+For detail:  
+[VapourSynth plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+[AviSynthPlus plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/AviSynthPlus-plugin)
 
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  

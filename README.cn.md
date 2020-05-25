@@ -73,9 +73,11 @@ Anime4KCPP 设置: 平衡
     480P  -> 1080P :       01 min 04 seconds
 
 
-# VapourSynth插件
-Anime4KCPP现已提供VapourSynth插件。
-详见[wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+# VapourSynth和AviSynthPlus插件
+Anime4KCPP现已提供VapourSynth和AviSynthPlus插件。  
+详见:  
+[VapourSynth插件wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+[AviSynthPlus插件wiki](https://github.com/TianZerL/Anime4KCPP/wiki/AviSynthPlus-plugin)
 
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
