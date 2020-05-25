@@ -1,6 +1,6 @@
-project(Anime4KCPP_VapourSynth LANGUAGES CXX)
+project(Anime4KCPP_AviSynthPlus LANGUAGES CXX)
 
-if(Build_VapourSynth_plugin)
+if(Build_AviSynthPlus_plugin)
 
     aux_source_directory(src SOURCE)
     aux_source_directory(${TOP_DIR}/Anime4KCore/src Anime4KCPPCoreSource)
@@ -11,6 +11,6 @@ if(Build_VapourSynth_plugin)
 
     add_library(${PROJECT_NAME} SHARED ${SOURCE} ${Anime4KCPPCoreSource})
 
-    include(${TOP_DIR}/cmake/ThirdPartyForVS.cmake)
+    include(${TOP_DIR}/cmake/ThirdPartyForASP.cmake)
 
 endif()
