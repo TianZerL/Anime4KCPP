@@ -18,7 +18,7 @@ bool checkFFmpeg()
 
 bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
-    std::string command("ffmpeg -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0 -map 1:1 -y \"" + dstFile + "\"");
+    std::string command("ffmpeg -loglevel 40 -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + dstFile + "\"");
     std::cout << command << std::endl;
 
     if (!system(command.data()))
