@@ -41,11 +41,11 @@ void Anime4KCPP::Anime4KCPUCNN::process()
     else
     {
         VideoIO::instance().init(
-            [this,tmpZfUp,tmpZf]()
+            [this, tmpZfUp, tmpZf]()
             {
                 Frame frame = VideoIO::instance().read();
                 cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame(H, W, CV_8UC4);
+                cv::Mat dstFrame;
                 
                 cv::Mat tmpFrame = orgFrame;
                 cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
@@ -73,7 +73,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
                 }
                 frame.first = dstFrame;
                 VideoIO::instance().write(frame);
