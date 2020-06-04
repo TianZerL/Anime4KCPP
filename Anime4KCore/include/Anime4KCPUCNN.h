@@ -34,12 +34,12 @@ public:
 
     void conv1To8(cv::InputArray img, const std::vector<cv::Mat>& kernels, const cv::Mat& biases, std::pair<cv::Mat, cv::Mat>& tmpMats);
     void conv8To8(const std::vector<std::vector<cv::Mat>>& kernels, const cv::Mat& biases, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void convTranspose8To1(const std::vector<cv::Mat>& kernels, std::pair<cv::Mat, cv::Mat>& tmpMats);
+    void convTranspose8To1(cv::Mat& img, const std::vector<cv::Mat>& kernels, std::pair<cv::Mat, cv::Mat>& tmpMats);
 
 private:
     void changEachPixel1To8(cv::InputArray _src, const std::function<void(int, int, Chan, Chan, LineC)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
     void changEachPixel8To8(const std::function<void(int, int, Chan, Chan, LineF, LineF)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void changEachPixel8To1(const std::function<void(int, int, PIXEL, LineF, LineF)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
+    void changEachPixel8To1(cv::Mat& img, const std::function<void(int, int, PIXEL, LineF, LineF)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
 
 private:
     const static std::vector<cv::Mat> kernelsL1;

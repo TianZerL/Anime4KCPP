@@ -5,29 +5,92 @@ Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
 
 void Anime4KCPP::Anime4KCPUCNN::process()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
-    std::pair<cv::Mat, cv::Mat> tmpMats;
-    conv1To8(orgImg, kernelsL1, biasesL1, tmpMats);
-    conv8To8(kernelsL2, biasesL2, tmpMats);
-    conv8To8(kernelsL3, biasesL3, tmpMats);
-    conv8To8(kernelsL4, biasesL4, tmpMats);
-    conv8To8(kernelsL5, biasesL5, tmpMats);
-    conv8To8(kernelsL6, biasesL6, tmpMats);
-    conv8To8(kernelsL7, biasesL7, tmpMats);
-    conv8To8(kernelsL8, biasesL8, tmpMats);
-    conv8To8(kernelsL9, biasesL9, tmpMats);
-    convTranspose8To1(kernelsL10, tmpMats);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+    double tmpZf = log2(zf);
+    int tmpZfUp = ceil(tmpZf);
+    if (!vm)
+    {
+        cv::Mat tmpImg = orgImg;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            std::pair<cv::Mat, cv::Mat> tmpMats;
+            conv1To8(tmpImg, kernelsL1, biasesL1, tmpMats);
+            conv8To8(kernelsL2, biasesL2, tmpMats);
+            conv8To8(kernelsL3, biasesL3, tmpMats);
+            conv8To8(kernelsL4, biasesL4, tmpMats);
+            conv8To8(kernelsL5, biasesL5, tmpMats);
+            conv8To8(kernelsL6, biasesL6, tmpMats);
+            conv8To8(kernelsL7, biasesL7, tmpMats);
+            conv8To8(kernelsL8, biasesL8, tmpMats);
+            conv8To8(kernelsL9, biasesL9, tmpMats);
+            convTranspose8To1(dstImg, kernelsL10, tmpMats);
+
+            std::vector<cv::Mat> yuv(3);
+            cv::split(tmpImg, yuv);
+            cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+            tmpImg = dstImg;
+        }
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+        }
+    }
+    else
+    {
+        VideoIO::instance().init(
+            [this,tmpZfUp,tmpZf]()
+            {
+                Frame frame = VideoIO::instance().read();
+                cv::Mat orgFrame = frame.first;
+                cv::Mat dstFrame(H, W, CV_8UC4);
+                
+                cv::Mat tmpFrame = orgFrame;
+                cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
+                for (int i = 0; i < tmpZfUp; i++)
+                {
+                    std::pair<cv::Mat, cv::Mat> tmpMats;
+                    conv1To8(tmpFrame, kernelsL1, biasesL1, tmpMats);
+                    conv8To8(kernelsL2, biasesL2, tmpMats);
+                    conv8To8(kernelsL3, biasesL3, tmpMats);
+                    conv8To8(kernelsL4, biasesL4, tmpMats);
+                    conv8To8(kernelsL5, biasesL5, tmpMats);
+                    conv8To8(kernelsL6, biasesL6, tmpMats);
+                    conv8To8(kernelsL7, biasesL7, tmpMats);
+                    conv8To8(kernelsL8, biasesL8, tmpMats);
+                    conv8To8(kernelsL9, biasesL9, tmpMats);
+                    convTranspose8To1(dstFrame, kernelsL10, tmpMats);
+
+                    std::vector<cv::Mat> yuv(3);
+                    cv::split(tmpFrame, yuv);
+                    cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                    tmpFrame = dstFrame;
+                }
+                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
+                if (tmpZfUp - tmpZf > 0.00001)
+                {
+                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+                }
+                frame.first = dstFrame;
+                VideoIO::instance().write(frame);
+            }
+            , mt
+                ).process();
+    }
 }
 
 void Anime4KCPP::Anime4KCPUCNN::conv1To8(cv::InputArray img, const std::vector<cv::Mat>& kernels, const cv::Mat& biases, std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
-    const int lineStep = orgW * 3;
+    const int lineStep = img.cols() * 3;
     changEachPixel1To8(img, [&](const int i, const int j, Chan tmpMat1, Chan tmpMat2, LineC curLine) {
         const int orgJ = j / 4 * 3;
-        const int jp = orgJ < (orgW - 1) * 3 ? 3 : 0;
+        const int jp = orgJ < (img.cols() - 1) * 3 ? 3 : 0;
         const int jn = orgJ > 3 ? -3 : 0;
-        const LineC pLineData = i < orgH - 1 ? curLine + lineStep : curLine;
+        const LineC pLineData = i < img.rows() - 1 ? curLine + lineStep : curLine;
         const LineC cLineData = curLine;
         const LineC nLineData = i > 0 ? curLine - lineStep : curLine;
 
@@ -101,15 +164,15 @@ void Anime4KCPP::Anime4KCPUCNN::conv1To8(cv::InputArray img, const std::vector<c
 
 void Anime4KCPP::Anime4KCPUCNN::conv8To8(const std::vector<std::vector<cv::Mat>>& kernels, const cv::Mat& biases, std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
-    const int lineStep = orgW * 4;
+    const int lineStep = tmpMats.first.cols * 4;
     changEachPixel8To8([&](const int i, const int j, Chan tmpMat1, Chan tmpMat2, LineF curLine1, LineF curLine2) {
-        const int jp = j < (orgW - 1) * 4 ? 4 : 0;
+        const int jp = j < (tmpMats.first.cols - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
-        const LineF pLineData1 = i < orgH - 1 ? curLine1 + lineStep : curLine1;
+        const LineF pLineData1 = i < tmpMats.first.rows - 1 ? curLine1 + lineStep : curLine1;
         const LineF cLineData1 = curLine1;
         const LineF nLineData1 = i > 0 ? curLine1 - lineStep : curLine1;
 
-        const LineF pLineData2 = i < orgH - 1 ? curLine2 + lineStep : curLine2;
+        const LineF pLineData2 = i < tmpMats.first.rows - 1 ? curLine2 + lineStep : curLine2;
         const LineF cLineData2 = curLine2;
         const LineF nLineData2 = i > 0 ? curLine2 - lineStep : curLine2;
 
@@ -535,9 +598,9 @@ void Anime4KCPP::Anime4KCPUCNN::conv8To8(const std::vector<std::vector<cv::Mat>>
         }, tmpMats);
 }
 
-void Anime4KCPP::Anime4KCPUCNN::convTranspose8To1(const std::vector<cv::Mat>& kernels, std::pair<cv::Mat, cv::Mat>& tmpMats)
+void Anime4KCPP::Anime4KCPUCNN::convTranspose8To1(cv::Mat& img, const std::vector<cv::Mat>& kernels, std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
-    changEachPixel8To1([&](const int i, const int j, PIXEL tmpMat, LineF tmpMat1, LineF tmpMat2) {
+    changEachPixel8To1(img, [&](const int i, const int j, PIXEL tmpMat, LineF tmpMat1, LineF tmpMat2) {
         auto kernel1 = reinterpret_cast<double*>(kernels[0].data);
         auto kernel2 = reinterpret_cast<double*>(kernels[1].data);
         auto kernel3 = reinterpret_cast<double*>(kernels[2].data);
@@ -636,22 +699,24 @@ void Anime4KCPP::Anime4KCPUCNN::changEachPixel1To8(cv::InputArray _src,
     tmpMats.first.create(src.size(), CV_64FC4);
     tmpMats.second.create(src.size(), CV_64FC4);
 
-    int jMAX = orgW * 4;
+    int h = src.rows, w = src.cols;
+
+    int jMAX = w * 4;
 #ifdef _MSC_VER
-    Concurrency::parallel_for(0, orgH, [&](int i) {
-        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(3);
-        LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+    Concurrency::parallel_for(0, h, [&](int i) {
+        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(3);
+        LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData1 + j, tmpLineData2 + j, lineData);
         });
 #else
 #pragma omp parallel for
-    for (int i = 0; i < orgH; i++)
+    for (int i = 0; i < h; i++)
     {
-        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(3);
-        LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(3);
+        LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData1 + j, tmpLineData2 + j, lineData);
     }
@@ -666,24 +731,26 @@ void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To8(
     tmp1.create(tmpMats.first.size(), tmpMats.first.type());
     tmp2.create(tmpMats.second.size(), tmpMats.second.type());
 
-    int jMAX = orgW * 4;
+    int h = tmpMats.first.rows, w = tmpMats.first.cols;
+
+    int jMAX = w * 4;
 #ifdef _MSC_VER
-    Concurrency::parallel_for(0, orgH, [&](int i) {
-        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData1 = reinterpret_cast<double*>(tmp1.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData2 = reinterpret_cast<double*>(tmp2.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+    Concurrency::parallel_for(0, h, [&](int i) {
+        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData1 = reinterpret_cast<double*>(tmp1.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData2 = reinterpret_cast<double*>(tmp2.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData1 + j, tmpLineData2 + j, lineData1, lineData2);
         });
 #else
 #pragma omp parallel for
-    for (int i = 0; i < orgH; i++)
+    for (int i = 0; i < h; i++)
     {
-        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData1 = reinterpret_cast<double*>(tmp1.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF tmpLineData2 = reinterpret_cast<double*>(tmp2.data) + static_cast<size_t>(i) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData1 = reinterpret_cast<double*>(tmp1.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
+        LineF tmpLineData2 = reinterpret_cast<double*>(tmp2.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData1 + j, tmpLineData2 + j, lineData1, lineData2);
     }
@@ -693,19 +760,19 @@ void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To8(
     tmp2.copyTo(tmpMats.second);
 }
 
-void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To1(
+void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To1(cv::Mat& img,
     const std::function<void(int, int, PIXEL, LineF, LineF)>&& callBack,
     std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
     cv::Mat tmp;
-    int h = 2 * orgH, w = 2 * orgW;
+    int h = 2 * tmpMats.first.rows, w = 2 * tmpMats.first.cols;
     tmp.create(h, w, CV_8UC1);
 
     int jMAX = w;
 #ifdef _MSC_VER
     Concurrency::parallel_for(0, h, [&](int i) {
-        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(w / 2) * static_cast<size_t>(4);
+        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(w / 2) * static_cast<size_t>(4);
         LineC tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(w);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData1 + static_cast<size_t>((j / 2)) * static_cast<size_t>(4), lineData2 + static_cast<size_t>((j / 2)) * static_cast<size_t>(4)
@@ -715,8 +782,8 @@ void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To1(
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
-        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(orgW) * static_cast<size_t>(4);
+        LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(w / 2) * static_cast<size_t>(4);
+        LineF lineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(w / 2) * static_cast<size_t>(4);
         LineC tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(w);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData1 + static_cast<size_t>((j / 2)) * static_cast<size_t>(4), lineData2 + static_cast<size_t>((j / 2)) * static_cast<size_t>(4)
@@ -724,13 +791,7 @@ void Anime4KCPP::Anime4KCPUCNN::changEachPixel8To1(
     }
 #endif
 
-    std::vector<cv::Mat> yuv(3);
-    cv::split(orgImg, yuv);
-    cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-    cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-
-    cv::merge(std::vector{ tmp,yuv[U],yuv[V] }, dstImg);
-    //cv::merge(std::vector{ tmp,tmp,tmp }, dstImg);
+    img = tmp;
 }
 
 
