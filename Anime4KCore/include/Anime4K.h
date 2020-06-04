@@ -82,7 +82,7 @@ struct Anime4KCPP::Parameters
 
 enum class Anime4KCPP::ProcessorType
 {
-    CPU, GPU
+    CPU, GPU, CPUCNN, GPUCNN
 };
 
 class Anime4KCPP::Anime4K

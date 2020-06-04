@@ -10,5 +10,6 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+Build
 ThirdParty
 settings.ini

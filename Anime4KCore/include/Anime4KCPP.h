@@ -2,6 +2,7 @@
 
 #include "Anime4KCPU.h"
 #include "Anime4KGPU.h"
+#include "Anime4KCPUCNN.h"
 
 #define ANIME4KCPP_CORE_VERSION "1.9.5"
 

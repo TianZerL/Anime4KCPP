@@ -21,7 +21,7 @@ class Anime4KCPP::Anime4KGPU :public Anime4K
 public:
     Anime4KGPU(const Parameters& parameters = Parameters());
     virtual ~Anime4KGPU() = default;
-    virtual void process();
+    virtual void process() override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
     static void releaseGPU();
     static bool isInitializedGPU();

@@ -86,6 +86,7 @@ so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also 
 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
 false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
+    opt.add("CNNMode", 'w', "Enable CNN");
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
@@ -111,6 +112,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     bool preProcessing = opt.exist("preprocessing");
     bool postProcessing = opt.exist("postprocessing");
     bool GPU = opt.exist("GPUMode");
+    bool CNN = opt.exist("CNNMode");
     bool listGPUs = opt.exist("listGPUs");
     unsigned int pID = opt.get<unsigned int>("platformID");
     unsigned int dID = opt.get<unsigned int>("deviceID");
@@ -158,25 +160,41 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
     try
     {
-        if (GPU)
+        if (CNN)
         {
-            std::cout << "GPU mode" << std::endl;
-            std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
-            if (!ret.first)
+            if (GPU)
             {
-                std::cout << ret.second << std::endl;
+                //TODO
                 return 0;
             }
             else
             {
-                std::cout << ret.second << std::endl;
+                std::cout << "CPUCNN mode" << std::endl;
+                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
             }
-            anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::GPU);
         }
         else
         {
-            std::cout << "CPU mode" << std::endl;
-            anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+            if (GPU)
+            {
+                std::cout << "GPU mode" << std::endl;
+                std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+                if (!ret.first)
+                {
+                    std::cout << ret.second << std::endl;
+                    return 0;
+                }
+                else
+                {
+                    std::cout << ret.second << std::endl;
+                }
+                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+            }
+            else
+            {
+                std::cout << "CPU mode" << std::endl;
+                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+            }
         }
 
         if (!videoMode)//Image
