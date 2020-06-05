@@ -20,7 +20,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define ANIME4KCPP_GUI_VERSION "1.5.0"
+#define ANIME4KCPP_GUI_VERSION "1.6.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -46,6 +46,11 @@ enum FileType
 enum GPUMode
 {
     GPUMODE_INITIALZED = 0, GPUMODE_UNINITIALZED = 1, GPUMODE_UNSUPPORT = 3
+};
+
+enum GPUCNNMode
+{
+    GPUCNNMODE_INITIALZED = 0, GPUCNNMODE_UNINITIALZED = 1, GPUCNNMODE_UNSUPPORT = 3
 };
 
 class MainWindow : public QMainWindow
@@ -139,9 +144,13 @@ private slots:
 
     void on_spinBoxPlatformID_valueChanged(int arg1);
 
-    void on_pushButton_clicked();
+    void on_pushButtonOpen_clicked();
 
     void on_pushButtonReleaseGPU_clicked();
+
+    void on_checkBoxACNet_stateChanged(int arg1);
+
+    void on_checkBoxACNetGPU_stateChanged(int arg1);
 
 private:
     Ui::MainWindow *ui;
@@ -156,6 +165,7 @@ private:
     Language currLanguage;
 
     GPUMode GPU;
+    GPUCNNMode GPUCNN;
     Anime4KCPP::Anime4KCreator anime4KCreator;
 
     std::vector<int> devices;

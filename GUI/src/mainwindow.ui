@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1042</width>
-    <height>590</height>
+    <height>616</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -259,7 +259,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButton">
+              <widget class="QPushButton" name="pushButtonOpen">
                <property name="text">
                 <string>open</string>
                </property>
@@ -581,8 +581,32 @@
           <property name="title">
            <string>Arguments</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
-           <item>
+          <layout class="QGridLayout" name="gridLayout_3">
+           <item row="0" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
+             <item>
+              <widget class="QCheckBox" name="checkBoxACNet">
+               <property name="statusTip">
+                <string>Enable ACNet</string>
+               </property>
+               <property name="text">
+                <string>ACNet</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBoxACNetGPU">
+               <property name="statusTip">
+                <string>Enable GPU acceleration for ACNet</string>
+               </property>
+               <property name="text">
+                <string>GPU acceleration for ACNet</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutPasses">
              <item>
               <widget class="QLabel" name="labelPasses">
@@ -602,7 +626,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="2" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutPushColorCount">
              <item>
               <widget class="QLabel" name="labelPushColorCount">
@@ -622,7 +646,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="3" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutPushColorStrength">
              <item>
               <widget class="QLabel" name="labelPushColorStrength">
@@ -642,7 +666,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="4" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutPushGradientStrength">
              <item>
               <widget class="QLabel" name="labelPushPushGradientStrength">
@@ -662,7 +686,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="5" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutZoomFactor">
              <item>
               <widget class="QLabel" name="labelZoomFactor">
@@ -682,7 +706,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="6" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutThreads">
              <item>
               <widget class="QLabel" name="labelThreads">
@@ -702,7 +726,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="7" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutCodec">
              <item>
               <widget class="QLabel" name="labelCodec">
@@ -770,7 +794,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="8" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout">
              <item>
               <widget class="QCheckBox" name="checkBoxFastMode">
@@ -794,7 +818,7 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="9" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutIDs">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutPlatformID">

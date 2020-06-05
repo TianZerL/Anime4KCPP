@@ -54,9 +54,11 @@ MainWindow::MainWindow(QWidget *parent)
         ffmpeg = checkFFmpeg();
     //initialize GPU
     GPU = GPUMODE_UNINITIALZED;
+    GPUCNN = GPUCNNMODE_UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
     ui->spinBoxDeviceID->setMinimum(0);
     ui->pushButtonReleaseGPU->setEnabled(false);
+    ui->checkBoxACNetGPU->setEnabled(false);
     platforms = 0;
     //Register
     qRegisterMetaType<std::string>("std::string");
@@ -476,10 +478,16 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K *&anime4K)
                 threads
                 );
 
-    if(ui->checkBoxGPUMode->isChecked())
-        anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::GPU);
+    if(ui->checkBoxACNet->isChecked())
+        if(ui->checkBoxACNetGPU->isChecked())
+            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::GPUCNN);
+        else
+            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::CPUCNN);
     else
-        anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::CPU);
+        if(ui->checkBoxGPUMode->isChecked())
+            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::GPU);
+        else
+            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::CPU);
 }
 
 void MainWindow::releaseAnime4K(Anime4KCPP::Anime4K *&anime4K)
@@ -1094,58 +1102,46 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 {
     if((state == Qt::Checked) && (GPU == GPUMODE_UNINITIALZED))
     {
-        if(QMessageBox::Yes == QMessageBox::information(this,
-                                 tr("Notice"),
-                                 tr("You are trying to enable GPU acceleration, "
-                                    "which is an experimental function, check and initialize GPU?"),
-                                 QMessageBox::Yes | QMessageBox::No,
-                                 QMessageBox::No))
+        unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
+        std::pair<bool,std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if(!ret.first)
         {
-            unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-            std::pair<bool,std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
-            if(!ret.first)
-            {
-                QMessageBox::warning(this,
-                                     tr("Warning"),
-                                     QString::fromStdString(ret.second),
-                                     QMessageBox::Ok);
-                GPU = GPUMODE_UNSUPPORT;
-                ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
-            }
-            else
-            {
-                try
-                {
-                    if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
-                        Anime4KCPP::Anime4KGPU::initGPU(currPlatFormID, currDeviceID);
-                }
-                catch (const char* error)
-                {
-                    QMessageBox::warning(this,
-                                         tr("Warning"),
-                                         QString(error),
-                                         QMessageBox::Ok);
-
-                    ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
-                    return;
-                }
-
-                GPU = GPUMODE_INITIALZED;
-                QMessageBox::information(this,
-                                     tr("Notice"),
-                                     "initialize successful!\n" +
-                                     QString::fromStdString(ret.second),
-                                     QMessageBox::Ok);
-                ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
-                ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
-                ui->spinBoxPlatformID->setEnabled(false);
-                ui->spinBoxDeviceID->setEnabled(false);
-                ui->pushButtonReleaseGPU->setEnabled(true);
-            }
+            QMessageBox::warning(this,
+                                 tr("Warning"),
+                                 QString::fromStdString(ret.second),
+                                 QMessageBox::Ok);
+            GPU = GPUMODE_UNSUPPORT;
+            ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
         }
         else
         {
-            ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+            try
+            {
+                if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
+                    Anime4KCPP::Anime4KGPU::initGPU(currPlatFormID, currDeviceID);
+            }
+            catch (const char* error)
+            {
+                QMessageBox::warning(this,
+                                     tr("Warning"),
+                                     QString(error),
+                                     QMessageBox::Ok);
+
+                ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+                return;
+            }
+
+            GPU = GPUMODE_INITIALZED;
+            QMessageBox::information(this,
+                                 tr("Notice"),
+                                 "initialize successful!\n" +
+                                 QString::fromStdString(ret.second),
+                                 QMessageBox::Ok);
+            ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
+            ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
+            ui->spinBoxPlatformID->setEnabled(false);
+            ui->spinBoxDeviceID->setEnabled(false);
+            ui->pushButtonReleaseGPU->setEnabled(true);
         }
     }
     else if((state == Qt::Checked) && (GPU == GPUMODE_UNSUPPORT))
@@ -1189,7 +1185,7 @@ void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
         ui->spinBoxDeviceID->setRange(0, devices[value] - 1);
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_pushButtonOpen_clicked()
 {
     QDir outputPath(ui->lineEditOutputPath->text());
     if (!outputPath.exists())
@@ -1214,5 +1210,103 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
         ui->spinBoxPlatformID->setEnabled(true);
         ui->spinBoxDeviceID->setEnabled(true);
         ui->pushButtonReleaseGPU->setEnabled(false);
+    }
+
+    if(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU() && GPUCNN == GPUCNNMODE_INITIALZED)
+    {
+        Anime4KCPP::Anime4KGPUCNN::releaseGPU();
+        GPUCNN = GPUCNNMODE_UNINITIALZED;
+        QMessageBox::information(this,
+                                 tr("Notice"),
+                                 tr("Successfully release GPU for ACNet"),
+                                 QMessageBox::Ok);
+        ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
+        ui->spinBoxPlatformID->setEnabled(true);
+        ui->spinBoxDeviceID->setEnabled(true);
+        ui->pushButtonReleaseGPU->setEnabled(false);
+    }
+}
+
+void MainWindow::on_checkBoxACNet_stateChanged(int state)
+{
+    if(state == Qt::Checked)
+    {
+        ui->spinBoxPasses->setEnabled(false);
+        ui->spinBoxPushColorCount->setEnabled(false);
+        ui->doubleSpinBoxPushColorStrength->setEnabled(false);
+        ui->doubleSpinBoxPushGradientStrength->setEnabled(false);
+        ui->checkBoxFastMode->setEnabled(false);
+        ui->tabPreprocessing->setEnabled(false);
+        ui->tabPostprocessing->setEnabled(false);
+        ui->checkBoxGPUMode->setEnabled(false);
+        ui->checkBoxACNetGPU->setEnabled(true);
+    }
+    else
+    {
+        ui->spinBoxPasses->setEnabled(true);
+        ui->spinBoxPushColorCount->setEnabled(true);
+        ui->doubleSpinBoxPushColorStrength->setEnabled(true);
+        ui->doubleSpinBoxPushGradientStrength->setEnabled(true);
+        ui->checkBoxFastMode->setEnabled(true);
+        ui->tabPreprocessing->setEnabled(true);
+        ui->tabPostprocessing->setEnabled(true);
+        ui->checkBoxACNetGPU->setEnabled(false);
+        ui->checkBoxGPUMode->setEnabled(true);
+    }
+}
+
+void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
+{
+    if((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNINITIALZED))
+    {
+        unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
+        std::pair<bool,std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if(!ret.first)
+        {
+            QMessageBox::warning(this,
+                                 tr("Warning"),
+                                 QString::fromStdString(ret.second),
+                                 QMessageBox::Ok);
+            GPUCNN = GPUCNNMODE_UNSUPPORT;
+            ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
+        }
+        else
+        {
+            try
+            {
+                if (!Anime4KCPP::Anime4KGPUCNN::isInitializedGPU())
+                    Anime4KCPP::Anime4KGPUCNN::initGPU(currPlatFormID, currDeviceID);
+            }
+            catch (const char* error)
+            {
+                QMessageBox::warning(this,
+                                     tr("Warning"),
+                                     QString(error),
+                                     QMessageBox::Ok);
+
+                ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
+                return;
+            }
+
+            GPUCNN = GPUCNNMODE_INITIALZED;
+            QMessageBox::information(this,
+                                 tr("Notice"),
+                                 "initialize successful!\n" +
+                                 QString::fromStdString(ret.second),
+                                 QMessageBox::Ok);
+            ui->textBrowserInfoOut->insertPlainText("GPU for CNN initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
+            ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
+            ui->spinBoxPlatformID->setEnabled(false);
+            ui->spinBoxDeviceID->setEnabled(false);
+            ui->pushButtonReleaseGPU->setEnabled(true);
+        }
+    }
+    else if((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNSUPPORT))
+    {
+        QMessageBox::warning(this,
+                             tr("Warning"),
+                             tr("Unsupport GPU acceleration for ACNet in this platform"),
+                             QMessageBox::Ok);
+        ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
     }
 }
