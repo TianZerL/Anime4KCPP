@@ -34,6 +34,7 @@ import java.util.List;
 import github.tianzerl.anime4kcpp.warpper.Anime4K;
 import github.tianzerl.anime4kcpp.warpper.Anime4KCreator;
 import github.tianzerl.anime4kcpp.warpper.Anime4KGPU;
+import github.tianzerl.anime4kcpp.warpper.Anime4KGPUCNN;
 import github.tianzerl.anime4kcpp.warpper.Parameters;
 import github.tianzerl.anime4kcpp.warpper.ProcessorType;
 import me.rosuh.filepicker.bean.FileItemBeanImpl;
@@ -47,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private enum GPUState {
+        Initialized, UnInitialized, Unsupported
+    }
+
+    private enum GPUCNNState {
         Initialized, UnInitialized, Unsupported
     }
 
@@ -73,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textViewState;
 
     private GPUState GPU = GPUState.UnInitialized;
+    private GPUCNNState GPUCNN = GPUCNNState.UnInitialized;
     private Anime4KCreator anime4KCreator = new Anime4KCreator(false);
 
     private Handler anime4KCPPHandler = new Handler(new Handler.Callback() {
@@ -238,6 +244,39 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        final Switch ACNetGPUMode = findViewById(R.id.switchACNetGPUMode);
+        ACNetGPUMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked && GPUCNN == GPUCNNState.UnInitialized)
+                {
+                    try {
+                        if (!Anime4KGPUCNN.isInitializedGPU() && Anime4KGPU.checkGPUSupport())
+                        {
+                            Toast.makeText(MainActivity.this,"ACNet GPU Mode enabled",Toast.LENGTH_SHORT).show();
+                            Anime4KGPUCNN.initGPU();
+                            GPUCNN = GPUCNNState.Initialized;
+                        }
+                        else
+                        {
+                            Toast.makeText(MainActivity.this,"Unsupported ACNet GPU Mode",Toast.LENGTH_SHORT).show();
+                            GPUCNN = GPUCNNState.Unsupported;
+                            buttonView.setChecked(false);
+                        }
+                    } catch (Exception exp) {
+                        errorHandler(Error.Anime4KCPPError, exp);
+                        GPUCNN = GPUCNNState.Unsupported;
+                        buttonView.setChecked(false);
+                    }
+                }
+                else if (isChecked && GPUCNN == GPUCNNState.Unsupported)
+                {
+                    Toast.makeText(MainActivity.this,"Unsupported ACNet GPU Mode",Toast.LENGTH_SHORT).show();
+                    buttonView.setChecked(false);
+                }
+            }
+        });
+
         final Switch preprocessingCAS = findViewById(R.id.switchPreprocessingCAS);
         preprocessingCAS.setChecked(true);
         final Switch postprocessingGaussianBlurWeak = findViewById(R.id.switchPostprocessingGaussianBlurWeak);
@@ -364,13 +403,27 @@ public class MainActivity extends AppCompatActivity {
             postFilters
         );
 
-        if (getSwitchSate(R.id.switchGPUMode))
+        if (getSwitchSate(R.id.switchACNet))
         {
-            return anime4KCreator.create(parameters, ProcessorType.GPU);
+            if (getSwitchSate(R.id.switchACNetGPUMode))
+            {
+                return anime4KCreator.create(parameters, ProcessorType.GPUCNN);
+            }
+            else
+            {
+                return anime4KCreator.create(parameters, ProcessorType.CPUCNN);
+            }
         }
         else
         {
-            return anime4KCreator.create(parameters, ProcessorType.CPU);
+            if (getSwitchSate(R.id.switchGPUMode))
+            {
+                return anime4KCreator.create(parameters, ProcessorType.GPU);
+            }
+            else
+            {
+                return anime4KCreator.create(parameters, ProcessorType.CPU);
+            }
         }
     }
 

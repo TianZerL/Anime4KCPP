@@ -91,6 +91,86 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_createAnime4KGPUByArgs(
     );
 }
 
+JNIEXPORT jlong JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNN(
+        JNIEnv *env,
+        jobject /* this */) {
+    return (jlong)(new Anime4KCPP::Anime4KCPUCNN());
+}
+
+JNIEXPORT jlong JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
+        JNIEnv *env,
+        jobject /* this */,
+        jint passes,
+        jint pushColorCount,
+        jdouble strengthColor,
+        jdouble strengthGradient,
+        jdouble zoomFactor,
+        jboolean fastMode,
+        jboolean videoMode,
+        jboolean preprocessing,
+        jboolean postprocessing,
+        jbyte preFilters,
+        jbyte postFilters) {
+
+    return (jlong)(new Anime4KCPP::Anime4KCPUCNN(
+            Anime4KCPP::Parameters(
+                    passes,
+                    pushColorCount,
+                    strengthColor,
+                    strengthGradient,
+                    zoomFactor,
+                    fastMode,
+                    videoMode,
+                    preprocessing,
+                    postprocessing,
+                    preFilters,
+                    postFilters
+            ))
+    );
+}
+
+JNIEXPORT jlong JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNN(
+        JNIEnv *env,
+        jobject /* this */) {
+    return (jlong)(new Anime4KCPP::Anime4KGPUCNN());
+}
+
+JNIEXPORT jlong JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
+        JNIEnv *env,
+        jobject /* this */,
+        jint passes,
+        jint pushColorCount,
+        jdouble strengthColor,
+        jdouble strengthGradient,
+        jdouble zoomFactor,
+        jboolean fastMode,
+        jboolean videoMode,
+        jboolean preprocessing,
+        jboolean postprocessing,
+        jbyte preFilters,
+        jbyte postFilters) {
+
+    return (jlong)(new Anime4KCPP::Anime4KGPUCNN(
+            Anime4KCPP::Parameters(
+                    passes,
+                    pushColorCount,
+                    strengthColor,
+                    strengthGradient,
+                    zoomFactor,
+                    fastMode,
+                    videoMode,
+                    preprocessing,
+                    postprocessing,
+                    preFilters,
+                    postFilters
+            ))
+    );
+}
+
 JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setArgumentsAnime4K(
         JNIEnv *env,
@@ -222,10 +302,24 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_initGPUAnime4KGPU(
 }
 
 JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_initGPUAnime4KGPUCNN(
+        JNIEnv *env,
+        jclass clazz) {
+    Anime4KCPP::Anime4KGPUCNN::initGPU();
+}
+
+JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_releaseGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
     Anime4KCPP::Anime4KGPU::releaseGPU();
+}
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_releaseGPUAnime4KGPUCNN(
+        JNIEnv *env,
+        jclass clazz) {
+    Anime4KCPP::Anime4KGPUCNN::releaseGPU();
 }
 
 JNIEXPORT jboolean JNICALL
@@ -234,6 +328,14 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_isInitializedGPUAnime4KGPU(
         jclass clazz) {
     return (jboolean)(Anime4KCPP::Anime4KGPU::isInitializedGPU());
 }
+
+JNIEXPORT jboolean JNICALL
+Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_isInitializedGPUAnime4KGPUCNN(
+        JNIEnv *env,
+        jclass clazz) {
+    return (jboolean)(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU());
+}
+
 
 JNIEXPORT jstring JNICALL
 Java_github_tianzerl_anime4kcpp_warpper_Anime4K_getCoreVersionAnime4K(

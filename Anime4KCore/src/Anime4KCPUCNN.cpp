@@ -1,4 +1,4 @@
-#include "Anime4KCPUCNN.H"
+#include "Anime4KCPUCNN.h"
 
 Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
     Anime4K(parameters) {}

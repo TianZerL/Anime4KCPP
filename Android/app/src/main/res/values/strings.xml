@@ -44,4 +44,6 @@
     <string name="video_suffix">Video suffix</string>
     <string name="about">About</string>
     <string name="quit">Quit</string>
+    <string name="acnet">ACNet</string>
+    <string name="acnet_gpu_mode">ACNet GPU Mode</string>
 </resources>

@@ -137,6 +137,20 @@
                 android:padding="1dp" />
 
             <Switch
+                android:id="@+id/switchACNet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/acnet" />
+
+            <Switch
+                android:id="@+id/switchACNetGPUMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/acnet_gpu_mode" />
+
+            <Switch
                 android:id="@+id/switchGPUMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
