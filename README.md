@@ -41,8 +41,14 @@ ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quali
 - Filters support, use them to denoise or anti-aliasing.
 
 # Result
-***This examples was out of date***
-![examples](images/examples.png)
+### origin
+![examples](/images/example.png)
+### Anime4K09
+![Anime4K09](/images/Anime4K09.png)
+### Anime4K09 with filters
+![Anime4K09 with filters](/images/Anime4K09Filters.png)
+### ACNet
+![examples](/images/ACNet.png)
 
 # GPU acceleration
 Anime4KCPP now supports GPU acceleration, which is implemented by original OpenCL for high performance, it supports any graphic card that implemented OpenCL 1.2 or newer, and can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
@@ -101,15 +107,10 @@ For detail:
 # GUI
 Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
 ***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
-***This picture is out of date***
-
-![GUI](images/GUI.png)
 
 # Android
 Anime4KCPP now provides an Android version, upscale your image by your phone as fast as your computer!  
 ***NOTICE: Android version is full feature***  
-
-![Android](images/Android.png)
 
 # CLI
 ## Video processing
@@ -123,10 +124,10 @@ For video processing, all you need do is to add the argument ```-v```, and waiti
       -o, --output              File for outputting (string [=output.png])
       -p, --passes              Passes for processing (int [=2])
       -n, --pushColorCount      Limit the number of color pushes (int [=2])
-      -c, --strengthColor       Strength for pushing color,range 0 to 1,higher for thinner (double [=0.3])
-      -g, --strengthGradient    Strength for pushing gradient,range 0 to 1,higher for sharper (double [=1])
-      -z, --zoomFactor          zoom factor for resizing (double [=2])
-      -t, --threads             Threads count for video processing (unsigned int [=8])
+      -c, --strengthColor       Strength for pushing color,range 0 to 1,higher for thinner (float [=0.3])
+      -g, --strengthGradient    Strength for pushing gradient,range 0 to 1,higher for sharper (float [=1])
+      -z, --zoomFactor          zoom factor for resizing (float [=2])
+      -t, --threads             Threads count for video processing (unsigned int [=12])
       -f, --fastMode            Faster but maybe low quality
       -v, --videoMode           Video process
       -s, --preview             Preview image
@@ -135,6 +136,7 @@ For video processing, all you need do is to add the argument ```-v```, and waiti
       -r, --preFilters          Enhancement filter, only working when preProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D) (unsigned int [=4])
       -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
       -q, --GPUMode             Enable GPU acceleration
+      -w, --CNNMode             Enable ACNet
       -l, --listGPUs            list GPUs
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
@@ -145,7 +147,7 @@ For video processing, all you need do is to add the argument ```-v```, and waiti
 ## About GPU acceleration
 Use ```-q``` to enable GPU acceleration, and then use ```-l``` to list the platform ids and device ids, ```-h``` for specifying platform id, ```-d``` for specifying device id.
 
-## Filters
+## Filters (Only for Anime4K09)
 Enable filters can make the result be better, now Anime4kCPP support following filters:
 
   - Median blur [0000001]
@@ -229,7 +231,7 @@ Now we just run `make`. The binaries should have been installed to `./bin/`.
 Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
 
 
-# pyanime4k
+# pyanime4k (out of date)
 [pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
 
 

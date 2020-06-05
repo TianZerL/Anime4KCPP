@@ -86,7 +86,7 @@ so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also 
 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
 false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
-    opt.add("CNNMode", 'w', "Enable CNN");
+    opt.add("CNNMode", 'w', "Enable ACNet");
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);

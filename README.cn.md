@@ -26,8 +26,14 @@ ACNet是一个基于卷积神经网络的超分辨率算法，旨在同时提供
 - 滤镜支持，利用它们进行抗锯齿和降噪。  
 
 # 效果
-**该示例已过时**
-![examples](images/examples.png)  
+### 原图
+![examples](/images/example.png)
+### Anime4K09
+![Anime4K09](/images/Anime4K09.png)
+### Anime4K09加滤镜
+![Anime4K09 with filters](/images/Anime4K09Filters.png)
+### ACNet
+![examples](/images/ACNet.png)
 
 # GPU加速
 Anime4KCPP现已支持GPU加速，通过原生OpenCL实现，可提供高性能与跨平台性，只要您的显卡支持OpenCL 1.2或者更高版本，即可开启。在*AMD Vege 8 Graphics* (*AMD Ryzen 3500U*的核显) 上可以在0.1秒内完成1080 -> 4K图像处理。  
@@ -87,15 +93,10 @@ Anime4KCPP现已提供VapourSynth和AviSynthPlus插件。
 # GUI
 Anime4KCPP支持GUI，您可以更轻松的处理您的图像与视频!  
 **注意: 在处理视频前请安装 [ffmpeg](https://ffmpeg.org) 否则处理结果将没有音轨**  
-**该界面已过时，请以新版为准**
-
-![GUI](images/GUI.png)
 
 # Android
 Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就像PC那样快!  
 ***NOTICE: Android版本是全功能的***  
-
-![Android](images/Android.png)
 
 # CLI
 ## 视频处理
@@ -109,9 +110,9 @@ Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就�
       -o, --output              输出文件名 (string [=output.png])
       -p, --passes              处理次数 (int [=2])
       -n, --pushColorCount      限制边缘细化执行次数(int [=2])
-      -c, --strengthColor       细化边缘，范围0-1，越大的值会越细 (double [=0.3])
-      -g, --strengthGradient    锐利度，范围0-1，越大的值会越锐利 (double [=1])
-      -z, --zoomFactor          缩放倍数 (double [=2])
+      -c, --strengthColor       细化边缘，范围0-1，越大的值会越细 (float [=0.3])
+      -g, --strengthGradient    锐利度，范围0-1，越大的值会越锐利 (float [=1])
+      -z, --zoomFactor          缩放倍数 (float [=2])
       -t, --threads             指定处理视频时所用的线程数 (unsigned int [=8])
       -f, --fastMode            加快处理速度但可能获得低质量图像
       -v, --videoMode           视频处理模式
@@ -121,6 +122,7 @@ Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就�
       -r, --preFilters          选择预处理滤镜，仅当preProcessing开启时有效，可使用以下滤镜: Median blur=000001，Mean blur=000010Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000，使用它们对应的二进制进行自由组合，例如: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D)， (unsigned int [=4])
       -e, --postFilters         选择后处理滤镜，仅当postProcessing开启时有效，可使用以下滤镜: Median blur=000001，Mean blur=000010Gaussian blur weak=000100, Gaussian blur=001000, Bilateral filter=010000, Bilateral filter faster=100000，使用它们对应的二进制进行自由组合，例如: Gaussian blur weak + Bilateral filter = 000100 | 010000 = 010100 = 20(D)，输入20即可开启Gaussian blur weak 和Bilateral filter，这也是我推荐用于小于1080P图像的设置，对于大于等于1080P的图像推荐使用24，小于1080P的视频推荐36，大于等于1080P的视频荐40 (unsigned int [=20])
       -q, --GPUMode             开启GPU加速  
+      -w, --CNNMode             开启ACNet
       -l, --listGPUs            列出GPU平台与设备
       -h, --platformID          指定平台ID (unsigned int [=0])
       -d, --deviceID            指定设备ID (unsigned int [=0])
@@ -131,7 +133,7 @@ Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就�
 ## GPU加速相关
 使用 ```-q``` 开启GPU加速，然后使用 ```-l``` 列出可用的GPU平台ID及其对应设备ID，参数 ```-h``` 指定平台ID，```-d``` 指定设备ID。
 
-## 滤镜
+## 滤镜 (仅支持Anime4K09)
 启用滤镜可以使得处理后的图像看起来更舒服，目前支持以下五种滤镜：
 
   - Median blur [0000001]
@@ -215,7 +217,7 @@ brew install opencv qt ffmpeg openh264 cmake
 
 请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
 
-# pyanime4k
+# pyanime4k (过时)
 [pyanime4k](https://github.com/TianZerL/pyanime4k) 是一个在python中使用Anime4K的简单方式，它基于Anime4KCPP。 
 
 
