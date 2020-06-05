@@ -226,7 +226,7 @@ Now we need to fix macOS libomp problem (copied from [here](https://stackoverflo
      cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
     ```
 
-Now we just run `make`. The binaries should have been installed to `./bin/`.
+Now we just run `cmake . && make`. The binaries should have been installed to `./bin/`.
 
 Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
 

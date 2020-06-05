@@ -213,7 +213,7 @@ brew install opencv qt ffmpeg openh264 cmake
      cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
     ```
 
-最后运行 `make`. 所有二进制文件都将被安装至 `./bin/`.
+最后运行 `cmake . && make`. 所有二进制文件都将被安装至 `./bin/`.
 
 请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
 
