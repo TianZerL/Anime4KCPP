@@ -45,6 +45,16 @@ namespace Anime4KCPP
 
     typedef unsigned char* RGBA;
     typedef unsigned char* Line;
+
+    enum YUV
+    {
+        Y = 0, U = 1, V = 2
+    };
+
+    typedef double* Chan;
+    typedef unsigned char* PIXEL;
+    typedef unsigned char* LineC;
+    typedef double* LineF;
 }
 
 struct Anime4KCPP::Parameters
@@ -82,7 +92,7 @@ struct Anime4KCPP::Parameters
 
 enum class Anime4KCPP::ProcessorType
 {
-    CPU, GPU
+    CPU, GPU, CPUCNN, GPUCNN
 };
 
 class Anime4KCPP::Anime4K

@@ -16,13 +16,16 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # About Anime4KCPP
-This is an implementation of Anime4K in C++. It based on the [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and try to optimize it to provide better quality, it aims to be a high performance pretreatment tools to process both image and video.  
+Anime4KCPP provides an optimized [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and it also provides its own CNN algorithm ***ACNet***, it aims to be a high performance pretreatment tools to process both image and video.  
 This project is for learning and the exploration task of algorithm course in SWJTU.  
 
 ***NOTICE: With CPU, it is fast enough to process normal image, It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython). With GPU acceleration, it can be more than 10 times faster than CPU (depends on your graphic card), so it is suitable for video processing, just try this for higher quality and speed.***
 
 # About Anime4K
-Anime4K is a simple high-quality anime upscale algorithm for anime. it does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
+Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
+
+# About ACNet
+ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.
 
 # Why Anime4KCPP
 - Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).
@@ -30,6 +33,7 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 - easy to use with GUI or CLI.
 - Android supports.
 - VapourSynth plugin supports.
+- AviSynthPlus plugin supports.
 - High performance.
 - Low memory usage, usually less than 1G even in processing 1080P videos.
 - GPU acceleration support, use it to process your image or video in a short time.
@@ -37,6 +41,7 @@ Anime4K is a simple high-quality anime upscale algorithm for anime. it does not 
 - Filters support, use them to denoise or anti-aliasing.
 
 # Result
+***This examples was out of date***
 ![examples](images/examples.png)
 
 # GPU acceleration

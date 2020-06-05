@@ -23,7 +23,7 @@ class Anime4KCPP::Anime4KCPU :public Anime4K
 public:
     Anime4KCPU(const Parameters& parameters = Parameters());
     virtual ~Anime4KCPU() = default;
-    virtual void process();
+    virtual void process() override;
 private:
     void getGray(cv::InputArray img);
     void pushColor(cv::InputArray img);
