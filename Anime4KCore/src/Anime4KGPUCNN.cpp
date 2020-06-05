@@ -1,3 +1,5 @@
+#define DLL
+
 #include "Anime4KGPUCNN.h"
 
 Anime4KCPP::Anime4KGPUCNN::Anime4KGPUCNN(const Parameters& parameters) :

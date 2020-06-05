@@ -13,7 +13,7 @@
 
 namespace Anime4KCPP
 {
-    class Anime4KCPUCNN;
+    class DLL Anime4KCPUCNN;
 }
 
 class Anime4KCPP::Anime4KCPUCNN :public Anime4K
