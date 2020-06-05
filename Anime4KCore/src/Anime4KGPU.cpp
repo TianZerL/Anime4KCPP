@@ -373,12 +373,14 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
+        clReleaseMemObject(imageBuffer0);
         throw"imageBuffer1 error";
     }
     //tmp buffer 2
     cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
+        clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
         throw"imageBuffer2 error";
     }
@@ -386,7 +388,9 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
+        clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
+        clReleaseMemObject(imageBuffer2);
         throw"imageBuffer3 error";
     }
 

@@ -13,15 +13,6 @@
 
 namespace Anime4KCPP
 {
-    enum YUV
-    {
-        Y = 0, U = 1, V = 2
-    };
-
-    typedef double* Chan;
-    typedef unsigned char* PIXEL;
-    typedef unsigned char* LineC;
-    typedef double* LineF;
     class Anime4KCPUCNN;
 }
 

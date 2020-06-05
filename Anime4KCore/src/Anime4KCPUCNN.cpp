@@ -611,8 +611,8 @@ void Anime4KCPP::Anime4KCPUCNN::convTranspose8To1(cv::Mat& img, const std::vecto
         auto kernel8 = reinterpret_cast<double*>(kernels[7].data);
 
         int flag = 0;
-        int r = i % 2;
-        int c = j % 2;
+        int r = i & 1;
+        int c = j & 1;
         if (r != 0 && c == 0)
             flag = 0;
         //0 x
