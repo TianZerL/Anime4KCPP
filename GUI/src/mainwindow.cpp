@@ -399,7 +399,7 @@ bool MainWindow::checkFFmpeg()
         ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
         return true;
     }
-    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg did not fount"), QMessageBox::Ok);
+    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg not found."), QMessageBox::Ok);
     ui->textBrowserInfoOut->insertPlainText(
                 "----------------------------------------------\n"
                 "             ffmpeg check failed              \n"
