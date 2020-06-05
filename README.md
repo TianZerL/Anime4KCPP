@@ -90,7 +90,7 @@ Anime4KCPP Settings: balance
 # VapourSynth and AviSynthPlus plugin
 Anime4KCPP now provides VapourSynth and AviSynthPlus plugin.  
 For detail:  
-[VapourSynth plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+[VapourSynth plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)  
 [AviSynthPlus plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/AviSynthPlus-plugin)
 
 # GUI

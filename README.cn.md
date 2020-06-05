@@ -76,7 +76,7 @@ Anime4KCPP 设置: 平衡
 # VapourSynth和AviSynthPlus插件
 Anime4KCPP现已提供VapourSynth和AviSynthPlus插件。  
 详见:  
-[VapourSynth插件wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)
+[VapourSynth插件wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)  
 [AviSynthPlus插件wiki](https://github.com/TianZerL/Anime4KCPP/wiki/AviSynthPlus-plugin)
 
 # GUI
