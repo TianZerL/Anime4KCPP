@@ -107,8 +107,8 @@ public:
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
     void loadImage(cv::InputArray srcImage);
-    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL);
-    void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b);
+    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL, bool inputAsYUV = false);
+    void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV = false);
 
     void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V);
     void saveImage(const std::string& dstFile);
@@ -133,6 +133,7 @@ protected:
     double fps;
     double totalFrameCount;
     cv::Mat orgImg, dstImg;
+    bool inputYUV = false;
 
 protected://arguments
     int ps, pcc;

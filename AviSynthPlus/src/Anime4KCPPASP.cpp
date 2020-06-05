@@ -18,9 +18,10 @@ enum AC_Parameters
     AC_strengthColor = 3,
     AC_strengthGradient = 4,
     AC_zoomFactor = 5,
-    AC_GPUMode = 6,
-    AC_platformID = 7,
-    AC_deviceID = 8
+    AC_ACNet = 6,
+    AC_GPUMode = 7,
+    AC_platformID = 8,
+    AC_deviceID = 9
 };
 
 class Anime4KCPPF : public GenericVideoFilter
@@ -29,6 +30,7 @@ public:
     Anime4KCPPF(
         PClip _child,
         Anime4KCPP::Parameters& inputs,
+        bool CNN,
         bool GPUMode,
         unsigned int pID,
         unsigned int dID,
@@ -39,11 +41,13 @@ private:
     Anime4KCPP::Parameters parameters;
     Anime4KCPP::Anime4KCreator anime4KCreator;
     bool GPUMode;
+    bool CNN;
 };
 
 Anime4KCPPF::Anime4KCPPF(
     PClip _child,
     Anime4KCPP::Parameters& inputs,
+    bool CNN,
     bool GPUMode,
     unsigned int pID,
     unsigned int dID,
@@ -51,12 +55,18 @@ Anime4KCPPF::Anime4KCPPF(
 ) :
     GenericVideoFilter(_child),
     parameters(inputs),
-    anime4KCreator(GPUMode, pID, dID),
-    GPUMode(GPUMode)
+    anime4KCreator(GPUMode, CNN, pID, dID),
+    GPUMode(GPUMode),
+    CNN(CNN)
 {
-    if (!vi.IsRGB24())
+    if (!vi.IsRGB24() && !vi.IsYV24())
     {
-        env->ThrowError("Anime4KCPP: RGB24 data only!");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV444 data only!");
+    }
+
+    if (vi.IsYV24() && !CNN)
+    {
+        env->ThrowError("Anime4KCPP: YUV444 only for ACNet!");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -68,48 +78,138 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    int srcPitch = src->GetPitch();
-    int dstPitch = dst->GetPitch();
-
-    int srcH = src->GetHeight();
-    int srcL = src->GetRowSize();
-    int dstH = dst->GetHeight();
-    int dstL = dst->GetRowSize();
-
-    const unsigned char* srcp = src->GetReadPtr();
-    unsigned char* dstp = dst->GetWritePtr();
-
-    unsigned char* srcData = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
-
-    for (int y = 0; y < srcH; y++)
+    if (vi.IsYV24())
     {
-        memcpy(srcData + y * static_cast<size_t>(srcL), srcp, srcL);
-        srcp += srcPitch;
-    }
+        int srcPitch = src->GetPitch(PLANAR_Y);
+        int dstPitch = dst->GetPitch(PLANAR_Y);
 
-    Anime4KCPP::Anime4K* anime4K;
-    if (GPUMode)
-        anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+        int srcH = src->GetHeight(PLANAR_Y);
+        int srcL = src->GetRowSize(PLANAR_Y);
+        int dstH = dst->GetHeight(PLANAR_Y);
+        int dstL = dst->GetRowSize(PLANAR_Y);
+
+        const unsigned char* srcpY = src->GetReadPtr(PLANAR_Y);
+        const unsigned char* srcpU = src->GetReadPtr(PLANAR_U);
+        const unsigned char* srcpV = src->GetReadPtr(PLANAR_V);
+
+        unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
+        unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
+        unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
+
+        unsigned char* srcDataY = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+        unsigned char* srcDataU = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+        unsigned char* srcDataV = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+
+        for (int y = 0; y < srcH; y++)
+        {
+            memcpy(srcDataY + y * static_cast<size_t>(srcL), srcpY, srcL);
+            srcpY += srcPitch;
+        }
+        for (int y = 0; y < srcH; y++)
+        {
+            memcpy(srcDataU + y * static_cast<size_t>(srcL), srcpU, srcL);
+            srcpU += srcPitch;
+        }
+        for (int y = 0; y < srcH; y++)
+        {
+            memcpy(srcDataV + y * static_cast<size_t>(srcL), srcpV, srcL);
+            srcpV += srcPitch;
+        }
+
+        Anime4KCPP::Anime4K* anime4K;
+
+        if (GPUMode)
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        else
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+
+        anime4K->loadImage(srcH, srcL, srcDataY, srcDataU, srcDataV, true);
+        anime4K->process();
+
+        size_t dstSize = anime4K->getResultDataPerChannelLength();
+        unsigned char* dstDataY = new unsigned char[dstSize];
+        unsigned char* dstDataU = new unsigned char[dstSize];
+        unsigned char* dstDataV = new unsigned char[dstSize];
+        anime4K->saveImage(dstDataY, dstDataU, dstDataV);
+
+        for (int y = 0; y < dstH; y++)
+        {
+            memcpy(dstpY, dstDataY + y * static_cast<size_t>(dstL), dstL);
+            dstpY += dstPitch;
+        }
+        for (int y = 0; y < dstH; y++)
+        {
+            memcpy(dstpU, dstDataU + y * static_cast<size_t>(dstL), dstL);
+            dstpU += dstPitch;
+        }
+        for (int y = 0; y < dstH; y++)
+        {
+            memcpy(dstpV, dstDataV + y * static_cast<size_t>(dstL), dstL);
+            dstpV += dstPitch;
+        }
+
+        anime4KCreator.release(anime4K);
+        delete[] dstDataY;
+        delete[] dstDataU;
+        delete[] dstDataV;
+        delete[] srcDataY;
+        delete[] srcDataU;
+        delete[] srcDataV;
+
+        return dst;
+    }
     else
-        anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
-
-    anime4K->loadImage(srcH, srcL / 3, srcData);
-    anime4K->process();
-
-    unsigned char* dstData = new unsigned char[anime4K->getResultDataLength()];
-    anime4K->saveImage(dstData);
-
-    for (int y = 0; y < dstH; y++)
     {
-        memcpy(dstp, dstData + y * static_cast<size_t>(dstL), dstL);
-        dstp += dstPitch;
+        int srcPitch = src->GetPitch();
+        int dstPitch = dst->GetPitch();
+
+        int srcH = src->GetHeight();
+        int srcL = src->GetRowSize();
+        int dstH = dst->GetHeight();
+        int dstL = dst->GetRowSize();
+
+        const unsigned char* srcp = src->GetReadPtr();
+        unsigned char* dstp = dst->GetWritePtr();
+
+        unsigned char* srcData = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+
+        for (int y = 0; y < srcH; y++)
+        {
+            memcpy(srcData + y * static_cast<size_t>(srcL), srcp, srcL);
+            srcp += srcPitch;
+        }
+
+        Anime4KCPP::Anime4K* anime4K;
+        if (CNN)
+            if (GPUMode)
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            else
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+        else
+            if (GPUMode)
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+            else
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+
+        anime4K->loadImage(srcH, srcL / 3, srcData);
+        anime4K->process();
+
+        unsigned char* dstData = new unsigned char[anime4K->getResultDataLength()];
+        anime4K->saveImage(dstData);
+
+        for (int y = 0; y < dstH; y++)
+        {
+            memcpy(dstp, dstData + y * static_cast<size_t>(dstL), dstL);
+            dstp += dstPitch;
+        }
+
+        anime4KCreator.release(anime4K);
+        delete[] dstData;
+        delete[] srcData;
+
+        return dst;
     }
-
-    anime4KCreator.release(anime4K);
-    delete[] dstData;
-    delete[] srcData;
-
-    return dst;
+    
 }
 
 AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
@@ -123,6 +223,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         false, false, false, false, 4, 40
     );
 
+    bool CNN = args[AC_ACNet].AsBool();
     bool GPUMode = args[AC_GPUMode].AsBool();
     unsigned int pID = args[AC_platformID].AsInt();
     unsigned int dID = args[AC_deviceID].AsInt();
@@ -138,6 +239,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         inputs.strengthGradient = 1.0;
     if (!args[AC_zoomFactor].Defined())
         inputs.zoomFactor = 1.0;
+    if (!args[AC_ACNet].Defined())
+        CNN = false;
     if (!args[AC_GPUMode].Defined())
         GPUMode = false;
     if (!args[AC_platformID].Defined())
@@ -175,6 +278,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     return new Anime4KCPPF(
         args[0].AsClip(),
         inputs,
+        CNN,
         GPUMode,
         pID,
         dID,
@@ -201,6 +305,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[strengthColor]f"
         "[strengthGradient]f"
         "[zoomFactor]i"
+        "[ACNet]b"
         "[GPUMode]b"
         "[platformID]i"
         "[deviceID]i",

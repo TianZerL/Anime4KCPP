@@ -11,6 +11,7 @@ typedef struct {
     double strengthGradient;
     double zoomFactor;
     bool GPU;
+    bool CNN;
     unsigned int pID, dID;
     Anime4KCPP::Anime4KCreator* anime4KCreator;
 }Anime4KCPPData;
@@ -19,7 +20,7 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
 {
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
     if (data->GPU)
-        data->anime4KCreator = new Anime4KCPP::Anime4KCreator(true, data->pID, data->dID);
+        data->anime4KCreator = new Anime4KCPP::Anime4KCreator(true, data->CNN, data->pID, data->dID);
     else
         data->anime4KCreator = new Anime4KCPP::Anime4KCreator(false);
     vsapi->setVideoInfo(&data->vi, 1, node);
@@ -60,14 +61,72 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
             data->zoomFactor
         );
 
-        if (data->GPU)
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPU);
+        if (data->CNN)
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            else
+                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPU);
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPU);
+            else
+                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPU);
         
         anime4K->loadImage(h, srcSrtide, srcR, srcG, srcB);
         anime4K->process();
         anime4K->saveImage(dstR, dstG, dstB);
+
+        data->anime4KCreator->release(anime4K);
+        vsapi->freeFrame(src);
+
+        return dst;
+    }
+    return nullptr;
+}
+
+static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+{
+    Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
+
+    if (activationReason == arInitial)
+        vsapi->requestFrameFilter(n, data->node, frameCtx);
+    else if (activationReason == arAllFramesReady)
+    {
+        const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
+
+        int h = vsapi->getFrameHeight(src, 0);
+        int w = vsapi->getFrameWidth(src, 0);
+
+        VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
+
+        int srcSrtide = vsapi->getStride(src, 0);
+
+        unsigned char* srcY = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
+        unsigned char* srcU = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
+        unsigned char* srcV = const_cast<unsigned char*>(vsapi->getReadPtr(src, 2));
+
+        unsigned char* dstY = vsapi->getWritePtr(dst, 0);
+        unsigned char* dstU = vsapi->getWritePtr(dst, 1);
+        unsigned char* dstV = vsapi->getWritePtr(dst, 2);
+
+        Anime4KCPP::Anime4K* anime4K;
+
+        Anime4KCPP::Parameters parameters(
+            data->passes,
+            data->pushColorCount,
+            data->strengthColor,
+            data->strengthGradient,
+            data->zoomFactor
+        );
+
+        if (data->GPU)
+            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        else
+            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+
+        anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
+        anime4K->process();
+        anime4K->saveImage(dstY, dstU, dstV);
 
         data->anime4KCreator->release(anime4K);
         vsapi->freeFrame(src);
@@ -93,9 +152,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.node = vsapi->propGetNode(in, "src", 0, 0);
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
 
-    if (!isConstantFormat(&tmpData.vi) || tmpData.vi.format->id != pfRGB24)
+    if (!isConstantFormat(&tmpData.vi) || (tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->id != pfYUV444P8))
     {
-        vsapi->setError(out, "Anime4KCPP: only RGB24 supported");
+        vsapi->setError(out, "Anime4KCPP: only RGB24 or YUV444P8 supported");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -134,6 +193,17 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     else if (tmpData.zoomFactor < 1.0)
     {
         vsapi->setError(out, "Anime4KCPP: zoomFactor must be an integer which >= 1");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
+
+    tmpData.CNN = vsapi->propGetInt(in, "ACNet", 0, &err);
+    if (err)
+        tmpData.CNN = false;
+
+    if (tmpData.vi.format->colorFamily == cmYUV && tmpData.CNN == false)
+    {
+        vsapi->setError(out, "Anime4KCPP: YUV444P8 only for ACNet");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -200,7 +270,10 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     Anime4KCPPData* data = new Anime4KCPPData;
     *data = tmpData;
 
-    vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame, Anime4KCPPFree, fmParallel, 0, data, core);
+    if(tmpData.vi.format->colorFamily == cmYUV)
+        vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV, Anime4KCPPFree, fmParallel, 0, data, core);
+    else
+        vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame, Anime4KCPPFree, fmParallel, 0, data, core);
 }
 
 static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
@@ -218,6 +291,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "strengthColor:float:opt;"
         "strengthGradient:float:opt;"
         "zoomFactor:int:opt;"
+        "ACNet:int:opt;"
         "GPUMode:int:opt;"
         "platformID:int:opt;"
         "deviceID:int:opt",

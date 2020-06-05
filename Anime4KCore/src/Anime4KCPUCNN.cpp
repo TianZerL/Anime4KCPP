@@ -6,36 +6,68 @@ Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
 void Anime4KCPP::Anime4KCPUCNN::process()
 {
     double tmpZf = log2(zf);
+    if (tmpZf < 0.0001)
+        tmpZf = 1.0- 0.0002;
     int tmpZfUp = ceil(tmpZf);
     if (!vm)
     {
-        cv::Mat tmpImg = orgImg;
-        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
-        for (int i = 0; i < tmpZfUp; i++)
+        if (!inputYUV)
         {
-            std::pair<cv::Mat, cv::Mat> tmpMats;
-            conv1To8(tmpImg, kernelsL1, biasesL1, tmpMats);
-            conv8To8(kernelsL2, biasesL2, tmpMats);
-            conv8To8(kernelsL3, biasesL3, tmpMats);
-            conv8To8(kernelsL4, biasesL4, tmpMats);
-            conv8To8(kernelsL5, biasesL5, tmpMats);
-            conv8To8(kernelsL6, biasesL6, tmpMats);
-            conv8To8(kernelsL7, biasesL7, tmpMats);
-            conv8To8(kernelsL8, biasesL8, tmpMats);
-            conv8To8(kernelsL9, biasesL9, tmpMats);
-            convTranspose8To1(dstImg, kernelsL10, tmpMats);
+            cv::Mat tmpImg = orgImg;
+            cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+            for (int i = 0; i < tmpZfUp; i++)
+            {
+                std::pair<cv::Mat, cv::Mat> tmpMats;
+                conv1To8(tmpImg, kernelsL1, biasesL1, tmpMats);
+                conv8To8(kernelsL2, biasesL2, tmpMats);
+                conv8To8(kernelsL3, biasesL3, tmpMats);
+                conv8To8(kernelsL4, biasesL4, tmpMats);
+                conv8To8(kernelsL5, biasesL5, tmpMats);
+                conv8To8(kernelsL6, biasesL6, tmpMats);
+                conv8To8(kernelsL7, biasesL7, tmpMats);
+                conv8To8(kernelsL8, biasesL8, tmpMats);
+                conv8To8(kernelsL9, biasesL9, tmpMats);
+                convTranspose8To1(dstImg, kernelsL10, tmpMats);
 
-            std::vector<cv::Mat> yuv(3);
-            cv::split(tmpImg, yuv);
-            cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-            cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-            cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
-            tmpImg = dstImg;
+                std::vector<cv::Mat> yuv(3);
+                cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::split(tmpImg, yuv);
+                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                tmpImg = dstImg;
+            }
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+            if (tmpZfUp - tmpZf > 0.00001)
+            {
+                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+            }
         }
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
-        if (tmpZfUp - tmpZf > 0.00001)
+        else
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+            cv::Mat tmpImg = orgImg;
+            for (int i = 0; i < tmpZfUp; i++)
+            {
+                std::pair<cv::Mat, cv::Mat> tmpMats;
+                conv1To8(tmpImg, kernelsL1, biasesL1, tmpMats);
+                conv8To8(kernelsL2, biasesL2, tmpMats);
+                conv8To8(kernelsL3, biasesL3, tmpMats);
+                conv8To8(kernelsL4, biasesL4, tmpMats);
+                conv8To8(kernelsL5, biasesL5, tmpMats);
+                conv8To8(kernelsL6, biasesL6, tmpMats);
+                conv8To8(kernelsL7, biasesL7, tmpMats);
+                conv8To8(kernelsL8, biasesL8, tmpMats);
+                conv8To8(kernelsL9, biasesL9, tmpMats);
+                convTranspose8To1(dstImg, kernelsL10, tmpMats);
+
+                std::vector<cv::Mat> yuv(3);
+                cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::split(tmpImg, yuv);
+                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                tmpImg = dstImg;
+            }
+            if (tmpZfUp - tmpZf > 0.00001)
+            {
+                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+            }
         }
     }
     else
@@ -64,9 +96,8 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     convTranspose8To1(dstFrame, kernelsL10, tmpMats);
 
                     std::vector<cv::Mat> yuv(3);
+                    cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::split(tmpFrame, yuv);
-                    cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
                     tmpFrame = dstFrame;
                 }
