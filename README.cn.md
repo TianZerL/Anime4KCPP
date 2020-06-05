@@ -2,12 +2,15 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # 关于Anime4KCPP
-Anime4KCPP是Anime4K的C++实现，它基于[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，并对其进行优化以提供更佳的图像质量。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
+Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法**ACNet**。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
 
 **注意: 使用CPU处理已经足够快，足以处理普通图像，其性能大约是[Go语言实现](https://github.com/TianZerL/Anime4KGo)的12倍，[Python实现](https://github.com/TianZerL/Anime4KPython)的1300倍。若使用GPU加速，一般情况下速度是CPU的10倍以上（取决于您的显卡），因此GPU加速很适合用于处理视频，尝试Anime4KCPP以获得更好的质量和高性能。**  
 
 # 关于Anime4K算法
 Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，它并不使用机器学习，因此速度非常快，可用于实时处理和预处理。    
+
+# 关于ACNet
+ACNet是一个基于卷积神经网络的超分辨率算法，旨在同时提供高质量和高性能。   
 
 # 为什么选择Anime4KCPP
 - 跨平台支持，已在Windows，Linux和macOS (感谢[NightMachinary](https://github.com/NightMachinary))上通过编译测试。
@@ -15,6 +18,7 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 - 提供易于使用的GUI和CLI程序。
 - 支持Android
 - 支持VapourSynth插件
+- 支持AviSynthPlus插件
 - 高性能。
 - 低内存占用，在处理1080P视频时通常情况下也不会超过1G。
 - 支持GPU加速，在短时间内处理图像和视频。
@@ -22,6 +26,7 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 - 滤镜支持，利用它们进行抗锯齿和降噪。  
 
 # 效果
+**该示例已过时**
 ![examples](images/examples.png)  
 
 # GPU加速
