@@ -25,7 +25,8 @@ This project is for learning and the exploration task of algorithm course in SWJ
 Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
 
 # About ACNet
-ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.
+ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.  
+for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 
 # Why Anime4KCPP
 - Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).

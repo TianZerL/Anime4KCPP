@@ -11,6 +11,7 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 
 # 关于ACNet
 ACNet是一个基于卷积神经网络的超分辨率算法，旨在同时提供高质量和高性能。   
+详情可见[wiki页面](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 
 # 为什么选择Anime4KCPP
 - 跨平台支持，已在Windows，Linux和macOS (感谢[NightMachinary](https://github.com/NightMachinary))上通过编译测试。
