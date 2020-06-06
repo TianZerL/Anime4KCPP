@@ -2,11 +2,11 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # 关于Anime4KCPP
-Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法**ACNet**。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
+Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法[**ACNet**](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
 
 **注意: 使用CPU处理已经足够快，足以处理普通图像，其性能大约是[Go语言实现](https://github.com/TianZerL/Anime4KGo)的12倍，[Python实现](https://github.com/TianZerL/Anime4KPython)的1300倍。若使用GPU加速，一般情况下速度是CPU的10倍以上（取决于您的显卡），因此GPU加速很适合用于处理视频，尝试Anime4KCPP以获得更好的质量和高性能。**  
 
-# 关于Anime4K算法
+# 关于Anime4K09算法
 Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，它并不使用机器学习，因此速度非常快，可用于实时处理和预处理。    
 
 # 关于ACNet
