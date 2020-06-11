@@ -112,7 +112,8 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
         jboolean preprocessing,
         jboolean postprocessing,
         jbyte preFilters,
-        jbyte postFilters) {
+        jbyte postFilters,
+        jboolean HDN) {
 
     return (jlong)(new Anime4KCPP::Anime4KCPUCNN(
             Anime4KCPP::Parameters(
@@ -126,7 +127,9 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
                     preprocessing,
                     postprocessing,
                     preFilters,
-                    postFilters
+                    postFilters,
+                    std::thread::hardware_concurrency(),
+                    HDN
             ))
     );
 }
@@ -152,7 +155,8 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
         jboolean preprocessing,
         jboolean postprocessing,
         jbyte preFilters,
-        jbyte postFilters) {
+        jbyte postFilters,
+        jboolean HDN) {
 
     return (jlong)(new Anime4KCPP::Anime4KGPUCNN(
             Anime4KCPP::Parameters(
@@ -166,7 +170,9 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
                     preprocessing,
                     postprocessing,
                     preFilters,
-                    postFilters
+                    postFilters,
+                    std::thread::hardware_concurrency(),
+                    HDN
             ))
     );
 }

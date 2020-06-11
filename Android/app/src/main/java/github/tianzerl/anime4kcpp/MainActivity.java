@@ -328,6 +328,7 @@ public class MainActivity extends AppCompatActivity {
         boolean postprocessing = false;
         byte preFilters=0;
         byte postFilters=0;
+        boolean HDN = getSwitchSate(R.id.switchHDN);
 
         RadioGroup settingsGroup = findViewById(R.id.radioGroupSettings);
         switch (settingsGroup.getCheckedRadioButtonId()) {
@@ -400,7 +401,8 @@ public class MainActivity extends AppCompatActivity {
             preprocessing,
             postprocessing,
             preFilters,
-            postFilters
+            postFilters,
+            HDN
         );
 
         if (getSwitchSate(R.id.switchACNet))

@@ -144,6 +144,13 @@
                 android:text="@string/acnet" />
 
             <Switch
+                android:id="@+id/switchHDN"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/hdn" />
+
+            <Switch
                 android:id="@+id/switchACNetGPUMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
