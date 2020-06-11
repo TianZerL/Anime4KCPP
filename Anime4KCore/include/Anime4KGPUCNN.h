@@ -1,6 +1,7 @@
 #pragma once
 
 #include"Anime4K.h"
+#include"CNNProcessor.h"
 #include"filterprocessor.h"
 
 #include<fstream>
@@ -22,12 +23,13 @@ public:
     Anime4KGPUCNN(const Parameters& parameters = Parameters());
     virtual ~Anime4KGPUCNN() = default;
     virtual void process() override;
-    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
+    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     static void releaseGPU();
     static bool isInitializedGPU();
 private:
-    void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
-    static void initOpenCL();
+    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg);
+    void runKernelACNetHDN(cv::InputArray orgImg, cv::OutputArray dstImg);
+    static void initOpenCL(const CNNType type);
     static void releaseOpenCL();
     static std::string readKernel(const std::string& fileName);
 private:
@@ -35,7 +37,8 @@ private:
 
     static cl_context context;
     static cl_command_queue commandQueue;
-    static cl_program program;
+    static cl_program programACNet;
+    static cl_program programACNetHDN;
     static cl_device_id device;
 
     static unsigned int pID;
@@ -43,6 +46,7 @@ private:
 
 #ifdef BUILT_IN_KERNEL
     static const std::string ACNetKernelSourceString;
+    static const std::string ACNetHDNKernelSourceString;
 #endif // BUILT_IN_KERNEL
 
 };

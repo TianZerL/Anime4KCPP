@@ -71,6 +71,7 @@ struct Anime4KCPP::Parameters
     uint8_t preFilters;
     uint8_t postFilters;
     unsigned int maxThreads;
+    bool HDN;
 
     void reset();
 
@@ -86,7 +87,8 @@ struct Anime4KCPP::Parameters
         bool postprocessing = false,
         uint8_t preFilters = 4,
         uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency()
+        unsigned int maxThreads = std::thread::hardware_concurrency(),
+        bool HDN = false
     );
 };
 
@@ -138,8 +140,7 @@ protected:
 protected://arguments
     int ps, pcc;
     float sc, sg, zf;
-    bool fm, vm, pre, post;
+    bool fm, vm, pre, post, HDN;
     uint8_t pref, postf;
     unsigned int mt;
 };
-

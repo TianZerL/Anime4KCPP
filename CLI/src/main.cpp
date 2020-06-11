@@ -87,6 +87,7 @@ so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also 
 false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
     opt.add("CNNMode", 'w', "Enable ACNet");
+    opt.add("HDN", 'H', "Enable HDN mode for ACNet");
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
@@ -113,6 +114,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     bool postProcessing = opt.exist("postprocessing");
     bool GPU = opt.exist("GPUMode");
     bool CNN = opt.exist("CNNMode");
+    bool HDN = opt.exist("HDN");
     bool listGPUs = opt.exist("listGPUs");
     unsigned int pID = opt.get<unsigned int>("platformID");
     unsigned int dID = opt.get<unsigned int>("deviceID");
@@ -140,8 +142,12 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;
     }
-
-    Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID);
+    Anime4KCPP::CNNType type;
+    if (HDN)
+        type = Anime4KCPP::CNNType::ACNetHDN;
+    else
+        type = Anime4KCPP::CNNType::ACNet;
+    Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID, type);
     Anime4KCPP::Anime4K* anime4k = nullptr;
     Anime4KCPP::Parameters parameters(
         passes,
@@ -155,7 +161,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         postProcessing,
         preFilters,
         postFilters,
-        threads
+        threads,
+        HDN
     );
 
     try

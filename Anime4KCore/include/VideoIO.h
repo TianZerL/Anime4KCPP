@@ -49,4 +49,3 @@ private:
     std::mutex mtxWrite;
     std::condition_variable cndWrite;
 };
-

@@ -12,6 +12,7 @@ typedef struct {
     double zoomFactor;
     bool GPU;
     bool CNN;
+    bool HDN;
     unsigned int pID, dID;
     Anime4KCPP::Anime4KCreator* anime4KCreator;
 }Anime4KCPPData;
@@ -58,7 +59,9 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
             data->pushColorCount,
             data->strengthColor,
             data->strengthGradient,
-            data->zoomFactor
+            data->zoomFactor,
+            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
+            data->HDN
         );
 
         if (data->CNN)
@@ -116,7 +119,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
             data->pushColorCount,
             data->strengthColor,
             data->strengthGradient,
-            data->zoomFactor
+            data->zoomFactor,
+            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
+            data->HDN
         );
 
         if (data->GPU)
@@ -208,6 +213,10 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         return;
     }
 
+    tmpData.HDN = vsapi->propGetInt(in, "HDN", 0, &err);
+    if (err)
+        tmpData.HDN = false;
+
     tmpData.GPU = vsapi->propGetInt(in, "GPUMode", 0, &err);
     if (err)
         tmpData.GPU = false;
@@ -293,6 +302,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "zoomFactor:int:opt;"
         "ACNet:int:opt;"
         "GPUMode:int:opt;"
+        "HDN:int:opt;"
         "platformID:int:opt;"
         "deviceID:int:opt",
         Anime4KCPPCreate, nullptr, plugin);

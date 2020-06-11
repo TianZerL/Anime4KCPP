@@ -8,10 +8,10 @@ Anime4KCPP::Anime4KCreator::Anime4KCreator(bool initGPU, unsigned int platformID
         Anime4KGPU::initGPU(platformID, deviceID);
 }
 
-Anime4KCPP::Anime4KCreator::Anime4KCreator(bool initGPU, bool initCNN, unsigned int platformID, unsigned int deviceID)
+Anime4KCPP::Anime4KCreator::Anime4KCreator(bool initGPU, bool initCNN, unsigned int platformID, unsigned int deviceID, const CNNType type)
 {
     if (initGPU && initCNN && !Anime4KGPUCNN::isInitializedGPU())
-        Anime4KGPUCNN::initGPU(platformID, deviceID);
+        Anime4KGPUCNN::initGPU(platformID, deviceID, type);
     else if (initGPU && !Anime4KGPU::isInitializedGPU())
         Anime4KGPU::initGPU(platformID, deviceID);
 }

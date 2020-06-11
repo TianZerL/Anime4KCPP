@@ -20,8 +20,9 @@ enum AC_Parameters
     AC_zoomFactor = 5,
     AC_ACNet = 6,
     AC_GPUMode = 7,
-    AC_platformID = 8,
-    AC_deviceID = 9
+    AC_HDN = 8,
+    AC_platformID = 9,
+    AC_deviceID = 10
 };
 
 class Anime4KCPPF : public GenericVideoFilter
@@ -220,7 +221,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         args[AC_strengthColor].AsFloatf(),
         args[AC_strengthGradient].AsFloatf(),
         args[AC_zoomFactor].AsInt(),
-        false, false, false, false, 4, 40
+        false, false, false, false, 4, 40,std::thread::hardware_concurrency(),
+        args[AC_HDN].AsBool()
     );
 
     bool CNN = args[AC_ACNet].AsBool();
@@ -307,6 +309,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[zoomFactor]i"
         "[ACNet]b"
         "[GPUMode]b"
+        "[HDN]b"
         "[platformID]i"
         "[deviceID]i",
         createAnime4KCPP, 0);

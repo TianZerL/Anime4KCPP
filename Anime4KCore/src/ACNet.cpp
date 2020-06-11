@@ -1,8 +1,21 @@
-#define RELU(x) fmax(x, 0.0f)
+#include "ACNet.h"
 
-__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+void Anime4KCPP::ACNet::process(const cv::Mat& src, cv::Mat& dst)
+{
+    std::pair<cv::Mat, cv::Mat> tmpMats;
+    conv1To8(src, kernelsL1, biasL1, tmpMats);
+    conv8To8(kernels[L2], biases[L2], tmpMats);
+    conv8To8(kernels[L3], biases[L3], tmpMats);
+    conv8To8(kernels[L4], biases[L4], tmpMats);
+    conv8To8(kernels[L5], biases[L5], tmpMats);
+    conv8To8(kernels[L6], biases[L6], tmpMats);
+    conv8To8(kernels[L7], biases[L7], tmpMats);
+    conv8To8(kernels[L8], biases[L8], tmpMats);
+    conv8To8(kernels[L9], biases[L9], tmpMats);
+    convTranspose8To1(dst, kernelsL10, tmpMats);
+}
 
-__constant float kernelsL1[9 * 8] = 
+const double Anime4KCPP::ACNet::kernelsL1[9 * 8] =
 {
  9.1525e-02,  1.2987e-01, -1.2165e-02,
 -1.2689e-01,  7.3165e-01,  2.0307e-01,
@@ -30,12 +43,7 @@ __constant float kernelsL1[9 * 8] =
  5.8978e-03,  9.8026e-04, -5.2215e-03
 };
 
-__constant float biasL1[8] = 
-{
--0.7444, -0.0235,  0.0270, -0.0205,  0.0126,  0.0243,  0.0165, -0.0089
-};
-
-__constant float kernelsL[8][9 * 8 * 8] = 
+const double Anime4KCPP::ACNet::kernels[8][9 * 8 * 8] =
 {
 {
  1.6309e-01,  3.4023e-02, -1.0644e-01,
@@ -1598,7 +1606,32 @@ __constant float kernelsL[8][9 * 8 * 8] =
 }
 };
 
-__constant float biasL[8][8] = 
+const double Anime4KCPP::ACNet::kernelsL10[4 * 8] =
+{
+ 0.3253, -0.0568,
+-0.0937, -0.1085,
+-0.0353, -0.2741,
+ 0.2962,  0.0285,
+-0.2525,  0.0696,
+-0.0008,  0.1982,
+ 0.3133,  0.2833,
+ 0.2296,  0.2678,
+ 0.2860,  0.0194,
+ 0.1992, -0.5335,
+-0.2106,  0.0542,
+-0.0026,  0.2344,
+ 0.1775,  0.1331,
+-0.4549,  0.1348,
+-0.0953,  0.2378,
+ 0.0623, -0.1812
+};
+
+const double Anime4KCPP::ACNet::biasL1[8] =
+{
+    -0.7444, -0.0235,  0.0270, -0.0205,  0.0126,  0.0243,  0.0165, -0.0089
+};
+
+const double Anime4KCPP::ACNet::biases[8][8] =
 {
 {
  0.0176, -0.5805, -0.0049, -0.0190, -0.0026, -0.0424, -0.0053, -0.0270
@@ -1632,478 +1665,3 @@ __constant float biasL[8][8] =
 -0.0005,  0.0140,  0.0099,  0.1028, -0.0012, -0.0006, -0.0009,  0.0090
 }
 };
-
-__constant float kernelsL10[4 * 8] = 
-{
- 0.3253, -0.0568,
--0.0937, -0.1085,
--0.0353, -0.2741,
- 0.2962,  0.0285,
--0.2525,  0.0696,
--0.0008,  0.1982,
- 0.3133,  0.2833,
- 0.2296,  0.2678,
- 0.2860,  0.0194,
- 0.1992, -0.5335,
--0.2106,  0.0542,
--0.0026,  0.2344,
- 0.1775,  0.1331,
--0.4549,  0.1348,
--0.0953,  0.2378,
- 0.0623, -0.1812
-};
-
-
-__kernel void conv1To8(
-    __read_only image2d_t srcImg, 
-    __write_only image2d_t tmpImgOut1, 
-    __write_only image2d_t tmpImgOut2)
-{
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(srcImg) || y >= get_image_height(srcImg))
-        return;
-
-    int2 coord = (int2)(x, y);
-
-    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
-    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
-    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
-    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
-    float4 mc = read_imagef(srcImg, samplerN, coord);
-    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
-    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
-    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
-    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
-
-    float4 c1234 = RELU((float4)(
-        tl.x * kernelsL1[0*9+0] + tc.x * kernelsL1[0*9+1] + tr.x * kernelsL1[0*9+2] +
-        ml.x * kernelsL1[0*9+3] + mc.x * kernelsL1[0*9+4] + mr.x * kernelsL1[0*9+5] +
-        bl.x * kernelsL1[0*9+6] + bc.x * kernelsL1[0*9+7] + br.x * kernelsL1[0*9+8] + biasL1[0],
-
-        tl.x * kernelsL1[1*9+0] + tc.x * kernelsL1[1*9+1] + tr.x * kernelsL1[1*9+2] +
-        ml.x * kernelsL1[1*9+3] + mc.x * kernelsL1[1*9+4] + mr.x * kernelsL1[1*9+5] +
-        bl.x * kernelsL1[1*9+6] + bc.x * kernelsL1[1*9+7] + br.x * kernelsL1[1*9+8] + biasL1[1],
-
-        tl.x * kernelsL1[2*9+0] + tc.x * kernelsL1[2*9+1] + tr.x * kernelsL1[2*9+2] +
-        ml.x * kernelsL1[2*9+3] + mc.x * kernelsL1[2*9+4] + mr.x * kernelsL1[2*9+5] +
-        bl.x * kernelsL1[2*9+6] + bc.x * kernelsL1[2*9+7] + br.x * kernelsL1[2*9+8] + biasL1[2],
-
-        tl.x * kernelsL1[3*9+0] + tc.x * kernelsL1[3*9+1] + tr.x * kernelsL1[3*9+2] +
-        ml.x * kernelsL1[3*9+3] + mc.x * kernelsL1[3*9+4] + mr.x * kernelsL1[3*9+5] +
-        bl.x * kernelsL1[3*9+6] + bc.x * kernelsL1[3*9+7] + br.x * kernelsL1[3*9+8] + biasL1[3]
-    ));
-    float4 c5678 = RELU((float4)(
-        tl.x * kernelsL1[4*9+0] + tc.x * kernelsL1[4*9+1] + tr.x * kernelsL1[4*9+2] +
-        ml.x * kernelsL1[4*9+3] + mc.x * kernelsL1[4*9+4] + mr.x * kernelsL1[4*9+5] +
-        bl.x * kernelsL1[4*9+6] + bc.x * kernelsL1[4*9+7] + br.x * kernelsL1[4*9+8] + biasL1[4],
-
-        tl.x * kernelsL1[5*9+0] + tc.x * kernelsL1[5*9+1] + tr.x * kernelsL1[5*9+2] +
-        ml.x * kernelsL1[5*9+3] + mc.x * kernelsL1[5*9+4] + mr.x * kernelsL1[5*9+5] +
-        bl.x * kernelsL1[5*9+6] + bc.x * kernelsL1[5*9+7] + br.x * kernelsL1[5*9+8] + biasL1[5],
-
-        tl.x * kernelsL1[6*9+0] + tc.x * kernelsL1[6*9+1] + tr.x * kernelsL1[6*9+2] +
-        ml.x * kernelsL1[6*9+3] + mc.x * kernelsL1[6*9+4] + mr.x * kernelsL1[6*9+5] +
-        bl.x * kernelsL1[6*9+6] + bc.x * kernelsL1[6*9+7] + br.x * kernelsL1[6*9+8] + biasL1[6],
-
-        tl.x * kernelsL1[7*9+0] + tc.x * kernelsL1[7*9+1] + tr.x * kernelsL1[7*9+2] +
-        ml.x * kernelsL1[7*9+3] + mc.x * kernelsL1[7*9+4] + mr.x * kernelsL1[7*9+5] +
-        bl.x * kernelsL1[7*9+6] + bc.x * kernelsL1[7*9+7] + br.x * kernelsL1[7*9+8] + biasL1[7]
-    ));
-
-    write_imagef(tmpImgOut1, coord, c1234);
-    write_imagef(tmpImgOut2, coord, c5678);
-}
-
-__kernel void conv8To8(
-    __read_only image2d_t tmpImgIn1,
-    __read_only image2d_t tmpImgIn2, 
-    __write_only image2d_t tmpImgOut1, 
-    __write_only image2d_t tmpImgOut2,
-    int l)
-{
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(tmpImgIn1) || y >= get_image_height(tmpImgIn1))
-        return;
-
-    int2 coord = (int2)(x, y);
-
-    float4 tl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y-1));
-    float4 tc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y-1));
-    float4 tr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y-1));
-    float4 ml1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y));
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, coord);
-    float4 mr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y));
-    float4 bl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y+1));
-    float4 bc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y+1));
-    float4 br1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y+1));
-
-    float4 tl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y-1));
-    float4 tc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y-1));
-    float4 tr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y-1));
-    float4 ml2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, coord);
-    float4 mr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y));
-    float4 bl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y+1));
-    float4 bc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y+1));
-    float4 br2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y+1));
-    
-    float4 c1234 = RELU((float4)(
-        tl1.x * kernelsL[l][0*72+0*9+0] + tc1.x * kernelsL[l][0*72+0*9+1] + tr1.x * kernelsL[l][0*72+0*9+2] +
-        ml1.x * kernelsL[l][0*72+0*9+3] + mc1.x * kernelsL[l][0*72+0*9+4] + mr1.x * kernelsL[l][0*72+0*9+5] +
-        bl1.x * kernelsL[l][0*72+0*9+6] + bc1.x * kernelsL[l][0*72+0*9+7] + br1.x * kernelsL[l][0*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][0*72+1*9+0] + tc1.y * kernelsL[l][0*72+1*9+1] + tr1.y * kernelsL[l][0*72+1*9+2] +
-        ml1.y * kernelsL[l][0*72+1*9+3] + mc1.y * kernelsL[l][0*72+1*9+4] + mr1.y * kernelsL[l][0*72+1*9+5] +
-        bl1.y * kernelsL[l][0*72+1*9+6] + bc1.y * kernelsL[l][0*72+1*9+7] + br1.y * kernelsL[l][0*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][0*72+2*9+0] + tc1.z * kernelsL[l][0*72+2*9+1] + tr1.z * kernelsL[l][0*72+2*9+2] +
-        ml1.z * kernelsL[l][0*72+2*9+3] + mc1.z * kernelsL[l][0*72+2*9+4] + mr1.z * kernelsL[l][0*72+2*9+5] +
-        bl1.z * kernelsL[l][0*72+2*9+6] + bc1.z * kernelsL[l][0*72+2*9+7] + br1.z * kernelsL[l][0*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][0*72+3*9+0] + tc1.w * kernelsL[l][0*72+3*9+1] + tr1.w * kernelsL[l][0*72+3*9+2] +
-        ml1.w * kernelsL[l][0*72+3*9+3] + mc1.w * kernelsL[l][0*72+3*9+4] + mr1.w * kernelsL[l][0*72+3*9+5] +
-        bl1.w * kernelsL[l][0*72+3*9+6] + bc1.w * kernelsL[l][0*72+3*9+7] + br1.w * kernelsL[l][0*72+3*9+8] +
-
-        tl2.x * kernelsL[l][0*72+4*9+0] + tc2.x * kernelsL[l][0*72+4*9+1] + tr2.x * kernelsL[l][0*72+4*9+2] +
-        ml2.x * kernelsL[l][0*72+4*9+3] + mc2.x * kernelsL[l][0*72+4*9+4] + mr2.x * kernelsL[l][0*72+4*9+5] +
-        bl2.x * kernelsL[l][0*72+4*9+6] + bc2.x * kernelsL[l][0*72+4*9+7] + br2.x * kernelsL[l][0*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][0*72+5*9+0] + tc2.y * kernelsL[l][0*72+5*9+1] + tr2.y * kernelsL[l][0*72+5*9+2] +
-        ml2.y * kernelsL[l][0*72+5*9+3] + mc2.y * kernelsL[l][0*72+5*9+4] + mr2.y * kernelsL[l][0*72+5*9+5] +
-        bl2.y * kernelsL[l][0*72+5*9+6] + bc2.y * kernelsL[l][0*72+5*9+7] + br2.y * kernelsL[l][0*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][0*72+6*9+0] + tc2.z * kernelsL[l][0*72+6*9+1] + tr2.z * kernelsL[l][0*72+6*9+2] +
-        ml2.z * kernelsL[l][0*72+6*9+3] + mc2.z * kernelsL[l][0*72+6*9+4] + mr2.z * kernelsL[l][0*72+6*9+5] +
-        bl2.z * kernelsL[l][0*72+6*9+6] + bc2.z * kernelsL[l][0*72+6*9+7] + br2.z * kernelsL[l][0*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][0*72+7*9+0] + tc2.w * kernelsL[l][0*72+7*9+1] + tr2.w * kernelsL[l][0*72+7*9+2] +
-        ml2.w * kernelsL[l][0*72+7*9+3] + mc2.w * kernelsL[l][0*72+7*9+4] + mr2.w * kernelsL[l][0*72+7*9+5] +
-        bl2.w * kernelsL[l][0*72+7*9+6] + bc2.w * kernelsL[l][0*72+7*9+7] + br2.w * kernelsL[l][0*72+7*9+8] + biasL[l][0]
-        ,
-        tl1.x * kernelsL[l][1*72+0*9+0] + tc1.x * kernelsL[l][1*72+0*9+1] + tr1.x * kernelsL[l][1*72+0*9+2] +
-        ml1.x * kernelsL[l][1*72+0*9+3] + mc1.x * kernelsL[l][1*72+0*9+4] + mr1.x * kernelsL[l][1*72+0*9+5] +
-        bl1.x * kernelsL[l][1*72+0*9+6] + bc1.x * kernelsL[l][1*72+0*9+7] + br1.x * kernelsL[l][1*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][1*72+1*9+0] + tc1.y * kernelsL[l][1*72+1*9+1] + tr1.y * kernelsL[l][1*72+1*9+2] +
-        ml1.y * kernelsL[l][1*72+1*9+3] + mc1.y * kernelsL[l][1*72+1*9+4] + mr1.y * kernelsL[l][1*72+1*9+5] +
-        bl1.y * kernelsL[l][1*72+1*9+6] + bc1.y * kernelsL[l][1*72+1*9+7] + br1.y * kernelsL[l][1*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][1*72+2*9+0] + tc1.z * kernelsL[l][1*72+2*9+1] + tr1.z * kernelsL[l][1*72+2*9+2] +
-        ml1.z * kernelsL[l][1*72+2*9+3] + mc1.z * kernelsL[l][1*72+2*9+4] + mr1.z * kernelsL[l][1*72+2*9+5] +
-        bl1.z * kernelsL[l][1*72+2*9+6] + bc1.z * kernelsL[l][1*72+2*9+7] + br1.z * kernelsL[l][1*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][1*72+3*9+0] + tc1.w * kernelsL[l][1*72+3*9+1] + tr1.w * kernelsL[l][1*72+3*9+2] +
-        ml1.w * kernelsL[l][1*72+3*9+3] + mc1.w * kernelsL[l][1*72+3*9+4] + mr1.w * kernelsL[l][1*72+3*9+5] +
-        bl1.w * kernelsL[l][1*72+3*9+6] + bc1.w * kernelsL[l][1*72+3*9+7] + br1.w * kernelsL[l][1*72+3*9+8] +
-
-        tl2.x * kernelsL[l][1*72+4*9+0] + tc2.x * kernelsL[l][1*72+4*9+1] + tr2.x * kernelsL[l][1*72+4*9+2] +
-        ml2.x * kernelsL[l][1*72+4*9+3] + mc2.x * kernelsL[l][1*72+4*9+4] + mr2.x * kernelsL[l][1*72+4*9+5] +
-        bl2.x * kernelsL[l][1*72+4*9+6] + bc2.x * kernelsL[l][1*72+4*9+7] + br2.x * kernelsL[l][1*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][1*72+5*9+0] + tc2.y * kernelsL[l][1*72+5*9+1] + tr2.y * kernelsL[l][1*72+5*9+2] +
-        ml2.y * kernelsL[l][1*72+5*9+3] + mc2.y * kernelsL[l][1*72+5*9+4] + mr2.y * kernelsL[l][1*72+5*9+5] +
-        bl2.y * kernelsL[l][1*72+5*9+6] + bc2.y * kernelsL[l][1*72+5*9+7] + br2.y * kernelsL[l][1*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][1*72+6*9+0] + tc2.z * kernelsL[l][1*72+6*9+1] + tr2.z * kernelsL[l][1*72+6*9+2] +
-        ml2.z * kernelsL[l][1*72+6*9+3] + mc2.z * kernelsL[l][1*72+6*9+4] + mr2.z * kernelsL[l][1*72+6*9+5] +
-        bl2.z * kernelsL[l][1*72+6*9+6] + bc2.z * kernelsL[l][1*72+6*9+7] + br2.z * kernelsL[l][1*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][1*72+7*9+0] + tc2.w * kernelsL[l][1*72+7*9+1] + tr2.w * kernelsL[l][1*72+7*9+2] +
-        ml2.w * kernelsL[l][1*72+7*9+3] + mc2.w * kernelsL[l][1*72+7*9+4] + mr2.w * kernelsL[l][1*72+7*9+5] +
-        bl2.w * kernelsL[l][1*72+7*9+6] + bc2.w * kernelsL[l][1*72+7*9+7] + br2.w * kernelsL[l][1*72+7*9+8] + biasL[l][1]
-        ,
-        tl1.x * kernelsL[l][2*72+0*9+0] + tc1.x * kernelsL[l][2*72+0*9+1] + tr1.x * kernelsL[l][2*72+0*9+2] +
-        ml1.x * kernelsL[l][2*72+0*9+3] + mc1.x * kernelsL[l][2*72+0*9+4] + mr1.x * kernelsL[l][2*72+0*9+5] +
-        bl1.x * kernelsL[l][2*72+0*9+6] + bc1.x * kernelsL[l][2*72+0*9+7] + br1.x * kernelsL[l][2*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][2*72+1*9+0] + tc1.y * kernelsL[l][2*72+1*9+1] + tr1.y * kernelsL[l][2*72+1*9+2] +
-        ml1.y * kernelsL[l][2*72+1*9+3] + mc1.y * kernelsL[l][2*72+1*9+4] + mr1.y * kernelsL[l][2*72+1*9+5] +
-        bl1.y * kernelsL[l][2*72+1*9+6] + bc1.y * kernelsL[l][2*72+1*9+7] + br1.y * kernelsL[l][2*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][2*72+2*9+0] + tc1.z * kernelsL[l][2*72+2*9+1] + tr1.z * kernelsL[l][2*72+2*9+2] +
-        ml1.z * kernelsL[l][2*72+2*9+3] + mc1.z * kernelsL[l][2*72+2*9+4] + mr1.z * kernelsL[l][2*72+2*9+5] +
-        bl1.z * kernelsL[l][2*72+2*9+6] + bc1.z * kernelsL[l][2*72+2*9+7] + br1.z * kernelsL[l][2*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][2*72+3*9+0] + tc1.w * kernelsL[l][2*72+3*9+1] + tr1.w * kernelsL[l][2*72+3*9+2] +
-        ml1.w * kernelsL[l][2*72+3*9+3] + mc1.w * kernelsL[l][2*72+3*9+4] + mr1.w * kernelsL[l][2*72+3*9+5] +
-        bl1.w * kernelsL[l][2*72+3*9+6] + bc1.w * kernelsL[l][2*72+3*9+7] + br1.w * kernelsL[l][2*72+3*9+8] +
-
-        tl2.x * kernelsL[l][2*72+4*9+0] + tc2.x * kernelsL[l][2*72+4*9+1] + tr2.x * kernelsL[l][2*72+4*9+2] +
-        ml2.x * kernelsL[l][2*72+4*9+3] + mc2.x * kernelsL[l][2*72+4*9+4] + mr2.x * kernelsL[l][2*72+4*9+5] +
-        bl2.x * kernelsL[l][2*72+4*9+6] + bc2.x * kernelsL[l][2*72+4*9+7] + br2.x * kernelsL[l][2*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][2*72+5*9+0] + tc2.y * kernelsL[l][2*72+5*9+1] + tr2.y * kernelsL[l][2*72+5*9+2] +
-        ml2.y * kernelsL[l][2*72+5*9+3] + mc2.y * kernelsL[l][2*72+5*9+4] + mr2.y * kernelsL[l][2*72+5*9+5] +
-        bl2.y * kernelsL[l][2*72+5*9+6] + bc2.y * kernelsL[l][2*72+5*9+7] + br2.y * kernelsL[l][2*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][2*72+6*9+0] + tc2.z * kernelsL[l][2*72+6*9+1] + tr2.z * kernelsL[l][2*72+6*9+2] +
-        ml2.z * kernelsL[l][2*72+6*9+3] + mc2.z * kernelsL[l][2*72+6*9+4] + mr2.z * kernelsL[l][2*72+6*9+5] +
-        bl2.z * kernelsL[l][2*72+6*9+6] + bc2.z * kernelsL[l][2*72+6*9+7] + br2.z * kernelsL[l][2*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][2*72+7*9+0] + tc2.w * kernelsL[l][2*72+7*9+1] + tr2.w * kernelsL[l][2*72+7*9+2] +
-        ml2.w * kernelsL[l][2*72+7*9+3] + mc2.w * kernelsL[l][2*72+7*9+4] + mr2.w * kernelsL[l][2*72+7*9+5] +
-        bl2.w * kernelsL[l][2*72+7*9+6] + bc2.w * kernelsL[l][2*72+7*9+7] + br2.w * kernelsL[l][2*72+7*9+8] + biasL[l][2]
-        ,
-        tl1.x * kernelsL[l][3*72+0*9+0] + tc1.x * kernelsL[l][3*72+0*9+1] + tr1.x * kernelsL[l][3*72+0*9+2] +
-        ml1.x * kernelsL[l][3*72+0*9+3] + mc1.x * kernelsL[l][3*72+0*9+4] + mr1.x * kernelsL[l][3*72+0*9+5] +
-        bl1.x * kernelsL[l][3*72+0*9+6] + bc1.x * kernelsL[l][3*72+0*9+7] + br1.x * kernelsL[l][3*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][3*72+1*9+0] + tc1.y * kernelsL[l][3*72+1*9+1] + tr1.y * kernelsL[l][3*72+1*9+2] +
-        ml1.y * kernelsL[l][3*72+1*9+3] + mc1.y * kernelsL[l][3*72+1*9+4] + mr1.y * kernelsL[l][3*72+1*9+5] +
-        bl1.y * kernelsL[l][3*72+1*9+6] + bc1.y * kernelsL[l][3*72+1*9+7] + br1.y * kernelsL[l][3*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][3*72+2*9+0] + tc1.z * kernelsL[l][3*72+2*9+1] + tr1.z * kernelsL[l][3*72+2*9+2] +
-        ml1.z * kernelsL[l][3*72+2*9+3] + mc1.z * kernelsL[l][3*72+2*9+4] + mr1.z * kernelsL[l][3*72+2*9+5] +
-        bl1.z * kernelsL[l][3*72+2*9+6] + bc1.z * kernelsL[l][3*72+2*9+7] + br1.z * kernelsL[l][3*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][3*72+3*9+0] + tc1.w * kernelsL[l][3*72+3*9+1] + tr1.w * kernelsL[l][3*72+3*9+2] +
-        ml1.w * kernelsL[l][3*72+3*9+3] + mc1.w * kernelsL[l][3*72+3*9+4] + mr1.w * kernelsL[l][3*72+3*9+5] +
-        bl1.w * kernelsL[l][3*72+3*9+6] + bc1.w * kernelsL[l][3*72+3*9+7] + br1.w * kernelsL[l][3*72+3*9+8] +
-
-        tl2.x * kernelsL[l][3*72+4*9+0] + tc2.x * kernelsL[l][3*72+4*9+1] + tr2.x * kernelsL[l][3*72+4*9+2] +
-        ml2.x * kernelsL[l][3*72+4*9+3] + mc2.x * kernelsL[l][3*72+4*9+4] + mr2.x * kernelsL[l][3*72+4*9+5] +
-        bl2.x * kernelsL[l][3*72+4*9+6] + bc2.x * kernelsL[l][3*72+4*9+7] + br2.x * kernelsL[l][3*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][3*72+5*9+0] + tc2.y * kernelsL[l][3*72+5*9+1] + tr2.y * kernelsL[l][3*72+5*9+2] +
-        ml2.y * kernelsL[l][3*72+5*9+3] + mc2.y * kernelsL[l][3*72+5*9+4] + mr2.y * kernelsL[l][3*72+5*9+5] +
-        bl2.y * kernelsL[l][3*72+5*9+6] + bc2.y * kernelsL[l][3*72+5*9+7] + br2.y * kernelsL[l][3*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][3*72+6*9+0] + tc2.z * kernelsL[l][3*72+6*9+1] + tr2.z * kernelsL[l][3*72+6*9+2] +
-        ml2.z * kernelsL[l][3*72+6*9+3] + mc2.z * kernelsL[l][3*72+6*9+4] + mr2.z * kernelsL[l][3*72+6*9+5] +
-        bl2.z * kernelsL[l][3*72+6*9+6] + bc2.z * kernelsL[l][3*72+6*9+7] + br2.z * kernelsL[l][3*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][3*72+7*9+0] + tc2.w * kernelsL[l][3*72+7*9+1] + tr2.w * kernelsL[l][3*72+7*9+2] +
-        ml2.w * kernelsL[l][3*72+7*9+3] + mc2.w * kernelsL[l][3*72+7*9+4] + mr2.w * kernelsL[l][3*72+7*9+5] +
-        bl2.w * kernelsL[l][3*72+7*9+6] + bc2.w * kernelsL[l][3*72+7*9+7] + br2.w * kernelsL[l][3*72+7*9+8] + biasL[l][3]
-    ));
-    float4 c5678 = RELU((float4)(
-        tl1.x * kernelsL[l][4*72+0*9+0] + tc1.x * kernelsL[l][4*72+0*9+1] + tr1.x * kernelsL[l][4*72+0*9+2] +
-        ml1.x * kernelsL[l][4*72+0*9+3] + mc1.x * kernelsL[l][4*72+0*9+4] + mr1.x * kernelsL[l][4*72+0*9+5] +
-        bl1.x * kernelsL[l][4*72+0*9+6] + bc1.x * kernelsL[l][4*72+0*9+7] + br1.x * kernelsL[l][4*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][4*72+1*9+0] + tc1.y * kernelsL[l][4*72+1*9+1] + tr1.y * kernelsL[l][4*72+1*9+2] +
-        ml1.y * kernelsL[l][4*72+1*9+3] + mc1.y * kernelsL[l][4*72+1*9+4] + mr1.y * kernelsL[l][4*72+1*9+5] +
-        bl1.y * kernelsL[l][4*72+1*9+6] + bc1.y * kernelsL[l][4*72+1*9+7] + br1.y * kernelsL[l][4*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][4*72+2*9+0] + tc1.z * kernelsL[l][4*72+2*9+1] + tr1.z * kernelsL[l][4*72+2*9+2] +
-        ml1.z * kernelsL[l][4*72+2*9+3] + mc1.z * kernelsL[l][4*72+2*9+4] + mr1.z * kernelsL[l][4*72+2*9+5] +
-        bl1.z * kernelsL[l][4*72+2*9+6] + bc1.z * kernelsL[l][4*72+2*9+7] + br1.z * kernelsL[l][4*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][4*72+3*9+0] + tc1.w * kernelsL[l][4*72+3*9+1] + tr1.w * kernelsL[l][4*72+3*9+2] +
-        ml1.w * kernelsL[l][4*72+3*9+3] + mc1.w * kernelsL[l][4*72+3*9+4] + mr1.w * kernelsL[l][4*72+3*9+5] +
-        bl1.w * kernelsL[l][4*72+3*9+6] + bc1.w * kernelsL[l][4*72+3*9+7] + br1.w * kernelsL[l][4*72+3*9+8] +
-
-        tl2.x * kernelsL[l][4*72+4*9+0] + tc2.x * kernelsL[l][4*72+4*9+1] + tr2.x * kernelsL[l][4*72+4*9+2] +
-        ml2.x * kernelsL[l][4*72+4*9+3] + mc2.x * kernelsL[l][4*72+4*9+4] + mr2.x * kernelsL[l][4*72+4*9+5] +
-        bl2.x * kernelsL[l][4*72+4*9+6] + bc2.x * kernelsL[l][4*72+4*9+7] + br2.x * kernelsL[l][4*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][4*72+5*9+0] + tc2.y * kernelsL[l][4*72+5*9+1] + tr2.y * kernelsL[l][4*72+5*9+2] +
-        ml2.y * kernelsL[l][4*72+5*9+3] + mc2.y * kernelsL[l][4*72+5*9+4] + mr2.y * kernelsL[l][4*72+5*9+5] +
-        bl2.y * kernelsL[l][4*72+5*9+6] + bc2.y * kernelsL[l][4*72+5*9+7] + br2.y * kernelsL[l][4*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][4*72+6*9+0] + tc2.z * kernelsL[l][4*72+6*9+1] + tr2.z * kernelsL[l][4*72+6*9+2] +
-        ml2.z * kernelsL[l][4*72+6*9+3] + mc2.z * kernelsL[l][4*72+6*9+4] + mr2.z * kernelsL[l][4*72+6*9+5] +
-        bl2.z * kernelsL[l][4*72+6*9+6] + bc2.z * kernelsL[l][4*72+6*9+7] + br2.z * kernelsL[l][4*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][4*72+7*9+0] + tc2.w * kernelsL[l][4*72+7*9+1] + tr2.w * kernelsL[l][4*72+7*9+2] +
-        ml2.w * kernelsL[l][4*72+7*9+3] + mc2.w * kernelsL[l][4*72+7*9+4] + mr2.w * kernelsL[l][4*72+7*9+5] +
-        bl2.w * kernelsL[l][4*72+7*9+6] + bc2.w * kernelsL[l][4*72+7*9+7] + br2.w * kernelsL[l][4*72+7*9+8] + biasL[l][4]
-        ,
-        tl1.x * kernelsL[l][5*72+0*9+0] + tc1.x * kernelsL[l][5*72+0*9+1] + tr1.x * kernelsL[l][5*72+0*9+2] +
-        ml1.x * kernelsL[l][5*72+0*9+3] + mc1.x * kernelsL[l][5*72+0*9+4] + mr1.x * kernelsL[l][5*72+0*9+5] +
-        bl1.x * kernelsL[l][5*72+0*9+6] + bc1.x * kernelsL[l][5*72+0*9+7] + br1.x * kernelsL[l][5*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][5*72+1*9+0] + tc1.y * kernelsL[l][5*72+1*9+1] + tr1.y * kernelsL[l][5*72+1*9+2] +
-        ml1.y * kernelsL[l][5*72+1*9+3] + mc1.y * kernelsL[l][5*72+1*9+4] + mr1.y * kernelsL[l][5*72+1*9+5] +
-        bl1.y * kernelsL[l][5*72+1*9+6] + bc1.y * kernelsL[l][5*72+1*9+7] + br1.y * kernelsL[l][5*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][5*72+2*9+0] + tc1.z * kernelsL[l][5*72+2*9+1] + tr1.z * kernelsL[l][5*72+2*9+2] +
-        ml1.z * kernelsL[l][5*72+2*9+3] + mc1.z * kernelsL[l][5*72+2*9+4] + mr1.z * kernelsL[l][5*72+2*9+5] +
-        bl1.z * kernelsL[l][5*72+2*9+6] + bc1.z * kernelsL[l][5*72+2*9+7] + br1.z * kernelsL[l][5*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][5*72+3*9+0] + tc1.w * kernelsL[l][5*72+3*9+1] + tr1.w * kernelsL[l][5*72+3*9+2] +
-        ml1.w * kernelsL[l][5*72+3*9+3] + mc1.w * kernelsL[l][5*72+3*9+4] + mr1.w * kernelsL[l][5*72+3*9+5] +
-        bl1.w * kernelsL[l][5*72+3*9+6] + bc1.w * kernelsL[l][5*72+3*9+7] + br1.w * kernelsL[l][5*72+3*9+8] +
-
-        tl2.x * kernelsL[l][5*72+4*9+0] + tc2.x * kernelsL[l][5*72+4*9+1] + tr2.x * kernelsL[l][5*72+4*9+2] +
-        ml2.x * kernelsL[l][5*72+4*9+3] + mc2.x * kernelsL[l][5*72+4*9+4] + mr2.x * kernelsL[l][5*72+4*9+5] +
-        bl2.x * kernelsL[l][5*72+4*9+6] + bc2.x * kernelsL[l][5*72+4*9+7] + br2.x * kernelsL[l][5*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][5*72+5*9+0] + tc2.y * kernelsL[l][5*72+5*9+1] + tr2.y * kernelsL[l][5*72+5*9+2] +
-        ml2.y * kernelsL[l][5*72+5*9+3] + mc2.y * kernelsL[l][5*72+5*9+4] + mr2.y * kernelsL[l][5*72+5*9+5] +
-        bl2.y * kernelsL[l][5*72+5*9+6] + bc2.y * kernelsL[l][5*72+5*9+7] + br2.y * kernelsL[l][5*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][5*72+6*9+0] + tc2.z * kernelsL[l][5*72+6*9+1] + tr2.z * kernelsL[l][5*72+6*9+2] +
-        ml2.z * kernelsL[l][5*72+6*9+3] + mc2.z * kernelsL[l][5*72+6*9+4] + mr2.z * kernelsL[l][5*72+6*9+5] +
-        bl2.z * kernelsL[l][5*72+6*9+6] + bc2.z * kernelsL[l][5*72+6*9+7] + br2.z * kernelsL[l][5*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][5*72+7*9+0] + tc2.w * kernelsL[l][5*72+7*9+1] + tr2.w * kernelsL[l][5*72+7*9+2] +
-        ml2.w * kernelsL[l][5*72+7*9+3] + mc2.w * kernelsL[l][5*72+7*9+4] + mr2.w * kernelsL[l][5*72+7*9+5] +
-        bl2.w * kernelsL[l][5*72+7*9+6] + bc2.w * kernelsL[l][5*72+7*9+7] + br2.w * kernelsL[l][5*72+7*9+8] + biasL[l][5]
-        ,
-        tl1.x * kernelsL[l][6*72+0*9+0] + tc1.x * kernelsL[l][6*72+0*9+1] + tr1.x * kernelsL[l][6*72+0*9+2] +
-        ml1.x * kernelsL[l][6*72+0*9+3] + mc1.x * kernelsL[l][6*72+0*9+4] + mr1.x * kernelsL[l][6*72+0*9+5] +
-        bl1.x * kernelsL[l][6*72+0*9+6] + bc1.x * kernelsL[l][6*72+0*9+7] + br1.x * kernelsL[l][6*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][6*72+1*9+0] + tc1.y * kernelsL[l][6*72+1*9+1] + tr1.y * kernelsL[l][6*72+1*9+2] +
-        ml1.y * kernelsL[l][6*72+1*9+3] + mc1.y * kernelsL[l][6*72+1*9+4] + mr1.y * kernelsL[l][6*72+1*9+5] +
-        bl1.y * kernelsL[l][6*72+1*9+6] + bc1.y * kernelsL[l][6*72+1*9+7] + br1.y * kernelsL[l][6*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][6*72+2*9+0] + tc1.z * kernelsL[l][6*72+2*9+1] + tr1.z * kernelsL[l][6*72+2*9+2] +
-        ml1.z * kernelsL[l][6*72+2*9+3] + mc1.z * kernelsL[l][6*72+2*9+4] + mr1.z * kernelsL[l][6*72+2*9+5] +
-        bl1.z * kernelsL[l][6*72+2*9+6] + bc1.z * kernelsL[l][6*72+2*9+7] + br1.z * kernelsL[l][6*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][6*72+3*9+0] + tc1.w * kernelsL[l][6*72+3*9+1] + tr1.w * kernelsL[l][6*72+3*9+2] +
-        ml1.w * kernelsL[l][6*72+3*9+3] + mc1.w * kernelsL[l][6*72+3*9+4] + mr1.w * kernelsL[l][6*72+3*9+5] +
-        bl1.w * kernelsL[l][6*72+3*9+6] + bc1.w * kernelsL[l][6*72+3*9+7] + br1.w * kernelsL[l][6*72+3*9+8] +
-
-        tl2.x * kernelsL[l][6*72+4*9+0] + tc2.x * kernelsL[l][6*72+4*9+1] + tr2.x * kernelsL[l][6*72+4*9+2] +
-        ml2.x * kernelsL[l][6*72+4*9+3] + mc2.x * kernelsL[l][6*72+4*9+4] + mr2.x * kernelsL[l][6*72+4*9+5] +
-        bl2.x * kernelsL[l][6*72+4*9+6] + bc2.x * kernelsL[l][6*72+4*9+7] + br2.x * kernelsL[l][6*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][6*72+5*9+0] + tc2.y * kernelsL[l][6*72+5*9+1] + tr2.y * kernelsL[l][6*72+5*9+2] +
-        ml2.y * kernelsL[l][6*72+5*9+3] + mc2.y * kernelsL[l][6*72+5*9+4] + mr2.y * kernelsL[l][6*72+5*9+5] +
-        bl2.y * kernelsL[l][6*72+5*9+6] + bc2.y * kernelsL[l][6*72+5*9+7] + br2.y * kernelsL[l][6*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][6*72+6*9+0] + tc2.z * kernelsL[l][6*72+6*9+1] + tr2.z * kernelsL[l][6*72+6*9+2] +
-        ml2.z * kernelsL[l][6*72+6*9+3] + mc2.z * kernelsL[l][6*72+6*9+4] + mr2.z * kernelsL[l][6*72+6*9+5] +
-        bl2.z * kernelsL[l][6*72+6*9+6] + bc2.z * kernelsL[l][6*72+6*9+7] + br2.z * kernelsL[l][6*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][6*72+7*9+0] + tc2.w * kernelsL[l][6*72+7*9+1] + tr2.w * kernelsL[l][6*72+7*9+2] +
-        ml2.w * kernelsL[l][6*72+7*9+3] + mc2.w * kernelsL[l][6*72+7*9+4] + mr2.w * kernelsL[l][6*72+7*9+5] +
-        bl2.w * kernelsL[l][6*72+7*9+6] + bc2.w * kernelsL[l][6*72+7*9+7] + br2.w * kernelsL[l][6*72+7*9+8] + biasL[l][6]
-        ,
-        tl1.x * kernelsL[l][7*72+0*9+0] + tc1.x * kernelsL[l][7*72+0*9+1] + tr1.x * kernelsL[l][7*72+0*9+2] +
-        ml1.x * kernelsL[l][7*72+0*9+3] + mc1.x * kernelsL[l][7*72+0*9+4] + mr1.x * kernelsL[l][7*72+0*9+5] +
-        bl1.x * kernelsL[l][7*72+0*9+6] + bc1.x * kernelsL[l][7*72+0*9+7] + br1.x * kernelsL[l][7*72+0*9+8] + 
-
-        tl1.y * kernelsL[l][7*72+1*9+0] + tc1.y * kernelsL[l][7*72+1*9+1] + tr1.y * kernelsL[l][7*72+1*9+2] +
-        ml1.y * kernelsL[l][7*72+1*9+3] + mc1.y * kernelsL[l][7*72+1*9+4] + mr1.y * kernelsL[l][7*72+1*9+5] +
-        bl1.y * kernelsL[l][7*72+1*9+6] + bc1.y * kernelsL[l][7*72+1*9+7] + br1.y * kernelsL[l][7*72+1*9+8] + 
-
-        tl1.z * kernelsL[l][7*72+2*9+0] + tc1.z * kernelsL[l][7*72+2*9+1] + tr1.z * kernelsL[l][7*72+2*9+2] +
-        ml1.z * kernelsL[l][7*72+2*9+3] + mc1.z * kernelsL[l][7*72+2*9+4] + mr1.z * kernelsL[l][7*72+2*9+5] +
-        bl1.z * kernelsL[l][7*72+2*9+6] + bc1.z * kernelsL[l][7*72+2*9+7] + br1.z * kernelsL[l][7*72+2*9+8] + 
-
-        tl1.w * kernelsL[l][7*72+3*9+0] + tc1.w * kernelsL[l][7*72+3*9+1] + tr1.w * kernelsL[l][7*72+3*9+2] +
-        ml1.w * kernelsL[l][7*72+3*9+3] + mc1.w * kernelsL[l][7*72+3*9+4] + mr1.w * kernelsL[l][7*72+3*9+5] +
-        bl1.w * kernelsL[l][7*72+3*9+6] + bc1.w * kernelsL[l][7*72+3*9+7] + br1.w * kernelsL[l][7*72+3*9+8] +
-
-        tl2.x * kernelsL[l][7*72+4*9+0] + tc2.x * kernelsL[l][7*72+4*9+1] + tr2.x * kernelsL[l][7*72+4*9+2] +
-        ml2.x * kernelsL[l][7*72+4*9+3] + mc2.x * kernelsL[l][7*72+4*9+4] + mr2.x * kernelsL[l][7*72+4*9+5] +
-        bl2.x * kernelsL[l][7*72+4*9+6] + bc2.x * kernelsL[l][7*72+4*9+7] + br2.x * kernelsL[l][7*72+4*9+8] + 
-
-        tl2.y * kernelsL[l][7*72+5*9+0] + tc2.y * kernelsL[l][7*72+5*9+1] + tr2.y * kernelsL[l][7*72+5*9+2] +
-        ml2.y * kernelsL[l][7*72+5*9+3] + mc2.y * kernelsL[l][7*72+5*9+4] + mr2.y * kernelsL[l][7*72+5*9+5] +
-        bl2.y * kernelsL[l][7*72+5*9+6] + bc2.y * kernelsL[l][7*72+5*9+7] + br2.y * kernelsL[l][7*72+5*9+8] + 
-
-        tl2.z * kernelsL[l][7*72+6*9+0] + tc2.z * kernelsL[l][7*72+6*9+1] + tr2.z * kernelsL[l][7*72+6*9+2] +
-        ml2.z * kernelsL[l][7*72+6*9+3] + mc2.z * kernelsL[l][7*72+6*9+4] + mr2.z * kernelsL[l][7*72+6*9+5] +
-        bl2.z * kernelsL[l][7*72+6*9+6] + bc2.z * kernelsL[l][7*72+6*9+7] + br2.z * kernelsL[l][7*72+6*9+8] + 
-
-        tl2.w * kernelsL[l][7*72+7*9+0] + tc2.w * kernelsL[l][7*72+7*9+1] + tr2.w * kernelsL[l][7*72+7*9+2] +
-        ml2.w * kernelsL[l][7*72+7*9+3] + mc2.w * kernelsL[l][7*72+7*9+4] + mr2.w * kernelsL[l][7*72+7*9+5] +
-        bl2.w * kernelsL[l][7*72+7*9+6] + bc2.w * kernelsL[l][7*72+7*9+7] + br2.w * kernelsL[l][7*72+7*9+8] + biasL[l][7]
-    ));
-
-    write_imagef(tmpImgOut1, coord, c1234);
-    write_imagef(tmpImgOut2, coord, c5678);
-}
-
-__kernel void convTranspose8To1(
-    __read_only image2d_t tmpImgIn1,
-    __read_only image2d_t tmpImgIn2, 
-    __write_only image2d_t dstImg)
-{
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
-        return;
-
-    int2 coord = (int2)(x, y);
-
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
-
-    int2 pos = (int2)(x & 1, y & 1);
-    int flag = 0;
-
-    if (pos.x == 0 && pos.y != 0)
-        flag = 0;
-        //0 x
-        //0 0
-    else if (pos.x == 0 && pos.y == 0)
-        flag = 1;
-        //0 0
-        //0 x
-    else if (pos.x != 0 && pos.y == 0)
-        flag = 2;
-        //0 0
-        //x 0
-    else if (pos.x != 0 && pos.y != 0)
-        flag = 3;
-        //x 0
-        //0 0
-
-        //180 degree rotation for kernel
-        //0 1  to  3 2
-        //2 3      1 0
-    float4 c;
-    float tmp;
-    switch(flag)
-    {
-    case 0:
-        tmp = clamp(
-            mc1.x * kernelsL10[0*4+2] +
-            mc1.y * kernelsL10[1*4+2] +
-            mc1.z * kernelsL10[2*4+2] +
-            mc1.w * kernelsL10[3*4+2] +
-            mc2.x * kernelsL10[4*4+2] +
-            mc2.y * kernelsL10[5*4+2] +
-            mc2.z * kernelsL10[6*4+2] +
-            mc2.w * kernelsL10[7*4+2], 0.0f, 1.0f);
-        
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 1:
-        tmp = clamp(
-            mc1.x * kernelsL10[0*4+0] +
-            mc1.y * kernelsL10[1*4+0] +
-            mc1.z * kernelsL10[2*4+0] +
-            mc1.w * kernelsL10[3*4+0] +
-            mc2.x * kernelsL10[4*4+0] +
-            mc2.y * kernelsL10[5*4+0] +
-            mc2.z * kernelsL10[6*4+0] +
-            mc2.w * kernelsL10[7*4+0], 0.0f, 1.0f);
-
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 2:
-        tmp = clamp(
-            mc1.x * kernelsL10[0*4+1] +
-            mc1.y * kernelsL10[1*4+1] +
-            mc1.z * kernelsL10[2*4+1] +
-            mc1.w * kernelsL10[3*4+1] +
-            mc2.x * kernelsL10[4*4+1] +
-            mc2.y * kernelsL10[5*4+1] +
-            mc2.z * kernelsL10[6*4+1] +
-            mc2.w * kernelsL10[7*4+1], 0.0f, 1.0f);
-            
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 3:
-        tmp = clamp(
-            mc1.x * kernelsL10[0*4+3] +
-            mc1.y * kernelsL10[1*4+3] +
-            mc1.z * kernelsL10[2*4+3] +
-            mc1.w * kernelsL10[3*4+3] +
-            mc2.x * kernelsL10[4*4+3] +
-            mc2.y * kernelsL10[5*4+3] +
-            mc2.z * kernelsL10[6*4+3] +
-            mc2.w * kernelsL10[7*4+3], 0.0f, 1.0f);
-            
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    }
-
-    write_imagef(dstImg, coord, c);
-}

@@ -16,6 +16,7 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters)
     pref = parameters.preFilters;
     postf = parameters.postFilters;
     mt = parameters.maxThreads;
+    HDN = parameters.HDN;
 
     orgH = orgW = H = W = 0;
     totalFrameCount = fps = 0.0;
@@ -368,6 +369,7 @@ void Anime4KCPP::Parameters::reset()
     preFilters = 4;
     postFilters = 40;
     maxThreads = std::thread::hardware_concurrency();
+    HDN = false;
 }
 
 Anime4KCPP::Parameters::Parameters(
@@ -382,10 +384,11 @@ Anime4KCPP::Parameters::Parameters(
     bool postprocessing,
     uint8_t preFilters,
     uint8_t postFilters,
-    unsigned int maxThreads
+    unsigned int maxThreads,
+    bool HDN
 ) :
     passes(passes), pushColorCount(pushColorCount),
     strengthColor(strengthColor), strengthGradient(strengthGradient),
     zoomFactor(zoomFactor), fastMode(fastMode), videoMode(videoMode),
     preprocessing(preprocessing), postprocessing(postprocessing),
-    preFilters(preFilters), postFilters(postFilters), maxThreads(maxThreads) {}
+    preFilters(preFilters), postFilters(postFilters), maxThreads(maxThreads), HDN(HDN) {}
