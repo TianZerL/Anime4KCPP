@@ -361,7 +361,7 @@
               <string/>
              </property>
              <property name="currentIndex">
-              <number>1</number>
+              <number>0</number>
              </property>
              <widget class="QWidget" name="tabPreprocessing">
               <attribute name="title">
@@ -595,9 +595,19 @@
               </widget>
              </item>
              <item>
+              <widget class="QCheckBox" name="checkBoxHDN">
+               <property name="statusTip">
+                <string>Enable HDN mode for ACNet</string>
+               </property>
+               <property name="text">
+                <string>HDN</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QCheckBox" name="checkBoxACNetGPU">
                <property name="statusTip">
-                <string>Enable GPU acceleration for ACNet</string>
+                <string>Enable GPU acceleration for ACNet, this will take a while, please don't close it.</string>
                </property>
                <property name="text">
                 <string>GPU acceleration for ACNet</string>

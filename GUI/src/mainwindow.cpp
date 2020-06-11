@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->spinBoxDeviceID->setMinimum(0);
     ui->pushButtonReleaseGPU->setEnabled(false);
     ui->checkBoxACNetGPU->setEnabled(false);
+    ui->checkBoxHDN->setEnabled(false);
     platforms = 0;
     //Register
     qRegisterMetaType<std::string>("std::string");
@@ -399,7 +400,7 @@ bool MainWindow::checkFFmpeg()
         ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
         return true;
     }
-    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg not found."), QMessageBox::Ok);
+    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg did not fount"), QMessageBox::Ok);
     ui->textBrowserInfoOut->insertPlainText(
                 "----------------------------------------------\n"
                 "             ffmpeg check failed              \n"
@@ -426,6 +427,7 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K *&anime4K)
     bool preprocessing = ui->checkBoxEnablePreprocessing->isChecked();
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
     unsigned int threads = ui->spinBoxThreads->value();
+    bool HDN = ui->checkBoxHDN->isChecked();
     uint8_t prefilters=0;
     if (preprocessing)
     {
@@ -475,7 +477,8 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K *&anime4K)
                 postprocessing,
                 prefilters,
                 postfilters,
-                threads
+                threads,
+                HDN
                 );
 
     if(ui->checkBoxACNet->isChecked())
@@ -1240,6 +1243,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->tabPostprocessing->setEnabled(false);
         ui->checkBoxGPUMode->setEnabled(false);
         ui->checkBoxACNetGPU->setEnabled(true);
+        ui->checkBoxHDN->setEnabled(true);
     }
     else
     {
@@ -1252,6 +1256,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->tabPostprocessing->setEnabled(true);
         ui->checkBoxACNetGPU->setEnabled(false);
         ui->checkBoxGPUMode->setEnabled(true);
+        ui->checkBoxHDN->setEnabled(false);
     }
 }
 
