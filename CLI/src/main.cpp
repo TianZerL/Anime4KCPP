@@ -171,7 +171,6 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         {
             if (GPU)
             {
-                std::cout << "GPUCNN mode" << std::endl;
                 std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
                 if (!ret.first)
                 {
@@ -186,7 +185,6 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                std::cout << "CPUCNN mode" << std::endl;
                 anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
             }
         }
@@ -194,7 +192,6 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         {
             if (GPU)
             {
-                std::cout << "GPU mode" << std::endl;
                 std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
                 if (!ret.first)
                 {
@@ -209,7 +206,6 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             }
             else
             {
-                std::cout << "CPU mode" << std::endl;
                 anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPU);
             }
         }

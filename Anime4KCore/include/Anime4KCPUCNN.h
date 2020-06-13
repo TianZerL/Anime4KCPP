@@ -22,4 +22,7 @@ public:
     Anime4KCPUCNN(const Parameters& parameters = Parameters());
     virtual ~Anime4KCPUCNN() = default;
     virtual void process() override;
+
+private:
+    virtual ProcessorType getProcessorType() override;
 };

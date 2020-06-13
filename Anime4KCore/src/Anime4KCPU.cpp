@@ -293,3 +293,8 @@ inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA
 
     mc[A] = 255;
 }
+
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPU::getProcessorType()
+{
+    return ProcessorType::CPU;
+}

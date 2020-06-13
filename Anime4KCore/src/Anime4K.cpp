@@ -185,6 +185,7 @@ void Anime4KCPP::Anime4K::saveVideo()
 
 void Anime4KCPP::Anime4K::showInfo()
 {
+    ProcessorType type = getProcessorType();
     std::cout << "----------------------------------------------" << std::endl;
     std::cout << "Welcome to Anime4KCPP" << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
@@ -196,72 +197,101 @@ void Anime4KCPP::Anime4K::showInfo()
     }
     std::cout << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Passes: " << ps << std::endl
-        << "pushColorCount: " << pcc << std::endl
-        << "Zoom Factor: " << zf << std::endl
-        << "Video Mode: " << std::boolalpha << vm << std::endl
-        << "Fast Mode: " << std::boolalpha << fm << std::endl
-        << "Strength Color: " << sc << std::endl
-        << "Strength Gradient: " << sg << std::endl;
+    std::cout << "Processor type: " << type << std::endl;
+    std::cout << "----------------------------------------------" << std::endl;
+    switch (type)
+    {
+    case ProcessorType::CPU:
+    case ProcessorType::GPU:
+        std::cout 
+            << "Passes: " << ps << std::endl
+            << "pushColorCount: " << pcc << std::endl
+            << "Zoom Factor: " << zf << std::endl
+            << "Video Mode: " << std::boolalpha << vm << std::endl
+            << "Fast Mode: " << std::boolalpha << fm << std::endl
+            << "Strength Color: " << sc << std::endl
+            << "Strength Gradient: " << sg << std::endl;
+        break;
+    case ProcessorType::CPUCNN:
+    case ProcessorType::GPUCNN:
+        std::cout
+            << "Zoom Factor: " << zf << std::endl
+            << "HDN Mode: " << std::boolalpha << HDN << std::endl;
+        break;
+    }
     std::cout << "----------------------------------------------" << std::endl;
 }
 
 void Anime4KCPP::Anime4K::showFiltersInfo()
 {
-    std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Preprocessing filters list:" << std::endl;
-    std::cout << "----------------------------------------------" << std::endl;
-    if (!pre)
+    switch (getProcessorType())
     {
-        std::cout << "Preprocessing disabled" << std::endl;
+    case ProcessorType::CPU:
+    case ProcessorType::GPU:
+        std::cout << "----------------------------------------------" << std::endl;
+        std::cout << "Preprocessing filters list:" << std::endl;
+        std::cout << "----------------------------------------------" << std::endl;
+        if (!pre)
+        {
+            std::cout << "Preprocessing disabled" << std::endl;
+        }
+        else
+        {
+            if (pref & MEDIAN_BLUR)
+                std::cout << "Median blur" << std::endl;
+            if (pref & MEAN_BLUR)
+                std::cout << "Mean blur" << std::endl;
+            if (pref & CAS_SHARPENING)
+                std::cout << "CAS Sharpening" << std::endl;
+            if (pref & GAUSSIAN_BLUR_WEAK)
+                std::cout << "Gaussian blur weak" << std::endl;
+            else if (pref & GAUSSIAN_BLUR)
+                std::cout << "Gaussian blur" << std::endl;
+            if (pref & BILATERAL_FILTER)
+                std::cout << "Bilateral filter" << std::endl;
+            else if (pref & BILATERAL_FILTER_FAST)
+                std::cout << "Bilateral filter faster" << std::endl;
+        }
+        std::cout << "----------------------------------------------" << std::endl;
+        std::cout << "Postprocessing filters list:" << std::endl;
+        std::cout << "----------------------------------------------" << std::endl;
+        if (!post)
+        {
+            std::cout << "Postprocessing disabled" << std::endl;
+        }
+        else
+        {
+            if (postf & MEDIAN_BLUR)
+                std::cout << "Median blur" << std::endl;
+            if (postf & MEAN_BLUR)
+                std::cout << "Mean blur" << std::endl;
+            if (postf & CAS_SHARPENING)
+                std::cout << "CAS Sharpening" << std::endl;
+            if (postf & GAUSSIAN_BLUR_WEAK)
+                std::cout << "Gaussian blur weak" << std::endl;
+            else if (postf & GAUSSIAN_BLUR)
+                std::cout << "Gaussian blur" << std::endl;
+            if (postf & BILATERAL_FILTER)
+                std::cout << "Bilateral filter" << std::endl;
+            else if (postf & BILATERAL_FILTER_FAST)
+                std::cout << "Bilateral filter faster" << std::endl;
+        }
+        std::cout << "----------------------------------------------" << std::endl;
+        break;
+    case ProcessorType::CPUCNN:
+    case ProcessorType::GPUCNN:
+        std::cout
+            << "----------------------------------------------" << std::endl
+            << "Filters does not support CNN mode" << std::endl
+            << "----------------------------------------------" << std::endl;
+        break;
     }
-    else
-    {
-        if (pref & MEDIAN_BLUR)
-            std::cout << "Median blur" << std::endl;
-        if (pref & MEAN_BLUR)
-            std::cout << "Mean blur" << std::endl;
-        if (pref & CAS_SHARPENING)
-            std::cout << "CAS Sharpening" << std::endl;
-        if (pref & GAUSSIAN_BLUR_WEAK)
-            std::cout << "Gaussian blur weak" << std::endl;
-        else if (pref & GAUSSIAN_BLUR)
-            std::cout << "Gaussian blur" << std::endl;
-        if (pref & BILATERAL_FILTER)
-            std::cout << "Bilateral filter" << std::endl;
-        else if (pref & BILATERAL_FILTER_FAST)
-            std::cout << "Bilateral filter faster" << std::endl;
-    }
-    std::cout << "----------------------------------------------" << std::endl;
-    std::cout << "Postprocessing filters list:" << std::endl;
-    std::cout << "----------------------------------------------" << std::endl;
-    if (!post)
-    {
-        std::cout << "Postprocessing disabled" << std::endl;
-    }
-    else
-    {
-        if (postf & MEDIAN_BLUR)
-            std::cout << "Median blur" << std::endl;
-        if (postf & MEAN_BLUR)
-            std::cout << "Mean blur" << std::endl;
-        if (postf & CAS_SHARPENING)
-            std::cout << "CAS Sharpening" << std::endl;
-        if (postf & GAUSSIAN_BLUR_WEAK)
-            std::cout << "Gaussian blur weak" << std::endl;
-        else if (postf & GAUSSIAN_BLUR)
-            std::cout << "Gaussian blur" << std::endl;
-        if (postf & BILATERAL_FILTER)
-            std::cout << "Bilateral filter" << std::endl;
-        else if (postf & BILATERAL_FILTER_FAST)
-            std::cout << "Bilateral filter faster" << std::endl;
-    }
-    std::cout << "----------------------------------------------" << std::endl;
 }
 
 std::string Anime4KCPP::Anime4K::getInfo()
 {
     std::ostringstream oss;
+    ProcessorType type = getProcessorType();
     oss << "----------------------------------------------" << std::endl;
     oss << "Welcome to Anime4KCPP" << std::endl;
     oss << "----------------------------------------------" << std::endl;
@@ -273,13 +303,26 @@ std::string Anime4KCPP::Anime4K::getInfo()
     }
     oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
     oss << "----------------------------------------------" << std::endl;
-    oss << "Passes: " << ps << std::endl
-        << "pushColorCount: " << pcc << std::endl
-        << "Zoom Factor: " << zf << std::endl
-        << "Video Mode: " << std::boolalpha << vm << std::endl
-        << "Fast Mode: " << std::boolalpha << fm << std::endl
-        << "Strength Color: " << sc << std::endl
-        << "Strength Gradient: " << sg << std::endl;
+    oss << "Processor type: " << type << std::endl;
+    oss << "----------------------------------------------" << std::endl;
+    switch (type)
+    {
+    case ProcessorType::CPU:
+    case ProcessorType::GPU:
+        oss << "Passes: " << ps << std::endl
+            << "pushColorCount: " << pcc << std::endl
+            << "Zoom Factor: " << zf << std::endl
+            << "Video Mode: " << std::boolalpha << vm << std::endl
+            << "Fast Mode: " << std::boolalpha << fm << std::endl
+            << "Strength Color: " << sc << std::endl
+            << "Strength Gradient: " << sg << std::endl;
+        break;
+    case ProcessorType::CPUCNN:
+    case ProcessorType::GPUCNN:
+        oss << "Zoom Factor: " << zf << std::endl
+            << "HDN Mode: " << std::boolalpha << HDN << std::endl;
+        break;
+    }
     oss << "----------------------------------------------" << std::endl;
     return std::string(oss.str());
 }
@@ -287,55 +330,68 @@ std::string Anime4KCPP::Anime4K::getInfo()
 std::string Anime4KCPP::Anime4K::getFiltersInfo()
 {
     std::ostringstream oss;
-    oss << "----------------------------------------------" << std::endl;
-    oss << "Preprocessing filters list:" << std::endl;
-    oss << "----------------------------------------------" << std::endl;
-    if (!pre)
+    switch (getProcessorType())
     {
-        oss << "Preprocessing disabled" << std::endl;
+    case ProcessorType::CPU:
+    case ProcessorType::GPU:
+        oss << "----------------------------------------------" << std::endl;
+        oss << "Preprocessing filters list:" << std::endl;
+        oss << "----------------------------------------------" << std::endl;
+        if (!pre)
+        {
+            oss << "Preprocessing disabled" << std::endl;
+        }
+        else
+        {
+            if (pref & MEDIAN_BLUR)
+                oss << "Median blur" << std::endl;
+            if (pref & MEAN_BLUR)
+                oss << "Mean blur" << std::endl;
+            if (pref & CAS_SHARPENING)
+                oss << "CAS Sharpening" << std::endl;
+            if (pref & GAUSSIAN_BLUR_WEAK)
+                oss << "Gaussian blur weak" << std::endl;
+            else if (pref & GAUSSIAN_BLUR)
+                oss << "Gaussian blur" << std::endl;
+            if (pref & BILATERAL_FILTER)
+                oss << "Bilateral filter" << std::endl;
+            else if (pref & BILATERAL_FILTER_FAST)
+                oss << "Bilateral filter faster" << std::endl;
+        }
+        oss << "----------------------------------------------" << std::endl;
+        oss << "Postprocessing filters list:" << std::endl;
+        oss << "----------------------------------------------" << std::endl;
+        if (!post)
+        {
+            oss << "Postprocessing disabled" << std::endl;
+        }
+        else
+        {
+            if (postf & MEDIAN_BLUR)
+                oss << "Median blur" << std::endl;
+            if (postf & MEAN_BLUR)
+                oss << "Mean blur" << std::endl;
+            if (postf & CAS_SHARPENING)
+                oss << "CAS Sharpening" << std::endl;
+            if (postf & GAUSSIAN_BLUR_WEAK)
+                oss << "Gaussian blur weak" << std::endl;
+            else if (postf & GAUSSIAN_BLUR)
+                oss << "Gaussian blur" << std::endl;
+            if (postf & BILATERAL_FILTER)
+                oss << "Bilateral filter" << std::endl;
+            else if (postf & BILATERAL_FILTER_FAST)
+                oss << "Bilateral filter faster" << std::endl;
+        }
+        oss << "----------------------------------------------" << std::endl;
+        break;
+    case ProcessorType::CPUCNN:
+    case ProcessorType::GPUCNN:
+        oss
+            << "----------------------------------------------" << std::endl
+            << "Filters does not support CNN mode" << std::endl
+            << "----------------------------------------------" << std::endl;
+        break;
     }
-    else
-    {
-        if (pref & MEDIAN_BLUR)
-            oss << "Median blur" << std::endl;
-        if (pref & MEAN_BLUR)
-            oss << "Mean blur" << std::endl;
-        if (pref & CAS_SHARPENING)
-            oss << "CAS Sharpening" << std::endl;
-        if (pref & GAUSSIAN_BLUR_WEAK)
-            oss << "Gaussian blur weak" << std::endl;
-        else if (pref & GAUSSIAN_BLUR)
-            oss << "Gaussian blur" << std::endl;
-        if (pref & BILATERAL_FILTER)
-            oss << "Bilateral filter" << std::endl;
-        else if (pref & BILATERAL_FILTER_FAST)
-            oss << "Bilateral filter faster" << std::endl;
-    }
-    oss << "----------------------------------------------" << std::endl;
-    oss << "Postprocessing filters list:" << std::endl;
-    oss << "----------------------------------------------" << std::endl;
-    if (!post)
-    {
-        oss << "Postprocessing disabled" << std::endl;
-    }
-    else
-    {
-        if (postf & MEDIAN_BLUR)
-            oss << "Median blur" << std::endl;
-        if (postf & MEAN_BLUR)
-            oss << "Mean blur" << std::endl;
-        if (postf & CAS_SHARPENING)
-            oss << "CAS Sharpening" << std::endl;
-        if (postf & GAUSSIAN_BLUR_WEAK)
-            oss << "Gaussian blur weak" << std::endl;
-        else if (postf & GAUSSIAN_BLUR)
-            oss << "Gaussian blur" << std::endl;
-        if (postf & BILATERAL_FILTER)
-            oss << "Bilateral filter" << std::endl;
-        else if (postf & BILATERAL_FILTER_FAST)
-            oss << "Bilateral filter faster" << std::endl;
-    }
-    oss << "----------------------------------------------" << std::endl;
     return std::string(oss.str());
 }
 

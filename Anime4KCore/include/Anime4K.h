@@ -31,6 +31,8 @@ namespace Anime4KCPP
 
     enum class ProcessorType;
 
+    std::ostream& operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type);
+
     enum BGRA
     {
         B = 0, G = 1, R = 2, A = 3
@@ -97,6 +99,29 @@ enum class Anime4KCPP::ProcessorType
     CPU, GPU, CPUCNN, GPUCNN
 };
 
+inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type)
+{
+    switch (type)
+    {
+    case Anime4KCPP::ProcessorType::CPU:
+        stream << "CPU";
+        break;
+    case Anime4KCPP::ProcessorType::GPU:
+        stream << "GPU";
+        break;
+    case Anime4KCPP::ProcessorType::CPUCNN:
+        stream << "CPU CNN";
+        break;
+    case Anime4KCPP::ProcessorType::GPUCNN:
+        stream << "GPU CNN";
+        break;
+    default:
+        stream << "Error processor type";
+        break;
+    }
+    return stream;
+}
+
 class Anime4KCPP::Anime4K
 {
 public:
@@ -129,7 +154,8 @@ public:
 
     void showImage();
     virtual void process() = 0;
-
+protected:
+    virtual ProcessorType getProcessorType() = 0;
 protected:
     int orgH, orgW, H, W;
     double fps;

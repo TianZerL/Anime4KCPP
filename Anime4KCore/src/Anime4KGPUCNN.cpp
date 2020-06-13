@@ -1012,6 +1012,11 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
     return std::string(source.str());
 }
 
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType()
+{
+    return ProcessorType::GPUCNN;
+}
+
 //init OpenCL arguments
 bool Anime4KCPP::Anime4KGPUCNN::isInitialized = false;
 cl_context Anime4KCPP::Anime4KGPUCNN::context = nullptr;

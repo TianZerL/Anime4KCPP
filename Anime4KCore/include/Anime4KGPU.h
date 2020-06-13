@@ -32,6 +32,8 @@ private:
     static void initOpenCL();
     static void releaseOpenCL();
     static std::string readKernel(const std::string &fileName);
+
+    virtual ProcessorType getProcessorType() override;
 private:
     static bool isInitialized;
 
