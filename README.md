@@ -26,6 +26,7 @@ Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does n
 
 # About ACNet
 ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.  
+HDN mode can better denoise.  
 for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 
 # Why Anime4KCPP
@@ -138,6 +139,7 @@ For video processing, all you need do is to add the argument ```-v```, and waiti
       -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
       -q, --GPUMode             Enable GPU acceleration
       -w, --CNNMode             Enable ACNet
+      -H, --HDN                 Enable HDN mode for ACNet
       -l, --listGPUs            list GPUs
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
