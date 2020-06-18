@@ -120,13 +120,13 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     unsigned int dID = opt.get<unsigned int>("deviceID");
     std::string codec = opt.get<std::string>("codec");
     bool version = opt.exist("version");
-
+    // -V
     if (version)
     {
         showVersionInfo();
         return 0;
     }
-
+    // -l
     if (listGPUs)
     {
         std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
@@ -142,11 +142,13 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;
     }
+
     Anime4KCPP::CNNType type;
     if (HDN)
         type = Anime4KCPP::CNNType::ACNetHDN;
     else
         type = Anime4KCPP::CNNType::ACNet;
+
     Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID, type);
     Anime4KCPP::Anime4K* anime4k = nullptr;
     Anime4KCPP::Parameters parameters(
