@@ -13,5 +13,3 @@ if(Build_C_wrapper)
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
 endif()
-
-

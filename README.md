@@ -62,6 +62,7 @@ GPU: AMD Vege 8 Graphics
 RAM: 16G  
 Anime4KCPP Version : 1.7.0  
 Anime4KCPP Settings: balance  
+algorithm: Anime4K09  
 
     CPU:
     Image:
@@ -86,6 +87,7 @@ SOC: Snapdragon 855
 RAM: 8G  
 Anime4KCPP Version : 1.8.1  
 Anime4KCPP Settings: balance  
+algorithm: Anime4K09  
 
     CPU:  
     Image:  
@@ -246,7 +248,7 @@ Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), 
 - C#
   - [shadow578/Anime4kSharp](https://github.com/shadow578/Anime4kSharp)
   - [net2cn/Anime4KSharp](https://github.com/net2cn/Anime4KSharp)
-- Java
+- GLSL
   - [bloc97/Anime4K](https://github.com/bloc97/Anime4K)
 - Rust
   - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)

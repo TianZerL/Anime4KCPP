@@ -47,6 +47,7 @@ GPU: AMD Vege 8 Graphics
 RAM: 16G  
 Anime4KCPP 版本 : 1.7.0  
 Anime4KCPP 设置: 平衡  
+算法: Anime4K09  
 
     CPU:
     图像:
@@ -71,6 +72,7 @@ SOC: 高通骁龙855
 RAM: 8G  
 Anime4KCPP 版本 : 1.7.1  
 Anime4KCPP 设置: 平衡  
+算法: Anime4K09  
 
     CPU:  
     图像:  
@@ -232,7 +234,7 @@ brew install opencv qt ffmpeg openh264 cmake
 - C#
   - [shadow578/Anime4kSharp](https://github.com/shadow578/Anime4kSharp)
   - [net2cn/Anime4KSharp](https://github.com/net2cn/Anime4KSharp)
-- Java
+- GLSL
   - [bloc97/Anime4K](https://github.com/bloc97/Anime4K)
 - Rust
   - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)
