@@ -76,14 +76,22 @@ extern "C"
 		ac_bool HDN;
 	} ac_parameters;
 
+	typedef struct ac_version
+	{
+		char coreVersion[6];
+		char wrapperVersion[6];
+	} ac_version;
 	typedef void *ac_instance;
 
+	extern AC_DLL ac_version AC_API acGetVersion(void);
 	extern AC_DLL ac_instance AC_API acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters *parameters, ac_processType type, ac_error *error);
 	extern AC_DLL void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
 	extern AC_DLL ac_error AC_API acInitParameters(ac_parameters *parameters);
 	extern AC_DLL ac_error AC_API acLoadImage(ac_instance instance, const char *srcFile);
 	extern AC_DLL ac_error AC_API acLoadVideo(ac_instance instance, const char *srcFile);
 	extern AC_DLL ac_error AC_API acProcess(ac_instance instance);
+	extern AC_DLL ac_error AC_API acProcessWithPrintProgress(ac_instance instance);
+	extern AC_DLL ac_error AC_API acProcessWithProgress(ac_instance instance,void (*callBack)(double));
 	extern AC_DLL ac_error AC_API acShowImage(ac_instance instance);
 	extern AC_DLL ac_error AC_API acSaveImage(ac_instance instance, const char *dstFile);
 	extern AC_DLL ac_error AC_API acSetSaveVideoInfo(ac_instance instance, const char *dstFile, ac_codec codec);

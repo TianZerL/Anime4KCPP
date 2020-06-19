@@ -1,4 +1,5 @@
 #define AC_DLL
+#define C_WRAPPER_VERSION "1.0.0"
 
 #include "Anime4KCPP.h"
 #include "AC.h"
@@ -28,6 +29,11 @@ Anime4KCPP::Parameters getParameters(ac_parameters *c_parameters)
 
 extern "C"
 {
+    ac_version acGetVersion(void)
+    {
+        return ac_version{ ANIME4KCPP_CORE_VERSION,C_WRAPPER_VERSION };
+    }
+
     ac_instance acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters *parameters, ac_processType type, ac_error *error)
     {
         if (error != nullptr)
@@ -160,6 +166,40 @@ extern "C"
             static_cast<Anime4KCPP::Anime4K *>(instance)->process();
         }
         catch (const char *err)
+        {
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessWithPrintProgress(ac_instance instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            static_cast<Anime4KCPP::Anime4K*>(instance)->processWithPrintProgress();
+        }
+        catch (const char* err)
+        {
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessWithProgress(ac_instance instance, void (*callBack)(double))
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            static_cast<Anime4KCPP::Anime4K*>(instance)->processWithProgress(callBack);
+        }
+        catch (const char* err)
         {
             return AC_ERROR_GPU_PROCESS;
         }
