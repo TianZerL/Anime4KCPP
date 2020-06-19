@@ -155,8 +155,12 @@ public:
 
     void showImage();
     virtual void process() = 0;
+    // for video processing
     void processWithPrintProgress();
     void processWithProgress(std::function<void(double)> &&callBack);
+    void stopVideoProcess();
+    void pauseVideoProcess();
+    void continueVideoProcess();
 protected:
     virtual ProcessorType getProcessorType() = 0;
 protected:
