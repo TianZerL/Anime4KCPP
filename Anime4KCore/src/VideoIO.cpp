@@ -22,9 +22,9 @@ Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t
 void Anime4KCPP::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
-    std::atomic<size_t> stop = reader.get(cv::CAP_PROP_FRAME_COUNT);
+    stop = reader.get(cv::CAP_PROP_FRAME_COUNT);
 
-    pool.exec([this, &stop]()
+    pool.exec([this]()
         {
             for (size_t i = 0; i < stop; i++)
             {
@@ -182,6 +182,26 @@ void Anime4KCPP::VideoIO::write(const Frame& frame)
 double Anime4KCPP::VideoIO::getProgress()
 {
     return progress;
+}
+
+void Anime4KCPP::VideoIO::stopProcess()
+{
+    stop = 0;
+}
+
+void Anime4KCPP::VideoIO::pauseProcess()
+{
+    pause = true;
+    {
+        std::lock_guard<std::mutex> lock(mtxRead);
+        while (pause)
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
+}
+
+void Anime4KCPP::VideoIO::continueProcess()
+{
+    pause = false;
 }
 
 inline void Anime4KCPP::VideoIO::setProgress(double p)

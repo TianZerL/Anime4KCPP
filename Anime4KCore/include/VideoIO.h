@@ -35,6 +35,9 @@ public:
     Frame read();
     void write(const Frame& frame);
     double getProgress();
+    void stopProcess();
+    void pauseProcess();
+    void continueProcess();
 private:
     VideoIO() = default;
     void setProgress(double p);
@@ -52,4 +55,6 @@ private:
     std::condition_variable cndWrite;
 
     std::atomic<double> progress;
+    std::atomic<size_t> stop;
+    std::atomic<bool> pause = false;
 };
