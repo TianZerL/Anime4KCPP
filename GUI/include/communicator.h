@@ -14,6 +14,7 @@ signals:
     void done(int row, double pro, quint64 time);
     void allDone();
     void showInfo(std::string info);
+    void updateProgress(double v, double elpsed, double remaining);
 };
 
 #endif // COMMUNICATOR_H

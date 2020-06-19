@@ -20,7 +20,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define ANIME4KCPP_GUI_VERSION "1.6.0"
+#define ANIME4KCPP_GUI_VERSION "1.8.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -51,6 +51,11 @@ enum GPUMode
 enum GPUCNNMode
 {
     GPUCNNMODE_INITIALZED = 0, GPUCNNMODE_UNINITIALZED = 1, GPUCNNMODE_UNSUPPORT = 3
+};
+
+enum PauseFlag
+{
+    NORMAL, PAUSE, CONTINUE
 };
 
 class MainWindow : public QMainWindow
@@ -86,6 +91,7 @@ private slots:
     void solt_error_renewState(int row, QString err);
     void solt_allDone_remindUser();
     void solt_showInfo_renewTextBrowser(std::string info);
+    void solt_updateProgress_updateCurrentTaskProgress(double v, double elpsed, double remaining);
 
 private slots:
     void on_actionQuit_triggered();
@@ -152,6 +158,12 @@ private slots:
 
     void on_checkBoxACNetGPU_stateChanged(int arg1);
 
+    void on_pushButtonForceStop_clicked();
+
+    void on_pushButtonPause_clicked();
+
+    void on_pushButtonContinue_clicked();
+
 private:
     Ui::MainWindow *ui;
     QTranslator *translator;
@@ -173,5 +185,8 @@ private:
 
     QHash<QString,Language> languageSelector;
     QHash<QString,Anime4KCPP::CODEC> codecSelector;
+
+    std::atomic<bool> stop;
+    std::atomic<PauseFlag> pause;
 };
 #endif // MAINWINDOW_H

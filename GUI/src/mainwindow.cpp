@@ -39,6 +39,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->progressBarProcessingList->reset();
     ui->progressBarProcessingList->setRange(0, 100);
     ui->progressBarProcessingList->setEnabled(false);
+    ui->progressBarCurrentTask->reset();
+    ui->progressBarCurrentTask->setRange(0, 100);
     //initialize arguments
     ui->spinBoxThreads->setMinimum(1);
     ui->doubleSpinBoxPushColorStrength->setRange(0.0,1.0);
@@ -60,7 +62,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButtonReleaseGPU->setEnabled(false);
     ui->checkBoxACNetGPU->setEnabled(false);
     ui->checkBoxHDN->setEnabled(false);
+    ui->pushButtonForceStop->setEnabled(false);
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonContinue->setEnabled(false);
     platforms = 0;
+    //stop flag
+    stop = false;
+    pause = NORMAL;
     //Register
     qRegisterMetaType<std::string>("std::string");
 }
@@ -134,7 +142,7 @@ void MainWindow::dropEvent(QDropEvent *event)
 
         inputFile = new QStandardItem(fileInfo.fileName());
         if(fileType(fileInfo)==VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mp4");
+            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mkv");
         else
             outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
         inputPath = new QStandardItem(fileInfo.filePath());
@@ -547,6 +555,8 @@ void MainWindow::solt_error_renewState(int row, QString err)
 
 void MainWindow::solt_allDone_remindUser()
 {
+    ui->labelElpsed->setText(QString("Elpsed: 0.0 s"));
+    ui->labelRemaining->setText(QString("Remaining: 0.0 s"));
     QMessageBox::information(this,
                              tr("Notice"),
                              QString("All tasks done\nTotal processing time: %1 s").arg(totalTime/1000.0),
@@ -555,11 +565,15 @@ void MainWindow::solt_allDone_remindUser()
     ui->tableViewProcessingList->setEnabled(true);
     ui->progressBarProcessingList->setEnabled(false);
     ui->progressBarProcessingList->reset();
+    ui->progressBarCurrentTask->reset();
     ui->pushButtonInputPath->setEnabled(true);
     ui->pushButtonPickFolder->setEnabled(true);
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
     ui->pushButtonStart->setEnabled(true);
+    ui->pushButtonForceStop->setEnabled(false);
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonContinue->setEnabled(false);
     on_pushButtonClear_clicked();
 }
 
@@ -567,6 +581,13 @@ void MainWindow::solt_showInfo_renewTextBrowser(std::string info)
 {
     ui->textBrowserInfoOut->insertPlainText(QString::fromStdString(info));
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
+}
+
+void MainWindow::solt_updateProgress_updateCurrentTaskProgress(double v, double elpsed, double remaining)
+{
+    ui->progressBarCurrentTask->setValue(v * 100);
+    ui->labelElpsed->setText(QString("Elpsed: %1 s").arg(elpsed, 0, 'f', 2,' '));
+    ui->labelRemaining->setText(QString("Remaining: %1 s").arg(remaining, 0, 'f', 2,' '));
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -835,6 +856,8 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonPickFolder->setEnabled(false);
     ui->progressBarProcessingList->setEnabled(true);
     ui->tableViewProcessingList->setEnabled(false);
+    ui->pushButtonForceStop->setEnabled(true);
+    ui->pushButtonPause->setEnabled(true);
 
     QtConcurrent::run([this, rows](){
         //QList<<input_path,outpt_path>,row>
@@ -878,6 +901,7 @@ void MainWindow::on_pushButtonStart_clicked()
         connect(&cm,SIGNAL(error(int, QString)),this,SLOT(solt_error_renewState(int, QString)));
         connect(&cm,SIGNAL(showInfo(std::string)),this,SLOT(solt_showInfo_renewTextBrowser(std::string)));
         connect(&cm,SIGNAL(allDone()),this,SLOT(solt_allDone_remindUser()));
+        connect(&cm,SIGNAL(updateProgress(double, double, double)),this,SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
 
         Anime4KCPP::Anime4K *anime4K;
         initAnime4K(anime4K);
@@ -919,10 +943,36 @@ void MainWindow::on_pushButtonStart_clicked()
                 try
                 {
                     anime4K->loadVideo(video.first.first.toStdString());
-                    anime4K->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4", getCodec(ui->comboBoxCodec->currentText()));
+                    anime4K->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4", getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(anime4K->getInfo()+"processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    anime4K->process();
+                    anime4K->processWithProgress([this, anime4K, &startTime, &cm](double v) {
+                        if (stop)
+                        {
+                            if(pause == PAUSE)
+                            {
+                                anime4K->continueVideoProcess();
+                                pause = NORMAL;
+                            }
+                            anime4K->stopVideoProcess();
+                            return ;
+                        }
+                        if (pause == PAUSE)
+                        {
+                            anime4K->pauseVideoProcess();
+                        }
+                        else if (pause == CONTINUE)
+                        {
+                            anime4K->continueVideoProcess();
+                            pause = NORMAL;
+                        }
+                        else
+                        {
+                            double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-startTime).count()/1000.0;
+                            double remaining = elpsed / v-elpsed;
+                            emit cm.updateProgress(v, elpsed, remaining);
+                        }
+                    });
                     endTime = std::chrono::steady_clock::now();
                     anime4K->saveVideo();
                 }
@@ -931,9 +981,15 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.error(video.second,QString(err));
                 }
 
+                if (stop)
+                {
+                    stop = false;
+                    break;
+                }
+
                 if(ffmpeg)
                 {
-                    if(!QProcess::execute("ffmpeg -i \"" + video.first.second + "_tmp_out.mp4""\" -i \"" + video.first.first + "\" -c copy -map 0 -map 1:1 -y \"" + video.first.second + "\""))
+                    if(!QProcess::execute("ffmpeg -loglevel 40 -i \"" + video.first.second + "\" -i \"" + video.first.first  + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + video.first.second + "\""))
                     {
 #ifdef _WIN32
                         const char* command = ("del /q \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
@@ -1082,7 +1138,7 @@ void MainWindow::on_pushButtonPickFolder_clicked()
         {
             inputFile = new QStandardItem(fileInfo.fileName());
             if(fileType(fileInfo)==VIDEO)
-                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mp4");
+                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mkv");
             else
                 outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
             inputPath = new QStandardItem(fileInfo.filePath());
@@ -1314,4 +1370,23 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
                              QMessageBox::Ok);
         ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
     }
+}
+
+void MainWindow::on_pushButtonForceStop_clicked()
+{
+    stop = true;
+}
+
+void MainWindow::on_pushButtonPause_clicked()
+{
+    pause = PAUSE;
+    ui->pushButtonPause->setEnabled(false);
+    ui->pushButtonContinue->setEnabled(true);
+}
+
+void MainWindow::on_pushButtonContinue_clicked()
+{
+    pause = CONTINUE;
+    ui->pushButtonPause->setEnabled(true);
+    ui->pushButtonContinue->setEnabled(false);
 }
