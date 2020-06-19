@@ -413,6 +413,11 @@ void Anime4KCPP::Anime4K::showImage()
 
 void Anime4KCPP::Anime4K::processWithPrintProgress()
 {
+    if (!vm)
+    {
+        process();
+        return;
+    }
     std::future<void> p = std::async(&Anime4K::process, this);
     std::chrono::milliseconds timeout(1000);
     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -443,6 +448,11 @@ void Anime4KCPP::Anime4K::processWithPrintProgress()
 
 void Anime4KCPP::Anime4K::processWithProgress(std::function<void(double)>&& callBack)
 {
+    if (!vm)
+    {
+        process();
+        return;
+    }
     std::future<void> p = std::async(&Anime4K::process, this);
     std::chrono::milliseconds timeout(1000);
     for (;;)
@@ -456,6 +466,24 @@ void Anime4KCPP::Anime4K::processWithProgress(std::function<void(double)>&& call
         double progress = VideoIO::instance().getProgress();
         callBack(progress);
     }
+}
+
+void Anime4KCPP::Anime4K::stopVideoProcess()
+{
+    if (vm)
+        VideoIO::instance().stopProcess();
+}
+
+void Anime4KCPP::Anime4K::pauseVideoProcess()
+{
+    if (vm)
+        VideoIO::instance().pauseProcess();
+}
+
+void Anime4KCPP::Anime4K::continueVideoProcess()
+{
+    if (vm)
+        VideoIO::instance().continueProcess();
 }
 
 void Anime4KCPP::Parameters::reset()
