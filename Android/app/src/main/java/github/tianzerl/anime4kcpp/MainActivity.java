@@ -34,12 +34,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import github.tianzerl.anime4kcpp.warpper.Anime4K;
-import github.tianzerl.anime4kcpp.warpper.Anime4KCreator;
-import github.tianzerl.anime4kcpp.warpper.Anime4KGPU;
-import github.tianzerl.anime4kcpp.warpper.Anime4KGPUCNN;
-import github.tianzerl.anime4kcpp.warpper.Parameters;
-import github.tianzerl.anime4kcpp.warpper.ProcessorType;
+import github.tianzerl.anime4kcpp.wrapper.Anime4K;
+import github.tianzerl.anime4kcpp.wrapper.Anime4KCreator;
+import github.tianzerl.anime4kcpp.wrapper.Anime4KGPU;
+import github.tianzerl.anime4kcpp.wrapper.Anime4KGPUCNN;
+import github.tianzerl.anime4kcpp.wrapper.Parameters;
+import github.tianzerl.anime4kcpp.wrapper.ProcessorType;
 import me.rosuh.filepicker.bean.FileItemBeanImpl;
 import me.rosuh.filepicker.config.AbstractFileFilter;
 import me.rosuh.filepicker.config.FilePickerManager;

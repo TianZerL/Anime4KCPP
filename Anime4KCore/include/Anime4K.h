@@ -4,6 +4,7 @@
 #include<sstream>
 #include<functional>
 #include<atomic>
+#include<future>
 
 #include<opencv2/opencv.hpp>
 #include<opencv2/videoio.hpp>
@@ -137,7 +138,7 @@ public:
     void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL, bool inputAsYUV = false);
     void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV = false);
 
-    void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V);
+    void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V, const double fps = 0.0);
     void saveImage(const std::string& dstFile);
     void saveImage(cv::Mat& dstImage);
     void saveImage(unsigned char*& data);
@@ -154,6 +155,8 @@ public:
 
     void showImage();
     virtual void process() = 0;
+    void processWithPrintProgress();
+    void processWithProgress(std::function<void(double)> &&callBack);
 protected:
     virtual ProcessorType getProcessorType() = 0;
 protected:

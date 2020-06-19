@@ -40,6 +40,7 @@ void Anime4KCPP::VideoIO::process()
                 }
                 writer.write(it->second);
                 frameMap.erase(it);
+                setProgress(static_cast<double>(i + 1) / static_cast<double>(stop));
             }
         });
 
@@ -68,9 +69,13 @@ bool Anime4KCPP::VideoIO::openReader(const std::string& srcFile)
     return reader.isOpened();
 }
 
-bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, CODEC codec, const cv::Size& size)
+bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile,const CODEC codec, const cv::Size& size,const double forceFps)
 {
-    double fps = reader.get(cv::CAP_PROP_FPS);
+    double fps;
+    if (!forceFps)
+        fps = reader.get(cv::CAP_PROP_FPS);
+    else
+        fps = forceFps;
     switch (codec)
     {
     case CODEC::MP4V:
@@ -172,4 +177,14 @@ void Anime4KCPP::VideoIO::write(const Frame& frame)
         frameMap[frame.second] = frame.first;
     }
     cndWrite.notify_all();
+}
+
+double Anime4KCPP::VideoIO::getProgress()
+{
+    return progress;
+}
+
+inline void Anime4KCPP::VideoIO::setProgress(double p)
+{
+    progress = p;
 }

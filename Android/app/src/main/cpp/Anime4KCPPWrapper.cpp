@@ -12,14 +12,14 @@ extern "C"
 {
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPU_createAnime4KCPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPU(
         JNIEnv *env,
         jobject /* this */) {
     return (jlong)(new Anime4KCPP::Anime4KCPU());
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPU_createAnime4KCPUByArgs(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
         JNIEnv *env,
         jobject /* this */,
         jint passes,
@@ -52,14 +52,14 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPU_createAnime4KCPUByArgs(
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_createAnime4KGPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPU(
         JNIEnv *env,
         jobject /* this */) {
     return (jlong)(new Anime4KCPP::Anime4KGPU());
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_createAnime4KGPUByArgs(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPUByArgs(
         JNIEnv *env,
         jobject /* this */,
         jint passes,
@@ -92,14 +92,14 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_createAnime4KGPUByArgs(
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNN(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNN(
         JNIEnv *env,
         jobject /* this */) {
     return (jlong)(new Anime4KCPP::Anime4KCPUCNN());
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
         JNIEnv *env,
         jobject /* this */,
         jint passes,
@@ -135,14 +135,14 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNN(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNN(
         JNIEnv *env,
         jobject /* this */) {
     return (jlong)(new Anime4KCPP::Anime4KGPUCNN());
 }
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
         JNIEnv *env,
         jobject /* this */,
         jint passes,
@@ -178,7 +178,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setArgumentsAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setArgumentsAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -211,7 +211,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setArgumentsAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_releaseAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_releaseAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
@@ -219,7 +219,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_releaseAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_loadImageAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadImageAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -233,7 +233,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_loadImageAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_processAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
@@ -241,7 +241,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_processAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_saveImageAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveImageAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -250,7 +250,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_saveImageAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setVideoModeAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoModeAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -259,7 +259,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setVideoModeAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_loadVideoAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadVideoAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -273,7 +273,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_loadVideoAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setVideoSaveInfoAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K,
@@ -286,7 +286,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_setVideoSaveInfoAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_saveVideoAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveVideoAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
@@ -294,49 +294,49 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4K_saveVideoAnime4K(
 }
 
 JNIEXPORT jboolean JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_checkGPUSupportAnime4KGPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_checkGPUSupportAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
     return (jboolean)(Anime4KCPP::Anime4KGPU::checkGPUSupport(0, 0).first);
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_initGPUAnime4KGPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_initGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
     Anime4KCPP::Anime4KGPU::initGPU();
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_initGPUAnime4KGPUCNN(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_initGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
     Anime4KCPP::Anime4KGPUCNN::initGPU();
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_releaseGPUAnime4KGPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_releaseGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
     Anime4KCPP::Anime4KGPU::releaseGPU();
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_releaseGPUAnime4KGPUCNN(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_releaseGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
     Anime4KCPP::Anime4KGPUCNN::releaseGPU();
 }
 
 JNIEXPORT jboolean JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPU_isInitializedGPUAnime4KGPU(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_isInitializedGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
     return (jboolean)(Anime4KCPP::Anime4KGPU::isInitializedGPU());
 }
 
 JNIEXPORT jboolean JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_isInitializedGPUAnime4KGPUCNN(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_isInitializedGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
     return (jboolean)(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU());
@@ -344,7 +344,7 @@ Java_github_tianzerl_anime4kcpp_warpper_Anime4KGPUCNN_isInitializedGPUAnime4KGPU
 
 
 JNIEXPORT jstring JNICALL
-Java_github_tianzerl_anime4kcpp_warpper_Anime4K_getCoreVersionAnime4K(
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_getCoreVersionAnime4K(
         JNIEnv *env,
         jclass clazz) {
     return env->NewStringUTF(ANIME4KCPP_CORE_VERSION);

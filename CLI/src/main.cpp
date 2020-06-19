@@ -94,6 +94,8 @@ false, 40, cmdline::range(1, 127));
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
 hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add("version", 'V', "print version information");
+    opt.add<float>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0F);
+    opt.add("disableProgress", 'D', "disable progress display");
 
     opt.parse_check(argc, argv);
 
@@ -120,6 +122,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     unsigned int dID = opt.get<unsigned int>("deviceID");
     std::string codec = opt.get<std::string>("codec");
     bool version = opt.exist("version");
+    float forceFps = opt.get<float>("forceFps");
+    bool disableProgress = opt.exist("disableProgress");
     // -V
     if (version)
     {
@@ -262,11 +266,11 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         }
         else//Video
         {
-            //Suffix check
-            outputPath.replace_extension(".mp4");
-
+            //default output
+            if (outputPath.string() == "output.png")
+                outputPath.replace_extension(".mkv");
             bool ffmpeg = checkFFmpeg();
-            std::string outputTmpName = output;
+            std::string outputTmpName = outputPath.string();
 
             if (!ffmpeg)
                 std::cout << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
@@ -284,17 +288,20 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
                     if (file.is_directory())
                         continue;
                     std::string currInputPath = file.path().string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".mp4")).string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".mkv")).string();
 
                     anime4k->loadVideo(currInputPath);
-                    anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
+                    anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
                     anime4k->showInfo();
                     anime4k->showFiltersInfo();
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                    anime4k->process();
+                    if (disableProgress)
+                        anime4k->process();
+                    else
+                        anime4k->processWithPrintProgress();
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                     std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
@@ -310,14 +317,17 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
                 std::string currOnputPath = outputPath.string();
 
                 anime4k->loadVideo(currInputPath);
-                anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec));
+                anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
                 anime4k->showInfo();
                 anime4k->showFiltersInfo();
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                anime4k->process();
+                if (disableProgress)
+                    anime4k->process();
+                else
+                    anime4k->processWithPrintProgress();
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                 std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 

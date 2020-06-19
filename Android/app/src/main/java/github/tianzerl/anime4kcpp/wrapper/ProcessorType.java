@@ -1,4 +1,4 @@
-package github.tianzerl.anime4kcpp.warpper;
+package github.tianzerl.anime4kcpp.wrapper;
 
 public enum ProcessorType {
     CPU, GPU, CPUCNN, GPUCNN

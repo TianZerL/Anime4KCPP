@@ -1,4 +1,4 @@
-package github.tianzerl.anime4kcpp.warpper;
+package github.tianzerl.anime4kcpp.wrapper;
 
 public class Anime4KCPUCNN extends Anime4K {
     public Anime4KCPUCNN() {

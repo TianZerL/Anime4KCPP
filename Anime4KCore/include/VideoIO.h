@@ -29,13 +29,15 @@ public:
     VideoIO& init(std::function<void()> &&p, size_t t);
     void process();
     bool openReader(const std::string& srcFile);
-    bool openWriter(const std::string& dstFile, CODEC codec, const cv::Size& size);
+    bool openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size,const double forceFps = 0.0);
     double get(int p);
     void release();
     Frame read();
     void write(const Frame& frame);
+    double getProgress();
 private:
     VideoIO() = default;
+    void setProgress(double p);
 private:
     size_t threads = 0;
     std::function<void()> processor;
@@ -48,4 +50,6 @@ private:
     std::condition_variable cndRead;
     std::mutex mtxWrite;
     std::condition_variable cndWrite;
+
+    std::atomic<double> progress;
 };

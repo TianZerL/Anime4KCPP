@@ -131,9 +131,9 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
     W = zf * orgW;
 }
 
-void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec)
+void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
-    if(!VideoIO::instance().openWriter(dstFile, codec, cv::Size(W, H)))
+    if (!VideoIO::instance().openWriter(dstFile, codec, cv::Size(W, H), fps))
         throw "Failed to initialize video writer.";
 }
 
@@ -409,6 +409,53 @@ void Anime4KCPP::Anime4K::showImage()
 {
     cv::imshow("dstImg", dstImg);
     cv::waitKey();
+}
+
+void Anime4KCPP::Anime4K::processWithPrintProgress()
+{
+    std::future<void> p = std::async(&Anime4K::process, this);
+    std::chrono::milliseconds timeout(1000);
+    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+    for (;;)
+    {
+        std::future_status status = p.wait_for(timeout);
+        if (status == std::future_status::ready)
+        {
+            std::cout
+                << std::fixed << std::setprecision(2)
+                << std::setw(5) << 100 << '%'
+                << "  elpsed: " << std::setw(5) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
+                << "  remaining: " << std::setw(5) << 0.0 << 's'
+                << std::endl;
+            break;
+        }
+        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+        double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
+        double progress = VideoIO::instance().getProgress();
+        std::cout
+            << std::fixed << std::setprecision(2)
+            << std::setw(5) << progress * 100 << '%'
+            << "  elpsed: " << std::setw(5) << currTime << 's'
+            << "  remaining: " << std::setw(5) << currTime / progress - currTime << 's'
+            << '\r';
+    }
+}
+
+void Anime4KCPP::Anime4K::processWithProgress(std::function<void(double)>&& callBack)
+{
+    std::future<void> p = std::async(&Anime4K::process, this);
+    std::chrono::milliseconds timeout(1000);
+    for (;;)
+    {
+        std::future_status status = p.wait_for(timeout);
+        if (status == std::future_status::ready)
+        {
+            callBack(1.0);
+            break;
+        }
+        double progress = VideoIO::instance().getProgress();
+        callBack(progress);
+    }
 }
 
 void Anime4KCPP::Parameters::reset()

@@ -1,4 +1,4 @@
-package github.tianzerl.anime4kcpp.warpper;
+package github.tianzerl.anime4kcpp.wrapper;
 
 public class Anime4KCreator {
     public Anime4KCreator(boolean initGPU, boolean initGPUCNN) {

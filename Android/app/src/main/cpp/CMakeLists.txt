@@ -18,7 +18,7 @@ add_library(Anime4KCPPCore
 
         SHARED
 
-        Anime4KCPPWarpper.cpp
+        Anime4KCPPWrapper.cpp
         ${SOURCE})
 
 target_link_libraries(Anime4KCPPCore
