@@ -28,8 +28,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import github.tianzerl.anime4kcpp.warpper.Anime4K;
 import github.tianzerl.anime4kcpp.warpper.Anime4KCreator;
@@ -44,7 +47,7 @@ import me.rosuh.filepicker.config.FilePickerManager;
 public class MainActivity extends AppCompatActivity {
 
     private enum Error {
-        Anime4KCPPError, FailedToCreateFolders, FailedToDeleteTmpFile
+        Anime4KCPPError, FailedToCreateFolders, FailedToDeleteTmpFile, FailedToLoadConfig, FailedToWriteConfig
     }
 
     private enum GPUState {
@@ -76,10 +79,11 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mainProgressBar;
     private ListView processingList;
     private TextView textViewState;
+    private Config config;
 
     private GPUState GPU = GPUState.UnInitialized;
     private GPUCNNState GPUCNN = GPUCNNState.UnInitialized;
-    private Anime4KCreator anime4KCreator = new Anime4KCreator(false);
+    private Anime4KCreator anime4KCreator = new Anime4KCreator(false,false);
 
     private Handler anime4KCPPHandler = new Handler(new Handler.Callback() {
         @Override
@@ -119,8 +123,16 @@ public class MainActivity extends AppCompatActivity {
 
         setSwitches();
 
+        config = new Config();
+        config.read();
         //Keep screen on
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        config.write();
     }
 
     @Override
@@ -218,17 +230,20 @@ public class MainActivity extends AppCompatActivity {
                 if (isChecked && GPU == GPUState.UnInitialized)
                 {
                     try {
-                        if (!Anime4KGPU.isInitializedGPU() && Anime4KGPU.checkGPUSupport())
+                        if (!Anime4KGPU.isInitializedGPU())
                         {
-                            Toast.makeText(MainActivity.this,"GPU Mode enabled",Toast.LENGTH_SHORT).show();
-                            Anime4KGPU.initGPU();
-                            GPU = GPUState.Initialized;
-                        }
-                        else
-                        {
-                            Toast.makeText(MainActivity.this,"Unsupported GPU Mode",Toast.LENGTH_SHORT).show();
-                            GPU = GPUState.Unsupported;
-                            buttonView.setChecked(false);
+                            if (Anime4KGPU.checkGPUSupport())
+                            {
+                                Toast.makeText(MainActivity.this, "GPU Mode enabled", Toast.LENGTH_SHORT).show();
+                                Anime4KGPU.initGPU();
+                                GPU = GPUState.Initialized;
+                            }
+                            else
+                            {
+                                Toast.makeText(MainActivity.this, "Unsupported GPU Mode", Toast.LENGTH_SHORT).show();
+                                GPU = GPUState.Unsupported;
+                                buttonView.setChecked(false);
+                            }
                         }
                     } catch (Exception exp) {
                         errorHandler(Error.Anime4KCPPError, exp);
@@ -251,17 +266,20 @@ public class MainActivity extends AppCompatActivity {
                 if (isChecked && GPUCNN == GPUCNNState.UnInitialized)
                 {
                     try {
-                        if (!Anime4KGPUCNN.isInitializedGPU() && Anime4KGPU.checkGPUSupport())
+                        if (!Anime4KGPUCNN.isInitializedGPU())
                         {
-                            Toast.makeText(MainActivity.this,"ACNet GPU Mode enabled",Toast.LENGTH_SHORT).show();
-                            Anime4KGPUCNN.initGPU();
-                            GPUCNN = GPUCNNState.Initialized;
-                        }
-                        else
-                        {
-                            Toast.makeText(MainActivity.this,"Unsupported ACNet GPU Mode",Toast.LENGTH_SHORT).show();
-                            GPUCNN = GPUCNNState.Unsupported;
-                            buttonView.setChecked(false);
+                            if (Anime4KGPU.checkGPUSupport())
+                            {
+                                Toast.makeText(MainActivity.this, "ACNet GPU Mode enabled", Toast.LENGTH_SHORT).show();
+                                Anime4KGPUCNN.initGPU();
+                                GPUCNN = GPUCNNState.Initialized;
+                            }
+                            else
+                            {
+                                Toast.makeText(MainActivity.this, "Unsupported ACNet GPU Mode", Toast.LENGTH_SHORT).show();
+                                GPUCNN = GPUCNNState.Unsupported;
+                                buttonView.setChecked(false);
+                            }
                         }
                     } catch (Exception exp) {
                         errorHandler(Error.Anime4KCPPError, exp);
@@ -311,6 +329,20 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to delete Temporary output video file, delete it manually.")
+                        .setPositiveButton("OK",null)
+                        .show();
+                break;
+            case FailedToLoadConfig:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("ERROR")
+                        .setMessage("Failed to load or create config file.")
+                        .setPositiveButton("OK",null)
+                        .show();
+                break;
+            case FailedToWriteConfig:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("ERROR")
+                        .setMessage("Failed to write config file.")
                         .setPositiveButton("OK",null)
                         .show();
                 break;
@@ -429,6 +461,60 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    class Config {
+        Properties properties;
+        File path = new File(getFilesDir(),"config.properties");
+        protected Config() {
+            properties = new Properties();
+            if (path.exists())
+            {
+                try {
+                    FileInputStream fi =  new FileInputStream(path);
+                    properties.load(fi);
+                    fi.close();
+                } catch (Exception ignored) {
+                    errorHandler(Error.FailedToLoadConfig,null);
+                }
+            }
+            else {
+                try {
+                    if(!path.createNewFile())
+                        throw new Exception();
+                    FileInputStream fi =  new FileInputStream(path);
+                    properties.load(fi);
+                    fi.close();
+                } catch (Exception ignored) {
+                    errorHandler(Error.FailedToLoadConfig,null);
+                }
+            }
+        }
+
+        protected void write() {
+            properties.setProperty("ouputPath",((EditText)findViewById(R.id.editTextOutputPath)).getText().toString());
+            properties.setProperty("ouputPrefix",((EditText)findViewById(R.id.editTextOutputPrefix)).getText().toString());
+            properties.setProperty("imageSuffix",((EditText)findViewById(R.id.editTextSuffixImage)).getText().toString());
+            properties.setProperty("videoSuffix",((EditText)findViewById(R.id.editTextSuffixVideo)).getText().toString());
+            try {
+                FileOutputStream fo =  new FileOutputStream(path);
+                properties.store(fo,null);
+                fo.flush();
+                fo.close();
+            } catch (Exception ignored) {
+                errorHandler(Error.FailedToWriteConfig,null);
+            }
+        }
+
+        protected void read() {
+            ((EditText)findViewById(R.id.editTextOutputPath))
+                    .setText(properties.getProperty("ouputPath","Android/data/github.tianzerl.anime4kcpp/files/output"));
+            ((EditText)findViewById(R.id.editTextOutputPrefix))
+                    .setText(properties.getProperty("ouputPrefix","anime4kcpp_output_"));
+            ((EditText)findViewById(R.id.editTextSuffixImage))
+                    .setText(properties.getProperty("imageSuffix","png:jpg:jpeg:bmp"));
+            ((EditText)findViewById(R.id.editTextSuffixVideo))
+                    .setText(properties.getProperty("videoSuffix","mp4:mkv:avi:m4v:flv:3gp:wmv:mov"));
+        }
+    }
 
     @SuppressLint("StaticFieldLeak")
     class Anime4KProcessor extends AsyncTask<String, Integer, Double> {

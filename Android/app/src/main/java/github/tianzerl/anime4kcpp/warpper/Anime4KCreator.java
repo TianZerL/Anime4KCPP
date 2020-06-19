@@ -1,9 +1,11 @@
 package github.tianzerl.anime4kcpp.warpper;
 
 public class Anime4KCreator {
-    public Anime4KCreator(boolean initGPU) {
+    public Anime4KCreator(boolean initGPU, boolean initGPUCNN) {
         if (initGPU && !Anime4KGPU.isInitializedGPU())
             Anime4KGPU.initGPU();
+        if (initGPUCNN && !Anime4KGPUCNN.isInitializedGPU())
+            Anime4KGPUCNN.initGPU();
     }
 
     public Anime4K create(Parameters parameters, ProcessorType type) {
@@ -27,5 +29,7 @@ public class Anime4KCreator {
         super.finalize();
         if (Anime4KGPU.isInitializedGPU())
             Anime4KGPU.releaseGPU();
+        if (Anime4KGPUCNN.isInitializedGPU())
+            Anime4KGPUCNN.releaseGPU();
     }
 }
