@@ -810,6 +810,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="90"/>
+        <location filename="mainwindow.cpp" line="1374"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -910,6 +911,11 @@
         <location filename="mainwindow.cpp" line="1366"/>
         <source>Unsupport GPU acceleration for ACNet in this platform</source>
         <translation>不支持将GPU加速用于ACNet</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.cpp" line="1375"/>
+        <source>Do you really want to stop all tasks?</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>You are trying to enable GPU acceleration, which is an experimental function, check and initialize GPU?</source>

@@ -1371,7 +1371,12 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
 
 void MainWindow::on_pushButtonForceStop_clicked()
 {
-    stop = true;
+    if (QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
+        tr("Do you really want to stop all tasks?"),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
+    {
+        stop = true;
+    }
 }
 
 void MainWindow::on_pushButtonPause_clicked()

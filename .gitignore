@@ -13,3 +13,4 @@ _deps
 Build
 ThirdParty
 settings.ini
+*.rc
