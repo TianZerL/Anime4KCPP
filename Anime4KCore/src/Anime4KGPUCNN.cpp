@@ -51,7 +51,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
             if (tmpZfUp - tmpZf > 0.00001)
             {
-                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
             }
         }
         else
@@ -72,7 +72,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             cv::merge(std::vector{ dstImg,uv }, dstImg);
             if (tmpZfUp - tmpZf > 0.00001)
             {
-                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
             }
         }
     }
@@ -103,7 +103,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_LANCZOS4);
+                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
                 }
                 
                 frame.first = dstFrame;
