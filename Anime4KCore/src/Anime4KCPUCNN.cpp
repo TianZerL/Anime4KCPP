@@ -7,10 +7,6 @@ Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
 
 void Anime4KCPP::Anime4KCPUCNN::process()
 {
-    double tmpZf = log2(zf);
-    if (tmpZf < 0.0001)
-        tmpZf = 1.0- 0.0002;
-    int tmpZfUp = ceil(tmpZf);
     CNNProcessor* processor;
     if (HDN)
     {
@@ -20,79 +16,150 @@ void Anime4KCPP::Anime4KCPUCNN::process()
     {
         processor = CNNCreator::create(CNNType::ACNet);
     }
-    
-    if (!vm)
-    {
-        if (!inputYUV)
-        {
-            cv::Mat tmpImg = orgImg;
-            cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
-            for (int i = 0; i < tmpZfUp; i++)
-            {
-                processor->process(tmpImg, dstImg);
 
-                std::vector<cv::Mat> yuv(3);
-                cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::split(tmpImg, yuv);
-                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
-                tmpImg = dstImg;
-            }
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
-            if (tmpZfUp - tmpZf > 0.00001)
+    if (fm)
+    {
+        if (!vm)
+        {
+            if (!inputYUV)
             {
-                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                if (zf > 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
+                else if (zf < 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+
+                processor->process(orgImg, dstImg);
+                std::vector<cv::Mat> yuv(3);
+                cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::split(orgImg, yuv);
+                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+
+                cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+            }
+            else
+            {
+                if (zf > 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
+                else if (zf < 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+
+                processor->process(orgImg, dstImg);
+                std::vector<cv::Mat> yuv(3);
+                cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::split(orgImg, yuv);
+                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+ 
             }
         }
         else
         {
-            cv::Mat tmpImg = orgImg;
-            for (int i = 0; i < tmpZfUp; i++)
-            {
-                processor->process(tmpImg, dstImg);
+            VideoIO::instance().init(
+                [this, processor]()
+                {
+                    Frame frame = VideoIO::instance().read();
+                    cv::Mat orgFrame = frame.first;
+                    cv::Mat dstFrame;
 
-                std::vector<cv::Mat> yuv(3);
-                cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::split(tmpImg, yuv);
-                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
-                tmpImg = dstImg;
-            }
-            if (tmpZfUp - tmpZf > 0.00001)
-            {
-                cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
-            }
+                    if (zf > 2.0)
+                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
+                    else if (zf < 2.0)
+                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                    cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2YUV);
+
+                    processor->process(orgFrame, dstFrame);
+                    std::vector<cv::Mat> yuv(3);
+                    cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::split(orgFrame, yuv);
+                    cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+
+                    cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
+                    frame.first = dstFrame;
+                    VideoIO::instance().write(frame);
+                }
+                , mt
+                    ).process();
         }
     }
     else
     {
-        VideoIO::instance().init(
-            [this, tmpZfUp, tmpZf, processor]()
+        double tmpZf = log2(zf);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = ceil(tmpZf);
+        if (!vm)
+        {
+            if (!inputYUV)
             {
-                Frame frame = VideoIO::instance().read();
-                cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame;
-                
-                cv::Mat tmpFrame = orgFrame;
-                cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
+                cv::Mat tmpImg = orgImg;
+                cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
                 for (int i = 0; i < tmpZfUp; i++)
                 {
-                    processor->process(tmpFrame, dstFrame);
+                    processor->process(tmpImg, dstImg);
 
                     std::vector<cv::Mat> yuv(3);
-                    cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::split(tmpFrame, yuv);
-                    cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
-                    tmpFrame = dstFrame;
+                    cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::split(tmpImg, yuv);
+                    cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                    tmpImg = dstImg;
                 }
-                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
+                cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
                 }
-                frame.first = dstFrame;
-                VideoIO::instance().write(frame);
             }
-            , mt
-                ).process();
+            else
+            {
+                cv::Mat tmpImg = orgImg;
+                for (int i = 0; i < tmpZfUp; i++)
+                {
+                    processor->process(tmpImg, dstImg);
+
+                    std::vector<cv::Mat> yuv(3);
+                    cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::split(tmpImg, yuv);
+                    cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                    tmpImg = dstImg;
+                }
+                if (tmpZfUp - tmpZf > 0.00001)
+                {
+                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                }
+            }
+        }
+        else
+        {
+            VideoIO::instance().init(
+                [this, tmpZfUp, tmpZf, processor]()
+                {
+                    Frame frame = VideoIO::instance().read();
+                    cv::Mat orgFrame = frame.first;
+                    cv::Mat dstFrame;
+
+                    cv::Mat tmpFrame = orgFrame;
+                    cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
+                    for (int i = 0; i < tmpZfUp; i++)
+                    {
+                        processor->process(tmpFrame, dstFrame);
+
+                        std::vector<cv::Mat> yuv(3);
+                        cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                        cv::split(tmpFrame, yuv);
+                        cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                        tmpFrame = dstFrame;
+                    }
+                    cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
+                    if (tmpZfUp - tmpZf > 0.00001)
+                    {
+                        cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                    }
+                    frame.first = dstFrame;
+                    VideoIO::instance().write(frame);
+                }
+                , mt
+                    ).process();
+        }
     }
     CNNCreator::release(processor);
 }
