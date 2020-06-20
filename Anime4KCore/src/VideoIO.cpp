@@ -186,7 +186,7 @@ double Anime4KCPP::VideoIO::getProgress()
 
 void Anime4KCPP::VideoIO::stopProcess()
 {
-    stop = 0;
+    stop = 1;
 }
 
 void Anime4KCPP::VideoIO::pauseProcess()

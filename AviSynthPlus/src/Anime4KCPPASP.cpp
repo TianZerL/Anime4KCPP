@@ -104,16 +104,10 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         for (int y = 0; y < srcH; y++)
         {
             memcpy(srcDataY + y * static_cast<size_t>(srcL), srcpY, srcL);
-            srcpY += srcPitch;
-        }
-        for (int y = 0; y < srcH; y++)
-        {
             memcpy(srcDataU + y * static_cast<size_t>(srcL), srcpU, srcL);
-            srcpU += srcPitch;
-        }
-        for (int y = 0; y < srcH; y++)
-        {
             memcpy(srcDataV + y * static_cast<size_t>(srcL), srcpV, srcL);
+            srcpY += srcPitch;
+            srcpU += srcPitch;
             srcpV += srcPitch;
         }
 
@@ -136,16 +130,10 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         for (int y = 0; y < dstH; y++)
         {
             memcpy(dstpY, dstDataY + y * static_cast<size_t>(dstL), dstL);
-            dstpY += dstPitch;
-        }
-        for (int y = 0; y < dstH; y++)
-        {
             memcpy(dstpU, dstDataU + y * static_cast<size_t>(dstL), dstL);
-            dstpU += dstPitch;
-        }
-        for (int y = 0; y < dstH; y++)
-        {
             memcpy(dstpV, dstDataV + y * static_cast<size_t>(dstL), dstL);
+            dstpY += dstPitch;
+            dstpU += dstPitch;
             dstpV += dstPitch;
         }
 
