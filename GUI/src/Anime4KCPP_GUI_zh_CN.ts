@@ -810,7 +810,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="90"/>
-        <location filename="mainwindow.cpp" line="1374"/>
+        <location filename="mainwindow.cpp" line="1372"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -857,9 +857,9 @@
         <location filename="mainwindow.cpp" line="1182"/>
         <location filename="mainwindow.cpp" line="1206"/>
         <location filename="mainwindow.cpp" line="1224"/>
-        <location filename="mainwindow.cpp" line="1325"/>
-        <location filename="mainwindow.cpp" line="1341"/>
-        <location filename="mainwindow.cpp" line="1365"/>
+        <location filename="mainwindow.cpp" line="1323"/>
+        <location filename="mainwindow.cpp" line="1339"/>
+        <location filename="mainwindow.cpp" line="1363"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -887,7 +887,7 @@
         <location filename="mainwindow.cpp" line="1230"/>
         <location filename="mainwindow.cpp" line="1262"/>
         <location filename="mainwindow.cpp" line="1276"/>
-        <location filename="mainwindow.cpp" line="1351"/>
+        <location filename="mainwindow.cpp" line="1349"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -908,12 +908,12 @@
         <translation>释放ACNet GPU成功</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1366"/>
+        <location filename="mainwindow.cpp" line="1364"/>
         <source>Unsupport GPU acceleration for ACNet in this platform</source>
         <translation>不支持将GPU加速用于ACNet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1375"/>
+        <location filename="mainwindow.cpp" line="1373"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>确认停止所有任务？</translation>
     </message>

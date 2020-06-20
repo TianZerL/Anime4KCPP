@@ -1291,7 +1291,6 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->spinBoxPushColorCount->setEnabled(false);
         ui->doubleSpinBoxPushColorStrength->setEnabled(false);
         ui->doubleSpinBoxPushGradientStrength->setEnabled(false);
-        ui->checkBoxFastMode->setEnabled(false);
         ui->tabPreprocessing->setEnabled(false);
         ui->tabPostprocessing->setEnabled(false);
         ui->checkBoxGPUMode->setEnabled(false);
@@ -1304,7 +1303,6 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->spinBoxPushColorCount->setEnabled(true);
         ui->doubleSpinBoxPushColorStrength->setEnabled(true);
         ui->doubleSpinBoxPushGradientStrength->setEnabled(true);
-        ui->checkBoxFastMode->setEnabled(true);
         ui->tabPreprocessing->setEnabled(true);
         ui->tabPostprocessing->setEnabled(true);
         ui->checkBoxACNetGPU->setEnabled(false);
