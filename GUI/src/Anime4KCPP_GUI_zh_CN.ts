@@ -915,7 +915,7 @@
     <message>
         <location filename="mainwindow.cpp" line="1375"/>
         <source>Do you really want to stop all tasks?</source>
-        <translation type="unfinished"></translation>
+        <translation>确认停止所有任务？</translation>
     </message>
     <message>
         <source>You are trying to enable GPU acceleration, which is an experimental function, check and initialize GPU?</source>
