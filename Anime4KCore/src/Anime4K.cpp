@@ -428,7 +428,7 @@ void Anime4KCPP::Anime4K::processWithPrintProgress()
         {
             std::cout
                 << std::fixed << std::setprecision(2)
-                << std::setw(5) << 100 << '%'
+                << std::setw(5) << 100.0 << '%'
                 << "  elpsed: " << std::setw(5) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
                 << "  remaining: " << std::setw(5) << 0.0 << 's'
                 << std::endl;

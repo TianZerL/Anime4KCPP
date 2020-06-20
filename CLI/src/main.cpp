@@ -266,9 +266,11 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         }
         else//Video
         {
-            //default output
-            if (outputPath.string() == "output.png")
+            //output suffix check
+            if (std::string(".png.jpg.jpeg.bmp.PNG.JPG.JPEG.BMP")
+                .find(outputPath.extension().string()) != std::string::npos)
                 outputPath.replace_extension(".mkv");
+
             bool ffmpeg = checkFFmpeg();
             std::string outputTmpName = outputPath.string();
 
