@@ -476,7 +476,7 @@ void Anime4KCPP::Anime4K::stopVideoProcess()
 
 void Anime4KCPP::Anime4K::pauseVideoProcess()
 {
-    if (vm)
+    if (vm && !VideoIO::instance().isPaused())
     {
         std::thread t(&VideoIO::pauseProcess, &VideoIO::instance());
         t.detach();

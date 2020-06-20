@@ -204,6 +204,11 @@ void Anime4KCPP::VideoIO::continueProcess()
     pause = false;
 }
 
+bool Anime4KCPP::VideoIO::isPaused()
+{
+    return pause;
+}
+
 inline void Anime4KCPP::VideoIO::setProgress(double p)
 {
     progress = p;

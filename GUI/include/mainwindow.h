@@ -55,7 +55,7 @@ enum GPUCNNMode
 
 enum PauseFlag
 {
-    NORMAL, PAUSE, CONTINUE
+    NORMAL, PAUSE, PAUSED, CONTINUE
 };
 
 class MainWindow : public QMainWindow

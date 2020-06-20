@@ -38,6 +38,7 @@ public:
     void stopProcess();
     void pauseProcess();
     void continueProcess();
+    bool isPaused();
 private:
     VideoIO() = default;
     void setProgress(double p);

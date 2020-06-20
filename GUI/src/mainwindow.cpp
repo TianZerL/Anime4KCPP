@@ -949,7 +949,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     anime4K->processWithProgress([this, anime4K, &startTime, &cm](double v) {
                         if (stop)
                         {
-                            if(pause == PAUSE)
+                            if(pause == PAUSED)
                             {
                                 anime4K->continueVideoProcess();
                                 pause = NORMAL;
@@ -960,13 +960,14 @@ void MainWindow::on_pushButtonStart_clicked()
                         if (pause == PAUSE)
                         {
                             anime4K->pauseVideoProcess();
+                            pause = PAUSED;
                         }
                         else if (pause == CONTINUE)
                         {
                             anime4K->continueVideoProcess();
                             pause = NORMAL;
                         }
-                        else
+                        else if (pause == NORMAL)
                         {
                             double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-startTime).count()/1000.0;
                             double remaining = elpsed / v-elpsed;
@@ -989,14 +990,10 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 if(ffmpeg)
                 {
-                    if(!QProcess::execute("ffmpeg -loglevel 40 -i \"" + video.first.second + "\" -i \"" + video.first.first  + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + video.first.second + "\""))
+                    QString tmpFilePath = video.first.second + "_tmp_out.mp4";
+                    if (!QProcess::execute("ffmpeg -loglevel 40 -i \"" + tmpFilePath + "\" -i \"" + video.first.first + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + video.first.second + "\""))
                     {
-#ifdef _WIN32
-                        const char* command = ("del /q \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
-#else
-                        const char* command = ("rm \"" + QDir::toNativeSeparators(video.first.second + "_tmp_out.mp4\"")).toLatin1();
-#endif // CURRENT SYSTEM
-                        system(command);
+                        QFile::remove(tmpFilePath);
                     }
                 }
 
