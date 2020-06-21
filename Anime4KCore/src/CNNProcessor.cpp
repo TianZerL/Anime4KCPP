@@ -2,11 +2,12 @@
 
 void Anime4KCPP::CNNProcessor::conv1To8(cv::InputArray img, const double* kernels, const double* biases, std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
-    const int lineStep = img.cols() * 3;
+    const int srcChannels = img.channels();
+    const int lineStep = img.cols() * srcChannels;
     changEachPixel1To8(img, [&](const int i, const int j, Chan tmpMat1, Chan tmpMat2, LineC curLine) {
-        const int orgJ = j / 4 * 3;
-        const int jp = orgJ < (img.cols() - 1) * 3 ? 3 : 0;
-        const int jn = orgJ > 3 ? -3 : 0;
+        const int orgJ = j / 4 * srcChannels;
+        const int jp = orgJ < (img.cols() - 1) * srcChannels ? srcChannels : 0;
+        const int jn = orgJ > srcChannels ? -srcChannels : 0;
         const LineC pLineData = i < img.rows() - 1 ? curLine + lineStep : curLine;
         const LineC cLineData = curLine;
         const LineC nLineData = i > 0 ? curLine - lineStep : curLine;
@@ -523,12 +524,14 @@ void Anime4KCPP::CNNProcessor::changEachPixel1To8(cv::InputArray _src,
     tmpMats.first.create(src.size(), CV_64FC4);
     tmpMats.second.create(src.size(), CV_64FC4);
 
-    int h = src.rows, w = src.cols;
+    const size_t srcChannels = src.channels();
 
-    int jMAX = w * 4;
+    const int h = src.rows, w = src.cols;
+
+    const int jMAX = w * 4;
 #ifdef _MSC_VER
     Concurrency::parallel_for(0, h, [&](int i) {
-        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(3);
+        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * srcChannels;
         LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
@@ -538,7 +541,7 @@ void Anime4KCPP::CNNProcessor::changEachPixel1To8(cv::InputArray _src,
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(3);
+        LineC lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * srcChannels;
         LineF tmpLineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         LineF tmpLineData2 = reinterpret_cast<double*>(tmpMats.second.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
         for (int j = 0; j < jMAX; j += 4)
@@ -555,9 +558,9 @@ void Anime4KCPP::CNNProcessor::changEachPixel8To8(
     tmp1.create(tmpMats.first.size(), tmpMats.first.type());
     tmp2.create(tmpMats.second.size(), tmpMats.second.type());
 
-    int h = tmpMats.first.rows, w = tmpMats.first.cols;
+    const int h = tmpMats.first.rows, w = tmpMats.first.cols;
 
-    int jMAX = w * 4;
+    const int jMAX = w * 4;
 #ifdef _MSC_VER
     Concurrency::parallel_for(0, h, [&](int i) {
         LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i) * static_cast<size_t>(w) * static_cast<size_t>(4);
@@ -589,10 +592,10 @@ void Anime4KCPP::CNNProcessor::changEachPixel8To1(cv::Mat& img,
     std::pair<cv::Mat, cv::Mat>& tmpMats)
 {
     cv::Mat tmp;
-    int h = 2 * tmpMats.first.rows, w = 2 * tmpMats.first.cols;
+    const int h = 2 * tmpMats.first.rows, w = 2 * tmpMats.first.cols;
     tmp.create(h, w, CV_8UC1);
 
-    int jMAX = w;
+    const int jMAX = w;
 #ifdef _MSC_VER
     Concurrency::parallel_for(0, h, [&](int i) {
         LineF lineData1 = reinterpret_cast<double*>(tmpMats.first.data) + static_cast<size_t>(i / 2) * static_cast<size_t>(w / 2) * static_cast<size_t>(4);

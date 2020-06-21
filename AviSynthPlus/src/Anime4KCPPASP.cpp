@@ -60,14 +60,14 @@ Anime4KCPPF::Anime4KCPPF(
     GPUMode(GPUMode),
     CNN(CNN)
 {
-    if (!vi.IsRGB24() && !vi.IsYV24())
+    if (!vi.IsRGB24() && (!vi.IsYUV() || vi.BitsPerComponent() != 8 || !vi.IsPlanar()))
     {
-        env->ThrowError("Anime4KCPP: RGB24 or YUV444 data only!");
+        env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only!");
     }
 
-    if (vi.IsYV24() && !CNN)
+    if (vi.IsYUV() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: YUV444 only for ACNet!");
+        env->ThrowError("Anime4KCPP: YUV only for ACNet!");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -79,15 +79,28 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    if (vi.IsYV24())
+    if (vi.IsYUV())
     {
-        int srcPitch = src->GetPitch(PLANAR_Y);
-        int dstPitch = dst->GetPitch(PLANAR_Y);
+        int srcPitchY = src->GetPitch(PLANAR_Y);
+        int dstPitchY = dst->GetPitch(PLANAR_Y);
+        int srcPitchU = src->GetPitch(PLANAR_U);
+        int dstPitchU = dst->GetPitch(PLANAR_U);
+        int srcPitchV = src->GetPitch(PLANAR_V);
+        int dstPitchV = dst->GetPitch(PLANAR_V);
 
-        int srcH = src->GetHeight(PLANAR_Y);
-        int srcL = src->GetRowSize(PLANAR_Y);
-        int dstH = dst->GetHeight(PLANAR_Y);
-        int dstL = dst->GetRowSize(PLANAR_Y);
+        int srcHY = src->GetHeight(PLANAR_Y);
+        int srcLY = src->GetRowSize(PLANAR_Y);
+        int srcHU = src->GetHeight(PLANAR_U);
+        int srcLU = src->GetRowSize(PLANAR_U);
+        int srcHV = src->GetHeight(PLANAR_V);
+        int srcLV = src->GetRowSize(PLANAR_V);
+
+        int dstHY = dst->GetHeight(PLANAR_Y);
+        int dstLY = dst->GetRowSize(PLANAR_Y);
+        int dstHU = dst->GetHeight(PLANAR_U);
+        int dstLU = dst->GetRowSize(PLANAR_U);
+        int dstHV = dst->GetHeight(PLANAR_V);
+        int dstLV = dst->GetRowSize(PLANAR_V);
 
         const unsigned char* srcpY = src->GetReadPtr(PLANAR_Y);
         const unsigned char* srcpU = src->GetReadPtr(PLANAR_U);
@@ -97,18 +110,24 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
         unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
 
-        unsigned char* srcDataY = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
-        unsigned char* srcDataU = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
-        unsigned char* srcDataV = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+        unsigned char* srcDataY = new unsigned char[static_cast<size_t>(srcHY) * static_cast<size_t>(srcLY)];
+        unsigned char* srcDataU = new unsigned char[static_cast<size_t>(srcHU) * static_cast<size_t>(srcLU)];
+        unsigned char* srcDataV = new unsigned char[static_cast<size_t>(srcHV) * static_cast<size_t>(srcLV)];
 
-        for (int y = 0; y < srcH; y++)
+        for (int y = 0; y < srcHY; y++)
         {
-            memcpy(srcDataY + y * static_cast<size_t>(srcL), srcpY, srcL);
-            memcpy(srcDataU + y * static_cast<size_t>(srcL), srcpU, srcL);
-            memcpy(srcDataV + y * static_cast<size_t>(srcL), srcpV, srcL);
-            srcpY += srcPitch;
-            srcpU += srcPitch;
-            srcpV += srcPitch;
+            memcpy(srcDataY + y * static_cast<size_t>(srcLY), srcpY, srcLY);
+            srcpY += srcPitchY;
+            if (y < srcHU)
+            {
+                memcpy(srcDataU + y * static_cast<size_t>(srcLU), srcpU, srcLU);
+                srcpU += srcPitchU;
+            }
+            if (y < srcHV)
+            {
+                memcpy(srcDataV + y * static_cast<size_t>(srcLV), srcpV, srcLV);
+                srcpV += srcPitchV;
+            }
         }
 
         Anime4KCPP::Anime4K* anime4K;
@@ -118,7 +137,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         else
             anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
-        anime4K->loadImage(srcH, srcL, srcDataY, srcDataU, srcDataV, true);
+        anime4K->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
         anime4K->process();
 
         size_t dstSize = anime4K->getResultDataPerChannelLength();
@@ -127,14 +146,20 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         unsigned char* dstDataV = new unsigned char[dstSize];
         anime4K->saveImage(dstDataY, dstDataU, dstDataV);
 
-        for (int y = 0; y < dstH; y++)
+        for (int y = 0; y < dstHY; y++)
         {
-            memcpy(dstpY, dstDataY + y * static_cast<size_t>(dstL), dstL);
-            memcpy(dstpU, dstDataU + y * static_cast<size_t>(dstL), dstL);
-            memcpy(dstpV, dstDataV + y * static_cast<size_t>(dstL), dstL);
-            dstpY += dstPitch;
-            dstpU += dstPitch;
-            dstpV += dstPitch;
+            memcpy(dstpY, dstDataY + y * static_cast<size_t>(dstLY), dstLY);
+            dstpY += dstPitchY;
+            if (y < dstHU)
+            {
+                memcpy(dstpU, dstDataU + y * static_cast<size_t>(dstLU), dstLU);
+                dstpU += dstPitchU;
+            }
+            if (y < dstHV)
+            {
+                memcpy(dstpV, dstDataV + y * static_cast<size_t>(dstLV), dstLV);
+                dstpV += dstPitchV;
+            }
         }
 
         anime4KCreator.release(anime4K);

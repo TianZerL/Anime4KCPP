@@ -87,12 +87,17 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
     W = zf * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV)
+void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444)
 {
     orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
-    if (inputAsYUV)
+    if (inputAsYUV444)
     {
         inputYUV = true;
+        std::vector<cv::Mat> yuv(3);
+        cv::split(dstImg, yuv);
+        dstY = orgY = yuv[Y];
+        dstU = orgU = yuv[U];
+        dstV = orgV = yuv[V];
     }
     else
     {
@@ -105,16 +110,14 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
     W = zf * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV)
+void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
 {
-    if (inputAsYUV)
+    if (inputAsYUV444)
     {
         inputYUV = true;
-        cv::merge(std::vector{
-                                cv::Mat(rows, cols, CV_8UC1, r),
-                                cv::Mat(rows, cols, CV_8UC1, g),
-                                cv::Mat(rows, cols, CV_8UC1, b) },
-                                orgImg);
+        dstY = orgY = cv::Mat(rows, cols, CV_8UC1, r);
+        dstU = orgU = cv::Mat(rows, cols, CV_8UC1, g);
+        dstV = orgV = cv::Mat(rows, cols, CV_8UC1, b);
     }
     else
     {
@@ -123,10 +126,22 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
                                 cv::Mat(rows, cols, CV_8UC1, g),
                                 cv::Mat(rows, cols, CV_8UC1, r) },
                                 orgImg);
+        dstImg = orgImg;
     }
-    dstImg = orgImg;
     orgH = rows;
     orgW = cols;
+    H = zf * orgH;
+    W = zf * orgW;
+}
+
+void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
+{
+    inputYUV = true;
+    dstY = orgY = cv::Mat(rowsY, colsY, CV_8UC1, y);
+    dstU = orgU = cv::Mat(rowsU, colsU, CV_8UC1, u);
+    dstV = orgV = cv::Mat(rowsV, colsV, CV_8UC1, v);
+    orgH = rowsY;
+    orgW = colsY;
     H = zf * orgH;
     W = zf * orgW;
 }
@@ -139,11 +154,25 @@ void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const COD
 
 void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
 {
+    if (inputYUV)
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+        else
+            throw "Only YUV444 can be saved to data pointer";
+    }
     cv::imwrite(dstFile, dstImg);
 }
 
 void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
 {
+    if(inputYUV)
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+        else
+            throw "Only YUV444 can be saved to data pointer";
+    }
     dstImage = dstImg;
 }
 
@@ -154,6 +183,13 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
     size_t size = dstImg.step * H;
     if(!inputYUV)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2RGB);
+    else
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+        else
+            throw "Only YUV444 can be saved to data pointer";
+    }
     memcpy(data, dstImg.data, size);
 }
 
@@ -161,17 +197,17 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsign
 {
     if (r == nullptr || g == nullptr || b == nullptr)
         throw "Pointers can not be nullptr";
-    size_t size = (size_t)W * (size_t)H;
-    std::vector<cv::Mat> bgr(3);
-    cv::split(dstImg, bgr);
     if (inputYUV)
     {
-        memcpy(r, bgr[Y].data, size);
-        memcpy(g, bgr[U].data, size);
-        memcpy(b, bgr[V].data, size);
+        memcpy(r, dstY.data, (size_t)dstY.cols * (size_t)dstY.rows);
+        memcpy(g, dstU.data, (size_t)dstU.cols * (size_t)dstU.rows);
+        memcpy(b, dstV.data, (size_t)dstV.cols * (size_t)dstV.rows);
     }
     else
     {
+        size_t size = (size_t)W * (size_t)H;
+        std::vector<cv::Mat> bgr(3);
+        cv::split(dstImg, bgr);
         memcpy(r, bgr[R].data, size);
         memcpy(g, bgr[G].data, size);
         memcpy(b, bgr[B].data, size);

@@ -40,16 +40,14 @@ void Anime4KCPP::Anime4KCPUCNN::process()
             else
             {
                 if (zf > 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
                 else if (zf < 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
 
-                processor->process(orgImg, dstImg);
-                std::vector<cv::Mat> yuv(3);
-                cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::split(orgImg, yuv);
-                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
- 
+                processor->process(orgY, dstY);
+
+                cv::resize(orgU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::resize(orgV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             }
         }
         else
@@ -111,20 +109,23 @@ void Anime4KCPP::Anime4KCPUCNN::process()
             }
             else
             {
-                cv::Mat tmpImg = orgImg;
+                cv::Mat tmpY = orgY;
+                dstU = orgU;
+                dstV = orgV;
                 for (int i = 0; i < tmpZfUp; i++)
                 {
-                    processor->process(tmpImg, dstImg);
+                    processor->process(tmpY, dstY);
 
-                    std::vector<cv::Mat> yuv(3);
-                    cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::split(tmpImg, yuv);
-                    cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
-                    tmpImg = dstImg;
+                    cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    tmpY = dstY;
                 }
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                    double currZf = zf / exp2(tmpZfUp);
+                    cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+                    cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+                    cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
                 }
             }
         }

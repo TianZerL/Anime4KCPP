@@ -51,19 +51,16 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             }
             else
             {
-                cv::Mat uv;
                 if (zf > 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
                 else if (zf < 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
-                std::vector<cv::Mat> yuv(3);
-                cv::split(orgImg, yuv);
-                orgImg = yuv[Y];
-                cv::merge(std::vector{ yuv[U],yuv[V] }, uv);
-                dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_8UC1);
-                runKernel(orgImg, dstImg);
-                cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::merge(std::vector{ dstImg,uv }, dstImg);
+                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+
+                dstY.create(orgY.rows * 2, orgY.cols * 2, CV_8UC1);
+                runKernel(orgY, dstY);
+
+                cv::resize(orgU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::resize(orgV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             }
         }
         else
@@ -134,23 +131,23 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             }
             else
             {
-                cv::Mat tmpImg = orgImg;
-                cv::Mat uv;
-                std::vector<cv::Mat> yuv(3);
-                cv::split(tmpImg, yuv);
-                tmpImg = yuv[Y];
-                cv::merge(std::vector{ yuv[U],yuv[V] }, uv);
+                cv::Mat tmpY = orgY;
+                dstU = orgU;
+                dstV = orgV;
                 for (int i = 0; i < tmpZfUp; i++)
                 {
-                    dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, CV_8UC1);
-                    runKernel(tmpImg, dstImg);
-                    cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    tmpImg = dstImg;
+                    dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_8UC1);
+                    runKernel(tmpY, dstY);
+                    cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    tmpY = dstY;
                 }
-                cv::merge(std::vector{ dstImg,uv }, dstImg);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                    double currZf = zf / exp2(tmpZfUp);
+                    cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+                    cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+                    cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
                 }
             }
         }

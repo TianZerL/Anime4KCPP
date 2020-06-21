@@ -96,11 +96,15 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        int h = vsapi->getFrameHeight(src, 0);
+        int hY = vsapi->getFrameHeight(src, 0);
+        int hU = vsapi->getFrameHeight(src, 1);
+        int hV = vsapi->getFrameHeight(src, 2);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        int srcSrtide = vsapi->getStride(src, 0);
+        int srcSrtideY = vsapi->getStride(src, 0);
+        int srcSrtideU = vsapi->getStride(src, 1);
+        int srcSrtideV = vsapi->getStride(src, 2);
 
         unsigned char* srcY = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
         unsigned char* srcU = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
@@ -127,7 +131,7 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
         else
             anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
-        anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
+        anime4K->loadImage(hY, srcSrtideY, srcY, hU, srcSrtideU, srcU, hV, srcSrtideV, srcV);
         anime4K->process();
         anime4K->saveImage(dstY, dstU, dstV);
 
@@ -250,42 +254,60 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        int srcH = vsapi->getFrameHeight(src, 0);
-        int srcW = vsapi->getFrameWidth(src, 0);
+        int srcHY = vsapi->getFrameHeight(src, 0);
+        int srcWY = vsapi->getFrameWidth(src, 0);
+        int srcHU = vsapi->getFrameHeight(src, 1);
+        int srcWU = vsapi->getFrameWidth(src, 1);
+        int srcHV = vsapi->getFrameHeight(src, 2);
+        int srcWV = vsapi->getFrameWidth(src, 2);
 
-        int srcSrtide = vsapi->getStride(src, 0);
+        int srcSrtideY = vsapi->getStride(src, 0);
+        int srcSrtideU = vsapi->getStride(src, 1);
+        int srcSrtideV = vsapi->getStride(src, 2);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        int dstH = vsapi->getFrameHeight(dst, 0);
-        int dstW = vsapi->getFrameWidth(dst, 0);
+        int dstHY = vsapi->getFrameHeight(dst, 0);
+        int dstWY = vsapi->getFrameWidth(dst, 0);
+        int dstHU = vsapi->getFrameHeight(dst, 1);
+        int dstWU = vsapi->getFrameWidth(dst, 1);
+        int dstHV = vsapi->getFrameHeight(dst, 2);
+        int dstWV = vsapi->getFrameWidth(dst, 2);
 
-        int dstSrtide = vsapi->getStride(dst, 0);
+        int dstSrtideY = vsapi->getStride(dst, 0);
+        int dstSrtideU = vsapi->getStride(dst, 1);
+        int dstSrtideV = vsapi->getStride(dst, 2);
 
         unsigned char* srcY = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
         unsigned char* srcU = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
         unsigned char* srcV = const_cast<unsigned char*>(vsapi->getReadPtr(src, 2));
 
-        unsigned char* srcYSafe = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcW)];
-        unsigned char* srcUSafe = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcW)];
-        unsigned char* srcVSafe = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcW)];
+        unsigned char* srcYSafe = new unsigned char[static_cast<size_t>(srcHY) * static_cast<size_t>(srcWY)];
+        unsigned char* srcUSafe = new unsigned char[static_cast<size_t>(srcHU) * static_cast<size_t>(srcWU)];
+        unsigned char* srcVSafe = new unsigned char[static_cast<size_t>(srcHV) * static_cast<size_t>(srcWV)];
 
         unsigned char* dstY = vsapi->getWritePtr(dst, 0);
         unsigned char* dstU = vsapi->getWritePtr(dst, 1);
         unsigned char* dstV = vsapi->getWritePtr(dst, 2);
 
-        unsigned char* dstYSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
-        unsigned char* dstUSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
-        unsigned char* dstVSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
+        unsigned char* dstYSafe = new unsigned char[static_cast<size_t>(dstHY) * static_cast<size_t>(dstWY)];
+        unsigned char* dstUSafe = new unsigned char[static_cast<size_t>(dstHU) * static_cast<size_t>(dstWU)];
+        unsigned char* dstVSafe = new unsigned char[static_cast<size_t>(dstHV) * static_cast<size_t>(dstWV)];
 
-        for (int y = 0; y < srcH; y++)
+        for (int y = 0; y < srcHY; y++)
         {
-            memcpy(srcYSafe + y * static_cast<size_t>(srcW), srcY, srcW);
-            memcpy(srcUSafe + y * static_cast<size_t>(srcW), srcU, srcW);
-            memcpy(srcVSafe + y * static_cast<size_t>(srcW), srcV, srcW);
-            srcY += srcSrtide;
-            srcU += srcSrtide;
-            srcV += srcSrtide;
+            memcpy(srcYSafe + y * static_cast<size_t>(srcWY), srcY, srcWY);
+            srcY += srcSrtideY;
+            if (y < srcHU)
+            {
+                memcpy(srcUSafe + y * static_cast<size_t>(srcWU), srcU, srcWU);
+                srcU += srcSrtideU;
+            }
+            if (y < srcHV)
+            {
+                memcpy(srcVSafe + y * static_cast<size_t>(srcWV), srcV, srcWV);
+                srcV += srcSrtideV;
+            }
         }
 
         Anime4KCPP::Anime4K* anime4K;
@@ -305,18 +327,24 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
         else
             anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
-        anime4K->loadImage(srcH, srcW, srcYSafe, srcUSafe, srcVSafe, true);
+        anime4K->loadImage(srcHY, srcWY, srcYSafe, srcHU, srcWU, srcUSafe, srcHV, srcWV, srcVSafe);
         anime4K->process();
         anime4K->saveImage(dstYSafe, dstUSafe, dstVSafe);
 
-        for (int y = 0; y < dstH; y++)
+        for (int y = 0; y < dstHY; y++)
         {
-            memcpy(dstY, dstYSafe + y * static_cast<size_t>(dstW), dstW);
-            memcpy(dstU, dstUSafe + y * static_cast<size_t>(dstW), dstW);
-            memcpy(dstV, dstVSafe + y * static_cast<size_t>(dstW), dstW);
-            dstY += dstSrtide;
-            dstU += dstSrtide;
-            dstV += dstSrtide;
+            memcpy(dstY, dstYSafe + y * static_cast<size_t>(dstWY), dstWY);
+            dstY += dstSrtideY;
+            if (y < dstHU)
+            {
+                memcpy(dstU, dstUSafe + y * static_cast<size_t>(dstWU), dstWU);
+                dstU += dstSrtideU;
+            }
+            if (y < dstHV)
+            {
+                memcpy(dstV, dstVSafe + y * static_cast<size_t>(dstWV), dstWV);
+                dstV += dstSrtideV;
+            }
         }
 
         data->anime4KCreator->release(anime4K);
@@ -351,9 +379,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.node = vsapi->propGetNode(in, "src", 0, 0);
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
 
-    if (!isConstantFormat(&tmpData.vi) || (tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->id != pfYUV444P8))
+    if (!isConstantFormat(&tmpData.vi) || (tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->bitsPerSample != 8))
     {
-        vsapi->setError(out, "Anime4KCPP: only RGB24 or YUV444P8 supported");
+        vsapi->setError(out, "Anime4KCPP: only RGB24 or YUV 8bit supported");
         vsapi->freeNode(tmpData.node);
         return;
     }
