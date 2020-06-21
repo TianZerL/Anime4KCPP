@@ -26,6 +26,12 @@ Anime4KCPP::Anime4K::~Anime4K()
 {
     orgImg.release();
     dstImg.release();
+    orgY.release();
+    orgU.release();
+    orgV.release();
+    dstY.release();
+    dstU.release();
+    dstV.release();
 }
 
 void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)

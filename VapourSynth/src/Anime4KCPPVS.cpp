@@ -96,15 +96,11 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        int hY = vsapi->getFrameHeight(src, 0);
-        int hU = vsapi->getFrameHeight(src, 1);
-        int hV = vsapi->getFrameHeight(src, 2);
+        int h = vsapi->getFrameHeight(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        int srcSrtideY = vsapi->getStride(src, 0);
-        int srcSrtideU = vsapi->getStride(src, 1);
-        int srcSrtideV = vsapi->getStride(src, 2);
+        int srcSrtide = vsapi->getStride(src, 0);
 
         unsigned char* srcY = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
         unsigned char* srcU = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
@@ -131,7 +127,7 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
         else
             anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
-        anime4K->loadImage(hY, srcSrtideY, srcY, hU, srcSrtideU, srcU, hV, srcSrtideV, srcV);
+        anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
         anime4K->process();
         anime4K->saveImage(dstY, dstU, dstV);
 
@@ -379,7 +375,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.node = vsapi->propGetNode(in, "src", 0, 0);
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
 
-    if (!isConstantFormat(&tmpData.vi) || (tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->bitsPerSample != 8))
+    if (!isConstantFormat(&tmpData.vi) || (tmpData.vi.format->id != pfRGB24 && (tmpData.vi.format->bitsPerSample != 8 || tmpData.vi.format->colorFamily != cmYUV)))
     {
         vsapi->setError(out, "Anime4KCPP: only RGB24 or YUV 8bit supported");
         vsapi->freeNode(tmpData.node);
@@ -454,6 +450,13 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     bool safeMode = vsapi->propGetInt(in, "safeMode", 0, &err);
     if (err)
         safeMode = true;
+
+    if (!safeMode && tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->id != pfYUV444P8)
+    {
+        vsapi->setError(out, "Anime4KCPP: RGB24 or YUV444P8 only if safeMode was disabled");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
 
     if (tmpData.GPU)
     {
