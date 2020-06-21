@@ -251,8 +251,14 @@ extern "C"
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
-
-        static_cast<Anime4KCPP::Anime4K *>(instance)->saveImage(dstFile);
+        try
+        {
+            static_cast<Anime4KCPP::Anime4K*>(instance)->saveImage(dstFile);
+        }
+        catch (const char* err)
+        {
+            return AC_ERROR_NOT_YUV444;
+        }
 
         return AC_OK;
     }
@@ -381,13 +387,15 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
+        if (*r == nullptr || *g == nullptr || *b == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
         try
         {
             static_cast<Anime4KCPP::Anime4K *>(instance)->saveImage(*r, *g, *b);
         }
         catch (const char *err)
         {
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
+            return AC_ERROR_NOT_YUV444;
         }
 
         return AC_OK;
@@ -398,13 +406,16 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
+        if (*data == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
+
         try
         {
             static_cast<Anime4KCPP::Anime4K *>(instance)->saveImage(*data);
         }
         catch (const char *err)
         {
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
+            return AC_ERROR_NOT_YUV444;
         }
 
         return AC_OK;
