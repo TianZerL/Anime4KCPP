@@ -207,6 +207,36 @@ extern "C"
         return AC_OK;
     }
 
+    ac_error acStopVideoProcess(ac_instance instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        static_cast<Anime4KCPP::Anime4K*>(instance)->stopVideoProcess();
+
+        return AC_OK;
+    }
+
+    ac_error acPauseVideoProcess(ac_instance instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        static_cast<Anime4KCPP::Anime4K*>(instance)->pauseVideoProcess();
+
+        return AC_OK;
+    }
+
+    ac_error acContinueVideoProcess(ac_instance instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        static_cast<Anime4KCPP::Anime4K*>(instance)->continueVideoProcess();
+
+        return AC_OK;
+    }
+
     ac_error acShowImage(ac_instance instance)
     {
         if (instance == nullptr)
@@ -316,22 +346,32 @@ extern "C"
             Anime4KCPP::Anime4KGPUCNN::releaseGPU();
     }
 
-    ac_error acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char *r, unsigned char *g, unsigned char *b, ac_bool inputAsYUV)
+    ac_error acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char *r, unsigned char *g, unsigned char *b, ac_bool inputAsYUV444)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV);
+        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char *data, size_t bytesPerLine, ac_bool inputAsYUV)
+    ac_error acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV);
+        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char *data, size_t bytesPerLine, ac_bool inputAsYUV444)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444);
 
         return AC_OK;
     }
