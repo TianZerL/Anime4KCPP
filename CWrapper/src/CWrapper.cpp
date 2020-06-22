@@ -207,6 +207,27 @@ extern "C"
         return AC_OK;
     }
 
+    ac_error acProcessWithProgressTime(ac_instance instance, void (*callBack)(double, double))
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            time_t start = time(nullptr);
+            static_cast<Anime4KCPP::Anime4K*>(instance)->processWithProgress([&callBack, &start](double v)
+                {
+                    callBack(v, time(nullptr) - start);
+                });
+        }
+        catch (const char* err)
+        {
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
     ac_error acStopVideoProcess(ac_instance instance)
     {
         if (instance == nullptr)

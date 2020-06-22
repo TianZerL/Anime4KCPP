@@ -96,6 +96,7 @@ extern "C"
 	extern AC_DLL ac_error AC_API acProcess(ac_instance instance);
 	extern AC_DLL ac_error AC_API acProcessWithPrintProgress(ac_instance instance);
 	extern AC_DLL ac_error AC_API acProcessWithProgress(ac_instance instance,void (*callBack)(double));
+	extern AC_DLL ac_error AC_API acProcessWithProgressTime(ac_instance instance, void (*callBack)(double, double));
 	extern AC_DLL ac_error AC_API acStopVideoProcess(ac_instance instance);
 	extern AC_DLL ac_error AC_API acPauseVideoProcess(ac_instance instance);
 	extern AC_DLL ac_error AC_API acContinueVideoProcess(ac_instance instance);
