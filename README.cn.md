@@ -27,6 +27,9 @@ HDN模式能更好的降噪。
 - 可调节参数，尝试不同的选项以获得更佳的质量或者更快的速度。
 - 滤镜支持，利用它们进行抗锯齿和降噪。  
 
+# 在MPC-HC, MPC-BE, Potplayer等播放器上使用Anime4KCPP
+Anime4KCPP可以通过[AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases)在Windows平台上的绝大多数播放器中使用,查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
+
 # 效果
 ### 原图
 ![examples](/images/example.png)

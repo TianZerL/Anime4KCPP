@@ -42,6 +42,9 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 - More arguments for you, you can get a better quality than real-time playback.
 - Filters support, use them to denoise or anti-aliasing.
 
+# Use Anime4KCPP in MPC-HC, MPC-BE, Potplayer and other players
+Anime4KCPP can be used in most players on Windows by [AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases), see [how](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
+
 # Result
 ### origin
 ![examples](/images/example.png)
