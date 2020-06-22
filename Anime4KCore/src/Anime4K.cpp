@@ -163,9 +163,12 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+        {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        }
         else
-            throw "Only YUV444 can be saved to data pointer";
+            throw "Only YUV444 can be saved to file";
     }
     cv::imwrite(dstFile, dstImg);
 }
@@ -175,9 +178,12 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     if(inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+        {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        }
         else
-            throw "Only YUV444 can be saved to data pointer";
+            throw "Only YUV444 can be saved to opencv Mat";
     }
     dstImage = dstImg;
 }
@@ -192,7 +198,10 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
     else
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+        {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        }
         else
             throw "Only YUV444 can be saved to data pointer";
     }
