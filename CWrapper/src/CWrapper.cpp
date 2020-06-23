@@ -1,5 +1,5 @@
 #define AC_DLL
-#define C_WRAPPER_VERSION "1.0.0"
+#define C_WRAPPER_VERSION "1.1.0"
 
 #include "Anime4KCPP.h"
 #include "AC.h"

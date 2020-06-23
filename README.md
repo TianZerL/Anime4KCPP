@@ -239,7 +239,7 @@ Now we just run `make`. The binaries should have been installed to `./bin/`.
 Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
 
 
-# pyanime4k (out of date)
+# pyanime4k  
 [pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
 
 
