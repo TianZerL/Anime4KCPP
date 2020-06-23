@@ -116,6 +116,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
     }
     else
     {
+        inputYUV = false;
         cv::cvtColor(orgImg, orgImg, cv::COLOR_RGB2BGR);
     }
     dstImg = orgImg;
@@ -136,6 +137,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
     }
     else
     {
+        inputYUV = false;
         cv::merge(std::vector{
                                 cv::Mat(rows, cols, CV_8UC1, b),
                                 cv::Mat(rows, cols, CV_8UC1, g),
@@ -467,6 +469,17 @@ size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength()
 
 void Anime4KCPP::Anime4K::showImage()
 {
+    if (inputYUV)
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+        {
+            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        }
+        else
+            throw "Only YUV444 can be saved to file";
+    }
+
     cv::imshow("dstImg", dstImg);
     cv::waitKey();
 }
