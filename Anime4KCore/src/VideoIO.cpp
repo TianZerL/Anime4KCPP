@@ -6,12 +6,6 @@ Anime4KCPP::VideoIO::~VideoIO()
     reader.release();
 }
 
-Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::instance()
-{
-    static VideoIO videoIOInstance;
-    return videoIOInstance;
-}
-
 Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t t)
 {
     processor = std::move(p);

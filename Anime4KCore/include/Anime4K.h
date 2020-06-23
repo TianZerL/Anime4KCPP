@@ -163,6 +163,9 @@ public:
     void continueVideoProcess();
 protected:
     virtual ProcessorType getProcessorType() = 0;
+private:
+    void initVideoIO();
+    void releaseVideoIO();
 protected:
     int orgH, orgW, H, W;
     double fps;
@@ -171,6 +174,7 @@ protected:
     cv::Mat orgY, orgU, orgV;
     cv::Mat dstY, dstU, dstV;
     bool inputYUV = false;
+    VideoIO* videoIO = nullptr;
 
 protected://arguments
     int ps, pcc;

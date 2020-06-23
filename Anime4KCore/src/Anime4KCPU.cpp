@@ -31,10 +31,10 @@ void Anime4KCPP::Anime4KCPU::process()
     }
     else
     {
-        VideoIO::instance().init(
+        videoIO->init(
             [this]()
             {
-                Frame frame = VideoIO::instance().read();
+                Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 int tmpPcc = this->pcc;
@@ -57,7 +57,7 @@ void Anime4KCPP::Anime4KCPU::process()
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
                 frame.first = dstFrame;
-                VideoIO::instance().write(frame);
+                videoIO->write(frame);
             }
         , mt
             ).process();

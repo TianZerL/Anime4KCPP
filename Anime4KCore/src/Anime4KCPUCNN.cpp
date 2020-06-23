@@ -52,10 +52,10 @@ void Anime4KCPP::Anime4KCPUCNN::process()
         }
         else
         {
-            VideoIO::instance().init(
+            videoIO->init(
                 [this, processor]()
                 {
-                    Frame frame = VideoIO::instance().read();
+                    Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -73,7 +73,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
 
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                     frame.first = dstFrame;
-                    VideoIO::instance().write(frame);
+                    videoIO->write(frame);
                 }
                 , mt
                     ).process();
@@ -131,10 +131,10 @@ void Anime4KCPP::Anime4KCPUCNN::process()
         }
         else
         {
-            VideoIO::instance().init(
+            videoIO->init(
                 [this, tmpZfUp, tmpZf, processor]()
                 {
-                    Frame frame = VideoIO::instance().read();
+                    Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -156,7 +156,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                         cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
                     }
                     frame.first = dstFrame;
-                    VideoIO::instance().write(frame);
+                    videoIO->write(frame);
                 }
                 , mt
                     ).process();

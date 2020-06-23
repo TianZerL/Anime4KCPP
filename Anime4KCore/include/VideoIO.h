@@ -22,10 +22,10 @@ enum class Anime4KCPP::CODEC
 class Anime4KCPP::VideoIO
 {
 public:
+    VideoIO() = default;
     ~VideoIO();
     VideoIO(const VideoIO&) = delete;
     VideoIO& operator=(const VideoIO&) = delete;
-    static VideoIO& instance();
     VideoIO& init(std::function<void()> &&p, size_t t);
     void process();
     bool openReader(const std::string& srcFile);
@@ -40,7 +40,6 @@ public:
     void continueProcess();
     bool isPaused();
 private:
-    VideoIO() = default;
     void setProgress(double p);
 private:
     size_t threads = 0;

@@ -32,10 +32,10 @@ void Anime4KCPP::Anime4KGPU::process()
     }
     else
     {
-        VideoIO::instance().init(
+        videoIO->init(
             [this]()
             {
-                Frame frame = VideoIO::instance().read();
+                Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 if (pre)
@@ -46,7 +46,7 @@ void Anime4KCPP::Anime4KGPU::process()
                 if (post)//PostProcessing
                     FilterProcessor(dstFrame, postf).process();
                 frame.first = dstFrame;
-                VideoIO::instance().write(frame);
+                videoIO->write(frame);
             }
             , mt
                 ).process();

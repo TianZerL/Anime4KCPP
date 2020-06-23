@@ -51,5 +51,8 @@ Anime4KCPP::Anime4K* Anime4KCPP::Anime4KCreator::create(
 void Anime4KCPP::Anime4KCreator::release(Anime4K*& anime4K)
 {
     if (anime4K != nullptr)
+    {
         delete anime4K;
+        anime4K = nullptr;
+    }
 }

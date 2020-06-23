@@ -20,6 +20,9 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters)
 
     orgH = orgW = H = W = 0;
     totalFrameCount = fps = 0.0;
+
+    if (vm)
+        initVideoIO();
 }
 
 Anime4KCPP::Anime4K::~Anime4K()
@@ -32,6 +35,7 @@ Anime4KCPP::Anime4K::~Anime4K()
     dstY.release();
     dstU.release();
     dstV.release();
+    releaseVideoIO();
 }
 
 void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
@@ -52,21 +56,26 @@ void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
     orgH = orgW = H = W = 0;
     fps = 0.0;
     totalFrameCount = fps = 0.0;
+
+    if (vm)
+        initVideoIO();
 }
 
 void Anime4KCPP::Anime4K::setVideoMode(const bool flag)
 {
     vm = flag;
+    if (vm)
+        initVideoIO();
 }
 
 void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
 {
-    if (!VideoIO::instance().openReader(srcFile))
+    if (!videoIO->openReader(srcFile))
         throw "Failed to load file: file doesn't not exist or decoder isn't installed.";
-    orgH = VideoIO::instance().get(cv::CAP_PROP_FRAME_HEIGHT);
-    orgW = VideoIO::instance().get(cv::CAP_PROP_FRAME_WIDTH);
-    fps = VideoIO::instance().get(cv::CAP_PROP_FPS);
-    totalFrameCount = VideoIO::instance().get(cv::CAP_PROP_FRAME_COUNT);
+    orgH = videoIO->get(cv::CAP_PROP_FRAME_HEIGHT);
+    orgW = videoIO->get(cv::CAP_PROP_FRAME_WIDTH);
+    fps = videoIO->get(cv::CAP_PROP_FPS);
+    totalFrameCount = videoIO->get(cv::CAP_PROP_FRAME_COUNT);
     H = zf * orgH;
     W = zf * orgW;
 }
@@ -154,7 +163,7 @@ void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int 
 
 void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
-    if (!VideoIO::instance().openWriter(dstFile, codec, cv::Size(W, H), fps))
+    if (!videoIO->openWriter(dstFile, codec, cv::Size(W, H), fps))
         throw "Failed to initialize video writer.";
 }
 
@@ -231,7 +240,7 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsign
 
 void Anime4KCPP::Anime4K::saveVideo()
 {
-    VideoIO::instance().release();
+    videoIO->release();
 }
 
 void Anime4KCPP::Anime4K::showInfo()
@@ -487,7 +496,7 @@ void Anime4KCPP::Anime4K::processWithPrintProgress()
         }
         std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
         double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
-        double progress = VideoIO::instance().getProgress();
+        double progress = videoIO->getProgress();
         std::cout
             << std::fixed << std::setprecision(2)
             << std::setw(5) << progress * 100 << '%'
@@ -514,7 +523,7 @@ void Anime4KCPP::Anime4K::processWithProgress(std::function<void(double)>&& call
             callBack(1.0);
             break;
         }
-        double progress = VideoIO::instance().getProgress();
+        double progress = videoIO->getProgress();
         callBack(progress);
     }
 }
@@ -522,14 +531,14 @@ void Anime4KCPP::Anime4K::processWithProgress(std::function<void(double)>&& call
 void Anime4KCPP::Anime4K::stopVideoProcess()
 {
     if (vm)
-        VideoIO::instance().stopProcess();
+        videoIO->stopProcess();
 }
 
 void Anime4KCPP::Anime4K::pauseVideoProcess()
 {
-    if (vm && !VideoIO::instance().isPaused())
+    if (vm && !videoIO->isPaused())
     {
-        std::thread t(&VideoIO::pauseProcess, &VideoIO::instance());
+        std::thread t(&VideoIO::pauseProcess, videoIO);
         t.detach();
     }
 }
@@ -537,7 +546,22 @@ void Anime4KCPP::Anime4K::pauseVideoProcess()
 void Anime4KCPP::Anime4K::continueVideoProcess()
 {
     if (vm)
-        VideoIO::instance().continueProcess();
+        videoIO->continueProcess();
+}
+
+inline void Anime4KCPP::Anime4K::initVideoIO()
+{
+    if (videoIO == nullptr)
+        videoIO = new VideoIO;
+}
+
+inline void Anime4KCPP::Anime4K::releaseVideoIO()
+{
+    if (videoIO != nullptr)
+    {
+        delete videoIO;
+        videoIO = nullptr;
+    }
 }
 
 void Anime4KCPP::Parameters::reset()
