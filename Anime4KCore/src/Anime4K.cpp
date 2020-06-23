@@ -470,6 +470,12 @@ size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength()
     return static_cast<size_t>(W) * static_cast<size_t>(H);
 }
 
+std::array<int, 3> Anime4KCPP::Anime4K::getResultShape()
+{
+    std::array<int, 3> shape = { H, W, 3 };
+    return shape;
+}
+
 void Anime4KCPP::Anime4K::showImage()
 {
     if (inputYUV)

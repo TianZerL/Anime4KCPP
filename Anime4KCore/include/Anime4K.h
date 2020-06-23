@@ -152,8 +152,9 @@ public:
     std::string getFiltersInfo();
     size_t getResultDataLength();
     size_t getResultDataPerChannelLength();
-
+    std::array<int, 3> getResultShape();
     void showImage();
+
     virtual void process() = 0;
     // for video processing
     void processWithPrintProgress();

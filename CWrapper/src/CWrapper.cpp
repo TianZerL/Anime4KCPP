@@ -472,6 +472,19 @@ extern "C"
         return static_cast<Anime4KCPP::Anime4K *>(instance)->getResultDataPerChannelLength();
     }
 
+    ac_error acGetResultShape(ac_instance instance, int* shape)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        std::array<int, 3> ret = static_cast<Anime4KCPP::Anime4K*>(instance)->getResultShape();
+
+        for (int i = 0; i < 3; i++)
+            shape[i] = ret[i];
+
+        return AC_OK;
+    }
+
     ac_error acGetInfo(ac_instance instance, char *info, size_t *length)
     {
         if (instance == nullptr)
@@ -510,7 +523,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char *info, size_t *length)
+    ac_bool acCheckGPUSupport(unsigned int pID, unsigned int dID, char *info, size_t *length)
     {
         std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
 

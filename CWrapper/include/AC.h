@@ -117,6 +117,8 @@ extern "C"
 	extern AC_DLL ac_error AC_API acSaveImageRGBBytes(ac_instance instance, unsigned char **data);
 	extern AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error *error);
 	extern AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error *error);
+	//shape should be int[3]
+	extern AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int* shape);
 	//acGetInfo may need to run two times for getting length of info string first
 	extern AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char *info, size_t *length);
 	//acGetFiltersInfo may need to run two times for getting length of info string first
