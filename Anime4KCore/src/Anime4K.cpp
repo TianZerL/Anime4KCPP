@@ -203,7 +203,6 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
 {
     if (data == nullptr)
         throw "Pointer can not be nullptr";
-    size_t size = dstImg.step * H;
     if(!inputYUV)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2RGB);
     else
@@ -211,11 +210,12 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
         {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2RGB);
         }
         else
             throw "Only YUV444 can be saved to data pointer";
     }
+    size_t size = dstImg.step * H;
     memcpy(data, dstImg.data, size);
 }
 
@@ -459,7 +459,10 @@ std::string Anime4KCPP::Anime4K::getFiltersInfo()
 
 size_t Anime4KCPP::Anime4K::getResultDataLength()
 {
-    return dstImg.step * static_cast<size_t>(H);
+    if(!inputYUV)
+        return dstImg.step * static_cast<size_t>(H);
+    else
+        return dstY.step * 3 * static_cast<size_t>(H);
 }
 
 size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength()
