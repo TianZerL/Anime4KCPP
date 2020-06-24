@@ -159,7 +159,7 @@ public:
     virtual void process() = 0;
     // for video processing
     void processWithPrintProgress();
-    void processWithProgress(std::function<void(double)> &&callBack);
+    void processWithProgress(const std::function<void(double)>&& callBack);
     void stopVideoProcess();
     void pauseVideoProcess();
     void continueVideoProcess();

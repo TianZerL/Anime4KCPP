@@ -226,7 +226,7 @@ brew install opencv qt ffmpeg openh264 cmake
 请注意，苹果已经弃用了OpenCL (强制使用自己专有的Metal API)，并且可能会在以后的版本中取消对它的支持。
 
 # pyanime4k  
-[pyanime4k](https://github.com/TianZerL/pyanime4k) 是一个在python中使用Anime4K的简单方式，它基于Anime4KCPP。 
+[pyanime4k](https://github.com/TianZerL/pyanime4k) 是一个在python中使用Anime4KCPP的简单方式，快速而强大。 
 
 
 # 其它实现

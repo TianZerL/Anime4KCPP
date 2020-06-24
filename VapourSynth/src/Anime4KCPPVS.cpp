@@ -36,7 +36,7 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
 
-static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
 
@@ -72,7 +72,7 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
                 anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
             else
                 anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
-        
+
         anime4K->loadImage(h, srcSrtide, srcR, srcG, srcB);
         anime4K->process();
         anime4K->saveImage(dstR, dstG, dstB);
@@ -165,7 +165,7 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
         cv::Mat dstRSafe;
         cv::Mat dstGSafe;
         cv::Mat dstBSafe;
-       
+
         for (int y = 0; y < srcH; y++)
         {
             memcpy(srcRSafe + y * static_cast<size_t>(srcW), srcR, srcW);
@@ -356,7 +356,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.strengthColor = vsapi->propGetFloat(in, "strengthColor", 0, &err);
     if (err)
         tmpData.strengthColor = 0.3;
-    else if(tmpData.strengthColor < 0.0 || tmpData.strengthColor > 1.0)
+    else if (tmpData.strengthColor < 0.0 || tmpData.strengthColor > 1.0)
     {
         vsapi->setError(out, "Anime4KCPP: strengthColor must range from 0 to 1");
         vsapi->freeNode(tmpData.node);
@@ -366,7 +366,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.strengthGradient = vsapi->propGetFloat(in, "strengthGradient", 0, &err);
     if (err)
         tmpData.strengthGradient = 1.0;
-    else if(tmpData.strengthGradient < 0.0 || tmpData.strengthGradient > 1.0)
+    else if (tmpData.strengthGradient < 0.0 || tmpData.strengthGradient > 1.0)
     {
         vsapi->setError(out, "Anime4KCPP: strengthGradient must range from 0 to 1");
         vsapi->freeNode(tmpData.node);
@@ -424,7 +424,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (tmpData.GPU)
     {
         std::pair<std::pair<int, std::vector<int>>, std::string> GPUinfo = Anime4KCPP::Anime4KGPU::listGPUs();
-        if (tmpData.pID >= static_cast<unsigned int>(GPUinfo.first.first) || 
+        if (tmpData.pID >= static_cast<unsigned int>(GPUinfo.first.first) ||
             tmpData.dID >= static_cast<unsigned int>(GPUinfo.first.second[tmpData.pID]))
         {
             std::ostringstream err;
@@ -460,7 +460,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         if (!safeMode && tmpData.vi.width % 32 != 0)//32-byte alignment
         {
             tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
-            vsapi->logMessage(mtWarning, 
+            vsapi->logMessage(mtWarning,
                 "The width of the input video is not a multiple of 32 (required by VapourSynth), "
                 "there will be black border of output video, please cut it off manually.");
         }

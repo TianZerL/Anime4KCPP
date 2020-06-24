@@ -240,7 +240,7 @@ Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), 
 
 
 # pyanime4k  
-[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use anime4k in python, easy, fast and powerful, which support both image and video processing, based on Anime4KCPP. 
+[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use Anime4KCPP in python, easy, fast and powerful, which support both image and video processing. 
 
 
 # Other implementations
