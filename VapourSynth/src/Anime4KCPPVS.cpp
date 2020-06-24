@@ -111,10 +111,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
 
         Anime4KCPP::Anime4K* anime4K;
 
-        if (data->GPU)
-            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        if (data->CNN)
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            else
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
-            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+            else
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
 
         anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
         anime4K->process();
@@ -284,10 +290,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
 
         Anime4KCPP::Anime4K* anime4K;
 
-        if (data->GPU)
-            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        if (data->CNN)
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            else
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
-            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+            if (data->GPU)
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+            else
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
 
         anime4K->loadImage(srcHY, srcWY, srcYSafe, srcHU, srcWU, srcUSafe, srcHV, srcWV, srcVSafe);
         anime4K->process();
@@ -387,9 +399,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         tmpData.CNN = false;
 
-    if (tmpData.vi.format->colorFamily == cmYUV && tmpData.CNN == false)
+    if (tmpData.vi.format->id != pfRGB24 && tmpData.vi.format->id != pfYUV444P8 && tmpData.CNN == false)
     {
-        vsapi->setError(out, "Anime4KCPP: YUV444P8 only for ACNet");
+        vsapi->setError(out, "Anime4KCPP: RGB24 or YUV444P8 only for Anime4K09");
         vsapi->freeNode(tmpData.node);
         return;
     }

@@ -115,10 +115,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
         dstV = orgV = yuv[V];
     }
     else
-    {
         inputYUV = false;
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_RGB2BGR);
-    }
     dstImg = orgImg;
     orgH = rows;
     orgW = cols;
@@ -189,10 +186,7 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-        {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
-        }
         else
             throw "Only YUV444 can be saved to opencv Mat";
     }
@@ -221,15 +215,10 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
 {
     if (data == nullptr)
         throw "Pointer can not be nullptr";
-    if (!inputYUV)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2RGB);
-    else
+    if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-        {
             cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2RGB);
-        }
         else
             throw "Only YUV444 can be saved to data pointer";
     }

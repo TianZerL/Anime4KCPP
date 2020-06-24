@@ -65,9 +65,9 @@ Anime4KCPPF::Anime4KCPPF(
         env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only!");
     }
 
-    if (vi.IsYUV() && !CNN)
+    if (!vi.IsRGB24() && !vi.IsYV24() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: YUV only for ACNet!");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV only for Anime4K09!");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -136,10 +136,16 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         Anime4KCPP::Anime4K* anime4K;
 
-        if (GPUMode)
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        if (CNN)
+            if (GPUMode)
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            else
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+            if (GPUMode)
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+            else
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
 
         anime4K->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
         anime4K->process();

@@ -21,6 +21,11 @@ void Anime4KCPP::Anime4KGPU::process()
 
     if (!vm)
     {
+        if (inputYUV)
+        {
+            cv::merge(std::vector{ orgY,orgU,orgV }, orgImg);
+            cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+        }
         dstImg.create(H, W, CV_8UC4);
         if (pre)//Pretprocessing(CPU)
             FilterProcessor(orgImg, pref).process();
@@ -29,6 +34,15 @@ void Anime4KCPP::Anime4KGPU::process()
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
         if (post)//Postprocessing(CPU)
             FilterProcessor(dstImg, postf).process();
+        if (inputYUV)
+        {
+            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+            std::vector<cv::Mat> yuv(3);
+            cv::split(dstImg, yuv);
+            dstY = yuv[Y];
+            dstU = yuv[U];
+            dstV = yuv[V];
+        }
     }
     else
     {
