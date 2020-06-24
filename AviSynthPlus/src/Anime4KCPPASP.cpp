@@ -114,6 +114,10 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         unsigned char* srcDataU = new unsigned char[static_cast<size_t>(srcHU) * static_cast<size_t>(srcLU)];
         unsigned char* srcDataV = new unsigned char[static_cast<size_t>(srcHV) * static_cast<size_t>(srcLV)];
 
+        cv::Mat dstDataY;
+        cv::Mat dstDataU;
+        cv::Mat dstDataV;
+
         for (int y = 0; y < srcHY; y++)
         {
             memcpy(srcDataY + y * static_cast<size_t>(srcLY), srcpY, srcLY);
@@ -139,33 +143,25 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         anime4K->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
         anime4K->process();
-
-        size_t dstSize = anime4K->getResultDataPerChannelLength();
-        unsigned char* dstDataY = new unsigned char[dstSize];
-        unsigned char* dstDataU = new unsigned char[dstSize];
-        unsigned char* dstDataV = new unsigned char[dstSize];
         anime4K->saveImage(dstDataY, dstDataU, dstDataV);
 
         for (int y = 0; y < dstHY; y++)
         {
-            memcpy(dstpY, dstDataY + y * static_cast<size_t>(dstLY), dstLY);
+            memcpy(dstpY, dstDataY.data + y * static_cast<size_t>(dstLY), dstLY);
             dstpY += dstPitchY;
             if (y < dstHU)
             {
-                memcpy(dstpU, dstDataU + y * static_cast<size_t>(dstLU), dstLU);
+                memcpy(dstpU, dstDataU.data + y * static_cast<size_t>(dstLU), dstLU);
                 dstpU += dstPitchU;
             }
             if (y < dstHV)
             {
-                memcpy(dstpV, dstDataV + y * static_cast<size_t>(dstLV), dstLV);
+                memcpy(dstpV, dstDataV.data + y * static_cast<size_t>(dstLV), dstLV);
                 dstpV += dstPitchV;
             }
         }
 
         anime4KCreator.release(anime4K);
-        delete[] dstDataY;
-        delete[] dstDataU;
-        delete[] dstDataV;
         delete[] srcDataY;
         delete[] srcDataU;
         delete[] srcDataV;
@@ -187,6 +183,8 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         unsigned char* srcData = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
 
+        cv::Mat dstData;
+
         for (int y = 0; y < srcH; y++)
         {
             memcpy(srcData + y * static_cast<size_t>(srcL), srcp, srcL);
@@ -194,6 +192,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         }
 
         Anime4KCPP::Anime4K* anime4K;
+
         if (CNN)
             if (GPUMode)
                 anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
@@ -207,18 +206,15 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         anime4K->loadImage(srcH, srcL / 3, srcData);
         anime4K->process();
-
-        unsigned char* dstData = new unsigned char[anime4K->getResultDataLength()];
         anime4K->saveImage(dstData);
 
         for (int y = 0; y < dstH; y++)
         {
-            memcpy(dstp, dstData + y * static_cast<size_t>(dstL), dstL);
+            memcpy(dstp, dstData.data + y * static_cast<size_t>(dstL), dstL);
             dstp += dstPitch;
         }
 
         anime4KCreator.release(anime4K);
-        delete[] dstData;
         delete[] srcData;
 
         return dst;

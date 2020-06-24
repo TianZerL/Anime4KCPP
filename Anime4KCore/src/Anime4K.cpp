@@ -199,6 +199,24 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     dstImage = dstImg;
 }
 
+void Anime4KCPP::Anime4K::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
+{
+    if (inputYUV)
+    {
+        r = dstY;
+        g = dstU;
+        b = dstV;
+    }
+    else
+    {
+        std::vector<cv::Mat> bgr(3);
+        cv::split(dstImg, bgr);
+        r = bgr[R];
+        g = bgr[G];
+        b = bgr[B];
+    }
+}
+
 void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
 {
     if (data == nullptr)

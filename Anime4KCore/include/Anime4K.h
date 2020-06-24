@@ -141,6 +141,7 @@ public:
     void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V, const double fps = 0.0);
     void saveImage(const std::string& dstFile);
     void saveImage(cv::Mat& dstImage);
+    void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
     void saveImage(unsigned char*& data);
     void saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b);
     void saveVideo();

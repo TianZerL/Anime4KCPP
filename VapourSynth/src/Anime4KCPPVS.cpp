@@ -3,18 +3,19 @@
 #include <VSHelper.h>
 
 typedef struct {
-    VSNodeRef* node;
-    VSVideoInfo vi;
-    int passes;
-    int pushColorCount;
-    double strengthColor;
-    double strengthGradient;
-    double zoomFactor;
-    bool GPU;
-    bool CNN;
-    bool HDN;
-    unsigned int pID, dID;
-    Anime4KCPP::Anime4KCreator* anime4KCreator;
+    VSNodeRef* node = nullptr;
+    VSVideoInfo vi = VSVideoInfo();
+    int passes = 2;
+    int pushColorCount = 2;
+    double strengthColor = 0.3;
+    double strengthGradient = 1.0;
+    double zoomFactor = 2.0;
+    bool GPU = false;
+    bool CNN = false;
+    bool HDN = false;
+    unsigned int pID = 0, dID = 0;
+    Anime4KCPP::Anime4KCreator* anime4KCreator = nullptr;
+    Anime4KCPP::Parameters parameters;
 }Anime4KCPPData;
 
 static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSNode* node, VSCore* core, const VSAPI* vsapi)
@@ -24,6 +25,14 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
         data->anime4KCreator = new Anime4KCPP::Anime4KCreator(true, data->CNN, data->pID, data->dID);
     else
         data->anime4KCreator = new Anime4KCPP::Anime4KCreator(false);
+
+    data->parameters.passes = data->passes;
+    data->parameters.pushColorCount = data->pushColorCount;
+    data->parameters.strengthColor = data->strengthColor;
+    data->parameters.strengthGradient = data->strengthGradient;
+    data->parameters.zoomFactor = data->zoomFactor;
+    data->parameters.HDN = data->HDN;
+
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
 
@@ -53,26 +62,16 @@ static const VSFrameRef *VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 
         Anime4KCPP::Anime4K* anime4K;
 
-        Anime4KCPP::Parameters parameters(
-            data->passes,
-            data->pushColorCount,
-            data->strengthColor,
-            data->strengthGradient,
-            data->zoomFactor,
-            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
-            data->HDN
-        );
-
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
             else
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
             else
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
         
         anime4K->loadImage(h, srcSrtide, srcR, srcG, srcB);
         anime4K->process();
@@ -112,20 +111,10 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
 
         Anime4KCPP::Anime4K* anime4K;
 
-        Anime4KCPP::Parameters parameters(
-            data->passes,
-            data->pushColorCount,
-            data->strengthColor,
-            data->strengthGradient,
-            data->zoomFactor,
-            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
-            data->HDN
-        );
-
         if (data->GPU)
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
         else
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
         anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
         anime4K->process();
@@ -161,9 +150,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
 
         int dstSrtide = vsapi->getStride(dst, 0);
 
-        unsigned char* srcR = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
-        unsigned char* srcG = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
-        unsigned char* srcB = const_cast<unsigned char*>(vsapi->getReadPtr(src, 2));
+        const unsigned char* srcR = vsapi->getReadPtr(src, 0);
+        const unsigned char* srcG = vsapi->getReadPtr(src, 1);
+        const unsigned char* srcB = vsapi->getReadPtr(src, 2);
 
         unsigned char* srcRSafe = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcW)];
         unsigned char* srcGSafe = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcW)];
@@ -173,10 +162,10 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
         unsigned char* dstG = vsapi->getWritePtr(dst, 1);
         unsigned char* dstB = vsapi->getWritePtr(dst, 2);
 
-        unsigned char* dstRSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
-        unsigned char* dstGSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
-        unsigned char* dstBSafe = new unsigned char[static_cast<size_t>(dstH) * static_cast<size_t>(dstW)];
-
+        cv::Mat dstRSafe;
+        cv::Mat dstGSafe;
+        cv::Mat dstBSafe;
+       
         for (int y = 0; y < srcH; y++)
         {
             memcpy(srcRSafe + y * static_cast<size_t>(srcW), srcR, srcW);
@@ -189,26 +178,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
 
         Anime4KCPP::Anime4K* anime4K;
 
-        Anime4KCPP::Parameters parameters(
-            data->passes,
-            data->pushColorCount,
-            data->strengthColor,
-            data->strengthGradient,
-            data->zoomFactor,
-            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
-            data->HDN
-        );
-
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
             else
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
             else
-                anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
 
         anime4K->loadImage(srcH, srcW, srcRSafe, srcGSafe, srcBSafe);
         anime4K->process();
@@ -216,9 +195,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
 
         for (int y = 0; y < dstH; y++)
         {
-            memcpy(dstR, dstRSafe + y * static_cast<size_t>(dstW), dstW);
-            memcpy(dstG, dstGSafe + y * static_cast<size_t>(dstW), dstW);
-            memcpy(dstB, dstBSafe + y * static_cast<size_t>(dstW), dstW);
+            memcpy(dstR, dstRSafe.data + y * static_cast<size_t>(dstW), dstW);
+            memcpy(dstG, dstGSafe.data + y * static_cast<size_t>(dstW), dstW);
+            memcpy(dstB, dstBSafe.data + y * static_cast<size_t>(dstW), dstW);
             dstR += dstSrtide;
             dstG += dstSrtide;
             dstB += dstSrtide;
@@ -229,9 +208,6 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
         delete[] srcRSafe;
         delete[] srcGSafe;
         delete[] srcBSafe;
-        delete[] dstRSafe;
-        delete[] dstGSafe;
-        delete[] dstBSafe;
 
         vsapi->freeFrame(src);
 
@@ -274,9 +250,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
         int dstSrtideU = vsapi->getStride(dst, 1);
         int dstSrtideV = vsapi->getStride(dst, 2);
 
-        unsigned char* srcY = const_cast<unsigned char*>(vsapi->getReadPtr(src, 0));
-        unsigned char* srcU = const_cast<unsigned char*>(vsapi->getReadPtr(src, 1));
-        unsigned char* srcV = const_cast<unsigned char*>(vsapi->getReadPtr(src, 2));
+        const unsigned char* srcY = vsapi->getReadPtr(src, 0);
+        const unsigned char* srcU = vsapi->getReadPtr(src, 1);
+        const unsigned char* srcV = vsapi->getReadPtr(src, 2);
 
         unsigned char* srcYSafe = new unsigned char[static_cast<size_t>(srcHY) * static_cast<size_t>(srcWY)];
         unsigned char* srcUSafe = new unsigned char[static_cast<size_t>(srcHU) * static_cast<size_t>(srcWU)];
@@ -286,9 +262,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
         unsigned char* dstU = vsapi->getWritePtr(dst, 1);
         unsigned char* dstV = vsapi->getWritePtr(dst, 2);
 
-        unsigned char* dstYSafe = new unsigned char[static_cast<size_t>(dstHY) * static_cast<size_t>(dstWY)];
-        unsigned char* dstUSafe = new unsigned char[static_cast<size_t>(dstHU) * static_cast<size_t>(dstWU)];
-        unsigned char* dstVSafe = new unsigned char[static_cast<size_t>(dstHV) * static_cast<size_t>(dstWV)];
+        cv::Mat dstYSafe;
+        cv::Mat dstUSafe;
+        cv::Mat dstVSafe;
 
         for (int y = 0; y < srcHY; y++)
         {
@@ -308,20 +284,10 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
 
         Anime4KCPP::Anime4K* anime4K;
 
-        Anime4KCPP::Parameters parameters(
-            data->passes,
-            data->pushColorCount,
-            data->strengthColor,
-            data->strengthGradient,
-            data->zoomFactor,
-            false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
-            data->HDN
-        );
-
         if (data->GPU)
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
         else
-            anime4K = data->anime4KCreator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+            anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
         anime4K->loadImage(srcHY, srcWY, srcYSafe, srcHU, srcWU, srcUSafe, srcHV, srcWV, srcVSafe);
         anime4K->process();
@@ -329,16 +295,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
 
         for (int y = 0; y < dstHY; y++)
         {
-            memcpy(dstY, dstYSafe + y * static_cast<size_t>(dstWY), dstWY);
+            memcpy(dstY, dstYSafe.data + y * static_cast<size_t>(dstWY), dstWY);
             dstY += dstSrtideY;
             if (y < dstHU)
             {
-                memcpy(dstU, dstUSafe + y * static_cast<size_t>(dstWU), dstWU);
+                memcpy(dstU, dstUSafe.data + y * static_cast<size_t>(dstWU), dstWU);
                 dstU += dstSrtideU;
             }
             if (y < dstHV)
             {
-                memcpy(dstV, dstVSafe + y * static_cast<size_t>(dstWV), dstWV);
+                memcpy(dstV, dstVSafe.data + y * static_cast<size_t>(dstWV), dstWV);
                 dstV += dstSrtideV;
             }
         }
@@ -348,9 +314,6 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
         delete[] srcYSafe;
         delete[] srcUSafe;
         delete[] srcVSafe;
-        delete[] dstYSafe;
-        delete[] dstUSafe;
-        delete[] dstVSafe;
 
         vsapi->freeFrame(src);
 
