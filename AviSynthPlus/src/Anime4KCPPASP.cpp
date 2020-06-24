@@ -62,12 +62,12 @@ Anime4KCPPF::Anime4KCPPF(
 {
     if (!vi.IsRGB24() && (!vi.IsYUV() || vi.BitsPerComponent() != 8 || !vi.IsPlanar()))
     {
-        env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only!");
+        env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only");
     }
 
     if (!vi.IsRGB24() && !vi.IsYV24() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: RGB24 or YUV only for Anime4K09!");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV444P8 only for Anime4K09");
     }
 
     vi.height *= inputs.zoomFactor;
