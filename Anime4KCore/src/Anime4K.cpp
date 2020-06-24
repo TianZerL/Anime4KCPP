@@ -483,20 +483,25 @@ std::array<int, 3> Anime4KCPP::Anime4K::getResultShape()
     return shape;
 }
 
-void Anime4KCPP::Anime4K::showImage()
+void Anime4KCPP::Anime4K::showImage(bool R2B)
 {
+    cv::Mat tmpImg = dstImg;
+
+    if (R2B)
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2RGB);
+
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
         {
-            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+            cv::merge(std::vector{ dstY,dstU,dstV }, tmpImg);
+            cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
         }
         else
             throw "Only YUV444 can be saved to file";
     }
 
-    cv::imshow("dstImg", dstImg);
+    cv::imshow("preview", tmpImg);
     cv::waitKey();
 }
 

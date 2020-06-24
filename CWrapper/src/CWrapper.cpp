@@ -258,12 +258,12 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acShowImage(ac_instance instance)
+    ac_error acShowImage(ac_instance instance, ac_bool R2B)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::Anime4K*>(instance)->showImage();
+        static_cast<Anime4KCPP::Anime4K*>(instance)->showImage(R2B);
 
         return AC_OK;
     }

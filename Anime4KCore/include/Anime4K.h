@@ -154,7 +154,7 @@ public:
     size_t getResultDataLength();
     size_t getResultDataPerChannelLength();
     std::array<int, 3> getResultShape();
-    void showImage();
+    void showImage(bool R2B = false);
 
     virtual void process() = 0;
     // for video processing

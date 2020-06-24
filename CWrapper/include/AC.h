@@ -100,7 +100,7 @@ extern "C"
     extern AC_DLL ac_error AC_API acStopVideoProcess(ac_instance instance);
     extern AC_DLL ac_error AC_API acPauseVideoProcess(ac_instance instance);
     extern AC_DLL ac_error AC_API acContinueVideoProcess(ac_instance instance);
-    extern AC_DLL ac_error AC_API acShowImage(ac_instance instance);
+    extern AC_DLL ac_error AC_API acShowImage(ac_instance instance, ac_bool R2B);
     extern AC_DLL ac_error AC_API acSaveImage(ac_instance instance, const char* dstFile);
     extern AC_DLL ac_error AC_API acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec);
     extern AC_DLL ac_error AC_API acSaveVideo(ac_instance instance);
