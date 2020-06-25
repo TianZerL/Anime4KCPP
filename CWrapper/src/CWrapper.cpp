@@ -284,14 +284,14 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec)
+    ac_error acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec, double fps)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
         try
         {
-            static_cast<Anime4KCPP::Anime4K*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec));
+            static_cast<Anime4KCPP::Anime4K*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
         }
         catch (const char* err)
         {
