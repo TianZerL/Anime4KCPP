@@ -33,7 +33,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                 std::vector<cv::Mat> yuv(3);
                 cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                 cv::split(orgImg, yuv);
-                cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                cv::merge(std::vector<cv::Mat>{ dstImg,yuv[U],yuv[V] }, dstImg);
 
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
             }
@@ -69,7 +69,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     std::vector<cv::Mat> yuv(3);
                     cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::split(orgFrame, yuv);
-                    cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                    cv::merge(std::vector<cv::Mat>{ dstFrame,yuv[U],yuv[V] }, dstFrame);
 
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                     frame.first = dstFrame;
@@ -98,7 +98,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     std::vector<cv::Mat> yuv(3);
                     cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::split(tmpImg, yuv);
-                    cv::merge(std::vector{ dstImg,yuv[U],yuv[V] }, dstImg);
+                    cv::merge(std::vector<cv::Mat>{ dstImg,yuv[U],yuv[V] }, dstImg);
                     tmpImg = dstImg;
                 }
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
@@ -147,7 +147,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                         std::vector<cv::Mat> yuv(3);
                         cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                         cv::split(tmpFrame, yuv);
-                        cv::merge(std::vector{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                        cv::merge(std::vector<cv::Mat>{ dstFrame,yuv[U],yuv[V] }, dstFrame);
                         tmpFrame = dstFrame;
                     }
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);

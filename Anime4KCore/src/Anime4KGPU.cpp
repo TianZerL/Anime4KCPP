@@ -23,7 +23,7 @@ void Anime4KCPP::Anime4KGPU::process()
     {
         if (inputYUV)
         {
-            cv::merge(std::vector{ orgY,orgU,orgV }, orgImg);
+            cv::merge(std::vector<cv::Mat>{ orgY,orgU,orgV }, orgImg);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
         dstImg.create(H, W, CV_8UC4);

@@ -11,7 +11,7 @@ void Anime4KCPP::Anime4KCPU::process()
     {
         if (inputYUV)
         {
-            cv::merge(std::vector{ orgY,orgU,orgV }, orgImg);
+            cv::merge(std::vector<cv::Mat>{ orgY,orgU,orgV }, orgImg);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
         int tmpPcc = this->pcc;

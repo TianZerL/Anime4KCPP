@@ -135,7 +135,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
     else
     {
         inputYUV = false;
-        cv::merge(std::vector{
+        cv::merge(std::vector<cv::Mat>{
                                 cv::Mat(rows, cols, CV_8UC1, b),
                                 cv::Mat(rows, cols, CV_8UC1, g),
                                 cv::Mat(rows, cols, CV_8UC1, r) },
@@ -172,7 +172,7 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
         {
-            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::merge(std::vector<cv::Mat>{ dstY,dstU,dstV }, dstImg);
             cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
         }
         else
@@ -186,7 +186,7 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::merge(std::vector<cv::Mat>{ dstY,dstU,dstV }, dstImg);
         else
             throw "Only YUV444 can be saved to opencv Mat";
     }
@@ -218,7 +218,7 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector{ dstY,dstU,dstV }, dstImg);
+            cv::merge(std::vector<cv::Mat>{ dstY,dstU,dstV }, dstImg);
         else
             throw "Only YUV444 can be saved to data pointer";
     }
@@ -494,7 +494,7 @@ void Anime4KCPP::Anime4K::showImage(bool R2B)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
         {
-            cv::merge(std::vector{ dstY,dstU,dstV }, tmpImg);
+            cv::merge(std::vector<cv::Mat>{ dstY,dstU,dstV }, tmpImg);
             cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
         }
         else

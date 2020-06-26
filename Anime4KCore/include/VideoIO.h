@@ -56,5 +56,5 @@ private:
 
     std::atomic<double> progress;
     std::atomic<size_t> stop;
-    std::atomic<bool> pause = false;
+    std::atomic<bool> pause{ false };
 };
