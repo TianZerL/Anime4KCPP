@@ -262,7 +262,7 @@
         <location filename="mainwindow.ui" line="357"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1001"/>
         <location filename="mainwindow.cpp" line="601"/>
-        <location filename="mainwindow.cpp" line="818"/>
+        <location filename="mainwindow.cpp" line="815"/>
         <source>image</source>
         <translation>图像</translation>
     </message>
@@ -276,7 +276,7 @@
         <location filename="mainwindow.ui" line="378"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1005"/>
         <location filename="mainwindow.cpp" line="602"/>
-        <location filename="mainwindow.cpp" line="819"/>
+        <location filename="mainwindow.cpp" line="816"/>
         <source>video</source>
         <translation>视频</translation>
     </message>
@@ -462,7 +462,7 @@
         <location filename="mainwindow.ui" line="635"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1081"/>
         <source>Enable ACNet</source>
-        <translation>开启ACNet</translation>
+        <translation>开启ACNet(小幅牺牲性能的情况下有效提升画质，推荐开启)</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="638"/>
@@ -474,7 +474,7 @@
         <location filename="mainwindow.ui" line="645"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1085"/>
         <source>Enable HDN mode for ACNet</source>
-        <translation>为ACNet开启HDN模式</translation>
+        <translation>为ACNet开启HDN模式(更好的降噪)</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="648"/>
@@ -655,7 +655,7 @@
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1131"/>
         <source>mp4v is recommended, Windows only support mp4v, dxva(HW, only for Windows), avc1(H264) and vp09(very slow), other is for tesing.</source>
         <oldsource>mp4v is recommended, Windows only support mp4v, dxva(HW, only for Windows), avc1(H264) and vp9(very slow), other is for tesing.</oldsource>
-        <translation>推荐使用mp4v，Windows下支持mp4v，dxva(硬件加速， 仅支持Windows)，avc1(即H264)和vp09(非常慢)，other选用保留做测试用。</translation>
+        <translation>推荐使用mp4v，Windows下支持mp4v，dxva(硬件加速， 仅支持Windows)，avc1(即H264)和vp09(非常慢)，other选项保留做测试用。</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="917"/>
@@ -745,7 +745,7 @@
     <message>
         <location filename="mainwindow.ui" line="1072"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="924"/>
-        <location filename="mainwindow.cpp" line="1018"/>
+        <location filename="mainwindow.cpp" line="1015"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
@@ -810,7 +810,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="90"/>
-        <location filename="mainwindow.cpp" line="1372"/>
+        <location filename="mainwindow.cpp" line="1369"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -822,7 +822,7 @@
     <message>
         <location filename="mainwindow.cpp" line="149"/>
         <location filename="mainwindow.cpp" line="634"/>
-        <location filename="mainwindow.cpp" line="1142"/>
+        <location filename="mainwindow.cpp" line="1139"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
@@ -853,13 +853,13 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="411"/>
-        <location filename="mainwindow.cpp" line="1166"/>
-        <location filename="mainwindow.cpp" line="1182"/>
-        <location filename="mainwindow.cpp" line="1206"/>
-        <location filename="mainwindow.cpp" line="1224"/>
-        <location filename="mainwindow.cpp" line="1323"/>
-        <location filename="mainwindow.cpp" line="1339"/>
-        <location filename="mainwindow.cpp" line="1363"/>
+        <location filename="mainwindow.cpp" line="1163"/>
+        <location filename="mainwindow.cpp" line="1179"/>
+        <location filename="mainwindow.cpp" line="1203"/>
+        <location filename="mainwindow.cpp" line="1221"/>
+        <location filename="mainwindow.cpp" line="1320"/>
+        <location filename="mainwindow.cpp" line="1336"/>
+        <location filename="mainwindow.cpp" line="1360"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -881,39 +881,39 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="561"/>
-        <location filename="mainwindow.cpp" line="833"/>
-        <location filename="mainwindow.cpp" line="1071"/>
-        <location filename="mainwindow.cpp" line="1192"/>
-        <location filename="mainwindow.cpp" line="1230"/>
-        <location filename="mainwindow.cpp" line="1262"/>
-        <location filename="mainwindow.cpp" line="1276"/>
-        <location filename="mainwindow.cpp" line="1349"/>
+        <location filename="mainwindow.cpp" line="830"/>
+        <location filename="mainwindow.cpp" line="1068"/>
+        <location filename="mainwindow.cpp" line="1189"/>
+        <location filename="mainwindow.cpp" line="1227"/>
+        <location filename="mainwindow.cpp" line="1259"/>
+        <location filename="mainwindow.cpp" line="1273"/>
+        <location filename="mainwindow.cpp" line="1346"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="834"/>
+        <location filename="mainwindow.cpp" line="831"/>
         <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
         <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
         <translation>您正在使用GPU加速模式，但依然启用了预处理或者后处理，这可能会拖慢GPU的处理速度(通常依然快于CPU)，关闭他们吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1072"/>
+        <location filename="mainwindow.cpp" line="1069"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日志已拷贝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1277"/>
+        <location filename="mainwindow.cpp" line="1274"/>
         <source>Successfully release GPU for ACNet</source>
         <translation>释放ACNet GPU成功</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1364"/>
+        <location filename="mainwindow.cpp" line="1361"/>
         <source>Unsupport GPU acceleration for ACNet in this platform</source>
         <translation>不支持将GPU加速用于ACNet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1373"/>
+        <location filename="mainwindow.cpp" line="1370"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>确认停止所有任务？</translation>
     </message>
@@ -923,13 +923,13 @@
         <translation type="vanished">您正在尝试启用GPU加速，这还是一个实验性功能，检查兼容性并初始化吗？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1207"/>
-        <location filename="mainwindow.cpp" line="1225"/>
+        <location filename="mainwindow.cpp" line="1204"/>
+        <location filename="mainwindow.cpp" line="1222"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平台不支持GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1263"/>
+        <location filename="mainwindow.cpp" line="1260"/>
         <source>Successfully release GPU</source>
         <translation>成功释放GPU</translation>
     </message>
@@ -956,13 +956,13 @@
         <location filename="mainwindow.ui" line="49"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="938"/>
         <location filename="mainwindow.cpp" line="600"/>
-        <location filename="mainwindow.cpp" line="817"/>
+        <location filename="mainwindow.cpp" line="814"/>
         <source>pick files</source>
         <translation>打开文件</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="656"/>
-        <location filename="mainwindow.cpp" line="1122"/>
+        <location filename="mainwindow.cpp" line="1119"/>
         <source>output directory</source>
         <translation>输出文件夹</translation>
     </message>

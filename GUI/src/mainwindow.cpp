@@ -677,32 +677,8 @@ void MainWindow::on_pushButtonDelete_clicked()
 
 void MainWindow::on_radioButtonFast_clicked()
 {
-    ui->spinBoxPasses->setValue(1);
-    ui->spinBoxPushColorCount->setValue(2);
-    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
-    ui->doubleSpinBoxPushColorStrength->setValue(0.3);
-    ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
-    ui->doubleSpinBoxZoomFactor->setValue(2.0);
-    ui->checkBoxFastMode->setChecked(true);
-    ui->checkBoxEnablePreprocessing->setChecked(false);
-    ui->checkBoxEnablePostprocessing->setChecked(false);
-}
-
-void MainWindow::on_radioButtonBalance_clicked()
-{
-    ui->spinBoxPasses->setValue(2);
-    ui->spinBoxPushColorCount->setValue(2);
-    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
-    ui->doubleSpinBoxPushColorStrength->setValue(0.3);
-    ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
-    ui->doubleSpinBoxZoomFactor->setValue(2.0);
-    ui->checkBoxFastMode->setChecked(false);
-    ui->checkBoxEnablePreprocessing->setChecked(false);
-    ui->checkBoxEnablePostprocessing->setChecked(false);
-}
-
-void MainWindow::on_radioButtonQuality_clicked()
-{
+    ui->checkBoxACNet->setChecked(false);
+    ui->checkBoxHDN->setChecked(false);
     ui->spinBoxPasses->setValue(2);
     ui->spinBoxPushColorCount->setValue(2);
     ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
@@ -728,6 +704,27 @@ void MainWindow::on_radioButtonQuality_clicked()
     ui->checkBoxPostGaussian->setChecked(false);
     ui->checkBoxPostBilateral->setChecked(true);
     ui->checkBoxPostBilateralFaster->setChecked(false);
+}
+
+void MainWindow::on_radioButtonBalance_clicked()
+{
+    ui->checkBoxACNet->setChecked(true);
+    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
+    ui->doubleSpinBoxZoomFactor->setValue(2.0);
+    ui->checkBoxFastMode->setChecked(false);
+    ui->checkBoxEnablePreprocessing->setChecked(false);
+    ui->checkBoxEnablePostprocessing->setChecked(false);
+}
+
+void MainWindow::on_radioButtonQuality_clicked()
+{
+    ui->checkBoxACNet->setChecked(true);
+    ui->checkBoxHDN->setChecked(true);
+    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
+    ui->doubleSpinBoxZoomFactor->setValue(2.0);
+    ui->checkBoxFastMode->setChecked(false);
+    ui->checkBoxEnablePreprocessing->setChecked(false);
+    ui->checkBoxEnablePostprocessing->setChecked(false);
 }
 
 void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
