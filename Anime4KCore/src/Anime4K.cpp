@@ -526,6 +526,8 @@ void Anime4KCPP::Anime4K::processWithPrintProgress()
                 << "  elpsed: " << std::setw(5) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
                 << "  remaining: " << std::setw(5) << 0.0 << 's'
                 << std::endl;
+            // get any possible exception
+            p.get();
             break;
         }
         std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
@@ -555,6 +557,7 @@ void Anime4KCPP::Anime4K::processWithProgress(const std::function<void(double)>&
         if (status == std::future_status::ready)
         {
             callBack(1.0);
+            p.get();
             break;
         }
         double progress = videoIO->getProgress();
