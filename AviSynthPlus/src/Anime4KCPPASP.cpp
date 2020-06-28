@@ -65,7 +65,7 @@ Anime4KCPPF::Anime4KCPPF(
         env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only");
     }
 
-    if (!vi.IsRGB24() && !vi.IsYV24() && !CNN)
+    if (!vi.IsRGB24() && !vi.Is444() && !CNN)
     {
         env->ThrowError("Anime4KCPP: RGB24 or YUV444P8 only for Anime4K09");
     }
