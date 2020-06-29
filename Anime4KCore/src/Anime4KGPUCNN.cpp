@@ -223,7 +223,6 @@ bool Anime4KCPP::Anime4KGPUCNN::isInitializedGPU()
 void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg)
 {
     cl_int err;
-    int i;
 
     cv::Mat orgImage = orgImg.getMat();
     cv::Mat dstImage = dstImg.getMat();
@@ -528,7 +527,6 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
 void Anime4KCPP::Anime4KGPUCNN::runKernelACNetHDN(cv::InputArray orgImg, cv::OutputArray dstImg)
 {
     cl_int err;
-    int i;
 
     cv::Mat orgImage = orgImg.getMat();
     cv::Mat dstImage = dstImg.getMat();

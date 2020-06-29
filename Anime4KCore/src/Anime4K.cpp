@@ -102,9 +102,18 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
     W = zf * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444)
+void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
 {
-    orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+    if (inputAsRGB32)
+    {
+        inputRGB32 = true;
+        cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+    }
+    else
+    {
+        inputRGB32 = false;
+        orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+    }
     if (inputAsYUV444)
     {
         inputYUV = true;
@@ -190,6 +199,9 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
         else
             throw "Only YUV444 can be saved to opencv Mat";
     }
+    else if (inputRGB32)
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+
     dstImage = dstImg;
 }
 
@@ -222,6 +234,9 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
         else
             throw "Only YUV444 can be saved to data pointer";
     }
+    else if (inputRGB32)
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+
     size_t size = dstImg.step * H;
     memcpy(data, dstImg.data, size);
 }
