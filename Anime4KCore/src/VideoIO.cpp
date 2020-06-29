@@ -16,7 +16,7 @@ Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t
 void Anime4KCPP::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
-    stop = reader.get(cv::CAP_PROP_FRAME_COUNT);
+    stop = static_cast<size_t>(reader.get(cv::CAP_PROP_FRAME_COUNT));
 
     pool.exec([this]()
         {

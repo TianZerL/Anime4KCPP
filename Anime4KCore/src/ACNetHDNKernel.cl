@@ -2025,34 +2025,16 @@ __kernel void convTranspose8To1(
     float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
 
     int2 pos = (int2)(x & 1, y & 1);
-    int flag = 0;
-
-    if (pos.x == 0 && pos.y != 0)
-        flag = 0;
-        //0 x
-        //0 0
-    else if (pos.x == 0 && pos.y == 0)
-        flag = 1;
-        //0 0
-        //0 x
-    else if (pos.x != 0 && pos.y == 0)
-        flag = 2;
-        //0 0
-        //x 0
-    else if (pos.x != 0 && pos.y != 0)
-        flag = 3;
-        //x 0
-        //0 0
-
-        //180 degree rotation for kernel
-        //0 1  to  3 2
-        //2 3      1 0
     float4 c;
-    float tmp;
-    switch(flag)
+
+    //180 degree rotation for kernel
+    //0 1  to  3 2
+    //2 3      1 0
+    if (pos.x == 0 && pos.y != 0)
     {
-    case 0:
-        tmp = clamp(
+        //0 x
+        //0 0
+        float tmp = clamp(
             mc1.x * kernelsL10[0*4+2] +
             mc1.y * kernelsL10[1*4+2] +
             mc1.z * kernelsL10[2*4+2] +
@@ -2063,9 +2045,12 @@ __kernel void convTranspose8To1(
             mc2.w * kernelsL10[7*4+2], 0.0f, 1.0f);
         
         c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 1:
-        tmp = clamp(
+    }
+    else if (pos.x == 0 && pos.y == 0)
+    {
+        //0 0
+        //0 x
+        float tmp = clamp(
             mc1.x * kernelsL10[0*4+0] +
             mc1.y * kernelsL10[1*4+0] +
             mc1.z * kernelsL10[2*4+0] +
@@ -2076,9 +2061,12 @@ __kernel void convTranspose8To1(
             mc2.w * kernelsL10[7*4+0], 0.0f, 1.0f);
 
         c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 2:
-        tmp = clamp(
+    }
+    else if (pos.x != 0 && pos.y == 0)
+    {
+        //0 0
+        //x 0
+        float tmp = clamp(
             mc1.x * kernelsL10[0*4+1] +
             mc1.y * kernelsL10[1*4+1] +
             mc1.z * kernelsL10[2*4+1] +
@@ -2089,9 +2077,12 @@ __kernel void convTranspose8To1(
             mc2.w * kernelsL10[7*4+1], 0.0f, 1.0f);
             
         c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
-    case 3:
-        tmp = clamp(
+    }
+    else if (pos.x != 0 && pos.y != 0)
+    {
+        //x 0
+        //0 0
+        float tmp = clamp(
             mc1.x * kernelsL10[0*4+3] +
             mc1.y * kernelsL10[1*4+3] +
             mc1.z * kernelsL10[2*4+3] +
@@ -2102,7 +2093,6 @@ __kernel void convTranspose8To1(
             mc2.w * kernelsL10[7*4+3], 0.0f, 1.0f);
             
         c = (float4)(tmp, tmp, tmp, 1.0f);
-        break;
     }
 
     write_imagef(dstImg, coord, c);
