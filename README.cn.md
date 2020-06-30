@@ -2,7 +2,7 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # 关于Anime4KCPP
-Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法[**ACNet**](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)。Anime4KCPP致力于成为高性能的视频或图像预处理工具。   
+Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法[**ACNet**](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)。Anime4KCPP提供多种使用方式，包括预处理与实时播放，其致力于成为高性能的视频或图像处理工具。   
 
 **注意: 使用CPU处理已经足够快，足以处理普通图像，其性能大约是[Go语言实现](https://github.com/TianZerL/Anime4KGo)的12倍，[Python实现](https://github.com/TianZerL/Anime4KPython)的1300倍。若使用GPU加速，一般情况下速度是CPU的10倍以上（取决于您的显卡），因此GPU加速很适合用于处理视频，尝试Anime4KCPP以获得更好的质量和高性能。**  
 
@@ -28,8 +28,8 @@ HDN模式能更好的降噪。
 - 滤镜支持，利用它们进行抗锯齿和降噪。  
 
 # 在MPC-HC, MPC-BE, Potplayer等播放器上使用Anime4KCPP
-Anime4KCPP支持DirectShow滤镜, 在Windows下使用非常简单, 查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
-Anime4KCPP可以通过[AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases)在Windows平台上的绝大多数播放器中使用,查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
+Anime4KCPP支持DirectShow滤镜, 在Windows下使用非常简单, 查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)  
+Anime4KCPP也可以通过[AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases)在Windows平台上的绝大多数播放器中使用,查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
 
 # 效果
 ### 原图
