@@ -13,4 +13,5 @@ _deps
 Build
 ThirdParty
 settings.ini
-*.rc
+logo.rc
+*.aps
