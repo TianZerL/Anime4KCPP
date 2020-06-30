@@ -2,7 +2,7 @@
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
-typedef struct {
+typedef struct Anime4KCPPData {
     VSNodeRef* node = nullptr;
     VSVideoInfo vi = VSVideoInfo();
     int passes = 2;
