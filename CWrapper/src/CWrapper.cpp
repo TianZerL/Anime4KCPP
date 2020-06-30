@@ -393,12 +393,12 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444)
+    ac_error acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444);
+        static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
 
         return AC_OK;
     }

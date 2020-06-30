@@ -112,7 +112,7 @@ extern "C"
     extern AC_DLL void AC_API acReleaseGPUCNN(void);
     extern AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
     extern AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
-    extern AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444);
+    extern AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
     extern AC_DLL ac_error AC_API acSaveImageRGB(ac_instance instance, unsigned char** r, unsigned char** g, unsigned char** b);
     extern AC_DLL ac_error AC_API acSaveImageRGBBytes(ac_instance instance, unsigned char** data);
     extern AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
