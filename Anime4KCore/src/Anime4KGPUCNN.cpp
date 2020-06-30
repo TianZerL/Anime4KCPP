@@ -1105,7 +1105,7 @@ unsigned int Anime4KCPP::Anime4KGPUCNN::dID = 0U;
 const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString = 
 R"(#define RELU(x) fmax(x, 0.0f)
 
-__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
 __constant float kernelsL1[9 * 8] = 
 {
@@ -3208,7 +3208,7 @@ __kernel void convTranspose8To1(
 const std::string Anime4KCPP::Anime4KGPUCNN::ACNetHDNKernelSourceString =
 R"(#define RELU(x) fmax(x, 0.0f)
 
-__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP | CLK_FILTER_NEAREST;
+__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
 __constant float kernelsL1[9 * 8] = 
 {
