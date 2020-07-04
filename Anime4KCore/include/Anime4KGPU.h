@@ -25,7 +25,9 @@ public:
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
     static void releaseGPU();
     static bool isInitializedGPU();
+    //return platforms, devices of each platform, all devices infomation
     static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
+    //return result and infomation
     static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
 private:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);

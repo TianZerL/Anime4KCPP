@@ -123,6 +123,7 @@ inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::P
     return stream;
 }
 
+//Base class for IO operation
 class Anime4KCPP::Anime4K
 {
 public:
@@ -154,6 +155,7 @@ public:
     size_t getResultDataLength();
     size_t getResultDataPerChannelLength();
     std::array<int, 3> getResultShape();
+    //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
 
     virtual void process() = 0;

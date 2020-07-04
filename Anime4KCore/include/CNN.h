@@ -7,6 +7,7 @@ namespace Anime4KCPP
     class CNNCreator;
 }
 
+//CNN Processor Factory
 class Anime4KCPP::CNNCreator
 {
 public:

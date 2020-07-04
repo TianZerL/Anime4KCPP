@@ -28,7 +28,6 @@ private:
     void CASSharpening(cv::InputArray src);
     void changEachPixelBGR(cv::InputArray _src, const std::function<void(const int, const int, RGBA, Line)>&& callBack);
 private:
-    const static int B = 0, G = 1, R = 2, A = 3;
     int H, W;
     cv::Mat img, tmpImg;
     uint8_t filters;

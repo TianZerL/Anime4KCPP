@@ -26,10 +26,14 @@ public:
     ~VideoIO();
     VideoIO(const VideoIO&) = delete;
     VideoIO& operator=(const VideoIO&) = delete;
+    //initialize frame process callback function `p` and thread count `t`, it's ready to call process after this
     VideoIO& init(std::function<void()> &&p, size_t t);
     void process();
+    //initialize VideoCapture
     bool openReader(const std::string& srcFile);
+    //initialize VideoWriter
     bool openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size,const double forceFps = 0.0);
+    //get the specifying video property from VideoCapture
     double get(int p);
     void release();
     Frame read();
@@ -48,12 +52,12 @@ private:
     cv::VideoWriter writer;
     std::queue <Frame> rawFrames;
     std::unordered_map<size_t, cv::Mat> frameMap;
-
+    //lock
     std::mutex mtxRead;
     std::condition_variable cndRead;
     std::mutex mtxWrite;
     std::condition_variable cndWrite;
-
+    //callback data
     std::atomic<double> progress;
     std::atomic<size_t> stop;
     std::atomic<bool> pause{ false };
