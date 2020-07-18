@@ -41,7 +41,7 @@ HRESULT ACProp::OnConnect(IUnknown* pUnk)
         return E_NOINTERFACE;
 
     CheckPointer(pIAC, E_FAIL);
-    pIAC->GetParameters(&HDN, &CNN, &pID, &dID, &zoomFactor);
+    pIAC->GetParameters(&HDN, &CNN, &pID, &dID, &zoomFactor, &H, &W);
 
     pIAC->GetGPUInfo(GPUInfo);
 
@@ -67,14 +67,20 @@ HRESULT ACProp::OnActivate()
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), CNN);
 
     TCHAR sz[STR_MAX_LENGTH];
-    (void)StringCchPrintf(sz, NUMELMS(sz), TEXT("%f\0"), zoomFactor);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%f\0"), zoomFactor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz);
 
-    (void)StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), pID);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), pID);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_PID), sz);
 
-    (void)StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), dID);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), dID);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_DID), sz);
+
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), H);
+    Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_H), sz);
+
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), W);
+    Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_W), sz);
 
     MultiByteToWideChar(CP_ACP, 0, GPUInfo.c_str(), -1, sz, STR_MAX_LENGTH);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_GPUINFO), sz);
@@ -96,7 +102,7 @@ HRESULT ACProp::OnApplyChanges()
 {
     GetValues();
     CheckPointer(pIAC, E_POINTER);
-    pIAC->SetParameters(HDN, CNN, pID, dID, zoomFactor);
+    pIAC->SetParameters(HDN, CNN, pID, dID, zoomFactor, H, W);
 
     return NOERROR;
 }
@@ -119,10 +125,18 @@ void ACProp::GetValues()
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_DID), sz, STR_MAX_LENGTH);
     dID = _wtoi(sz);
     dID = dID < 0 ? 0 : dID;
+
+    Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_H), sz, STR_MAX_LENGTH);
+    H = _wtoi(sz);
+    H = H < 0 ? 0 : H;
+
+    Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_W), sz, STR_MAX_LENGTH);
+    W = _wtoi(sz);
+    W = W < 0 ? 0 : W;
 }
 
 ACProp::ACProp(LPUNKNOWN lpunk, HRESULT* phr) :
     CBasePropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), lpunk,
         IDD_ACPROP, IDS_TITLE),
-    HDN(false), CNN(false), pID(0), dID(0), zoomFactor(2.0),
+    HDN(false), CNN(false), pID(0), dID(0), zoomFactor(2.0), H(1080), W(1920),
     pIAC(NULL), bInit(FALSE) {}

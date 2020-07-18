@@ -26,8 +26,8 @@ public:
     virtual HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
-    STDMETHODIMP GetParameters(bool* HDN, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor);
-    STDMETHODIMP SetParameters(bool HDN, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor);
+    STDMETHODIMP GetParameters(bool* HDN, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor, int *H, int* W);
+    STDMETHODIMP SetParameters(bool HDN, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor, int H, int W);
     STDMETHODIMP GetGPUInfo(std::string& info);
 
     STDMETHODIMP GetPages(CAUUID* pPages);
@@ -45,6 +45,7 @@ private:
     unsigned int pID, dID;
     float zf;
     bool CNN;
+    int H, W;
 
     LONG srcH, srcW, dstH, dstW;
     LONG dstDataLength;

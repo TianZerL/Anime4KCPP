@@ -15,6 +15,10 @@
 #define IDC_EDIT_GPUINFO                1011
 #define IDC_STATIC_EXPLAIN              1012
 #define IDC_STATIC_GPUs                 1013
+#define IDC_EDIT_W                      1014
+#define IDC_EDIT_H                      1015
+#define IDC_STATIC_X                    1016
+#define IDC_STATIC_RESINFO              1017
 
 // Next default values for new objects
 // 

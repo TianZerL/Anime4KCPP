@@ -19,7 +19,9 @@ extern "C"
             bool* CNN,
             unsigned int* pID,
             unsigned int* dID,
-            float* zoomFactor
+            float* zoomFactor,
+            int *H,
+            int *W
             ) PURE;
 
         STDMETHOD(SetParameters) (THIS_
@@ -27,7 +29,9 @@ extern "C"
             bool CNN,
             unsigned int pID,
             unsigned int dID,
-            float zoomFactor
+            float zoomFactor,
+            int H,
+            int W
             ) PURE;
 
         STDMETHOD(GetGPUInfo) (THIS_
@@ -57,6 +61,7 @@ private:
     bool HDN, CNN;
     unsigned int pID, dID;
     float zoomFactor;
+    int H, W;
     std::string GPUInfo;
 
     IAC* pIAC;

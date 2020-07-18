@@ -108,6 +108,8 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0F ? zf : 1.0F;
+    H = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"H", 1080, lpPath);
+    W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
 }
 
 inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
@@ -205,6 +207,19 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     // VIDEOINFOHEADER and VIDEOINFOHEADER2 is supported
     if (*mtIn->FormatType() != FORMAT_VideoInfo && *mtIn->FormatType() != FORMAT_VideoInfo2)
         return E_INVALIDARG;
+
+    if (mtIn->formattype == FORMAT_VideoInfo2)
+    {
+        VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)mtIn->pbFormat;
+        if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
+            return E_INVALIDARG;
+    }
+    else
+    {
+        VIDEOINFOHEADER* pVi = (VIDEOINFOHEADER*)mtIn->pbFormat;
+        if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
+            return E_INVALIDARG;
+    }
 
     // Can we transform this type
     if (IsYV12(mtIn) || IsIYUV(mtIn) || IsNV12(mtIn) || IsRGB24(mtIn) || IsRGB32(mtIn))
@@ -531,27 +546,31 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     return hr;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor)
+STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor, int* H, int* W)
 {
     *HDN = parameters.HDN;
     *CNN = this->CNN;
     *pID = this->pID;
     *dID = this->dID;
+    *H = this->H;
+    *W = this->W;
     *zoomFactor = zf;
 
     return NOERROR;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor)
+STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor, int H, int W)
 {
     CAutoLock cAutoLock(&lock);
 
-    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10], _zoomFactor[10];
+    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10], _H[10], _W[10], _zoomFactor[10];
 
     //convert to string
     _itow_s(pID, _pID, 10, 10);
     _itow_s(dID, _dID, 10, 10);
     _itow_s(CNN, _CNN, 10, 10);
+    _itow_s(H, _H, 10, 10);
+    _itow_s(W, _W, 10, 10);
     _itow_s(HDN, _HDN, 10, 10);
     swprintf(_zoomFactor, 10, L"%f", zoomFactor);
 
@@ -560,6 +579,8 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, u
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"dID", _dID, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"ACNet", _CNN, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"HDN", _HDN, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"H", _H, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"W", _W, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", _zoomFactor, lpPath);
 
     return NOERROR;
