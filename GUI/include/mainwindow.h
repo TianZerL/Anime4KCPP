@@ -20,7 +20,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define ANIME4KCPP_GUI_VERSION "1.8.0"
+#define ANIME4KCPP_GUI_VERSION "1.9.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -33,14 +33,14 @@ enum Language
 
 enum ErrorType
 {
-    INPUT_NONASCII = 0, PROCESSING_LIST_EMPTY=1,
-    FILE_NOT_EXIST = 2, DIR_NOT_EXIST=3,
-    TYPE_NOT_IMAGE = 4, TYPE_NOT_ADD = 5
+    PROCESSING_LIST_EMPTY,
+    FILE_NOT_EXIST, DIR_NOT_EXIST,
+    TYPE_NOT_IMAGE, TYPE_NOT_ADD
 };
 
 enum FileType
 {
-    IMAGE = 0, VIDEO = 1, ERROR_TYPE=2
+    IMAGE = 0, VIDEO = 1, ERROR_TYPE = 2
 };
 
 enum GPUMode
@@ -63,28 +63,28 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
 protected:
-    void closeEvent(QCloseEvent *event);
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
+    void closeEvent(QCloseEvent* event);
+    void dragEnterEvent(QDragEnterEvent* event);
+    void dropEvent(QDropEvent* event);
 
 private:
-    void readConfig(const QSettings *conf);
-    void writeConfig(QSettings *conf);
-    Language getLanguage(const QString &lang);
+    void readConfig(const QSettings* conf);
+    void writeConfig(QSettings* conf);
+    Language getLanguage(const QString& lang);
     QString getLanguage(const Language lang);
     void errorHandler(const ErrorType err);
     void initTextBrowser();
     bool checkFFmpeg();
-    QString formatSuffixList(const QString &&type, QString str);
-    void initAnime4K(Anime4KCPP::Anime4K *&anime4K);
-    void releaseAnime4K(Anime4KCPP::Anime4K *&anime4K);
-    FileType fileType(const QFileInfo &file);
+    QString formatSuffixList(const QString&& type, QString str);
+    void initAnime4K(Anime4KCPP::Anime4K*& anime4K);
+    void releaseAnime4K(Anime4KCPP::Anime4K*& anime4K);
+    FileType fileType(const QFileInfo& file);
     QString getOutputPrefix();
-    Anime4KCPP::CODEC getCodec(const QString &codec);
+    Anime4KCPP::CODEC getCodec(const QString& codec);
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
@@ -96,9 +96,9 @@ private slots:
 private slots:
     void on_actionQuit_triggered();
 
-    void on_pushButtonInputPath_clicked();
+    void on_pushButtonPickFiles_clicked();
 
-    void on_pushButtonOutputPath_clicked();
+    void on_pushButtonOutputPathPick_clicked();
 
     void on_pushButtonClear_clicked();
 
@@ -132,7 +132,7 @@ private slots:
 
     void on_spinBoxFontSize_valueChanged(int arg1);
 
-    void on_fontComboBox_currentFontChanged(const QFont &f);
+    void on_fontComboBox_currentFontChanged(const QFont& f);
 
     void on_pushButtonCopyText_clicked();
 
@@ -150,7 +150,7 @@ private slots:
 
     void on_spinBoxPlatformID_valueChanged(int arg1);
 
-    void on_pushButtonOpen_clicked();
+    void on_pushButtonOutputPathOpen_clicked();
 
     void on_pushButtonReleaseGPU_clicked();
 
@@ -165,10 +165,10 @@ private slots:
     void on_pushButtonContinue_clicked();
 
 private:
-    Ui::MainWindow *ui;
-    QTranslator *translator;
-    QStandardItemModel *tableModel;
-    QSettings *config;
+    Ui::MainWindow* ui;
+    QTranslator* translator;
+    QStandardItemModel* tableModel;
+    QSettings* config;
     quint64 totalTime;
     int imageCount;
     int videoCount;
@@ -183,8 +183,8 @@ private:
     std::vector<int> devices;
     int platforms;
 
-    QHash<QString,Language> languageSelector;
-    QHash<QString,Anime4KCPP::CODEC> codecSelector;
+    QHash<QString, Language> languageSelector;
+    QHash<QString, Anime4KCPP::CODEC> codecSelector;
 
     std::atomic<bool> stop;
     std::atomic<PauseFlag> pause;

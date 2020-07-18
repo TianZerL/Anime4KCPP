@@ -1,7 +1,7 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
     //initialize textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
     ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
-    ui->spinBoxFontSize->setRange(9,30);
+    ui->spinBoxFontSize->setRange(9, 30);
     ui->spinBoxFontSize->setValue(9);
     initTextBrowser();
     //accept drops
@@ -29,11 +29,11 @@ MainWindow::MainWindow(QWidget *parent)
     //initialize tableView
     tableModel = new QStandardItemModel(this);
     tableModel->setColumnCount(5);
-    tableModel->setHorizontalHeaderLabels({"Input file",
+    tableModel->setHorizontalHeaderLabels({ "Input file",
                                            "Output file",
                                            "Full path",
                                            "Output path",
-                                           "State"});
+                                           "State" });
     ui->tableViewProcessingList->setModel(tableModel);
     //initialize processBar
     ui->progressBarProcessingList->reset();
@@ -43,9 +43,9 @@ MainWindow::MainWindow(QWidget *parent)
     ui->progressBarCurrentTask->setRange(0, 100);
     //initialize arguments
     ui->spinBoxThreads->setMinimum(1);
-    ui->doubleSpinBoxPushColorStrength->setRange(0.0,1.0);
-    ui->doubleSpinBoxPushGradientStrength->setRange(0.0,1.0);
-    ui->doubleSpinBoxZoomFactor->setRange(1.0,10.0);
+    ui->doubleSpinBoxPushColorStrength->setRange(0.0, 1.0);
+    ui->doubleSpinBoxPushGradientStrength->setRange(0.0, 1.0);
+    ui->doubleSpinBoxZoomFactor->setRange(1.0, 10.0);
     //initialize time and count
     totalTaskCount = totalTime = imageCount = videoCount = 0;
     //initialize config
@@ -78,7 +78,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
+void MainWindow::closeEvent(QCloseEvent* event)
 {
     if (!ui->actionQuit_confirmation->isChecked())
     {
@@ -88,8 +88,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     }
 
     if (QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
-                                                 tr("Do you really want to exit?"),
-                                                 QMessageBox::Yes|QMessageBox::No, QMessageBox::No))
+        tr("Do you really want to exit?"),
+        QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
     {
         writeConfig(config);
         event->accept();
@@ -99,108 +99,97 @@ void MainWindow::closeEvent(QCloseEvent *event)
     event->ignore();
 }
 
-void MainWindow::dragEnterEvent(QDragEnterEvent *event)
+void MainWindow::dragEnterEvent(QDragEnterEvent* event)
 {
     event->acceptProposedAction();
 }
 
-void MainWindow::dropEvent(QDropEvent *event)
+void MainWindow::dropEvent(QDropEvent* event)
 {
     QList<QUrl> urls = event->mimeData()->urls();
-    if(urls.isEmpty())
+    if (urls.isEmpty())
         return;
 
     QStringList files;
 
-    bool flag=false;
-    for (QUrl &url:urls)
+    for (QUrl& url : urls)
     {
         QString file = url.toLocalFile();
-        if(file.contains(QRegExp("[^\\x00-\\xff]")))
-        {
-            flag = true;
-            continue;
-        }
         if (!files.contains(file))
             files.append(file);
     }
 
-    QStandardItem *inputFile;
-    QStandardItem *outputFile;
-    QStandardItem *inputPath;
-    QStandardItem *outputPath;
-    QStandardItem *state;
+    QStandardItem* inputFile;
+    QStandardItem* outputFile;
+    QStandardItem* inputPath;
+    QStandardItem* outputPath;
+    QStandardItem* state;
 
-    for (QString &file:files)
+    for (QString& file : files)
     {
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo)==ERROR_TYPE){
+        if (fileType(fileInfo) == ERROR_TYPE)
+        {
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if(fileType(fileInfo)==VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mkv");
+        if (fileType(fileInfo) == VIDEO)
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
         else
-            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         inputPath = new QStandardItem(fileInfo.filePath());
         state = new QStandardItem(tr("ready"));
         if (ui->lineEditOutputPath->text().isEmpty())
             outputPath = new QStandardItem(QDir::currentPath());
         else
             outputPath = new QStandardItem(ui->lineEditOutputPath->text());
-        tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+        tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 
         totalTaskCount++;
     }
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
-
-    if (flag)
-    {
-        errorHandler(INPUT_NONASCII);
-    }
-
 }
 
-void MainWindow::readConfig(const QSettings *conf)
+void MainWindow::readConfig(const QSettings* conf)
 {
-    QString language = conf->value("/GUI/language","en").toString();
-    bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom",true).toBool();
-    bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg",true).toBool();
+    QString language = conf->value("/GUI/language", "en").toString();
+    bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom", true).toBool();
+    bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
 
-    QString imageSuffix = conf->value("/Suffix/image","png:jpg:jpeg:bmp").toString();
-    QString videoSuffix = conf->value("/Suffix/video","mp4:mkv:avi:m4v:flv:3gp:wmv:mov").toString();
-    QString outputPath = conf->value("/Output/path",QApplication::applicationDirPath()+"/output").toString();
-    QString outputPrefix = conf->value("/Output/perfix","output_anime4kcpp_").toString();
+    QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
+    QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov").toString();
+    QString outputPath = conf->value("/Output/path", QApplication::applicationDirPath() + "/output").toString();
+    QString outputPrefix = conf->value("/Output/perfix", "output_anime4kcpp_").toString();
 
-    int passes = conf->value("/Arguments/passes",2).toInt();
-    int pushColorCount = conf->value("/Arguments/pushColorCount",2).toInt();
-    double pushColorStrength = conf->value("/Arguments/pushColorStrength",0.3).toDouble();
-    double pushGradientStrength = conf->value("/Arguments/pushGradientStrength",1.0).toDouble();
-    double zoomFactor = conf->value("/Arguments/zoomFactor",2.0).toDouble();
-    unsigned int threads = conf->value("/Arguments/threads",std::thread::hardware_concurrency()).toUInt();
-    bool fastMode = conf->value("/Arguments/fastMode",false).toBool();
+    int passes = conf->value("/Arguments/passes", 2).toInt();
+    int pushColorCount = conf->value("/Arguments/pushColorCount", 2).toInt();
+    double pushColorStrength = conf->value("/Arguments/pushColorStrength", 0.3).toDouble();
+    double pushGradientStrength = conf->value("/Arguments/pushGradientStrength", 1.0).toDouble();
+    double zoomFactor = conf->value("/Arguments/zoomFactor", 2.0).toDouble();
+    unsigned int threads = conf->value("/Arguments/threads", std::thread::hardware_concurrency()).toUInt();
+    bool fastMode = conf->value("/Arguments/fastMode", false).toBool();
 
-    bool enablePreprocessing = conf->value("/Preprocessing/enable",true).toBool();
-    bool preMedian = conf->value("/Preprocessing/MedianBlur",false).toBool();
-    bool preMean = conf->value("/Preprocessing/MeanBlur",false).toBool();
-    bool preCAS = conf->value("/Preprocessing/CASSharpening",true).toBool();
-    bool preGaussianWeak = conf->value("/Preprocessing/GaussianBlurWeak",false).toBool();
-    bool preGaussian = conf->value("/Preprocessing/GaussianBlur",false).toBool();
-    bool preBilateral = conf->value("/Preprocessing/BilateralFilter",false).toBool();
-    bool preBilateralFaster = conf->value("/Preprocessing/BilateralFilterFaster",false).toBool();
+    bool enablePreprocessing = conf->value("/Preprocessing/enable", true).toBool();
+    bool preMedian = conf->value("/Preprocessing/MedianBlur", false).toBool();
+    bool preMean = conf->value("/Preprocessing/MeanBlur", false).toBool();
+    bool preCAS = conf->value("/Preprocessing/CASSharpening", true).toBool();
+    bool preGaussianWeak = conf->value("/Preprocessing/GaussianBlurWeak", false).toBool();
+    bool preGaussian = conf->value("/Preprocessing/GaussianBlur", false).toBool();
+    bool preBilateral = conf->value("/Preprocessing/BilateralFilter", false).toBool();
+    bool preBilateralFaster = conf->value("/Preprocessing/BilateralFilterFaster", false).toBool();
 
-    bool enablePostprocessing = conf->value("/Postprocessing/enable",true).toBool();
-    bool postMedian = conf->value("/Postprocessing/MedianBlur",false).toBool();
-    bool postMean = conf->value("/Postprocessing/MeanBlur",false).toBool();
-    bool postCAS = conf->value("/Postprocessing/CASSharpening",false).toBool();
-    bool postGaussianWeak = conf->value("/Postprocessing/GaussianBlurWeak",true).toBool();
-    bool postGaussian = conf->value("/Postprocessing/GaussianBlur",false).toBool();
-    bool postBilateral = conf->value("/Postprocessing/BilateralFilter",true).toBool();
-    bool postBilateralFaster = conf->value("/Postprocessing/BilateralFilterFaster",false).toBool();
+    bool enablePostprocessing = conf->value("/Postprocessing/enable", true).toBool();
+    bool postMedian = conf->value("/Postprocessing/MedianBlur", false).toBool();
+    bool postMean = conf->value("/Postprocessing/MeanBlur", false).toBool();
+    bool postCAS = conf->value("/Postprocessing/CASSharpening", false).toBool();
+    bool postGaussianWeak = conf->value("/Postprocessing/GaussianBlurWeak", true).toBool();
+    bool postGaussian = conf->value("/Postprocessing/GaussianBlur", false).toBool();
+    bool postBilateral = conf->value("/Postprocessing/BilateralFilter", true).toBool();
+    bool postBilateralFaster = conf->value("/Postprocessing/BilateralFilterFaster", false).toBool();
 
     //GUI options
     //set language
@@ -249,7 +238,7 @@ void MainWindow::readConfig(const QSettings *conf)
     ui->checkBoxPostBilateralFaster->setChecked(postBilateralFaster);
 }
 
-void MainWindow::writeConfig(QSettings *conf)
+void MainWindow::writeConfig(QSettings* conf)
 {
     QString language = getLanguage(currLanguage);
     bool quitConfirmatiom = ui->actionQuit_confirmation->isChecked();
@@ -286,43 +275,43 @@ void MainWindow::writeConfig(QSettings *conf)
     bool postBilateral = ui->checkBoxPostBilateral->isChecked();
     bool postBilateralFaster = ui->checkBoxPostBilateralFaster->isChecked();
 
-    conf->setValue("/GUI/language",language);
-    conf->setValue("/GUI/quitConfirmatiom",quitConfirmatiom);
-    conf->setValue("/GUI/checkFFmpeg",checkFFmpegOnStart);
+    conf->setValue("/GUI/language", language);
+    conf->setValue("/GUI/quitConfirmatiom", quitConfirmatiom);
+    conf->setValue("/GUI/checkFFmpeg", checkFFmpegOnStart);
 
-    conf->setValue("/Suffix/image",imageSuffix);
-    conf->setValue("/Suffix/video",videoSuffix);
-    conf->setValue("/Output/path",outputPath);
-    conf->setValue("/Output/perfix",outputPrefix);
+    conf->setValue("/Suffix/image", imageSuffix);
+    conf->setValue("/Suffix/video", videoSuffix);
+    conf->setValue("/Output/path", outputPath);
+    conf->setValue("/Output/perfix", outputPrefix);
 
-    conf->setValue("/Arguments/passes",passes);
-    conf->setValue("/Arguments/pushColorCount",pushColorCount);
-    conf->setValue("/Arguments/pushColorStrength",pushColorStrength);
-    conf->setValue("/Arguments/pushGradientStrength",pushGradientStrength);
-    conf->setValue("/Arguments/zoomFactor",zoomFactor);
-    conf->setValue("/Arguments/threads",threads);
-    conf->setValue("/Arguments/fastMode",fastMode);
+    conf->setValue("/Arguments/passes", passes);
+    conf->setValue("/Arguments/pushColorCount", pushColorCount);
+    conf->setValue("/Arguments/pushColorStrength", pushColorStrength);
+    conf->setValue("/Arguments/pushGradientStrength", pushGradientStrength);
+    conf->setValue("/Arguments/zoomFactor", zoomFactor);
+    conf->setValue("/Arguments/threads", threads);
+    conf->setValue("/Arguments/fastMode", fastMode);
 
-    conf->setValue("/Preprocessing/enable",enablePreprocessing);
-    conf->setValue("/Preprocessing/MedianBlur",preMedian);
-    conf->setValue("/Preprocessing/MeanBlur",preMean);
-    conf->setValue("/Preprocessing/CASSharpening",preCAS);
-    conf->setValue("/Preprocessing/GaussianBlurWeak",preGaussianWeak);
-    conf->setValue("/Preprocessing/GaussianBlur",preGaussian);
-    conf->setValue("/Preprocessing/BilateralFilter",preBilateral);
-    conf->setValue("/Preprocessing/BilateralFilterFaster",preBilateralFaster);
+    conf->setValue("/Preprocessing/enable", enablePreprocessing);
+    conf->setValue("/Preprocessing/MedianBlur", preMedian);
+    conf->setValue("/Preprocessing/MeanBlur", preMean);
+    conf->setValue("/Preprocessing/CASSharpening", preCAS);
+    conf->setValue("/Preprocessing/GaussianBlurWeak", preGaussianWeak);
+    conf->setValue("/Preprocessing/GaussianBlur", preGaussian);
+    conf->setValue("/Preprocessing/BilateralFilter", preBilateral);
+    conf->setValue("/Preprocessing/BilateralFilterFaster", preBilateralFaster);
 
-    conf->setValue("/Postprocessing/enable",enablePostprocessing);
-    conf->setValue("/Postprocessing/MedianBlur",postMedian);
-    conf->setValue("/Postprocessing/MeanBlur",postMean);
-    conf->setValue("/Postprocessing/CASSharpening",postCAS);
-    conf->setValue("/Postprocessing/GaussianBlurWeak",postGaussianWeak);
-    conf->setValue("/Postprocessing/GaussianBlur",postGaussian);
-    conf->setValue("/Postprocessing/BilateralFilter",postBilateral);
-    conf->setValue("/Postprocessing/BilateralFilterFaster",postBilateralFaster);
+    conf->setValue("/Postprocessing/enable", enablePostprocessing);
+    conf->setValue("/Postprocessing/MedianBlur", postMedian);
+    conf->setValue("/Postprocessing/MeanBlur", postMean);
+    conf->setValue("/Postprocessing/CASSharpening", postCAS);
+    conf->setValue("/Postprocessing/GaussianBlurWeak", postGaussianWeak);
+    conf->setValue("/Postprocessing/GaussianBlur", postGaussian);
+    conf->setValue("/Postprocessing/BilateralFilter", postBilateral);
+    conf->setValue("/Postprocessing/BilateralFilterFaster", postBilateralFaster);
 }
 
-inline Language MainWindow::getLanguage(const QString &lang)
+inline Language MainWindow::getLanguage(const QString& lang)
 {
     return languageSelector[lang];
 }
@@ -343,41 +332,35 @@ void MainWindow::errorHandler(const ErrorType err)
 {
     switch (err)
     {
-    case INPUT_NONASCII:
-        QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("Only ASCII encoding is supported"),
-                                 QMessageBox::Ok);
-        break;
     case PROCESSING_LIST_EMPTY:
         QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("Processing list empty"),
-                                 QMessageBox::Ok);
+            tr("Error"),
+            tr("Processing list empty"),
+            QMessageBox::Ok);
         break;
     case FILE_NOT_EXIST:
         QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("File does not exists"),
-                                 QMessageBox::Ok);
+            tr("Error"),
+            tr("File does not exists"),
+            QMessageBox::Ok);
         break;
     case DIR_NOT_EXIST:
         QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("Dir does not exists"),
-                                 QMessageBox::Ok);
+            tr("Error"),
+            tr("Dir does not exists"),
+            QMessageBox::Ok);
         break;
     case TYPE_NOT_IMAGE:
         QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("File type error, only image support"),
-                                 QMessageBox::Ok);
+            tr("Error"),
+            tr("File type error, only image support"),
+            QMessageBox::Ok);
         break;
     case TYPE_NOT_ADD:
         QMessageBox::information(this,
-                                 tr("Error"),
-                                 tr("File type error, you can add it manually"),
-                                 QMessageBox::Ok);
+            tr("Error"),
+            tr("File type error, you can add it manually"),
+            QMessageBox::Ok);
         break;
     }
 }
@@ -385,14 +368,14 @@ void MainWindow::errorHandler(const ErrorType err)
 void MainWindow::initTextBrowser()
 {
     ui->textBrowserInfoOut->setText(
-                "----------------------------------------------\n"
-                "           Welcome to Anime4KCPP GUI          \n"
-                "----------------------------------------------\n"+
+        "----------------------------------------------\n"
+        "           Welcome to Anime4KCPP GUI          \n"
+        "----------------------------------------------\n" +
         QString("         Anime4KCPP GUI v%1                 \n"
-                "         Anime4KCPP Core v%2                \n"
-                "----------------------------------------------\n").arg(ANIME4KCPP_GUI_VERSION,
-                                                                        ANIME4KCPP_CORE_VERSION)
-                );
+            "         Anime4KCPP Core v%2                \n"
+            "----------------------------------------------\n").arg(ANIME4KCPP_GUI_VERSION,
+                ANIME4KCPP_CORE_VERSION)
+    );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
@@ -401,29 +384,29 @@ bool MainWindow::checkFFmpeg()
     if (!QProcess::execute("ffmpeg -version"))
     {
         ui->textBrowserInfoOut->insertPlainText(
-                    "----------------------------------------------\n"
-                    "               ffmpeg check OK                \n"
-                    "----------------------------------------------\n"
-                    );
+            "----------------------------------------------\n"
+            "               ffmpeg check OK                \n"
+            "----------------------------------------------\n"
+        );
         ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
         return true;
     }
     QMessageBox::warning(this, tr("Warning"), tr("FFmpeg did not fount"), QMessageBox::Ok);
     ui->textBrowserInfoOut->insertPlainText(
-                "----------------------------------------------\n"
-                "             ffmpeg check failed              \n"
-                "----------------------------------------------\n"
-                );
+        "----------------------------------------------\n"
+        "             ffmpeg check failed              \n"
+        "----------------------------------------------\n"
+    );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
     return  false;
 }
 
-QString MainWindow::formatSuffixList(const QString &&type, QString str)
+QString MainWindow::formatSuffixList(const QString&& type, QString str)
 {
-    return type+"( *."+str.replace(QRegExp(":")," *.")+");;";
+    return type + "( *." + str.replace(QRegExp(":"), " *.") + ");;";
 }
 
-void MainWindow::initAnime4K(Anime4KCPP::Anime4K *&anime4K)
+void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
 {
     int passes = ui->spinBoxPasses->value();
     int pushColorCount = ui->spinBoxPushColorCount->value();
@@ -436,77 +419,77 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K *&anime4K)
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
     unsigned int threads = ui->spinBoxThreads->value();
     bool HDN = ui->checkBoxHDN->isChecked();
-    uint8_t prefilters=0;
+    uint8_t prefilters = 0;
     if (preprocessing)
     {
         if (ui->checkBoxPreMedian->isChecked())
-            prefilters|=1;
+            prefilters |= 1;
         if (ui->checkBoxPreMean->isChecked())
-            prefilters|=2;
+            prefilters |= 2;
         if (ui->checkBoxPreCAS->isChecked())
-            prefilters|=4;
+            prefilters |= 4;
         if (ui->checkBoxPreGaussianWeak->isChecked())
-            prefilters|=8;
+            prefilters |= 8;
         if (ui->checkBoxPreGaussian->isChecked())
-            prefilters|=16;
+            prefilters |= 16;
         if (ui->checkBoxPreBilateral->isChecked())
-            prefilters|=32;
+            prefilters |= 32;
         if (ui->checkBoxPreBilateralFaster->isChecked())
-            prefilters|=64;
+            prefilters |= 64;
     }
-    uint8_t postfilters=0;
+    uint8_t postfilters = 0;
     if (postprocessing)
     {
         if (ui->checkBoxPostMedian->isChecked())
-            postfilters|=1;
+            postfilters |= 1;
         if (ui->checkBoxPostMean->isChecked())
-            postfilters|=2;
+            postfilters |= 2;
         if (ui->checkBoxPostCAS->isChecked())
-            postfilters|=4;
+            postfilters |= 4;
         if (ui->checkBoxPostGaussianWeak->isChecked())
-            postfilters|=8;
+            postfilters |= 8;
         if (ui->checkBoxPostGaussian->isChecked())
-            postfilters|=16;
+            postfilters |= 16;
         if (ui->checkBoxPostBilateral->isChecked())
-            postfilters|=32;
+            postfilters |= 32;
         if (ui->checkBoxPostBilateralFaster->isChecked())
-            postfilters|=64;
+            postfilters |= 64;
     }
 
     Anime4KCPP::Parameters parameters(
-                passes,
-                pushColorCount,
-                pushColorStrength,
-                pushGradientStrength,
-                zoomFactor,
-                fastMode,
-                videoMode,
-                preprocessing,
-                postprocessing,
-                prefilters,
-                postfilters,
-                threads,
-                HDN
-                );
+        passes,
+        pushColorCount,
+        pushColorStrength,
+        pushGradientStrength,
+        zoomFactor,
+        fastMode,
+        videoMode,
+        preprocessing,
+        postprocessing,
+        prefilters,
+        postfilters,
+        threads,
+        HDN
+    );
 
-    if(ui->checkBoxACNet->isChecked())
-        if(ui->checkBoxACNetGPU->isChecked())
-            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::GPUCNN);
+    if (ui->checkBoxACNet->isChecked())
+        if (ui->checkBoxACNetGPU->isChecked())
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
         else
-            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::CPUCNN);
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
     else
-        if(ui->checkBoxGPUMode->isChecked())
-            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::GPU);
+        if (ui->checkBoxGPUMode->isChecked())
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
         else
-            anime4K = anime4KCreator.create(parameters,Anime4KCPP::ProcessorType::CPU);
+            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
 }
 
-void MainWindow::releaseAnime4K(Anime4KCPP::Anime4K *&anime4K)
+void MainWindow::releaseAnime4K(Anime4KCPP::Anime4K*& anime4K)
 {
     anime4KCreator.release(anime4K);
 }
 
-FileType MainWindow::fileType(const QFileInfo &file)
+FileType MainWindow::fileType(const QFileInfo& file)
 {
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
@@ -522,15 +505,10 @@ QString MainWindow::getOutputPrefix()
     QString prefix = ui->lineEditOutputPrefix->text();
     if (prefix.isEmpty())
         return "output_anime4kcpp_";
-    if (prefix.contains(QRegExp("[^\\x00-\\xff]")))
-    {
-        errorHandler(INPUT_NONASCII);
-        return "output_anime4kcpp_";
-    }
     return ui->lineEditOutputPrefix->text();
 }
 
-inline Anime4KCPP::CODEC MainWindow::getCodec(const QString &codec)
+inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
 {
     return codecSelector[codec];
 }
@@ -538,8 +516,8 @@ inline Anime4KCPP::CODEC MainWindow::getCodec(const QString &codec)
 void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
 {
     tableModel->setData(tableModel->index(row, 4), tr("done"), Qt::DisplayRole);
-    ui->progressBarProcessingList->setValue(pro*100);
-    ui->textBrowserInfoOut->insertPlainText(QString("processing time: %1 s\ndone\n").arg(time/1000.0));
+    ui->progressBarProcessingList->setValue(pro * 100);
+    ui->textBrowserInfoOut->insertPlainText(QString("processing time: %1 s\ndone\n").arg(time / 1000.0));
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
     totalTime += time;
 }
@@ -548,9 +526,9 @@ void MainWindow::solt_error_renewState(int row, QString err)
 {
     tableModel->setData(tableModel->index(row, 4), tr("error"), Qt::DisplayRole);
     QMessageBox::information(this,
-                             tr("error"),
-                             err,
-                             QMessageBox::Ok);
+        tr("error"),
+        err,
+        QMessageBox::Ok);
 }
 
 void MainWindow::solt_allDone_remindUser()
@@ -558,15 +536,15 @@ void MainWindow::solt_allDone_remindUser()
     ui->labelElpsed->setText(QString("Elpsed: 0.0 s"));
     ui->labelRemaining->setText(QString("Remaining: 0.0 s"));
     QMessageBox::information(this,
-                             tr("Notice"),
-                             QString("All tasks done\nTotal processing time: %1 s").arg(totalTime/1000.0),
-                             QMessageBox::Ok);
+        tr("Notice"),
+        QString("All tasks done\nTotal processing time: %1 s").arg(totalTime / 1000.0),
+        QMessageBox::Ok);
     totalTime = 0;
     ui->tableViewProcessingList->setEnabled(true);
     ui->progressBarProcessingList->setEnabled(false);
     ui->progressBarProcessingList->reset();
     ui->progressBarCurrentTask->reset();
-    ui->pushButtonInputPath->setEnabled(true);
+    ui->pushButtonPickFiles->setEnabled(true);
     ui->pushButtonPickFolder->setEnabled(true);
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
@@ -586,8 +564,8 @@ void MainWindow::solt_showInfo_renewTextBrowser(std::string info)
 void MainWindow::solt_updateProgress_updateCurrentTaskProgress(double v, double elpsed, double remaining)
 {
     ui->progressBarCurrentTask->setValue(v * 100);
-    ui->labelElpsed->setText(QString("Elpsed: %1 s").arg(elpsed, 0, 'f', 2,' '));
-    ui->labelRemaining->setText(QString("Remaining: %1 s").arg(remaining, 0, 'f', 2,' '));
+    ui->labelElpsed->setText(QString("Elpsed: %1 s").arg(elpsed, 0, 'f', 2, ' '));
+    ui->labelRemaining->setText(QString("Remaining: %1 s").arg(remaining, 0, 'f', 2, ' '));
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -595,66 +573,52 @@ void MainWindow::on_actionQuit_triggered()
     this->close();
 }
 
-void MainWindow::on_pushButtonInputPath_clicked()
+void MainWindow::on_pushButtonPickFiles_clicked()
 {
     QStringList files = QFileDialog::getOpenFileNames(this, tr("pick files"), "./",
-                                                      formatSuffixList(tr("image"),ui->lineEditImageSuffix->text())+
-                                                      formatSuffixList(tr("video"),ui->lineEditVideoSuffix->text()));
+        formatSuffixList(tr("image"), ui->lineEditImageSuffix->text()) +
+        formatSuffixList(tr("video"), ui->lineEditVideoSuffix->text()));
     files.removeDuplicates();
 
-    QStandardItem *inputFile;
-    QStandardItem *outputFile;
-    QStandardItem *inputPath;
-    QStandardItem *outputPath;
-    QStandardItem *state;
+    QStandardItem* inputFile;
+    QStandardItem* outputFile;
+    QStandardItem* inputPath;
+    QStandardItem* outputPath;
+    QStandardItem* state;
 
 
-    bool flag=false;
-    for(QString &file:files)
+    for (QString& file : files)
     {
-        if(file.contains(QRegExp("[^\\x00-\\xff]")))
-        {
-            flag = true;
-            continue;
-        }
-
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo)==ERROR_TYPE){
+        if (fileType(fileInfo) == ERROR_TYPE) {
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if(fileType(fileInfo)==VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mp4");
+        if (fileType(fileInfo) == VIDEO)
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
         else
-            outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         inputPath = new QStandardItem(fileInfo.filePath());
         state = new QStandardItem(tr("ready"));
         if (ui->lineEditOutputPath->text().isEmpty())
             outputPath = new QStandardItem(QDir::currentPath());
         else
             outputPath = new QStandardItem(ui->lineEditOutputPath->text());
-        tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+        tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 
         totalTaskCount++;
     }
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
-
-    if (flag)
-    {
-        errorHandler(INPUT_NONASCII);
-    }
-
-
 }
 
-void MainWindow::on_pushButtonOutputPath_clicked()
+void MainWindow::on_pushButtonOutputPathPick_clicked()
 {
-    QString outputPath = QFileDialog::getExistingDirectory(this,tr("output directory"),"./");
-    if(outputPath.isEmpty())
+    QString outputPath = QFileDialog::getExistingDirectory(this, tr("output directory"), "./");
+    if (outputPath.isEmpty())
         return;
     ui->lineEditOutputPath->setText(outputPath);
 }
@@ -729,7 +693,7 @@ void MainWindow::on_radioButtonQuality_clicked()
 
 void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
 {
-    if (arg1==Qt::CheckState::Checked)
+    if (arg1 == Qt::CheckState::Checked)
     {
         ui->checkBoxPreCAS->setEnabled(true);
         ui->checkBoxPreMean->setEnabled(true);
@@ -753,7 +717,7 @@ void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
 
 void MainWindow::on_checkBoxEnablePostprocessing_stateChanged(int arg1)
 {
-    if (arg1==Qt::CheckState::Checked)
+    if (arg1 == Qt::CheckState::Checked)
     {
         ui->checkBoxPostCAS->setEnabled(true);
         ui->checkBoxPostMean->setEnabled(true);
@@ -786,13 +750,13 @@ void MainWindow::on_pushButtonPreview_clicked()
 
     ui->pushButtonPreview->setEnabled(false);
 
-    Anime4KCPP::Anime4K *anime4K;
+    Anime4KCPP::Anime4K* anime4K;
     initAnime4K(anime4K);
     switch (fileType(previewFile))
     {
     case IMAGE:
         anime4K->setVideoMode(false);
-        anime4K->loadImage(previewFile.filePath().toStdString());
+        anime4K->loadImage(previewFile.filePath().toLocal8Bit().constData());
         anime4K->process();
         anime4K->showImage();
         break;
@@ -812,27 +776,22 @@ void MainWindow::on_pushButtonPreview_clicked()
 void MainWindow::on_pushButtonPreviewPick_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this, tr("pick files"), "./",
-                                                    formatSuffixList(tr("image"),ui->lineEditImageSuffix->text())+
-                                                    formatSuffixList(tr("video"),ui->lineEditVideoSuffix->text()));
-    if (fileName.contains(QRegExp("[^\\x00-\\xff]")))
-    {
-        errorHandler(INPUT_NONASCII);
-        return;
-    }
+        formatSuffixList(tr("image"), ui->lineEditImageSuffix->text()) +
+        formatSuffixList(tr("video"), ui->lineEditVideoSuffix->text()));
     ui->lineEditPreview->setText(fileName);
 }
 
 void MainWindow::on_pushButtonStart_clicked()
 {
-    if(ui->checkBoxGPUMode->isChecked() && (ui->checkBoxEnablePreprocessing->isChecked() || ui->checkBoxEnablePostprocessing->isChecked()))
+    if (ui->checkBoxGPUMode->isChecked() && (ui->checkBoxEnablePreprocessing->isChecked() || ui->checkBoxEnablePostprocessing->isChecked()))
     {
         if (QMessageBox::Yes == QMessageBox::information(this,
-                                 tr("Notice"),
-                                 tr("You are using GPU acceleration but still enabled"
-                                    "preprocessing or postprocessing, which is not GPU acceletation yet, "
-                                    "and may slow down processing for GPU (usually still faster than CPU), close them?"),
-                                 QMessageBox::Yes | QMessageBox::No,
-                                 QMessageBox::Yes))
+            tr("Notice"),
+            tr("You are using GPU acceleration but still enabled"
+                "preprocessing or postprocessing, which is not GPU acceletation yet, "
+                "and may slow down processing for GPU (usually still faster than CPU), close them?"),
+            QMessageBox::Yes | QMessageBox::No,
+            QMessageBox::Yes))
         {
             ui->checkBoxEnablePreprocessing->setChecked(false);
             ui->checkBoxEnablePostprocessing->setChecked(false);
@@ -840,7 +799,7 @@ void MainWindow::on_pushButtonStart_clicked()
     }
 
     int rows = tableModel->rowCount();
-    if(!rows)
+    if (!rows)
     {
         errorHandler(PROCESSING_LIST_EMPTY);
         return;
@@ -849,43 +808,43 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonStart->setEnabled(false);
     ui->pushButtonClear->setEnabled(false);
     ui->pushButtonDelete->setEnabled(false);
-    ui->pushButtonInputPath->setEnabled(false);
+    ui->pushButtonPickFiles->setEnabled(false);
     ui->pushButtonPickFolder->setEnabled(false);
     ui->progressBarProcessingList->setEnabled(true);
     ui->tableViewProcessingList->setEnabled(false);
     ui->pushButtonForceStop->setEnabled(true);
     ui->pushButtonPause->setEnabled(true);
 
-    QtConcurrent::run([this, rows](){
+    QtConcurrent::run([this, rows]() {
         //QList<<input_path,outpt_path>,row>
-        QList<QPair<QPair<QString,QString>,int>> images;
-        QList<QPair<QPair<QString,QString>,int>> videos;
+        QList<QPair<QPair<QString, QString>, int>> images;
+        QList<QPair<QPair<QString, QString>, int>> videos;
         //read info
         {
             QDir outputPathMaker;
             QString outputPath;
             QString outputFileName;
-            for(int i=0;i<rows;i++)
+            for (int i = 0; i < rows; i++)
             {
-                QFileInfo fileInfo(tableModel->index(i,2).data().toString());
-                outputPathMaker.setPath(tableModel->index(i,3).data().toString());
+                QFileInfo fileInfo(tableModel->index(i, 2).data().toString());
+                outputPathMaker.setPath(tableModel->index(i, 3).data().toString());
                 outputPath = outputPathMaker.absolutePath();
-                outputFileName =  tableModel->index(i,1).data().toString();
+                outputFileName = tableModel->index(i, 1).data().toString();
 
                 outputPathMaker.mkpath(outputPath);
 
-                if (fileType(fileInfo)==IMAGE)
+                if (fileType(fileInfo) == IMAGE)
                 {
-                    images<<QPair<QPair<QString,QString>,int>(QPair<QString,QString>(fileInfo.filePath(),
-                                                                                     outputPath+"/"+
-                                                                                     outputFileName),i);
+                    images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(fileInfo.filePath(),
+                        outputPath + "/" +
+                        outputFileName), i);
                     imageCount++;
                 }
                 else
                 {
-                    videos<<QPair<QPair<QString,QString>,int>(QPair<QString,QString>(fileInfo.filePath(),
-                                                                                     outputPath+"/"+
-                                                                                     outputFileName),i);
+                    videos << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(fileInfo.filePath(),
+                        outputPath + "/" +
+                        outputFileName), i);
                     videoCount++;
                 }
             }
@@ -894,13 +853,13 @@ void MainWindow::on_pushButtonStart_clicked()
         double total = imageCount + videoCount;
 
         Communicator cm;
-        connect(&cm,SIGNAL(done(int, double, quint64)),this,SLOT(solt_done_renewState(int, double, quint64)));
-        connect(&cm,SIGNAL(error(int, QString)),this,SLOT(solt_error_renewState(int, QString)));
-        connect(&cm,SIGNAL(showInfo(std::string)),this,SLOT(solt_showInfo_renewTextBrowser(std::string)));
-        connect(&cm,SIGNAL(allDone()),this,SLOT(solt_allDone_remindUser()));
-        connect(&cm,SIGNAL(updateProgress(double, double, double)),this,SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
+        connect(&cm, SIGNAL(done(int, double, quint64)), this, SLOT(solt_done_renewState(int, double, quint64)));
+        connect(&cm, SIGNAL(error(int, QString)), this, SLOT(solt_error_renewState(int, QString)));
+        connect(&cm, SIGNAL(showInfo(std::string)), this, SLOT(solt_showInfo_renewTextBrowser(std::string)));
+        connect(&cm, SIGNAL(allDone()), this, SLOT(solt_allDone_remindUser()));
+        connect(&cm, SIGNAL(updateProgress(double, double, double)), this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
 
-        Anime4KCPP::Anime4K *anime4K;
+        Anime4KCPP::Anime4K* anime4K;
         initAnime4K(anime4K);
         emit cm.showInfo(anime4K->getFiltersInfo());
 
@@ -909,50 +868,50 @@ void MainWindow::on_pushButtonStart_clicked()
         if (imageCount)
         {
             anime4K->setVideoMode(false);
-            for (QPair<QPair<QString,QString>,int> const &image: images)
+            for (QPair<QPair<QString, QString>, int> const& image : images)
             {
                 try
                 {
-                    anime4K->loadImage(image.first.first.toStdString());
-                    emit cm.showInfo(anime4K->getInfo()+"processing...\n");
+                    anime4K->loadImage(image.first.first.toLocal8Bit().constData());
+                    emit cm.showInfo(anime4K->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     anime4K->process();
                     endTime = std::chrono::steady_clock::now();
-                    anime4K->saveImage(image.first.second.toStdString());
+                    anime4K->saveImage(image.first.second.toLocal8Bit().constData());
                 }
                 catch (const char* err)
                 {
-                    emit cm.error(image.second,QString(err));
+                    emit cm.error(image.second, QString(err));
                 }
 
                 imageCount--;
 
                 emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
-                             std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
+                    std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
             }
         }
         if (videoCount)
         {
             anime4K->setVideoMode(true);
-            for (QPair<QPair<QString,QString>,int> const &video: videos)
+            for (QPair<QPair<QString, QString>, int> const& video : videos)
             {
                 try
                 {
-                    anime4K->loadVideo(video.first.first.toStdString());
-                    anime4K->setVideoSaveInfo(video.first.second.toStdString()+"_tmp_out.mp4", getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
-                    emit cm.showInfo(anime4K->getInfo()+"processing...\n");
+                    anime4K->loadVideo(video.first.first.toLocal8Bit().constData());
+                    anime4K->setVideoSaveInfo(video.first.second.toLocal8Bit().constData() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
+                    emit cm.showInfo(anime4K->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     anime4K->processWithProgress([this, anime4K, &startTime, &cm](double v) {
                         if (stop)
                         {
-                            if(pause == PAUSED)
+                            if (pause == PAUSED)
                             {
                                 anime4K->continueVideoProcess();
                                 pause = NORMAL;
                             }
                             anime4K->stopVideoProcess();
-                            return ;
+                            return;
                         }
                         if (pause == PAUSE)
                         {
@@ -966,17 +925,17 @@ void MainWindow::on_pushButtonStart_clicked()
                         }
                         else if (pause == NORMAL)
                         {
-                            double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-startTime).count()/1000.0;
-                            double remaining = elpsed / v-elpsed;
+                            double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
+                            double remaining = elpsed / v - elpsed;
                             emit cm.updateProgress(v, elpsed, remaining);
                         }
-                    });
+                        });
                     endTime = std::chrono::steady_clock::now();
                     anime4K->saveVideo();
                 }
                 catch (const char* err)
                 {
-                    emit cm.error(video.second,QString(err));
+                    emit cm.error(video.second, QString(err));
                 }
 
                 if (stop)
@@ -985,7 +944,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     break;
                 }
 
-                if(ffmpeg)
+                if (ffmpeg)
                 {
                     QString tmpFilePath = video.first.second + "_tmp_out.mp4";
                     if (!QProcess::execute("ffmpeg -loglevel 40 -i \"" + tmpFilePath + "\" -i \"" + video.first.first + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + video.first.second + "\""))
@@ -997,7 +956,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 videoCount--;
 
                 emit cm.done(video.second, 1.0 - (videoCount / total),
-                             std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
+                    std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
             }
         }
@@ -1005,23 +964,23 @@ void MainWindow::on_pushButtonStart_clicked()
         releaseAnime4K(anime4K);
 
         emit cm.allDone();
-    });
+        });
 
 }
 
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::information(this,
-                             tr("About"),
-                             QString("Anime4KCPP GUI\n\n"
-                                     "Anime4KCPP GUI v%1\n"
-                                     "Anime4KCPP core v%2\n\n"
-                                     "Build on %3 %4\n\n"
-                                     "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
-                                     "Copyright (c) 2020 TianZerL").arg(ANIME4KCPP_GUI_VERSION,
-                                                                        ANIME4KCPP_CORE_VERSION,
-                                                                        __DATE__, __TIME__),
-                             QMessageBox::Ok);
+        tr("About"),
+        QString("Anime4KCPP GUI\n\n"
+            "Anime4KCPP GUI v%1\n"
+            "Anime4KCPP core v%2\n\n"
+            "Build on %3 %4\n\n"
+            "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
+            "Copyright (c) 2020 TianZerL").arg(ANIME4KCPP_GUI_VERSION,
+                ANIME4KCPP_CORE_VERSION,
+                __DATE__, __TIME__),
+        QMessageBox::Ok);
 }
 
 void MainWindow::on_tabWidgetMain_tabBarClicked(int index)
@@ -1035,14 +994,14 @@ void MainWindow::on_actionChinese_triggered()
     translator->load("./language/Anime4KCPP_GUI_zh_CN.qm");
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage=zh_cn;
+    currLanguage = zh_cn;
 }
 
 void MainWindow::on_actionEnglish_triggered()
 {
     qApp->removeTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage=en;
+    currLanguage = en;
 }
 
 void MainWindow::on_pushButtonClearText_clicked()
@@ -1053,35 +1012,35 @@ void MainWindow::on_pushButtonClearText_clicked()
 
 void MainWindow::on_spinBoxFontSize_valueChanged(int value)
 {
-    ui->textBrowserInfoOut->setFont(QFont(ui->fontComboBox->font().family(),value));
+    ui->textBrowserInfoOut->setFont(QFont(ui->fontComboBox->font().family(), value));
 }
 
-void MainWindow::on_fontComboBox_currentFontChanged(const QFont &font)
+void MainWindow::on_fontComboBox_currentFontChanged(const QFont& font)
 {
-    ui->textBrowserInfoOut->setFont(QFont(font.family(),ui->spinBoxFontSize));
+    ui->textBrowserInfoOut->setFont(QFont(font.family(), ui->spinBoxFontSize));
 }
 
 void MainWindow::on_pushButtonCopyText_clicked()
 {
-   QApplication::clipboard()->setText(ui->textBrowserInfoOut->toPlainText());
-   QMessageBox::information(this,
-                            tr("Notice"),
-                            tr("Log has been copied to the clipboard"),
-                            QMessageBox::Ok);
+    QApplication::clipboard()->setText(ui->textBrowserInfoOut->toPlainText());
+    QMessageBox::information(this,
+        tr("Notice"),
+        tr("Log has been copied to the clipboard"),
+        QMessageBox::Ok);
 }
 
 void MainWindow::on_pushButtonPreviewOrgin_clicked()
 {
-    QString filePath =  ui->lineEditPreview->text();
+    QString filePath = ui->lineEditPreview->text();
     if (filePath.isEmpty())
     {
         errorHandler(FILE_NOT_EXIST);
         return;
     }
     QPixmap orginImage(filePath);
-    QWidget *orginImageWidget = new QWidget(this,Qt::Window);
+    QWidget* orginImageWidget = new QWidget(this, Qt::Window);
     orginImageWidget->setAttribute(Qt::WA_DeleteOnClose);
-    QLabel *orginImageLable = new QLabel(orginImageWidget);
+    QLabel* orginImageLable = new QLabel(orginImageWidget);
     orginImageLable->setPixmap(orginImage);
     orginImageWidget->setWindowTitle("orgin image");
     orginImageWidget->setFixedSize(orginImage.size());
@@ -1090,7 +1049,7 @@ void MainWindow::on_pushButtonPreviewOrgin_clicked()
 
 void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
 {
-    QString filePath =  ui->lineEditPreview->text();
+    QString filePath = ui->lineEditPreview->text();
     if (filePath.isEmpty())
     {
         errorHandler(FILE_NOT_EXIST);
@@ -1098,16 +1057,16 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     }
     //read image by opencv for resizing by CUBIC
     double factor = ui->doubleSpinBoxZoomFactor->value();
-    cv::Mat orgImg = cv::imread(filePath.toStdString(), cv::IMREAD_COLOR);
-    cv::resize(orgImg, orgImg, cv::Size(0,0), factor, factor, cv::INTER_CUBIC);
+    cv::Mat orgImg = cv::imread(filePath.toLocal8Bit().constData(), cv::IMREAD_COLOR);
+    cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
     QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888);
     QPixmap resizedImage(QPixmap::fromImage(orginImage));
     //show
-    QWidget *resizedImageWidget = new QWidget(this,Qt::Window);
+    QWidget* resizedImageWidget = new QWidget(this, Qt::Window);
     resizedImageWidget->setAttribute(Qt::WA_DeleteOnClose);
-    QLabel *resizedImageLable = new QLabel(resizedImageWidget);
+    QLabel* resizedImageLable = new QLabel(resizedImageWidget);
     resizedImageLable->setPixmap(resizedImage);
     resizedImageWidget->setWindowTitle("resized image");
     resizedImageWidget->setFixedSize(resizedImage.size());
@@ -1116,32 +1075,32 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
 
 void MainWindow::on_pushButtonPickFolder_clicked()
 {
-    QString folderPath = QFileDialog::getExistingDirectory(this,tr("output directory"),"./");
+    QString folderPath = QFileDialog::getExistingDirectory(this, tr("output directory"), "./");
     QDir folder(folderPath);
     QFileInfoList fileInfoList = folder.entryInfoList(QDir::Files);
 
-    QStandardItem *inputFile;
-    QStandardItem *outputFile;
-    QStandardItem *inputPath;
-    QStandardItem *outputPath;
-    QStandardItem *state;
+    QStandardItem* inputFile;
+    QStandardItem* outputFile;
+    QStandardItem* inputPath;
+    QStandardItem* outputPath;
+    QStandardItem* state;
 
-    for (QFileInfo &fileInfo : fileInfoList)
+    for (QFileInfo& fileInfo : fileInfoList)
     {
         if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (fileType(fileInfo) != ERROR_TYPE))
         {
             inputFile = new QStandardItem(fileInfo.fileName());
-            if(fileType(fileInfo)==VIDEO)
-                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.baseName()+".mkv");
+            if (fileType(fileInfo) == VIDEO)
+                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
             else
-                outputFile = new QStandardItem(getOutputPrefix()+fileInfo.fileName());
+                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
             inputPath = new QStandardItem(fileInfo.filePath());
             state = new QStandardItem(tr("ready"));
             if (ui->lineEditOutputPath->text().isEmpty())
                 outputPath = new QStandardItem(QDir::currentPath());
             else
                 outputPath = new QStandardItem(ui->lineEditOutputPath->text());
-            tableModel->appendRow({inputFile,outputFile,inputPath,outputPath,state});
+            tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 
             totalTaskCount++;
         }
@@ -1153,16 +1112,16 @@ void MainWindow::on_pushButtonPickFolder_clicked()
 
 void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 {
-    if((state == Qt::Checked) && (GPU == GPUMODE_UNINITIALZED))
+    if ((state == Qt::Checked) && (GPU == GPUMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        std::pair<bool,std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
-        if(!ret.first)
+        std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if (!ret.first)
         {
             QMessageBox::warning(this,
-                                 tr("Warning"),
-                                 QString::fromStdString(ret.second),
-                                 QMessageBox::Ok);
+                tr("Warning"),
+                QString::fromStdString(ret.second),
+                QMessageBox::Ok);
             GPU = GPUMODE_UNSUPPORT;
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
         }
@@ -1176,9 +1135,9 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             catch (const char* error)
             {
                 QMessageBox::warning(this,
-                                     tr("Warning"),
-                                     QString(error),
-                                     QMessageBox::Ok);
+                    tr("Warning"),
+                    QString(error),
+                    QMessageBox::Ok);
 
                 ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
                 return;
@@ -1186,10 +1145,10 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 
             GPU = GPUMODE_INITIALZED;
             QMessageBox::information(this,
-                                 tr("Notice"),
-                                 "initialize successful!\n" +
-                                 QString::fromStdString(ret.second),
-                                 QMessageBox::Ok);
+                tr("Notice"),
+                "initialize successful!\n" +
+                QString::fromStdString(ret.second),
+                QMessageBox::Ok);
             ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
             ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
             ui->spinBoxPlatformID->setEnabled(false);
@@ -1197,12 +1156,12 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             ui->pushButtonReleaseGPU->setEnabled(true);
         }
     }
-    else if((state == Qt::Checked) && (GPU == GPUMODE_UNSUPPORT))
+    else if ((state == Qt::Checked) && (GPU == GPUMODE_UNSUPPORT))
     {
         QMessageBox::warning(this,
-                             tr("Warning"),
-                             tr("Unsupport GPU acceleration in this platform"),
-                             QMessageBox::Ok);
+            tr("Warning"),
+            tr("Unsupport GPU acceleration in this platform"),
+            QMessageBox::Ok);
         ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
     }
 }
@@ -1215,18 +1174,18 @@ void MainWindow::on_actionList_GPUs_triggered()
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
     std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
-    if(ret.first.first == 0)
+    if (ret.first.first == 0)
     {
         QMessageBox::warning(this,
-                             tr("Warning"),
-                             tr("Unsupport GPU acceleration in this platform"),
-                             QMessageBox::Ok);
-         return;
+            tr("Warning"),
+            tr("Unsupport GPU acceleration in this platform"),
+            QMessageBox::Ok);
+        return;
     }
     QMessageBox::information(this,
-                         tr("Notice"),
-                         QString::fromStdString(ret.second),
-                         QMessageBox::Ok);
+        tr("Notice"),
+        QString::fromStdString(ret.second),
+        QMessageBox::Ok);
     platforms = ret.first.first;
     devices = ret.first.second;
     ui->spinBoxPlatformID->setRange(0, ret.first.first - 1);
@@ -1234,11 +1193,11 @@ void MainWindow::on_pushButtonListGPUs_clicked()
 
 void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
 {
-    if(value < int(devices.size()))
+    if (value < int(devices.size()))
         ui->spinBoxDeviceID->setRange(0, devices[value] - 1);
 }
 
-void MainWindow::on_pushButtonOpen_clicked()
+void MainWindow::on_pushButtonOutputPathOpen_clicked()
 {
     QDir outputPath(ui->lineEditOutputPath->text());
     if (!outputPath.exists())
@@ -1251,28 +1210,28 @@ void MainWindow::on_pushButtonOpen_clicked()
 
 void MainWindow::on_pushButtonReleaseGPU_clicked()
 {
-    if(Anime4KCPP::Anime4KGPU::isInitializedGPU() && GPU == GPUMODE_INITIALZED)
+    if (Anime4KCPP::Anime4KGPU::isInitializedGPU() && GPU == GPUMODE_INITIALZED)
     {
         Anime4KCPP::Anime4KGPU::releaseGPU();
         GPU = GPUMODE_UNINITIALZED;
         QMessageBox::information(this,
-                                 tr("Notice"),
-                                 tr("Successfully release GPU"),
-                                 QMessageBox::Ok);
+            tr("Notice"),
+            tr("Successfully release GPU"),
+            QMessageBox::Ok);
         ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
         ui->spinBoxPlatformID->setEnabled(true);
         ui->spinBoxDeviceID->setEnabled(true);
         ui->pushButtonReleaseGPU->setEnabled(false);
     }
 
-    if(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU() && GPUCNN == GPUCNNMODE_INITIALZED)
+    if (Anime4KCPP::Anime4KGPUCNN::isInitializedGPU() && GPUCNN == GPUCNNMODE_INITIALZED)
     {
         Anime4KCPP::Anime4KGPUCNN::releaseGPU();
         GPUCNN = GPUCNNMODE_UNINITIALZED;
         QMessageBox::information(this,
-                                 tr("Notice"),
-                                 tr("Successfully release GPU for ACNet"),
-                                 QMessageBox::Ok);
+            tr("Notice"),
+            tr("Successfully release GPU for ACNet"),
+            QMessageBox::Ok);
         ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
         ui->spinBoxPlatformID->setEnabled(true);
         ui->spinBoxDeviceID->setEnabled(true);
@@ -1282,7 +1241,7 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
 
 void MainWindow::on_checkBoxACNet_stateChanged(int state)
 {
-    if(state == Qt::Checked)
+    if (state == Qt::Checked)
     {
         ui->spinBoxPasses->setEnabled(false);
         ui->spinBoxPushColorCount->setEnabled(false);
@@ -1310,16 +1269,16 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
 
 void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
 {
-    if((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNINITIALZED))
+    if ((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        std::pair<bool,std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
-        if(!ret.first)
+        std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if (!ret.first)
         {
             QMessageBox::warning(this,
-                                 tr("Warning"),
-                                 QString::fromStdString(ret.second),
-                                 QMessageBox::Ok);
+                tr("Warning"),
+                QString::fromStdString(ret.second),
+                QMessageBox::Ok);
             GPUCNN = GPUCNNMODE_UNSUPPORT;
             ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
         }
@@ -1333,9 +1292,9 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
             catch (const char* error)
             {
                 QMessageBox::warning(this,
-                                     tr("Warning"),
-                                     QString(error),
-                                     QMessageBox::Ok);
+                    tr("Warning"),
+                    QString(error),
+                    QMessageBox::Ok);
 
                 ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
                 return;
@@ -1343,10 +1302,10 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
 
             GPUCNN = GPUCNNMODE_INITIALZED;
             QMessageBox::information(this,
-                                 tr("Notice"),
-                                 "initialize successful!\n" +
-                                 QString::fromStdString(ret.second),
-                                 QMessageBox::Ok);
+                tr("Notice"),
+                "initialize successful!\n" +
+                QString::fromStdString(ret.second),
+                QMessageBox::Ok);
             ui->textBrowserInfoOut->insertPlainText("GPU for CNN initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
             ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
             ui->spinBoxPlatformID->setEnabled(false);
@@ -1354,12 +1313,12 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
             ui->pushButtonReleaseGPU->setEnabled(true);
         }
     }
-    else if((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNSUPPORT))
+    else if ((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNSUPPORT))
     {
         QMessageBox::warning(this,
-                             tr("Warning"),
-                             tr("Unsupport GPU acceleration for ACNet in this platform"),
-                             QMessageBox::Ok);
+            tr("Warning"),
+            tr("Unsupport GPU acceleration for ACNet in this platform"),
+            QMessageBox::Ok);
         ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
     }
 }

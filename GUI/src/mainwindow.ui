@@ -44,7 +44,7 @@
            <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutListControl">
              <item>
-              <widget class="QPushButton" name="pushButtonInputPath">
+              <widget class="QPushButton" name="pushButtonPickFiles">
                <property name="text">
                 <string>pick files</string>
                </property>
@@ -297,14 +297,14 @@
               <widget class="QLineEdit" name="lineEditOutputPath"/>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButtonOutputPath">
+              <widget class="QPushButton" name="pushButtonOutputPathPick">
                <property name="text">
                 <string>pick</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButtonOpen">
+              <widget class="QPushButton" name="pushButtonOutputPathOpen">
                <property name="text">
                 <string>open</string>
                </property>
@@ -1025,7 +1025,7 @@
      <x>0</x>
      <y>0</y>
      <width>1042</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMenu">
