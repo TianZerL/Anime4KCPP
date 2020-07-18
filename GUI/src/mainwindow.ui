@@ -30,8 +30,8 @@
           <property name="title">
            <string>Processing list</string>
           </property>
-          <layout class="QGridLayout" name="gridLayout_4">
-           <item row="0" column="0" colspan="7">
+          <layout class="QVBoxLayout" name="verticalLayout_2">
+           <item>
             <widget class="QTableView" name="tableViewProcessingList">
              <property name="toolTip">
               <string>Drag and drop files here</string>
@@ -41,8 +41,8 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayoutListControl">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
               <widget class="QPushButton" name="pushButtonPickFiles">
                <property name="text">
@@ -54,6 +54,13 @@
               <widget class="QPushButton" name="pushButtonPickFolder">
                <property name="text">
                 <string>pick folder</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="pushButtonWebVideo">
+               <property name="text">
+                <string>web video</string>
                </property>
               </widget>
              </item>
@@ -73,47 +80,51 @@
              </item>
             </layout>
            </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="labelTotalTaskCount">
-             <property name="text">
-              <string>Total: 0 </string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2">
-            <widget class="QProgressBar" name="progressBarProcessingList">
-             <property name="value">
-              <number>24</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="3">
-            <widget class="QLabel" name="labelCurrentTask">
-             <property name="text">
-              <string>Current</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="4">
-            <widget class="QProgressBar" name="progressBarCurrentTask">
-             <property name="value">
-              <number>24</number>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="5">
+           <item>
             <widget class="QLabel" name="labelElpsed">
              <property name="text">
               <string>Elpsed: 0.0 s </string>
              </property>
             </widget>
            </item>
-           <item row="1" column="6">
+           <item>
             <widget class="QLabel" name="labelRemaining">
              <property name="text">
               <string>Remaining: 0.0 s</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QLabel" name="labelCurrentTask">
+               <property name="text">
+                <string>Current</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBarCurrentTask">
+               <property name="value">
+                <number>24</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="labelTotalTaskCount">
+               <property name="text">
+                <string>Total: 0 </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QProgressBar" name="progressBarProcessingList">
+               <property name="value">
+                <number>24</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>

@@ -172,6 +172,13 @@ void MainWindow::readConfig(const QSettings* conf)
     double zoomFactor = conf->value("/Arguments/zoomFactor", 2.0).toDouble();
     unsigned int threads = conf->value("/Arguments/threads", std::thread::hardware_concurrency()).toUInt();
     bool fastMode = conf->value("/Arguments/fastMode", false).toBool();
+    int codec = conf->value("/Arguments/codec", 0).toInt();
+    double fps = conf->value("/Arguments/fps", 0.0).toDouble();
+    unsigned int pID = conf->value("/Arguments/pID", 0).toUInt();
+    unsigned int dID = conf->value("/Arguments/dID", 0).toUInt();
+
+    bool ACNet = conf->value("/ACNet/ACNet", false).toBool();
+    bool HDN = conf->value("/ACNet/HDN", false).toBool();
 
     bool enablePreprocessing = conf->value("/Preprocessing/enable", true).toBool();
     bool preMedian = conf->value("/Preprocessing/MedianBlur", false).toBool();
@@ -218,6 +225,13 @@ void MainWindow::readConfig(const QSettings* conf)
     ui->doubleSpinBoxZoomFactor->setValue(zoomFactor);
     ui->spinBoxThreads->setValue(threads);
     ui->checkBoxFastMode->setChecked(fastMode);
+    ui->comboBoxCodec->setCurrentIndex(codec);
+    ui->doubleSpinBoxFPS->setValue(fps);
+    ui->spinBoxPlatformID->setValue(pID);
+    ui->spinBoxDeviceID->setValue(dID);
+    //ACNet
+    ui->checkBoxACNet->setChecked(ACNet);
+    ui->checkBoxHDN->setChecked(HDN);
     //preprocessing
     ui->checkBoxEnablePreprocessing->setChecked(enablePreprocessing);
     ui->checkBoxPreMedian->setChecked(preMedian);
@@ -256,6 +270,13 @@ void MainWindow::writeConfig(QSettings* conf)
     double zoomFactor = ui->doubleSpinBoxZoomFactor->value();
     unsigned int threads = ui->spinBoxThreads->value();
     bool fastMode = ui->checkBoxFastMode->isChecked();
+    int codec = ui->comboBoxCodec->currentIndex();
+    double fps = ui->doubleSpinBoxFPS->value();
+    unsigned int pID = ui->spinBoxPlatformID->value();
+    unsigned int dID = ui->spinBoxDeviceID->value();
+
+    bool ACNet = ui->checkBoxACNet->isChecked();
+    bool HDN = ui->checkBoxHDN->isChecked();
 
     bool enablePreprocessing = ui->checkBoxEnablePreprocessing->isChecked();
     bool preMedian = ui->checkBoxPreMedian->isChecked();
@@ -291,6 +312,13 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Arguments/zoomFactor", zoomFactor);
     conf->setValue("/Arguments/threads", threads);
     conf->setValue("/Arguments/fastMode", fastMode);
+    conf->setValue("/Arguments/codec", codec);
+    conf->setValue("/Arguments/fps", fps);
+    conf->setValue("/Arguments/pID", pID);
+    conf->setValue("/Arguments/dID", dID);
+
+    conf->setValue("/ACNet/ACNet", ACNet);
+    conf->setValue("/ACNet/HDN", HDN);
 
     conf->setValue("/Preprocessing/enable", enablePreprocessing);
     conf->setValue("/Preprocessing/MedianBlur", preMedian);
@@ -324,8 +352,9 @@ inline QString MainWindow::getLanguage(const Language lang)
         return "en";
     case zh_cn:
         return "zh_cn";
+    default:
+        return "en";
     }
-    return "unknown";
 }
 
 void MainWindow::errorHandler(const ErrorType err)
@@ -360,6 +389,12 @@ void MainWindow::errorHandler(const ErrorType err)
         QMessageBox::information(this,
             tr("Error"),
             tr("File type error, you can add it manually"),
+            QMessageBox::Ok);
+        break;
+    case URL_INVALID:
+        QMessageBox::information(this,
+            tr("Error"),
+            tr("Invalid url, please check your input"),
             QMessageBox::Ok);
         break;
     }
@@ -546,6 +581,7 @@ void MainWindow::solt_allDone_remindUser()
     ui->progressBarCurrentTask->reset();
     ui->pushButtonPickFiles->setEnabled(true);
     ui->pushButtonPickFolder->setEnabled(true);
+    ui->pushButtonWebVideo->setEnabled(true);
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
     ui->pushButtonStart->setEnabled(true);
@@ -591,7 +627,8 @@ void MainWindow::on_pushButtonPickFiles_clicked()
     {
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo) == ERROR_TYPE) {
+        if (fileType(fileInfo) == ERROR_TYPE)
+        {
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
@@ -621,6 +658,46 @@ void MainWindow::on_pushButtonOutputPathPick_clicked()
     if (outputPath.isEmpty())
         return;
     ui->lineEditOutputPath->setText(outputPath);
+}
+
+void MainWindow::on_pushButtonWebVideo_clicked()
+{
+    QString urlStr = QInputDialog::getText(this,
+        tr("Web Video"),
+        tr("Please input the url of web video")
+    ).simplified();
+    QUrl url(urlStr);
+    if (!QRegExp("^https?|ftp|file$").exactMatch(url.scheme()) || !url.isValid())
+    {
+        errorHandler(URL_INVALID);
+        return;
+    }
+    QFileInfo fileInfo(url.path());
+
+    QStandardItem* inputFile;
+    QStandardItem* outputFile;
+    QStandardItem* inputPath;
+    QStandardItem* outputPath;
+    QStandardItem* state;
+
+    if (fileType(fileInfo) == ERROR_TYPE)
+    {
+        errorHandler(TYPE_NOT_ADD);
+        return;
+    }
+
+    inputFile = new QStandardItem(fileInfo.fileName());
+    if (fileType(fileInfo) == VIDEO)
+        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+    else
+        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
+    inputPath = new QStandardItem(urlStr);
+    state = new QStandardItem(tr("ready"));
+    if (ui->lineEditOutputPath->text().isEmpty())
+        outputPath = new QStandardItem(QDir::currentPath());
+    else
+        outputPath = new QStandardItem(ui->lineEditOutputPath->text());
+    tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 }
 
 void MainWindow::on_pushButtonClear_clicked()
@@ -810,6 +887,7 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonDelete->setEnabled(false);
     ui->pushButtonPickFiles->setEnabled(false);
     ui->pushButtonPickFolder->setEnabled(false);
+    ui->pushButtonWebVideo->setEnabled(false);
     ui->progressBarProcessingList->setEnabled(true);
     ui->tableViewProcessingList->setEnabled(false);
     ui->pushButtonForceStop->setEnabled(true);
@@ -826,23 +904,23 @@ void MainWindow::on_pushButtonStart_clicked()
             QString outputFileName;
             for (int i = 0; i < rows; i++)
             {
-                QFileInfo fileInfo(tableModel->index(i, 2).data().toString());
+                QString filePath(tableModel->index(i, 2).data().toString());
                 outputPathMaker.setPath(tableModel->index(i, 3).data().toString());
                 outputPath = outputPathMaker.absolutePath();
                 outputFileName = tableModel->index(i, 1).data().toString();
 
                 outputPathMaker.mkpath(outputPath);
 
-                if (fileType(fileInfo) == IMAGE)
+                if (fileType(filePath) == IMAGE)
                 {
-                    images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(fileInfo.filePath(),
+                    images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
                         outputPath + "/" +
                         outputFileName), i);
                     imageCount++;
                 }
                 else
                 {
-                    videos << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(fileInfo.filePath(),
+                    videos << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
                         outputPath + "/" +
                         outputFileName), i);
                     videoCount++;

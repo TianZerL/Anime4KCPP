@@ -96,6 +96,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add("version", 'V', "print version information");
     opt.add<float>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0F);
     opt.add("disableProgress", 'D', "disable progress display");
+    opt.add("webVideo", 'W', "process the video from Internet");
 
     opt.parse_check(argc, argv);
 
@@ -124,6 +125,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     bool version = opt.exist("version");
     float forceFps = opt.get<float>("forceFps");
     bool disableProgress = opt.exist("disableProgress");
+    bool webVideo = opt.exist("webVideo");
     // -V
     if (version)
     {
@@ -141,7 +143,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     }
 
     std::filesystem::path inputPath(input), outputPath(output);
-    if (!std::filesystem::exists(inputPath))
+    if ((!videoMode || !webVideo) && !std::filesystem::exists(inputPath))
     {
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;

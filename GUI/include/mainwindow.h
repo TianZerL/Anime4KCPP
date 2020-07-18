@@ -17,6 +17,7 @@
 #include <QClipboard>
 #include <QSettings>
 #include <QDesktopServices>
+#include <QInputDialog>
 
 #include <opencv2/opencv.hpp>
 
@@ -35,7 +36,8 @@ enum ErrorType
 {
     PROCESSING_LIST_EMPTY,
     FILE_NOT_EXIST, DIR_NOT_EXIST,
-    TYPE_NOT_IMAGE, TYPE_NOT_ADD
+    TYPE_NOT_IMAGE, TYPE_NOT_ADD,
+    URL_INVALID
 };
 
 enum FileType
@@ -99,6 +101,8 @@ private slots:
     void on_pushButtonPickFiles_clicked();
 
     void on_pushButtonOutputPathPick_clicked();
+
+    void on_pushButtonWebVideo_clicked();
 
     void on_pushButtonClear_clicked();
 
