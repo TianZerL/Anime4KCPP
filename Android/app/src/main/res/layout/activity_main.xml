@@ -87,7 +87,7 @@
 
                 <ProgressBar
                     android:id="@+id/progressBar"
-                    style="?android:attr/progressBarStyleHorizontal"
+                    style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="45dp" />
 
@@ -100,6 +100,20 @@
                     android:padding="1dp" />
 
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/remaining_time_0_s" />
+
+            <View
+                android:id="@+id/viewLine12"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:layout_margin="3dp"
+                android:background="#FF0000"
+                android:padding="1dp" />
 
             <TextView
                 android:id="@+id/textViewState"

@@ -1,6 +1,5 @@
 package github.tianzerl.anime4kcpp;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -30,10 +29,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
+import github.tianzerl.anime4kcpp.utility.VideoAudioProcessor;
 import github.tianzerl.anime4kcpp.wrapper.Anime4K;
 import github.tianzerl.anime4kcpp.wrapper.Anime4KCreator;
 import github.tianzerl.anime4kcpp.wrapper.Anime4KGPU;
@@ -77,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayAdapter<String> adapterForProcessingList;
     private ProgressBar mainProgressBar;
+    private TextView textViewTime;
     private ListView processingList;
     private TextView textViewState;
     private Config config;
@@ -107,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mainProgressBar = findViewById(R.id.progressBar);
+        textViewTime = findViewById(R.id.textViewTime);
         textViewState = findViewById(R.id.textViewState);
 
         adapterForProcessingList = new ArrayAdapter<>(
@@ -192,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
         }
         EditText editTextOutputPath = findViewById(R.id.editTextOutputPath);
         EditText editTextOutputPrefix = findViewById(R.id.editTextOutputPrefix);
-        new Anime4KProcessor()
+        new Anime4KProcessor(this)
                 .execute(editTextOutputPrefix.getText().toString(),
                         "/storage/emulated/0/"+editTextOutputPath.getText().toString());
     }
@@ -516,52 +520,72 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressLint("StaticFieldLeak")
-    class Anime4KProcessor extends AsyncTask<String, Integer, Double> {
+     static class Anime4KProcessor extends AsyncTask<String, Integer, Double> {
 
-        //private final boolean GPU;
-        Button buttonStart = findViewById(R.id.buttonStart);
+         private WeakReference<MainActivity> activityReference;
+
+         Anime4KProcessor(MainActivity context) {
+             activityReference = new WeakReference<>(context);
+         }
+
+        public void updateProgressForVideoProcessing(double v, double t) {
+            publishProgress((int) (v * 100), (int) (t / v - t));
+        }
 
         @Override
         protected void onPreExecute() {
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing())
+                return;
+
+            Button buttonStart = activity.findViewById(R.id.buttonStart);
+
             buttonStart.setEnabled(false);
-            Toast.makeText(MainActivity.this,"Processing...",Toast.LENGTH_SHORT).show();
-            textViewState.setText(R.string.processing);
+            Toast.makeText(activity,"Processing...",Toast.LENGTH_SHORT).show();
+            activity.textViewState.setText(R.string.processing);
         }
 
         @Override
         protected Double doInBackground(@NonNull String... strings) {
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing())
+                return 0.0;
+
             String prefix = strings[0], dst = strings[1];
             long totalTime = 0;
-            int taskCount = adapterForProcessingList.getCount();
+            int taskCount = activity.adapterForProcessingList.getCount();
 
             File dstPath = new File(dst);
             if(!dstPath.exists() && !dstPath.mkdirs())
              {
                  Message message = new Message();
                  message.obj = Error.FailedToCreateFolders;
-                 otherErrorHandler.sendMessage(message);
+                 activity.otherErrorHandler.sendMessage(message);
              }
 
             List<Pair<String,Integer>> images = new ArrayList<>();
             List<Pair<String,Integer>> videos = new ArrayList<>();
 
+            //add images and video to processing list
             for(int i = 0; i < taskCount; i++)
             {
-                String filePath = adapterForProcessingList.getItem(i);
+                String filePath = activity.adapterForProcessingList.getItem(i);
                 assert filePath != null;
-                FileType fileType = getFileType(filePath);
+                FileType fileType = activity.getFileType(filePath);
                 if(fileType == FileType.Image)
                     images.add(Pair.create(filePath,i));
                 else if(fileType == FileType.Video)
                     videos.add(Pair.create(filePath,i));
             }
 
-            Anime4K anime4K = initAnime4KCPP();
+            Anime4K anime4K = activity.initAnime4KCPP();
+            CallbackProxy callbackProxy = new CallbackProxy(this);
+            anime4K.setCallbackProxy(callbackProxy);
 
             int imageCount = 0, videoCount = 0;
 
             try {
+                //processing images
                 anime4K.setVideoMode(false);
                 for (Pair<String,Integer> image: images) {
                     File srcFile = new File(image.first);
@@ -574,20 +598,22 @@ public class MainActivity extends AppCompatActivity {
                     anime4K.saveImage(dst+"/"+prefix+srcFile.getName());
 
                     totalTime += end - start;
-                    publishProgress((++imageCount) * 100 / taskCount, image.second);
+                    publishProgress((++imageCount) * 100 / taskCount, 0, image.second);
                 }
 
+                //processing videos
                 anime4K.setVideoMode(true);
                 for (Pair<String,Integer> video: videos) {
                     File srcFile = new File(video.first);
-                    String tmpOutputPath = dst+"/" + "tmpOutput" + videoCount +".mp4";
-                    String OutputPath = dst+"/" + prefix+srcFile.getName() + ".mp4";
+                    String tmpOutputPath = dst + "/" + "tmpOutput" + videoCount +".mp4";
+                    String OutputPath = dst + "/" + prefix+srcFile.getName() + ".mp4";
 
                     anime4K.loadVideo(srcFile.getPath());
                     anime4K.setVideoSaveInfo(tmpOutputPath);
 
                     long start = System.currentTimeMillis();
-                    anime4K.process();
+                    //anime4K.process();
+                    anime4K.processWithProgress();
                     long end = System.currentTimeMillis();
 
                     anime4K.saveVideo();
@@ -598,45 +624,59 @@ public class MainActivity extends AppCompatActivity {
                     {
                         Message message = new Message();
                         message.obj = Error.FailedToDeleteTmpFile;
-                        otherErrorHandler.sendMessage(message);
+                        activity.otherErrorHandler.sendMessage(message);
                     }
                     totalTime += end - start;
-                    publishProgress((++videoCount + imageCount) * 100 / taskCount, video.second);
+                    publishProgress((++videoCount + imageCount) * 100 / taskCount, 0, video.second);
                 }
             } catch (Exception exp) {
                 Message message = new Message();
                 message.obj = exp.getMessage();
-                anime4KCPPHandler.sendMessage(message);
+                activity.anime4KCPPHandler.sendMessage(message);
                 return 0.0;
             }
 
-            return (double)(totalTime)/1000.0;
+            return (double)(totalTime) / 1000.0;
         }
 
         @Override
         protected void onProgressUpdate(@NonNull Integer... values) {
-            mainProgressBar.setProgress(values[0]);
-            processingList.setItemChecked(values[1], true);
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing())
+                return;
+
+            activity.mainProgressBar.setProgress(values[0]);
+            activity.textViewTime.setText(String.format(Locale.ENGLISH,"remaining time:  %d s", values[1]));
+            if(values.length > 2)
+            {
+                activity.processingList.setItemChecked(values[2], true);
+            }
+
         }
 
         @Override
         protected void onPostExecute(Double aDouble) {
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing())
+                return;
+
+            Button buttonStart = activity.findViewById(R.id.buttonStart);
+
             buttonStart.setEnabled(true);
 
             if (aDouble==0.0)
             {
-                mainProgressBar.setProgress(0);
+                activity.mainProgressBar.setProgress(0);
                 return;
             }
 
-            new AlertDialog.Builder(MainActivity.this)
+            new AlertDialog.Builder(activity)
                     .setTitle("NOTICE")
                     .setMessage("Finished in "+aDouble.toString()+"s")
                     .setPositiveButton("OK",null)
                     .show();
-            textViewState.setText(R.string.waitting);
-            mainProgressBar.setProgress(0);
+            activity.textViewState.setText(R.string.waitting);
+            activity.mainProgressBar.setProgress(0);
         }
     }
-
 }

@@ -1,4 +1,4 @@
-package github.tianzerl.anime4kcpp;
+package github.tianzerl.anime4kcpp.utility;
 
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -11,18 +11,18 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-class VideoAudioProcessor {
+public class VideoAudioProcessor {
     private String src;
     private String tmp;
     private String dst;
 
-    VideoAudioProcessor(@NonNull String srcPath, @NonNull String tmpPath, @NonNull String dstPath) {
+    public VideoAudioProcessor(@NonNull String srcPath, @NonNull String tmpPath, @NonNull String dstPath) {
         src = srcPath;
         tmp = tmpPath;
         dst = dstPath;
     }
 
-    void merge() throws IOException {
+    public void merge() throws IOException {
         MediaExtractor srcVideoExtractor = new MediaExtractor();
         MediaExtractor tmpVideoExtractor = new MediaExtractor();
         MediaMuxer dstVideoMuxer = new MediaMuxer(dst,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);

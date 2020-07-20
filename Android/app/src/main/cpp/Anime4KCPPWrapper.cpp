@@ -241,6 +241,25 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processAnime4K(
 }
 
 JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processWithProgressAnime4K(
+        JNIEnv *env,
+        jobject thiz /* this */,
+        jlong ptrAnime4K) {
+
+    jclass classID = env->GetObjectClass(thiz);
+    jmethodID callback = env->GetMethodID(classID,"progressCallback", "(DD)V");
+
+    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+
+    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->processWithProgress(
+            [&env, &thiz, &callback, &s](double v)
+            {
+                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                env->CallVoidMethod(thiz, callback, v, std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0);
+            });
+}
+
+JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveImageAnime4K(
         JNIEnv *env,
         jobject /* this */,

@@ -1,11 +1,14 @@
 package github.tianzerl.anime4kcpp.wrapper;
 
+import github.tianzerl.anime4kcpp.CallbackProxy;
+
 public abstract class Anime4K {
     static {
         System.loadLibrary("Anime4KCPPCore");
     }
 
     long anime4k;
+    private CallbackProxy callbackProxy;
 
     public void setArguments(Parameters parameters) {
         setArgumentsAnime4K( anime4k,
@@ -41,6 +44,18 @@ public abstract class Anime4K {
 
     public void process() {
         processAnime4K(anime4k);
+    }
+
+    public void processWithProgress() {
+        processWithProgressAnime4K(anime4k);
+    }
+
+    public void progressCallback(double v, double t) {
+        callbackProxy.callback(v, t);
+    }
+
+    public void setCallbackProxy(CallbackProxy callbackProxy) {
+        this.callbackProxy = callbackProxy;
     }
 
     public void saveImage(final String dst) {
@@ -81,6 +96,7 @@ public abstract class Anime4K {
     protected native void loadVideoAnime4K(long ptr, final String src) throws Exception;
     protected native void setVideoSaveInfoAnime4K(long ptr, final String dst) throws Exception;
     protected native void processAnime4K(long ptr);
+    protected native void processWithProgressAnime4K(long ptr);
     protected native void saveImageAnime4K(long ptr, final String dst);
     protected native void saveVideoAnime4K(long ptr);
     protected native static String getCoreVersionAnime4K();
