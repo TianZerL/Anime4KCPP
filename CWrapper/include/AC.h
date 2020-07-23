@@ -9,7 +9,7 @@
 #define AC_DLL __declspec(dllexport)
 #endif
 #else
-#define AC_API __attribute__((__stdcall__))
+#define AC_API
 #ifndef AC_DLL
 #define AC_DLL
 #endif
