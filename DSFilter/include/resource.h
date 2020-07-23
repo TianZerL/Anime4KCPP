@@ -19,6 +19,8 @@
 #define IDC_EDIT_H                      1015
 #define IDC_STATIC_X                    1016
 #define IDC_STATIC_RESINFO              1017
+#define IDC_STATIC_VERSION              1018
+#define IDC_EDIT_VERSION                1019
 
 // Next default values for new objects
 // 

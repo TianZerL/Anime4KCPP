@@ -67,6 +67,7 @@ HRESULT ACProp::OnActivate()
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), CNN);
 
     TCHAR sz[STR_MAX_LENGTH];
+
     StringCchPrintf(sz, NUMELMS(sz), TEXT("%f\0"), zoomFactor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz);
 
@@ -84,6 +85,9 @@ HRESULT ACProp::OnActivate()
 
     MultiByteToWideChar(CP_ACP, 0, GPUInfo.c_str(), -1, sz, STR_MAX_LENGTH);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_GPUINFO), sz);
+
+    MultiByteToWideChar(CP_ACP, 0, ANIME4KCPP_CORE_VERSION, -1, sz, STR_MAX_LENGTH);
+    Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_VERSION), sz);
 
     bInit = TRUE;
 

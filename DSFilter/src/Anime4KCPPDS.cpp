@@ -469,8 +469,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     case ColorFormat::RGB24:
     {
         LONG stride = pOut->GetActualDataLength() / dstH;
-        LONG dataPreLine = dstW * 3;
-        if (stride == dataPreLine)
+        LONG dataPerLine = dstW * 3;
+        if (stride == dataPerLine)
         {
             ac->loadImage(srcH, srcW, pBufferIn);
             ac->process();
@@ -485,7 +485,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             ac->saveImage(dstTmp);
             for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(dstRGB, dstTmp.data + y * dataPreLine, dataPreLine);
+                memcpy(dstRGB, dstTmp.data + y * dataPerLine, dataPerLine);
                 dstRGB += stride;
             }
         }
@@ -494,8 +494,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     case ColorFormat::RGB32:
     {
         LONG stride = pOut->GetActualDataLength() / dstH;
-        LONG dataPreLine = dstW << 2;
-        if (stride == dataPreLine)
+        LONG dataPerLine = dstW << 2;
+        if (stride == dataPerLine)
         {
             cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
             cv::flip(srcTmp, srcTmp, 0);
@@ -514,7 +514,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             ac->saveImage(dstTmp);
             for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(dstRGBA, dstTmp.data + y * dataPreLine, dataPreLine);
+                memcpy(dstRGBA, dstTmp.data + y * dataPerLine, dataPerLine);
                 dstRGBA += stride;
             }
         }
