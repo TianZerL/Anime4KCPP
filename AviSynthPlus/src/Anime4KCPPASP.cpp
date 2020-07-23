@@ -67,7 +67,7 @@ Anime4KCPPF::Anime4KCPPF(
 
     if (!vi.IsRGB24() && !vi.Is444() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: RGB24 or YUV444P8 only for Anime4K09");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV444P8 is needed for Anime4K09");
     }
 
     vi.height *= inputs.zoomFactor;

@@ -104,12 +104,13 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     pID = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"pID", 0, lpPath);
     dID = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"dID", 0, lpPath);
     CNN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"ACNet", 1, lpPath);
+    H = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"H", 1080, lpPath);
+    W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
     parameters.HDN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDN", 0, lpPath);
+
     GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0F ? zf : 1.0F;
-    H = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"H", 1080, lpPath);
-    W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
 }
 
 inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
@@ -208,6 +209,7 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     if (*mtIn->FormatType() != FORMAT_VideoInfo && *mtIn->FormatType() != FORMAT_VideoInfo2)
         return E_INVALIDARG;
 
+    //Resolution check
     if (mtIn->formattype == FORMAT_VideoInfo2)
     {
         VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)mtIn->pbFormat;
@@ -466,9 +468,9 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     case ColorFormat::RGB24:
     {
-        LONG dstSize = pOut->GetActualDataLength() / 3;
-        LONG stride = dstSize / dstH;
-        if (stride == dstW)
+        LONG stride = pOut->GetActualDataLength() / dstH;
+        LONG dataPreLine = dstW * 3;
+        if (stride == dataPreLine)
         {
             ac->loadImage(srcH, srcW, pBufferIn);
             ac->process();
@@ -476,32 +478,24 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
         else
         {
-            BYTE* dstR = pBufferOut;
-            BYTE* dstG = dstR + dstSize;
-            BYTE* dstB = dstG + dstSize;
+            BYTE* dstRGB = pBufferOut;
             cv::Mat dstTmp;
             ac->loadImage(srcH, srcW, pBufferIn);
             ac->process();
             ac->saveImage(dstTmp);
-            for (LONG y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(dstR, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW), dstW);
-                memcpy(dstG, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW)
-                    + static_cast<size_t>(dstH) * static_cast<size_t>(dstW), dstW);
-                memcpy(dstB, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW)
-                    + (static_cast<size_t>(dstH) * static_cast<size_t>(dstW) << 1), dstW);
-                dstR += stride;
-                dstG += stride;
-                dstB += stride;
+                memcpy(dstRGB, dstTmp.data + y * dataPreLine, dataPreLine);
+                dstRGB += stride;
             }
         }
     }
     break;
     case ColorFormat::RGB32:
     {
-        LONG dstSize = pOut->GetActualDataLength() >> 2;
-        LONG stride = dstSize / dstH;
-        if (stride == dstW)
+        LONG stride = pOut->GetActualDataLength() / dstH;
+        LONG dataPreLine = dstW << 2;
+        if (stride == dataPreLine)
         {
             cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
             cv::flip(srcTmp, srcTmp, 0);
@@ -511,30 +505,17 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
         else
         {
-            BYTE* dstR = pBufferOut;
-            BYTE* dstG = dstR + dstSize;
-            BYTE* dstB = dstG + dstSize;
-            BYTE* dstA = dstB + dstSize;
-            // upside down ???
-            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
-            cv::flip(srcTmp, srcTmp, 0);
+            BYTE* dstRGBA = pBufferOut;
             cv::Mat dstTmp;
+            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
+            cv::flip(srcTmp, srcTmp, 0); // upside down ???
             ac->loadImage(srcH, srcW, srcTmp.data, 0Ui64, false, true);
             ac->process();
             ac->saveImage(dstTmp);
-            for (LONG y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(dstR, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW), dstW);
-                memcpy(dstG, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW)
-                    + static_cast<size_t>(dstH) * static_cast<size_t>(dstW), dstW);
-                memcpy(dstB, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW)
-                    + (static_cast<size_t>(dstH) * static_cast<size_t>(dstW) << 1), dstW);
-                memcpy(dstA, dstTmp.data + static_cast<size_t>(y) * static_cast<size_t>(dstW)
-                    + static_cast<size_t>(dstH) * static_cast<size_t>(dstW) * static_cast<size_t>(3), dstW);
-                dstR += stride;
-                dstG += stride;
-                dstB += stride;
-                dstA += stride;
+                memcpy(dstRGBA, dstTmp.data + y * dataPreLine, dataPreLine);
+                dstRGBA += stride;
             }
         }
     }
