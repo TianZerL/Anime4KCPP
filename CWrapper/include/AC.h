@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #define AC_API __stdcall
 #ifndef AC_DLL
 #define AC_DLL __declspec(dllimport)
@@ -87,48 +87,58 @@ extern "C"
     } ac_version;
     typedef void* ac_instance;
 
-    extern AC_DLL ac_version AC_API acGetVersion(void);
-    extern AC_DLL ac_instance AC_API acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error);
-    extern AC_DLL void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
-    extern AC_DLL ac_error AC_API acInitParameters(ac_parameters* parameters);
-    extern AC_DLL ac_error AC_API acLoadImage(ac_instance instance, const char* srcFile);
-    extern AC_DLL ac_error AC_API acLoadVideo(ac_instance instance, const char* srcFile);
-    extern AC_DLL ac_error AC_API acProcess(ac_instance instance);
-    extern AC_DLL ac_error AC_API acProcessWithPrintProgress(ac_instance instance);
-    extern AC_DLL ac_error AC_API acProcessWithProgress(ac_instance instance, void (*callBack)(double));
-    extern AC_DLL ac_error AC_API acProcessWithProgressTime(ac_instance instance, void (*callBack)(double, double));
-    extern AC_DLL ac_error AC_API acStopVideoProcess(ac_instance instance);
-    extern AC_DLL ac_error AC_API acPauseVideoProcess(ac_instance instance);
-    extern AC_DLL ac_error AC_API acContinueVideoProcess(ac_instance instance);
-    extern AC_DLL ac_error AC_API acShowImage(ac_instance instance, ac_bool R2B);
-    extern AC_DLL ac_error AC_API acSaveImage(ac_instance instance, const char* dstFile);
-    extern AC_DLL ac_error AC_API acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec, double fps);
-    extern AC_DLL ac_error AC_API acSaveVideo(ac_instance instance);
-    extern AC_DLL ac_error AC_API acSetArguments(ac_instance instance, ac_parameters* parameters);
-    extern AC_DLL ac_error AC_API acSetVideoMode(ac_instance instance, ac_bool flag);
-    extern AC_DLL ac_error AC_API acInitGPU(void);
-    extern AC_DLL void AC_API acReleaseGPU(void);
-    extern AC_DLL ac_error AC_API acInitGPUCNN(void);
-    extern AC_DLL void AC_API acReleaseGPUCNN(void);
-    extern AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
-    extern AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
-    extern AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    extern AC_DLL ac_error AC_API acSaveImageRGB(ac_instance instance, unsigned char** r, unsigned char** g, unsigned char** b);
-    extern AC_DLL ac_error AC_API acSaveImageRGBBytes(ac_instance instance, unsigned char** data);
-    extern AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
-    extern AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
+    AC_DLL ac_version AC_API acGetVersion(void);
+    AC_DLL ac_instance AC_API acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error);
+    AC_DLL void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
+    AC_DLL ac_error AC_API acInitParameters(ac_parameters* parameters);
+    AC_DLL ac_error AC_API acLoadImage(ac_instance instance, const char* srcFile);
+    AC_DLL ac_error AC_API acLoadVideo(ac_instance instance, const char* srcFile);
+    AC_DLL ac_error AC_API acProcess(ac_instance instance);
+    AC_DLL ac_error AC_API acProcessWithPrintProgress(ac_instance instance);
+    /*
+    Processing with callback funciton:
+    callBack(double progress);
+    progress form 0 to 1
+    */
+    AC_DLL ac_error AC_API acProcessWithProgress(ac_instance instance, void (*callBack)(double));
+    /*
+    Processing with callback funciton:
+    callBack(double progress, double elapsedTime);
+    progress form 0 to 1
+    */
+    AC_DLL ac_error AC_API acProcessWithProgressTime(ac_instance instance, void (*callBack)(double, double));
+    AC_DLL ac_error AC_API acStopVideoProcess(ac_instance instance);
+    AC_DLL ac_error AC_API acPauseVideoProcess(ac_instance instance);
+    AC_DLL ac_error AC_API acContinueVideoProcess(ac_instance instance);
+    AC_DLL ac_error AC_API acShowImage(ac_instance instance, ac_bool R2B);
+    AC_DLL ac_error AC_API acSaveImage(ac_instance instance, const char* dstFile);
+    AC_DLL ac_error AC_API acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec, double fps);
+    AC_DLL ac_error AC_API acSaveVideo(ac_instance instance);
+    AC_DLL ac_error AC_API acSetArguments(ac_instance instance, ac_parameters* parameters);
+    AC_DLL ac_error AC_API acSetVideoMode(ac_instance instance, ac_bool flag);
+    AC_DLL ac_error AC_API acInitGPU(void);
+    AC_DLL void AC_API acReleaseGPU(void);
+    AC_DLL ac_error AC_API acInitGPUCNN(void);
+    AC_DLL void AC_API acReleaseGPUCNN(void);
+    AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
+    AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acSaveImageRGB(ac_instance instance, unsigned char** r, unsigned char** g, unsigned char** b);
+    AC_DLL ac_error AC_API acSaveImageRGBBytes(ac_instance instance, unsigned char** data);
+    AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
+    AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
     //shape should be int[3]
-    extern AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int* shape);
+    AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int* shape);
     //acGetInfo may need to run two times for getting length of info string first
-    extern AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char* info, size_t* length);
+    AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char* info, size_t* length);
     //acGetFiltersInfo may need to run two times for getting length of info string first
-    extern AC_DLL ac_error AC_API acGetFiltersInfo(ac_instance instance, char* info, size_t* length);
+    AC_DLL ac_error AC_API acGetFiltersInfo(ac_instance instance, char* info, size_t* length);
     //acCheckGPUSupport may need to run two times for getting length of info string firs
-    extern AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
+    AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
     //acCheckGPUSupport may need to run two times for getting length of info string and length(platforms) of devices first
-    extern AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
-    extern AC_DLL ac_bool AC_API acIsInitializedGPU(void);
-    extern AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
+    AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
+    AC_DLL ac_bool AC_API acIsInitializedGPU(void);
+    AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
 #ifdef __cplusplus
 }
 #endif
