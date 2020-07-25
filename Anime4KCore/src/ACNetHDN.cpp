@@ -2,17 +2,17 @@
 
 void Anime4KCPP::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst)
 {
-    std::pair<cv::Mat, cv::Mat> tmpMats;
-    conv1To8(src, kernelsL1, biasL1, tmpMats);
-    conv8To8(kernels[L2], biases[L2], tmpMats);
-    conv8To8(kernels[L3], biases[L3], tmpMats);
-    conv8To8(kernels[L4], biases[L4], tmpMats);
-    conv8To8(kernels[L5], biases[L5], tmpMats);
-    conv8To8(kernels[L6], biases[L6], tmpMats);
-    conv8To8(kernels[L7], biases[L7], tmpMats);
-    conv8To8(kernels[L8], biases[L8], tmpMats);
-    conv8To8(kernels[L9], biases[L9], tmpMats);
-    convTranspose8To1(dst, kernelsL10, tmpMats);
+    cv::Mat tmpMat;
+    conv1To8(src, kernelsL1, biasL1, tmpMat);
+    conv8To8(kernels[L2], biases[L2], tmpMat);
+    conv8To8(kernels[L3], biases[L3], tmpMat);
+    conv8To8(kernels[L4], biases[L4], tmpMat);
+    conv8To8(kernels[L5], biases[L5], tmpMat);
+    conv8To8(kernels[L6], biases[L6], tmpMat);
+    conv8To8(kernels[L7], biases[L7], tmpMat);
+    conv8To8(kernels[L8], biases[L8], tmpMat);
+    conv8To8(kernels[L9], biases[L9], tmpMat);
+    convTranspose8To1(dst, kernelsL10, tmpMat);
 }
 
 const double Anime4KCPP::ACNetHDN::kernelsL1[9 * 8] =

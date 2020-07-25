@@ -54,10 +54,12 @@ namespace Anime4KCPP
         Y = 0, U = 1, V = 2
     };
 
-    typedef double* Chan;
-    typedef unsigned char* PIXEL;
-    typedef unsigned char* LineC;
+    typedef double* ChanF;
+    typedef unsigned char* ChanB;
+    typedef double* PixelF;
+    typedef unsigned char* PixelB;
     typedef double* LineF;
+    typedef unsigned char* LineB;
 }
 
 struct Anime4KCPP::Parameters

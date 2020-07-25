@@ -36,11 +36,11 @@ public:
 
     virtual void process(const cv::Mat& src, cv::Mat& dst) = 0;
 protected:
-    void conv1To8(cv::InputArray img, const double* kernels, const double* biases, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void conv8To8(const double* kernels, const double* biases, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void convTranspose8To1(cv::Mat& img, const double* kernels, std::pair<cv::Mat, cv::Mat>& tmpMats);
+    void conv1To8(cv::InputArray img, const double* kernels, const double* biases, cv::Mat& tmpMat);
+    void conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat);
+    void convTranspose8To1(cv::Mat& img, const double* kernels, cv::Mat& tmpMat);
 
-    void changEachPixel1To8(cv::InputArray _src, const std::function<void(int, int, Chan, Chan, LineC)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void changEachPixel8To8(const std::function<void(int, int, Chan, Chan, LineF, LineF)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
-    void changEachPixel8To1(cv::Mat& img, const std::function<void(int, int, PIXEL, LineF, LineF)>&& callBack, std::pair<cv::Mat, cv::Mat>& tmpMats);
+    void changEachPixel1ToN(cv::InputArray _src, const std::function<void(int, int, ChanF, LineB)>&& callBack, cv::Mat& tmpMat, int outChannels);
+    void changEachPixelNToN(const std::function<void(int, int, ChanF, LineF)>&& callBack, cv::Mat& tmpMat);
+    void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanB, LineF)>&& callBack, cv::Mat& tmpMat);
 };

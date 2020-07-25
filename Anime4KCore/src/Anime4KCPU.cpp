@@ -2,7 +2,7 @@
 
 #include "Anime4KCPU.h"
 
-Anime4KCPP::Anime4KCPU::Anime4KCPU(const Parameters& parameters) : 
+Anime4KCPP::Anime4KCPU::Anime4KCPU(const Parameters& parameters) :
     Anime4K(parameters) {}
 
 void Anime4KCPP::Anime4KCPU::process()
@@ -11,7 +11,7 @@ void Anime4KCPP::Anime4KCPU::process()
     {
         if (inputYUV)
         {
-            cv::merge(std::vector<cv::Mat>{ orgY,orgU,orgV }, orgImg);
+            cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
         int tmpPcc = this->pcc;
@@ -73,8 +73,8 @@ void Anime4KCPP::Anime4KCPU::process()
                 frame.first = dstFrame;
                 videoIO->write(frame);
             }
-        , mt
-            ).process();
+            , mt
+                ).process();
     }
 }
 
@@ -270,11 +270,13 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
     cv::Mat tmp;
     src.copyTo(tmp);
 
-    int jMAX = W * 4;
+    const int jMAX = W * 4;
+    const size_t step = jMAX;
+
 #ifdef _MSC_VER //let's do something crazy
     Concurrency::parallel_for(0, H, [&](int i) {
-        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
-        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
+        Line lineData = src.data + static_cast<size_t>(i) * step;
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -282,8 +284,8 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
-        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(4);
+        Line lineData = src.data + static_cast<size_t>(i) * step;
+        Line tmpLineData = tmp.data + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     }
