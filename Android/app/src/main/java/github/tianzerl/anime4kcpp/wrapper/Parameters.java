@@ -13,6 +13,7 @@ public final class Parameters {
     public byte preFilters = 4 ;
     public byte postFilters = 48 ;
     public boolean HDN = false;
+    public int HDNLevel = 1;
     public boolean alpha = false;
 
     public Parameters(
@@ -28,6 +29,7 @@ public final class Parameters {
             byte preFilters,
             byte postFilters,
             boolean HDN,
+            int HDNLevel,
             boolean alpha
     ) {
         this.passes = passes;
@@ -42,6 +44,7 @@ public final class Parameters {
         this.preFilters = preFilters ;
         this.postFilters = postFilters ;
         this.HDN = HDN;
+        this.HDNLevel = HDNLevel;
         this.alpha = alpha;
     }
 

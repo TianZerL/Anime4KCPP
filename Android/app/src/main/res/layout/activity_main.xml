@@ -164,6 +164,24 @@
                 android:layout_margin="4dp"
                 android:text="@string/hdn" />
 
+            <TextView
+                android:id="@+id/textViewHDNLevel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:labelFor="@id/editTextPasses"
+                android:text="@string/hdn_level_1_3" />
+
+            <EditText
+                android:id="@+id/editTextHDNLevel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:ems="10"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:text="@string/default_HDN_level" />
+
             <Switch
                 android:id="@+id/switchACNetGPUMode"
                 android:layout_width="match_parent"
@@ -381,7 +399,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:labelFor="@id/editTextPushColorCount"
+                android:labelFor="@id/editTextHDNLevel"
                 android:text="@string/push_color_count" />
 
             <EditText

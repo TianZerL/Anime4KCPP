@@ -50,6 +50,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
             postFilters,
             std::thread::hardware_concurrency(),
             false,
+            1,
             alpha
             ))
     );
@@ -94,6 +95,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPUByArgs(
             postFilters,
             std::thread::hardware_concurrency(),
             false,
+            1,
             alpha
         ))
     );
@@ -122,6 +124,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
         jbyte preFilters,
         jbyte postFilters,
         jboolean HDN,
+        jint HDNLevel,
         jboolean alpha) {
 
     return (jlong)(new Anime4KCPP::Anime4KCPUCNN(
@@ -139,6 +142,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
                     postFilters,
                     std::thread::hardware_concurrency(),
                     HDN,
+                    HDNLevel,
                     alpha
             ))
     );
@@ -167,6 +171,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
         jbyte preFilters,
         jbyte postFilters,
         jboolean HDN,
+        jint HDNLevel,
         jboolean alpha) {
 
     return (jlong)(new Anime4KCPP::Anime4KGPUCNN(
@@ -184,6 +189,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
                     postFilters,
                     std::thread::hardware_concurrency(),
                     HDN,
+                    HDNLevel,
                     alpha
             ))
     );

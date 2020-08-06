@@ -365,6 +365,7 @@ public class MainActivity extends AppCompatActivity {
         byte preFilters = 0;
         byte postFilters = 0;
         boolean HDN = getSwitchSate(R.id.switchHDN);
+        int HDNLevel = Integer.parseInt(((EditText)findViewById(R.id.editTextHDNLevel)).getText().toString());
         boolean alpha = getSwitchSate(R.id.switchAlphaChannel);
 
         RadioGroup settingsGroup = findViewById(R.id.radioGroupSettings);
@@ -440,6 +441,7 @@ public class MainActivity extends AppCompatActivity {
                 preFilters,
                 postFilters,
                 HDN,
+                HDNLevel,
                 alpha
         );
 

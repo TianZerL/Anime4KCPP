@@ -19,6 +19,7 @@ public class Anime4KCPUCNN extends Anime4K {
                 parameters.preFilters,
                 parameters.postFilters,
                 parameters.HDN,
+                parameters.HDNLevel,
                 parameters.alpha
         );
     }
@@ -36,5 +37,6 @@ public class Anime4KCPUCNN extends Anime4K {
                                                byte preFilters,
                                                byte postFilters,
                                                boolean HDN,
+                                               int HDNLevel,
                                                boolean alpha);
 }
