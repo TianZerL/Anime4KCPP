@@ -169,7 +169,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:labelFor="@id/editTextPasses"
+                android:labelFor="@id/editTextHDNLevel"
                 android:text="@string/hdn_level_1_3" />
 
             <EditText
@@ -399,7 +399,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:labelFor="@id/editTextHDNLevel"
+                android:labelFor="@id/editTextPushColorCount"
                 android:text="@string/push_color_count" />
 
             <EditText
