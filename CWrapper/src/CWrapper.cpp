@@ -23,6 +23,7 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
         c_parameters->postFilters,
         c_parameters->maxThreads,
         c_parameters->HDN,
+        c_parameters->HDNLevel,
         c_parameters->alpha);
 
     return std::move(cpp_parameters);

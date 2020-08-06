@@ -78,6 +78,7 @@ extern "C"
         unsigned char postFilters;
         unsigned int maxThreads;
         ac_bool HDN;
+        int HDNLevel;
         ac_bool alpha;
     } ac_parameters;
 
