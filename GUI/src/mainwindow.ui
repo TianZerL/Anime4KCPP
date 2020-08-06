@@ -661,6 +661,30 @@
               </widget>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="horizontalLayoutHDNLevel">
+               <item>
+                <widget class="QLabel" name="labelHDNLevel">
+                 <property name="statusTip">
+                  <string>Passes for processing</string>
+                 </property>
+                 <property name="text">
+                  <string>HDN Level</string>
+                 </property>
+                 <property name="buddy">
+                  <cstring>spinBoxHDNLevel</cstring>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBoxHDNLevel">
+                 <property name="statusTip">
+                  <string>Set HDN level from 1 to 3, higher for better denoising but maybe blurred</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <widget class="QCheckBox" name="checkBoxACNetGPU">
                <property name="statusTip">
                 <string>Enable GPU acceleration for ACNet, this will take a while, please don't close it.</string>
@@ -810,6 +834,9 @@
                  <property name="text">
                   <string>codec</string>
                  </property>
+                 <property name="buddy">
+                  <cstring>comboBoxCodec</cstring>
+                 </property>
                 </widget>
                </item>
                <item>
@@ -873,7 +900,7 @@
                   <string>FPS</string>
                  </property>
                  <property name="buddy">
-                  <cstring>doubleSpinBoxPushColorStrength</cstring>
+                  <cstring>doubleSpinBoxFPS</cstring>
                  </property>
                 </widget>
                </item>

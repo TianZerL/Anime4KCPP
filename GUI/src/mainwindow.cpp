@@ -43,6 +43,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->progressBarCurrentTask->setRange(0, 100);
     //initialize arguments
     ui->spinBoxThreads->setMinimum(1);
+    ui->spinBoxHDNLevel->setRange(1, 3);
     ui->doubleSpinBoxPushColorStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxZoomFactor->setRange(1.0, 10.0);
@@ -59,12 +60,18 @@ MainWindow::MainWindow(QWidget* parent)
     GPUCNN = GPUCNNMODE_UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
     ui->spinBoxDeviceID->setMinimum(0);
+
     ui->pushButtonReleaseGPU->setEnabled(false);
-    ui->checkBoxACNetGPU->setEnabled(false);
-    ui->checkBoxHDN->setEnabled(false);
     ui->pushButtonForceStop->setEnabled(false);
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(false);
+
+    if (!ui->checkBoxACNet->isChecked())
+    {
+        ui->checkBoxACNetGPU->setEnabled(false);
+        ui->checkBoxHDN->setEnabled(false);
+        ui->spinBoxHDNLevel->setEnabled(false);
+    }
     platforms = 0;
     //stop flag
     stop = false;
@@ -180,6 +187,7 @@ void MainWindow::readConfig(const QSettings* conf)
 
     bool ACNet = conf->value("/ACNet/ACNet", false).toBool();
     bool HDN = conf->value("/ACNet/HDN", false).toBool();
+    int HDNLevel = conf->value("/ACNet/HDNLevel", 1).toInt();
 
     bool enablePreprocessing = conf->value("/Preprocessing/enable", true).toBool();
     bool preMedian = conf->value("/Preprocessing/MedianBlur", false).toBool();
@@ -234,6 +242,7 @@ void MainWindow::readConfig(const QSettings* conf)
     //ACNet
     ui->checkBoxACNet->setChecked(ACNet);
     ui->checkBoxHDN->setChecked(HDN);
+    ui->spinBoxHDNLevel->setValue(HDNLevel);
     //preprocessing
     ui->checkBoxEnablePreprocessing->setChecked(enablePreprocessing);
     ui->checkBoxPreMedian->setChecked(preMedian);
@@ -280,6 +289,7 @@ void MainWindow::writeConfig(QSettings* conf)
 
     bool ACNet = ui->checkBoxACNet->isChecked();
     bool HDN = ui->checkBoxHDN->isChecked();
+    int HDNLevel = ui->spinBoxHDNLevel->value();
 
     bool enablePreprocessing = ui->checkBoxEnablePreprocessing->isChecked();
     bool preMedian = ui->checkBoxPreMedian->isChecked();
@@ -323,6 +333,7 @@ void MainWindow::writeConfig(QSettings* conf)
 
     conf->setValue("/ACNet/ACNet", ACNet);
     conf->setValue("/ACNet/HDN", HDN);
+    conf->setValue("/ACNet/HDNLevel", HDNLevel);
 
     conf->setValue("/Preprocessing/enable", enablePreprocessing);
     conf->setValue("/Preprocessing/MedianBlur", preMedian);
@@ -472,6 +483,7 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
     unsigned int threads = ui->spinBoxThreads->value();
     bool HDN = ui->checkBoxHDN->isChecked();
+    int HDNLevel = ui->spinBoxHDNLevel->value();
     bool alpha = ui->checkBoxAlphaChannel->isChecked();
     uint8_t prefilters = 0;
     if (preprocessing)
@@ -524,6 +536,7 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
         postfilters,
         threads,
         HDN,
+        HDNLevel,
         alpha
     );
 
@@ -1374,6 +1387,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->checkBoxGPUMode->setEnabled(false);
         ui->checkBoxACNetGPU->setEnabled(true);
         ui->checkBoxHDN->setEnabled(true);
+        ui->spinBoxHDNLevel->setEnabled(true);
     }
     else
     {
@@ -1386,6 +1400,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->checkBoxACNetGPU->setEnabled(false);
         ui->checkBoxGPUMode->setEnabled(true);
         ui->checkBoxHDN->setEnabled(false);
+        ui->spinBoxHDNLevel->setEnabled(false);
     }
 }
 
