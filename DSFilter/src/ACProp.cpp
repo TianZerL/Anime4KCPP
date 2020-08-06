@@ -41,7 +41,7 @@ HRESULT ACProp::OnConnect(IUnknown* pUnk)
         return E_NOINTERFACE;
 
     CheckPointer(pIAC, E_FAIL);
-    pIAC->GetParameters(&HDN, &CNN, &pID, &dID, &zoomFactor, &H, &W);
+    pIAC->GetParameters(&HDN, &HDNLevel, &CNN, &pID, &dID, &zoomFactor, &H, &W);
 
     pIAC->GetGPUInfo(GPUInfo);
 
@@ -70,6 +70,9 @@ HRESULT ACProp::OnActivate()
 
     StringCchPrintf(sz, NUMELMS(sz), TEXT("%f\0"), zoomFactor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz);
+
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), HDNLevel);
+    Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_HDNLevel), sz);
 
     StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), pID);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_PID), sz);
@@ -106,7 +109,7 @@ HRESULT ACProp::OnApplyChanges()
 {
     GetValues();
     CheckPointer(pIAC, E_POINTER);
-    pIAC->SetParameters(HDN, CNN, pID, dID, zoomFactor, H, W);
+    pIAC->SetParameters(HDN, HDNLevel, CNN, pID, dID, zoomFactor, H, W);
 
     return NOERROR;
 }
@@ -121,6 +124,10 @@ void ACProp::GetValues()
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz, STR_MAX_LENGTH);
     zoomFactor = _wtof(sz);
     zoomFactor = zoomFactor >= 1.0F ? zoomFactor : 1.0F;
+
+    Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_HDNLevel), sz, STR_MAX_LENGTH);
+    HDNLevel = _wtoi(sz);
+    HDNLevel = (HDNLevel < 0 || HDNLevel > 3) ? 1 : HDNLevel;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_PID), sz, STR_MAX_LENGTH);
     pID = _wtoi(sz);
@@ -142,5 +149,5 @@ void ACProp::GetValues()
 ACProp::ACProp(LPUNKNOWN lpunk, HRESULT* phr) :
     CBasePropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), lpunk,
         IDD_ACPROP, IDS_TITLE),
-    HDN(false), CNN(false), pID(0), dID(0), zoomFactor(2.0), H(1080), W(1920),
+    HDN(false), CNN(false), HDNLevel(1), pID(0), dID(0), zoomFactor(2.0), H(1080), W(1920),
     pIAC(NULL), bInit(FALSE) {}

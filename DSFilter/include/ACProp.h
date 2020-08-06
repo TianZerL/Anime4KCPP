@@ -17,6 +17,7 @@ extern "C"
     {
         STDMETHOD(GetParameters) (THIS_
             bool* HDN,
+            int* HDNLevel,
             bool* CNN,
             unsigned int* pID,
             unsigned int* dID,
@@ -27,6 +28,7 @@ extern "C"
 
         STDMETHOD(SetParameters) (THIS_
             bool HDN,
+            int HDNLevel,
             bool CNN,
             unsigned int pID,
             unsigned int dID,
@@ -60,6 +62,7 @@ private:
     ACProp(LPUNKNOWN lpunk, HRESULT* phr);
 private:
     bool HDN, CNN;
+    int HDNLevel;
     unsigned int pID, dID;
     float zoomFactor;
     int H, W;

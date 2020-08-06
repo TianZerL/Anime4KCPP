@@ -9,6 +9,7 @@
 #define IDC_EDIT_ZF                     1004
 #define IDC_EDIT_DID                    1005
 #define IDC_EDIT_PID                    1006
+#define IDC_EDIT_HDNLevel               1007
 #define IDC_STATIC_ZF                   1008
 #define IDC_STATIC_PID                  1009
 #define IDC_STATIC_DID                  1010
@@ -21,6 +22,7 @@
 #define IDC_STATIC_RESINFO              1017
 #define IDC_STATIC_VERSION              1018
 #define IDC_EDIT_VERSION                1019
+#define IDC_STATIC_HDNLevel             1020
 
 // Next default values for new objects
 // 

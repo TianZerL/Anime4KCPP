@@ -107,6 +107,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     H = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"H", 1080, lpPath);
     W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
     parameters.HDN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDN", 0, lpPath);
+    parameters.HDNLevel = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDNLevel", 1, lpPath);
 
     GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
@@ -527,9 +528,10 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     return hr;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor, int* H, int* W)
+STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor, int* H, int* W)
 {
     *HDN = parameters.HDN;
+    *HDNLevel = parameters.HDNLevel;
     *CNN = this->CNN;
     *pID = this->pID;
     *dID = this->dID;
@@ -540,11 +542,11 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, bool* CNN, unsigned int* pID
     return NOERROR;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor, int H, int W)
+STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor, int H, int W)
 {
     CAutoLock cAutoLock(&lock);
 
-    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10], _H[10], _W[10], _zoomFactor[10];
+    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10],_HDNLevel[10], _H[10], _W[10], _zoomFactor[10];
 
     //convert to string
     _itow_s(pID, _pID, 10, 10);
@@ -553,6 +555,8 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, u
     _itow_s(H, _H, 10, 10);
     _itow_s(W, _W, 10, 10);
     _itow_s(HDN, _HDN, 10, 10);
+    _itow_s(HDNLevel, _HDNLevel, 10, 10);
+
     swprintf(_zoomFactor, 10, L"%f", zoomFactor);
 
     //write config
@@ -560,6 +564,7 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, bool CNN, unsigned int pID, u
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"dID", _dID, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"ACNet", _CNN, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"HDN", _HDN, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"HDNLevel", _HDNLevel, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"H", _H, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"W", _W, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", _zoomFactor, lpPath);
