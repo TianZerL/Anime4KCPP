@@ -78,6 +78,7 @@ struct Anime4KCPP::Parameters
     unsigned int maxThreads;
     bool HDN;
     bool alpha;
+    int HDNLevel;
 
     void reset();
 
@@ -95,6 +96,7 @@ struct Anime4KCPP::Parameters
         uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency(),
         bool HDN = false,
+        int HDNLevel = 1,
         bool alpha = false
     );
 };
@@ -188,7 +190,7 @@ protected:
     VideoIO* videoIO = nullptr;
 
 protected://arguments
-    int ps, pcc;
+    int ps, pcc, HDNLevel;
     float sc, sg, zf;
     bool fm, vm, pre, post, HDN, alpha;
     uint8_t pref, postf;

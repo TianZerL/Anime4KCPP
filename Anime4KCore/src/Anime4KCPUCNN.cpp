@@ -10,7 +10,21 @@ void Anime4KCPP::Anime4KCPUCNN::process()
     CNNProcessor* processor;
     if (HDN)
     {
-        processor = CNNCreator::create(CNNType::ACNetHDN);
+        switch (HDNLevel)
+        {
+        case 1:
+            processor = CNNCreator::create(CNNType::ACNetHDNL1);
+            break;
+        case 2:
+            processor = CNNCreator::create(CNNType::ACNetHDNL2);
+            break;
+        case 3:
+            processor = CNNCreator::create(CNNType::ACNetHDNL3);
+            break;
+        default:
+            processor = CNNCreator::create(CNNType::ACNetHDNL1);
+            break;
+        }
     }
     else
     {

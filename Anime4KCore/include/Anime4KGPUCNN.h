@@ -15,6 +15,11 @@
 namespace Anime4KCPP
 {
     class DLL Anime4KGPUCNN;
+
+    enum ACNetType
+    {
+        HDNL0 = 0, HDNL1 = 1, HDNL2 = 2, HDNL3 = 3, TotalTypeCount = 4
+    };
 }
 
 class Anime4KCPP::Anime4KGPUCNN :public Anime4K
@@ -27,8 +32,7 @@ public:
     static void releaseGPU();
     static bool isInitializedGPU();
 private:
-    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg);
-    void runKernelACNetHDN(cv::InputArray orgImg, cv::OutputArray dstImg);
+    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::ACNetType type);
     static void initOpenCL(const CNNType type);
     static void releaseOpenCL();
     static std::string readKernel(const std::string& fileName);
@@ -39,16 +43,14 @@ private:
 
     static cl_context context;
     static cl_command_queue commandQueue;
-    static cl_program programACNet;
-    static cl_program programACNetHDN;
+    static cl_program program[TotalTypeCount];
     static cl_device_id device;
 
     static unsigned int pID;
     static unsigned int dID;
 
 #ifdef BUILT_IN_KERNEL
-    static const std::string ACNetKernelSourceString;
-    static const std::string ACNetHDNKernelSourceString;
+    static const std::string ACNetKernelSourceString[TotalTypeCount];
 #endif // BUILT_IN_KERNEL
 
 };

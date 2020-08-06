@@ -88,6 +88,7 @@ false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
     opt.add("CNNMode", 'w', "Enable ACNet");
     opt.add("HDN", 'H', "Enable HDN mode for ACNet");
+    opt.add<int>("HDNLevel", 'L', "Set HDN level", false, 1, cmdline::range(1, 3));
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
@@ -119,6 +120,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     bool GPU = opt.exist("GPUMode");
     bool CNN = opt.exist("CNNMode");
     bool HDN = opt.exist("HDN");
+    int HDNLevel = opt.get<int>("HDNLevel");
     bool listGPUs = opt.exist("listGPUs");
     unsigned int pID = opt.get<unsigned int>("platformID");
     unsigned int dID = opt.get<unsigned int>("deviceID");
@@ -153,7 +155,24 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
 
     Anime4KCPP::CNNType type;
     if (HDN)
-        type = Anime4KCPP::CNNType::ACNetHDN;
+    {
+        switch (HDNLevel)
+        {
+        case 1:
+            type = Anime4KCPP::CNNType::ACNetHDNL1;
+            break;
+        case 2:
+            type = Anime4KCPP::CNNType::ACNetHDNL2;
+            break;
+        case 3:
+            type = Anime4KCPP::CNNType::ACNetHDNL3;
+            break;
+        default:
+            type = Anime4KCPP::CNNType::ACNetHDNL1;
+            break;
+        }
+    }
+        
     else
         type = Anime4KCPP::CNNType::ACNet;
 
@@ -173,6 +192,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         postFilters,
         threads,
         HDN,
+        HDNLevel,
         alpha
     );
 

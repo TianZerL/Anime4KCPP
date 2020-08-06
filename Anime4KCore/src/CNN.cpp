@@ -6,8 +6,12 @@ Anime4KCPP::CNNProcessor* Anime4KCPP::CNNCreator::create(const CNNType& type)
 	{
 	case CNNType::ACNet:
 		return new ACNet();
-	case CNNType::ACNetHDN:
-		return new ACNetHDN();
+	case CNNType::ACNetHDNL1:
+		return new ACNetHDNL1();
+	case CNNType::ACNetHDNL2:
+		return new ACNetHDNL2();
+	case CNNType::ACNetHDNL3:
+		return new ACNetHDNL3();
 	default:
 		return nullptr;
 	}

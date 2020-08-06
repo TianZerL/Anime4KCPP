@@ -10,18 +10,44 @@ void Anime4KCPP::Anime4KGPUCNN::process()
     std::function<void(cv::InputArray, cv::OutputArray)> runKernel;
     if (HDN)
     {
-        runKernel =
-            [this](cv::InputArray orgImg, cv::OutputArray dstImg)
+        switch (HDNLevel)
         {
-            runKernelACNetHDN(orgImg, dstImg);
-        };
+        case 1:
+            runKernel =
+                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
+            {
+                runKernelACNet(orgImg, dstImg, HDNL1);
+            };
+            break;
+        case 2:
+            runKernel =
+                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
+            {
+                runKernelACNet(orgImg, dstImg, HDNL2);
+            };
+            break;
+        case 3:
+            runKernel =
+                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
+            {
+                runKernelACNet(orgImg, dstImg, HDNL3);
+            };
+            break;
+        default:
+            runKernel =
+                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
+            {
+                runKernelACNet(orgImg, dstImg, HDNL1);
+            };
+            break;
+        }
     }
     else
     {
         runKernel =
             [this](cv::InputArray orgImg, cv::OutputArray dstImg)
         {
-            runKernelACNet(orgImg, dstImg);
+            runKernelACNet(orgImg, dstImg, HDNL0);
         };
     }
 
@@ -217,8 +243,8 @@ void Anime4KCPP::Anime4KGPUCNN::releaseGPU()
         releaseOpenCL();
         context = nullptr;
         commandQueue = nullptr;
-        programACNet = nullptr;
-        programACNetHDN = nullptr;
+        for (int i = HDNL0; i < TotalTypeCount; i++)
+            program[i] = nullptr;
         device = nullptr;
         isInitialized = false;
     }
@@ -229,7 +255,7 @@ bool Anime4KCPP::Anime4KGPUCNN::isInitializedGPU()
     return isInitialized;
 }
 
-void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg)
+void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::ACNetType type)
 {
     cl_int err;
 
@@ -274,25 +300,25 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     dstDesc.num_samples = 0;
     dstDesc.buffer = nullptr;
 
-    cl_kernel kernelConv1To8L1 = clCreateKernel(programACNet, "conv1To8", &err);
+    cl_kernel kernelConv1To8L1 = clCreateKernel(program[type], "conv1To8", &err);
     if (err != CL_SUCCESS)
     {
         throw"Failed to create OpenCL kernel L1";
     }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L2 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
         throw"Failed to create OpenCL kernel L2";
     }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L3 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
         clReleaseKernel(kernelConv8To8L2);
         throw"Failed to create OpenCL kernel L3";
     }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L4 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -300,7 +326,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L3);
         throw"Failed to create OpenCL kernel L4";
     }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L5 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -309,7 +335,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L4);
         throw"Failed to create OpenCL kernel L5";
     }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L6 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -319,7 +345,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L5);
         throw"Failed to create OpenCL kernel L6";
     }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L7 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -330,7 +356,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L6);
         throw"Failed to create OpenCL kernel L7";
     }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L8 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -342,7 +368,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L7);
         throw"Failed to create OpenCL kernel L8";
     }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(programACNet, "conv8To8", &err);
+    cl_kernel kernelConv8To8L9 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -355,311 +381,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L8);
         throw"Failed to create OpenCL kernel L9";
     }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(programACNet, "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw"Failed to create OpenCL kernel L10";
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw"imageBufferOrg error";
-    }
-
-    cl_mem imageBufferTmp11 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw"imageBufferTmp11 error";
-    }
-
-    cl_mem imageBufferTmp21 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp11);
-        throw"imageBufferTmp21 error";
-    }
-
-    cl_mem imageBufferTmp12 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp11);
-        clReleaseMemObject(imageBufferTmp21);
-        throw"imageBufferTmp12 error";
-    }
-
-    cl_mem imageBufferTmp22 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp11);
-        clReleaseMemObject(imageBufferTmp21);
-        clReleaseMemObject(imageBufferTmp12);
-        throw"imageBufferTmp22 error";
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp11);
-        clReleaseMemObject(imageBufferTmp21);
-        clReleaseMemObject(imageBufferTmp12);
-        clReleaseMemObject(imageBufferTmp22);
-        throw"imageBufferDst error";
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv1To8L1, 2, sizeof(cl_mem), &imageBufferTmp21);
-    if (err != CL_SUCCESS)
-        throw"L1 clSetKernelArg error";
-    //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L2, 3, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L2, 4, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        throw"L2 clSetKernelArg error";
-    //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L3, 3, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L3, 4, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        throw"L3 clSetKernelArg error";
-    //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L4, 3, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L4, 4, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        throw"L4 clSetKernelArg error";
-    //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L5, 3, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L5, 4, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        throw"L5 clSetKernelArg error";
-    //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L6, 3, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L6, 4, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        throw"L6 clSetKernelArg error";
-    //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L7, 3, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L7, 4, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        throw"L7 clSetKernelArg error";
-    //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L8, 3, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L8, 4, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        throw"L8 clSetKernelArg error";
-    //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp12);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp22);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConv8To8L9, 3, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConv8To8L9, 4, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        throw"L9 clSetKernelArg error";
-    //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp11);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferTmp21);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 2, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        throw"L10 clSetKernelArg error";
-
-    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImage.step, 0, dstImage.data, 0, nullptr, nullptr);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp11);
-    clReleaseMemObject(imageBufferTmp21);
-    clReleaseMemObject(imageBufferTmp12);
-    clReleaseMemObject(imageBufferTmp22);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
-
-}
-
-void Anime4KCPP::Anime4KGPUCNN::runKernelACNetHDN(cv::InputArray orgImg, cv::OutputArray dstImg)
-{
-    cl_int err;
-
-    cv::Mat orgImage = orgImg.getMat();
-    cv::Mat dstImage = dstImg.getMat();
-
-    cl_image_format format;
-    cl_image_format tmpFormat;
-    cl_image_desc dstDesc;
-    cl_image_desc orgDesc;
-
-    const size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { size_t(orgImage.cols),size_t(orgImage.rows),1 };
-    const size_t dstRegion[3] = { size_t(dstImage.cols),size_t(dstImage.rows),1 };
-    const size_t orgSize[2] = { size_t(orgImage.cols),size_t(orgImage.rows) };
-    const size_t dstSize[2] = { size_t(dstImage.cols),size_t(dstImage.rows) };
-
-    const cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
-
-    //init frame
-    format.image_channel_data_type = CL_UNORM_INT8;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImage.rows;
-    orgDesc.image_width = orgImage.cols;
-    orgDesc.image_row_pitch = 0;
-    orgDesc.image_slice_pitch = 0;
-    orgDesc.num_mip_levels = 0;
-    orgDesc.num_samples = 0;
-    orgDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImage.rows;
-    dstDesc.image_width = dstImage.cols;
-    dstDesc.image_row_pitch = 0;
-    dstDesc.image_slice_pitch = 0;
-    dstDesc.num_mip_levels = 0;
-    dstDesc.num_samples = 0;
-    dstDesc.buffer = nullptr;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(programACNetHDN, "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw"Failed to create OpenCL kernel L1";
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw"Failed to create OpenCL kernel L2";
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw"Failed to create OpenCL kernel L3";
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw"Failed to create OpenCL kernel L4";
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw"Failed to create OpenCL kernel L5";
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw"Failed to create OpenCL kernel L6";
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw"Failed to create OpenCL kernel L7";
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw"Failed to create OpenCL kernel L8";
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(programACNetHDN, "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw"Failed to create OpenCL kernel L9";
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(programACNetHDN, "convTranspose8To1", &err);
+    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[type], "convTranspose8To1", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -941,23 +663,23 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
 
 #ifndef BUILT_IN_KERNEL
     //read kernel files
-    std::string ACNetKernelSourceString;
-    std::string ACNetHDNKernelSourceString;
+    std::string ACNetKernelSourceString[TotalTypeCount];
+    std::string kernelFiles[TotalTypeCount]
+    { "ACNetKernel.cl", "ACNetHDNL1Kernel.cl" ,"ACNetHDNL2Kernel.cl" ,"ACNetHDNL3Kernel.cl" };
 #endif // BUILT_IN_KERNEL
-    const char* ACNetKernelSource;
-    const char* ACNetHDNKernelSource;
+    const char* ACNetKernelSource[TotalTypeCount];
 
     switch (type)
     {
     case CNNType::ACNet:
 #ifndef BUILT_IN_KERNEL
         //read kernel files
-        ACNetKernelSourceString = readKernel("ACNetKernel.cl");
+        ACNetKernelSourceString[HDNL0] = readKernel(kernelFiles[HDNL0]);
 #endif // BUILT_IN_KERNEL
-        ACNetKernelSource = ACNetKernelSourceString.c_str();
+        ACNetKernelSource[HDNL0] = ACNetKernelSourceString[HDNL0].c_str();
 
         //create program
-        programACNet = clCreateProgramWithSource(context, 1, &ACNetKernelSource, nullptr, &err);
+        program[HDNL0] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL0], nullptr, &err);
         if (err != CL_SUCCESS)
         {
             std::cout << err << std::endl;
@@ -966,13 +688,13 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(programACNet, 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL0], 1, &device, nullptr, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(programACNet, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+            clGetProgramBuildInfo(program[HDNL0], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
             char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(programACNet, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
+            clGetProgramBuildInfo(program[HDNL0], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
             //print build info
             std::cout << buildError << std::endl;
@@ -980,15 +702,15 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             throw"Kernel build error";
         }
         break;
-    case CNNType::ACNetHDN:
+    case CNNType::ACNetHDNL1:
 #ifndef BUILT_IN_KERNEL
         //read kernel files
-        ACNetHDNKernelSourceString = readKernel("ACNetHDNKernel.cl");
+        ACNetKernelSourceString[HDNL1] = readKernel(kernelFiles[HDNL1]);
 #endif // BUILT_IN_KERNEL
-        ACNetHDNKernelSource = ACNetHDNKernelSourceString.c_str();
+        ACNetKernelSource[HDNL1] = ACNetKernelSourceString[HDNL1].c_str();
 
         //create program
-        programACNetHDN = clCreateProgramWithSource(context, 1, &ACNetHDNKernelSource, nullptr, &err);
+        program[HDNL1] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL1], nullptr, &err);
         if (err != CL_SUCCESS)
         {
             std::cout << err << std::endl;
@@ -997,13 +719,75 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(programACNetHDN, 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL1], 1, &device, nullptr, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(programACNetHDN, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+            clGetProgramBuildInfo(program[HDNL1], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
             char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(programACNetHDN, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
+            clGetProgramBuildInfo(program[HDNL1], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
+            releaseOpenCL();
+            //print build info
+            std::cout << buildError << std::endl;
+            delete[] buildError;
+            throw"Kernel build error";
+        }
+        break;
+    case CNNType::ACNetHDNL2:
+#ifndef BUILT_IN_KERNEL
+        //read kernel files
+        ACNetKernelSourceString[HDNL2] = readKernel(kernelFiles[HDNL2]);
+#endif // BUILT_IN_KERNEL
+        ACNetKernelSource[HDNL2] = ACNetKernelSourceString[HDNL2].c_str();
+
+        //create program
+        program[HDNL2] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL2], nullptr, &err);
+        if (err != CL_SUCCESS)
+        {
+            std::cout << err << std::endl;
+            releaseOpenCL();
+            throw"Failed to create OpenCL program";
+        }
+
+        //build program
+        err = clBuildProgram(program[HDNL2], 1, &device, nullptr, nullptr, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            size_t buildErrorSize = 0;
+            clGetProgramBuildInfo(program[HDNL2], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+            char* buildError = new char[buildErrorSize];
+            clGetProgramBuildInfo(program[HDNL2], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
+            releaseOpenCL();
+            //print build info
+            std::cout << buildError << std::endl;
+            delete[] buildError;
+            throw"Kernel build error";
+        }
+        break;
+    case CNNType::ACNetHDNL3:
+#ifndef BUILT_IN_KERNEL
+        //read kernel files
+        ACNetKernelSourceString[HDNL3] = readKernel(kernelFiles[HDNL3]);
+#endif // BUILT_IN_KERNEL
+        ACNetKernelSource[HDNL3] = ACNetKernelSourceString[HDNL3].c_str();
+
+        //create program
+        program[HDNL3] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL3], nullptr, &err);
+        if (err != CL_SUCCESS)
+        {
+            std::cout << err << std::endl;
+            releaseOpenCL();
+            throw"Failed to create OpenCL program";
+        }
+
+        //build program
+        err = clBuildProgram(program[HDNL3], 1, &device, nullptr, nullptr, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            size_t buildErrorSize = 0;
+            clGetProgramBuildInfo(program[HDNL3], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+            char* buildError = new char[buildErrorSize];
+            clGetProgramBuildInfo(program[HDNL3], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
             //print build info
             std::cout << buildError << std::endl;
@@ -1014,58 +798,36 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     case CNNType::Default:
 #ifndef BUILT_IN_KERNEL
         //read kernel files
-        ACNetKernelSourceString = readKernel("ACNetKernel.cl");
-        ACNetHDNKernelSourceString = readKernel("ACNetHDNKernel.cl");
+        for (int i = HDNL0; i < TotalTypeCount; i++)
+            ACNetKernelSourceString[i] = readKernel(kernelFiles[i]);
 #endif // BUILT_IN_KERNEL
-        ACNetKernelSource = ACNetKernelSourceString.c_str();
-        ACNetHDNKernelSource = ACNetHDNKernelSourceString.c_str();
-
-        //create programACNet
-        programACNet = clCreateProgramWithSource(context, 1, &ACNetKernelSource, nullptr, &err);
-        if (err != CL_SUCCESS)
+        for (int i = HDNL0; i < TotalTypeCount; i++)
         {
-            std::cout << err << std::endl;
-            releaseOpenCL();
-            throw"Failed to create OpenCL program";
-        }
+            ACNetKernelSource[i] = ACNetKernelSourceString[i].c_str();
 
-        //build programACNet
-        err = clBuildProgram(programACNet, 1, &device, nullptr, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(programACNet, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(programACNet, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
-            delete[] buildError;
-            throw"Kernel build error";
-        }
+            //create programACNet
+            program[i] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[i], nullptr, &err);
+            if (err != CL_SUCCESS)
+            {
+                std::cout << err << std::endl;
+                releaseOpenCL();
+                throw"Failed to create OpenCL program";
+            }
 
-        //create programACNetHDN
-        programACNetHDN = clCreateProgramWithSource(context, 1, &ACNetHDNKernelSource, nullptr, &err);
-        if (err != CL_SUCCESS)
-        {
-            std::cout << err << std::endl;
-            releaseOpenCL();
-            throw"Failed to create OpenCL program";
-        }
-
-        //build programACNetHDN
-        err = clBuildProgram(programACNetHDN, 1, &device, nullptr, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(programACNetHDN, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(programACNetHDN, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
-            delete[] buildError;
-            throw"Kernel build error";
+            //build programACNet
+            err = clBuildProgram(program[i], 1, &device, nullptr, nullptr, nullptr);
+            if (err != CL_SUCCESS)
+            {
+                size_t buildErrorSize = 0;
+                clGetProgramBuildInfo(program[i], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
+                char* buildError = new char[buildErrorSize];
+                clGetProgramBuildInfo(program[i], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
+                releaseOpenCL();
+                //print build info
+                std::cout << buildError << std::endl;
+                delete[] buildError;
+                throw"Kernel build error";
+            }
         }
         break;
     }
@@ -1073,10 +835,11 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
 
 void Anime4KCPP::Anime4KGPUCNN::releaseOpenCL()
 {
-    if (programACNet != nullptr)
-        clReleaseProgram(programACNet);
-    if (programACNetHDN != nullptr)
-        clReleaseProgram(programACNetHDN);
+    for (int i = HDNL0; i < TotalTypeCount; i++)
+    {
+        if (program[i] != nullptr)
+            clReleaseProgram(program[i]);
+    }
     if (commandQueue != nullptr)
         clReleaseCommandQueue(commandQueue);
     if (context != nullptr)
@@ -1104,14 +867,14 @@ Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType()
 bool Anime4KCPP::Anime4KGPUCNN::isInitialized = false;
 cl_context Anime4KCPP::Anime4KGPUCNN::context = nullptr;
 cl_command_queue Anime4KCPP::Anime4KGPUCNN::commandQueue = nullptr;
-cl_program Anime4KCPP::Anime4KGPUCNN::programACNet = nullptr;
-cl_program Anime4KCPP::Anime4KGPUCNN::programACNetHDN = nullptr;
+cl_program Anime4KCPP::Anime4KGPUCNN::program[TotalTypeCount]{ nullptr };
 cl_device_id Anime4KCPP::Anime4KGPUCNN::device = nullptr;
 unsigned int Anime4KCPP::Anime4KGPUCNN::pID = 0U;
 unsigned int Anime4KCPP::Anime4KGPUCNN::dID = 0U;
 
 #ifdef BUILT_IN_KERNEL
-const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString = 
+const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString[TotalTypeCount]
+{
 R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -2719,7 +2482,7 @@ R"(
 -7.3744e-03,  1.9112e-02,  4.2251e-03
 }
 };
-)"+std::string(
+)" + std::string(
 R"(
 __constant float biasL[8][8] = 
 {
@@ -3212,9 +2975,8 @@ __kernel void convTranspose8To1(
 
     write_imagef(dstImg, coord, c);
 }
-)");
+)"),
 
-const std::string Anime4KCPP::Anime4KGPUCNN::ACNetHDNKernelSourceString =
 R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -4822,7 +4584,7 @@ R"(
  1.1696e-40, -3.3028e-40, -2.2959e-40
 }
 };)" + std::string(
-R"(
+    R"(
 __constant float biasL[8][8] = 
 {
 {
@@ -5314,5 +5076,4234 @@ __kernel void convTranspose8To1(
 
     write_imagef(dstImg, coord, c);
 }
-)");
+)"),
+
+R"(#define RELU(x) fmax(x, 0.0f)
+
+__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+__constant float kernelsL1[9 * 8] = 
+{
+-2.0676e-02,  6.7641e-03,  2.8287e-01,
+ 2.5576e-01,  1.9765e-01, -2.4700e-01,
+ 3.5056e-01,  2.9306e-01, -2.2245e-01,
+ 8.4706e-02, -2.9455e-01, -5.5831e-02,
+-8.4635e-02, -9.6835e-02,  3.1208e-01,
+ 1.7690e-01,  2.7624e-02,  5.1954e-02,
+-5.3869e-01,  7.2934e-02, -1.7662e-03,
+-3.1402e-02,  3.1700e-01,  1.4965e-01,
+ 3.8569e-02,  5.5025e-03, -6.6555e-03,
+-4.2049e-38, -4.1971e-38, -4.1488e-38,
+-4.2855e-38, -4.2871e-38, -4.2363e-38,
+-4.1861e-38, -4.1974e-38, -4.1677e-38,
+ 1.8451e-01, -5.4584e-02,  1.4494e-01,
+ 1.3433e-01,  1.0073e-01,  2.6371e-01,
+ 6.1261e-02,  2.2116e-01,  2.0074e-01,
+ 5.9669e-02, -3.9168e-02,  2.1674e-01,
+-2.9132e-01,  3.0285e-03,  1.2625e-01,
+-4.3415e-02,  1.8663e-01, -1.6554e-01,
+ 1.0102e-01,  6.3466e-02,  1.5225e-01,
+ 2.1692e-01,  1.9860e-01, -7.0456e-02,
+-1.6406e-03, -2.7834e-01, -3.5449e-01,
+-3.0140e-01, -4.2348e-01, -5.8263e-01,
+ 2.3140e-01, -2.6843e-01, -1.1069e-01,
+-9.1484e-02,  1.1486e-02,  5.6396e-02
+};
+
+__constant float biasL1[8] = 
+{
+-9.0964e-02,  2.1136e-01, -1.2011e-02, -4.5657e-38, -1.4443e-01, 1.8968e-01, -2.9027e-02,  1.6199e-01
+};
+)"
+R"(
+__constant float kernelsL[8][9 * 8 * 8] = 
+{
+{
+ 4.4561e-02,  4.3527e-01, -8.9737e-02,
+-4.9011e-03,  1.4879e-01, -8.2210e-02,
+-1.7593e-02,  4.9294e-02,  1.8058e-01,
+-3.3827e-02, -7.9055e-02,  2.6982e-01,
+-5.2485e-02, -4.2046e-01, -5.6838e-02,
+ 1.0919e-01, -7.3141e-02,  9.4797e-02,
+ 6.2764e-02,  2.5475e-01,  1.3705e-01,
+ 2.0997e-01,  7.3360e-01,  2.0801e-01,
+-1.1500e-01,  3.1245e-01,  6.7457e-01,
+-5.1481e-39, -5.1520e-39, -4.9367e-39,
+-5.1383e-39, -5.1642e-39, -4.9479e-39,
+-5.1323e-39, -5.1859e-39, -4.9547e-39,
+ 1.3849e-01,  1.1564e-01, -1.8175e-01,
+-5.5355e-03, -1.5117e-01, -2.4654e-01,
+ 8.1590e-03, -1.1681e-01,  3.4700e-05,
+-2.5950e-01, -1.4182e-01,  3.1814e-01,
+ 1.7662e-01,  1.8420e-01, -1.5181e-01,
+ 7.6233e-02, -7.8372e-02, -3.1968e-01,
+-4.5770e-01,  4.1562e-02,  1.3721e-01,
+-5.8444e-02,  3.3148e-02, -2.3370e-01,
+ 1.5374e-01, -1.1162e-01, -7.4099e-03,
+-1.5716e-01, -1.8356e-01,  2.1114e-02,
+-3.2233e-01,  2.1064e-02,  2.7019e-01,
+-1.3702e-01,  2.6969e-01,  2.1033e-01,
+ 8.9027e-02, -7.9969e-02,  1.0096e-01,
+ 6.6773e-02,  3.9558e-02, -7.4944e-02,
+-5.9789e-02,  1.2265e-01,  3.3873e-02,
+-9.7157e-03,  9.2906e-02,  6.0300e-02,
+-2.2104e-03,  6.8198e-02, -1.2931e-01,
+ 8.9288e-02, -1.2554e-01, -4.3270e-02,
+ 1.0660e-01,  1.1609e-02, -1.2415e-01,
+ 2.6372e-02, -3.6311e-02,  1.5625e-01,
+-7.9595e-02, -3.3662e-01, -4.0760e-01,
+-2.9566e-39, -2.8760e-39, -2.8816e-39,
+-2.9566e-39, -2.8964e-39, -2.9115e-39,
+-2.9566e-39, -2.9179e-39, -2.9130e-39,
+ 7.9255e-02,  9.4548e-02,  8.8155e-02,
+-2.8163e-02,  1.2428e-01, -6.4973e-03,
+ 7.7875e-02,  7.4765e-02, -5.2405e-02,
+-1.4886e-02, -7.1499e-02, -7.0719e-02,
+ 9.7562e-02,  9.0948e-02, -5.6588e-02,
+-1.2872e-02, -6.6390e-02, -6.4147e-02,
+ 9.8262e-02, -2.4215e-01, -1.7051e-01,
+ 1.8096e-01,  1.8106e-01,  1.3108e-01,
+ 2.0649e-01,  1.2242e-01,  3.7225e-02,
+-2.5125e-01, -1.0073e-01,  4.5330e-01,
+ 1.8588e-01, -2.6809e-01, -1.5709e-01,
+ 4.7668e-01, -2.4208e-01, -6.6012e-01,
+ 1.3561e-01,  5.4109e-02,  6.1899e-02,
+-1.9605e-02,  1.1349e-01,  3.5781e-02,
+ 3.5513e-03,  3.1212e-02, -6.0399e-02,
+ 5.9258e-02, -1.8175e-02,  7.3714e-02,
+ 2.0052e-02,  4.3245e-02, -5.0879e-03,
+-1.1082e-02, -1.0753e-01, -1.7896e-03,
+ 2.9139e-02,  2.2747e-01, -6.4075e-02,
+ 7.3097e-02,  1.5703e-01, -5.3815e-01,
+ 1.0620e-01, -1.1386e-01,  1.7103e-01,
+-3.8728e-39, -3.8299e-39, -3.8320e-39,
+-3.9065e-39, -3.8445e-39, -3.8135e-39,
+-3.8838e-39, -3.8114e-39, -3.8255e-39,
+ 2.3253e-02,  6.9893e-02,  1.4774e-01,
+ 9.6087e-02,  2.3102e-03, -3.4449e-02,
+ 2.6819e-02,  1.0254e-01, -2.8200e-02,
+ 3.9553e-02,  4.7191e-05, -5.5558e-02,
+ 4.1641e-02,  5.8706e-02, -1.0337e-01,
+ 1.1291e-01,  5.9622e-02,  7.0677e-02,
+-2.5162e-01,  7.6659e-02,  1.7245e-01,
+-5.8522e-02,  1.4365e-01,  2.1189e-01,
+-2.8897e-02, -5.7365e-02,  1.4232e-01,
+ 1.7854e-02,  1.7404e-03, -8.7356e-03,
+-6.0777e-02, -6.2687e-02, -1.1500e-02,
+-1.6468e-01, -2.5058e-01, -1.2798e-01,
+ 2.3193e-02,  1.7209e-01,  1.6687e-01,
+-3.4483e-02, -1.6846e-02,  2.5930e-02,
+ 1.4410e-01,  4.2932e-02, -5.0149e-03,
+ 4.7269e-02,  1.1276e-01, -9.2701e-03,
+ 1.5323e-02,  1.3552e-02,  9.0256e-02,
+-8.9393e-03,  7.0903e-02, -6.9379e-02,
+ 1.8645e-01,  1.0543e-01, -1.5590e-01,
+ 2.1056e-01,  1.1051e-01, -1.5514e-01,
+-7.0484e-02, -1.5153e-01, -5.0873e-01,
+ 3.2730e-39,  3.2358e-39,  3.1222e-39,
+ 3.2642e-39,  3.2358e-39,  3.0921e-39,
+ 3.2730e-39,  3.2358e-39,  3.0899e-39,
+ 1.2225e-02,  1.2386e-01,  6.7712e-02,
+ 3.1263e-02,  1.3617e-01,  1.5352e-01,
+ 2.3405e-02,  8.5466e-02,  8.7303e-02,
+-2.0372e-02,  8.3465e-02, -7.4233e-02,
+ 1.2269e-01,  8.4046e-02, -3.6869e-02,
+ 1.0242e-01,  7.3218e-02, -1.1496e-01,
+-1.4539e-01, -2.3923e-01, -2.2818e-01,
+-3.2368e-02, -7.4360e-02,  2.3493e-02,
+ 1.7004e-01,  6.2924e-02,  8.9327e-02,
+-1.1449e-01, -1.4973e-03, -7.0451e-03,
+-9.3205e-02, -1.0312e-01,  4.6503e-02,
+-2.2148e-01, -1.8111e-01, -1.1992e-01,
+ 9.8140e-02,  9.9823e-02, -2.0282e-02,
+-8.1973e-02,  1.4255e-01, -5.2392e-02,
+ 8.0350e-03, -4.8299e-02, -7.7908e-02,
+ 4.2383e-02,  3.0707e-02,  2.8560e-02,
+ 1.0437e-01,  6.1290e-02, -9.7796e-02,
+-1.7125e-02, -1.3572e-01, -1.5345e-01,
+-1.3292e-01,  2.9477e-02,  6.8032e-02,
+ 1.5741e-01,  4.0258e-01,  2.5838e-01,
+ 1.3948e-01,  3.5713e-01, -3.9825e-01,
+-1.9224e-39, -2.4076e-39, -2.4529e-39,
+-1.9181e-39, -1.9894e-39, -4.0240e-39,
+-1.9335e-39, -2.3920e-39, -4.0147e-39,
+-2.1714e-02, -3.5299e-02, -7.5803e-03,
+-2.4087e-02,  7.5265e-02,  7.6697e-02,
+ 4.5309e-02,  8.9529e-02,  7.6510e-03,
+ 1.0813e-02,  3.1294e-02, -2.5907e-02,
+ 1.1962e-02, -6.8664e-03, -1.4084e-01,
+ 7.7013e-02, -1.2305e-01, -6.7800e-02,
+-9.7392e-02,  4.4082e-02,  1.4473e-01,
+ 4.9436e-02,  2.8859e-01,  2.8252e-01,
+-3.5828e-02, -7.5616e-02,  2.4875e-01,
+-6.7684e-02,  1.1290e-01,  4.2827e-02,
+-1.0860e-01,  1.2952e-01,  5.9784e-01,
+-3.5402e-01, -3.9558e-02, -6.0775e-01,
+-1.2854e-02,  1.5240e-01,  1.4115e-01,
+-2.8134e-02, -1.2939e-02, -2.6203e-02,
+ 1.1300e-01,  1.4481e-01, -5.1454e-02,
+ 1.2688e-01,  2.8536e-02,  9.4877e-02,
+ 9.6033e-02, -1.3901e-02,  6.0035e-02,
+-1.1249e-01,  4.3971e-02, -1.0918e-01,
+ 8.2500e-02,  2.1413e-01,  3.9015e-02,
+ 1.8361e-01,  2.5271e-01, -2.2794e-01,
+-8.1195e-02, -1.2269e-01, -2.6097e-01,
+ 7.6827e-39,  7.7882e-39,  7.6893e-39,
+ 7.7006e-39,  7.7857e-39,  7.7384e-39,
+ 7.6985e-39,  7.7712e-39,  7.7399e-39,
+ 1.4458e-02,  1.0801e-01,  1.5906e-01,
+-1.4676e-02,  1.3699e-01,  9.2460e-02,
+-3.6479e-02,  1.4529e-01, -2.8681e-02,
+-3.3251e-02, -7.3096e-02, -1.4330e-01,
+ 5.7009e-02, -3.1905e-02, -1.2035e-01,
+ 1.1838e-01,  5.7011e-02,  2.0800e-02,
+-1.1567e-02, -2.2125e-01, -9.3953e-02,
+-7.5378e-02, -1.2069e-01,  1.3217e-01,
+-7.7357e-02, -1.3171e-01,  1.2776e-01,
+-1.1397e-01, -3.5183e-02,  2.2994e-02,
+-6.5101e-02, -1.5019e-01, -2.7451e-02,
+-2.4260e-01, -1.3543e-01, -1.9889e-02,
+-1.9798e-39, -3.5282e-40, -1.9216e-39,
+-1.9140e-39, -1.9370e-39, -1.9943e-39,
+-1.8623e-39, -1.8665e-39, -1.9320e-39,
+-4.8850e-39, -5.0283e-39, -4.9987e-39,
+-5.0868e-39, -5.0814e-39, -5.0779e-39,
+-5.2489e-39, -5.1086e-39, -5.1234e-39,
+-2.9120e-39, -3.0278e-39, -2.9633e-39,
+ 1.3186e-39,  6.0555e-39,  6.0419e-39,
+-5.5922e-39, -8.5992e-40, -2.8529e-39,
+-3.4668e-39, -3.5127e-39, -3.4668e-39,
+-3.2831e-39, -3.4668e-39, -3.6734e-39,
+-3.2142e-39, -3.2831e-39, -3.5816e-39,
+ 1.3445e-39,  1.3621e-39,  1.3375e-39,
+ 1.4539e-39, -2.2695e-40,  1.4522e-39,
+ 1.3563e-39,  1.3339e-39,  1.3001e-39,
+-4.4670e-39, -4.4026e-39, -4.3159e-39,
+-4.5047e-39, -4.3505e-39, -2.7259e-39,
+-4.5265e-39, -4.4721e-39, -4.4990e-39,
+-1.9864e-39, -4.1379e-39, -3.7189e-39,
+ 5.2465e-39,  2.5220e-39,  1.5639e-39,
+-3.9760e-39, -5.7033e-39, -4.0978e-39,
+-6.3745e-40, -4.7511e-39,  2.3456e-39,
+-1.5164e-39,  5.0431e-39,  5.1197e-39,
+ 8.7052e-40,  1.4947e-39, -1.1546e-39,
+ 5.3140e-02,  1.0281e-01,  1.4767e-01,
+-6.1530e-02, -9.4166e-02,  4.8671e-02,
+ 5.6787e-03, -1.4551e-01,  1.5614e-02,
+-3.4826e-02, -5.1148e-02,  9.7079e-02,
+-1.3603e-02, -1.2249e-01, -1.9330e-02,
+-6.8184e-02, -1.4344e-01, -9.4023e-03,
+-7.4629e-02,  3.9634e-02,  1.3445e-01,
+ 4.2153e-02,  7.1129e-01,  2.8703e-02,
+ 7.8247e-02,  7.2210e-01, -6.6198e-01,
+-6.1010e-39, -6.2892e-39, -6.4008e-39,
+-6.0825e-39, -6.3221e-39, -6.3883e-39,
+-1.4962e-39, -1.1702e-39, -1.2143e-39,
+ 5.5512e-02, -2.1522e-02,  1.0866e-01,
+-9.2812e-02, -3.5119e-02,  1.1396e-01,
+-1.3922e-01,  6.7287e-02, -5.5626e-02,
+-2.0492e-01,  8.1441e-02, -1.3513e-01,
+ 4.7447e-02,  2.0081e-01, -3.1249e-01,
+-1.8546e-02,  2.0680e-01,  7.3979e-02,
+ 8.8928e-02, -4.3606e-01, -8.4823e-02,
+-5.6133e-02,  3.5132e-01,  1.8633e-01,
+-4.3855e-03,  5.4869e-02,  1.1658e-01,
+ 1.7423e-01, -5.3107e-02,  2.2925e-02,
+-1.7622e-01,  4.4453e-02,  2.8131e-02,
+ 2.6863e-01, -2.9085e-01, -1.5098e-01
+}
+,)"
+R"(
+{
+-2.4230e-40,  5.4425e-39,  3.4517e-39,
+-1.9803e-39, -1.5207e-39, -3.5630e-39,
+-4.9409e-39, -2.9280e-39,  7.7966e-40,
+ 2.4867e-39, -2.1848e-39,  3.2524e-39,
+-6.2860e-39,  4.0411e-39, -3.6956e-39,
+-3.3384e-39, -1.0908e-39,  5.4261e-39,
+-3.6691e-40,  9.4949e-40, -1.7279e-39,
+-1.0644e-39, -2.1371e-39, -2.5125e-39,
+ 2.9368e-39, -5.3820e-39, -3.9771e-40,
+-1.4703e-39, -3.6960e-39, -4.4161e-39,
+ 8.2800e-40, -4.9175e-39,  3.1868e-39,
+ 5.5703e-39, -3.0263e-39, -1.6991e-39,
+ 5.2691e-39,  4.8127e-39,  4.1346e-39,
+-1.3013e-39, -1.7101e-39, -3.5467e-39,
+ 1.1496e-39,  2.0938e-39, -4.2970e-39,
+-5.5314e-39,  6.4852e-40, -5.0870e-39,
+ 3.9377e-39, -4.1683e-39, -3.5404e-40,
+-3.6188e-39,  5.4657e-39,  2.1279e-39,
+ 3.4090e-40,  2.4425e-40,  9.3423e-41,
+-2.3450e-39,  3.1518e-40,  4.3061e-40,
+-2.6175e-39, -2.4696e-39, -2.3755e-39,
+ 2.2764e-39, -4.4934e-39,  8.5722e-40,
+ 5.1798e-39,  2.7072e-39,  5.3750e-39,
+ 5.4335e-40,  3.8556e-39, -3.4799e-39,
+-4.8963e-39, -1.1413e-39, -5.3918e-40,
+ 6.1843e-39, -1.8521e-39, -1.3450e-39,
+-2.0906e-39, -3.2544e-39, -2.8205e-39,
+ 5.3550e-39, -3.0202e-39, -3.4181e-39,
+-3.0043e-39, -3.2900e-39, -3.2915e-39,
+ 6.1849e-39, -3.3421e-39, -3.3995e-39,
+-4.8657e-39, -4.7034e-39, -4.7467e-39,
+-4.6555e-39, -4.6045e-39, -4.6954e-39,
+-4.8886e-39, -4.7333e-39, -4.7805e-39,
+-2.0900e-39, -1.9429e-39, -2.0572e-39,
+-2.0270e-39, -1.9074e-39, -1.9275e-39,
+-2.1243e-39, -2.1134e-39, -2.1539e-39,
+-4.4175e-39, -4.6412e-39, -4.6582e-39,
+-4.6364e-39, -4.8757e-39, -4.6795e-39,
+-4.4571e-39, -4.5038e-39, -4.4570e-39,
+-3.2662e-39, -3.1163e-39, -3.2050e-39,
+-3.2098e-39, -3.0887e-39, -3.1635e-39,
+-3.3183e-39, -3.1411e-39, -3.2824e-39,
+ 8.6839e-40,  5.7318e-39,  1.8373e-40,
+ 4.6732e-39, -4.5549e-41,  1.2817e-39,
+ 3.7642e-41, -6.2591e-39, -5.0492e-39,
+ 5.0057e-39,  6.0612e-39,  2.0220e-39,
+ 3.7436e-39,  4.8326e-39,  3.1353e-39,
+ 3.5289e-39,  4.7177e-39,  6.2666e-39,
+-1.4963e-01, -8.0360e-02, -7.9054e-02,
+-1.3731e-01,  5.0766e-02,  6.9673e-02,
+ 3.2213e-02,  3.3250e-02,  1.3170e-01,
+-2.9718e-02, -2.6931e-02,  1.5768e-02,
+ 5.9232e-02,  7.8471e-02,  9.9465e-02,
+ 2.4872e-02, -4.4226e-02,  3.2357e-02,
+-6.0139e-02, -2.2756e-02, -5.5412e-02,
+ 4.5363e-02,  1.6393e-01,  3.7428e-02,
+ 5.2497e-02,  9.5435e-02,  9.7155e-02,
+ 8.2849e-02,  5.9711e-02,  1.4352e-01,
+ 1.1756e-02,  1.5440e-02,  1.3039e-01,
+ 4.3324e-03,  5.9119e-02,  1.1129e-01,
+-3.9591e-03,  5.8617e-02, -1.3843e-02,
+-2.9949e-02,  3.4877e-02,  5.0679e-03,
+ 3.7278e-02, -2.5221e-02,  1.2191e-01,
+ 1.5626e-01,  8.9797e-02, -1.5458e-02,
+ 1.5607e-01,  1.4561e-02,  1.1720e-01,
+-1.6112e-02,  7.7908e-02, -6.1322e-02,
+ 3.8589e-39,  3.9262e-39,  3.8641e-39,
+ 3.9450e-39,  3.8805e-39,  3.9383e-39,
+ 3.8384e-39,  3.8027e-39,  3.7700e-39,
+ 6.2294e-02, -5.6804e-03, -4.7293e-01,
+ 1.3161e-01,  3.1187e-01, -1.8013e-01,
+ 4.9908e-02,  9.8583e-02,  3.8863e-02,
+-1.7400e-39,  3.5779e-39,  5.2800e-39,
+-1.6845e-39,  4.7140e-39,  2.4244e-39,
+-1.3654e-39,  2.4123e-40, -1.5360e-39,
+-1.0409e-39,  1.8590e-39, -5.2161e-41,
+-8.5110e-40, -1.7210e-39, -4.6624e-39,
+ 5.0754e-40, -2.6248e-39, -5.4801e-39,
+-4.9486e-39,  2.8984e-39,  4.9357e-39,
+-1.4077e-39,  3.8778e-39,  5.8202e-39,
+-4.1095e-39,  6.8891e-40,  5.6565e-39,
+ 3.8021e-39, -5.4740e-41,  2.1795e-39,
+-2.4185e-39, -5.8101e-39,  1.5651e-39,
+-4.9775e-39,  6.0152e-39, -5.2337e-39,
+-4.4350e-39, -3.8239e-39,  3.1624e-40,
+-4.3665e-39, -3.0919e-39, -4.7675e-39,
+-2.3335e-39,  1.8270e-39, -5.5077e-39,
+ 5.5906e-39,  6.7732e-41,  3.7359e-39,
+-5.1412e-40, -2.3239e-39,  5.1937e-39,
+-4.4951e-39, -3.4928e-40, -5.0589e-39,
+ 4.9149e-39,  1.1372e-39,  6.6368e-40,
+-1.8870e-40, -5.9117e-40, -1.3973e-39,
+-2.3555e-39, -1.0637e-39,  3.1692e-39,
+-4.8054e-39,  4.8090e-40,  2.0873e-39,
+ 3.8301e-39, -3.8642e-39,  4.8187e-39,
+-1.6563e-39,  8.9890e-40, -3.5162e-39,
+-2.3010e-01, -7.4445e-02, -1.0006e-01,
+-2.4543e-01, -8.5750e-02,  1.4859e-01,
+-1.3783e-01,  1.2709e-01,  2.5012e-01,
+ 1.0310e-01, -2.3520e-02, -8.1277e-02,
+-2.9267e-02,  1.0686e-01,  4.6287e-02,
+-1.2342e-02, -1.7104e-02,  8.4357e-02,
+-1.8492e-02, -2.0711e-02, -3.5242e-02,
+ 7.6163e-02,  6.0853e-02,  9.4248e-02,
+ 6.2008e-02,  1.1373e-02,  2.6609e-02,
+-7.8135e-02,  1.0672e-01, -5.8380e-02,
+ 7.1618e-02,  2.7966e-04,  1.1835e-01,
+ 1.1306e-01, -7.8578e-03,  5.1743e-03,
+-1.2123e-01,  4.9640e-02,  7.3827e-02,
+-1.0377e-01, -3.7377e-02, -3.6536e-02,
+ 5.7489e-02, -4.6279e-04,  9.0068e-02,
+ 4.0784e-05, -3.3328e-02,  5.1191e-02,
+ 9.6538e-02,  7.1779e-02,  1.2121e-01,
+ 1.1598e-01, -5.9055e-02,  8.2671e-02,
+-1.7292e-39, -1.7848e-39, -1.7308e-39,
+-3.2817e-39, -1.7274e-39, -3.3601e-39,
+-1.7252e-39, -3.4067e-39, -1.7783e-39,
+-7.4053e-02, -4.2785e-01, -4.7597e-01,
+ 4.6309e-01,  7.6018e-02, -3.5885e-01,
+ 3.0428e-01,  8.7449e-02,  9.7880e-02,
+-3.4191e-02,  1.1834e-01, -4.3273e-02,
+-6.0782e-01,  9.2387e-01, -1.3972e-01,
+ 3.0665e-01,  4.7445e-01,  4.8683e-02,
+-1.8865e-02,  9.9509e-02, -4.9881e-02,
+ 2.1640e-02, -2.0941e-01, -1.4779e-01,
+ 1.7808e-01, -1.2572e-01, -9.6756e-02,
+-1.0143e-01,  8.3153e-02, -1.0478e-01,
+ 1.6201e-01,  2.0740e-01, -1.2653e-01,
+ 8.1654e-02, -7.6224e-02, -8.9864e-02,
+ 4.5383e-02, -3.6893e-02, -1.0096e-01,
+ 2.0389e-01,  2.2557e-01, -1.9685e-01,
+-9.5198e-02,  2.2877e-01,  2.1135e-02,
+-1.0919e-01, -1.7563e-01, -3.5255e-01,
+-1.3447e-01,  3.3709e-01, -1.9043e-01,
+-2.1422e-01, -2.8848e-01, -5.3921e-02,
+ 5.5351e-02, -5.0579e-02, -1.6168e-01,
+ 2.5282e-01,  1.9715e-01, -2.4035e-01,
+-3.0800e-02,  1.9329e-01, -1.0893e-01,
+-3.4416e-39, -1.8080e-39, -1.6625e-39,
+-1.6612e-39, -1.7397e-39, -1.5953e-39,
+ 5.3047e-39,  5.4221e-39, -1.1665e-39,
+ 2.1838e-02, -7.0635e-02,  3.6095e-01,
+ 5.1096e-01,  6.3838e-01,  5.0716e-01,
+ 1.1642e-01,  1.8546e-01,  1.5989e-01,
+ 1.0799e-01,  2.8380e-01,  1.4910e-01,
+-2.4305e-01,  2.3084e-01, -9.9982e-02,
+-4.6839e-01,  6.0376e-01, -1.2748e-02,
+ 8.7608e-02,  9.8828e-02,  2.1469e-02,
+-3.5384e-03, -1.5689e-01, -1.1411e-01,
+ 2.0728e-02,  5.6814e-02, -1.1090e-02,
+-3.9301e-02, -9.4325e-02, -6.2119e-02,
+ 1.2842e-01,  9.7466e-02, -2.7502e-02,
+ 1.6560e-01,  1.5058e-01,  2.2821e-02,
+-8.1287e-02, -6.3940e-03,  3.2162e-02,
+ 9.4116e-02, -6.2567e-02, -1.2704e-01,
+ 5.4654e-02,  1.4885e-02,  3.8166e-03,
+ 1.9830e-01, -2.5419e-01, -6.7067e-02,
+ 3.2303e-01,  1.6037e-01, -3.0200e-02,
+ 1.3011e-01,  7.5455e-02, -1.2726e-02,
+-1.9198e-01, -1.5419e-01, -7.5420e-02,
+ 1.6070e-01, -6.1031e-02, -2.0179e-01,
+-1.5829e-02,  1.9918e-01,  1.0960e-01,
+-5.5215e-39, -5.8659e-39, -5.5573e-39,
+-6.2394e-39, -6.0172e-39, -6.0159e-39,
+-4.0308e-39, -4.1217e-39, -4.1372e-39,
+ 1.6143e-01,  1.7271e-01,  4.3534e-01,
+-2.4312e-01,  4.0146e-01,  4.4693e-01,
+ 1.5442e-01,  3.9885e-01, -1.4357e-01,
+-6.0236e-02, -1.2324e-01,  6.1197e-02,
+-2.5842e-02, -1.0266e-02,  1.5670e-03,
+ 2.9103e-02,  2.9966e-02,  1.1286e-01,
+ 3.4528e-02,  1.3039e-01,  9.2736e-02,
+ 3.5193e-02,  5.6583e-02,  5.9465e-02,
+ 1.2846e-01,  9.3387e-02,  9.2131e-02,
+ 1.4974e-03,  1.0196e-01,  6.7632e-02,
+ 8.9809e-02,  5.7568e-02, -6.0621e-02,
+-2.7582e-03,  3.1935e-02,  3.1299e-02,
+ 1.3595e-01,  4.9498e-02,  1.2535e-01,
+-3.9396e-02,  4.8859e-02,  4.1389e-02,
+ 3.7026e-02,  1.3667e-01,  7.5657e-03,
+-5.3476e-02,  1.9677e-02,  9.5214e-02,
+ 1.3136e-02,  7.5560e-02,  6.2428e-03,
+-5.2378e-02, -1.8704e-02,  1.0657e-01,
+-4.2938e-02, -5.0199e-02,  1.4357e-01,
+-5.7002e-02,  1.4158e-01,  4.9442e-02,
+-6.8383e-02,  1.1316e-01,  5.2071e-02,
+ 1.5031e-40,  2.1250e-40,  1.8673e-40,
+ 1.5681e-40,  1.3104e-40,  1.6173e-40,
+ 2.1560e-40,  1.8582e-40,  1.7747e-40,
+ 8.4848e-02, -1.9845e-01, -5.1844e-01,
+ 3.0959e-01,  3.6682e-01,  3.1208e-02,
+ 1.9871e-01,  2.8318e-01,  1.6066e-01
+}
+,)"
+R"(
+{
+-2.7283e-39, -4.9031e-39, -2.1039e-39,
+-1.0327e-39, -5.1679e-39, -4.3300e-39,
+-5.2613e-39, -3.1707e-39, -6.0916e-39,
+ 1.5840e-39,  1.6709e-39,  1.6120e-39,
+ 1.6716e-39,  1.7418e-39,  1.6624e-39,
+ 1.5922e-39,  1.7383e-39,  1.5668e-39,
+ 1.1389e-01, -4.5774e-02,  6.1423e-02,
+ 1.3858e-01,  2.3102e-02, -6.5079e-02,
+ 1.3269e-01,  3.2387e-02,  7.6966e-02,
+-2.1531e-39, -1.6063e-39, -3.2070e-39,
+-2.8531e-39,  4.6956e-39,  1.4038e-39,
+ 2.0509e-39, -4.4924e-39, -5.3658e-39,
+ 1.1524e-01, -5.0115e-02,  9.4187e-02,
+ 4.2477e-02,  1.4197e-01,  2.4986e-02,
+-2.8688e-02,  9.2289e-02,  4.1965e-02,
+-2.1691e-01, -6.6916e-04, -1.3026e-01,
+-1.9143e-01,  1.2211e-01,  1.2562e-01,
+-1.2273e-01,  7.1045e-02,  1.2396e-01,
+-8.0861e-02, -4.4301e-03,  6.3144e-03,
+ 3.0338e-02, -8.6463e-03,  5.5084e-02,
+-1.8370e-01, -5.0287e-02, -7.2194e-02,
+ 7.4570e-02,  5.4483e-02, -1.2639e-02,
+ 1.2481e-01,  1.4683e-01, -4.7581e-02,
+ 1.6748e-01, -3.1374e-02, -1.7271e-02,
+ 1.9801e-39, -3.3469e-39, -4.7012e-39,
+-2.9869e-39, -3.2752e-39, -2.2142e-39,
+-4.2927e-39, -1.9635e-39, -8.7517e-40,
+ 2.7286e-39,  2.7755e-39,  2.7501e-39,
+ 2.7114e-39,  2.7711e-39,  2.6858e-39,
+ 2.5562e-39,  2.6523e-39,  2.5846e-39,
+ 1.4015e-01,  1.0486e-01,  1.2320e-01,
+ 4.6545e-02,  1.2068e-01,  9.2531e-02,
+ 1.0717e-01,  3.8738e-02,  1.0181e-01,
+-7.4503e-40, -1.1490e-39,  6.1230e-41,
+ 2.4896e-39,  5.3740e-39, -1.4060e-39,
+ 1.9095e-39, -7.1020e-40,  3.5820e-39,
+-1.4348e-02,  6.4128e-02,  6.1082e-02,
+-1.1112e-02,  8.5993e-02,  2.4835e-02,
+ 1.2794e-01, -9.1072e-02, -1.3487e-02,
+-5.8057e-02,  1.3080e-01,  1.0895e-01,
+-1.6436e-01,  9.8593e-03,  1.5586e-02,
+-1.5336e-01,  3.6391e-02,  1.4539e-01,
+-4.6112e-02,  3.0102e-02,  6.2460e-02,
+-2.5510e-02,  2.0437e-02, -5.6816e-02,
+-1.0308e-01, -1.5284e-01, -7.1036e-02,
+ 5.5290e-02, -6.6632e-02,  4.2268e-02,
+-2.7665e-02,  9.3415e-02,  5.1026e-02,
+ 1.5652e-01,  1.0835e-01,  9.6131e-02,
+-4.2583e-39, -3.4889e-39, -5.7522e-39,
+ 4.2701e-40,  2.8095e-39, -3.5579e-39,
+ 2.2286e-39,  4.9865e-39,  4.0469e-39,
+-6.4320e-40, -3.3384e-39, -5.9025e-39,
+-7.9075e-40, -3.0577e-39, -6.0007e-39,
+-8.9627e-40, -2.8374e-39, -5.8866e-39,
+ 6.3645e-03, -5.3080e-03, -5.1759e-02,
+ 1.0665e-01, -6.3126e-02,  5.0918e-02,
+ 7.2193e-02, -6.8836e-02, -6.5657e-02,
+ 2.8519e-39, -5.0955e-39, -9.6085e-40,
+-3.3563e-39, -5.6038e-39, -1.6256e-39,
+ 2.6872e-39,  1.4728e-39, -1.9908e-39,
+-1.5254e-02,  9.8323e-02,  4.5504e-02,
+ 1.3855e-01,  6.9300e-02,  1.9135e-01,
+-5.2321e-02, -6.0227e-03, -1.1734e-04,
+-1.4457e-01,  9.2761e-02,  4.5219e-02,
+-3.0361e-01,  3.4673e-01, -2.3110e-01,
+ 2.1017e-01,  2.4983e-01,  3.1659e-01,
+-6.0569e-02, -5.4348e-02, -7.6719e-02,
+-6.5060e-02,  2.8902e-01,  8.0732e-02,
+-3.3425e-01, -3.1361e-01, -2.7183e-01,
+ 2.8035e-02, -5.8134e-02, -4.3880e-02,
+-1.6375e-02,  9.8195e-02, -7.4011e-02,
+-5.9523e-02,  1.0234e-01, -5.3357e-02,
+ 2.3364e-39, -2.5324e-39, -4.8333e-40,
+ 2.2903e-41, -3.3061e-39, -2.5779e-39,
+-1.8164e-39, -4.9236e-39, -4.9272e-39,
+-1.2809e-39, -1.1698e-39, -1.2564e-39,
+-1.3111e-39, -1.1778e-39, -1.2543e-39,
+-1.4772e-39, -1.4021e-39, -1.4721e-39,
+ 8.8919e-02, -3.4541e-03, -4.9619e-02,
+ 1.0997e-01,  1.0257e-01,  6.9950e-02,
+ 9.2624e-02,  3.2712e-02,  8.7916e-02,
+-5.0242e-39, -6.1320e-39,  8.7891e-40,
+-4.9951e-39,  2.3873e-39, -2.7823e-39,
+-3.6739e-39, -1.8903e-39,  5.2150e-39,
+ 9.6288e-02,  9.7568e-03, -5.8178e-02,
+ 2.3313e-02,  1.1725e-01,  1.0291e-01,
+-1.0111e-01,  8.3706e-02,  9.6575e-03,
+-8.2531e-02,  7.0089e-02,  1.0821e-01,
+-1.1016e-01,  1.8977e-01,  2.5576e-01,
+-1.0221e-01,  5.9236e-02,  6.1678e-02,
+ 2.6234e-02,  9.6868e-02,  9.2432e-02,
+ 4.9881e-02,  5.9121e-02, -1.0477e-02,
+-1.4693e-01, -1.0030e-01, -1.0608e-01,
+ 1.1936e-01, -2.2301e-02,  1.1363e-01,
+ 1.3981e-01,  6.7734e-02, -8.2775e-02,
+ 1.0404e-01, -7.7360e-03,  4.2523e-02,
+-2.6052e-39,  5.7201e-39, -5.6049e-39,
+-3.6314e-39, -5.9232e-39, -3.6970e-39,
+ 3.4360e-39, -5.6848e-39, -3.8308e-39,
+ 4.6279e-39,  5.8135e-39,  2.0652e-39,
+ 3.9864e-39,  4.4000e-39,  5.5163e-39,
+ 2.9644e-39,  2.7537e-39,  3.6593e-39,
+ 4.7872e-02, -2.5857e-02,  4.8810e-02,
+ 1.0389e-01, -1.0782e-01,  4.1365e-02,
+ 9.5778e-02, -5.2341e-02,  4.5947e-02,
+-8.2652e-40, -5.7602e-39,  4.6187e-39,
+-2.8365e-39,  1.4981e-39,  6.2504e-39,
+-4.8330e-39,  4.0283e-39,  4.9792e-39,
+-1.0893e-03, -8.2708e-02, -1.7925e-01,
+ 8.3461e-02,  3.1339e-02,  8.8096e-02,
+ 7.3139e-02, -1.2212e-01,  1.0489e-02,
+-2.4187e-01, -3.8397e-01,  1.3730e-01,
+ 1.9217e-01,  1.4101e-01,  4.9795e-01,
+-1.1441e-01,  3.3343e-01,  7.9194e-02,
+ 1.4556e-01, -5.1060e-01,  2.1556e-01,
+ 3.5719e-01,  2.7282e-01, -1.9015e-01,
+-1.0941e-01,  2.7634e-02,  1.1833e-01,
+-9.3316e-02, -4.1307e-03,  7.8613e-02,
+-2.1526e-02, -6.7141e-02,  2.5513e-02,
+-3.3942e-02, -8.6282e-02,  3.0446e-02,
+-4.5124e-39, -2.7154e-39,  4.9467e-39,
+-4.2299e-39, -5.9485e-39, -2.9606e-39,
+-4.7642e-39, -4.7981e-39, -4.0169e-39,
+-3.8238e-39,  5.7381e-39,  4.0097e-39,
+ 1.9550e-39,  4.5523e-39,  3.1206e-39,
+ 6.0200e-39,  3.0406e-39,  2.0498e-39,
+-3.2474e-01,  1.1052e-02,  4.7197e-02,
+-1.4658e-01,  1.6728e-01,  5.2190e-02,
+ 4.3174e-02,  4.5864e-02,  5.4472e-02,
+ 2.6403e-39,  2.7421e-39, -4.3011e-39,
+-3.6258e-39, -1.3708e-39,  3.6147e-39,
+-1.9471e-39,  4.5896e-39,  4.5992e-39,
+-9.9986e-02,  7.0727e-02,  8.5023e-02,
+ 2.2501e-02,  1.4343e-01,  1.1878e-01,
+ 2.8126e-02,  7.3239e-02,  1.0468e-02,
+ 4.5032e-01,  4.4730e-01,  1.3446e-01,
+-1.3374e-01,  8.8554e-02,  3.5610e-01,
+ 3.0584e-01,  2.3536e-01,  1.6161e-01,
+-5.1485e-01,  1.2372e-01,  5.4379e-02,
+-2.9665e-01, -3.3157e-02, -1.8688e-01,
+ 5.1777e-02, -1.4315e-01, -1.1366e-01,
+-2.4471e-01,  5.5554e-02,  8.9284e-02,
+-1.6870e-01,  7.6156e-02,  1.2472e-01,
+-1.5633e-01,  4.3184e-03,  1.1078e-01,
+ 4.0579e-39, -3.8271e-39,  1.1535e-39,
+ 6.6968e-40, -1.1545e-39, -5.4217e-40,
+ 3.5566e-39, -4.4956e-40, -1.7097e-39,
+-4.1778e-39, -3.7655e-39, -3.7148e-39,
+-3.8013e-39, -3.5225e-39, -3.4678e-39,
+-3.8369e-39, -3.5583e-39, -3.6518e-39,
+-1.4894e-02,  2.4801e-03, -4.6996e-02,
+ 6.7453e-04,  1.8799e-02,  2.9889e-02,
+ 7.2700e-03,  1.2385e-01,  9.2522e-02,
+ 3.9300e-39,  3.1853e-39,  2.8376e-39,
+ 2.8888e-39, -4.8734e-39,  2.3402e-39,
+-3.9710e-39, -4.3243e-39,  4.1151e-39,
+ 1.6399e-02, -8.2828e-02, -5.8361e-02,
+ 2.1315e-02,  1.1968e-02,  6.8727e-02,
+ 3.8558e-02,  1.5451e-02,  5.4465e-04,
+ 1.0549e-02, -8.6468e-02, -1.8535e-01,
+-1.3616e-01,  2.7371e-01,  1.1157e-01,
+-1.7097e-01,  1.3659e-01,  2.2831e-02,
+-3.3897e-02,  1.3307e-01,  7.4482e-03,
+ 4.8120e-01,  7.7053e-01,  5.3354e-01,
+-2.4277e-01, -5.9136e-02, -1.3419e-01,
+-7.4653e-02, -6.4169e-02, -2.9526e-02,
+-3.6336e-02,  7.2362e-02, -3.5332e-02,
+ 6.2628e-02,  6.2278e-02,  3.5639e-02,
+ 3.6614e-39, -2.6150e-39, -3.5229e-39,
+ 5.3538e-39, -1.2368e-39,  2.1530e-39,
+ 4.8585e-39, -2.4150e-39,  5.2220e-40,
+ 3.8610e-40,  1.4772e-39,  2.1962e-39,
+-1.8493e-40,  1.1409e-39,  1.7309e-39,
+-2.5751e-40,  9.1351e-40,  1.3106e-39,
+ 6.2867e-02, -1.2727e-01, -6.5307e-02,
+ 1.1415e-01, -4.5529e-02, -1.1358e-01,
+ 4.3427e-02, -6.0994e-02, -7.7808e-02,
+-4.1831e-39,  1.3230e-39,  5.5853e-39,
+-3.4646e-39, -7.2824e-40, -3.4263e-39,
+ 1.5344e-39, -5.8245e-39,  1.9910e-39,
+ 1.1000e-02, -3.7088e-03, -8.0042e-02,
+ 9.7603e-02,  8.6581e-02, -1.8921e-03,
+ 2.2820e-01,  6.8073e-02, -8.1081e-02,
+-3.3901e-01, -1.1231e-01, -8.6476e-02,
+ 1.1147e-01,  4.9587e-01, -1.7039e-01,
+-2.0702e-01,  5.8730e-02, -1.3475e-01,
+ 2.3548e-01, -6.8044e-02,  9.4296e-02,
+ 4.4803e-01,  6.1517e-03, -5.5192e-02,
+-2.7304e-01, -2.6003e-02,  4.0713e-01,
+ 2.8621e-02,  6.2698e-03, -1.4746e-01,
+ 9.4819e-02, -1.3109e-02,  3.5540e-02,
+ 4.4047e-02,  3.5066e-02, -9.5886e-03
+}
+,)"
+R"(
+{
+-6.7011e-03,  1.7398e-01,  1.4767e-01,
+-1.9882e-02,  1.9286e-01,  4.8626e-02,
+ 1.1465e-01, -4.4017e-02, -1.9288e-01,
+-7.5817e-02,  1.5598e-01,  1.2329e-01,
+ 3.4126e-03, -9.4884e-02, -4.2276e-02,
+ 3.9110e-02, -1.3477e-01, -4.4951e-02,
+ 6.0450e-02,  4.4656e-01,  3.8954e-01,
+-2.1207e-01, -1.0600e-02, -5.6351e-01,
+ 1.8074e-01,  3.0797e-02, -4.0380e-01,
+-1.0733e-01,  3.7228e-02,  9.7157e-02,
+-7.5810e-03,  5.5605e-02, -9.1898e-02,
+-1.4992e-01, -5.3206e-02, -1.9667e-01,
+-1.6667e-01,  7.6091e-02,  1.7064e-01,
+ 2.5322e-01, -9.4636e-03, -2.7899e-01,
+ 4.2013e-02,  1.5693e-01,  3.1124e-01,
+-2.1534e-02,  1.3915e-01, -2.8199e-01,
+-2.9683e-03,  1.4445e-02, -1.5552e-01,
+ 3.4759e-02, -2.0321e-01, -1.1155e-01,
+ 3.6164e-02,  2.8664e-01,  2.3426e-01,
+-1.2525e-01, -1.7195e-01, -5.2270e-02,
+ 3.8782e-02,  5.7734e-02,  2.1945e-01,
+ 1.0243e-01, -1.3159e-01, -1.7844e-01,
+-6.0359e-02,  1.9125e-01,  3.3553e-01,
+-1.0876e-01, -1.2149e-01, -5.7185e-01,
+-2.0583e-02, -4.8168e-03, -7.1908e-02,
+-2.3428e-02,  2.9902e-02,  1.0888e-02,
+ 3.6383e-02,  1.0052e-01,  2.8972e-02,
+ 1.1415e-03, -3.4518e-02, -9.0058e-02,
+ 7.3207e-03,  6.0961e-02,  7.5629e-02,
+-4.5969e-02,  2.4314e-02,  6.7658e-02,
+-1.3043e-01, -3.0343e-01, -2.0799e-01,
+-4.6261e-02, -1.7650e-02, -7.2160e-02,
+-2.6291e-02,  1.5707e-01,  9.5021e-02,
+-4.1030e-02, -8.1977e-02, -3.0776e-02,
+-3.0685e-02,  8.2163e-03,  4.0357e-02,
+-6.9633e-02,  6.0690e-02,  1.5418e-02,
+-1.2814e-01,  7.3968e-02, -3.3742e-03,
+-1.5239e-01,  8.9941e-03,  1.7877e-01,
+ 2.1219e-01, -5.2057e-01, -2.2284e-01,
+-3.4681e-02, -1.3594e-02,  1.6700e-01,
+-7.7366e-02,  8.5138e-03, -4.3159e-02,
+ 4.0597e-02,  9.7247e-04, -3.4326e-01,
+-2.1424e-01, -1.6489e-01, -4.3248e-02,
+ 1.5987e-01,  4.6235e-01,  2.6287e-01,
+-1.2270e-02,  1.3165e-01,  5.3217e-02,
+ 7.2716e-02, -7.0677e-02, -1.7740e-01,
+-6.2357e-02,  1.1932e-01,  1.5733e-01,
+-1.0275e-01,  1.4966e-01,  4.8125e-02,
+-4.7150e-02,  1.5516e-01,  6.9615e-02,
+ 6.1252e-02,  5.3859e-02,  1.7052e-01,
+ 3.1940e-02,  1.1842e-01,  4.2265e-02,
+-4.9531e-02,  1.1519e-01,  9.8914e-02,
+ 1.3455e-01,  1.3177e-01, -2.7938e-03,
+ 1.1895e-01,  1.1377e-01,  6.1035e-02,
+ 8.0390e-02, -4.1028e-02,  3.7415e-03,
+-1.0317e-01,  1.0279e-01, -6.5789e-03,
+-2.3339e-02,  7.2741e-02,  4.1662e-02,
+-7.4087e-02,  8.8531e-02, -4.9697e-02,
+ 4.6134e-02,  1.4300e-01,  1.1720e-01,
+ 3.8271e-03,  1.7108e-01, -2.4779e-02,
+ 6.9844e-02, -4.6467e-02, -9.1699e-02,
+ 5.5704e-02, -3.0312e-02, -7.8252e-03,
+-4.3799e-02, -1.6623e-01, -2.3006e-02,
+ 4.9214e-02,  3.1528e-02,  3.3302e-02,
+ 3.1213e-02,  9.8880e-02, -1.1098e-01,
+ 4.5092e-02, -1.6922e-03, -5.1380e-02,
+ 7.6063e-02,  1.4159e-01,  4.1409e-02,
+ 8.0812e-02,  9.7569e-02,  4.1532e-02,
+-1.1136e-01, -4.3686e-02, -1.4144e-01,
+-9.7717e-02,  4.8239e-02,  5.3374e-02,
+-1.1827e-01,  1.0008e-01,  8.6368e-02,
+-6.2572e-02,  3.6484e-02, -6.3361e-02,
+ 4.1008e-03,  1.6709e-02,  4.0553e-02,
+ 2.2766e-02,  2.7241e-02,  5.1786e-02,
+ 1.3607e-02,  5.4638e-02,  6.9439e-02,
+-2.4211e-02,  4.0065e-03, -1.9540e-03,
+-9.5697e-03,  3.0503e-02,  3.5809e-02,
+-4.3456e-02,  2.8959e-02,  4.2898e-02,
+-1.5629e-02, -9.4347e-02,  7.2799e-02,
+ 2.3115e-01,  7.3449e-02,  6.9354e-02,
+ 1.6014e-01,  1.8878e-01, -2.2148e-02,
+-4.9274e-02, -6.9233e-03,  1.0578e-02,
+-4.3291e-02, -7.8361e-03,  1.6647e-02,
+-5.6168e-02,  1.0317e-02,  3.1170e-02,
+ 1.2530e-01, -3.2398e-02, -6.5690e-02,
+-2.5805e-01,  3.6079e-02,  3.5390e-02,
+-1.7236e-01,  6.6798e-03,  4.8924e-02,
+ 1.3314e-01,  5.0646e-02, -3.4844e-02,
+-1.2559e-01, -1.1774e-01,  1.2898e-01,
+-7.7402e-02, -1.0703e-02, -2.6359e-01,
+-3.8706e-02, -2.2082e-02,  2.7591e-03,
+-8.2353e-02, -3.1941e-02, -1.1937e-01,
+ 2.9747e-02,  2.0041e-01, -5.1984e-02,
+ 1.7919e-01,  6.3603e-02, -5.5516e-02,
+ 1.0116e-01,  8.7370e-02, -8.6624e-02,
+-8.4314e-02,  3.5997e-02,  2.1161e-01,
+ 1.0902e-39,  9.3514e-40,  9.3074e-40,
+ 9.8377e-40,  1.1299e-39,  8.2024e-40,
+ 1.2062e-39,  1.0405e-39,  1.0284e-39,
+-5.7829e-40, -6.7489e-40, -6.3814e-40,
+-6.8460e-40, -7.9377e-40, -7.6449e-40,
+-4.7632e-40, -5.6022e-40, -5.2053e-40,
+ 1.8459e-39,  2.1036e-39,  2.1848e-39,
+ 2.0535e-39,  2.3728e-39,  2.4416e-39,
+ 1.7027e-39,  2.0249e-39,  2.0833e-39,
+ 9.1594e-40,  8.0493e-40,  7.7836e-40,
+ 7.5889e-40,  6.3026e-40,  9.3384e-40,
+ 9.6987e-40,  1.1273e-39,  8.1906e-40,
+-7.9046e-39, -7.2328e-39, -7.1040e-39,
+-7.9046e-39, -7.1862e-39, -7.4931e-39,
+-6.5243e-39, -7.1117e-39, -6.9941e-39,
+ 1.3577e-39,  3.5945e-40, -3.6833e-40,
+ 1.3768e-39,  6.9779e-40, -7.5180e-40,
+ 5.7295e-40, -6.0767e-41, -1.3085e-39,
+ 7.7960e-39,  7.8579e-39,  7.4482e-39,
+ 7.4224e-39,  7.5791e-39,  7.4378e-39,
+ 6.5819e-39,  6.7271e-39,  6.6281e-39,
+-1.6535e-39, -7.7817e-40, -8.5918e-40,
+-2.0861e-39, -1.3658e-39, -1.0560e-39,
+-3.4360e-39, -2.6878e-39, -2.6477e-39,
+ 4.6460e-02,  1.1676e-01, -5.9846e-02,
+ 8.6467e-03, -1.1287e-02,  7.0129e-02,
+-1.1277e-01,  1.0321e-02, -1.9567e-02,
+ 1.2145e-01, -7.1995e-02, -1.3615e-02,
+ 9.7877e-02,  6.6061e-02,  1.0272e-02,
+ 1.1391e-01,  5.6974e-02,  9.7472e-02,
+-3.3605e-02,  6.1751e-02, -4.3004e-02,
+-5.1040e-02, -3.8798e-02, -7.1736e-02,
+-1.0179e-02,  8.5964e-02, -8.1435e-04,
+ 2.5149e-02,  7.1990e-02,  8.1534e-02,
+ 6.3133e-02,  5.8643e-02,  4.6756e-02,
+-5.3580e-03,  3.4411e-02,  5.2957e-03,
+ 1.0652e-01, -6.6035e-02,  8.5754e-02,
+ 3.2919e-01, -1.5958e-02,  2.1694e-03,
+-9.0943e-02, -2.1920e-02,  2.9706e-02,
+ 4.7986e-02,  1.7105e-02, -5.7711e-02,
+-4.2066e-03,  6.5668e-02, -1.6617e-01,
+ 1.0057e-02, -2.0108e-03, -1.5499e-01,
+ 6.7941e-02,  1.7352e-01,  4.9498e-02,
+ 6.2013e-02,  9.6180e-02, -2.9861e-03,
+-1.2482e-02,  9.5709e-03, -8.7913e-02,
+-8.6954e-02,  9.9646e-03,  8.0050e-02,
+-4.4157e-02, -6.3008e-03,  4.0645e-02,
+-7.9624e-02,  1.0856e-01, -4.5341e-04,
+ 7.1085e-02,  5.7002e-02,  1.1673e-02,
+-5.1378e-02, -2.3945e-03, -5.9532e-02,
+ 3.4998e-02, -3.6019e-02,  1.0428e-02,
+ 5.9774e-03,  5.4993e-03,  2.4306e-02,
+-5.9813e-03,  4.4999e-02,  7.4744e-02,
+-3.0773e-02, -3.6835e-02,  5.8396e-04,
+-3.8644e-01,  2.4563e-01,  1.2436e-01,
+-3.2986e-01, -1.1044e-01,  2.0753e-01,
+-1.3621e-01, -1.3544e-01,  5.8882e-02,
+ 8.8837e-02,  5.7460e-02, -3.0960e-02,
+-1.2598e-03,  3.9124e-02, -5.3322e-02,
+-4.4227e-02, -3.8000e-02, -3.2677e-02,
+ 1.5675e-01,  1.0808e-01,  1.1024e-01,
+ 5.4468e-01, -5.9268e-01,  1.0088e-01,
+ 8.2360e-02,  1.9646e-01,  6.4799e-03,
+ 1.6357e-01,  6.8273e-02, -1.2051e-01,
+ 4.9511e-02,  4.7334e-01, -4.8876e-02,
+-1.3130e-01, -5.1568e-03,  1.0088e-01,
+-5.8971e-02,  2.5775e-01,  9.0169e-02,
+-3.0461e-01, -3.2353e-02, -2.0293e-01,
+ 1.3897e-02,  1.4249e-01, -5.8661e-02,
+-1.3624e-01, -5.3026e-02,  3.1038e-03,
+-5.6211e-01, -2.8375e-01, -1.2524e-01,
+-2.3813e-01, -2.2439e-02, -4.4082e-02,
+ 9.9066e-02, -7.1735e-02,  2.2345e-02,
+-1.4791e-02,  1.3225e-01,  8.9460e-02,
+-4.8986e-02, -3.2296e-02, -4.7474e-02,
+ 6.5865e-02, -8.0697e-02, -6.8475e-02,
+-7.6845e-02,  1.1568e-01,  3.7443e-03,
+ 1.0448e-01, -3.3206e-03,  5.4523e-02,
+ 5.5741e-02,  5.0917e-02,  1.0209e-01,
+-9.6729e-02,  7.8876e-02, -4.9550e-02,
+-3.8926e-02,  7.1163e-02,  8.9436e-02,
+-1.4001e-03, -9.4980e-02, -7.7747e-02,
+ 9.4335e-02,  1.1605e-01,  9.5715e-02,
+ 1.7951e-02,  4.3177e-03, -5.6937e-02,
+ 4.4558e-02, -5.2562e-02,  4.0652e-02,
+ 1.8058e-01, -1.0763e-01,  4.8927e-02,
+-5.2569e-03, -1.3437e-01,  2.8578e-02,
+ 1.3592e-02, -3.9346e-02,  1.0003e-01,
+ 1.8091e-01,  7.2687e-03, -3.7241e-02,
+ 6.0438e-02,  5.7872e-02,  7.3778e-02,
+ 1.2411e-02,  4.1856e-02, -2.8892e-02,
+ 3.2884e-02,  6.9072e-02, -5.9363e-02,
+-1.7112e-01, -9.9734e-02, -7.3417e-02,
+-8.9623e-02,  4.5292e-02, -1.6635e-01,
+-3.1895e-02,  1.4284e-01,  2.0752e-01,
+ 2.3383e-02, -1.3490e-02,  5.1593e-03
+}
+,)"
+R"(
+{
+ 5.8708e-01,  2.6026e-01,  8.8379e-02,
+ 3.1818e-01,  7.0055e-03,  1.1652e-01,
+ 1.1719e-01,  8.7711e-02, -1.1687e-02,
+ 7.5741e-02, -3.7970e-01,  1.6001e-01,
+ 1.0739e-01,  3.1735e-01,  2.0061e-01,
+ 8.6719e-02,  8.5111e-02, -3.9354e-02,
+-9.9512e-02, -9.1524e-02, -9.7984e-02,
+ 5.6333e-02, -1.5928e-01,  1.1998e-03,
+ 2.7488e-02,  2.8168e-02,  1.3768e-01,
+ 5.9686e-02,  2.8931e-01, -1.7131e-02,
+ 1.6391e-01,  3.3748e-01,  1.2296e-01,
+ 8.9242e-02,  1.4761e-01,  1.7187e-01,
+-2.6352e-39, -4.0703e-39, -5.1751e-39,
+-2.5214e-39, -3.9666e-39, -4.6282e-39,
+-2.4635e-39, -3.6734e-39, -4.3359e-39,
+-7.1654e-02,  7.9691e-03, -1.0219e-01,
+-5.5684e-02, -1.3065e-01, -1.9106e-02,
+ 1.0561e-01,  5.9054e-02, -2.1279e-02,
+-1.8840e-02,  1.6690e-01,  3.8050e-01,
+ 6.2779e-02, -1.2124e-01,  5.0304e-01,
+ 2.1870e-02,  1.7631e-01,  1.4858e-01,
+ 1.4614e-01, -1.1767e-01, -3.9155e-02,
+ 1.2963e-01, -4.6753e-02,  1.3848e-01,
+-8.2292e-02,  2.1908e-01,  6.2794e-02,
+-3.2625e-01, -8.8528e-03, -6.5603e-03,
+ 5.4245e-02,  2.7983e-01,  2.1608e-01,
+ 8.5890e-02,  1.0955e-01, -1.1606e-01,
+ 9.7435e-02,  1.5911e-01,  6.7285e-02,
+ 3.9570e-02,  1.9333e-01, -1.5531e-02,
+-2.3475e-01, -2.5006e-02,  2.8106e-02,
+ 6.8740e-03,  1.3261e-01, -3.8563e-02,
+ 8.8758e-02, -4.2225e-02,  4.7042e-02,
+ 5.6284e-02, -2.8303e-02,  3.4532e-03,
+-4.0265e-02, -3.0645e-02, -5.2059e-02,
+-4.6196e-02, -2.4868e-02, -3.3257e-02,
+-3.7208e-02, -2.4100e-03, -7.1959e-04,
+ 6.4237e-39,  6.1438e-39,  6.5434e-39,
+ 6.1596e-39,  6.1608e-39,  6.3157e-39,
+ 6.4263e-39,  6.4625e-39,  6.5877e-39,
+ 1.1092e-01, -4.4784e-02,  9.1292e-02,
+ 9.2900e-02,  1.2459e-01, -7.1447e-02,
+ 2.6158e-02, -5.0219e-02, -5.6136e-02,
+-5.8603e-02,  2.9323e-02, -2.4230e-01,
+-9.4921e-02,  1.9103e-01,  1.1670e-01,
+ 1.2022e-02,  6.2830e-02,  3.0393e-01,
+ 3.3819e-02,  1.0040e-01,  8.2600e-02,
+-8.7604e-02,  7.0641e-02, -1.0132e-01,
+-9.9371e-02,  8.9363e-02, -1.0703e-01,
+ 4.4603e-01,  7.9636e-03,  1.8834e-01,
+ 1.1859e-01,  4.0760e-01,  9.6841e-02,
+-1.1735e-01,  2.3993e-01, -7.7916e-02,
+ 6.3481e-02, -1.4958e-01,  1.1554e-02,
+ 5.2668e-02,  3.4379e-01,  8.3536e-03,
+-5.5403e-02,  1.1655e-01, -7.5022e-02,
+-8.2992e-02, -7.0322e-02, -1.0078e-01,
+-1.4516e-02, -1.6558e-02,  6.6806e-02,
+-6.7454e-04, -5.7525e-02,  1.5772e-01,
+ 1.6446e-01, -1.1897e-02, -8.3387e-02,
+ 7.1339e-02,  1.6254e-01,  1.6963e-01,
+ 1.2630e-02,  5.7933e-02,  8.4686e-02,
+-5.6318e-39, -6.1837e-39, -6.1661e-39,
+-5.9923e-39, -6.2371e-39, -6.4922e-39,
+-6.4206e-39, -6.6092e-39, -7.1603e-39,
+ 4.6507e-02, -4.5924e-02, -7.3838e-02,
+-3.3012e-02,  5.1295e-02, -7.4884e-02,
+ 7.5389e-02,  1.2002e-01,  3.9442e-03,
+ 9.9461e-02,  1.9607e-01,  1.4896e-01,
+-1.1191e-02,  1.8352e-01,  2.6778e-01,
+ 8.0977e-02,  1.0885e-01,  2.5331e-01,
+ 3.1503e-02, -3.0004e-01, -6.9114e-02,
+ 2.0705e-01, -2.0978e-02,  1.5154e-01,
+ 6.3033e-02, -1.5721e-01,  5.1067e-02,
+-1.1220e-02,  1.5315e-01,  4.5277e-03,
+ 3.3250e-01,  1.4207e-01,  1.3469e-01,
+ 5.2996e-01, -2.5803e-01, -4.5525e-02,
+ 3.9807e-02, -1.7088e-01, -1.2414e-01,
+ 2.1564e-01, -2.9160e-01, -1.8796e-01,
+ 1.5482e-02,  2.7005e-01,  8.2446e-02,
+ 5.4906e-02, -1.0507e-01, -8.0069e-02,
+-4.5729e-03, -2.0621e-02,  5.0088e-02,
+ 2.5479e-02,  9.5924e-02,  8.3813e-02,
+ 4.7833e-02, -2.6191e-01,  3.3483e-02,
+ 6.1653e-02,  7.1940e-03, -1.3578e-01,
+ 1.7662e-01, -2.8194e-02, -2.7509e-02,
+-1.9419e-39, -2.4904e-39, -2.7567e-39,
+-2.9896e-39, -3.2700e-39, -3.6336e-39,
+-3.8942e-39, -4.2028e-39, -4.5229e-39,
+-1.6839e-02, -9.4421e-02, -3.0147e-02,
+-6.5974e-02, -1.6716e-02,  5.0672e-02,
+-7.9841e-02, -4.7086e-03,  5.0016e-02,
+ 1.8223e-04,  3.3984e-03,  5.1965e-02,
+-7.3512e-02, -5.6604e-03, -1.1630e-01,
+-1.0767e-01,  3.2261e-02, -2.0044e-01,
+ 1.0995e-01,  4.3581e-02, -3.9397e-02,
+-1.4476e-02, -2.3087e-02,  2.6423e-03,
+ 1.2047e-02,  1.2084e-01,  1.8563e-01,
+-2.8497e-01, -2.5353e-01,  1.0933e-01,
+ 8.8974e-03,  1.3315e-01,  1.9153e-01,
+ 2.0427e-02, -8.9900e-02,  2.2363e-02,
+ 2.8575e-02,  1.6351e-01,  1.1876e-01,
+-2.7438e-02, -1.0816e-03, -5.5680e-02,
+ 5.1369e-02, -2.0575e-02,  4.5232e-02,
+ 9.4988e-02,  2.5418e-02,  8.9888e-02,
+ 9.6631e-02,  1.5828e-01,  1.1577e-01,
+-2.9665e-02,  3.2035e-02,  1.4428e-01,
+ 7.4352e-03,  2.4917e-03,  4.2713e-03,
+ 1.2534e-02,  2.1314e-02,  1.5963e-02,
+ 2.2920e-03,  2.1864e-02,  2.2921e-02,
+ 7.1089e-40,  5.3581e-40,  4.5922e-40,
+ 6.2492e-40,  4.6365e-40,  4.5466e-40,
+ 9.2740e-40,  7.7219e-40,  7.4187e-40,
+-7.0909e-02,  1.1127e-01, -8.8953e-02,
+-5.0537e-04,  4.5664e-05,  1.3829e-02,
+ 7.4380e-02,  1.3900e-03,  4.0345e-02,
+ 5.7173e-02,  8.7514e-02, -3.9945e-01,
+ 4.4116e-02,  1.4148e-01, -2.7578e-02,
+-1.2133e-02,  1.9647e-01, -2.6767e-02,
+ 8.5870e-02, -1.3723e-02,  1.3408e-02,
+ 7.9471e-03,  7.8321e-02,  5.1118e-02,
+-8.3660e-02, -7.1584e-02,  2.7423e-02,
+-5.5651e-39, -3.2350e-39,  4.7534e-39,
+-4.8581e-39, -5.8010e-39,  6.3268e-39,
+-3.4016e-39,  6.2313e-39,  5.7413e-39,
+-3.0708e-39,  6.0155e-39, -6.3317e-39,
+-3.1054e-39, -5.5914e-39, -6.4181e-39,
+-1.3636e-40, -6.0343e-39, -6.2034e-39,
+ 1.0108e-39, -2.5283e-39, -8.6098e-40,
+ 1.0088e-39, -2.3042e-39, -8.2029e-40,
+ 1.2802e-39, -3.7761e-39, -4.6451e-40,
+ 1.4160e-39,  7.3869e-40,  1.3275e-39,
+ 1.2560e-39,  1.0078e-39,  1.2296e-39,
+-2.4490e-39,  8.6071e-40, -2.4510e-39,
+ 2.1753e-39, -2.0576e-39, -2.1365e-39,
+ 2.0157e-39,  2.0755e-39,  1.9439e-39,
+ 2.0998e-39,  2.0732e-39,  2.1072e-39,
+-1.1289e-39, -1.6132e-39,  4.8117e-40,
+ 1.2029e-39, -1.3112e-39,  6.4761e-40,
+ 1.4958e-39, -9.2719e-40,  8.9526e-40,
+ 3.6032e-39, -4.9803e-39, -2.4410e-39,
+-1.6429e-39, -4.9602e-39, -5.9626e-39,
+-1.6627e-39, -4.9809e-39, -5.6258e-39,
+ 1.6619e-39,  1.7856e-39,  5.1822e-39,
+ 1.5443e-39,  1.4215e-39,  6.1830e-39,
+ 1.4242e-39, -1.7895e-39,  5.2206e-39,
+-2.4764e-01, -2.8696e-01, -5.7562e-03,
+ 1.9255e-01,  5.1335e-02, -1.4512e-01,
+-1.1017e-02, -3.6505e-02, -1.1773e-01,
+ 5.8651e-02, -1.9354e-02,  2.1595e-02,
+-3.5114e-03,  1.8335e-01,  4.0043e-02,
+ 1.0579e-01, -6.3055e-02,  2.6981e-02,
+-1.4351e-02, -1.5029e-02, -9.7792e-02,
+ 4.6718e-02,  3.8673e-02, -2.3410e-02,
+-2.8942e-03, -8.4898e-03, -3.3613e-02,
+ 2.0298e-01,  9.7218e-02,  1.5052e-01,
+ 3.2108e-01,  2.6568e-01,  1.3809e-03,
+ 1.0008e-01,  6.9262e-02, -4.7810e-02,
+ 4.1291e-39,  4.3762e-39,  4.2724e-39,
+ 4.5864e-39,  4.7827e-39,  4.8821e-39,
+ 4.5529e-39,  4.6921e-39,  4.7519e-39,
+ 9.1246e-03, -1.8136e-02, -5.8517e-03,
+ 9.1080e-03,  4.2591e-02, -1.5604e-02,
+-3.6270e-02,  5.9184e-02,  2.3189e-02,
+ 4.2636e-02,  3.6600e-01,  4.7134e-01,
+ 3.6666e-02,  4.3565e-01,  2.1105e-01,
+-5.2747e-02,  4.0503e-01,  2.0926e-01,
+ 8.8427e-02,  4.9138e-02, -2.3381e-01,
+-5.6521e-02,  7.5013e-02, -1.4783e-01,
+-4.7299e-02, -8.1200e-02, -6.5665e-02,
+-1.6281e-01, -2.3070e-01,  5.4033e-02,
+ 1.1527e-01,  3.4730e-01,  1.9293e-02,
+-1.8352e-02,  2.0626e-01, -1.1955e-01,
+ 8.1665e-02,  3.8584e-02,  2.7958e-03,
+ 6.4294e-02,  1.3912e-01, -5.6370e-02,
+-1.7618e-02,  9.0357e-02, -5.5021e-03,
+ 9.3211e-05,  1.5219e-01,  1.0844e-01,
+ 7.6218e-02,  1.7016e-01,  9.2438e-02,
+ 4.3387e-02,  8.0141e-02, -3.2034e-02,
+ 9.2121e-03, -2.8742e-03, -1.5988e-03,
+ 9.1980e-03,  1.6983e-02,  3.3154e-03,
+-2.5642e-02,  4.1607e-03,  6.9246e-03,
+ 3.7665e-40, -4.0391e-41, -4.0502e-41,
+ 2.2436e-40, -1.7190e-40,  1.6583e-40,
+ 1.4090e-40,  2.2914e-41,  6.7388e-41,
+-8.1776e-02,  9.0814e-02,  1.0222e-01,
+-3.4949e-02,  1.0266e-01,  3.6826e-02,
+-8.3856e-02,  1.1102e-01,  1.1026e-01,
+ 1.5993e-02, -1.1626e-01, -3.0870e-01,
+-3.4119e-03,  1.7638e-01, -1.9092e-01,
+-1.2549e-01,  3.2538e-01, -7.9381e-02,
+ 3.8433e-03, -8.2530e-02,  3.2103e-02,
+-1.1637e-02, -1.0371e-01,  2.3851e-02,
+ 2.5390e-02,  7.7085e-02,  8.9536e-02
+}
+,)"
+R"(
+{
+-2.8918e-02, -8.3719e-02, -3.3026e-02,
+-2.2620e-01,  2.4280e-02, -2.1254e-01,
+ 2.8231e-02,  3.5323e-02, -2.8425e-02,
+ 1.6891e-01,  3.8192e-03,  7.2794e-02,
+-1.6364e-01, -4.1031e-02, -1.3141e-02,
+-3.9478e-02,  1.4910e-01, -7.0978e-02,
+-6.3880e-02,  9.8206e-02,  1.3163e-01,
+ 1.5778e-01,  1.1914e-01,  3.3277e-01,
+-3.6808e-01, -5.5627e-01,  1.4401e-01,
+-4.0314e-01,  3.6298e-01, -3.8212e-02,
+-2.3782e-01,  2.5410e-01, -2.2334e-01,
+ 7.6542e-02,  9.4998e-02,  3.3399e-02,
+-1.8601e-01, -1.8863e-02, -4.1835e-02,
+-5.8671e-02, -8.9987e-02, -6.1069e-02,
+-7.1062e-02, -9.5987e-02,  1.2318e-02,
+ 5.4541e-39, -1.8871e-39,  4.5048e-39,
+-2.2237e-39, -5.4753e-39,  1.4395e-39,
+-3.5753e-39,  6.1466e-40, -2.1567e-39,
+ 4.5273e-02,  1.1619e-02,  1.1379e-01,
+ 1.4093e-01,  1.0444e-01,  1.1283e-01,
+-3.0230e-02,  3.1937e-01,  5.0541e-02,
+ 8.2862e-02, -3.1540e-02, -6.4833e-02,
+ 1.5168e-01,  1.7613e-03,  4.2690e-02,
+ 1.8820e-01,  4.3783e-02,  6.3473e-02,
+ 8.0477e-02,  1.0397e-01, -3.6337e-02,
+-7.2828e-02,  6.4048e-02,  4.2476e-02,
+-1.3974e-04, -2.2468e-01, -4.9189e-02,
+-2.7478e-03,  8.7663e-03,  4.3870e-02,
+-3.3168e-02,  1.1915e-01, -1.8083e-02,
+ 4.8155e-02, -4.1742e-02,  1.1251e-01,
+-6.1535e-02,  5.1782e-02, -2.3494e-02,
+ 5.1677e-02,  1.4067e-01, -1.0377e-01,
+ 3.2951e-03,  1.1942e-02, -1.1775e-01,
+-2.2104e-02, -8.1073e-02, -3.7509e-02,
+ 6.8970e-03,  1.6406e-02,  4.6923e-02,
+-8.8448e-03,  2.9130e-02,  3.1024e-02,
+ 7.6795e-02,  4.6816e-02, -1.3204e-02,
+ 1.3988e-01,  1.1175e-01,  8.7121e-02,
+ 1.2097e-01, -3.8463e-02,  6.7387e-02,
+ 1.4708e-39,  1.7125e-39,  2.7764e-39,
+ 1.5203e-39,  1.5811e-39,  4.4921e-39,
+ 1.8828e-39,  1.7593e-39,  2.3774e-39,
+ 4.3474e-02, -4.7065e-02, -7.1999e-02,
+ 6.0338e-02,  3.7240e-02,  2.8802e-02,
+-4.0701e-02,  1.8627e-02, -1.8181e-02,
+ 5.5169e-02,  1.1874e-01, -7.0475e-02,
+-1.3438e-02,  1.4335e-01,  1.5180e-01,
+ 5.6331e-02,  7.9719e-02,  6.2691e-03,
+-6.6460e-02,  2.7455e-01,  5.5916e-02,
+ 1.3515e-01, -3.7263e-01,  1.3463e-01,
+-4.0820e-05,  3.1896e-01, -8.3871e-02,
+-7.6172e-02,  6.1963e-02, -1.3804e-02,
+-5.2852e-02,  1.0006e-01, -3.4106e-02,
+ 6.7218e-02, -3.8616e-03, -7.1788e-02,
+ 1.6386e-02, -1.8612e-02, -1.7354e-01,
+-1.2166e-01,  1.2667e-02, -3.3852e-02,
+-3.2897e-02,  1.0343e-01,  2.4924e-01,
+-1.3272e-02,  1.5705e-01,  6.7731e-02,
+ 1.0637e-01,  1.9482e-02, -2.0655e-01,
+-5.9087e-03, -7.1073e-02,  1.8723e-02,
+-2.6087e-02,  1.5997e-01,  9.6264e-02,
+ 1.2431e-01,  1.1462e-01, -9.7197e-02,
+-6.2347e-02, -4.5239e-02, -2.6443e-02,
+ 3.7406e-39, -4.6345e-40,  3.7971e-39,
+-3.8112e-39, -3.5585e-39,  4.6938e-39,
+ 6.0588e-39, -4.2403e-39,  1.5311e-39,
+ 1.6381e-01, -6.8390e-02,  2.6527e-02,
+-9.8612e-02,  2.1953e-01, -2.1886e-01,
+ 7.4841e-02, -1.2118e-01, -8.1700e-02,
+ 4.4974e-02,  7.7514e-02, -8.4620e-02,
+-2.9808e-02,  2.1591e-02, -3.9502e-02,
+-5.5797e-02, -6.5105e-02, -5.9860e-02,
+-3.7811e-01, -2.3056e-01, -7.4491e-02,
+ 4.0833e-02, -2.2613e-01, -1.4986e-01,
+-1.0974e-01, -6.5161e-01,  1.7546e-01,
+ 7.7903e-02, -1.5969e-02, -6.3040e-02,
+-1.7819e-01, -7.1414e-02,  1.8451e-02,
+-1.0618e-01,  3.5614e-03,  3.6719e-02,
+ 1.5666e-01,  3.9222e-01,  9.1678e-02,
+ 1.4519e-01,  5.7331e-01, -7.3466e-02,
+ 1.0271e-01,  1.0803e-01, -1.3150e-01,
+ 3.7496e-01,  1.5001e-01,  1.4727e-01,
+ 3.2151e-01,  1.2875e-01, -8.1645e-02,
+ 2.8629e-01,  1.9329e-01, -8.0009e-02,
+-9.9557e-02, -2.6954e-02,  2.6042e-02,
+-5.3374e-02,  1.1369e-01,  4.6503e-02,
+-3.4068e-02,  9.1849e-03, -9.1420e-02,
+ 4.6343e-39,  4.8289e-40,  3.1694e-40,
+-3.5093e-39, -4.7356e-39,  7.1265e-40,
+-4.9626e-39, -2.1280e-39,  1.8542e-39,
+-1.3634e-01, -5.4825e-02, -6.6125e-02,
+-2.0694e-01,  1.4924e-01,  1.4028e-01,
+ 3.2735e-02,  7.6360e-02, -9.2541e-02,
+-1.2149e-01, -7.9789e-02, -2.9591e-02,
+ 1.2852e-02,  1.2457e-01,  1.3081e-02,
+-3.2966e-03,  1.1089e-01,  8.6461e-02,
+ 1.4352e-01,  5.9238e-02, -2.1140e-02,
+ 7.3999e-02,  2.0893e-01,  3.5512e-02,
+-5.3110e-02,  3.9222e-01,  1.3103e-01,
+ 1.0168e-01,  1.6685e-02,  5.1616e-02,
+ 9.8241e-02, -1.6502e-01, -1.2586e-01,
+ 8.3915e-02,  7.4837e-03,  5.7355e-02,
+-3.4982e-02, -1.2773e-01,  6.8213e-02,
+-1.4674e-01, -3.6844e-01,  8.1546e-02,
+-1.5385e-01, -7.0368e-02,  4.3894e-02,
+ 7.8201e-02, -1.3952e-01,  1.5154e-01,
+ 2.3880e-02,  1.4078e-01, -1.2906e-01,
+-1.8268e-01, -1.5687e-02, -1.2588e-01,
+-9.4643e-03,  1.4718e-02,  7.4932e-02,
+ 3.0996e-02, -1.2339e-01,  1.7452e-01,
+ 4.4221e-02, -1.3808e-01, -1.0205e-02,
+-8.6959e-40, -3.7907e-39, -1.6020e-41,
+ 4.3567e-40,  1.4647e-39,  6.5692e-40,
+ 5.4286e-39,  8.8667e-40, -3.5047e-39,
+ 2.4116e-02, -9.5358e-02,  1.6468e-01,
+ 3.1916e-01, -2.3472e-01, -2.1644e-01,
+ 1.2945e-01, -1.8403e-02, -3.2247e-02,
+ 1.3666e-02, -3.0548e-02, -4.7635e-02,
+-9.2714e-02, -2.1605e-01, -5.9464e-02,
+-8.9110e-03, -3.9299e-03, -2.3289e-02,
+-1.7855e-01,  9.0661e-03, -1.9142e-02,
+-5.6754e-02, -5.4451e-01, -5.7664e-01,
+ 1.6835e-01,  2.0531e-02,  2.0812e-01,
+ 5.2794e-02, -9.0414e-02,  3.5560e-02,
+ 3.7395e-02,  5.9355e-02, -3.6676e-02,
+ 3.8035e-02,  6.7844e-02,  1.1042e-01,
+ 5.0372e-02,  6.8188e-02, -8.5353e-02,
+ 2.2769e-01,  5.9758e-01, -7.4568e-02,
+ 7.8316e-02,  8.4925e-02, -4.0400e-02,
+-7.7984e-02, -2.0739e-01,  1.1736e-01,
+ 2.4528e-02,  2.1850e-01,  2.5639e-01,
+-2.4561e-02,  8.4661e-02, -9.2191e-02,
+-2.7006e-02, -7.8921e-02, -2.7124e-02,
+-5.9232e-03, -2.7693e-02,  5.9524e-02,
+ 9.7704e-02,  9.6223e-02,  2.0432e-02,
+-2.5588e-39,  5.5478e-39, -5.6209e-39,
+-4.7285e-39,  4.5875e-39, -5.7483e-39,
+ 6.7240e-40, -3.5113e-39, -3.6246e-39,
+ 1.6870e-03, -2.1707e-01, -3.8895e-02,
+-5.8465e-02, -5.9146e-02,  1.1936e-01,
+-2.7727e-02, -9.5047e-02, -2.2627e-01,
+-9.5155e-02, -7.1422e-02,  9.4611e-03,
+ 3.7587e-03,  1.6966e-02,  2.8839e-02,
+-3.0794e-02,  1.9888e-02, -5.2541e-02,
+-1.0708e-02,  3.0171e-02, -3.0473e-01,
+-1.0214e-01,  4.2017e-02,  2.5568e-01,
+-9.8664e-02, -5.5928e-01, -7.6876e-02,
+-8.6821e-03,  4.6484e-02, -3.0836e-01,
+-1.0205e-01,  6.8113e-02, -2.8059e-01,
+-5.7828e-02,  2.0990e-02, -1.2843e-01,
+ 7.5680e-02,  1.7504e-02,  1.6278e-01,
+ 1.4075e-01,  2.4361e-01,  2.2737e-01,
+-1.3044e-01,  8.2145e-03,  1.6344e-01,
+-2.4780e-03,  1.5108e-01,  1.3313e-02,
+-9.5257e-02,  6.1810e-02, -1.9386e-01,
+ 7.1365e-02,  1.5328e-01,  9.5848e-04,
+ 1.2278e-01,  7.8318e-02,  3.3400e-02,
+ 4.8597e-02,  6.0632e-02, -5.7238e-02,
+ 3.2522e-02,  4.5926e-02, -9.5566e-02,
+ 1.0844e-39, -3.2490e-39, -2.6904e-39,
+-3.0517e-39,  4.7535e-39,  4.3440e-39,
+-1.3996e-39,  4.5201e-39, -3.6165e-39,
+-5.6164e-02,  1.0353e-01,  6.6228e-02,
+ 8.2147e-02,  4.7827e-01,  1.2004e-01,
+-6.8150e-02,  1.8340e-01,  2.2113e-01,
+ 1.0580e-05, -2.0949e-01, -1.0358e-01,
+ 1.6206e-01,  1.2538e-01, -1.3104e-01,
+ 1.3700e-01,  2.9282e-02, -8.7020e-02,
+ 4.5467e-39,  5.9787e-39,  2.6105e-39,
+-1.2670e-39,  2.9513e-39, -1.0811e-39,
+-3.9129e-39, -1.8499e-39,  2.9297e-39,
+ 5.7414e-39,  5.5907e-39,  5.5702e-39,
+ 5.9004e-39,  5.7585e-39,  6.3188e-39,
+ 5.7395e-39,  5.6146e-39,  5.6451e-39,
+-7.3964e-39, -6.3330e-39, -5.5236e-39,
+-7.5172e-39, -5.8828e-39, -3.7555e-39,
+-6.9528e-39, -7.7656e-39, -5.5115e-39,
+-7.9031e-39, -7.8200e-39, -7.7914e-39,
+-7.4570e-39, -7.6413e-39, -7.9054e-39,
+-7.3437e-39, -6.7956e-39, -7.0789e-39,
+-3.6774e-40,  1.3572e-40,  3.0250e-40,
+-4.1792e-40, -4.6240e-40,  2.2528e-40,
+-5.2143e-40, -5.6847e-40, -4.2768e-40,
+-4.0128e-39,  1.3485e-39,  1.3436e-39,
+ 1.5337e-39, -3.9186e-39,  1.2120e-39,
+ 1.2992e-39,  1.5671e-39,  1.5659e-39,
+-4.6533e-39, -4.7029e-39, -6.0334e-39,
+-5.1157e-39, -5.3257e-39, -5.8595e-39,
+-4.3046e-39, -4.4391e-39, -5.0039e-39,
+-1.0025e-39, -1.0145e-39, -8.6762e-40,
+-1.0282e-39, -1.0939e-39, -9.4134e-40,
+-1.1868e-39, -1.2133e-39, -5.4261e-40
+}
+,)"
+R"(
+{
+-1.2633e-01,  2.7332e-01, -4.6674e-01,
+-9.4537e-03,  9.6797e-02, -6.4975e-01,
+ 1.8103e-02,  2.7190e-03,  2.3888e-01,
+ 4.8553e-02, -8.7297e-02,  1.8415e-01,
+ 3.1194e-02, -7.2899e-02, -8.1835e-02,
+ 7.1639e-02, -3.1455e-02, -6.2866e-02,
+-2.1413e-02,  4.6066e-02,  9.2372e-02,
+ 1.5761e-01, -1.0352e-01, -3.4808e-01,
+ 2.3715e-02,  1.6453e-01, -1.3699e-01,
+ 1.1705e-01, -1.6882e-02,  1.2575e-01,
+-2.9834e-02, -1.1558e-01,  4.7318e-01,
+ 3.5301e-02,  1.1246e-01,  3.5038e-03,
+ 1.5837e-01, -2.9968e-01,  1.6094e-01,
+ 4.0562e-02, -1.6329e-01, -3.7023e-02,
+-3.9991e-02,  1.7001e-01, -2.7735e-03,
+ 8.8139e-02, -2.4828e-01,  5.5751e-04,
+-1.3871e-01, -2.4839e-01,  1.7996e-03,
+-1.1670e-01,  3.3651e-02, -2.9559e-02,
+ 3.8572e-03,  3.7329e-02,  4.7511e-02,
+-7.8848e-02,  1.2844e-01,  9.2677e-02,
+-8.5041e-02,  5.7212e-02, -1.0415e-02,
+-3.2462e-39,  2.3003e-39,  4.9676e-39,
+-3.9261e-39, -6.8290e-40,  5.9119e-39,
+-4.1242e-39, -1.1996e-39,  3.8436e-39,
+-2.3243e-02, -2.2525e-02,  3.9668e-02,
+-1.1210e-01, -2.3892e-01,  1.6431e-01,
+-1.3998e-01, -1.5857e-01, -1.5625e-01,
+-1.7634e-02, -3.9174e-02, -9.0936e-03,
+-3.9428e-03, -1.6411e-02,  2.6484e-03,
+ 1.1376e-02, -2.9057e-03,  6.3382e-02,
+ 4.8930e-02,  9.1298e-02,  1.8195e-02,
+-6.3365e-02, -1.5407e-01,  8.1543e-02,
+ 4.9919e-02,  1.6852e-01,  4.4053e-02,
+-4.8682e-02, -7.3614e-02, -6.9206e-03,
+-4.8193e-02, -2.3704e-01, -8.3394e-03,
+ 5.6024e-02,  3.7845e-01, -2.4550e-02,
+ 5.2050e-02,  2.2027e-01, -4.1328e-02,
+-6.6327e-02,  1.0450e-01,  1.7058e-02,
+-1.2047e-01,  5.2494e-02, -1.8018e-02,
+ 5.4807e-02,  1.1177e-01,  2.3511e-02,
+ 6.0413e-03, -3.2457e-02,  7.6611e-02,
+-2.1276e-02,  3.0054e-02,  5.0752e-02,
+ 7.5556e-02,  2.5734e-02, -6.0634e-02,
+ 1.2201e-01, -4.1533e-01,  2.7634e-02,
+ 4.5560e-01,  3.2832e-01,  2.6277e-02,
+ 1.9889e-39,  3.8337e-39,  4.0170e-39,
+ 1.5149e-39,  3.6456e-39,  4.0474e-39,
+ 1.1508e-39,  2.7381e-39,  3.8673e-39,
+-7.9206e-02, -2.0763e-02, -2.4842e-01,
+-6.5777e-02, -1.8446e-01,  2.6178e-01,
+-1.7908e-02, -2.3039e-01, -3.5767e-01,
+ 1.0324e-02,  1.3610e-01,  8.6519e-02,
+ 1.3499e-01,  3.1933e-02,  9.1822e-03,
+-3.6017e-02, -2.2056e-01, -2.3258e-01,
+-7.6185e-02, -2.8981e-01, -1.1816e-01,
+-9.9048e-02,  5.3879e-02, -1.7351e-01,
+-2.1874e-01, -1.2109e-01, -3.1457e-01,
+ 5.1576e-02, -2.5656e-02,  4.6789e-02,
+ 7.6286e-02,  6.0126e-01, -2.5925e-01,
+-5.3443e-02, -3.3656e-01,  4.7585e-01,
+-4.7442e-02, -5.1580e-02, -8.5216e-02,
+-1.0600e-01, -1.3859e-01, -3.1484e-01,
+ 2.1454e-01, -1.1851e-01, -7.6614e-02,
+-7.8873e-03, -7.0275e-02, -1.0958e-01,
+-8.0654e-02,  1.3946e-01,  2.5292e-01,
+ 1.3254e-03, -6.7372e-02, -2.6429e-01,
+-8.2344e-02,  1.2388e-01,  5.2930e-02,
+ 8.3665e-02,  3.9729e-01,  4.7687e-02,
+-4.4502e-02, -8.3105e-02, -1.6430e-01,
+ 1.2825e-39,  1.7532e-39,  2.1774e-39,
+-2.1331e-39, -2.1826e-39, -1.0009e-39,
+ 3.7081e-39,  2.0015e-39, -5.8349e-40,
+-3.5278e-02,  6.5211e-02, -5.4199e-03,
+ 8.3961e-02,  3.1410e-02,  4.4510e-02,
+-5.4905e-02,  4.0727e-02, -1.5710e-02,
+ 1.0813e-01,  8.2043e-03,  4.1303e-02,
+ 1.3405e-01,  1.4150e-01,  7.2155e-02,
+ 3.3942e-02, -4.7781e-02,  1.6095e-01,
+-1.4266e-01, -2.5283e-02,  6.4043e-03,
+-1.8699e-02,  1.0895e-01, -2.1497e-02,
+ 5.5074e-02,  1.7031e-02,  1.0572e-01,
+ 7.3199e-04,  1.0813e-01, -9.0280e-05,
+ 1.4808e-01,  2.5436e-01, -1.3749e-01,
+ 2.2936e-02, -7.9733e-02, -2.2360e-01,
+ 6.0406e-02, -1.2874e-01, -7.4692e-02,
+-1.3216e-01, -9.9889e-03,  2.7608e-03,
+-1.1412e-01, -5.1312e-02, -1.7196e-02,
+-2.2800e-02, -1.2112e-01, -9.3855e-03,
+ 3.6905e-02,  1.0049e-01,  9.0602e-03,
+-7.3200e-02,  1.0628e-01, -4.8218e-02,
+-4.6525e-02,  6.0314e-02, -3.6467e-03,
+-8.0943e-02,  2.5461e-01,  1.5461e-01,
+-5.7708e-02, -5.7823e-02,  5.4042e-02,
+ 3.8847e-39,  3.5806e-39,  4.1610e-39,
+ 3.9082e-39,  4.1898e-39,  4.1926e-39,
+ 4.1200e-39,  4.3759e-39,  4.3977e-39,
+-3.3576e-01,  9.5443e-02,  2.7804e-02,
+-2.3834e-01, -7.2650e-01, -1.2229e-01,
+ 1.0380e-01,  1.9520e-01,  3.4571e-02,
+-3.7291e-02,  7.6216e-02,  8.6171e-02,
+-1.6324e-01, -8.6759e-03,  4.3038e-02,
+-3.4364e-02, -7.2777e-03,  3.7451e-02,
+ 1.8826e-01,  1.6387e-01, -3.4750e-02,
+-2.0203e-01,  2.4170e-01,  9.0358e-05,
+-1.3049e-01,  9.6855e-02, -1.6737e-03,
+-6.3782e-02,  7.1413e-02, -6.5077e-02,
+-1.5262e-01,  4.3261e-01, -8.4224e-02,
+ 6.4632e-02,  1.0553e-01, -1.5274e-01,
+ 4.4294e-05,  8.6239e-02,  5.7537e-03,
+-5.7633e-01, -5.0076e-03, -5.2298e-02,
+ 1.8556e-01, -1.1332e-02, -2.7010e-02,
+ 1.6155e-01, -3.0337e-02, -9.6808e-03,
+-2.8404e-01, -2.7625e-02,  1.6058e-02,
+ 5.7937e-02, -6.6464e-02,  1.1096e-02,
+ 7.8268e-02,  8.6122e-02,  2.9298e-02,
+ 6.4696e-02,  2.0285e-01,  4.3660e-02,
+ 1.5339e-01, -3.7650e-02,  7.1438e-03,
+-8.9058e-40, -3.6429e-39, -4.7562e-39,
+ 8.3914e-40, -2.8054e-39, -3.6702e-39,
+ 4.3666e-39, -1.0602e-39, -3.0369e-39,
+ 7.2731e-02, -1.0227e-01, -1.9583e-02,
+-1.7466e-02, -2.0097e-01,  9.3108e-02,
+ 6.5196e-02, -1.1880e-01, -3.5152e-03,
+-5.6533e-02,  6.2109e-02,  5.2029e-02,
+ 5.7971e-02,  5.1577e-02,  6.6318e-02,
+-2.1669e-03,  7.7274e-02, -4.0609e-02,
+ 2.8531e-02, -8.3960e-02,  1.3615e-02,
+-1.1151e-02, -1.4162e-03,  5.6661e-02,
+-8.0954e-02, -1.0600e-01,  4.3276e-02,
+ 7.6762e-04,  3.1437e-02, -6.1084e-02,
+-8.1119e-02,  2.1406e-01,  6.0836e-02,
+ 4.8105e-02, -1.6263e-01,  9.2555e-03,
+ 1.1060e-01, -2.1090e-01,  1.6435e-01,
+-1.0248e-01, -1.1884e-01, -7.9929e-02,
+ 5.9980e-02,  1.0271e-01, -1.1891e-02,
+-7.5044e-02, -2.3655e-02, -5.2865e-02,
+ 2.1542e-02,  2.7305e-04,  1.3508e-01,
+-1.2317e-02,  9.0742e-02, -3.0079e-03,
+-9.9020e-02,  1.5578e-01, -2.1482e-03,
+-8.9029e-02,  1.8470e-01,  3.7571e-02,
+-2.0394e-01, -1.3735e-01,  2.9648e-02,
+-4.3016e-40, -7.3591e-40, -7.3773e-40,
+-4.1239e-40, -8.6029e-41, -6.9504e-42,
+-7.5082e-40,  1.2975e-40,  2.1462e-40,
+-1.8967e-02, -1.4903e-01,  8.1452e-02,
+ 1.2099e-01, -2.5524e-02,  1.3285e-02,
+-1.3780e-01, -5.3359e-02, -3.1310e-02,
+-1.8984e-02,  4.1962e-02,  1.0186e-01,
+-1.0823e-01,  1.1079e-01,  7.8613e-02,
+-1.4521e-01, -7.7509e-02,  1.8768e-02,
+ 5.0613e-03, -3.0459e-02, -6.3055e-02,
+ 4.4540e-02,  2.0135e-01,  9.6351e-02,
+-1.9495e-02, -1.2314e-01,  1.1720e-02,
+ 2.1739e-02,  5.2098e-02, -4.0453e-02,
+-9.9983e-02,  4.7578e-02, -2.7862e-02,
+-8.6565e-02,  1.5241e-01, -4.0462e-02,
+ 4.0458e-02, -1.2871e-01, -4.3491e-02,
+ 9.8981e-02, -1.3637e-01,  2.0092e-02,
+ 1.5626e-01, -8.4550e-04, -2.5701e-02,
+ 1.8511e-02, -1.0257e-01, -7.3238e-02,
+-3.9802e-02, -1.6120e-02, -7.4068e-04,
+-1.1377e-02,  9.7975e-03, -9.0342e-02,
+-6.7152e-02,  1.0208e-01,  2.5234e-02,
+-4.3687e-02,  2.5334e-01,  9.2712e-02,
+ 3.7702e-01,  4.1450e-02,  1.9934e-02,
+-5.4201e-39, -6.7158e-39, -7.5025e-39,
+-5.2548e-39, -6.4829e-39, -7.2782e-39,
+-4.9999e-39, -5.9599e-39, -6.0469e-39,
+ 3.5890e-02, -7.3738e-02,  9.8899e-02,
+ 3.3312e-02,  5.8231e-02, -2.1348e-01,
+ 8.6289e-02,  5.0837e-02, -6.5613e-02,
+ 7.0208e-02,  4.1424e-02, -6.0761e-02,
+ 4.4654e-02, -3.3590e-02, -5.3044e-02,
+ 1.2319e-01, -4.4666e-02, -8.8193e-02,
+-9.0463e-02, -3.0083e-02,  6.8075e-02,
+ 4.2531e-02,  4.3248e-01,  1.3480e-01,
+ 9.2389e-02,  1.3683e-01, -2.6092e-01,
+ 2.8925e-02,  2.3317e-01,  7.8128e-02,
+ 6.3444e-02,  1.6291e-01, -3.8727e-03,
+ 6.9107e-02,  6.8477e-03,  3.9528e-01,
+ 3.8471e-02,  3.0745e-02,  2.8446e-02,
+ 1.0625e-02, -2.4006e-01, -1.2490e-01,
+-1.3002e-01,  2.0025e-01,  4.7618e-02,
+-3.9705e-02, -1.2017e-02, -9.8790e-02,
+-1.2798e-02, -2.7540e-01, -1.5138e-01,
+-1.0290e-01,  5.0112e-02, -1.7391e-01,
+-9.7079e-02, -2.2350e-03, -5.9211e-02,
+-2.4728e-01,  4.3353e-01, -1.9306e-01,
+-1.8039e-01,  1.2689e-01,  5.2103e-02,
+-4.5547e-39, -7.8040e-39,  4.1196e-39,
+ 1.5214e-39,  9.3494e-40, -3.9058e-39,
+ 7.8718e-39,  7.1728e-39,  5.3609e-39
+}
+,)"
+R"(
+{
+-9.4505e-02, -7.0477e-02, -1.5792e-04,
+-2.3475e-01,  5.8849e-02, -6.8161e-02,
+ 7.0658e-03, -1.0276e-01,  7.2471e-02,
+-7.3820e-03, -3.0740e-02, -1.1131e-01,
+ 2.8429e-02, -3.5750e-01, -8.4683e-02,
+-5.0210e-02, -3.1096e-03, -2.3730e-02,
+ 4.5756e-02, -3.6724e-01, -7.6317e-02,
+ 3.8467e-01,  5.5354e-02,  1.6943e-01,
+-4.9403e-02,  7.4709e-02, -3.0550e-02,
+-7.5324e-03, -1.6910e-01, -1.6103e-01,
+ 4.6314e-02,  1.2912e-01, -3.0488e-02,
+ 2.6388e-02,  5.6925e-02,  6.4396e-02,
+ 3.7748e-03, -2.1310e-02,  1.1410e-01,
+-7.0164e-03,  1.8228e-02, -2.5920e-01,
+ 6.8416e-02,  1.3998e-01,  1.3290e-01,
+-3.8861e-02,  8.9898e-02, -3.6631e-03,
+ 3.5528e-02,  1.1249e-01,  3.7018e-02,
+-6.2334e-02, -4.8470e-02, -4.4094e-02,
+ 3.1574e-02, -1.2162e-01,  1.9669e-01,
+-4.6605e-03,  1.1887e-02, -1.1958e-01,
+-1.0736e-01,  6.0131e-02, -1.2829e-02,
+ 2.1305e-01, -8.4750e-02, -2.7028e-02,
+-3.0351e-01, -6.4246e-03, -7.9128e-02,
+ 1.3081e-01,  9.5878e-02,  1.6193e-02,
+-5.8335e-02, -5.5968e-02, -2.6284e-03,
+-7.2218e-02, -1.1661e-02,  1.9413e-03,
+-1.6043e-01,  1.1388e-01, -3.6473e-02,
+-2.4077e-02,  1.2210e-01,  1.5531e-02,
+ 1.5074e-01, -4.5545e-01,  6.1004e-02,
+-6.3948e-02,  3.9804e-02, -4.8822e-04,
+ 1.3135e-01,  9.2392e-02,  8.8914e-02,
+ 1.2941e-01, -3.6052e-01,  3.9571e-02,
+-2.4838e-02,  7.0425e-02, -1.9016e-02,
+ 2.7629e-02, -7.0648e-02, -2.6838e-02,
+-2.1844e-02, -9.6184e-02, -3.3611e-02,
+ 8.5938e-02,  5.2663e-02,  2.2938e-02,
+-6.9909e-03, -3.9627e-03, -6.5162e-02,
+-4.9296e-03, -4.0383e-02,  6.7670e-01,
+ 1.5251e-02,  2.1000e-01, -1.9137e-01,
+ 2.2825e-02,  1.6640e-02,  3.8147e-02,
+ 7.1902e-02, -4.9821e-02, -6.5592e-03,
+ 1.5826e-02,  2.1626e-02,  1.1646e-02,
+ 1.5180e-02,  1.5664e-01,  9.8696e-03,
+-7.2901e-02, -2.1818e-01,  9.2465e-02,
+ 6.4349e-02,  6.0290e-02, -2.1094e-02,
+ 2.0633e-02,  4.8808e-02,  1.4080e-02,
+ 4.8083e-02, -1.5979e-01, -5.3634e-02,
+ 6.5004e-02,  7.0317e-02,  1.9117e-02,
+-4.3048e-02,  5.9627e-02, -1.5068e-02,
+ 1.8861e-01, -2.6868e-01,  1.2789e-03,
+ 1.1273e-01, -2.7796e-01,  4.9841e-02,
+ 4.9008e-03,  1.8241e-02,  4.3449e-02,
+ 2.1420e-02, -1.0299e-01, -1.6235e-01,
+-1.9300e-02, -1.5121e-02,  2.0616e-03,
+-2.7591e-01,  3.9622e-02, -5.0492e-02,
+ 1.1866e-01,  5.5502e-01, -2.3622e-02,
+-6.1204e-03, -7.4778e-03,  6.7961e-03,
+ 2.4215e-02,  2.1643e-03,  1.1442e-01,
+ 7.5326e-02,  1.4455e-01,  8.0497e-02,
+ 6.6115e-02,  2.9762e-02,  2.8680e-02,
+ 3.7784e-03, -2.2769e-02,  2.4529e-02,
+-1.1441e-02,  9.8463e-02, -1.2761e-02,
+ 1.0642e-02,  5.2871e-02,  1.9650e-01,
+-2.2225e-02,  3.1504e-02,  8.5645e-03,
+ 4.9125e-02,  1.4439e-01,  8.4573e-02,
+ 1.0103e-02,  1.9097e-02,  4.5579e-03,
+-2.5773e-02, -4.0984e-02, -1.5402e-01,
+ 5.3050e-02,  1.5509e-01, -1.9040e-01,
+ 3.7700e-02,  1.0632e-01, -2.2520e-02,
+-5.6582e-02, -4.6040e-02, -5.7562e-03,
+-3.4924e-01,  3.2933e-01,  5.5211e-02,
+ 2.3230e-02,  8.5108e-02,  3.7448e-02,
+ 1.4266e-02, -7.2016e-02,  4.5252e-03,
+-7.0246e-02,  3.9142e-01, -1.9216e-02,
+ 2.0536e-01, -3.5615e-01,  3.8009e-02,
+ 1.2252e-02, -5.7966e-02,  9.2672e-02,
+ 2.4225e-02, -1.0186e-01, -1.4219e-01,
+-2.8815e-02,  1.3088e-02, -2.6031e-03,
+-6.2341e-02, -1.1216e-01, -7.2122e-02,
+ 1.1812e-01,  4.3493e-01,  4.3593e-02,
+-1.3524e-02,  4.8679e-03, -1.0598e-02,
+ 3.4904e-02,  5.5813e-02,  4.6811e-02,
+ 8.0928e-02,  7.6607e-02,  6.3968e-02,
+ 5.4647e-02,  2.8693e-02,  2.1957e-02,
+-8.2725e-03,  5.4668e-02, -3.0533e-02,
+-9.3953e-03,  1.5874e-01, -3.6093e-01,
+ 5.6412e-03,  1.8977e-02,  2.0088e-01,
+-1.9414e-02,  1.9088e-02,  1.4504e-02,
+ 5.8462e-02,  6.2645e-02,  4.9884e-02,
+ 6.6913e-03,  4.3639e-02,  1.5139e-02,
+-2.1897e-02, -1.1436e-01, -5.0838e-02,
+ 7.1176e-02,  8.4667e-02, -1.4480e-01,
+ 3.7676e-02,  1.0840e-01, -2.6417e-02,
+-4.7584e-02, -4.0524e-02,  6.3032e-03,
+-2.4822e-01,  2.4635e-01,  5.5942e-03,
+-1.3347e-02,  1.0515e-01,  4.2549e-02,
+-1.2380e-01,  4.1074e-02,  1.2608e-02,
+-1.2042e-01,  2.9516e-01,  2.8380e-03,
+ 5.1930e-01, -1.6498e-01,  5.7152e-02,
+-6.5519e-02,  1.1001e-01,  2.8943e-02,
+ 1.0854e-01, -6.0107e-02, -1.6730e-01,
+-4.4417e-02,  3.4347e-02, -3.3756e-02,
+ 2.0694e-01,  3.3047e-01, -9.4497e-02,
+-2.1977e-01,  4.6614e-02,  1.2201e-01,
+-2.9541e-02,  1.8900e-01, -1.8391e-01,
+ 2.0064e-02, -3.2480e-02, -8.9041e-03,
+-5.6385e-02, -6.4531e-02,  1.2879e-02,
+-3.2499e-02,  1.0883e-02,  7.3564e-03,
+ 1.9828e-02, -2.3278e-01, -4.3789e-03,
+ 9.7669e-02,  1.3008e-01, -1.0405e-01,
+ 2.2618e-02, -2.5495e-01, -1.0718e-01,
+ 4.3524e-02, -7.3127e-02,  8.2424e-02,
+-5.0193e-02,  4.0634e-03,  4.0696e-02,
+ 2.7419e-02,  1.8353e-01,  9.2117e-02,
+-7.4918e-02,  1.0602e-01, -3.4752e-02,
+-1.3331e-01, -2.9583e-02, -5.2197e-03,
+-3.7852e-02,  1.5998e-01,  1.5078e-03,
+-5.6512e-02,  1.3378e-01,  1.4512e-02,
+ 4.5255e-02,  2.4702e-01, -2.4848e-02,
+-1.7526e-01,  1.5532e-01,  8.6686e-02,
+ 3.1486e-02, -2.3247e-02,  9.7320e-03,
+-5.2106e-01,  4.7937e-02,  4.1614e-02,
+ 5.5436e-02, -2.0432e-01,  1.2444e-02,
+-5.6792e-02, -5.5632e-02,  5.7612e-02,
+-6.0248e-04,  4.9770e-02, -6.7956e-02,
+ 1.3389e-02, -9.4141e-03, -7.3497e-03,
+-4.6361e-01,  2.7450e-01, -8.2210e-02,
+-2.6737e-01, -6.6114e-02,  6.3568e-02,
+ 1.6910e-02,  1.4456e-01, -9.0081e-02,
+ 8.8278e-03,  2.1776e-02,  8.7710e-03,
+-2.3378e-02, -4.3907e-02, -3.6751e-02,
+-2.4694e-03, -6.0419e-03,  3.0840e-02,
+-1.6968e-02, -8.2266e-02, -1.0049e-01,
+ 3.4429e-02,  1.0960e-01,  3.8355e-01,
+-4.0301e-04, -3.1089e-02, -2.1373e-02,
+-2.4172e-02,  4.6432e-02,  8.0742e-03,
+-2.3134e-02,  1.7789e-02,  2.7136e-02,
+ 3.0729e-02,  6.9008e-03,  1.2822e-02,
+ 3.5043e-02, -6.1749e-02, -1.2565e-02,
+-1.0354e-02, -2.6515e-03,  4.5632e-03,
+-5.9818e-02, -9.7686e-04, -6.6467e-03,
+-5.0833e-01,  1.8474e-02,  1.3598e-02,
+ 3.6287e-01,  1.3698e-01, -1.2806e-02,
+-2.8618e-02, -2.9128e-02,  2.9855e-02,
+ 8.1243e-02,  4.7414e-02, -4.7434e-02,
+-3.3738e-02, -3.4926e-01,  1.7786e-02,
+ 1.0056e-01, -5.7937e-02, -1.8308e-02,
+ 1.8214e-02, -1.9519e-01,  2.2152e-02,
+-7.3543e-02,  2.0786e-01, -5.8196e-02,
+ 3.9396e-02, -4.5349e-02,  1.5748e-02,
+-5.4604e-03,  4.5777e-01,  1.7295e-01,
+-2.0570e-01, -3.0970e-01, -1.9075e-01,
+ 7.6751e-02, -1.3099e-01,  6.1278e-02,
+ 6.0222e-02,  5.4418e-02,  1.2259e-01,
+ 3.2160e-02,  8.5146e-03,  3.4578e-02,
+-5.4391e-02, -2.5285e-02,  1.0251e-02,
+-3.2763e-02,  7.9163e-02, -7.5136e-02,
+ 1.8545e-02, -2.1972e-02,  1.3887e+00,
+-1.2402e-03, -2.5679e-01,  7.2392e-02,
+ 4.9692e-03,  1.7034e-02,  4.7043e-02,
+ 1.2093e-02, -3.1230e-02, -8.2613e-03,
+-7.8701e-03, -2.3516e-03, -7.2487e-04,
+ 6.8495e-02, -5.2837e-02, -2.2482e-01,
+ 1.3259e-02,  4.8009e-01, -4.0940e-02,
+-4.1547e-02, -2.8753e-02, -5.2579e-03,
+-1.7152e-01, -3.3676e-02,  1.5080e-02,
+ 8.6014e-02,  7.9239e-02,  4.2196e-02,
+-9.2870e-02, -1.5913e-02, -6.5804e-03,
+ 4.0364e-02,  2.4914e-02, -1.4638e-02,
+ 8.8705e-03,  2.8037e-01,  3.9890e-02,
+ 1.1638e-01,  2.9467e-01, -4.3518e-03,
+ 7.1091e-02, -2.2378e-01,  4.7315e-02,
+ 3.8006e-02, -2.0246e-01, -3.8679e-02,
+-5.8004e-02,  5.8991e-02, -6.2149e-03,
+-1.3034e-01,  1.5540e-01, -5.2558e-02,
+ 8.1594e-02,  3.5570e-01,  2.1220e-02,
+ 1.4977e-02,  2.4493e-03, -4.0627e-02,
+ 1.1402e-01,  6.6962e-02,  1.1150e-01,
+ 1.1824e-01,  1.1492e-01,  1.1219e-01,
+ 6.6067e-02,  6.9639e-02, -8.1836e-02,
+-2.7144e-02,  1.4677e-01, -5.9261e-02,
+ 4.4573e-03,  2.6235e-01, -7.4379e-01,
+-8.3569e-03,  9.4465e-02, -6.5653e-03,
+ 2.1095e-02, -1.8853e-02,  6.7972e-02,
+ 1.2957e-01,  3.0122e-02, -1.0061e-02,
+-3.4832e-02,  8.5404e-02,  5.7663e-02,
+-5.0400e-02, -1.2050e-01, -2.3344e-01,
+ 1.4977e-01,  7.8806e-02,  6.0771e-03,
+ 5.6483e-02,  6.3927e-02, -5.8376e-03,
+-2.8124e-01,  5.2581e-02, -1.3918e-04,
+-1.4341e-01,  3.6558e-01,  4.7332e-02,
+-3.9089e-02,  8.4188e-02,  2.7058e-02
+}
+};
+)"+std::string(
+R"(
+__constant float biasL[8][8] = 
+{
+{
+ 7.2678e-02,  8.5350e-03,  5.0400e-02,  2.6268e-02,  6.2434e-02, 1.0483e-01, -7.1650e-39,  1.0062e-01
+}
+,
+{
+-4.9844e-39, -1.8567e-39,  6.0627e-04, -1.9234e-38,  1.8331e-02, -1.1364e-01, -8.3962e-03, -1.7372e-04
+}
+,
+{
+-0.0091, -0.0055,  0.0237,  0.0093, -0.0479,  0.0188, -0.0034,  0.0399
+}
+,
+{
+ 6.5694e-03, -2.2259e-01, -1.1226e-02, -8.0327e-02, -1.0615e-36, 1.0402e-02,  7.6246e-03, -6.5940e-02
+}
+,
+{
+ 5.0711e-02,  7.1911e-02,  2.5293e-02, -1.5608e-02,  5.3835e-02, -1.6967e-38,  2.2243e-02,  3.2742e-02
+}
+,
+{
+ 1.5629e-02,  2.9703e-02,  2.6412e-02,  1.2301e-02,  1.8654e-01, -7.2260e-03,  2.4613e-02, -3.1853e-38
+}
+,
+{
+-0.0030, -0.0123,  0.0348,  0.0277, -0.0152,  0.0005, -0.0124, -0.0209
+}
+,
+{
+7.4856e-03, 7.2931e-04, 8.3015e-03, 6.4820e-03, 2.4008e-04, 7.0377e-06, 1.7948e-03, 8.9869e-03
+}
+};
+
+__constant float kernelsL10[4 * 8] = 
+{
+ 0.4240,  0.4165,
+ 0.1648,  0.1909,
+-0.0985, -0.4455,
+ 0.4639, -0.0533,
+-0.1368,  0.4413,
+ 0.2539,  0.3294,
+ 0.2458, -0.3256,
+-0.0479,  0.3200,
+-0.3977, -0.0422,
+-0.2736,  0.1053,
+ 0.3902,  0.0594,
+-0.0721, -0.2988,
+ 0.0495,  0.1309,
+-0.1703,  0.0033,
+ 0.3061,  0.1827,
+ 0.2443, -0.1259
+};
+
+)"
+R"(
+__kernel void conv1To8(
+    __read_only image2d_t srcImg, 
+    __write_only image2d_t tmpImgOut1, 
+    __write_only image2d_t tmpImgOut2)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(srcImg) || y >= get_image_height(srcImg))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 mc = read_imagef(srcImg, samplerN, coord);
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
+
+    float4 c1234 = RELU((float4)(
+        tl.x * kernelsL1[0*9+0] + tc.x * kernelsL1[0*9+1] + tr.x * kernelsL1[0*9+2] +
+        ml.x * kernelsL1[0*9+3] + mc.x * kernelsL1[0*9+4] + mr.x * kernelsL1[0*9+5] +
+        bl.x * kernelsL1[0*9+6] + bc.x * kernelsL1[0*9+7] + br.x * kernelsL1[0*9+8] + biasL1[0],
+
+        tl.x * kernelsL1[1*9+0] + tc.x * kernelsL1[1*9+1] + tr.x * kernelsL1[1*9+2] +
+        ml.x * kernelsL1[1*9+3] + mc.x * kernelsL1[1*9+4] + mr.x * kernelsL1[1*9+5] +
+        bl.x * kernelsL1[1*9+6] + bc.x * kernelsL1[1*9+7] + br.x * kernelsL1[1*9+8] + biasL1[1],
+
+        tl.x * kernelsL1[2*9+0] + tc.x * kernelsL1[2*9+1] + tr.x * kernelsL1[2*9+2] +
+        ml.x * kernelsL1[2*9+3] + mc.x * kernelsL1[2*9+4] + mr.x * kernelsL1[2*9+5] +
+        bl.x * kernelsL1[2*9+6] + bc.x * kernelsL1[2*9+7] + br.x * kernelsL1[2*9+8] + biasL1[2],
+
+        tl.x * kernelsL1[3*9+0] + tc.x * kernelsL1[3*9+1] + tr.x * kernelsL1[3*9+2] +
+        ml.x * kernelsL1[3*9+3] + mc.x * kernelsL1[3*9+4] + mr.x * kernelsL1[3*9+5] +
+        bl.x * kernelsL1[3*9+6] + bc.x * kernelsL1[3*9+7] + br.x * kernelsL1[3*9+8] + biasL1[3]
+    ));
+    float4 c5678 = RELU((float4)(
+        tl.x * kernelsL1[4*9+0] + tc.x * kernelsL1[4*9+1] + tr.x * kernelsL1[4*9+2] +
+        ml.x * kernelsL1[4*9+3] + mc.x * kernelsL1[4*9+4] + mr.x * kernelsL1[4*9+5] +
+        bl.x * kernelsL1[4*9+6] + bc.x * kernelsL1[4*9+7] + br.x * kernelsL1[4*9+8] + biasL1[4],
+
+        tl.x * kernelsL1[5*9+0] + tc.x * kernelsL1[5*9+1] + tr.x * kernelsL1[5*9+2] +
+        ml.x * kernelsL1[5*9+3] + mc.x * kernelsL1[5*9+4] + mr.x * kernelsL1[5*9+5] +
+        bl.x * kernelsL1[5*9+6] + bc.x * kernelsL1[5*9+7] + br.x * kernelsL1[5*9+8] + biasL1[5],
+
+        tl.x * kernelsL1[6*9+0] + tc.x * kernelsL1[6*9+1] + tr.x * kernelsL1[6*9+2] +
+        ml.x * kernelsL1[6*9+3] + mc.x * kernelsL1[6*9+4] + mr.x * kernelsL1[6*9+5] +
+        bl.x * kernelsL1[6*9+6] + bc.x * kernelsL1[6*9+7] + br.x * kernelsL1[6*9+8] + biasL1[6],
+
+        tl.x * kernelsL1[7*9+0] + tc.x * kernelsL1[7*9+1] + tr.x * kernelsL1[7*9+2] +
+        ml.x * kernelsL1[7*9+3] + mc.x * kernelsL1[7*9+4] + mr.x * kernelsL1[7*9+5] +
+        bl.x * kernelsL1[7*9+6] + bc.x * kernelsL1[7*9+7] + br.x * kernelsL1[7*9+8] + biasL1[7]
+    ));
+
+    write_imagef(tmpImgOut1, coord, c1234);
+    write_imagef(tmpImgOut2, coord, c5678);
+}
+)"
+R"(
+__kernel void conv8To8(
+    __read_only image2d_t tmpImgIn1,
+    __read_only image2d_t tmpImgIn2, 
+    __write_only image2d_t tmpImgOut1, 
+    __write_only image2d_t tmpImgOut2,
+    int l)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(tmpImgIn1) || y >= get_image_height(tmpImgIn1))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 tl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y-1));
+    float4 tc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y-1));
+    float4 tr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y-1));
+    float4 ml1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, coord);
+    float4 mr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y));
+    float4 bl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y+1));
+    float4 bc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y+1));
+    float4 br1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y+1));
+
+    float4 tl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y-1));
+    float4 tc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y-1));
+    float4 tr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y-1));
+    float4 ml2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y));
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, coord);
+    float4 mr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y));
+    float4 bl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y+1));
+    float4 bc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y+1));
+    float4 br2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y+1));
+    
+    float4 c1234 = RELU((float4)(
+        tl1.x * kernelsL[l][0*72+0*9+0] + tc1.x * kernelsL[l][0*72+0*9+1] + tr1.x * kernelsL[l][0*72+0*9+2] +
+        ml1.x * kernelsL[l][0*72+0*9+3] + mc1.x * kernelsL[l][0*72+0*9+4] + mr1.x * kernelsL[l][0*72+0*9+5] +
+        bl1.x * kernelsL[l][0*72+0*9+6] + bc1.x * kernelsL[l][0*72+0*9+7] + br1.x * kernelsL[l][0*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][0*72+1*9+0] + tc1.y * kernelsL[l][0*72+1*9+1] + tr1.y * kernelsL[l][0*72+1*9+2] +
+        ml1.y * kernelsL[l][0*72+1*9+3] + mc1.y * kernelsL[l][0*72+1*9+4] + mr1.y * kernelsL[l][0*72+1*9+5] +
+        bl1.y * kernelsL[l][0*72+1*9+6] + bc1.y * kernelsL[l][0*72+1*9+7] + br1.y * kernelsL[l][0*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][0*72+2*9+0] + tc1.z * kernelsL[l][0*72+2*9+1] + tr1.z * kernelsL[l][0*72+2*9+2] +
+        ml1.z * kernelsL[l][0*72+2*9+3] + mc1.z * kernelsL[l][0*72+2*9+4] + mr1.z * kernelsL[l][0*72+2*9+5] +
+        bl1.z * kernelsL[l][0*72+2*9+6] + bc1.z * kernelsL[l][0*72+2*9+7] + br1.z * kernelsL[l][0*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][0*72+3*9+0] + tc1.w * kernelsL[l][0*72+3*9+1] + tr1.w * kernelsL[l][0*72+3*9+2] +
+        ml1.w * kernelsL[l][0*72+3*9+3] + mc1.w * kernelsL[l][0*72+3*9+4] + mr1.w * kernelsL[l][0*72+3*9+5] +
+        bl1.w * kernelsL[l][0*72+3*9+6] + bc1.w * kernelsL[l][0*72+3*9+7] + br1.w * kernelsL[l][0*72+3*9+8] +
+
+        tl2.x * kernelsL[l][0*72+4*9+0] + tc2.x * kernelsL[l][0*72+4*9+1] + tr2.x * kernelsL[l][0*72+4*9+2] +
+        ml2.x * kernelsL[l][0*72+4*9+3] + mc2.x * kernelsL[l][0*72+4*9+4] + mr2.x * kernelsL[l][0*72+4*9+5] +
+        bl2.x * kernelsL[l][0*72+4*9+6] + bc2.x * kernelsL[l][0*72+4*9+7] + br2.x * kernelsL[l][0*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][0*72+5*9+0] + tc2.y * kernelsL[l][0*72+5*9+1] + tr2.y * kernelsL[l][0*72+5*9+2] +
+        ml2.y * kernelsL[l][0*72+5*9+3] + mc2.y * kernelsL[l][0*72+5*9+4] + mr2.y * kernelsL[l][0*72+5*9+5] +
+        bl2.y * kernelsL[l][0*72+5*9+6] + bc2.y * kernelsL[l][0*72+5*9+7] + br2.y * kernelsL[l][0*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][0*72+6*9+0] + tc2.z * kernelsL[l][0*72+6*9+1] + tr2.z * kernelsL[l][0*72+6*9+2] +
+        ml2.z * kernelsL[l][0*72+6*9+3] + mc2.z * kernelsL[l][0*72+6*9+4] + mr2.z * kernelsL[l][0*72+6*9+5] +
+        bl2.z * kernelsL[l][0*72+6*9+6] + bc2.z * kernelsL[l][0*72+6*9+7] + br2.z * kernelsL[l][0*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][0*72+7*9+0] + tc2.w * kernelsL[l][0*72+7*9+1] + tr2.w * kernelsL[l][0*72+7*9+2] +
+        ml2.w * kernelsL[l][0*72+7*9+3] + mc2.w * kernelsL[l][0*72+7*9+4] + mr2.w * kernelsL[l][0*72+7*9+5] +
+        bl2.w * kernelsL[l][0*72+7*9+6] + bc2.w * kernelsL[l][0*72+7*9+7] + br2.w * kernelsL[l][0*72+7*9+8] + biasL[l][0]
+        ,
+        tl1.x * kernelsL[l][1*72+0*9+0] + tc1.x * kernelsL[l][1*72+0*9+1] + tr1.x * kernelsL[l][1*72+0*9+2] +
+        ml1.x * kernelsL[l][1*72+0*9+3] + mc1.x * kernelsL[l][1*72+0*9+4] + mr1.x * kernelsL[l][1*72+0*9+5] +
+        bl1.x * kernelsL[l][1*72+0*9+6] + bc1.x * kernelsL[l][1*72+0*9+7] + br1.x * kernelsL[l][1*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][1*72+1*9+0] + tc1.y * kernelsL[l][1*72+1*9+1] + tr1.y * kernelsL[l][1*72+1*9+2] +
+        ml1.y * kernelsL[l][1*72+1*9+3] + mc1.y * kernelsL[l][1*72+1*9+4] + mr1.y * kernelsL[l][1*72+1*9+5] +
+        bl1.y * kernelsL[l][1*72+1*9+6] + bc1.y * kernelsL[l][1*72+1*9+7] + br1.y * kernelsL[l][1*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][1*72+2*9+0] + tc1.z * kernelsL[l][1*72+2*9+1] + tr1.z * kernelsL[l][1*72+2*9+2] +
+        ml1.z * kernelsL[l][1*72+2*9+3] + mc1.z * kernelsL[l][1*72+2*9+4] + mr1.z * kernelsL[l][1*72+2*9+5] +
+        bl1.z * kernelsL[l][1*72+2*9+6] + bc1.z * kernelsL[l][1*72+2*9+7] + br1.z * kernelsL[l][1*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][1*72+3*9+0] + tc1.w * kernelsL[l][1*72+3*9+1] + tr1.w * kernelsL[l][1*72+3*9+2] +
+        ml1.w * kernelsL[l][1*72+3*9+3] + mc1.w * kernelsL[l][1*72+3*9+4] + mr1.w * kernelsL[l][1*72+3*9+5] +
+        bl1.w * kernelsL[l][1*72+3*9+6] + bc1.w * kernelsL[l][1*72+3*9+7] + br1.w * kernelsL[l][1*72+3*9+8] +
+
+        tl2.x * kernelsL[l][1*72+4*9+0] + tc2.x * kernelsL[l][1*72+4*9+1] + tr2.x * kernelsL[l][1*72+4*9+2] +
+        ml2.x * kernelsL[l][1*72+4*9+3] + mc2.x * kernelsL[l][1*72+4*9+4] + mr2.x * kernelsL[l][1*72+4*9+5] +
+        bl2.x * kernelsL[l][1*72+4*9+6] + bc2.x * kernelsL[l][1*72+4*9+7] + br2.x * kernelsL[l][1*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][1*72+5*9+0] + tc2.y * kernelsL[l][1*72+5*9+1] + tr2.y * kernelsL[l][1*72+5*9+2] +
+        ml2.y * kernelsL[l][1*72+5*9+3] + mc2.y * kernelsL[l][1*72+5*9+4] + mr2.y * kernelsL[l][1*72+5*9+5] +
+        bl2.y * kernelsL[l][1*72+5*9+6] + bc2.y * kernelsL[l][1*72+5*9+7] + br2.y * kernelsL[l][1*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][1*72+6*9+0] + tc2.z * kernelsL[l][1*72+6*9+1] + tr2.z * kernelsL[l][1*72+6*9+2] +
+        ml2.z * kernelsL[l][1*72+6*9+3] + mc2.z * kernelsL[l][1*72+6*9+4] + mr2.z * kernelsL[l][1*72+6*9+5] +
+        bl2.z * kernelsL[l][1*72+6*9+6] + bc2.z * kernelsL[l][1*72+6*9+7] + br2.z * kernelsL[l][1*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][1*72+7*9+0] + tc2.w * kernelsL[l][1*72+7*9+1] + tr2.w * kernelsL[l][1*72+7*9+2] +
+        ml2.w * kernelsL[l][1*72+7*9+3] + mc2.w * kernelsL[l][1*72+7*9+4] + mr2.w * kernelsL[l][1*72+7*9+5] +
+        bl2.w * kernelsL[l][1*72+7*9+6] + bc2.w * kernelsL[l][1*72+7*9+7] + br2.w * kernelsL[l][1*72+7*9+8] + biasL[l][1]
+        ,
+        tl1.x * kernelsL[l][2*72+0*9+0] + tc1.x * kernelsL[l][2*72+0*9+1] + tr1.x * kernelsL[l][2*72+0*9+2] +
+        ml1.x * kernelsL[l][2*72+0*9+3] + mc1.x * kernelsL[l][2*72+0*9+4] + mr1.x * kernelsL[l][2*72+0*9+5] +
+        bl1.x * kernelsL[l][2*72+0*9+6] + bc1.x * kernelsL[l][2*72+0*9+7] + br1.x * kernelsL[l][2*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][2*72+1*9+0] + tc1.y * kernelsL[l][2*72+1*9+1] + tr1.y * kernelsL[l][2*72+1*9+2] +
+        ml1.y * kernelsL[l][2*72+1*9+3] + mc1.y * kernelsL[l][2*72+1*9+4] + mr1.y * kernelsL[l][2*72+1*9+5] +
+        bl1.y * kernelsL[l][2*72+1*9+6] + bc1.y * kernelsL[l][2*72+1*9+7] + br1.y * kernelsL[l][2*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][2*72+2*9+0] + tc1.z * kernelsL[l][2*72+2*9+1] + tr1.z * kernelsL[l][2*72+2*9+2] +
+        ml1.z * kernelsL[l][2*72+2*9+3] + mc1.z * kernelsL[l][2*72+2*9+4] + mr1.z * kernelsL[l][2*72+2*9+5] +
+        bl1.z * kernelsL[l][2*72+2*9+6] + bc1.z * kernelsL[l][2*72+2*9+7] + br1.z * kernelsL[l][2*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][2*72+3*9+0] + tc1.w * kernelsL[l][2*72+3*9+1] + tr1.w * kernelsL[l][2*72+3*9+2] +
+        ml1.w * kernelsL[l][2*72+3*9+3] + mc1.w * kernelsL[l][2*72+3*9+4] + mr1.w * kernelsL[l][2*72+3*9+5] +
+        bl1.w * kernelsL[l][2*72+3*9+6] + bc1.w * kernelsL[l][2*72+3*9+7] + br1.w * kernelsL[l][2*72+3*9+8] +
+
+        tl2.x * kernelsL[l][2*72+4*9+0] + tc2.x * kernelsL[l][2*72+4*9+1] + tr2.x * kernelsL[l][2*72+4*9+2] +
+        ml2.x * kernelsL[l][2*72+4*9+3] + mc2.x * kernelsL[l][2*72+4*9+4] + mr2.x * kernelsL[l][2*72+4*9+5] +
+        bl2.x * kernelsL[l][2*72+4*9+6] + bc2.x * kernelsL[l][2*72+4*9+7] + br2.x * kernelsL[l][2*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][2*72+5*9+0] + tc2.y * kernelsL[l][2*72+5*9+1] + tr2.y * kernelsL[l][2*72+5*9+2] +
+        ml2.y * kernelsL[l][2*72+5*9+3] + mc2.y * kernelsL[l][2*72+5*9+4] + mr2.y * kernelsL[l][2*72+5*9+5] +
+        bl2.y * kernelsL[l][2*72+5*9+6] + bc2.y * kernelsL[l][2*72+5*9+7] + br2.y * kernelsL[l][2*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][2*72+6*9+0] + tc2.z * kernelsL[l][2*72+6*9+1] + tr2.z * kernelsL[l][2*72+6*9+2] +
+        ml2.z * kernelsL[l][2*72+6*9+3] + mc2.z * kernelsL[l][2*72+6*9+4] + mr2.z * kernelsL[l][2*72+6*9+5] +
+        bl2.z * kernelsL[l][2*72+6*9+6] + bc2.z * kernelsL[l][2*72+6*9+7] + br2.z * kernelsL[l][2*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][2*72+7*9+0] + tc2.w * kernelsL[l][2*72+7*9+1] + tr2.w * kernelsL[l][2*72+7*9+2] +
+        ml2.w * kernelsL[l][2*72+7*9+3] + mc2.w * kernelsL[l][2*72+7*9+4] + mr2.w * kernelsL[l][2*72+7*9+5] +
+        bl2.w * kernelsL[l][2*72+7*9+6] + bc2.w * kernelsL[l][2*72+7*9+7] + br2.w * kernelsL[l][2*72+7*9+8] + biasL[l][2]
+        ,
+        tl1.x * kernelsL[l][3*72+0*9+0] + tc1.x * kernelsL[l][3*72+0*9+1] + tr1.x * kernelsL[l][3*72+0*9+2] +
+        ml1.x * kernelsL[l][3*72+0*9+3] + mc1.x * kernelsL[l][3*72+0*9+4] + mr1.x * kernelsL[l][3*72+0*9+5] +
+        bl1.x * kernelsL[l][3*72+0*9+6] + bc1.x * kernelsL[l][3*72+0*9+7] + br1.x * kernelsL[l][3*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][3*72+1*9+0] + tc1.y * kernelsL[l][3*72+1*9+1] + tr1.y * kernelsL[l][3*72+1*9+2] +
+        ml1.y * kernelsL[l][3*72+1*9+3] + mc1.y * kernelsL[l][3*72+1*9+4] + mr1.y * kernelsL[l][3*72+1*9+5] +
+        bl1.y * kernelsL[l][3*72+1*9+6] + bc1.y * kernelsL[l][3*72+1*9+7] + br1.y * kernelsL[l][3*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][3*72+2*9+0] + tc1.z * kernelsL[l][3*72+2*9+1] + tr1.z * kernelsL[l][3*72+2*9+2] +
+        ml1.z * kernelsL[l][3*72+2*9+3] + mc1.z * kernelsL[l][3*72+2*9+4] + mr1.z * kernelsL[l][3*72+2*9+5] +
+        bl1.z * kernelsL[l][3*72+2*9+6] + bc1.z * kernelsL[l][3*72+2*9+7] + br1.z * kernelsL[l][3*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][3*72+3*9+0] + tc1.w * kernelsL[l][3*72+3*9+1] + tr1.w * kernelsL[l][3*72+3*9+2] +
+        ml1.w * kernelsL[l][3*72+3*9+3] + mc1.w * kernelsL[l][3*72+3*9+4] + mr1.w * kernelsL[l][3*72+3*9+5] +
+        bl1.w * kernelsL[l][3*72+3*9+6] + bc1.w * kernelsL[l][3*72+3*9+7] + br1.w * kernelsL[l][3*72+3*9+8] +
+
+        tl2.x * kernelsL[l][3*72+4*9+0] + tc2.x * kernelsL[l][3*72+4*9+1] + tr2.x * kernelsL[l][3*72+4*9+2] +
+        ml2.x * kernelsL[l][3*72+4*9+3] + mc2.x * kernelsL[l][3*72+4*9+4] + mr2.x * kernelsL[l][3*72+4*9+5] +
+        bl2.x * kernelsL[l][3*72+4*9+6] + bc2.x * kernelsL[l][3*72+4*9+7] + br2.x * kernelsL[l][3*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][3*72+5*9+0] + tc2.y * kernelsL[l][3*72+5*9+1] + tr2.y * kernelsL[l][3*72+5*9+2] +
+        ml2.y * kernelsL[l][3*72+5*9+3] + mc2.y * kernelsL[l][3*72+5*9+4] + mr2.y * kernelsL[l][3*72+5*9+5] +
+        bl2.y * kernelsL[l][3*72+5*9+6] + bc2.y * kernelsL[l][3*72+5*9+7] + br2.y * kernelsL[l][3*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][3*72+6*9+0] + tc2.z * kernelsL[l][3*72+6*9+1] + tr2.z * kernelsL[l][3*72+6*9+2] +
+        ml2.z * kernelsL[l][3*72+6*9+3] + mc2.z * kernelsL[l][3*72+6*9+4] + mr2.z * kernelsL[l][3*72+6*9+5] +
+        bl2.z * kernelsL[l][3*72+6*9+6] + bc2.z * kernelsL[l][3*72+6*9+7] + br2.z * kernelsL[l][3*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][3*72+7*9+0] + tc2.w * kernelsL[l][3*72+7*9+1] + tr2.w * kernelsL[l][3*72+7*9+2] +
+        ml2.w * kernelsL[l][3*72+7*9+3] + mc2.w * kernelsL[l][3*72+7*9+4] + mr2.w * kernelsL[l][3*72+7*9+5] +
+        bl2.w * kernelsL[l][3*72+7*9+6] + bc2.w * kernelsL[l][3*72+7*9+7] + br2.w * kernelsL[l][3*72+7*9+8] + biasL[l][3]
+    ));)"
+    R"(
+    float4 c5678 = RELU((float4)(
+        tl1.x * kernelsL[l][4*72+0*9+0] + tc1.x * kernelsL[l][4*72+0*9+1] + tr1.x * kernelsL[l][4*72+0*9+2] +
+        ml1.x * kernelsL[l][4*72+0*9+3] + mc1.x * kernelsL[l][4*72+0*9+4] + mr1.x * kernelsL[l][4*72+0*9+5] +
+        bl1.x * kernelsL[l][4*72+0*9+6] + bc1.x * kernelsL[l][4*72+0*9+7] + br1.x * kernelsL[l][4*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][4*72+1*9+0] + tc1.y * kernelsL[l][4*72+1*9+1] + tr1.y * kernelsL[l][4*72+1*9+2] +
+        ml1.y * kernelsL[l][4*72+1*9+3] + mc1.y * kernelsL[l][4*72+1*9+4] + mr1.y * kernelsL[l][4*72+1*9+5] +
+        bl1.y * kernelsL[l][4*72+1*9+6] + bc1.y * kernelsL[l][4*72+1*9+7] + br1.y * kernelsL[l][4*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][4*72+2*9+0] + tc1.z * kernelsL[l][4*72+2*9+1] + tr1.z * kernelsL[l][4*72+2*9+2] +
+        ml1.z * kernelsL[l][4*72+2*9+3] + mc1.z * kernelsL[l][4*72+2*9+4] + mr1.z * kernelsL[l][4*72+2*9+5] +
+        bl1.z * kernelsL[l][4*72+2*9+6] + bc1.z * kernelsL[l][4*72+2*9+7] + br1.z * kernelsL[l][4*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][4*72+3*9+0] + tc1.w * kernelsL[l][4*72+3*9+1] + tr1.w * kernelsL[l][4*72+3*9+2] +
+        ml1.w * kernelsL[l][4*72+3*9+3] + mc1.w * kernelsL[l][4*72+3*9+4] + mr1.w * kernelsL[l][4*72+3*9+5] +
+        bl1.w * kernelsL[l][4*72+3*9+6] + bc1.w * kernelsL[l][4*72+3*9+7] + br1.w * kernelsL[l][4*72+3*9+8] +
+
+        tl2.x * kernelsL[l][4*72+4*9+0] + tc2.x * kernelsL[l][4*72+4*9+1] + tr2.x * kernelsL[l][4*72+4*9+2] +
+        ml2.x * kernelsL[l][4*72+4*9+3] + mc2.x * kernelsL[l][4*72+4*9+4] + mr2.x * kernelsL[l][4*72+4*9+5] +
+        bl2.x * kernelsL[l][4*72+4*9+6] + bc2.x * kernelsL[l][4*72+4*9+7] + br2.x * kernelsL[l][4*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][4*72+5*9+0] + tc2.y * kernelsL[l][4*72+5*9+1] + tr2.y * kernelsL[l][4*72+5*9+2] +
+        ml2.y * kernelsL[l][4*72+5*9+3] + mc2.y * kernelsL[l][4*72+5*9+4] + mr2.y * kernelsL[l][4*72+5*9+5] +
+        bl2.y * kernelsL[l][4*72+5*9+6] + bc2.y * kernelsL[l][4*72+5*9+7] + br2.y * kernelsL[l][4*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][4*72+6*9+0] + tc2.z * kernelsL[l][4*72+6*9+1] + tr2.z * kernelsL[l][4*72+6*9+2] +
+        ml2.z * kernelsL[l][4*72+6*9+3] + mc2.z * kernelsL[l][4*72+6*9+4] + mr2.z * kernelsL[l][4*72+6*9+5] +
+        bl2.z * kernelsL[l][4*72+6*9+6] + bc2.z * kernelsL[l][4*72+6*9+7] + br2.z * kernelsL[l][4*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][4*72+7*9+0] + tc2.w * kernelsL[l][4*72+7*9+1] + tr2.w * kernelsL[l][4*72+7*9+2] +
+        ml2.w * kernelsL[l][4*72+7*9+3] + mc2.w * kernelsL[l][4*72+7*9+4] + mr2.w * kernelsL[l][4*72+7*9+5] +
+        bl2.w * kernelsL[l][4*72+7*9+6] + bc2.w * kernelsL[l][4*72+7*9+7] + br2.w * kernelsL[l][4*72+7*9+8] + biasL[l][4]
+        ,
+        tl1.x * kernelsL[l][5*72+0*9+0] + tc1.x * kernelsL[l][5*72+0*9+1] + tr1.x * kernelsL[l][5*72+0*9+2] +
+        ml1.x * kernelsL[l][5*72+0*9+3] + mc1.x * kernelsL[l][5*72+0*9+4] + mr1.x * kernelsL[l][5*72+0*9+5] +
+        bl1.x * kernelsL[l][5*72+0*9+6] + bc1.x * kernelsL[l][5*72+0*9+7] + br1.x * kernelsL[l][5*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][5*72+1*9+0] + tc1.y * kernelsL[l][5*72+1*9+1] + tr1.y * kernelsL[l][5*72+1*9+2] +
+        ml1.y * kernelsL[l][5*72+1*9+3] + mc1.y * kernelsL[l][5*72+1*9+4] + mr1.y * kernelsL[l][5*72+1*9+5] +
+        bl1.y * kernelsL[l][5*72+1*9+6] + bc1.y * kernelsL[l][5*72+1*9+7] + br1.y * kernelsL[l][5*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][5*72+2*9+0] + tc1.z * kernelsL[l][5*72+2*9+1] + tr1.z * kernelsL[l][5*72+2*9+2] +
+        ml1.z * kernelsL[l][5*72+2*9+3] + mc1.z * kernelsL[l][5*72+2*9+4] + mr1.z * kernelsL[l][5*72+2*9+5] +
+        bl1.z * kernelsL[l][5*72+2*9+6] + bc1.z * kernelsL[l][5*72+2*9+7] + br1.z * kernelsL[l][5*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][5*72+3*9+0] + tc1.w * kernelsL[l][5*72+3*9+1] + tr1.w * kernelsL[l][5*72+3*9+2] +
+        ml1.w * kernelsL[l][5*72+3*9+3] + mc1.w * kernelsL[l][5*72+3*9+4] + mr1.w * kernelsL[l][5*72+3*9+5] +
+        bl1.w * kernelsL[l][5*72+3*9+6] + bc1.w * kernelsL[l][5*72+3*9+7] + br1.w * kernelsL[l][5*72+3*9+8] +
+
+        tl2.x * kernelsL[l][5*72+4*9+0] + tc2.x * kernelsL[l][5*72+4*9+1] + tr2.x * kernelsL[l][5*72+4*9+2] +
+        ml2.x * kernelsL[l][5*72+4*9+3] + mc2.x * kernelsL[l][5*72+4*9+4] + mr2.x * kernelsL[l][5*72+4*9+5] +
+        bl2.x * kernelsL[l][5*72+4*9+6] + bc2.x * kernelsL[l][5*72+4*9+7] + br2.x * kernelsL[l][5*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][5*72+5*9+0] + tc2.y * kernelsL[l][5*72+5*9+1] + tr2.y * kernelsL[l][5*72+5*9+2] +
+        ml2.y * kernelsL[l][5*72+5*9+3] + mc2.y * kernelsL[l][5*72+5*9+4] + mr2.y * kernelsL[l][5*72+5*9+5] +
+        bl2.y * kernelsL[l][5*72+5*9+6] + bc2.y * kernelsL[l][5*72+5*9+7] + br2.y * kernelsL[l][5*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][5*72+6*9+0] + tc2.z * kernelsL[l][5*72+6*9+1] + tr2.z * kernelsL[l][5*72+6*9+2] +
+        ml2.z * kernelsL[l][5*72+6*9+3] + mc2.z * kernelsL[l][5*72+6*9+4] + mr2.z * kernelsL[l][5*72+6*9+5] +
+        bl2.z * kernelsL[l][5*72+6*9+6] + bc2.z * kernelsL[l][5*72+6*9+7] + br2.z * kernelsL[l][5*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][5*72+7*9+0] + tc2.w * kernelsL[l][5*72+7*9+1] + tr2.w * kernelsL[l][5*72+7*9+2] +
+        ml2.w * kernelsL[l][5*72+7*9+3] + mc2.w * kernelsL[l][5*72+7*9+4] + mr2.w * kernelsL[l][5*72+7*9+5] +
+        bl2.w * kernelsL[l][5*72+7*9+6] + bc2.w * kernelsL[l][5*72+7*9+7] + br2.w * kernelsL[l][5*72+7*9+8] + biasL[l][5]
+        ,
+        tl1.x * kernelsL[l][6*72+0*9+0] + tc1.x * kernelsL[l][6*72+0*9+1] + tr1.x * kernelsL[l][6*72+0*9+2] +
+        ml1.x * kernelsL[l][6*72+0*9+3] + mc1.x * kernelsL[l][6*72+0*9+4] + mr1.x * kernelsL[l][6*72+0*9+5] +
+        bl1.x * kernelsL[l][6*72+0*9+6] + bc1.x * kernelsL[l][6*72+0*9+7] + br1.x * kernelsL[l][6*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][6*72+1*9+0] + tc1.y * kernelsL[l][6*72+1*9+1] + tr1.y * kernelsL[l][6*72+1*9+2] +
+        ml1.y * kernelsL[l][6*72+1*9+3] + mc1.y * kernelsL[l][6*72+1*9+4] + mr1.y * kernelsL[l][6*72+1*9+5] +
+        bl1.y * kernelsL[l][6*72+1*9+6] + bc1.y * kernelsL[l][6*72+1*9+7] + br1.y * kernelsL[l][6*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][6*72+2*9+0] + tc1.z * kernelsL[l][6*72+2*9+1] + tr1.z * kernelsL[l][6*72+2*9+2] +
+        ml1.z * kernelsL[l][6*72+2*9+3] + mc1.z * kernelsL[l][6*72+2*9+4] + mr1.z * kernelsL[l][6*72+2*9+5] +
+        bl1.z * kernelsL[l][6*72+2*9+6] + bc1.z * kernelsL[l][6*72+2*9+7] + br1.z * kernelsL[l][6*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][6*72+3*9+0] + tc1.w * kernelsL[l][6*72+3*9+1] + tr1.w * kernelsL[l][6*72+3*9+2] +
+        ml1.w * kernelsL[l][6*72+3*9+3] + mc1.w * kernelsL[l][6*72+3*9+4] + mr1.w * kernelsL[l][6*72+3*9+5] +
+        bl1.w * kernelsL[l][6*72+3*9+6] + bc1.w * kernelsL[l][6*72+3*9+7] + br1.w * kernelsL[l][6*72+3*9+8] +
+
+        tl2.x * kernelsL[l][6*72+4*9+0] + tc2.x * kernelsL[l][6*72+4*9+1] + tr2.x * kernelsL[l][6*72+4*9+2] +
+        ml2.x * kernelsL[l][6*72+4*9+3] + mc2.x * kernelsL[l][6*72+4*9+4] + mr2.x * kernelsL[l][6*72+4*9+5] +
+        bl2.x * kernelsL[l][6*72+4*9+6] + bc2.x * kernelsL[l][6*72+4*9+7] + br2.x * kernelsL[l][6*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][6*72+5*9+0] + tc2.y * kernelsL[l][6*72+5*9+1] + tr2.y * kernelsL[l][6*72+5*9+2] +
+        ml2.y * kernelsL[l][6*72+5*9+3] + mc2.y * kernelsL[l][6*72+5*9+4] + mr2.y * kernelsL[l][6*72+5*9+5] +
+        bl2.y * kernelsL[l][6*72+5*9+6] + bc2.y * kernelsL[l][6*72+5*9+7] + br2.y * kernelsL[l][6*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][6*72+6*9+0] + tc2.z * kernelsL[l][6*72+6*9+1] + tr2.z * kernelsL[l][6*72+6*9+2] +
+        ml2.z * kernelsL[l][6*72+6*9+3] + mc2.z * kernelsL[l][6*72+6*9+4] + mr2.z * kernelsL[l][6*72+6*9+5] +
+        bl2.z * kernelsL[l][6*72+6*9+6] + bc2.z * kernelsL[l][6*72+6*9+7] + br2.z * kernelsL[l][6*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][6*72+7*9+0] + tc2.w * kernelsL[l][6*72+7*9+1] + tr2.w * kernelsL[l][6*72+7*9+2] +
+        ml2.w * kernelsL[l][6*72+7*9+3] + mc2.w * kernelsL[l][6*72+7*9+4] + mr2.w * kernelsL[l][6*72+7*9+5] +
+        bl2.w * kernelsL[l][6*72+7*9+6] + bc2.w * kernelsL[l][6*72+7*9+7] + br2.w * kernelsL[l][6*72+7*9+8] + biasL[l][6]
+        ,
+        tl1.x * kernelsL[l][7*72+0*9+0] + tc1.x * kernelsL[l][7*72+0*9+1] + tr1.x * kernelsL[l][7*72+0*9+2] +
+        ml1.x * kernelsL[l][7*72+0*9+3] + mc1.x * kernelsL[l][7*72+0*9+4] + mr1.x * kernelsL[l][7*72+0*9+5] +
+        bl1.x * kernelsL[l][7*72+0*9+6] + bc1.x * kernelsL[l][7*72+0*9+7] + br1.x * kernelsL[l][7*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][7*72+1*9+0] + tc1.y * kernelsL[l][7*72+1*9+1] + tr1.y * kernelsL[l][7*72+1*9+2] +
+        ml1.y * kernelsL[l][7*72+1*9+3] + mc1.y * kernelsL[l][7*72+1*9+4] + mr1.y * kernelsL[l][7*72+1*9+5] +
+        bl1.y * kernelsL[l][7*72+1*9+6] + bc1.y * kernelsL[l][7*72+1*9+7] + br1.y * kernelsL[l][7*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][7*72+2*9+0] + tc1.z * kernelsL[l][7*72+2*9+1] + tr1.z * kernelsL[l][7*72+2*9+2] +
+        ml1.z * kernelsL[l][7*72+2*9+3] + mc1.z * kernelsL[l][7*72+2*9+4] + mr1.z * kernelsL[l][7*72+2*9+5] +
+        bl1.z * kernelsL[l][7*72+2*9+6] + bc1.z * kernelsL[l][7*72+2*9+7] + br1.z * kernelsL[l][7*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][7*72+3*9+0] + tc1.w * kernelsL[l][7*72+3*9+1] + tr1.w * kernelsL[l][7*72+3*9+2] +
+        ml1.w * kernelsL[l][7*72+3*9+3] + mc1.w * kernelsL[l][7*72+3*9+4] + mr1.w * kernelsL[l][7*72+3*9+5] +
+        bl1.w * kernelsL[l][7*72+3*9+6] + bc1.w * kernelsL[l][7*72+3*9+7] + br1.w * kernelsL[l][7*72+3*9+8] +
+
+        tl2.x * kernelsL[l][7*72+4*9+0] + tc2.x * kernelsL[l][7*72+4*9+1] + tr2.x * kernelsL[l][7*72+4*9+2] +
+        ml2.x * kernelsL[l][7*72+4*9+3] + mc2.x * kernelsL[l][7*72+4*9+4] + mr2.x * kernelsL[l][7*72+4*9+5] +
+        bl2.x * kernelsL[l][7*72+4*9+6] + bc2.x * kernelsL[l][7*72+4*9+7] + br2.x * kernelsL[l][7*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][7*72+5*9+0] + tc2.y * kernelsL[l][7*72+5*9+1] + tr2.y * kernelsL[l][7*72+5*9+2] +
+        ml2.y * kernelsL[l][7*72+5*9+3] + mc2.y * kernelsL[l][7*72+5*9+4] + mr2.y * kernelsL[l][7*72+5*9+5] +
+        bl2.y * kernelsL[l][7*72+5*9+6] + bc2.y * kernelsL[l][7*72+5*9+7] + br2.y * kernelsL[l][7*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][7*72+6*9+0] + tc2.z * kernelsL[l][7*72+6*9+1] + tr2.z * kernelsL[l][7*72+6*9+2] +
+        ml2.z * kernelsL[l][7*72+6*9+3] + mc2.z * kernelsL[l][7*72+6*9+4] + mr2.z * kernelsL[l][7*72+6*9+5] +
+        bl2.z * kernelsL[l][7*72+6*9+6] + bc2.z * kernelsL[l][7*72+6*9+7] + br2.z * kernelsL[l][7*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][7*72+7*9+0] + tc2.w * kernelsL[l][7*72+7*9+1] + tr2.w * kernelsL[l][7*72+7*9+2] +
+        ml2.w * kernelsL[l][7*72+7*9+3] + mc2.w * kernelsL[l][7*72+7*9+4] + mr2.w * kernelsL[l][7*72+7*9+5] +
+        bl2.w * kernelsL[l][7*72+7*9+6] + bc2.w * kernelsL[l][7*72+7*9+7] + br2.w * kernelsL[l][7*72+7*9+8] + biasL[l][7]
+    ));
+
+    write_imagef(tmpImgOut1, coord, c1234);
+    write_imagef(tmpImgOut2, coord, c5678);
+}
+)"
+R"(
+__kernel void convTranspose8To1(
+    __read_only image2d_t tmpImgIn1,
+    __read_only image2d_t tmpImgIn2, 
+    __write_only image2d_t dstImg)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+
+    int2 pos = (int2)(x & 1, y & 1);
+    float4 c;
+
+    //180 degree rotation for kernel
+    //0 1  to  3 2
+    //2 3      1 0
+    if (pos.x == 0 && pos.y != 0)
+    {
+        //0 x
+        //0 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+2] +
+            mc1.y * kernelsL10[1*4+2] +
+            mc1.z * kernelsL10[2*4+2] +
+            mc1.w * kernelsL10[3*4+2] +
+            mc2.x * kernelsL10[4*4+2] +
+            mc2.y * kernelsL10[5*4+2] +
+            mc2.z * kernelsL10[6*4+2] +
+            mc2.w * kernelsL10[7*4+2], 0.0f, 1.0f);
+        
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x == 0 && pos.y == 0)
+    {
+        //0 0
+        //0 x
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+0] +
+            mc1.y * kernelsL10[1*4+0] +
+            mc1.z * kernelsL10[2*4+0] +
+            mc1.w * kernelsL10[3*4+0] +
+            mc2.x * kernelsL10[4*4+0] +
+            mc2.y * kernelsL10[5*4+0] +
+            mc2.z * kernelsL10[6*4+0] +
+            mc2.w * kernelsL10[7*4+0], 0.0f, 1.0f);
+
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x != 0 && pos.y == 0)
+    {
+        //0 0
+        //x 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+1] +
+            mc1.y * kernelsL10[1*4+1] +
+            mc1.z * kernelsL10[2*4+1] +
+            mc1.w * kernelsL10[3*4+1] +
+            mc2.x * kernelsL10[4*4+1] +
+            mc2.y * kernelsL10[5*4+1] +
+            mc2.z * kernelsL10[6*4+1] +
+            mc2.w * kernelsL10[7*4+1], 0.0f, 1.0f);
+            
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x != 0 && pos.y != 0)
+    {
+        //x 0
+        //0 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+3] +
+            mc1.y * kernelsL10[1*4+3] +
+            mc1.z * kernelsL10[2*4+3] +
+            mc1.w * kernelsL10[3*4+3] +
+            mc2.x * kernelsL10[4*4+3] +
+            mc2.y * kernelsL10[5*4+3] +
+            mc2.z * kernelsL10[6*4+3] +
+            mc2.w * kernelsL10[7*4+3], 0.0f, 1.0f);
+            
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+
+    write_imagef(dstImg, coord, c);
+}
+)"),
+
+R"(#define RELU(x) fmax(x, 0.0f)
+
+__constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
+
+__constant float kernelsL1[9 * 8] = 
+{
+-0.0461,  0.1274,  0.2976,
+-0.0393, -0.1251,  0.2527,
+ 0.0791,  0.0600, -0.0303,
+-0.0520, -0.5039, -0.3305,
+-0.0115,  0.0456,  0.4370,
+ 0.0601,  0.0780,  0.3106,
+-0.0017, -0.0018, -0.0017,
+-0.0017, -0.0018, -0.0018,
+-0.0017, -0.0017, -0.0017,
+ 0.2666,  0.1687,  0.2303,
+-0.1901,  0.3825,  0.3024,
+ 0.1811,  0.0581,  0.2080,
+-0.1246,  0.0155, -0.4075,
+ 0.1156,  0.5929,  0.1449,
+-0.1080, -0.0171, -0.0516,
+-0.0817,  0.2247,  0.0472,
+ 0.0394,  0.1085,  0.1435,
+-0.0480, -0.0135, -0.0606,
+-0.0083,  0.2045,  0.1056,
+-0.2239,  0.2823, -0.1926,
+ 0.2581,  0.1362, -0.1914,
+-0.0833,  0.0702,  0.0234,
+ 0.3616,  0.3789, -0.1840,
+ 0.0128,  0.1347, -0.0187
+};
+
+__constant float biasL1[8] = 
+{
+-0.1329, -0.0431, -0.0031, -0.0129,  0.2294, -0.2595, -0.2370, -0.0499
+};
+)"
+R"(
+__constant float kernelsL[8][9 * 8 * 8] = 
+{
+{
+ 1.4090e-01, -1.8985e-02, -6.8589e-02,
+ 6.6491e-02,  1.4360e-02,  8.5223e-02,
+ 1.8782e-01,  9.8042e-02, -3.4558e-02,
+ 2.5606e-01,  2.2027e-01,  2.7603e-01,
+ 1.9424e-01,  3.4537e-02,  9.5975e-02,
+ 1.1223e-02, -4.3377e-01, -1.4760e-01,
+-3.4293e-40, -5.5421e-40, -4.4763e-41,
+-6.3322e-40, -3.1495e-40, -7.8264e-41,
+-1.5375e-40, -3.3656e-40,  5.2441e-40,
+ 1.2413e-01,  1.5682e-01,  1.1465e-01,
+ 1.6683e-02,  7.8382e-02,  1.0110e-01,
+ 1.4902e-01,  1.3608e-01,  1.1674e-01,
+-6.5160e-02,  7.7748e-02,  2.1773e-02,
+ 2.0652e-02,  2.7245e-01,  1.0297e-01,
+-2.0953e-02,  6.1685e-02,  4.4128e-02,
+ 6.1538e-02, -1.9746e-02, -1.2785e-02,
+ 2.5931e-02,  1.2740e-01,  9.0033e-02,
+ 8.6448e-02,  2.0684e-01,  9.8063e-02,
+-7.8384e-03,  6.3277e-02,  7.6751e-03,
+ 3.5956e-02,  1.0555e-01,  4.2728e-02,
+ 7.1578e-02,  1.3253e-01,  1.1171e-01,
+-2.7538e-02,  1.5836e-01,  1.0014e-01,
+-4.9113e-02,  1.6911e-01,  2.7329e-01,
+ 7.9170e-03,  9.5440e-02,  1.3922e-01,
+ 8.0151e-02,  4.3438e-02,  5.5314e-02,
+ 3.4896e-02,  1.6816e-01, -4.5783e-03,
+-1.4579e-03,  2.0493e-01,  2.6238e-02,
+ 2.6499e-02,  3.9490e-01, -1.1582e-02,
+ 3.5790e-01,  1.4317e-01, -2.1775e-01,
+ 4.1794e-03, -3.2513e-01, -1.6729e-01,
+ 3.4040e-41, -6.2960e-42, -1.0067e-40,
+ 5.5978e-41, -1.2353e-40, -1.1347e-40,
+ 5.4572e-40, -6.4384e-40, -4.1234e-40,
+-9.3690e-02,  1.7765e-01,  1.1275e-01,
+ 9.1159e-03,  1.7375e-01,  1.1427e-01,
+-7.8385e-02,  1.5658e-01, -3.8399e-02,
+-1.0756e-01,  5.9943e-02, -6.7273e-02,
+-1.1117e-01,  1.5267e-01,  1.1563e-01,
+-1.2964e-01, -3.8604e-02, -2.4532e-02,
+ 1.6324e-02,  1.3112e-01,  6.1679e-03,
+-7.7703e-03,  2.6311e-01,  8.9427e-02,
+-2.8948e-02,  1.9341e-01,  4.4339e-02,
+ 6.4559e-03, -6.8885e-02,  1.1481e-01,
+-1.0665e-01,  3.8613e-02,  7.0410e-02,
+-6.1680e-02, -1.7374e-02,  9.5475e-03,
+-4.0081e-02, -3.1549e-02,  2.8311e-01,
+-1.2178e-01, -1.3848e-01,  1.7416e-01,
+-8.1756e-02, -1.7718e-01,  7.9533e-02,
+-3.1299e-03, -3.2305e-03, -3.2094e-03,
+-3.1548e-03, -3.2553e-03, -3.2453e-03,
+-3.1459e-03, -3.2278e-03, -3.2076e-03,
+-3.6554e-05, -3.6715e-05, -3.1284e-05,
+-1.4927e-05, -1.4357e-05, -1.2185e-05,
+-1.5771e-09, -1.1439e-09, -6.4952e-10,
+ 3.7723e-40,  4.9166e-40, -2.1946e-40,
+-4.7599e-40, -4.3356e-40, -8.3928e-41,
+ 2.6127e-40,  4.8634e-40,  2.7720e-40,
+-5.4972e-03, -5.6409e-03, -5.6919e-03,
+-5.5818e-03, -5.7079e-03, -5.7542e-03,
+-5.6338e-03, -5.7437e-03, -5.7600e-03,
+-3.7940e-03, -3.8853e-03, -3.8693e-03,
+-3.8995e-03, -3.9616e-03, -3.8945e-03,
+-3.8438e-03, -3.9156e-03, -3.8269e-03,
+-7.2342e-05, -7.8682e-05, -4.7701e-05,
+-1.1126e-04, -1.1918e-04, -7.8931e-05,
+-1.1644e-04, -1.2418e-04, -8.2350e-05,
+-2.3881e-04, -3.7971e-04, -3.9448e-04,
+-2.4112e-04, -3.8395e-04, -4.0189e-04,
+-2.3451e-04, -3.7525e-04, -3.9222e-04,
+-3.9853e-03, -4.0748e-03, -4.1134e-03,
+-4.0685e-03, -4.1456e-03, -4.1548e-03,
+-4.0547e-03, -4.1388e-03, -4.1357e-03,
+ 5.3008e-02,  2.2252e-02, -7.1158e-02,
+-6.6411e-02, -3.0015e-02, -2.2526e-02,
+ 1.2259e-01, -6.2488e-02,  5.6190e-02,
+ 1.5981e-02, -7.6832e-02,  1.7908e-02,
+ 2.7618e-01,  5.4054e-02,  8.7282e-02,
+ 1.5212e-02, -1.1097e-01, -2.2265e-02,
+-6.8532e-41, -6.0539e-40,  4.6269e-40,
+-2.9221e-40, -3.8468e-40, -4.6656e-40,
+ 6.4572e-40, -6.1625e-40,  6.4545e-40,
+ 3.5920e-02,  9.0955e-02, -1.7626e-02,
+ 4.7826e-02,  1.8832e-01, -4.4043e-02,
+-3.8405e-02,  5.9176e-02,  6.8182e-02,
+ 3.7657e-03,  2.6441e-02, -2.5585e-01,
+ 1.0969e-01,  2.3914e-01,  3.5120e-02,
+-1.6252e-01,  3.4371e-02, -2.7501e-01,
+ 4.9289e-02,  2.2088e-02, -1.4588e-02,
+ 1.6384e-01, -8.1421e-03, -6.9613e-02,
+ 1.0820e-01,  1.1137e-01,  7.2648e-03,
+ 1.5243e-01,  1.3659e-01,  2.7553e-02,
+ 1.3966e-01,  1.1019e-01,  1.9817e-02,
+ 1.1420e-01, -5.1386e-03,  6.8617e-03,
+-1.3264e-02,  2.1508e-01,  4.8430e-02,
+ 5.1149e-02,  2.9165e-01,  2.8077e-01,
+ 2.9288e-03,  9.0611e-02,  8.1538e-02,
+-1.1812e-01,  1.5603e-02,  1.1571e-01,
+-3.4958e-02, -1.6688e-03, -4.6619e-02,
+-1.0417e-02, -3.1802e-02,  1.8357e-02,
+ 1.1064e-01,  1.8397e-01,  4.8449e-02,
+-8.3336e-03,  1.6029e-01,  3.9490e-02,
+-4.0959e-01, -2.6134e-01,  2.0766e-02,
+ 6.6073e-41, -6.7490e-40, -5.1131e-41,
+-4.3320e-41, -3.7194e-40,  2.0674e-40,
+-5.2359e-40, -3.4006e-40, -4.9257e-40,
+-4.7260e-02,  2.8518e-03, -2.7764e-01,
+ 6.9182e-03,  1.3938e-01, -1.3162e-01,
+-6.0901e-03,  1.0339e-01,  6.0419e-02,
+-1.4449e-01, -3.2043e-02, -9.1466e-02,
+-1.4022e-02,  3.1703e-01,  5.8166e-02,
+-1.5243e-02,  1.4521e-01,  2.0790e-04,
+-1.0255e-01, -7.8766e-02, -1.2395e-01,
+ 7.9894e-03,  3.7079e-03, -3.2134e-02,
+ 1.1663e-01,  1.4808e-01,  2.0431e-01,
+ 7.4026e-02,  6.9632e-02,  1.7156e-01,
+-3.0385e-02,  2.3218e-01,  7.3855e-02,
+-8.8530e-02, -5.9224e-02,  2.3431e-02,
+ 1.4596e-02,  3.2442e-02, -1.1308e-01,
+-6.3734e-02,  2.5270e-01,  7.8081e-02,
+ 1.0468e-02,  1.5473e-01,  3.8676e-02,
+-1.0842e-01,  8.6778e-03,  1.4985e-01,
+ 8.1757e-03, -8.2109e-02,  8.5471e-02,
+-2.1437e-01, -6.1173e-02,  4.8163e-02,
+ 2.8965e-01,  1.9748e-01,  4.2651e-02,
+ 1.8196e-01,  3.3932e-01,  3.9594e-01,
+ 3.9657e-01,  4.2167e-01,  2.9290e-01,
+ 7.4011e-41,  6.5220e-40, -5.9885e-40,
+ 7.4011e-41,  6.2047e-40, -7.1533e-40,
+ 4.1950e-40, -1.1886e-40, -5.9922e-40,
+ 1.9662e-01,  2.1402e-01,  3.1041e-02,
+-1.1079e-01,  1.3361e-01, -2.1608e-01,
+-1.7962e-01, -8.0576e-02, -3.1277e-01,
+ 1.0620e-02,  2.4024e-01,  1.0657e-01,
+-7.9906e-05,  2.8760e-01,  4.1231e-02,
+-1.3261e-02, -1.0868e-01, -1.1267e-01,
+-1.0659e-02, -2.6051e-02, -4.5389e-02,
+ 5.8261e-02,  4.0288e-02,  6.7050e-02,
+-2.6462e-01, -1.7846e-01, -1.0002e-01,
+-6.2904e-02,  1.5275e-01,  4.4282e-03,
+ 1.4446e-01,  1.1814e-01, -8.0349e-02,
+ 2.0331e-02,  3.3014e-02,  1.2710e-01,
+ 1.6084e-01,  3.8819e-01,  1.0854e-01,
+-6.8126e-03,  3.5673e-01,  1.8938e-01,
+-1.1660e-01, -5.7694e-02, -2.9194e-01,
+ 1.2775e-02, -3.2769e-02,  1.7228e-02,
+ 1.8324e-01,  1.1983e-01, -1.6944e-02,
+ 1.0593e-01,  1.3451e-01,  5.2536e-02,
+ 1.9147e-01,  1.3875e-01,  1.0298e-01,
+-2.0871e-01, -1.7197e-01,  1.1342e-01,
+-1.7581e-01,  4.0972e-02,  2.9796e-01,
+ 3.2588e-40, -4.3663e-40, -2.6518e-40,
+ 3.2588e-40, -4.3663e-40, -2.6518e-40,
+ 4.1600e-40, -4.4350e-40, -4.8744e-41,
+ 3.7289e-02,  8.1769e-03,  1.7059e-02,
+ 3.7735e-02,  6.6571e-02, -6.6137e-02,
+-5.8890e-02, -7.7019e-03, -6.2128e-02,
+-4.0751e-02,  1.1710e-01, -1.1586e-01,
+-1.2999e-01, -1.6384e-02, -2.1858e-01,
+-2.8028e-01, -6.0443e-02, -1.1880e-01,
+ 1.8152e-01,  1.5364e-01,  1.1781e-01,
+ 2.9010e-01,  2.4612e-01,  1.3170e-01,
+ 1.9022e-01,  1.8117e-01,  1.6483e-01,
+ 9.3342e-02,  2.6607e-01,  1.4679e-01,
+ 1.6729e-01,  2.5374e-01,  1.1954e-01,
+ 6.3258e-02,  1.0557e-01,  6.7221e-02,
+-5.2017e-02,  1.9628e-01,  1.7243e-01,
+-3.2667e-02,  1.5756e-01,  1.9347e-01,
+-9.5252e-02, -3.7525e-02, -3.4543e-04,
+-4.9759e-02,  4.0383e-02, -2.0231e-02,
+-1.1776e-01,  3.4182e-02,  3.6720e-02,
+-1.4822e-02, -4.1658e-02, -1.3729e-02,
+-1.9215e-02,  2.4427e-02, -9.0638e-02,
+-1.4438e-01, -2.1785e-01, -5.1789e-02,
+-2.0279e-01, -3.3918e-01, -1.6871e-01,
+ 6.1262e-41,  2.4066e-40,  6.6851e-40,
+ 5.3430e-40, -3.2335e-40, -3.7400e-40,
+-6.3256e-40, -4.7491e-40,  2.2854e-40,
+-6.8701e-03, -1.4849e-02,  8.6332e-02,
+ 1.1686e-01,  1.8346e-01,  1.8797e-01,
+-2.3251e-02,  7.3973e-02,  1.0532e-01,
+-6.1838e-02,  5.6667e-02,  8.1584e-02,
+-3.8900e-02,  7.0927e-02,  9.5606e-02,
+-4.5098e-02, -1.0829e-01, -1.2224e-01,
+ 3.5047e-03,  3.2898e-02,  3.5622e-02,
+ 1.6170e-02,  4.3721e-02,  9.7496e-02,
+ 2.3445e-03,  6.0417e-02,  1.3482e-01,
+ 6.0570e-02, -5.7139e-03, -1.0883e-03,
+ 2.2701e-02, -2.9113e-02,  7.9178e-03,
+ 8.1214e-02, -4.1408e-02,  1.3616e-02,
+-4.7985e-02,  1.0304e-02, -3.3236e-02,
+-1.6334e-02, -8.1538e-02,  1.8629e-02,
+-9.3720e-02, -1.2920e-01, -4.0836e-02
+}
+,)"
+R"(
+{
+ 1.0443e-01,  1.5461e-01, -1.4743e-01,
+ 1.6716e-01,  1.0532e-01, -2.3088e-01,
+ 1.0218e-01,  1.2393e-01, -9.6646e-02,
+ 1.7659e-01, -7.3279e-02,  1.9627e-02,
+ 1.7721e-01, -1.4329e-01, -1.2533e-01,
+ 1.6551e-01, -3.4616e-01,  9.5618e-02,
+ 4.5827e-09,  9.3413e-09,  1.7015e-08,
+ 1.2245e-08,  9.9727e-09,  6.7108e-09,
+ 1.9612e-07,  3.9479e-08,  1.1537e-09,
+ 2.2127e-02,  9.2715e-02, -1.2150e-01,
+ 7.5652e-02,  1.1548e-01, -1.2420e-01,
+-1.0693e-03, -7.2839e-02, -1.9664e-01,
+ 1.4466e-01, -1.8552e-03, -1.3575e-01,
+ 2.0699e-01,  8.0396e-02, -1.9651e-01,
+-4.7075e-02, -5.1259e-02, -8.2593e-02,
+-2.2385e-01,  3.0066e-03, -2.2659e-02,
+ 6.1827e-02,  2.5331e-02, -5.3898e-02,
+ 2.7091e-01,  1.0991e-01, -3.3600e-01,
+-8.9499e-02, -9.3821e-03,  2.2675e-02,
+ 1.1213e-01,  1.3276e-01,  2.0368e-02,
+ 6.5408e-02,  4.1598e-02, -4.7917e-02,
+ 6.0740e-03,  1.2236e-04, -1.0659e-01,
+-1.8072e-02, -9.1082e-02, -9.0414e-02,
+ 4.9052e-02, -1.4298e-01, -3.9721e-02,
+ 1.1840e-01,  2.2503e-01,  2.4587e-02,
+ 9.3023e-02,  6.9650e-02,  1.6798e-01,
+-1.5640e-03,  1.6300e-02,  6.3585e-02,
+ 1.4431e-01,  3.7885e-02,  1.6692e-02,
+ 1.7345e-01,  7.2315e-02,  1.8942e-02,
+ 1.1081e-01,  8.2973e-02, -9.7717e-02,
+-5.2264e-03, -5.2641e-03, -5.2727e-03,
+-5.2809e-03, -5.3125e-03, -5.3153e-03,
+-5.2915e-03, -5.3251e-03, -5.3231e-03,
+ 6.0008e-02,  2.0268e-01,  1.3396e-01,
+-2.5202e-03, -1.7750e-02, -1.2019e-02,
+ 1.1806e-01, -2.2306e-02,  3.6464e-02,
+ 7.9324e-02,  3.1883e-02,  1.5483e-02,
+-4.3537e-02,  1.2204e-02,  1.8905e-02,
+-8.1581e-02, -1.1307e-01, -6.0718e-02,
+-2.4865e-01, -1.0199e-01,  1.9886e-02,
+-1.0519e-02,  6.9972e-02,  4.8012e-02,
+-1.5282e-02,  1.1979e-01,  8.7968e-02,
+-3.6752e-02,  1.9523e-02,  7.1321e-02,
+-5.8295e-02,  5.3242e-02,  1.2773e-01,
+-7.9671e-02,  8.3249e-04,  7.4904e-02,
+ 1.1792e-01,  2.2135e-03, -9.0963e-03,
+-2.8356e-03, -4.2661e-02,  6.9497e-02,
+ 9.3561e-02,  1.0475e-01,  5.4745e-02,
+-8.5901e-02, -2.1969e-01, -1.5572e-01,
+ 3.6473e-02,  1.1097e-01, -2.6830e-02,
+ 1.2199e-02,  1.8917e-01,  1.1906e-01,
+ 1.0664e-01, -2.7005e-01,  1.5492e-01,
+-4.1771e-02, -1.6580e-01,  2.9234e-02,
+-1.9854e-02,  2.1436e-01, -1.1100e-01,
+ 4.5382e-04,  4.2085e-04,  5.6852e-04,
+ 3.4951e-04,  3.7354e-04,  3.2786e-04,
+ 2.0790e-04,  2.8606e-04,  3.2415e-04,
+-1.5500e-02,  2.2865e-02, -3.0070e-01,
+ 1.8467e-01,  2.4899e-01,  1.4812e-02,
+-1.2318e-01,  2.3175e-01,  7.2244e-02,
+ 1.6713e-01,  1.9089e-02, -2.7494e-01,
+ 1.0202e-01,  2.9200e-01, -3.6055e-03,
+ 1.3265e-01,  2.2551e-01,  1.9897e-01,
+-3.9474e-02,  1.6262e-01,  1.6726e-01,
+-8.6222e-02,  2.0573e-01, -7.3247e-01,
+-9.5391e-02,  3.8933e-01,  1.5861e-01,
+-1.2202e-01, -6.4735e-02, -1.1762e-01,
+-2.2427e-02, -1.9171e-01, -1.6092e-01,
+ 3.2356e-01, -2.2234e-01, -1.3743e-01,
+-1.1493e-01, -2.4936e-02,  2.9212e-02,
+-9.8112e-02, -1.8021e-02, -1.0507e-01,
+-1.0168e-01,  1.1759e-01, -9.8203e-02,
+-2.8871e-02,  1.3249e-01,  7.8378e-02,
+-1.1012e-01, -4.0596e-02,  5.4202e-02,
+ 4.9022e-02, -1.1744e-01,  9.8888e-02,
+ 1.3343e-02,  1.4358e-01, -8.7142e-02,
+ 1.9952e-01,  3.3708e-02,  2.0721e-02,
+ 2.6527e-02, -2.3822e-01,  2.4706e-01,
+-3.2750e-04, -2.8475e-04, -6.3494e-05,
+-2.2378e-04, -1.8046e-04, -1.9242e-05,
+-4.2124e-05, -2.2062e-05,  4.5500e-07,
+ 1.1692e-01,  4.0366e-01, -1.8709e-02,
+ 8.2700e-02,  1.7884e-01, -1.3520e-01,
+ 3.7758e-02,  3.7048e-02, -2.8109e-01,
+-2.3438e-01,  5.9423e-02, -1.7300e-01,
+ 1.0343e-02,  7.2307e-02, -4.3852e-01,
+-5.7429e-02, -4.9136e-02, -8.0327e-02,
+ 8.1094e-02,  2.9118e-02,  1.6677e-01,
+ 1.2155e-01,  6.5358e-01,  2.4544e-01,
+ 3.1163e-02,  3.7463e-02, -2.6613e-01,
+ 1.2723e-01,  1.2541e-01,  1.4319e-02,
+ 1.9055e-01, -5.7441e-02,  1.1146e-01,
+-1.0690e-02, -1.7567e-01, -1.2238e-01,
+-2.0879e-01, -6.5278e-02, -7.9327e-02,
+-1.6564e-01, -1.3659e-01, -2.6231e-01,
+-3.1916e-01, -2.6553e-01, -9.8647e-02,
+-1.0617e-01,  1.2782e-01, -2.1053e-02,
+-1.2329e-01,  1.4952e-01, -1.7466e-02,
+-1.6969e-01,  3.6980e-02, -6.7732e-02,
+-3.1220e-02,  4.0615e-02, -1.5251e-01,
+-2.0017e-01,  2.2421e-01, -2.5682e-02,
+-6.5873e-02,  1.8346e-01,  1.2982e-02,
+ 1.4021e-06, -1.6929e-05, -8.4696e-05,
+ 1.9580e-05,  2.9943e-06,  3.0084e-06,
+ 2.0769e-04,  1.4661e-05,  2.9503e-06,
+-1.4485e-01,  1.8841e-01, -1.7954e-01,
+ 2.1551e-01,  2.2601e-01, -8.6689e-03,
+ 8.6926e-02, -6.8989e-02, -1.2683e-01,
+-8.7712e-02,  6.3176e-02,  1.1983e-01,
+ 1.0790e-01,  6.6418e-02,  6.5849e-02,
+ 1.2483e-01,  1.2428e-01,  4.4994e-02,
+ 1.5139e-01, -1.2116e-01, -3.5497e-01,
+-6.1889e-02,  3.4088e-01,  1.3148e-01,
+-1.6478e-01,  4.4477e-02, -1.1979e-01,
+ 3.8343e-02,  1.7992e-01,  3.6790e-01,
+ 3.0426e-01,  1.1235e-01,  4.9815e-01,
+ 2.6290e-01,  1.9703e-01,  1.5881e-01,
+-6.4678e-03,  2.4401e-01,  1.9266e-01,
+-1.4089e-01,  1.2323e-01,  4.4340e-02,
+-8.8856e-02,  8.4036e-02, -9.8488e-02,
+-1.7377e-03, -1.7654e-03, -1.7223e-03,
+-1.7651e-03, -1.7919e-03, -1.7491e-03,
+-1.7172e-03, -1.7446e-03, -1.7041e-03,
+-3.0384e-04, -2.9297e-04, -2.4838e-04,
+-3.2961e-04, -3.1678e-04, -2.7009e-04,
+-3.1665e-04, -3.0492e-04, -2.6122e-04,
+ 3.7109e-40, -3.7915e-40, -5.2536e-40,
+ 5.8286e-41, -5.6108e-40,  4.3331e-40,
+-3.0184e-42, -4.8987e-40, -5.1788e-40,
+-4.0457e-04, -4.3257e-04, -4.1616e-04,
+-4.2268e-04, -4.5118e-04, -4.3407e-04,
+-3.9446e-04, -4.2199e-04, -4.0650e-04,
+-1.1253e-16, -1.1328e-14, -2.0489e-14,
+-3.0346e-19, -1.7189e-16, -4.5141e-16,
+-2.4957e-30, -1.8191e-23, -3.5882e-22,
+-3.1610e-36, -1.7544e-24, -2.2187e-21,
+-4.2887e-19, -1.5526e-15, -1.5160e-14,
+-1.7750e-16, -6.8066e-14, -3.3764e-13,
+-6.9570e-24, -5.1139e-23, -2.9335e-23,
+-1.9091e-22, -1.0323e-21, -4.5931e-22,
+-2.0010e-22, -9.3710e-22, -3.5622e-22,
+-2.9470e-04, -2.9081e-04, -2.5958e-04,
+-3.2290e-04, -3.1810e-04, -2.8461e-04,
+-3.1795e-04, -3.1356e-04, -2.8121e-04,
+ 6.1623e-02,  1.7057e-01,  8.0478e-02,
+ 1.2624e-01,  1.8468e-01,  2.1901e-02,
+ 7.6033e-02,  1.3455e-01,  8.4037e-02,
+ 8.4434e-02, -1.7069e-02, -7.8318e-02,
+ 4.9244e-02,  4.4782e-02, -6.9747e-02,
+ 1.2915e-01,  1.1453e-01, -6.5243e-02,
+-5.0985e-03, -5.1407e-03, -5.1687e-03,
+-5.1185e-03, -5.1511e-03, -5.1712e-03,
+-5.0986e-03, -5.1272e-03, -5.1409e-03,
+-1.8186e-02,  6.2680e-02,  3.3235e-02,
+ 1.3398e-02,  1.6497e-01,  4.3523e-02,
+-2.4101e-02,  1.3316e-01,  1.8373e-02,
+-6.2677e-04,  6.5026e-03,  2.5948e-02,
+ 6.6542e-02,  1.2352e-01,  1.5155e-02,
+-8.6237e-02, -2.0907e-02,  1.0237e-02,
+-1.7807e-01, -8.6196e-02, -3.2408e-02,
+-8.1946e-03, -1.3957e-02, -1.6733e-01,
+ 2.6269e-02,  1.6817e-01,  9.4029e-02,
+ 3.4005e-02, -1.2833e-02, -1.2038e-01,
+-4.8950e-02,  3.9857e-02,  1.4048e-02,
+-6.4758e-02,  9.9603e-02,  1.0748e-01,
+-1.0850e-02,  9.8875e-02, -4.4439e-02,
+ 9.1219e-02,  6.6400e-02, -6.7693e-02,
+ 5.3318e-02,  1.1838e-02, -1.5164e-01,
+-5.8568e-02,  1.1249e-01, -3.8286e-02,
+-7.1122e-02,  9.5799e-02,  3.8521e-02,
+-1.3846e-01,  1.4167e-01, -3.5500e-03,
+-1.0343e-01, -3.3025e-02,  3.7186e-02,
+-2.0769e-03,  1.3558e-01, -1.3009e-01,
+ 1.0167e-02,  1.5358e-02, -9.8009e-02,
+ 2.4123e-05, -1.1800e-05, -1.4180e-04,
+ 3.5217e-05, -6.3838e-06, -1.2243e-04,
+ 8.5525e-05,  2.1599e-06, -5.3290e-05,
+-1.4471e-01,  2.0111e-02, -1.2449e-01,
+ 5.3368e-02,  3.2918e-01,  1.4034e-01,
+-1.1833e-01, -1.9225e-02, -1.2658e-01,
+-2.6966e-01,  1.1751e-01,  9.7072e-02,
+-1.9929e-01,  9.7986e-02, -5.1240e-02,
+-9.5073e-02, -6.8070e-02, -2.1318e-01,
+ 9.5305e-02, -4.0551e-02, -1.0936e-01,
+ 5.2687e-02,  4.5340e-01,  2.3531e-01,
+-1.3385e-02,  1.5922e-01, -1.8371e-01,
+-1.2203e-01, -7.2567e-02, -3.0000e-01,
+-3.4356e-02, -1.3471e-01, -9.0995e-02,
+-2.5230e-01, -2.4846e-01, -1.8529e-01,
+-1.6962e-01,  1.0905e-01,  1.1557e-01,
+-1.4405e-01,  8.9191e-02,  1.1715e-01,
+-1.3237e-01,  5.2092e-02, -1.2227e-01
+}
+,)"
+R"(
+{
+ 2.0013e-01,  2.2105e-01,  1.9196e-01,
+ 6.8158e-02,  1.7154e-01, -8.6677e-02,
+ 9.2652e-02,  1.0789e-01,  1.6745e-01,
+-2.9254e-01, -7.6815e-02,  5.8812e-02,
+-4.6466e-02,  1.3941e-02,  2.3353e-01,
+-1.5033e-01,  7.5167e-02,  1.4433e-01,
+ 2.8008e-02,  3.1625e-01,  3.2877e-02,
+-5.8835e-02, -1.7305e-01, -6.1558e-02,
+-1.2227e-01,  3.9931e-02,  3.0300e-02,
+ 2.3004e-01,  4.1834e-02, -5.7790e-02,
+-2.2861e-01,  2.9314e-01,  1.6884e-01,
+-2.8009e-02,  4.7550e-02, -4.4542e-02,
+-2.4674e-01, -1.5483e-01,  3.2653e-02,
+-2.1574e-01,  3.1083e-01, -1.4025e-03,
+ 1.7354e-02,  5.6417e-02,  1.0844e-01,
+-4.2681e-40,  4.5893e-42, -7.4234e-40,
+ 1.7665e-40,  4.0151e-40,  4.6269e-40,
+ 2.5452e-40, -7.0179e-40, -1.2338e-40,
+-1.4957e-01, -1.9087e-02,  7.1170e-02,
+-1.4435e-01,  8.9560e-02,  1.3879e-01,
+-3.6992e-02,  5.9822e-02,  1.9241e-02,
+-2.4402e-03,  1.5097e-01,  6.3958e-02,
+-1.7630e-01,  3.6009e-01, -2.0383e-01,
+-8.5106e-03,  4.0863e-03, -2.7575e-02,
+ 7.8942e-02, -1.8640e-01, -6.7715e-02,
+ 7.2777e-02, -1.3804e-01, -7.0332e-02,
+ 1.5185e-01, -4.3530e-02,  1.4502e-01,
+-3.2928e-02, -3.0583e-02,  9.2061e-02,
+ 1.2493e-01,  1.0400e-01,  1.3780e-01,
+ 1.4438e-01,  8.2051e-02,  1.6159e-02,
+ 2.7478e-02,  1.7768e-01,  2.5945e-01,
+-3.4662e-01,  2.0330e-03,  8.8118e-02,
+-2.9628e-01, -1.3212e-01, -1.8145e-02,
+-1.9330e-01,  3.9238e-02, -4.6944e-02,
+-1.5668e-01, -5.7104e-02,  1.9558e-01,
+ 6.5305e-02,  5.9933e-02,  7.7337e-02,
+-2.4906e-02, -1.1235e-01,  1.3822e-02,
+-3.9988e-02, -9.1882e-03,  1.9204e-02,
+ 1.0504e-01,  4.6820e-03, -2.1836e-02,
+-2.6953e-40,  2.5334e-40, -1.3028e-40,
+ 1.4110e-41,  5.6841e-40,  3.6368e-40,
+-1.1746e-41, -7.0658e-41, -3.9413e-40,
+ 1.5025e-02,  7.4419e-02,  9.5652e-02,
+ 5.0297e-02,  6.6704e-02,  5.7316e-02,
+ 2.5102e-02,  1.1985e-01,  2.6043e-02,
+ 3.3297e-02, -7.7374e-02, -1.1114e-01,
+-7.5586e-02, -1.9338e-02, -1.3739e-02,
+ 4.5616e-02, -6.4946e-02, -6.9372e-02,
+-7.5874e-03, -1.1141e-01, -2.9135e-02,
+-6.9436e-03, -1.4418e-02,  1.6436e-03,
+-1.3051e-01, -1.3324e-01, -9.3934e-02,
+ 1.2184e-01,  1.9386e-01,  1.7995e-01,
+-2.7452e-02,  9.9736e-02,  1.0020e-01,
+-6.3290e-02, -2.1447e-02, -1.7005e-01,
+ 1.3857e-01,  2.3338e-01,  2.5410e-01,
+ 2.3002e-01,  1.9551e-01,  1.4452e-01,
+ 4.7040e-01,  2.2647e-01,  1.5215e-01,
+ 2.6927e-02, -2.1304e-01, -1.4762e-01,
+-5.6998e-02,  2.9064e-01,  1.8085e-01,
+ 8.9393e-02, -1.7463e-01, -2.7095e-01,
+ 3.8434e-02,  1.7198e-01, -1.8122e-02,
+-1.3857e-01,  1.9418e-01,  1.5019e-01,
+-5.6337e-02, -5.3265e-01,  3.2122e-01,
+-2.4484e-40, -5.3707e-40,  1.5854e-41,
+ 5.1791e-40, -4.1875e-41,  5.6732e-40,
+ 1.3048e-40,  1.6452e-40, -4.5028e-40,
+-3.0692e-02,  1.8569e-01,  2.0327e-01,
+-7.4756e-02, -5.1765e-02,  4.2475e-02,
+-9.0675e-02, -3.0438e-01, -3.5088e-01,
+-1.9129e-02, -1.5663e-03,  4.9895e-02,
+-1.9441e-02,  9.3237e-02,  1.2910e-01,
+-2.3919e-02, -4.0539e-01,  2.8167e-02,
+ 2.0203e-01,  3.3424e-02,  1.7927e-02,
+ 4.1923e-02, -1.6967e-01,  2.5656e-02,
+-1.5869e-01, -1.8727e-01,  2.7860e-03,
+-4.0276e-02, -6.7792e-03,  3.3699e-02,
+-6.7044e-03,  1.7686e-02,  2.9786e-02,
+-1.5623e-02,  3.7904e-02,  2.4737e-02,
+-1.2282e-01, -3.6563e-02,  4.1976e-02,
+-9.9622e-03,  8.8981e-02,  2.1364e-02,
+-8.5668e-02, -1.6803e-01, -4.4974e-02,
+ 1.3164e-01,  4.1294e-01,  1.8897e-01,
+ 2.1991e-01,  1.6247e-02,  1.1569e-01,
+-3.0142e-02,  1.4069e-02,  3.6646e-02,
+-2.6816e-02, -3.9767e-02,  1.4061e-01,
+-1.3603e-01, -2.0649e-01,  7.5837e-02,
+-1.6984e-02, -8.3800e-03,  2.3652e-04,
+ 1.5049e-40,  4.6504e-40,  1.3625e-40,
+-7.5358e-40, -3.4257e-40,  9.9763e-41,
+ 4.7243e-40,  7.4890e-40, -7.9440e-42,
+-5.9692e-02, -2.8047e-02,  2.3795e-02,
+-3.5284e-02,  1.1448e-02,  5.0302e-04,
+-3.5066e-02,  4.6185e-02,  1.2167e-02,
+ 3.7583e-02, -3.6598e-02,  1.0206e-01,
+-9.6229e-02, -1.5977e-01,  4.9157e-02,
+ 3.7293e-02,  5.8766e-02,  1.0448e-02,
+ 1.1490e-01,  1.4459e-01,  8.6936e-02,
+ 2.8609e-01, -4.8108e-02,  9.0023e-02,
+ 6.7941e-02, -5.7148e-03,  1.0021e-01,
+ 7.3816e-02,  7.3794e-02,  8.0970e-03,
+ 2.8307e-02,  3.6635e-03, -1.1769e-01,
+ 4.1374e-02,  3.9933e-02, -4.4292e-02,
+ 5.9423e-02,  1.9009e-01, -2.3735e-01,
+-2.6670e-01,  5.8789e-01, -2.0048e-01,
+-3.7082e-01,  1.8045e-01,  5.4820e-02,
+-6.3567e-01,  2.0098e-01,  1.0653e-01,
+-2.5056e-01,  6.5065e-01, -4.0471e-01,
+ 5.4715e-02,  2.4375e-01, -2.7402e-01,
+ 1.5982e-01,  1.0923e-01,  2.1566e-01,
+ 2.0239e-01, -9.0221e-02, -4.4606e-01,
+ 1.0550e-01,  5.4666e-02, -2.7134e-01,
+-4.6424e-40,  2.9137e-40,  7.4968e-41,
+ 1.2376e-41, -5.6213e-40, -6.3457e-40,
+ 2.5404e-40,  2.0013e-40,  3.5611e-40,
+ 5.5423e-02,  3.9843e-02, -1.7509e-01,
+ 5.4480e-02,  5.0331e-02, -1.6793e-01,
+ 6.6093e-02,  3.0163e-02, -8.2023e-02,
+-1.5490e-01,  1.7457e-01,  2.7832e-01,
+ 1.1482e-01,  2.5759e-01, -2.4199e-01,
+-9.3891e-02,  9.1921e-02, -6.4480e-03,
+ 1.9266e-01,  5.2907e-02,  7.0289e-02,
+ 1.3582e-01,  6.4246e-02,  1.4989e-01,
+ 6.2013e-03, -6.8884e-02,  6.8734e-02,
+-1.0483e-01, -7.7134e-02, -3.6204e-02,
+ 1.7590e-02,  5.0844e-02,  1.4234e-01,
+ 7.2913e-02,  6.0726e-02,  6.4414e-02,
+-8.5021e-02, -1.0621e-03,  5.5851e-02,
+ 2.4666e-01,  6.5652e-02, -1.8180e-02,
+ 1.5225e-01,  1.2928e-01,  3.1578e-03,
+ 1.1468e-01,  1.9544e-01,  6.6637e-02,
+ 6.3430e-02,  2.0542e-01,  7.0876e-02,
+ 3.4779e-02,  1.0037e-02, -2.2134e-02,
+-6.9304e-02,  1.1184e-01, -3.7015e-02,
+-1.7634e-01,  1.2475e-01,  9.1947e-02,
+-6.0550e-02, -1.3904e-01,  7.5192e-02,
+-2.2871e-40,  4.7367e-41, -1.0711e-40,
+-2.8662e-40,  4.0542e-41,  3.3067e-40,
+-4.4395e-41, -7.2684e-41,  1.8695e-40,
+-1.6702e-01, -2.6654e-01,  8.7902e-03,
+-2.0108e-01, -3.8093e-01, -8.3700e-02,
+-7.5433e-02, -2.0689e-01,  2.7951e-02,
+ 2.9938e-03,  1.1378e-01,  7.1598e-02,
+-1.6031e-01,  1.3475e-01,  1.5800e-01,
+-7.2019e-02, -1.1663e-01,  8.0692e-02,
+ 1.0610e-01,  1.1163e-02, -1.4959e-01,
+-1.1576e-01, -8.5645e-02,  4.0414e-02,
+ 5.6245e-02,  1.7056e-01,  2.5734e-01,
+-6.1086e-02, -7.0851e-02,  7.6851e-02,
+-2.7595e-02, -6.0890e-02,  4.7472e-02,
+ 7.1059e-03,  6.0942e-05,  7.4915e-02,
+ 1.9350e-01, -1.8458e-02, -2.3040e-02,
+ 6.3477e-02,  1.1923e-01,  9.9319e-02,
+ 6.4839e-02,  2.7973e-01,  1.2902e-01,
+-1.7829e-01,  5.7083e-03, -6.1680e-03,
+-1.1256e-01, -2.7951e-02, -2.1544e-01,
+-2.1614e-02, -7.1468e-02, -2.2054e-02,
+-8.7543e-02, -1.2982e-01,  1.9386e-01,
+-5.7157e-03, -1.0108e-01,  1.4467e-01,
+-6.5742e-02, -7.2054e-02,  1.7924e-01,
+ 7.5418e-40,  6.3043e-40,  4.9815e-40,
+-1.0952e-40,  3.0327e-40, -2.3848e-40,
+ 4.1302e-40,  2.0150e-40, -1.6509e-40,
+-1.3985e-02, -1.0550e-01,  5.8772e-02,
+-1.7108e-02, -7.3644e-02,  3.3014e-02,
+-1.8224e-03,  2.8931e-03,  9.2762e-02,
+ 4.1531e-02, -1.5139e-01, -1.7773e-01,
+ 9.6548e-02, -1.1914e-01, -4.6536e-02,
+ 8.6754e-02, -4.0057e-03,  1.8983e-01,
+ 1.6545e-01, -4.7311e-02, -7.2455e-03,
+ 3.7567e-01,  1.8883e-01, -7.4325e-02,
+-5.8252e-02, -1.3811e-02, -7.0470e-02,
+-3.2943e-02, -7.0770e-02, -1.4700e-01,
+ 1.7043e-02,  9.4331e-02,  4.2857e-03,
+ 4.1247e-03,  1.6690e-01,  4.2146e-02,
+ 1.1420e-01, -7.4456e-02, -3.8763e-02,
+ 1.6807e-01,  9.3636e-03, -1.1796e-01,
+ 1.7703e-01,  1.1386e-03, -6.8707e-02,
+ 1.0259e-01, -1.8918e-02,  6.5902e-03,
+ 1.2421e-02, -7.8960e-02,  2.1766e-02,
+ 1.3062e-01,  4.6001e-02,  2.4199e-01,
+-1.2955e-02, -1.9329e-01,  5.2074e-03,
+ 5.9446e-02,  1.8832e-01,  2.2094e-01,
+-1.0954e-01, -8.1867e-02, -4.3324e-02,
+-3.9596e-41,  2.8677e-40, -6.5843e-40,
+ 4.2812e-41, -3.5323e-40,  4.8298e-40,
+ 7.6351e-40, -2.4759e-40,  7.3030e-40,
+-1.1284e-01, -8.4171e-02, -1.5935e-01,
+-3.2299e-02,  1.5427e-01,  8.9029e-02,
+-3.8815e-02,  1.3098e-01, -4.3065e-02,
+-2.5276e-01, -1.7018e-01,  9.7901e-02,
+ 1.4218e-01,  3.1236e-01,  2.9636e-01,
+-2.3613e-02, -5.5258e-02, -2.0550e-01
+}
+,)"
+R"(
+{
+ 0.0333,  0.1145, -0.0922,
+ 0.1185,  0.4533, -0.2015,
+-0.0774,  0.1759, -0.0496,
+ 0.0954, -0.0499,  0.0824,
+ 0.1059,  0.0173, -0.0586,
+-0.0666, -0.0287, -0.0652,
+-0.0558, -0.1362,  0.0015,
+ 0.1277,  0.1020, -0.1369,
+ 0.0020, -0.0103, -0.0804,
+ 0.0507,  0.1404, -0.0241,
+ 0.0520,  0.1239,  0.0633,
+-0.0268,  0.0335,  0.0883,
+-0.0549, -0.1022, -0.0515,
+-0.0163, -0.1167, -0.0442,
+ 0.0858, -0.0804, -0.0014,
+ 0.0354, -0.0666, -0.2105,
+-0.0950,  0.1578, -0.0920,
+-0.1303,  0.0299, -0.0195,
+-0.0281, -0.1993, -0.0154,
+ 0.0796,  0.0503,  0.0954,
+ 0.0540,  0.0212,  0.0389,
+-0.1387,  0.1091, -0.1212,
+ 0.1556,  0.3573,  0.0976,
+-0.0587, -0.2070,  0.2067,
+ 0.0138,  0.0051, -0.1008,
+ 0.2877,  0.1079, -0.0681,
+ 0.0953, -0.0739, -0.2349,
+ 0.1482,  0.0657,  0.0480,
+ 0.1590, -0.0009,  0.1402,
+ 0.0700,  0.0435,  0.1190,
+ 0.0957,  0.0117, -0.1010,
+ 0.1790, -0.0200, -0.0765,
+ 0.0797,  0.1455, -0.0340,
+ 0.0008, -0.0267,  0.0089,
+ 0.0644,  0.0647,  0.0397,
+ 0.0463, -0.0116, -0.0771,
+ 0.2237,  0.0324,  0.0192,
+-0.0082, -0.0345,  0.0294,
+ 0.0719, -0.0185,  0.1008,
+-0.0307,  0.0134, -0.0747,
+ 0.0776, -0.1485,  0.0135,
+ 0.0965, -0.0665, -0.1263,
+-0.0101, -0.0097, -0.0144,
+-0.0022, -0.0083,  0.0277,
+ 0.0136, -0.0076,  0.0314,
+-0.0008,  0.0722, -0.0704,
+ 0.0053,  0.0767,  0.0368,
+-0.0189, -0.1354,  0.0231,
+-0.1416,  0.1945, -0.1756,
+ 0.2058,  0.0401, -0.1348,
+-0.0945, -0.2530, -0.3082,
+-0.0096,  0.0871,  0.0699,
+-0.0092,  0.0423,  0.0995,
+-0.0914, -0.0570, -0.0718,
+-0.0739, -0.2749, -0.2320,
+ 0.1488, -0.2698, -0.1977,
+ 0.1445, -0.1655, -0.0758,
+ 0.2035, -0.0138,  0.0332,
+ 0.0282, -0.2247, -0.0945,
+-0.0614, -0.2484, -0.0595,
+-0.1174, -0.1252,  0.1969,
+-0.1101, -0.2950, -0.2164,
+-0.0348, -0.0891,  0.1250,
+ 0.0195,  0.0050,  0.0300,
+-0.0508, -0.0316, -0.0194,
+ 0.0199,  0.0345,  0.0444,
+-0.0022, -0.0529,  0.1604,
+ 0.0756, -0.2015, -0.2117,
+-0.0837, -0.1270,  0.1330,
+ 0.0286,  0.0952,  0.1082,
+ 0.0724, -0.0446, -0.1156,
+ 0.0545,  0.0444, -0.0291,
+ 0.0759,  0.1110,  0.0944,
+ 0.1615,  0.4302, -0.1060,
+ 0.0418, -0.0281, -0.1378,
+-0.0757, -0.0527, -0.1578,
+ 0.0123, -0.0427,  0.1504,
+ 0.0694,  0.0690,  0.0203,
+ 0.2132, -0.3449,  0.0936,
+ 0.2491,  0.0279, -0.0884,
+-0.0447,  0.1589, -0.0054,
+-0.0246,  0.1247,  0.0403,
+ 0.0513, -0.0541, -0.1141,
+ 0.0712, -0.1174, -0.0051,
+ 0.2304,  0.2431, -0.0517,
+-0.1548, -0.0401,  0.2032,
+-0.0087, -0.1676, -0.0600,
+ 0.1094, -0.0329,  0.0530,
+-0.0580,  0.1499, -0.0806,
+-0.0086, -0.1400, -0.0636,
+ 0.0708, -0.1003, -0.1113,
+-0.0732, -0.1199,  0.0060,
+-0.0534, -0.0011,  0.0965,
+-0.0268,  0.0116, -0.1161,
+ 0.0787,  0.3925, -0.0819,
+-0.0041, -0.0892, -0.2063,
+-0.1296,  0.0924, -0.0079,
+ 0.5625,  0.4013,  0.1645,
+-0.0137, -0.1935,  0.2714,
+ 0.0980,  0.0016, -0.1461,
+ 0.1576,  0.0305, -0.1450,
+ 0.1503, -0.0303, -0.1403,
+ 0.0262, -0.0077,  0.0459,
+ 0.2718,  0.0754,  0.2404,
+ 0.1381, -0.1499,  0.0016,
+ 0.1454, -0.1278, -0.0085,
+ 0.1674, -0.0834,  0.1993,
+ 0.0874, -0.0598, -0.0188,
+ 0.2003,  0.3296,  0.0153,
+-0.0154,  0.5550, -0.0945,
+ 0.0489,  0.0415, -0.0940,
+ 0.0164,  0.0791,  0.1077,
+-0.0893,  0.1231,  0.0473,
+-0.0319,  0.1444,  0.1690,
+-0.0518, -0.1404, -0.1778,
+-0.0170,  0.1395, -0.0234,
+ 0.0128, -0.0112, -0.0472,
+ 0.1039,  0.1982, -0.0272,
+ 0.0282, -0.1199, -0.2622,
+-0.0449,  0.0239, -0.1030,
+-0.0840, -0.1044, -0.0646,
+ 0.0588,  0.1937, -0.2494,
+ 0.0180,  0.0747,  0.1530,
+ 0.0500,  0.1756,  0.0491,
+-0.1113, -0.0079,  0.0854,
+-0.1493, -0.0559, -0.0373,
+ 0.1972, -0.3158, -0.0500,
+ 0.1932,  0.3177, -0.0018,
+-0.0516, -0.1144,  0.0686,
+ 0.0175,  0.0598,  0.0345,
+-0.0667, -0.1078,  0.0384,
+ 0.0897,  0.2198, -0.0531,
+-0.2596, -0.1997,  0.0195,
+ 0.0332,  0.4098,  0.1381,
+ 0.1985, -0.0669, -0.1275,
+-0.0751, -0.2388, -0.0672,
+ 0.0090,  0.0891, -0.0362,
+ 0.1392, -0.0518,  0.2039,
+ 0.2079, -0.1202,  0.0707,
+ 0.0498, -0.1237, -0.0665,
+-0.0398, -0.1557, -0.0928,
+ 0.0505,  0.1220,  0.0352,
+-0.0674, -0.1159,  0.0724,
+-0.0331, -0.1751,  0.0766,
+ 0.0992, -0.0763,  0.0090,
+-0.1223,  0.2621, -0.2029,
+ 0.0509, -0.0279, -0.1061,
+ 0.0598,  0.0353, -0.1610,
+ 0.0165,  0.0835,  0.0704,
+-0.0079, -0.0982,  0.0187,
+ 0.2331, -0.1929,  0.0684,
+-0.0507,  0.1476, -0.0886,
+-0.0275,  0.1658,  0.0697,
+-0.1123, -0.0069, -0.0851,
+-0.0377, -0.0917, -0.0629,
+-0.0420,  0.0506,  0.1111,
+ 0.1086,  0.1351, -0.0851,
+ 0.0466,  0.2750,  0.0185,
+-0.0208,  0.2090,  0.0271,
+ 0.0217, -0.0548,  0.0078,
+-0.0609,  0.1029, -0.1641,
+ 0.1392,  0.0115,  0.0317,
+-0.0570,  0.1060,  0.1814,
+-0.2015, -0.1301,  0.1082,
+ 0.2452, -0.1815, -0.0046,
+ 0.0103, -0.0466, -0.0895,
+ 0.0158, -0.0594, -0.1386,
+-0.0073, -0.0719, -0.0716,
+ 0.1308, -0.0206,  0.0511,
+-0.0437, -0.0763,  0.0287,
+ 0.0493, -0.1239,  0.0219,
+-0.0041,  0.0373,  0.0262,
+ 0.0078, -0.0249, -0.0284,
+ 0.0598, -0.0205, -0.0276,
+ 0.0115, -0.1778, -0.0395,
+ 0.1673, -0.0036,  0.2334,
+ 0.0706, -0.0694,  0.0177,
+ 0.1123, -0.0043,  0.0716,
+-0.0894, -0.1609,  0.0334,
+-0.0046, -0.2006, -0.0977,
+-0.0127,  0.1198, -0.0339,
+-0.0283,  0.1354,  0.1637,
+-0.1696,  0.0187, -0.2621,
+ 0.0496,  0.2834,  0.0423,
+ 0.1126,  0.3962,  0.1660,
+-0.0750,  0.1955,  0.0590,
+-0.1088, -0.1146, -0.1219,
+ 0.1360,  0.1524,  0.0498,
+-0.1151,  0.0219, -0.0063,
+-0.0821,  0.0247, -0.1065,
+ 0.1153,  0.2085,  0.0618,
+-0.0383,  0.0527, -0.2067
+}
+,)"
+R"(
+{
+ 1.8014e-01,  2.1908e-01, -2.1088e-03,
+ 1.7345e-01,  2.7654e-01,  1.3607e-02,
+ 1.1363e-01,  9.9105e-02, -6.5730e-02,
+-3.5679e-02,  9.6072e-03,  4.0721e-02,
+-1.8771e-02, -2.3484e-04, -1.0230e-02,
+ 1.6965e-02, -1.3032e-02, -6.3906e-02,
+-4.5686e-02, -3.6733e-02, -4.8873e-02,
+ 4.0752e-02,  2.1615e-02, -1.4822e-02,
+ 1.1689e-01,  3.0153e-02, -5.0163e-04,
+-7.0394e-03, -1.2387e-01, -8.9243e-02,
+-1.8312e-01, -1.3868e-01, -6.2618e-02,
+-8.1627e-02, -2.0480e-01, -3.0740e-01,
+ 4.4296e-02,  3.8572e-02,  4.3754e-02,
+ 1.7538e-01,  5.3284e-02, -7.5663e-03,
+ 1.9670e-01, -1.2397e-01, -1.6266e-01,
+ 1.4575e-01, -5.7771e-02,  2.7619e-02,
+ 2.2757e-02, -4.8910e-01, -2.6201e-01,
+ 3.6513e-02, -2.0704e-01, -1.3225e-01,
+-6.7533e-02,  1.1289e-02,  7.1316e-02,
+-7.6847e-02,  6.8128e-02,  7.4717e-02,
+ 1.1269e-01,  2.9978e-02,  3.2132e-02,
+-5.4557e-02, -4.4599e-02,  4.1835e-02,
+ 5.7964e-02, -2.1246e-03,  1.5007e-01,
+ 1.8432e-01,  1.1463e-01,  2.2691e-01,
+ 9.6166e-02,  4.7887e-02, -3.8399e-02,
+ 5.8153e-02, -2.0255e-02, -1.1362e-01,
+ 2.6402e-02,  2.5562e-02,  1.9096e-02,
+ 1.1588e-01,  1.4540e-01,  1.1948e-01,
+ 1.0360e-01,  5.9083e-02,  1.9263e-01,
+ 1.6953e-01,  2.7390e-02,  9.7883e-02,
+ 1.5059e-01,  6.7593e-02, -4.5843e-03,
+ 8.7031e-02, -2.0926e-03, -6.3056e-02,
+-6.6960e-02, -5.2056e-02, -7.3570e-02,
+ 1.4361e-02,  1.1059e-01, -4.9720e-02,
+ 4.4270e-02,  3.9995e-02,  4.3101e-03,
+-1.1042e-01,  4.5028e-02, -8.9124e-02,
+-1.2906e-01, -7.6972e-02, -6.5449e-03,
+-1.9269e-01,  2.8349e-01,  1.1573e-01,
+-1.7983e-01,  9.7615e-02,  9.4003e-03,
+-4.7802e-02, -1.5889e-01, -1.2693e-01,
+ 7.4717e-02,  2.8655e-01, -7.2637e-02,
+ 1.5837e-02,  8.7125e-02, -1.2198e-01,
+-1.7754e-02, -5.6443e-02, -9.8661e-03,
+ 6.3040e-02,  2.0249e-02, -3.5368e-02,
+ 9.7756e-03,  2.6760e-02, -5.5172e-02,
+-1.0406e-02,  4.8313e-02,  2.4717e-02,
+-5.2851e-02,  6.8496e-02, -2.5933e-02,
+ 4.5932e-02,  5.9892e-02,  1.9200e-02,
+-5.1316e-40, -5.1811e-40, -1.5144e-40,
+-6.7758e-38, -5.4608e-40, -3.9680e-40,
+-1.9155e-39,  2.0423e-41,  1.5256e-41,
+-2.5559e-08, -3.2461e-08, -2.6821e-08,
+-3.6885e-08, -4.6896e-08, -3.9086e-08,
+-3.4305e-08, -4.4160e-08, -3.7187e-08,
+-3.7416e-40,  3.6550e-40,  5.0727e-40,
+-1.6722e-40,  3.9228e-40,  5.4548e-40,
+-5.7512e-40, -2.8156e-40,  9.4571e-41,
+-4.7040e-40, -1.6974e-40,  6.3849e-40,
+-3.7322e-40,  2.6014e-40,  2.3080e-40,
+-2.8395e-40, -3.7116e-40,  4.4393e-40,
+ 1.1597e-40,  4.3291e-40,  3.8219e-40,
+ 3.3393e-40,  3.1747e-40, -1.8400e-36,
+-5.5215e-40,  1.7648e-40, -1.6540e-35,
+-3.0953e-40,  5.3063e-40, -1.6454e-40,
+ 2.1341e-40,  2.0790e-40, -3.0226e-40,
+-2.6807e-40, -1.6601e-40,  5.1829e-40,
+-1.8897e-40, -4.5956e-41,  5.3784e-40,
+-2.5661e-40, -2.1726e-40,  1.2010e-40,
+ 1.8263e-41,  1.1214e-40, -3.7693e-40,
+-4.2596e-40,  1.8854e-40,  5.5010e-40,
+-6.6262e-40, -4.8808e-40,  3.3123e-40,
+ 5.9379e-41,  2.3249e-40,  4.4504e-40,
+-8.4836e-04, -8.4397e-04, -5.8640e-04,
+-8.3506e-04, -8.0192e-04, -5.3901e-04,
+-8.3539e-04, -7.8069e-04, -4.8720e-04,
+-3.4706e-04, -4.4640e-04, -5.2353e-04,
+-4.4518e-04, -5.3374e-04, -5.2734e-04,
+-5.8780e-04, -5.8730e-04, -5.4362e-04,
+-5.2452e-04, -5.4578e-04, -5.6266e-04,
+-4.2387e-04, -4.4643e-04, -4.8936e-04,
+-3.5880e-04, -3.7886e-04, -4.1998e-04,
+-2.4479e-04, -4.0736e-04, -3.1189e-04,
+-3.4922e-04, -4.0173e-04, -2.5042e-04,
+-5.7091e-04, -5.2665e-04, -2.3293e-04,
+-2.8505e-04,  9.7283e-05,  3.1209e-04,
+-2.7463e-04,  1.8704e-04,  4.4351e-04,
+-9.1436e-05,  3.2602e-04,  5.7573e-04,
+-4.0112e-04, -4.2566e-04, -2.4300e-04,
+-9.9362e-05, -6.5499e-05,  3.2872e-05,
+ 1.1584e-04,  2.3417e-04,  3.4427e-04,
+-7.5767e-05,  3.9768e-06,  6.2201e-05,
+ 2.3151e-05,  2.5595e-04,  3.4038e-04,
+-1.3871e-05,  3.0295e-04,  4.4170e-04,
+-1.7802e-04, -4.5376e-04, -5.1847e-04,
+-5.0687e-04, -5.5837e-04, -2.5917e-04,
+-5.3992e-04, -7.1375e-04, -4.8728e-04,
+-1.7543e-01, -3.4151e-01, -3.2619e-02,
+-1.9701e-02, -1.5494e-01, -1.6534e-01,
+ 3.5632e-02, -1.0897e-01, -3.8379e-02,
+-6.1420e-02, -1.0735e-01,  1.4730e-01,
+ 7.4386e-02, -1.0487e-01,  7.9646e-02,
+ 1.7130e-02,  4.4391e-02, -5.1959e-03,
+ 4.5682e-02, -1.1543e-01,  9.4035e-03,
+-3.4376e-01, -1.1961e-01,  1.0099e-01,
+ 1.1335e-01,  7.5840e-02,  1.0675e-01,
+ 4.9539e-02,  8.7406e-02,  4.4951e-02,
+ 1.8111e-01,  2.6406e-01, -1.5924e-02,
+-1.1464e-01,  8.4579e-04, -6.6811e-02,
+-8.9635e-03,  1.8236e-03,  3.6561e-02,
+-7.0281e-02,  2.9717e-01,  3.1836e-02,
+-1.3647e-01, -6.5627e-02,  9.3063e-02,
+-2.1851e-01, -6.0226e-02, -1.0326e-01,
+ 5.3441e-02,  1.9103e-01, -5.7999e-02,
+-3.3512e-02,  1.5496e-01, -1.1111e-01,
+ 2.3256e-03, -1.5004e-01, -9.1248e-02,
+-9.7706e-02,  1.9549e-01, -1.5403e-01,
+-1.5327e-01,  8.3335e-02,  5.6111e-03,
+-1.5707e-01,  8.0277e-03, -7.3955e-02,
+-1.4111e-01, -1.3548e-01, -1.0563e-01,
+ 2.3054e-01, -2.1822e-02, -6.6938e-03,
+-1.0259e-01,  4.3577e-02, -1.7630e-01,
+ 1.6484e-01,  4.2413e-01,  6.9475e-02,
+-2.4705e-01,  2.5757e-01, -9.5611e-02,
+ 1.0236e-01, -3.4820e-02, -6.8818e-03,
+-1.1434e-01, -3.1800e-01,  2.1337e-02,
+-1.9939e-01, -2.6532e-01,  7.3361e-02,
+ 6.5939e-02,  9.5812e-02, -7.0156e-02,
+-1.6249e-02, -1.5927e-02, -1.1189e-01,
+-9.3936e-03, -1.0933e-01, -2.9399e-02,
+-2.8752e-02, -4.5613e-02, -1.2718e-02,
+ 3.8781e-01,  2.6776e-01, -1.0373e-02,
+-2.3927e-02, -6.4398e-02,  9.9117e-02,
+-6.0732e-02, -5.5917e-03,  5.1716e-02,
+-1.4168e-01,  1.7661e-01, -5.5893e-02,
+-3.0419e-01, -3.5537e-01,  2.1978e-01,
+-1.8610e-01, -5.7743e-03,  3.2649e-02,
+ 1.9975e-01,  1.6508e-01,  1.3808e-02,
+ 1.0733e-01,  1.4722e-01,  5.8671e-02,
+ 6.4940e-02,  1.6114e-01,  3.9697e-02,
+ 1.1530e-01,  2.4021e-01, -2.1669e-01,
+ 6.0220e-02,  2.0257e-01, -1.5227e-01,
+-6.1096e-02,  6.6511e-02, -1.3858e-01,
+-6.5275e-02,  1.0891e-01,  8.2048e-02,
+-6.7907e-02,  2.2863e-02, -1.0322e-01,
+ 1.6542e-01, -1.4436e-01,  6.4125e-02,
+-1.0378e-01, -3.2346e-01, -1.5123e-02,
+ 3.8758e-03,  1.1006e-01, -4.4325e-02,
+-1.0102e-01, -3.7699e-02,  9.2472e-02,
+-6.8972e-02, -1.2308e-02,  1.6478e-01,
+ 3.4351e-02, -1.7461e-02,  1.0301e-01,
+-2.7125e-01, -5.6730e-02, -2.5989e-01,
+-3.0163e-01, -1.4826e-01, -3.4955e-01,
+-1.6259e-01, -1.6708e-01, -2.7964e-01,
+-6.7134e-02, -2.2385e-01,  2.1776e-01,
+-1.1351e-02, -3.7861e-01,  1.8687e-01,
+ 4.0551e-02,  8.1943e-02,  1.0866e-01,
+ 1.0273e-01,  1.1844e-01, -1.1852e-01,
+ 2.6758e-02, -8.5806e-02,  5.9444e-02,
+-5.1627e-02,  7.1636e-02,  2.2841e-01,
+-3.7242e-03,  2.9723e-01,  1.1918e-01,
+ 8.4994e-02, -3.5747e-01,  3.6148e-02,
+ 9.9705e-02, -1.3736e-01, -6.0080e-02,
+ 1.2370e-01,  5.0668e-02, -6.0246e-02,
+ 6.0562e-02, -3.5068e-01, -3.2645e-01,
+ 9.1020e-04,  6.6203e-02, -1.0770e-01,
+ 1.9434e-02,  3.0018e-01,  2.8018e-01,
+ 1.4021e-01,  2.7481e-01,  2.2868e-01,
+ 4.8540e-02,  1.7719e-01, -4.5834e-02,
+-9.6349e-02, -2.3008e-02, -1.4497e-01,
+ 4.3053e-02, -1.0161e-01,  2.8750e-02,
+-1.2594e-01, -1.0388e-02, -4.3966e-02,
+ 7.5993e-02, -7.1609e-02,  1.4624e-02,
+ 4.1110e-02,  7.1258e-02, -2.9109e-02,
+-5.8698e-03,  1.2389e-01,  4.7648e-02,
+-6.1585e-04, -4.4556e-02, -2.3373e-02,
+-4.4883e-02, -7.7722e-02, -7.3635e-02,
+-2.7750e-02, -1.5117e-03, -8.7368e-02,
+ 2.5113e-02,  7.7490e-02,  2.9024e-02,
+ 1.5426e-01,  2.5472e-01,  4.8057e-02,
+-1.1969e-01, -1.1487e-01, -1.1802e-01,
+-4.7392e-02, -4.2226e-02,  3.1968e-02,
+-2.6717e-01, -5.0206e-02,  8.1946e-04,
+-4.0426e-02,  1.4373e-01, -3.3121e-03,
+-4.5292e-02, -2.4538e-02,  1.0377e-01,
+-1.7780e-02,  2.0058e-01, -2.4343e-02,
+-1.1714e-02,  1.5984e-01, -1.2638e-01,
+ 6.4655e-02,  3.7703e-02,  3.7970e-02,
+ 9.1864e-03,  1.1468e-01, -6.2760e-04,
+-1.4812e-01,  6.5670e-03,  1.0765e-01,
+ 1.5023e-01, -7.0594e-02, -1.3924e-01,
+ 3.6016e-02, -3.9078e-02, -3.8950e-02,
+ 1.8735e-02, -1.5573e-01, -1.2456e-01
+}
+,)"
+R"(
+{
+ 4.8634e-02, -1.3617e-01,  6.1231e-02,
+-7.0235e-02, -6.4110e-01,  1.5985e-01,
+ 8.6151e-02,  1.1847e-01,  1.3819e-01,
+-3.6017e-04, -3.2273e-02, -8.5485e-02,
+-7.0804e-03,  2.1751e-01,  7.2575e-03,
+-8.3606e-02, -1.4885e-01, -1.2702e-01,
+ 4.0848e-41,  8.0934e-40, -1.8889e-40,
+-3.9103e-40, -7.4709e-40,  3.8377e-40,
+-2.4159e-40, -4.7610e-40,  7.7359e-40,
+-8.6217e-05, -5.9763e-05, -4.0558e-05,
+-7.4966e-05, -4.7074e-05, -3.1656e-05,
+-9.8390e-05, -6.6833e-05, -4.7669e-05,
+ 3.5375e-02,  2.8660e-02,  4.1277e-02,
+ 1.6289e-01, -3.2199e-01, -1.7845e-02,
+ 2.4659e-01, -3.9618e-02,  4.1065e-03,
+ 2.7267e-02,  8.6819e-02,  9.5070e-02,
+-7.2700e-02, -2.8826e-01,  1.1750e-03,
+ 2.5259e-02,  2.4681e-03,  6.4737e-02,
+ 7.3023e-03,  2.9631e-02,  1.0820e-02,
+-2.1400e-02,  5.4244e-01,  1.5639e-01,
+-1.7561e-01,  4.8947e-01, -8.8305e-02,
+ 6.5073e-02,  3.4922e-01,  1.3483e-01,
+ 1.4506e-01, -2.5472e-01, -7.2894e-02,
+ 4.5945e-02,  1.4040e-01,  1.2148e-01,
+-2.6932e-01, -1.1518e-01, -9.3158e-03,
+-2.3961e-01, -1.2479e-01, -8.9796e-02,
+ 1.8688e-02, -4.9267e-02,  7.7189e-02,
+-7.3691e-02,  7.8186e-03,  1.3761e-02,
+-1.5689e-01,  3.1138e-02,  3.9231e-02,
+-4.3607e-03,  2.0813e-01,  5.5635e-02,
+-6.7000e-41,  9.8995e-41,  3.0043e-40,
+ 6.7190e-40,  4.0827e-40,  7.6057e-40,
+ 4.2208e-40,  8.1141e-40, -3.3569e-40,
+ 1.0179e-03,  5.1543e-04,  3.8076e-04,
+ 7.3507e-04,  4.5432e-04,  3.7410e-04,
+ 9.3014e-04,  6.7365e-04,  6.0051e-04,
+-5.1998e-02,  6.5768e-02,  3.1603e-02,
+-3.0198e-02, -3.1692e-02, -6.9299e-02,
+ 1.7672e-02,  2.3766e-01,  5.7877e-02,
+-5.7944e-02,  1.2624e-01, -1.4396e-01,
+-4.1542e-02,  6.5110e-01,  1.0942e-01,
+-1.3133e-01,  5.0538e-02, -2.7371e-02,
+-3.7515e-02,  2.8703e-02,  1.2382e-03,
+ 3.8542e-01, -2.2754e-02,  3.4459e-02,
+ 3.0545e-01, -5.3817e-01, -2.1389e-03,
+ 1.3888e-02, -2.2775e-01, -6.3692e-02,
+-1.8430e-01,  5.8452e-02,  4.5764e-02,
+-8.5045e-02, -1.7060e-01, -1.8565e-02,
+-2.0384e-02, -3.3018e-02, -5.1135e-02,
+-4.5789e-02, -1.8105e-01,  3.5419e-02,
+-5.0081e-02,  8.7719e-02,  1.0373e-01,
+-1.0033e-02,  7.0530e-02, -7.8012e-03,
+ 8.4042e-02,  1.1982e-01, -9.6046e-02,
+-6.4009e-02, -1.0711e-01, -1.3523e-01,
+ 1.8868e-41, -7.0039e-40, -7.2568e-40,
+ 1.7408e-40, -7.8143e-40, -6.8130e-40,
+-6.3142e-40, -6.2560e-40, -7.4238e-40,
+ 2.6297e-04,  7.0014e-05, -4.0981e-04,
+ 2.6263e-04,  4.2811e-05, -4.9950e-04,
+ 3.9795e-04,  1.2615e-04, -4.7660e-04,
+ 7.5933e-02,  2.6295e-02,  2.7984e-02,
+-5.5914e-03, -8.7981e-02, -9.2618e-02,
+ 4.2725e-02, -3.1210e-01,  1.3412e-01,
+ 5.2683e-02,  3.9891e-01,  2.9150e-02,
+-6.6090e-02,  2.9455e-01, -1.9710e-01,
+ 1.4546e-02, -2.5572e-02,  8.1125e-02,
+ 1.2271e-01,  1.6097e-01,  4.5644e-02,
+ 3.6101e-02, -1.7174e-02,  6.6110e-02,
+ 1.5078e-01,  4.5180e-01,  7.7154e-02,
+-5.9725e-02,  1.0185e-01,  1.1363e-03,
+ 6.7791e-02,  1.7696e-02,  5.2638e-02,
+ 3.3051e-02, -8.4049e-02,  1.4380e-01,
+ 1.8744e-02, -2.0940e-01, -2.1424e-01,
+-2.1329e-01, -1.3154e-01, -3.2572e-01,
+ 1.1292e-01,  1.2361e-02, -1.5506e-01,
+-1.0362e-02,  1.9955e-02,  4.2639e-02,
+-2.1952e-02, -2.4682e-02, -2.4453e-02,
+-2.5606e-02, -3.3580e-02, -3.6340e-02,
+-5.0830e-40,  6.3797e-40, -5.2775e-40,
+-7.7988e-40, -7.4579e-40, -5.1901e-40,
+-3.8275e-41, -5.7607e-40, -1.3656e-40,
+ 2.7164e-04,  5.9977e-04,  8.6886e-04,
+ 3.0116e-04,  7.0106e-04,  1.0248e-03,
+ 2.9177e-04,  6.4748e-04,  9.4825e-04,
+ 6.6310e-02,  1.5240e-02, -5.3044e-02,
+ 1.2545e-01,  5.0582e-02,  2.7358e-02,
+ 1.9338e-01,  1.1377e-01,  4.6110e-02,
+-3.1997e-02,  1.5171e-02, -4.9372e-02,
+ 5.4615e-04,  1.7262e-01, -2.2081e-01,
+ 8.4871e-02,  1.7824e-02, -3.6429e-02,
+ 4.2821e-02, -1.0055e-01,  4.8927e-02,
+ 1.2524e-01,  5.8859e-02, -2.0980e-02,
+ 2.2897e-01,  1.7594e-01,  3.4239e-02,
+ 1.0915e-01,  1.2088e-01,  1.0151e-01,
+ 6.8449e-03, -1.5546e-01,  1.2024e-01,
+ 4.9036e-02, -1.2245e-01,  4.6713e-02,
+ 7.5083e-03, -4.8084e-02,  9.7731e-03,
+ 4.8779e-02,  3.1848e-02, -9.3517e-02,
+ 6.4595e-02,  3.9337e-02, -7.2343e-02,
+ 3.9519e-02,  4.1867e-02, -5.0485e-02,
+ 2.5257e-02,  1.4071e-01,  1.3606e-01,
+ 1.7481e-01,  2.0210e-01,  1.7241e-01,
+-7.6295e-40, -7.8460e-40, -4.1806e-41,
+-7.9994e-40, -7.3271e-40, -6.2665e-40,
+-7.9602e-40, -7.0226e-40, -7.4131e-40,
+-4.5544e-04, -5.2379e-04, -7.0755e-04,
+-3.3807e-04, -3.8123e-04, -5.3222e-04,
+-3.1771e-04, -3.4586e-04, -4.8784e-04,
+-3.5257e-02, -1.1866e-02,  1.9717e-02,
+-6.0777e-02, -7.3127e-03, -3.2825e-02,
+-1.4952e-01,  3.2117e-01, -6.3786e-02,
+-1.0255e-02,  1.2961e-01, -8.6823e-02,
+ 1.6994e-01,  4.7491e-01,  2.7135e-01,
+ 2.8538e-03,  1.5572e-01, -3.3736e-02,
+ 8.5996e-02, -1.0176e-02,  2.6629e-02,
+ 7.3362e-02, -7.7525e-03,  5.6261e-02,
+ 1.0819e-01, -2.5863e-01, -5.7146e-03,
+-7.1781e-02,  2.8376e-03,  7.8298e-02,
+ 1.3183e-01,  2.7149e-02, -9.9786e-02,
+ 9.0491e-02,  8.7938e-02, -2.1882e-02,
+ 4.1396e-03, -4.5816e-02, -7.8892e-02,
+-6.3855e-03,  1.7502e-01,  1.2053e-01,
+ 1.2492e-01,  6.1258e-02, -4.0516e-02,
+-4.5409e-02, -4.5877e-02, -7.6414e-02,
+-1.0573e-02, -1.2517e-01, -4.3991e-02,
+-2.6447e-02, -9.5478e-02, -2.4735e-02,
+-4.6548e-41, -1.6443e-40, -3.1221e-40,
+-3.2675e-40, -2.7265e-40, -3.1190e-40,
+-2.2065e-40, -2.5407e-40, -6.9511e-40,
+-1.2727e-04, -2.6585e-04, -3.5516e-04,
+ 3.4272e-05, -1.6810e-04, -3.1677e-04,
+-5.5355e-05, -2.9924e-04, -4.3692e-04,
+-5.6428e-02,  1.0771e-01,  1.0185e-01,
+ 2.2948e-01, -7.8744e-02,  6.0768e-04,
+-2.2355e-03, -2.0128e-03, -5.7317e-03,
+-7.1232e-03,  1.0297e-01,  1.6872e-01,
+ 1.9194e-01, -1.1578e-01,  1.0732e-01,
+-8.6952e-02,  3.2901e-02, -6.6658e-03,
+ 7.3979e-02,  8.3875e-02, -7.6372e-03,
+ 1.9577e-01,  2.7391e-01,  4.5275e-02,
+ 1.5610e-01,  2.3802e-01,  1.6555e-02,
+ 1.3814e-01,  1.2870e-01,  9.1626e-02,
+-4.6890e-02, -8.8734e-02,  7.8866e-02,
+ 1.0027e-01,  2.2139e-01,  1.0050e-01,
+-6.5845e-02, -1.0990e-01, -6.9896e-02,
+ 4.1687e-02,  3.0631e-02, -8.8441e-02,
+-1.1868e-01,  1.0836e-02,  2.5873e-02,
+-1.7114e-02,  7.6295e-02,  1.5439e-02,
+-2.4271e-02,  5.8538e-02,  9.8190e-02,
+ 4.9742e-02,  8.7807e-02,  6.5871e-02,
+-7.2669e-40, -7.5936e-41, -7.4975e-40,
+-1.6984e-42, -1.7334e-40, -8.4954e-41,
+-2.1556e-41, -1.5374e-40, -1.5515e-40,
+-6.2626e-04, -7.2727e-04, -8.1665e-04,
+-5.6584e-04, -6.1190e-04, -6.9584e-04,
+-5.6278e-04, -5.8554e-04, -6.3554e-04,
+ 8.1550e-02, -4.1817e-03,  1.2301e-02,
+-4.5800e-02,  4.6708e-02, -8.7972e-02,
+-2.9880e-01,  2.6456e-01,  3.9363e-03,
+-3.0939e-02, -1.9921e-01, -3.8689e-03,
+-8.6803e-02,  3.4857e-01, -1.0201e-01,
+ 2.1597e-02,  1.4380e-02,  4.3448e-02,
+ 7.1195e-02,  1.4980e-01,  3.8079e-02,
+-1.2678e-01, -8.1274e-02, -4.3445e-02,
+ 5.2482e-02, -1.8763e-01,  1.1557e-01,
+-9.4614e-02,  5.4415e-02, -3.1485e-02,
+-3.6451e-02,  1.4379e-01,  5.2291e-02,
+-9.2069e-02,  9.5675e-02, -5.8433e-02,
+ 7.5768e-03, -7.1280e-02, -1.4576e-01,
+-1.4671e-01, -1.2446e-01, -1.5207e-01,
+-5.4368e-02,  3.8303e-02, -8.1794e-02,
+ 2.0492e-02,  4.0910e-02,  1.1379e-02,
+ 3.1582e-02,  3.6039e-02, -4.4040e-03,
+ 1.7540e-02,  1.4097e-04, -6.4367e-02,
+-7.9553e-40, -5.3941e-40, -7.1912e-40,
+-5.8099e-40, -6.8315e-40, -6.6012e-40,
+-7.6242e-40, -5.4784e-40, -7.0267e-40,
+-2.9197e-04, -2.1994e-04, -1.9501e-04,
+-2.6516e-05, -1.2642e-05, -8.4345e-05,
+ 1.6763e-04,  1.1268e-04, -5.4516e-05,
+-3.8007e-03, -6.8765e-02, -9.5716e-02,
+ 6.3091e-02, -8.1971e-02, -9.2895e-02,
+-6.8353e-03,  7.3639e-02,  1.3505e-01,
+ 9.0083e-02,  2.4352e-01,  3.9708e-02,
+-5.4051e-02, -6.8748e-02, -1.8937e-01,
+-1.9808e-03, -7.1337e-02, -2.8316e-02,
+ 8.1504e-02,  8.3226e-03,  6.9013e-03,
+ 9.4393e-02,  5.9322e-02,  5.5023e-02,
+ 1.0236e-01, -4.0205e-02,  3.5172e-02,
+ 6.5381e-02,  4.9075e-02, -5.3931e-02,
+ 4.3961e-02,  9.0223e-03, -4.1678e-02,
+-6.4262e-02, -5.0304e-02, -9.3597e-02
+}
+,)"
+R"(
+{
+ 3.8496e-01,  1.4287e-01,  3.4530e-02,
+-5.5398e-01, -6.0381e-02,  1.2078e-02,
+ 7.9983e-02,  2.1478e-01, -5.7915e-02,
+-1.4020e-01, -2.6914e-02,  1.5915e-02,
+ 1.2371e-01,  2.5496e-01, -2.9867e-02,
+ 1.3269e-02, -9.9596e-02, -2.3173e-01,
+ 5.1471e-02, -4.5507e-01, -7.7620e-02,
+-5.1328e-02, -1.9808e-02, -4.7051e-02,
+ 3.0573e-02,  7.8762e-02, -7.2627e-02,
+ 6.8690e-02, -4.0125e-02,  5.6657e-02,
+ 8.0208e-02, -2.0075e-02,  1.4019e-01,
+-5.7959e-02, -7.3152e-02,  2.0202e-02,
+-8.8702e-02, -1.9911e-01, -1.5570e-01,
+ 2.8401e-02,  5.8802e-02,  1.3050e-01,
+ 2.1905e-02, -3.4298e-02,  4.0447e-02,
+ 1.0184e-01, -9.0101e-02, -9.2770e-02,
+ 1.1713e-02, -3.2514e-01,  1.9393e-01,
+-9.4227e-02,  2.7053e-01, -9.7233e-02,
+-1.0478e-01,  6.0652e-02,  8.3399e-02,
+ 1.1104e-01,  2.9008e-01,  4.9208e-02,
+-1.5414e-02,  3.1718e-02, -7.9083e-02,
+-5.2358e-03,  9.0101e-02,  5.2973e-02,
+ 5.5527e-02, -1.6599e-02, -8.5167e-02,
+-5.1018e-02,  7.2243e-03, -9.5684e-02,
+-5.0608e-02, -6.7864e-02, -8.9496e-02,
+-2.4348e-01,  2.7477e-01, -1.7588e-01,
+ 1.3927e-01,  5.5502e-02, -1.3370e-02,
+-4.3509e-02, -2.1511e-01, -5.9070e-02,
+ 1.0293e-01,  4.2678e-01, -8.7527e-02,
+-6.8546e-02, -5.6296e-02, -8.7962e-02,
+-8.6130e-02,  9.2069e-02,  7.2303e-02,
+ 2.4365e-02,  2.1988e-01, -7.9408e-03,
+-3.0063e-02,  1.1554e-01, -5.0311e-02,
+ 1.0605e-02,  5.4598e-02,  1.3826e-02,
+-1.4342e-02,  1.5353e-01, -5.3974e-03,
+ 1.5583e-01, -6.0889e-02, -1.5772e-02,
+-2.5956e-02, -3.5285e-01, -2.0338e-01,
+ 2.6011e-01,  2.2737e-01, -1.4693e-01,
+-7.7964e-02,  1.0053e-01, -5.4278e-02,
+-3.0668e-02,  3.4556e-02, -3.4321e-02,
+ 7.8695e-02, -2.2357e-01,  9.5733e-02,
+ 1.7483e-01, -1.5153e-01, -1.8262e-03,
+ 4.7605e-02, -2.2834e-01,  4.6383e-02,
+ 1.5701e-01,  3.2264e-01,  1.0334e-02,
+ 6.3351e-02,  1.1340e-01,  8.3478e-02,
+ 6.4196e-02,  3.3460e-02,  8.8473e-02,
+ 5.4663e-02, -1.7665e-03, -4.1935e-02,
+-6.1346e-03, -5.4463e-02, -6.2960e-02,
+ 2.8159e-02,  2.9903e-02,  9.2429e-03,
+-3.0041e-02, -9.7783e-02, -4.9500e-02,
+ 9.5350e-02, -7.9143e-02, -1.3244e-01,
+-6.5129e-02,  1.4568e-01,  6.6843e-02,
+ 1.5241e-01, -7.8736e-02,  1.0721e-01,
+-5.9015e-02,  1.5320e-01,  3.0796e-01,
+-5.4266e-03, -6.0804e-02,  3.7326e-02,
+ 7.4844e-02,  4.8340e-02,  1.5251e-01,
+ 3.8158e-02,  1.2087e-01, -8.9003e-02,
+-5.8369e-02, -7.3813e-02,  1.2240e-02,
+-4.5106e-03,  7.4580e-02,  1.2042e-01,
+ 4.1959e-02,  1.4529e-01,  5.3636e-03,
+-4.9708e-03, -1.0775e-02, -5.9374e-02,
+ 1.5358e-02,  1.7277e-02, -1.5412e-01,
+ 8.1647e-02,  3.3503e-02, -8.1934e-02,
+-1.5807e-02, -1.0001e-02, -1.0059e-02,
+-9.0493e-03, -7.8954e-02,  4.3891e-02,
+-9.3815e-03,  3.2241e-02,  4.7962e-02,
+-7.2252e-03,  7.9324e-02,  2.0662e-02,
+-5.7710e-02, -5.1142e-02, -1.4296e-01,
+ 2.1501e-02, -1.9518e-02, -2.7658e-02,
+ 1.4983e-01,  8.5447e-02,  7.2092e-04,
+ 1.1275e-01,  6.1131e-02,  5.7955e-02,
+ 1.5624e-02,  2.7225e-01,  1.1716e-01,
+-1.6322e-04, -1.3368e-04, -1.5575e-04,
+-1.0525e-04, -1.0765e-04, -1.5306e-04,
+-8.9692e-05, -1.0857e-04, -1.7316e-04,
+-1.8015e-03, -1.3733e-03, -3.9154e-04,
+-1.8453e-03, -1.4238e-03, -4.4163e-04,
+-1.5511e-03, -1.1131e-03, -2.0087e-04,
+-2.4082e-03, -2.2576e-03, -1.9231e-03,
+-2.4913e-03, -2.4136e-03, -2.1678e-03,
+-2.5057e-03, -2.4650e-03, -2.2732e-03,
+-2.3901e-05, -1.5870e-05, -5.8255e-06,
+-1.5163e-05, -1.2370e-05, -6.0712e-06,
+-1.3098e-05, -1.1132e-05, -5.7866e-06,
+-5.9760e-03, -5.9998e-03, -6.0295e-03,
+-5.9962e-03, -6.0100e-03, -6.0277e-03,
+-6.0003e-03, -6.0059e-03, -6.0148e-03,
+-3.2764e-05, -2.9574e-05, -2.8001e-05,
+-1.0846e-05, -1.1569e-05, -1.4282e-05,
+-1.6255e-06, -2.5666e-06, -4.7808e-06,
+-5.1999e-03, -5.2334e-03, -5.2847e-03,
+-5.2057e-03, -5.2283e-03, -5.2713e-03,
+-5.2195e-03, -5.2321e-03, -5.2633e-03,
+-3.0782e-06, -9.2118e-06, -1.6177e-05,
+-1.6382e-06, -6.9559e-06, -1.4245e-05,
+-1.1471e-06, -6.5984e-06, -1.4903e-05,
+ 7.7574e-02, -1.2866e-02,  4.1348e-03,
+-6.7298e-02, -1.3691e-01,  6.4079e-02,
+ 3.7962e-02,  8.7737e-02, -4.1046e-02,
+-2.8471e-02,  1.7647e-01,  6.4232e-02,
+ 1.2316e-01,  3.6800e-01, -1.5740e-01,
+-6.0839e-02,  1.5449e-02, -1.0761e-01,
+-6.6869e-02, -1.2867e-01, -4.0195e-02,
+-4.9651e-02, -5.5500e-02, -2.5879e-02,
+ 2.0179e-02,  6.8467e-02,  2.6575e-02,
+-6.7728e-04, -7.6269e-02,  2.3470e-02,
+ 7.1869e-02, -1.1855e-01, -2.1067e-02,
+ 1.3263e-01, -3.2957e-02, -3.4365e-03,
+ 8.1936e-02,  1.3073e-01,  1.1477e-01,
+ 1.2429e-01,  1.6129e-01,  1.6251e-01,
+ 1.5476e-02,  3.2862e-02,  2.1999e-02,
+-2.9189e-02, -3.3615e-02,  5.5616e-04,
+-2.4059e-02, -9.6181e-03, -4.1175e-02,
+-6.3680e-04, -9.6559e-02, -9.1448e-02,
+ 3.0238e-02,  1.2534e-01,  1.5256e-02,
+-4.2118e-02,  1.5723e-01,  2.6929e-03,
+ 1.9873e-02,  5.3050e-02, -1.0153e-03,
+ 2.0634e-02,  9.2825e-03, -6.8027e-03,
+ 3.1335e-03, -7.7443e-03, -1.8307e-02,
+ 7.9974e-03, -1.0283e-03, -6.2520e-03,
+ 4.5050e-02,  9.9504e-02, -1.3404e-01,
+-6.7271e-01, -5.7290e-02,  2.6919e-02,
+ 2.3673e-01,  2.4688e-02, -2.0227e-02,
+ 5.1389e-02, -3.9810e-02, -8.9700e-02,
+ 2.8445e-02,  3.9136e-01, -1.1508e-01,
+-1.0449e-01, -6.2005e-02,  6.5721e-02,
+-1.9123e-01, -4.2613e-02,  3.5371e-02,
+ 1.9207e-01,  8.7916e-02,  4.8089e-02,
+-5.7912e-02,  1.0014e-01, -9.4659e-02,
+ 1.1240e-02, -6.2254e-03,  1.3399e-01,
+ 1.6483e-01, -3.5079e-01,  1.1612e-02,
+ 2.9215e-01,  5.6875e-02,  6.9505e-02,
+ 1.3721e-02,  1.2607e-01,  2.6426e-02,
+-2.0529e-01,  2.1768e-01,  2.1232e-01,
+-6.3574e-02,  2.3504e-02, -1.0811e-01,
+-1.3470e-02, -3.6446e-02, -5.4379e-02,
+-1.3257e-01, -8.3412e-02,  3.7745e-02,
+ 5.8778e-02, -2.6060e-01,  3.8262e-02,
+-4.3689e-03, -6.6703e-02, -2.2025e-01,
+-9.0961e-02,  1.3855e-01,  3.4573e-04,
+-2.9613e-01, -3.6138e-02, -1.3827e-01,
+ 4.5896e-02, -5.3871e-02, -1.0037e-01,
+ 1.8457e-01,  1.0338e-01, -5.7306e-02,
+ 5.5510e-02, -9.4938e-02, -5.6527e-05,
+ 1.6372e-01, -3.3854e-02,  5.6332e-02,
+-4.0251e-01, -5.9428e-02, -9.1470e-02,
+-1.5921e-02, -5.7948e-02,  8.1682e-03,
+-3.7833e-03,  1.6293e-01,  5.3784e-02,
+ 1.1053e-01, -1.3867e-01,  2.6772e-02,
+-1.3133e-02,  3.7614e-01,  3.6361e-03,
+-1.4205e-01,  3.1312e-02, -9.9928e-02,
+-1.5755e-01,  4.2016e-01,  9.4065e-02,
+ 2.7536e-02,  1.2620e-01, -1.4894e-01,
+-4.2137e-02, -9.8700e-02, -1.7479e-01,
+ 4.5836e-02,  5.3893e-02, -1.0138e-01,
+ 8.3609e-02,  2.1849e-02, -1.0648e-01,
+ 7.4801e-02, -1.2671e-01, -1.5007e-02,
+ 2.7440e-01, -3.1351e-01,  6.5787e-02,
+-6.7820e-02,  1.6312e-01, -1.3254e-02,
+-2.5770e-02, -2.0041e-02,  5.8243e-02,
+ 1.6055e-02,  1.1971e-02, -4.6112e-02,
+-1.6276e-01, -1.5313e-02, -7.9826e-03,
+ 9.1668e-02,  9.7722e-02,  1.3754e-01,
+-7.4817e-02, -4.1923e-01, -1.2337e-01,
+ 1.3472e-01, -4.0745e-02, -5.4055e-02,
+-1.2943e-02,  4.8796e-02,  4.2007e-02,
+ 9.4668e-02,  8.6149e-02,  1.2362e-01,
+ 7.0637e-02,  2.3565e-01,  1.4582e-01,
+ 5.6904e-02, -8.2166e-02,  1.0563e-01,
+ 9.3969e-02, -2.2909e-01,  4.6537e-02,
+ 6.5257e-02,  1.4804e-01, -6.2092e-02,
+-1.5699e-02, -1.5303e-02,  1.6671e-01,
+-6.1947e-03,  2.5749e-01,  1.5257e-01,
+ 3.2908e-02, -5.9907e-02,  1.1502e-01,
+ 7.5876e-02, -2.6699e-01, -1.5891e-02,
+-8.0426e-02,  1.3406e-01, -1.9881e-02,
+ 3.5472e-02, -8.2140e-02,  1.6509e-02,
+ 8.3390e-03, -7.8291e-02, -2.0754e-01,
+ 3.4490e-02,  2.7913e-01,  5.9566e-02,
+ 2.5288e-02,  1.1725e-01, -1.0356e-01,
+-5.0955e-02,  9.2093e-02, -5.8477e-02,
+ 4.4325e-02,  3.2973e-02, -1.9477e-01,
+ 3.9582e-02, -8.6877e-02, -1.1753e-01,
+ 3.0401e-02, -2.8757e-02, -2.5563e-02,
+ 5.0741e-02, -3.5056e-01, -2.5584e-01,
+ 9.1709e-02, -4.0932e-02,  2.3812e-01,
+ 5.0945e-02,  4.9246e-02,  1.2738e-01,
+ 5.1440e-03,  1.5703e-01,  5.5743e-02,
+-3.9492e-02,  1.2114e-01,  2.0531e-02,
+ 8.0800e-02,  2.6680e-03, -1.6660e-02,
+ 1.0684e-01,  1.2308e-01,  1.7882e-02,
+ 1.8280e-02,  1.0972e-01, -5.2912e-03
+}
+,)"
+R"(
+{
+-1.3812e-02, -4.6271e-02,  7.3790e-02,
+-6.3801e-02, -3.6817e-01, -1.7880e-02,
+ 5.2986e-02,  1.8626e-01,  1.5645e-03,
+ 1.2367e-02, -6.2923e-02,  3.0844e-02,
+ 9.3623e-02,  1.9527e-01, -2.6366e-02,
+-2.0837e-02, -3.4424e-02,  4.0256e-02,
+ 4.1482e-02,  6.1795e-02, -1.1293e-02,
+-8.9944e-02, -1.3608e-01,  1.8067e-02,
+ 3.6974e-02,  5.2530e-03, -2.7474e-02,
+ 1.1872e-05,  1.9000e-05,  2.0729e-05,
+ 1.0139e-05,  1.6832e-05,  1.9392e-05,
+ 6.5445e-06,  1.0973e-05,  1.3521e-05,
+-5.3340e-02,  1.3108e-03,  4.0436e-02,
+ 5.7068e-02, -2.7923e-02, -5.4781e-02,
+-2.9293e-02,  2.7145e-02,  2.7340e-02,
+ 5.3520e-03,  1.8766e-02,  4.0297e-01,
+ 2.6473e-02, -3.4675e-02, -1.1783e-01,
+-2.5038e-02, -1.7702e-02, -3.4908e-02,
+ 1.4847e-02,  2.3237e-01, -6.3687e-02,
+-6.5672e-02, -2.1888e-01, -1.7233e-02,
+ 4.0608e-02, -6.9580e-02, -2.2200e-02,
+ 5.8163e-02,  1.3695e-01, -2.6257e-02,
+-1.3328e-01, -3.5730e-01,  2.4507e-02,
+-4.5611e-03,  2.0424e-01, -3.9821e-02,
+ 5.5300e-02, -1.6006e-01,  1.1717e-01,
+-2.6107e-02, -8.6995e-02,  8.3720e-02,
+ 7.5494e-02,  3.2189e-01,  1.5527e-01,
+-6.6869e-02,  1.4469e-01,  5.1805e-02,
+ 9.8760e-02, -1.6759e-01, -1.2350e-01,
+ 5.7005e-02,  8.4904e-02,  8.9713e-02,
+-1.4263e-02,  2.8914e-02,  3.2239e-02,
+-2.4871e-02,  5.6014e-02, -4.4469e-02,
+ 3.1209e-02,  1.3677e-02, -2.1052e-02,
+-1.6548e-03, -1.8796e-03, -1.9883e-03,
+-1.6186e-03, -1.8494e-03, -1.9670e-03,
+-1.5841e-03, -1.8173e-03, -1.9345e-03,
+ 3.5726e-02,  1.8013e-01,  1.6913e-02,
+-1.2168e-01, -6.3848e-02,  3.0555e-02,
+ 3.0269e-02, -1.0260e-01, -1.5259e-02,
+-4.7375e-03,  5.5115e-02,  6.2642e-01,
+ 9.9776e-03, -2.1988e-01, -2.0984e-01,
+ 7.0470e-03,  6.3178e-02, -1.3607e-02,
+ 1.1918e-01, -2.4081e-01,  1.7889e-01,
+-1.0514e-01,  2.9220e-01, -1.3263e-01,
+ 5.6091e-03, -4.1623e-02,  2.5589e-02,
+-1.8496e-01,  2.7698e-02, -6.5768e-02,
+ 2.9677e-01,  4.4163e-02,  5.8530e-02,
+-1.1010e-01, -7.6787e-02,  3.9844e-02,
+ 5.2113e-03, -1.8202e-02,  1.4129e-03,
+-6.1402e-03, -2.7222e-01,  7.4690e-02,
+ 1.9131e-02,  2.2753e-01,  1.9587e-02,
+-2.7391e-02,  6.7917e-03,  2.0496e-03,
+ 6.7333e-02,  7.8262e-02,  2.1110e-03,
+-5.4519e-02,  3.0763e-02,  1.5628e-02,
+ 9.5055e-02,  3.8855e-02,  1.2446e-02,
+-1.5152e-01,  7.8124e-02, -1.2616e-02,
+ 9.3100e-03, -1.6528e-02, -1.2873e-02,
+-1.8377e-03, -1.9231e-03, -1.8930e-03,
+-1.8058e-03, -1.8841e-03, -1.8678e-03,
+-1.7387e-03, -1.7966e-03, -1.7781e-03,
+-4.5122e-02,  1.7027e-03, -3.5534e-03,
+ 8.5222e-03,  1.0130e-01,  4.7893e-02,
+ 6.5574e-02,  7.2150e-03, -2.1820e-03,
+-5.5105e-03, -1.8990e-01,  2.6527e-02,
+ 6.6140e-03,  2.1537e-01, -2.2183e-02,
+-8.0628e-03,  6.8398e-03,  9.4474e-03,
+ 1.2239e-01, -1.3337e-01,  7.3391e-02,
+-1.2205e-01,  1.3145e-01, -2.0063e-02,
+ 2.2168e-02,  3.6097e-03,  2.7146e-02,
+ 4.6717e-02,  2.1122e-02,  1.5491e-02,
+-1.3077e-01,  1.1635e-01,  1.0849e-02,
+ 8.0113e-02, -8.4028e-02,  1.2863e-03,
+-2.9796e-02, -8.4537e-02, -2.6766e-03,
+-7.7771e-03, -2.4274e-03,  8.6274e-02,
+-2.0354e-02,  4.1245e-02,  8.4227e-02,
+ 5.5894e-02,  1.0706e-01,  5.2965e-02,
+-7.8731e-03,  5.5825e-01,  1.0373e-01,
+-1.1975e-01, -2.0071e-02, -2.5286e-02,
+-7.7477e-02,  5.3589e-02, -1.5710e-03,
+-1.2753e-01,  2.5166e-01,  8.2205e-03,
+-9.8349e-02, -4.9539e-02, -5.4941e-02,
+-4.9916e-03, -4.9986e-03, -5.0660e-03,
+-4.9770e-03, -4.9840e-03, -5.0543e-03,
+-4.9997e-03, -5.0114e-03, -5.0809e-03,
+ 6.1819e-02,  1.5061e-01,  1.1984e-02,
+ 1.2905e-01,  2.5921e-01,  1.4768e-01,
+ 4.5548e-02,  1.4902e-01, -4.8961e-03,
+-1.3605e-02,  8.2896e-02, -4.1931e-01,
+-2.2657e-02,  2.4768e-01,  2.6528e-01,
+-1.1566e-02, -8.7819e-03,  4.3618e-02,
+-3.4332e-02, -1.8392e-01,  4.4471e-02,
+-3.7073e-02, -5.4620e-02,  1.0899e-01,
+ 3.7891e-02,  9.9487e-02,  3.2383e-02,
+-6.3628e-02, -5.0303e-03,  5.4617e-02,
+-8.7802e-02,  2.1977e-01, -6.0249e-03,
+ 6.3554e-02, -5.4291e-02, -2.6709e-02,
+-1.5505e-02, -6.7104e-02,  3.8607e-02,
+-1.1427e-01, -3.2524e-01,  4.0077e-02,
+-6.5144e-03,  1.2313e-01, -2.7924e-02,
+ 1.4265e-02, -3.8338e-02,  8.6780e-02,
+ 1.5341e-01,  1.2174e-01, -7.3160e-02,
+ 2.6326e-04,  7.3690e-02,  5.2187e-02,
+-3.3114e-02, -3.6588e-02,  1.1635e-02,
+-3.3521e-02,  1.0767e-01, -8.9125e-03,
+-2.2431e-02, -4.5655e-03,  7.5531e-03,
+ 6.7227e-04,  7.2856e-04,  7.3907e-04,
+ 6.5335e-04,  7.0702e-04,  7.1233e-04,
+ 6.1540e-04,  6.7286e-04,  6.7797e-04,
+-3.1496e-02,  6.0514e-02,  4.2013e-02,
+-2.8617e-02,  1.4846e-02,  4.0016e-03,
+ 4.7006e-03, -4.0017e-02, -3.0411e-02,
+-9.6037e-03,  8.8522e-02,  9.8616e-02,
+ 4.1297e-02, -3.2645e-01, -7.6144e-03,
+-1.0711e-02,  3.9324e-02,  4.0144e-02,
+ 5.2899e-02, -7.8668e-02, -5.4798e-02,
+-2.0428e-01,  5.7238e-02, -3.6937e-02,
+-3.6103e-02, -8.2683e-02, -2.8101e-02,
+ 8.2479e-02,  5.7766e-02, -1.2019e-01,
+-3.8373e-01,  6.8272e-02, -1.1758e-02,
+ 5.1129e-02, -2.7931e-01,  4.5608e-02,
+-2.5151e-02, -5.0816e-02,  1.7231e-02,
+-3.6376e-02,  1.5916e-01,  2.9192e-02,
+-4.1947e-02,  5.3183e-02, -9.7289e-02,
+ 4.6138e-02,  7.0842e-02,  1.6673e-02,
+-1.7243e-03,  2.7203e-01,  3.8262e-02,
+-1.4000e-01, -7.3793e-02, -2.0050e-02,
+-1.8750e-02, -8.5319e-02, -3.0858e-02,
+-5.9981e-02,  1.2729e-01,  1.4094e-02,
+-5.4088e-02, -2.3694e-02, -9.7485e-03,
+-4.7840e-03, -4.8359e-03, -4.8727e-03,
+-4.7882e-03, -4.8380e-03, -4.8755e-03,
+-4.7859e-03, -4.8321e-03, -4.8633e-03,
+ 4.9511e-02,  1.0935e-01, -3.7430e-03,
+ 1.1834e-01,  7.7243e-02,  4.3074e-02,
+ 6.7446e-02,  2.9734e-02, -1.1276e-02,
+-2.0080e-02,  1.3561e-01, -1.3455e-01,
+-1.4505e-02,  2.2100e-01,  4.9635e-02,
+-1.0040e-02,  3.4560e-02, -7.4607e-03,
+-6.8873e-02, -5.6221e-02,  1.2255e-02,
+-2.9198e-02,  7.1612e-02,  2.9402e-02,
+ 4.1036e-02,  4.6417e-02,  6.0284e-03,
+-6.5261e-02,  2.1426e-03,  2.4192e-02,
+-1.6073e-03, -6.2222e-03, -1.8295e-02,
+ 2.4952e-04, -2.0623e-02, -3.3064e-03,
+ 5.9188e-02, -4.8839e-02,  7.9840e-02,
+-6.7952e-02, -4.7191e-01,  1.5117e-01,
+ 1.5668e-01,  2.4733e-01,  1.1354e-01,
+ 1.7742e-02, -4.4059e-02,  9.5374e-03,
+ 3.2049e-01, -1.3779e-01,  9.6608e-02,
+ 8.4580e-02,  1.4293e-01,  6.1574e-02,
+ 2.8777e-03,  7.8795e-02, -5.1902e-02,
+ 1.2212e-01,  1.0321e-01,  3.2360e-02,
+-9.6617e-02,  7.8941e-03, -7.0876e-02,
+ 3.5869e-03,  3.5891e-03,  3.5923e-03,
+ 3.5746e-03,  3.5840e-03,  3.5967e-03,
+ 3.5785e-03,  3.5932e-03,  3.6080e-03,
+ 1.5454e-03,  3.0582e-03,  4.3737e-02,
+-5.9833e-02, -1.1247e-01,  4.4380e-02,
+-1.3206e-01,  8.2778e-03,  4.7963e-02,
+-4.3720e-02, -7.5722e-03,  2.0510e-01,
+ 3.0133e-02, -4.0506e-01,  2.7867e-01,
+ 5.5586e-02,  2.8926e-02,  1.3360e-03,
+ 1.9490e-05,  3.3326e-01, -7.7241e-02,
+-1.5648e-01,  1.5195e-01, -1.3995e-01,
+ 8.6519e-02,  1.0447e-01, -4.1413e-02,
+-3.8667e-03,  1.6159e-01,  1.1627e-01,
+-2.2646e-01, -3.4758e-02, -6.7956e-03,
+-3.2689e-01,  1.9606e-01, -9.1523e-02,
+ 1.1238e-02,  1.5084e-03,  4.2113e-02,
+-1.1154e-02, -3.6596e-01, -7.2252e-02,
+ 6.6621e-02,  1.0188e-01,  4.1032e-01,
+ 3.5892e-02, -4.8304e-02,  6.6142e-03,
+ 1.3374e-01,  2.2720e-01, -7.1224e-02,
+ 6.8952e-02,  2.0467e-01,  5.0251e-02,
+-6.2016e-02,  2.2175e-01, -1.7764e-02,
+ 2.7542e-02,  1.4905e-01,  3.6637e-02,
+-7.2231e-02,  5.0271e-03, -7.1823e-02,
+ 3.5760e-03,  3.5540e-03,  3.5692e-03,
+ 3.5664e-03,  3.5490e-03,  3.5689e-03,
+ 3.5671e-03,  3.5619e-03,  3.5864e-03,
+ 2.7470e-02, -3.9752e-02,  4.1063e-02,
+-2.4985e-02, -1.7969e-01,  8.2186e-02,
+-5.4251e-02, -5.9651e-03,  2.5079e-02,
+-2.1197e-02,  2.5426e-02,  1.3585e-01,
+-1.3460e-02, -1.1377e-01,  1.2278e-01,
+ 3.6533e-02,  1.2843e-02,  5.6219e-02,
+ 5.8141e-04,  2.8354e-01, -6.2016e-02,
+-1.0289e-01,  1.8724e-01, -9.9475e-02,
+ 5.1193e-02,  7.5986e-02, -1.2951e-03,
+-8.2587e-02,  1.8498e-01,  1.0891e-01,
+ 1.3538e-01, -4.7728e-01,  1.0868e-01,
+-8.6415e-02, -1.7061e-01,  1.0457e-02
+}
+};
+)" + std::string(
+R"(
+__constant float biasL[8][8] = 
+{
+{
+-0.1175, -0.0258, -0.0053, -0.0437, -0.0563, -0.1047, -0.3449,  0.0568
+}
+,
+{
+ 0.0339, -0.1738,  0.0061,  0.1565, -0.0316, -0.0016, -0.0032, -0.0554
+}
+,
+{
+-0.0508, -0.0609,  0.0347, -0.0802, -0.0438,  0.2512, -0.0491, -0.0259
+}
+,
+{
+ 0.0655,  0.0255,  0.0228, -0.0027, -0.0155, -0.0163, -0.0174, -0.1095
+}
+,
+{
+ 4.9947e-03,  5.3372e-03, -4.5286e-09, -1.3756e-03,  3.8858e-03, -4.4197e-02,  3.3970e-02,  2.8411e-02
+}
+,
+{
+-0.0396,  0.0007,  0.1735,  0.0109,  0.1177,  0.0919,  0.0567, -0.0005
+}
+,
+{
+ 0.0127, -0.0688,  0.1102, -0.0052,  0.1602, -0.0191, -0.0322,  0.0311
+}
+,
+{
+ 0.0063, 0.0093, 0.0729, 0.3734, 0.0006, 0.1915, 0.3186, 0.2636
+}
+};
+
+__constant float kernelsL10[4 * 8] = 
+{
+-0.0967, -0.3094,
+ 0.3537,  0.5705,
+ 0.2547,  0.3360,
+-0.0718, -0.0700,
+-0.3013, -0.1602,
+ 0.4520,  0.0495,
+ 0.1564,  0.3773,
+-0.0216,  0.4367,
+-0.4855, -0.1972,
+-0.2026, -0.4390,
+ 0.3743, -0.1156,
+ 0.4408, -0.3123,
+-0.3577,  0.0753,
+-0.3396,  0.0336,
+ 0.1052, -0.4180,
+ 0.0799, -0.3587
+};
+
+)"
+R"(
+__kernel void conv1To8(
+    __read_only image2d_t srcImg, 
+    __write_only image2d_t tmpImgOut1, 
+    __write_only image2d_t tmpImgOut2)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(srcImg) || y >= get_image_height(srcImg))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 mc = read_imagef(srcImg, samplerN, coord);
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
+
+    float4 c1234 = RELU((float4)(
+        tl.x * kernelsL1[0*9+0] + tc.x * kernelsL1[0*9+1] + tr.x * kernelsL1[0*9+2] +
+        ml.x * kernelsL1[0*9+3] + mc.x * kernelsL1[0*9+4] + mr.x * kernelsL1[0*9+5] +
+        bl.x * kernelsL1[0*9+6] + bc.x * kernelsL1[0*9+7] + br.x * kernelsL1[0*9+8] + biasL1[0],
+
+        tl.x * kernelsL1[1*9+0] + tc.x * kernelsL1[1*9+1] + tr.x * kernelsL1[1*9+2] +
+        ml.x * kernelsL1[1*9+3] + mc.x * kernelsL1[1*9+4] + mr.x * kernelsL1[1*9+5] +
+        bl.x * kernelsL1[1*9+6] + bc.x * kernelsL1[1*9+7] + br.x * kernelsL1[1*9+8] + biasL1[1],
+
+        tl.x * kernelsL1[2*9+0] + tc.x * kernelsL1[2*9+1] + tr.x * kernelsL1[2*9+2] +
+        ml.x * kernelsL1[2*9+3] + mc.x * kernelsL1[2*9+4] + mr.x * kernelsL1[2*9+5] +
+        bl.x * kernelsL1[2*9+6] + bc.x * kernelsL1[2*9+7] + br.x * kernelsL1[2*9+8] + biasL1[2],
+
+        tl.x * kernelsL1[3*9+0] + tc.x * kernelsL1[3*9+1] + tr.x * kernelsL1[3*9+2] +
+        ml.x * kernelsL1[3*9+3] + mc.x * kernelsL1[3*9+4] + mr.x * kernelsL1[3*9+5] +
+        bl.x * kernelsL1[3*9+6] + bc.x * kernelsL1[3*9+7] + br.x * kernelsL1[3*9+8] + biasL1[3]
+    ));
+    float4 c5678 = RELU((float4)(
+        tl.x * kernelsL1[4*9+0] + tc.x * kernelsL1[4*9+1] + tr.x * kernelsL1[4*9+2] +
+        ml.x * kernelsL1[4*9+3] + mc.x * kernelsL1[4*9+4] + mr.x * kernelsL1[4*9+5] +
+        bl.x * kernelsL1[4*9+6] + bc.x * kernelsL1[4*9+7] + br.x * kernelsL1[4*9+8] + biasL1[4],
+
+        tl.x * kernelsL1[5*9+0] + tc.x * kernelsL1[5*9+1] + tr.x * kernelsL1[5*9+2] +
+        ml.x * kernelsL1[5*9+3] + mc.x * kernelsL1[5*9+4] + mr.x * kernelsL1[5*9+5] +
+        bl.x * kernelsL1[5*9+6] + bc.x * kernelsL1[5*9+7] + br.x * kernelsL1[5*9+8] + biasL1[5],
+
+        tl.x * kernelsL1[6*9+0] + tc.x * kernelsL1[6*9+1] + tr.x * kernelsL1[6*9+2] +
+        ml.x * kernelsL1[6*9+3] + mc.x * kernelsL1[6*9+4] + mr.x * kernelsL1[6*9+5] +
+        bl.x * kernelsL1[6*9+6] + bc.x * kernelsL1[6*9+7] + br.x * kernelsL1[6*9+8] + biasL1[6],
+
+        tl.x * kernelsL1[7*9+0] + tc.x * kernelsL1[7*9+1] + tr.x * kernelsL1[7*9+2] +
+        ml.x * kernelsL1[7*9+3] + mc.x * kernelsL1[7*9+4] + mr.x * kernelsL1[7*9+5] +
+        bl.x * kernelsL1[7*9+6] + bc.x * kernelsL1[7*9+7] + br.x * kernelsL1[7*9+8] + biasL1[7]
+    ));
+
+    write_imagef(tmpImgOut1, coord, c1234);
+    write_imagef(tmpImgOut2, coord, c5678);
+}
+)"
+R"(
+__kernel void conv8To8(
+    __read_only image2d_t tmpImgIn1,
+    __read_only image2d_t tmpImgIn2, 
+    __write_only image2d_t tmpImgOut1, 
+    __write_only image2d_t tmpImgOut2,
+    int l)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(tmpImgIn1) || y >= get_image_height(tmpImgIn1))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 tl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y-1));
+    float4 tc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y-1));
+    float4 tr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y-1));
+    float4 ml1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, coord);
+    float4 mr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y));
+    float4 bl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y+1));
+    float4 bc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y+1));
+    float4 br1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y+1));
+
+    float4 tl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y-1));
+    float4 tc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y-1));
+    float4 tr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y-1));
+    float4 ml2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y));
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, coord);
+    float4 mr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y));
+    float4 bl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y+1));
+    float4 bc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y+1));
+    float4 br2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y+1));
+    
+    float4 c1234 = RELU((float4)(
+        tl1.x * kernelsL[l][0*72+0*9+0] + tc1.x * kernelsL[l][0*72+0*9+1] + tr1.x * kernelsL[l][0*72+0*9+2] +
+        ml1.x * kernelsL[l][0*72+0*9+3] + mc1.x * kernelsL[l][0*72+0*9+4] + mr1.x * kernelsL[l][0*72+0*9+5] +
+        bl1.x * kernelsL[l][0*72+0*9+6] + bc1.x * kernelsL[l][0*72+0*9+7] + br1.x * kernelsL[l][0*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][0*72+1*9+0] + tc1.y * kernelsL[l][0*72+1*9+1] + tr1.y * kernelsL[l][0*72+1*9+2] +
+        ml1.y * kernelsL[l][0*72+1*9+3] + mc1.y * kernelsL[l][0*72+1*9+4] + mr1.y * kernelsL[l][0*72+1*9+5] +
+        bl1.y * kernelsL[l][0*72+1*9+6] + bc1.y * kernelsL[l][0*72+1*9+7] + br1.y * kernelsL[l][0*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][0*72+2*9+0] + tc1.z * kernelsL[l][0*72+2*9+1] + tr1.z * kernelsL[l][0*72+2*9+2] +
+        ml1.z * kernelsL[l][0*72+2*9+3] + mc1.z * kernelsL[l][0*72+2*9+4] + mr1.z * kernelsL[l][0*72+2*9+5] +
+        bl1.z * kernelsL[l][0*72+2*9+6] + bc1.z * kernelsL[l][0*72+2*9+7] + br1.z * kernelsL[l][0*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][0*72+3*9+0] + tc1.w * kernelsL[l][0*72+3*9+1] + tr1.w * kernelsL[l][0*72+3*9+2] +
+        ml1.w * kernelsL[l][0*72+3*9+3] + mc1.w * kernelsL[l][0*72+3*9+4] + mr1.w * kernelsL[l][0*72+3*9+5] +
+        bl1.w * kernelsL[l][0*72+3*9+6] + bc1.w * kernelsL[l][0*72+3*9+7] + br1.w * kernelsL[l][0*72+3*9+8] +
+
+        tl2.x * kernelsL[l][0*72+4*9+0] + tc2.x * kernelsL[l][0*72+4*9+1] + tr2.x * kernelsL[l][0*72+4*9+2] +
+        ml2.x * kernelsL[l][0*72+4*9+3] + mc2.x * kernelsL[l][0*72+4*9+4] + mr2.x * kernelsL[l][0*72+4*9+5] +
+        bl2.x * kernelsL[l][0*72+4*9+6] + bc2.x * kernelsL[l][0*72+4*9+7] + br2.x * kernelsL[l][0*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][0*72+5*9+0] + tc2.y * kernelsL[l][0*72+5*9+1] + tr2.y * kernelsL[l][0*72+5*9+2] +
+        ml2.y * kernelsL[l][0*72+5*9+3] + mc2.y * kernelsL[l][0*72+5*9+4] + mr2.y * kernelsL[l][0*72+5*9+5] +
+        bl2.y * kernelsL[l][0*72+5*9+6] + bc2.y * kernelsL[l][0*72+5*9+7] + br2.y * kernelsL[l][0*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][0*72+6*9+0] + tc2.z * kernelsL[l][0*72+6*9+1] + tr2.z * kernelsL[l][0*72+6*9+2] +
+        ml2.z * kernelsL[l][0*72+6*9+3] + mc2.z * kernelsL[l][0*72+6*9+4] + mr2.z * kernelsL[l][0*72+6*9+5] +
+        bl2.z * kernelsL[l][0*72+6*9+6] + bc2.z * kernelsL[l][0*72+6*9+7] + br2.z * kernelsL[l][0*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][0*72+7*9+0] + tc2.w * kernelsL[l][0*72+7*9+1] + tr2.w * kernelsL[l][0*72+7*9+2] +
+        ml2.w * kernelsL[l][0*72+7*9+3] + mc2.w * kernelsL[l][0*72+7*9+4] + mr2.w * kernelsL[l][0*72+7*9+5] +
+        bl2.w * kernelsL[l][0*72+7*9+6] + bc2.w * kernelsL[l][0*72+7*9+7] + br2.w * kernelsL[l][0*72+7*9+8] + biasL[l][0]
+        ,
+        tl1.x * kernelsL[l][1*72+0*9+0] + tc1.x * kernelsL[l][1*72+0*9+1] + tr1.x * kernelsL[l][1*72+0*9+2] +
+        ml1.x * kernelsL[l][1*72+0*9+3] + mc1.x * kernelsL[l][1*72+0*9+4] + mr1.x * kernelsL[l][1*72+0*9+5] +
+        bl1.x * kernelsL[l][1*72+0*9+6] + bc1.x * kernelsL[l][1*72+0*9+7] + br1.x * kernelsL[l][1*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][1*72+1*9+0] + tc1.y * kernelsL[l][1*72+1*9+1] + tr1.y * kernelsL[l][1*72+1*9+2] +
+        ml1.y * kernelsL[l][1*72+1*9+3] + mc1.y * kernelsL[l][1*72+1*9+4] + mr1.y * kernelsL[l][1*72+1*9+5] +
+        bl1.y * kernelsL[l][1*72+1*9+6] + bc1.y * kernelsL[l][1*72+1*9+7] + br1.y * kernelsL[l][1*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][1*72+2*9+0] + tc1.z * kernelsL[l][1*72+2*9+1] + tr1.z * kernelsL[l][1*72+2*9+2] +
+        ml1.z * kernelsL[l][1*72+2*9+3] + mc1.z * kernelsL[l][1*72+2*9+4] + mr1.z * kernelsL[l][1*72+2*9+5] +
+        bl1.z * kernelsL[l][1*72+2*9+6] + bc1.z * kernelsL[l][1*72+2*9+7] + br1.z * kernelsL[l][1*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][1*72+3*9+0] + tc1.w * kernelsL[l][1*72+3*9+1] + tr1.w * kernelsL[l][1*72+3*9+2] +
+        ml1.w * kernelsL[l][1*72+3*9+3] + mc1.w * kernelsL[l][1*72+3*9+4] + mr1.w * kernelsL[l][1*72+3*9+5] +
+        bl1.w * kernelsL[l][1*72+3*9+6] + bc1.w * kernelsL[l][1*72+3*9+7] + br1.w * kernelsL[l][1*72+3*9+8] +
+
+        tl2.x * kernelsL[l][1*72+4*9+0] + tc2.x * kernelsL[l][1*72+4*9+1] + tr2.x * kernelsL[l][1*72+4*9+2] +
+        ml2.x * kernelsL[l][1*72+4*9+3] + mc2.x * kernelsL[l][1*72+4*9+4] + mr2.x * kernelsL[l][1*72+4*9+5] +
+        bl2.x * kernelsL[l][1*72+4*9+6] + bc2.x * kernelsL[l][1*72+4*9+7] + br2.x * kernelsL[l][1*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][1*72+5*9+0] + tc2.y * kernelsL[l][1*72+5*9+1] + tr2.y * kernelsL[l][1*72+5*9+2] +
+        ml2.y * kernelsL[l][1*72+5*9+3] + mc2.y * kernelsL[l][1*72+5*9+4] + mr2.y * kernelsL[l][1*72+5*9+5] +
+        bl2.y * kernelsL[l][1*72+5*9+6] + bc2.y * kernelsL[l][1*72+5*9+7] + br2.y * kernelsL[l][1*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][1*72+6*9+0] + tc2.z * kernelsL[l][1*72+6*9+1] + tr2.z * kernelsL[l][1*72+6*9+2] +
+        ml2.z * kernelsL[l][1*72+6*9+3] + mc2.z * kernelsL[l][1*72+6*9+4] + mr2.z * kernelsL[l][1*72+6*9+5] +
+        bl2.z * kernelsL[l][1*72+6*9+6] + bc2.z * kernelsL[l][1*72+6*9+7] + br2.z * kernelsL[l][1*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][1*72+7*9+0] + tc2.w * kernelsL[l][1*72+7*9+1] + tr2.w * kernelsL[l][1*72+7*9+2] +
+        ml2.w * kernelsL[l][1*72+7*9+3] + mc2.w * kernelsL[l][1*72+7*9+4] + mr2.w * kernelsL[l][1*72+7*9+5] +
+        bl2.w * kernelsL[l][1*72+7*9+6] + bc2.w * kernelsL[l][1*72+7*9+7] + br2.w * kernelsL[l][1*72+7*9+8] + biasL[l][1]
+        ,
+        tl1.x * kernelsL[l][2*72+0*9+0] + tc1.x * kernelsL[l][2*72+0*9+1] + tr1.x * kernelsL[l][2*72+0*9+2] +
+        ml1.x * kernelsL[l][2*72+0*9+3] + mc1.x * kernelsL[l][2*72+0*9+4] + mr1.x * kernelsL[l][2*72+0*9+5] +
+        bl1.x * kernelsL[l][2*72+0*9+6] + bc1.x * kernelsL[l][2*72+0*9+7] + br1.x * kernelsL[l][2*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][2*72+1*9+0] + tc1.y * kernelsL[l][2*72+1*9+1] + tr1.y * kernelsL[l][2*72+1*9+2] +
+        ml1.y * kernelsL[l][2*72+1*9+3] + mc1.y * kernelsL[l][2*72+1*9+4] + mr1.y * kernelsL[l][2*72+1*9+5] +
+        bl1.y * kernelsL[l][2*72+1*9+6] + bc1.y * kernelsL[l][2*72+1*9+7] + br1.y * kernelsL[l][2*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][2*72+2*9+0] + tc1.z * kernelsL[l][2*72+2*9+1] + tr1.z * kernelsL[l][2*72+2*9+2] +
+        ml1.z * kernelsL[l][2*72+2*9+3] + mc1.z * kernelsL[l][2*72+2*9+4] + mr1.z * kernelsL[l][2*72+2*9+5] +
+        bl1.z * kernelsL[l][2*72+2*9+6] + bc1.z * kernelsL[l][2*72+2*9+7] + br1.z * kernelsL[l][2*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][2*72+3*9+0] + tc1.w * kernelsL[l][2*72+3*9+1] + tr1.w * kernelsL[l][2*72+3*9+2] +
+        ml1.w * kernelsL[l][2*72+3*9+3] + mc1.w * kernelsL[l][2*72+3*9+4] + mr1.w * kernelsL[l][2*72+3*9+5] +
+        bl1.w * kernelsL[l][2*72+3*9+6] + bc1.w * kernelsL[l][2*72+3*9+7] + br1.w * kernelsL[l][2*72+3*9+8] +
+
+        tl2.x * kernelsL[l][2*72+4*9+0] + tc2.x * kernelsL[l][2*72+4*9+1] + tr2.x * kernelsL[l][2*72+4*9+2] +
+        ml2.x * kernelsL[l][2*72+4*9+3] + mc2.x * kernelsL[l][2*72+4*9+4] + mr2.x * kernelsL[l][2*72+4*9+5] +
+        bl2.x * kernelsL[l][2*72+4*9+6] + bc2.x * kernelsL[l][2*72+4*9+7] + br2.x * kernelsL[l][2*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][2*72+5*9+0] + tc2.y * kernelsL[l][2*72+5*9+1] + tr2.y * kernelsL[l][2*72+5*9+2] +
+        ml2.y * kernelsL[l][2*72+5*9+3] + mc2.y * kernelsL[l][2*72+5*9+4] + mr2.y * kernelsL[l][2*72+5*9+5] +
+        bl2.y * kernelsL[l][2*72+5*9+6] + bc2.y * kernelsL[l][2*72+5*9+7] + br2.y * kernelsL[l][2*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][2*72+6*9+0] + tc2.z * kernelsL[l][2*72+6*9+1] + tr2.z * kernelsL[l][2*72+6*9+2] +
+        ml2.z * kernelsL[l][2*72+6*9+3] + mc2.z * kernelsL[l][2*72+6*9+4] + mr2.z * kernelsL[l][2*72+6*9+5] +
+        bl2.z * kernelsL[l][2*72+6*9+6] + bc2.z * kernelsL[l][2*72+6*9+7] + br2.z * kernelsL[l][2*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][2*72+7*9+0] + tc2.w * kernelsL[l][2*72+7*9+1] + tr2.w * kernelsL[l][2*72+7*9+2] +
+        ml2.w * kernelsL[l][2*72+7*9+3] + mc2.w * kernelsL[l][2*72+7*9+4] + mr2.w * kernelsL[l][2*72+7*9+5] +
+        bl2.w * kernelsL[l][2*72+7*9+6] + bc2.w * kernelsL[l][2*72+7*9+7] + br2.w * kernelsL[l][2*72+7*9+8] + biasL[l][2]
+        ,
+        tl1.x * kernelsL[l][3*72+0*9+0] + tc1.x * kernelsL[l][3*72+0*9+1] + tr1.x * kernelsL[l][3*72+0*9+2] +
+        ml1.x * kernelsL[l][3*72+0*9+3] + mc1.x * kernelsL[l][3*72+0*9+4] + mr1.x * kernelsL[l][3*72+0*9+5] +
+        bl1.x * kernelsL[l][3*72+0*9+6] + bc1.x * kernelsL[l][3*72+0*9+7] + br1.x * kernelsL[l][3*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][3*72+1*9+0] + tc1.y * kernelsL[l][3*72+1*9+1] + tr1.y * kernelsL[l][3*72+1*9+2] +
+        ml1.y * kernelsL[l][3*72+1*9+3] + mc1.y * kernelsL[l][3*72+1*9+4] + mr1.y * kernelsL[l][3*72+1*9+5] +
+        bl1.y * kernelsL[l][3*72+1*9+6] + bc1.y * kernelsL[l][3*72+1*9+7] + br1.y * kernelsL[l][3*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][3*72+2*9+0] + tc1.z * kernelsL[l][3*72+2*9+1] + tr1.z * kernelsL[l][3*72+2*9+2] +
+        ml1.z * kernelsL[l][3*72+2*9+3] + mc1.z * kernelsL[l][3*72+2*9+4] + mr1.z * kernelsL[l][3*72+2*9+5] +
+        bl1.z * kernelsL[l][3*72+2*9+6] + bc1.z * kernelsL[l][3*72+2*9+7] + br1.z * kernelsL[l][3*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][3*72+3*9+0] + tc1.w * kernelsL[l][3*72+3*9+1] + tr1.w * kernelsL[l][3*72+3*9+2] +
+        ml1.w * kernelsL[l][3*72+3*9+3] + mc1.w * kernelsL[l][3*72+3*9+4] + mr1.w * kernelsL[l][3*72+3*9+5] +
+        bl1.w * kernelsL[l][3*72+3*9+6] + bc1.w * kernelsL[l][3*72+3*9+7] + br1.w * kernelsL[l][3*72+3*9+8] +
+
+        tl2.x * kernelsL[l][3*72+4*9+0] + tc2.x * kernelsL[l][3*72+4*9+1] + tr2.x * kernelsL[l][3*72+4*9+2] +
+        ml2.x * kernelsL[l][3*72+4*9+3] + mc2.x * kernelsL[l][3*72+4*9+4] + mr2.x * kernelsL[l][3*72+4*9+5] +
+        bl2.x * kernelsL[l][3*72+4*9+6] + bc2.x * kernelsL[l][3*72+4*9+7] + br2.x * kernelsL[l][3*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][3*72+5*9+0] + tc2.y * kernelsL[l][3*72+5*9+1] + tr2.y * kernelsL[l][3*72+5*9+2] +
+        ml2.y * kernelsL[l][3*72+5*9+3] + mc2.y * kernelsL[l][3*72+5*9+4] + mr2.y * kernelsL[l][3*72+5*9+5] +
+        bl2.y * kernelsL[l][3*72+5*9+6] + bc2.y * kernelsL[l][3*72+5*9+7] + br2.y * kernelsL[l][3*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][3*72+6*9+0] + tc2.z * kernelsL[l][3*72+6*9+1] + tr2.z * kernelsL[l][3*72+6*9+2] +
+        ml2.z * kernelsL[l][3*72+6*9+3] + mc2.z * kernelsL[l][3*72+6*9+4] + mr2.z * kernelsL[l][3*72+6*9+5] +
+        bl2.z * kernelsL[l][3*72+6*9+6] + bc2.z * kernelsL[l][3*72+6*9+7] + br2.z * kernelsL[l][3*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][3*72+7*9+0] + tc2.w * kernelsL[l][3*72+7*9+1] + tr2.w * kernelsL[l][3*72+7*9+2] +
+        ml2.w * kernelsL[l][3*72+7*9+3] + mc2.w * kernelsL[l][3*72+7*9+4] + mr2.w * kernelsL[l][3*72+7*9+5] +
+        bl2.w * kernelsL[l][3*72+7*9+6] + bc2.w * kernelsL[l][3*72+7*9+7] + br2.w * kernelsL[l][3*72+7*9+8] + biasL[l][3]
+    ));)"
+    R"(
+    float4 c5678 = RELU((float4)(
+        tl1.x * kernelsL[l][4*72+0*9+0] + tc1.x * kernelsL[l][4*72+0*9+1] + tr1.x * kernelsL[l][4*72+0*9+2] +
+        ml1.x * kernelsL[l][4*72+0*9+3] + mc1.x * kernelsL[l][4*72+0*9+4] + mr1.x * kernelsL[l][4*72+0*9+5] +
+        bl1.x * kernelsL[l][4*72+0*9+6] + bc1.x * kernelsL[l][4*72+0*9+7] + br1.x * kernelsL[l][4*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][4*72+1*9+0] + tc1.y * kernelsL[l][4*72+1*9+1] + tr1.y * kernelsL[l][4*72+1*9+2] +
+        ml1.y * kernelsL[l][4*72+1*9+3] + mc1.y * kernelsL[l][4*72+1*9+4] + mr1.y * kernelsL[l][4*72+1*9+5] +
+        bl1.y * kernelsL[l][4*72+1*9+6] + bc1.y * kernelsL[l][4*72+1*9+7] + br1.y * kernelsL[l][4*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][4*72+2*9+0] + tc1.z * kernelsL[l][4*72+2*9+1] + tr1.z * kernelsL[l][4*72+2*9+2] +
+        ml1.z * kernelsL[l][4*72+2*9+3] + mc1.z * kernelsL[l][4*72+2*9+4] + mr1.z * kernelsL[l][4*72+2*9+5] +
+        bl1.z * kernelsL[l][4*72+2*9+6] + bc1.z * kernelsL[l][4*72+2*9+7] + br1.z * kernelsL[l][4*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][4*72+3*9+0] + tc1.w * kernelsL[l][4*72+3*9+1] + tr1.w * kernelsL[l][4*72+3*9+2] +
+        ml1.w * kernelsL[l][4*72+3*9+3] + mc1.w * kernelsL[l][4*72+3*9+4] + mr1.w * kernelsL[l][4*72+3*9+5] +
+        bl1.w * kernelsL[l][4*72+3*9+6] + bc1.w * kernelsL[l][4*72+3*9+7] + br1.w * kernelsL[l][4*72+3*9+8] +
+
+        tl2.x * kernelsL[l][4*72+4*9+0] + tc2.x * kernelsL[l][4*72+4*9+1] + tr2.x * kernelsL[l][4*72+4*9+2] +
+        ml2.x * kernelsL[l][4*72+4*9+3] + mc2.x * kernelsL[l][4*72+4*9+4] + mr2.x * kernelsL[l][4*72+4*9+5] +
+        bl2.x * kernelsL[l][4*72+4*9+6] + bc2.x * kernelsL[l][4*72+4*9+7] + br2.x * kernelsL[l][4*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][4*72+5*9+0] + tc2.y * kernelsL[l][4*72+5*9+1] + tr2.y * kernelsL[l][4*72+5*9+2] +
+        ml2.y * kernelsL[l][4*72+5*9+3] + mc2.y * kernelsL[l][4*72+5*9+4] + mr2.y * kernelsL[l][4*72+5*9+5] +
+        bl2.y * kernelsL[l][4*72+5*9+6] + bc2.y * kernelsL[l][4*72+5*9+7] + br2.y * kernelsL[l][4*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][4*72+6*9+0] + tc2.z * kernelsL[l][4*72+6*9+1] + tr2.z * kernelsL[l][4*72+6*9+2] +
+        ml2.z * kernelsL[l][4*72+6*9+3] + mc2.z * kernelsL[l][4*72+6*9+4] + mr2.z * kernelsL[l][4*72+6*9+5] +
+        bl2.z * kernelsL[l][4*72+6*9+6] + bc2.z * kernelsL[l][4*72+6*9+7] + br2.z * kernelsL[l][4*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][4*72+7*9+0] + tc2.w * kernelsL[l][4*72+7*9+1] + tr2.w * kernelsL[l][4*72+7*9+2] +
+        ml2.w * kernelsL[l][4*72+7*9+3] + mc2.w * kernelsL[l][4*72+7*9+4] + mr2.w * kernelsL[l][4*72+7*9+5] +
+        bl2.w * kernelsL[l][4*72+7*9+6] + bc2.w * kernelsL[l][4*72+7*9+7] + br2.w * kernelsL[l][4*72+7*9+8] + biasL[l][4]
+        ,
+        tl1.x * kernelsL[l][5*72+0*9+0] + tc1.x * kernelsL[l][5*72+0*9+1] + tr1.x * kernelsL[l][5*72+0*9+2] +
+        ml1.x * kernelsL[l][5*72+0*9+3] + mc1.x * kernelsL[l][5*72+0*9+4] + mr1.x * kernelsL[l][5*72+0*9+5] +
+        bl1.x * kernelsL[l][5*72+0*9+6] + bc1.x * kernelsL[l][5*72+0*9+7] + br1.x * kernelsL[l][5*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][5*72+1*9+0] + tc1.y * kernelsL[l][5*72+1*9+1] + tr1.y * kernelsL[l][5*72+1*9+2] +
+        ml1.y * kernelsL[l][5*72+1*9+3] + mc1.y * kernelsL[l][5*72+1*9+4] + mr1.y * kernelsL[l][5*72+1*9+5] +
+        bl1.y * kernelsL[l][5*72+1*9+6] + bc1.y * kernelsL[l][5*72+1*9+7] + br1.y * kernelsL[l][5*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][5*72+2*9+0] + tc1.z * kernelsL[l][5*72+2*9+1] + tr1.z * kernelsL[l][5*72+2*9+2] +
+        ml1.z * kernelsL[l][5*72+2*9+3] + mc1.z * kernelsL[l][5*72+2*9+4] + mr1.z * kernelsL[l][5*72+2*9+5] +
+        bl1.z * kernelsL[l][5*72+2*9+6] + bc1.z * kernelsL[l][5*72+2*9+7] + br1.z * kernelsL[l][5*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][5*72+3*9+0] + tc1.w * kernelsL[l][5*72+3*9+1] + tr1.w * kernelsL[l][5*72+3*9+2] +
+        ml1.w * kernelsL[l][5*72+3*9+3] + mc1.w * kernelsL[l][5*72+3*9+4] + mr1.w * kernelsL[l][5*72+3*9+5] +
+        bl1.w * kernelsL[l][5*72+3*9+6] + bc1.w * kernelsL[l][5*72+3*9+7] + br1.w * kernelsL[l][5*72+3*9+8] +
+
+        tl2.x * kernelsL[l][5*72+4*9+0] + tc2.x * kernelsL[l][5*72+4*9+1] + tr2.x * kernelsL[l][5*72+4*9+2] +
+        ml2.x * kernelsL[l][5*72+4*9+3] + mc2.x * kernelsL[l][5*72+4*9+4] + mr2.x * kernelsL[l][5*72+4*9+5] +
+        bl2.x * kernelsL[l][5*72+4*9+6] + bc2.x * kernelsL[l][5*72+4*9+7] + br2.x * kernelsL[l][5*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][5*72+5*9+0] + tc2.y * kernelsL[l][5*72+5*9+1] + tr2.y * kernelsL[l][5*72+5*9+2] +
+        ml2.y * kernelsL[l][5*72+5*9+3] + mc2.y * kernelsL[l][5*72+5*9+4] + mr2.y * kernelsL[l][5*72+5*9+5] +
+        bl2.y * kernelsL[l][5*72+5*9+6] + bc2.y * kernelsL[l][5*72+5*9+7] + br2.y * kernelsL[l][5*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][5*72+6*9+0] + tc2.z * kernelsL[l][5*72+6*9+1] + tr2.z * kernelsL[l][5*72+6*9+2] +
+        ml2.z * kernelsL[l][5*72+6*9+3] + mc2.z * kernelsL[l][5*72+6*9+4] + mr2.z * kernelsL[l][5*72+6*9+5] +
+        bl2.z * kernelsL[l][5*72+6*9+6] + bc2.z * kernelsL[l][5*72+6*9+7] + br2.z * kernelsL[l][5*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][5*72+7*9+0] + tc2.w * kernelsL[l][5*72+7*9+1] + tr2.w * kernelsL[l][5*72+7*9+2] +
+        ml2.w * kernelsL[l][5*72+7*9+3] + mc2.w * kernelsL[l][5*72+7*9+4] + mr2.w * kernelsL[l][5*72+7*9+5] +
+        bl2.w * kernelsL[l][5*72+7*9+6] + bc2.w * kernelsL[l][5*72+7*9+7] + br2.w * kernelsL[l][5*72+7*9+8] + biasL[l][5]
+        ,
+        tl1.x * kernelsL[l][6*72+0*9+0] + tc1.x * kernelsL[l][6*72+0*9+1] + tr1.x * kernelsL[l][6*72+0*9+2] +
+        ml1.x * kernelsL[l][6*72+0*9+3] + mc1.x * kernelsL[l][6*72+0*9+4] + mr1.x * kernelsL[l][6*72+0*9+5] +
+        bl1.x * kernelsL[l][6*72+0*9+6] + bc1.x * kernelsL[l][6*72+0*9+7] + br1.x * kernelsL[l][6*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][6*72+1*9+0] + tc1.y * kernelsL[l][6*72+1*9+1] + tr1.y * kernelsL[l][6*72+1*9+2] +
+        ml1.y * kernelsL[l][6*72+1*9+3] + mc1.y * kernelsL[l][6*72+1*9+4] + mr1.y * kernelsL[l][6*72+1*9+5] +
+        bl1.y * kernelsL[l][6*72+1*9+6] + bc1.y * kernelsL[l][6*72+1*9+7] + br1.y * kernelsL[l][6*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][6*72+2*9+0] + tc1.z * kernelsL[l][6*72+2*9+1] + tr1.z * kernelsL[l][6*72+2*9+2] +
+        ml1.z * kernelsL[l][6*72+2*9+3] + mc1.z * kernelsL[l][6*72+2*9+4] + mr1.z * kernelsL[l][6*72+2*9+5] +
+        bl1.z * kernelsL[l][6*72+2*9+6] + bc1.z * kernelsL[l][6*72+2*9+7] + br1.z * kernelsL[l][6*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][6*72+3*9+0] + tc1.w * kernelsL[l][6*72+3*9+1] + tr1.w * kernelsL[l][6*72+3*9+2] +
+        ml1.w * kernelsL[l][6*72+3*9+3] + mc1.w * kernelsL[l][6*72+3*9+4] + mr1.w * kernelsL[l][6*72+3*9+5] +
+        bl1.w * kernelsL[l][6*72+3*9+6] + bc1.w * kernelsL[l][6*72+3*9+7] + br1.w * kernelsL[l][6*72+3*9+8] +
+
+        tl2.x * kernelsL[l][6*72+4*9+0] + tc2.x * kernelsL[l][6*72+4*9+1] + tr2.x * kernelsL[l][6*72+4*9+2] +
+        ml2.x * kernelsL[l][6*72+4*9+3] + mc2.x * kernelsL[l][6*72+4*9+4] + mr2.x * kernelsL[l][6*72+4*9+5] +
+        bl2.x * kernelsL[l][6*72+4*9+6] + bc2.x * kernelsL[l][6*72+4*9+7] + br2.x * kernelsL[l][6*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][6*72+5*9+0] + tc2.y * kernelsL[l][6*72+5*9+1] + tr2.y * kernelsL[l][6*72+5*9+2] +
+        ml2.y * kernelsL[l][6*72+5*9+3] + mc2.y * kernelsL[l][6*72+5*9+4] + mr2.y * kernelsL[l][6*72+5*9+5] +
+        bl2.y * kernelsL[l][6*72+5*9+6] + bc2.y * kernelsL[l][6*72+5*9+7] + br2.y * kernelsL[l][6*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][6*72+6*9+0] + tc2.z * kernelsL[l][6*72+6*9+1] + tr2.z * kernelsL[l][6*72+6*9+2] +
+        ml2.z * kernelsL[l][6*72+6*9+3] + mc2.z * kernelsL[l][6*72+6*9+4] + mr2.z * kernelsL[l][6*72+6*9+5] +
+        bl2.z * kernelsL[l][6*72+6*9+6] + bc2.z * kernelsL[l][6*72+6*9+7] + br2.z * kernelsL[l][6*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][6*72+7*9+0] + tc2.w * kernelsL[l][6*72+7*9+1] + tr2.w * kernelsL[l][6*72+7*9+2] +
+        ml2.w * kernelsL[l][6*72+7*9+3] + mc2.w * kernelsL[l][6*72+7*9+4] + mr2.w * kernelsL[l][6*72+7*9+5] +
+        bl2.w * kernelsL[l][6*72+7*9+6] + bc2.w * kernelsL[l][6*72+7*9+7] + br2.w * kernelsL[l][6*72+7*9+8] + biasL[l][6]
+        ,
+        tl1.x * kernelsL[l][7*72+0*9+0] + tc1.x * kernelsL[l][7*72+0*9+1] + tr1.x * kernelsL[l][7*72+0*9+2] +
+        ml1.x * kernelsL[l][7*72+0*9+3] + mc1.x * kernelsL[l][7*72+0*9+4] + mr1.x * kernelsL[l][7*72+0*9+5] +
+        bl1.x * kernelsL[l][7*72+0*9+6] + bc1.x * kernelsL[l][7*72+0*9+7] + br1.x * kernelsL[l][7*72+0*9+8] + 
+
+        tl1.y * kernelsL[l][7*72+1*9+0] + tc1.y * kernelsL[l][7*72+1*9+1] + tr1.y * kernelsL[l][7*72+1*9+2] +
+        ml1.y * kernelsL[l][7*72+1*9+3] + mc1.y * kernelsL[l][7*72+1*9+4] + mr1.y * kernelsL[l][7*72+1*9+5] +
+        bl1.y * kernelsL[l][7*72+1*9+6] + bc1.y * kernelsL[l][7*72+1*9+7] + br1.y * kernelsL[l][7*72+1*9+8] + 
+
+        tl1.z * kernelsL[l][7*72+2*9+0] + tc1.z * kernelsL[l][7*72+2*9+1] + tr1.z * kernelsL[l][7*72+2*9+2] +
+        ml1.z * kernelsL[l][7*72+2*9+3] + mc1.z * kernelsL[l][7*72+2*9+4] + mr1.z * kernelsL[l][7*72+2*9+5] +
+        bl1.z * kernelsL[l][7*72+2*9+6] + bc1.z * kernelsL[l][7*72+2*9+7] + br1.z * kernelsL[l][7*72+2*9+8] + 
+
+        tl1.w * kernelsL[l][7*72+3*9+0] + tc1.w * kernelsL[l][7*72+3*9+1] + tr1.w * kernelsL[l][7*72+3*9+2] +
+        ml1.w * kernelsL[l][7*72+3*9+3] + mc1.w * kernelsL[l][7*72+3*9+4] + mr1.w * kernelsL[l][7*72+3*9+5] +
+        bl1.w * kernelsL[l][7*72+3*9+6] + bc1.w * kernelsL[l][7*72+3*9+7] + br1.w * kernelsL[l][7*72+3*9+8] +
+
+        tl2.x * kernelsL[l][7*72+4*9+0] + tc2.x * kernelsL[l][7*72+4*9+1] + tr2.x * kernelsL[l][7*72+4*9+2] +
+        ml2.x * kernelsL[l][7*72+4*9+3] + mc2.x * kernelsL[l][7*72+4*9+4] + mr2.x * kernelsL[l][7*72+4*9+5] +
+        bl2.x * kernelsL[l][7*72+4*9+6] + bc2.x * kernelsL[l][7*72+4*9+7] + br2.x * kernelsL[l][7*72+4*9+8] + 
+
+        tl2.y * kernelsL[l][7*72+5*9+0] + tc2.y * kernelsL[l][7*72+5*9+1] + tr2.y * kernelsL[l][7*72+5*9+2] +
+        ml2.y * kernelsL[l][7*72+5*9+3] + mc2.y * kernelsL[l][7*72+5*9+4] + mr2.y * kernelsL[l][7*72+5*9+5] +
+        bl2.y * kernelsL[l][7*72+5*9+6] + bc2.y * kernelsL[l][7*72+5*9+7] + br2.y * kernelsL[l][7*72+5*9+8] + 
+
+        tl2.z * kernelsL[l][7*72+6*9+0] + tc2.z * kernelsL[l][7*72+6*9+1] + tr2.z * kernelsL[l][7*72+6*9+2] +
+        ml2.z * kernelsL[l][7*72+6*9+3] + mc2.z * kernelsL[l][7*72+6*9+4] + mr2.z * kernelsL[l][7*72+6*9+5] +
+        bl2.z * kernelsL[l][7*72+6*9+6] + bc2.z * kernelsL[l][7*72+6*9+7] + br2.z * kernelsL[l][7*72+6*9+8] + 
+
+        tl2.w * kernelsL[l][7*72+7*9+0] + tc2.w * kernelsL[l][7*72+7*9+1] + tr2.w * kernelsL[l][7*72+7*9+2] +
+        ml2.w * kernelsL[l][7*72+7*9+3] + mc2.w * kernelsL[l][7*72+7*9+4] + mr2.w * kernelsL[l][7*72+7*9+5] +
+        bl2.w * kernelsL[l][7*72+7*9+6] + bc2.w * kernelsL[l][7*72+7*9+7] + br2.w * kernelsL[l][7*72+7*9+8] + biasL[l][7]
+    ));
+
+    write_imagef(tmpImgOut1, coord, c1234);
+    write_imagef(tmpImgOut2, coord, c5678);
+}
+)"
+R"(
+__kernel void convTranspose8To1(
+    __read_only image2d_t tmpImgIn1,
+    __read_only image2d_t tmpImgIn2, 
+    __write_only image2d_t dstImg)
+{
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
+        return;
+
+    int2 coord = (int2)(x, y);
+
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+
+    int2 pos = (int2)(x & 1, y & 1);
+    float4 c;
+
+    //180 degree rotation for kernel
+    //0 1  to  3 2
+    //2 3      1 0
+    if (pos.x == 0 && pos.y != 0)
+    {
+        //0 x
+        //0 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+2] +
+            mc1.y * kernelsL10[1*4+2] +
+            mc1.z * kernelsL10[2*4+2] +
+            mc1.w * kernelsL10[3*4+2] +
+            mc2.x * kernelsL10[4*4+2] +
+            mc2.y * kernelsL10[5*4+2] +
+            mc2.z * kernelsL10[6*4+2] +
+            mc2.w * kernelsL10[7*4+2], 0.0f, 1.0f);
+        
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x == 0 && pos.y == 0)
+    {
+        //0 0
+        //0 x
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+0] +
+            mc1.y * kernelsL10[1*4+0] +
+            mc1.z * kernelsL10[2*4+0] +
+            mc1.w * kernelsL10[3*4+0] +
+            mc2.x * kernelsL10[4*4+0] +
+            mc2.y * kernelsL10[5*4+0] +
+            mc2.z * kernelsL10[6*4+0] +
+            mc2.w * kernelsL10[7*4+0], 0.0f, 1.0f);
+
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x != 0 && pos.y == 0)
+    {
+        //0 0
+        //x 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+1] +
+            mc1.y * kernelsL10[1*4+1] +
+            mc1.z * kernelsL10[2*4+1] +
+            mc1.w * kernelsL10[3*4+1] +
+            mc2.x * kernelsL10[4*4+1] +
+            mc2.y * kernelsL10[5*4+1] +
+            mc2.z * kernelsL10[6*4+1] +
+            mc2.w * kernelsL10[7*4+1], 0.0f, 1.0f);
+            
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+    else if (pos.x != 0 && pos.y != 0)
+    {
+        //x 0
+        //0 0
+        float tmp = clamp(
+            mc1.x * kernelsL10[0*4+3] +
+            mc1.y * kernelsL10[1*4+3] +
+            mc1.z * kernelsL10[2*4+3] +
+            mc1.w * kernelsL10[3*4+3] +
+            mc2.x * kernelsL10[4*4+3] +
+            mc2.y * kernelsL10[5*4+3] +
+            mc2.z * kernelsL10[6*4+3] +
+            mc2.w * kernelsL10[7*4+3], 0.0f, 1.0f);
+            
+        c = (float4)(tmp, tmp, tmp, 1.0f);
+    }
+
+    write_imagef(dstImg, coord, c);
+}
+)")
+};
 #endif // BUILT_IN_KERNEL

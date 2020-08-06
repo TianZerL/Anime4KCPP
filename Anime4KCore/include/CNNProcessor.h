@@ -25,7 +25,7 @@ namespace Anime4KCPP
 
 enum class Anime4KCPP::CNNType
 {
-    Default = 0, ACNet = 1, ACNetHDN = 2
+    Default, ACNet, ACNetHDNL1, ACNetHDNL2, ACNetHDNL3
 };
 
 class Anime4KCPP::CNNProcessor
