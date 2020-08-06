@@ -13,6 +13,7 @@ public final class Parameters {
     public byte preFilters = 4 ;
     public byte postFilters = 48 ;
     public boolean HDN = false;
+    public boolean alpha = false;
 
     public Parameters(
             int passes,
@@ -26,7 +27,8 @@ public final class Parameters {
             boolean postprocessing,
             byte preFilters,
             byte postFilters,
-            boolean HDN
+            boolean HDN,
+            boolean alpha
     ) {
         this.passes = passes;
         this.pushColorCount = pushColorCount;
@@ -40,6 +42,7 @@ public final class Parameters {
         this.preFilters = preFilters ;
         this.postFilters = postFilters ;
         this.HDN = HDN;
+        this.alpha = alpha;
     }
 
     public void reset() {
@@ -55,6 +58,7 @@ public final class Parameters {
         preFilters = 4 ;
         postFilters = 48 ;
         HDN = false;
+        alpha = false;
     }
 
 }

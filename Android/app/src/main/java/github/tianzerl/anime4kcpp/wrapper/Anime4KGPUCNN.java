@@ -18,7 +18,8 @@ public class Anime4KGPUCNN extends Anime4K {
                 parameters.postprocessing,
                 parameters.preFilters,
                 parameters.postFilters,
-                parameters.HDN
+                parameters.HDN,
+                parameters.alpha
         );
     }
 
@@ -46,7 +47,8 @@ public class Anime4KGPUCNN extends Anime4K {
                                                boolean postProcessing,
                                                byte preFilters,
                                                byte postFilters,
-                                               boolean HDN);
+                                               boolean HDN,
+                                               boolean alpha);
     private native static void initGPUAnime4KGPUCNN();
     private native static void releaseGPUAnime4KGPUCNN();
     private native static boolean isInitializedGPUAnime4KGPUCNN();

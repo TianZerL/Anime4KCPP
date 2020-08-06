@@ -8,17 +8,18 @@ public class Anime4KCPU extends Anime4K {
 
     public Anime4KCPU(Parameters parameters) {
         anime4k = createAnime4KCPUByArgs(
-            parameters.passes,
-            parameters.pushColorCount,
-            parameters.strengthColor,
-            parameters.strengthGradient,
-            parameters.zoomFactor,
-            parameters.fastMode,
-            parameters.videoMode,
-            parameters.preprocessing,
-            parameters.postprocessing,
-            parameters.preFilters,
-            parameters.postFilters
+                parameters.passes,
+                parameters.pushColorCount,
+                parameters.strengthColor,
+                parameters.strengthGradient,
+                parameters.zoomFactor,
+                parameters.fastMode,
+                parameters.videoMode,
+                parameters.preprocessing,
+                parameters.postprocessing,
+                parameters.preFilters,
+                parameters.postFilters,
+                parameters.alpha
         );
     }
 
@@ -33,5 +34,6 @@ public class Anime4KCPU extends Anime4K {
                                                boolean preprocessing,
                                                boolean postProcessing,
                                                byte preFilters,
-                                               byte postFilters);
+                                               byte postFilters,
+                                               boolean alpha);
 }

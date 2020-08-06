@@ -355,16 +355,17 @@ public class MainActivity extends AppCompatActivity {
 
     private Anime4K initAnime4KCPP() {
         int passes = 2;
-        int pushColorCount=2;
+        int pushColorCount = 2;
         double strengthColor = 0.3;
         double strengthGradient = 1;
-        double zoomFactor=2;
+        double zoomFactor = 2;
         boolean fastMode = getSwitchSate(R.id.switchFastMode);
         boolean preprocessing = false;
         boolean postprocessing = false;
-        byte preFilters=0;
-        byte postFilters=0;
+        byte preFilters = 0;
+        byte postFilters = 0;
         boolean HDN = getSwitchSate(R.id.switchHDN);
+        boolean alpha = getSwitchSate(R.id.switchAlphaChannel);
 
         RadioGroup settingsGroup = findViewById(R.id.radioGroupSettings);
         switch (settingsGroup.getCheckedRadioButtonId()) {
@@ -427,18 +428,19 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Parameters parameters = new Parameters(
-            passes,
-            pushColorCount,
-            strengthColor,
-            strengthGradient,
-            zoomFactor,
-            fastMode,
-            false,
-            preprocessing,
-            postprocessing,
-            preFilters,
-            postFilters,
-            HDN
+                passes,
+                pushColorCount,
+                strengthColor,
+                strengthGradient,
+                zoomFactor,
+                fastMode,
+                false,
+                preprocessing,
+                postprocessing,
+                preFilters,
+                postFilters,
+                HDN,
+                alpha
         );
 
         if (getSwitchSate(R.id.switchACNet))

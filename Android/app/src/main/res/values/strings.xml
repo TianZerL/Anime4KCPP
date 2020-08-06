@@ -48,4 +48,5 @@
     <string name="acnet_gpu_mode">ACNet GPU Mode</string>
     <string name="hdn">HDN</string>
     <string name="remaining_time_0_s">Remaining time: 0 s</string>
+    <string name="alpha_channel">Alpha Channel</string>
 </resources>
