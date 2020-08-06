@@ -1,5 +1,5 @@
 #define AC_DLL
-#define C_WRAPPER_VERSION "1.1.2"
+#define C_WRAPPER_VERSION "1.2.0"
 
 #include "Anime4KCPP.h"
 #include "AC.h"
@@ -22,7 +22,8 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
         c_parameters->preFilters,
         c_parameters->postFilters,
         c_parameters->maxThreads,
-        c_parameters->HDN);
+        c_parameters->HDN,
+        c_parameters->alpha);
 
     return std::move(cpp_parameters);
 }

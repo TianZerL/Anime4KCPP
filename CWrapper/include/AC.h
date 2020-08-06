@@ -78,6 +78,7 @@ extern "C"
         unsigned char postFilters;
         unsigned int maxThreads;
         ac_bool HDN;
+        ac_bool alpha;
     } ac_parameters;
 
     typedef struct ac_version
