@@ -37,7 +37,7 @@ enum ErrorType
     PROCESSING_LIST_EMPTY,
     FILE_NOT_EXIST, DIR_NOT_EXIST,
     TYPE_NOT_IMAGE, TYPE_NOT_ADD,
-    URL_INVALID
+    URL_INVALID, ERROR_IMAGE_FORMAT
 };
 
 enum FileType
@@ -79,6 +79,7 @@ private:
     Language getLanguage(const QString& lang);
     QString getLanguage(const Language lang);
     void errorHandler(const ErrorType err);
+    void errorHandler(const QString& err);
     void initTextBrowser();
     bool checkFFmpeg();
     QString formatSuffixList(const QString&& type, QString str);

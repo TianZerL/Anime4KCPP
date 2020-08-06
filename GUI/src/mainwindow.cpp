@@ -176,6 +176,7 @@ void MainWindow::readConfig(const QSettings* conf)
     double fps = conf->value("/Arguments/fps", 0.0).toDouble();
     unsigned int pID = conf->value("/Arguments/pID", 0).toUInt();
     unsigned int dID = conf->value("/Arguments/dID", 0).toUInt();
+    bool alphaChannel = conf->value("/Arguments/alphaChannel", false).toBool();
 
     bool ACNet = conf->value("/ACNet/ACNet", false).toBool();
     bool HDN = conf->value("/ACNet/HDN", false).toBool();
@@ -229,6 +230,7 @@ void MainWindow::readConfig(const QSettings* conf)
     ui->doubleSpinBoxFPS->setValue(fps);
     ui->spinBoxPlatformID->setValue(pID);
     ui->spinBoxDeviceID->setValue(dID);
+    ui->checkBoxAlphaChannel->setChecked(alphaChannel);
     //ACNet
     ui->checkBoxACNet->setChecked(ACNet);
     ui->checkBoxHDN->setChecked(HDN);
@@ -274,6 +276,7 @@ void MainWindow::writeConfig(QSettings* conf)
     double fps = ui->doubleSpinBoxFPS->value();
     unsigned int pID = ui->spinBoxPlatformID->value();
     unsigned int dID = ui->spinBoxDeviceID->value();
+    bool alphaChannel = ui->checkBoxAlphaChannel->isChecked();
 
     bool ACNet = ui->checkBoxACNet->isChecked();
     bool HDN = ui->checkBoxHDN->isChecked();
@@ -316,6 +319,7 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Arguments/fps", fps);
     conf->setValue("/Arguments/pID", pID);
     conf->setValue("/Arguments/dID", dID);
+    conf->setValue("/Arguments/alphaChannel", alphaChannel);
 
     conf->setValue("/ACNet/ACNet", ACNet);
     conf->setValue("/ACNet/HDN", HDN);
@@ -362,42 +366,56 @@ void MainWindow::errorHandler(const ErrorType err)
     switch (err)
     {
     case PROCESSING_LIST_EMPTY:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("Processing list empty"),
             QMessageBox::Ok);
         break;
     case FILE_NOT_EXIST:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("File does not exists"),
             QMessageBox::Ok);
         break;
     case DIR_NOT_EXIST:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("Dir does not exists"),
             QMessageBox::Ok);
         break;
     case TYPE_NOT_IMAGE:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("File type error, only image support"),
             QMessageBox::Ok);
         break;
     case TYPE_NOT_ADD:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("File type error, you can add it manually"),
             QMessageBox::Ok);
         break;
     case URL_INVALID:
-        QMessageBox::information(this,
+        QMessageBox::warning(this,
             tr("Error"),
             tr("Invalid url, please check your input"),
             QMessageBox::Ok);
         break;
+    case ERROR_IMAGE_FORMAT:
+        QMessageBox::warning(this,
+            tr("Error"),
+            tr("Error image format, please check your input"),
+            QMessageBox::Ok);
+        break;
     }
+}
+
+void MainWindow::errorHandler(const QString& err)
+{
+    QMessageBox::critical(this,
+        tr("Error"),
+        err,
+        QMessageBox::Ok);
 }
 
 void MainWindow::initTextBrowser()
@@ -454,6 +472,7 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
     unsigned int threads = ui->spinBoxThreads->value();
     bool HDN = ui->checkBoxHDN->isChecked();
+    bool alpha = ui->checkBoxAlphaChannel->isChecked();
     uint8_t prefilters = 0;
     if (preprocessing)
     {
@@ -504,7 +523,8 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
         prefilters,
         postfilters,
         threads,
-        HDN
+        HDN,
+        alpha
     );
 
     if (ui->checkBoxACNet->isChecked())
@@ -560,10 +580,7 @@ void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
 void MainWindow::solt_error_renewState(int row, QString err)
 {
     tableModel->setData(tableModel->index(row, 4), tr("error"), Qt::DisplayRole);
-    QMessageBox::information(this,
-        tr("error"),
-        err,
-        QMessageBox::Ok);
+    errorHandler(err);
 }
 
 void MainWindow::solt_allDone_remindUser()
@@ -832,10 +849,17 @@ void MainWindow::on_pushButtonPreview_clicked()
     switch (fileType(previewFile))
     {
     case IMAGE:
-        anime4K->setVideoMode(false);
-        anime4K->loadImage(previewFile.filePath().toLocal8Bit().constData());
-        anime4K->process();
-        anime4K->showImage();
+        try
+        {
+            anime4K->setVideoMode(false);
+            anime4K->loadImage(previewFile.filePath().toLocal8Bit().constData());
+            anime4K->process();
+            anime4K->showImage();
+        }
+        catch (const char* err)
+        {
+            errorHandler(err);
+        }
         break;
     case VIDEO:
         errorHandler(TYPE_NOT_IMAGE);
@@ -1135,11 +1159,31 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     }
     //read image by opencv for resizing by CUBIC
     double factor = ui->doubleSpinBoxZoomFactor->value();
-    cv::Mat orgImg = cv::imread(filePath.toLocal8Bit().constData(), cv::IMREAD_COLOR);
+    cv::Mat orgImg = cv::imread(filePath.toLocal8Bit().constData(), cv::IMREAD_UNCHANGED);
     cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
-    QImage orginImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888);
+    QImage orginImage;
+    switch (orgImg.channels())
+    {
+    case 4:
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2RGBA);
+        orginImage = std::move(
+            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGBA8888));
+        break;
+    case 3:
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
+        orginImage = std::move(
+            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
+        break;
+    case 1:
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2RGB);
+        orginImage = std::move(
+            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
+        break;
+    default:
+        errorHandler(ERROR_IMAGE_FORMAT);
+        return;
+    }
     QPixmap resizedImage(QPixmap::fromImage(orginImage));
     //show
     QWidget* resizedImageWidget = new QWidget(this, Qt::Window);

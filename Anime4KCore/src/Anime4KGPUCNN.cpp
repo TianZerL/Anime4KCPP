@@ -185,7 +185,6 @@ void Anime4KCPP::Anime4KGPUCNN::process()
 
                     cv::merge(std::vector<cv::Mat>{ dstFrame, yuv[U], yuv[V] }, dstFrame);
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
-
                     if (tmpZfUp - tmpZf > 0.00001)
                     {
                         cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);

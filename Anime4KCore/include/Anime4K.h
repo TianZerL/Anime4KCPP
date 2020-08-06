@@ -184,6 +184,7 @@ protected:
     cv::Mat alphaChannel;
     bool inputYUV = false;
     bool inputRGB32 = false;
+    bool checkAlphaChannel = false;
     VideoIO* videoIO = nullptr;
 
 protected://arguments

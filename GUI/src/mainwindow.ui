@@ -887,6 +887,16 @@
            <item row="8" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout">
              <item>
+              <widget class="QCheckBox" name="checkBoxAlphaChannel">
+               <property name="statusTip">
+                <string>Preserve alpha channels for transparent image</string>
+               </property>
+               <property name="text">
+                <string>alpha channel</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QCheckBox" name="checkBoxFastMode">
                <property name="statusTip">
                 <string>Faster but maybe low quality (Only for CPU)</string>

@@ -68,7 +68,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     std::vector<cv::Mat> yuv(3);
                     cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
-                    dstFrame = dstFrame;
+                    dstFrame = orgFrame;
 
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                     frame.first = dstFrame;

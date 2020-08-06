@@ -90,12 +90,27 @@ void Anime4KCPP::Anime4K::loadImage(const std::string& srcFile)
     else
     {
         orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
-        if(orgImg.channels() != 4)
-            throw "Error file type: file doesn't have an alpha channel.";
-        cv::extractChannel(orgImg, alphaChannel, A);
-        cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-        dstImg = orgImg;
+        switch (orgImg.channels())
+        {
+        case 4:
+            cv::extractChannel(orgImg, alphaChannel, A);
+            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
+            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
+            dstImg = orgImg;
+            checkAlphaChannel = true;
+            break;
+        case 3:
+            dstImg = orgImg;
+            checkAlphaChannel = false;
+            break;
+        case 1:
+            cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+            dstImg = orgImg;
+            checkAlphaChannel = false;
+            break;
+        default:
+            throw "Failed to load file: incorrect file format.";
+        }
     }
     if (orgImg.empty())
         throw "Failed to load file: file doesn't exist or incorrect file format.";
@@ -201,7 +216,7 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
         else
             throw "Only YUV444 can be saved to file";
     }
-    if (alpha)
+    if (checkAlphaChannel)
         cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
     cv::imwrite(dstFile, dstImg);
 }
@@ -530,6 +545,14 @@ void Anime4KCPP::Anime4K::showImage(bool R2B)
         }
         else
             throw "Only YUV444 can be saved to file";
+    }
+
+    if (checkAlphaChannel)
+    {
+        cv::Mat tmp;
+        cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
+        tmp.convertTo(tmp, CV_32FC3, 1 / 255.0f);
+        cv::multiply(tmpImg, tmp, tmpImg, 1.0, CV_8UC3);
     }
 
     cv::imshow("preview", tmpImg);
