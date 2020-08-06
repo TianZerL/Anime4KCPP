@@ -1162,29 +1162,29 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     cv::Mat orgImg = cv::imread(filePath.toLocal8Bit().constData(), cv::IMREAD_UNCHANGED);
     cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
-    QImage orginImage;
+    QImage originImage;
     switch (orgImg.channels())
     {
     case 4:
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2RGBA);
-        orginImage = std::move(
+        originImage = std::move(
             QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGBA8888));
         break;
     case 3:
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
-        orginImage = std::move(
+        originImage = std::move(
             QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
         break;
     case 1:
         cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2RGB);
-        orginImage = std::move(
+        originImage = std::move(
             QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
         break;
     default:
         errorHandler(ERROR_IMAGE_FORMAT);
         return;
     }
-    QPixmap resizedImage(QPixmap::fromImage(orginImage));
+    QPixmap resizedImage(QPixmap::fromImage(originImage));
     //show
     QWidget* resizedImageWidget = new QWidget(this, Qt::Window);
     resizedImageWidget->setAttribute(Qt::WA_DeleteOnClose);

@@ -551,7 +551,7 @@ void Anime4KCPP::Anime4K::showImage(bool R2B)
     {
         cv::Mat tmp;
         cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
-        tmp.convertTo(tmp, CV_32FC3, 1 / 255.0f);
+        tmp.convertTo(tmp, CV_32FC3, 1.0 / 255.0);
         cv::multiply(tmpImg, tmp, tmpImg, 1.0, CV_8UC3);
     }
 
