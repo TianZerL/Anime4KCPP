@@ -74,17 +74,17 @@ int main(int argc, char* argv[])
     opt.add("preprocessing", 'b', "Enable preprocessing");
     opt.add("postprocessing", 'a', "Enable postprocessing");
     opt.add<unsigned int>("preFilters", 'r',
-        "Enhancement filter, only working when preProcessing is true,there are 5 options by binary:\
-Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, \
-you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D)",
-false, 4, cmdline::range(1, 127));
+        "Enhancement filter, only working when preProcessing is true,there are 5 options by binary:"
+        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
+        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D)",
+        false, 4, cmdline::range(1, 127));
     opt.add<unsigned int>("postFilters", 'e',
-        "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:\
-Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, \
-you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), \
-so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, \
-48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
-false, 40, cmdline::range(1, 127));
+        "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:"
+        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
+        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), "
+        "so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, "
+        "48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
+        false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
     opt.add("CNNMode", 'w', "Enable ACNet");
     opt.add("HDN", 'H', "Enable HDN mode for ACNet");
@@ -92,13 +92,13 @@ false, 40, cmdline::range(1, 127));
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
-    opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), \
-hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
+    opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
+        "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add("version", 'V', "print version information");
     opt.add<float>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0F);
     opt.add("disableProgress", 'D', "disable progress display");
-    opt.add("webVideo", 'W', "process the video from Internet");
-    opt.add("alpha", 'A', "process the image with alpha channel");
+    opt.add("webVideo", 'W', "process the video from URL");
+    opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
 
     opt.parse_check(argc, argv);
 
@@ -172,7 +172,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
             break;
         }
     }
-        
+
     else
         type = Anime4KCPP::CNNType::ACNet;
 
