@@ -32,9 +32,8 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                 processor->process(orgImg, dstImg);
                 std::vector<cv::Mat> yuv(3);
                 cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::split(orgImg, yuv);
-                cv::merge(std::vector<cv::Mat>{ dstImg,yuv[U],yuv[V] }, dstImg);
-
+                cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+                dstImg = orgImg;
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
             }
             else
@@ -46,8 +45,8 @@ void Anime4KCPP::Anime4KCPUCNN::process()
 
                 processor->process(orgY, dstY);
 
-                cv::resize(orgU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::resize(orgV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::resize(orgU, dstU, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
+                cv::resize(orgV, dstV, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
             }
         }
         else
@@ -68,8 +67,8 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     processor->process(orgFrame, dstFrame);
                     std::vector<cv::Mat> yuv(3);
                     cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::split(orgFrame, yuv);
-                    cv::merge(std::vector<cv::Mat>{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                    cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
+                    dstFrame = dstFrame;
 
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                     frame.first = dstFrame;
@@ -85,29 +84,32 @@ void Anime4KCPP::Anime4KCPUCNN::process()
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
         int tmpZfUp = ceil(tmpZf);
+
         if (!vm)
         {
-            if (!inputYUV)
+            if (!inputYUV) //RGB
             {
                 cv::Mat tmpImg = orgImg;
                 cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+
                 for (int i = 0; i < tmpZfUp; i++)
                 {
                     processor->process(tmpImg, dstImg);
 
-                    std::vector<cv::Mat> yuv(3);
-                    cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::split(tmpImg, yuv);
-                    cv::merge(std::vector<cv::Mat>{ dstImg,yuv[U],yuv[V] }, dstImg);
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     tmpImg = dstImg;
                 }
+
+                cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+                dstImg = orgImg;
+
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
                     cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
                 }
             }
-            else
+            else //YUV
             {
                 cv::Mat tmpY = orgY;
                 dstU = orgU;
@@ -140,21 +142,24 @@ void Anime4KCPP::Anime4KCPUCNN::process()
 
                     cv::Mat tmpFrame = orgFrame;
                     cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
+
                     for (int i = 0; i < tmpZfUp; i++)
                     {
                         processor->process(tmpFrame, dstFrame);
 
-                        std::vector<cv::Mat> yuv(3);
-                        cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                        cv::split(tmpFrame, yuv);
-                        cv::merge(std::vector<cv::Mat>{ dstFrame,yuv[U],yuv[V] }, dstFrame);
+                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                         tmpFrame = dstFrame;
                     }
+
+                    cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
+                    dstFrame = orgFrame;
+
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
                     if (tmpZfUp - tmpZf > 0.00001)
                     {
                         cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
                     }
+
                     frame.first = dstFrame;
                     videoIO->write(frame);
                 }

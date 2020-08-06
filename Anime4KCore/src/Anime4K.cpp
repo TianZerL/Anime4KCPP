@@ -17,6 +17,7 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters)
     postf = parameters.postFilters;
     mt = parameters.maxThreads;
     HDN = parameters.HDN;
+    alpha = parameters.alpha;
 
     orgH = orgW = H = W = 0;
     totalFrameCount = fps = 0.0;
@@ -35,6 +36,7 @@ Anime4KCPP::Anime4K::~Anime4K()
     dstY.release();
     dstU.release();
     dstV.release();
+    alphaChannel.release();
     releaseVideoIO();
 }
 
@@ -52,9 +54,10 @@ void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
     pref = parameters.preFilters;
     postf = parameters.postFilters;
     mt = parameters.maxThreads;
+    HDN = parameters.HDN;
+    alpha = parameters.alpha;
 
     orgH = orgW = H = W = 0;
-    fps = 0.0;
     totalFrameCount = fps = 0.0;
 
     if (vm)
@@ -82,9 +85,20 @@ void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
 
 void Anime4KCPP::Anime4K::loadImage(const std::string& srcFile)
 {
-    dstImg = orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
+    if (!alpha)
+        dstImg = orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
+    else
+    {
+        orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
+        if(orgImg.channels() != 4)
+            throw "Error file type: file doesn't have an alpha channel.";
+        cv::extractChannel(orgImg, alphaChannel, A);
+        cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
+        dstImg = orgImg;
+    }
     if (orgImg.empty())
-        throw "Failed to load file: file doesn't not exist or incorrect file format.";
+        throw "Failed to load file: file doesn't exist or incorrect file format.";
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = zf * orgH;
@@ -187,6 +201,8 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
         else
             throw "Only YUV444 can be saved to file";
     }
+    if (alpha)
+        cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
     cv::imwrite(dstFile, dstImg);
 }
 
@@ -631,6 +647,7 @@ void Anime4KCPP::Parameters::reset()
     postFilters = 40;
     maxThreads = std::thread::hardware_concurrency();
     HDN = false;
+    alpha = false;
 }
 
 Anime4KCPP::Parameters::Parameters(
@@ -646,10 +663,12 @@ Anime4KCPP::Parameters::Parameters(
     uint8_t preFilters,
     uint8_t postFilters,
     unsigned int maxThreads,
-    bool HDN
+    bool HDN,
+    bool alpha
 ) :
     passes(passes), pushColorCount(pushColorCount),
     strengthColor(strengthColor), strengthGradient(strengthGradient),
     zoomFactor(zoomFactor), fastMode(fastMode), videoMode(videoMode),
     preprocessing(preprocessing), postprocessing(postprocessing),
-    preFilters(preFilters), postFilters(postFilters), maxThreads(maxThreads), HDN(HDN) {}
+    preFilters(preFilters), postFilters(postFilters), maxThreads(maxThreads),
+    HDN(HDN), alpha(alpha) {}

@@ -31,7 +31,6 @@ void Anime4KCPP::Anime4KGPUCNN::process()
         {
             if (!inputYUV)
             {
-                cv::Mat uv;
                 if (zf > 2.0)
                     cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
                 else if (zf < 2.0)
@@ -41,12 +40,14 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                 std::vector<cv::Mat> yuv(3);
                 cv::split(orgImg, yuv);
                 orgImg = yuv[Y];
-                cv::merge(std::vector<cv::Mat>{ yuv[U],yuv[V] }, uv);
+
                 dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_8UC1);
                 runKernel(orgImg, dstImg);
-                cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::merge(std::vector<cv::Mat>{ dstImg,uv }, dstImg);
 
+                cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+                cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
             }
             else
@@ -59,8 +60,8 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                 dstY.create(orgY.rows * 2, orgY.cols * 2, CV_8UC1);
                 runKernel(orgY, dstY);
 
-                cv::resize(orgU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                cv::resize(orgV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                cv::resize(orgU, dstU, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
+                cv::resize(orgV, dstV, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
             }
         }
         else
@@ -72,7 +73,6 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
-                    cv::Mat uv;
                     if (zf > 2.0)
                         cv::resize(orgFrame, orgFrame, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
                     else if (zf < 2.0)
@@ -82,12 +82,14 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                     std::vector<cv::Mat> yuv(3);
                     cv::split(orgFrame, yuv);
                     orgFrame = yuv[Y];
-                    cv::merge(std::vector<cv::Mat>{ yuv[U],yuv[V] }, uv);
+
                     dstFrame.create(orgFrame.rows * 2, orgFrame.cols * 2, CV_8UC1);
                     runKernel(orgFrame, dstFrame);
-                    cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
-                    cv::merge(std::vector<cv::Mat>{ dstFrame,uv }, dstFrame);
 
+                    cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+                    cv::merge(std::vector<cv::Mat>{ dstFrame, yuv[U], yuv[V] }, dstFrame);
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
 
                     frame.first = dstFrame;
@@ -109,20 +111,23 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             if (!inputYUV)
             {
                 cv::Mat tmpImg = orgImg;
-                cv::Mat uv;
                 cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+
                 std::vector<cv::Mat> yuv(3);
                 cv::split(tmpImg, yuv);
                 tmpImg = yuv[Y];
-                cv::merge(std::vector<cv::Mat>{ yuv[U],yuv[V] }, uv);
+
                 for (int i = 0; i < tmpZfUp; i++)
                 {
                     dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, CV_8UC1);
                     runKernel(tmpImg, dstImg);
-                    cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+                    cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                    cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     tmpImg = dstImg;
                 }
-                cv::merge(std::vector<cv::Mat>{ dstImg,uv }, dstImg);
+
+                cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
                 cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
@@ -138,6 +143,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                 {
                     dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_8UC1);
                     runKernel(tmpY, dstY);
+
                     cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     tmpY = dstY;
@@ -161,21 +167,25 @@ void Anime4KCPP::Anime4KGPUCNN::process()
                     cv::Mat dstFrame;
 
                     cv::Mat tmpFrame = orgFrame;
-                    cv::Mat uv;
                     cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
+
                     std::vector<cv::Mat> yuv(3);
                     cv::split(tmpFrame, yuv);
                     tmpFrame = yuv[Y];
-                    cv::merge(std::vector<cv::Mat>{ yuv[U],yuv[V] }, uv);
+
                     for (int i = 0; i < tmpZfUp; i++)
                     {
                         dstFrame.create(tmpFrame.rows * 2, tmpFrame.cols * 2, CV_8UC1);
                         runKernel(tmpFrame, dstFrame);
-                        cv::resize(uv, uv, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+                        cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+                        cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                         tmpFrame = dstFrame;
                     }
-                    cv::merge(std::vector<cv::Mat>{ dstFrame,uv }, dstFrame);
+
+                    cv::merge(std::vector<cv::Mat>{ dstFrame, yuv[U], yuv[V] }, dstFrame);
                     cv::cvtColor(dstFrame, dstFrame, cv::COLOR_YUV2BGR);
+
                     if (tmpZfUp - tmpZf > 0.00001)
                     {
                         cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);

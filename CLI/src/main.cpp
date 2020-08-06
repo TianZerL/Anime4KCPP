@@ -97,6 +97,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add<float>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0F);
     opt.add("disableProgress", 'D', "disable progress display");
     opt.add("webVideo", 'W', "process the video from Internet");
+    opt.add("alpha", 'A', "process the image with alpha channel");
 
     opt.parse_check(argc, argv);
 
@@ -126,6 +127,7 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     float forceFps = opt.get<float>("forceFps");
     bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
+    bool alpha = opt.exist("alpha");
     // -V
     if (version)
     {
@@ -170,7 +172,8 @@ hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
         preFilters,
         postFilters,
         threads,
-        HDN
+        HDN,
+        alpha
     );
 
     try
