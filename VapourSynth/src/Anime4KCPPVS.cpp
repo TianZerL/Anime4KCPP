@@ -13,6 +13,7 @@ typedef struct Anime4KCPPData {
     bool GPU = false;
     bool CNN = false;
     bool HDN = false;
+    int HDNLevel = 1;
     unsigned int pID = 0, dID = 0;
     Anime4KCPP::Anime4KCreator* anime4KCreator = nullptr;
     Anime4KCPP::Parameters parameters;
@@ -32,6 +33,7 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
     data->parameters.strengthGradient = data->strengthGradient;
     data->parameters.zoomFactor = data->zoomFactor;
     data->parameters.HDN = data->HDN;
+    data->parameters.HDNLevel = data->HDNLevel;
 
     vsapi->setVideoInfo(&data->vi, 1, node);
 }
@@ -410,6 +412,16 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         tmpData.HDN = false;
 
+    tmpData.HDNLevel = vsapi->propGetInt(in, "HDNLevel", 0, &err);
+    if (err)
+        tmpData.HDNLevel = 1;
+    else if (tmpData.HDNLevel < 1 || tmpData.HDNLevel > 3)
+    {
+        vsapi->setError(out, "Anime4KCPP: HDNLevel must range from 1 to 3");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
+
     tmpData.GPU = vsapi->propGetInt(in, "GPUMode", 0, &err);
     if (err)
         tmpData.GPU = false;
@@ -513,6 +525,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "ACNet:int:opt;"
         "GPUMode:int:opt;"
         "HDN:int:opt;"
+        "HDNLevel:int:opt;"
         "platformID:int:opt;"
         "deviceID:int:opt;"
         "safeMode:int:opt",

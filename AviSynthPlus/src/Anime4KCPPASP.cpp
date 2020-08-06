@@ -21,8 +21,9 @@ enum AC_Parameters
     AC_ACNet = 6,
     AC_GPUMode = 7,
     AC_HDN = 8,
-    AC_platformID = 9,
-    AC_deviceID = 10
+    AC_HDNLevel = 9,
+    AC_platformID = 10,
+    AC_deviceID = 11
 };
 
 class Anime4KCPPF : public GenericVideoFilter
@@ -237,7 +238,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         args[AC_strengthGradient].AsFloatf(),
         args[AC_zoomFactor].AsInt(),
         false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
-        args[AC_HDN].AsBool()
+        args[AC_HDN].AsBool(),
+        args[AC_HDNLevel].AsInt()
     );
 
     bool CNN = args[AC_ACNet].AsBool();
@@ -266,14 +268,17 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         dID = 0;
 
 
-    if (inputs.strengthColor < 0.0 || inputs.strengthColor>1.0)
+    if (inputs.strengthColor < 0.0 || inputs.strengthColor > 1.0)
         env->ThrowError("Anime4KCPP: strengthColor must range from 0 to 1!");
 
-    if (inputs.strengthGradient < 0.0 || inputs.strengthGradient>1.0)
+    if (inputs.strengthGradient < 0.0 || inputs.strengthGradient > 1.0)
         env->ThrowError("Anime4KCPP: strengthGradient must range from 0 to 1!");
 
     if (inputs.zoomFactor < 1.0)
         env->ThrowError("Anime4KCPP: zoomFactor must be an integer which >= 1!");
+
+    if (inputs.HDNLevel < 1 || inputs.HDNLevel > 3)
+        env->ThrowError("Anime4KCPP: HDNLevel must range from 1 to 3!");
 
     if (GPUMode)
     {
@@ -325,6 +330,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[ACNet]b"
         "[GPUMode]b"
         "[HDN]b"
+        "[HDNLevel]i"
         "[platformID]i"
         "[deviceID]i",
         createAnime4KCPP, 0);
