@@ -21,9 +21,20 @@ bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, co
     std::string command("ffmpeg -loglevel 40 -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + dstFile + "\"");
     std::cout << command << std::endl;
 
-    if (!system(command.data()))
-        return true;
-    return false;
+    return !system(command.data());
+}
+
+bool video2GIF(const std::string& srcFile, const std::string& dstFile)
+{
+    std::string commandGeneratePalette("ffmpeg -i \"" + srcFile + "\" -vf palettegen -y palette.png");
+    std::cout << commandGeneratePalette << std::endl;
+
+    std::string command2Gif("ffmpeg -i \"" + srcFile + "\" -i palette.png -y -lavfi paletteuse \"" + dstFile + "\"");
+    std::cout << command2Gif << std::endl;
+    
+    bool flag = !system(commandGeneratePalette.data()) && !system(command2Gif.data());
+    std::filesystem::remove("palette.png");
+    return flag;
 }
 
 Anime4KCPP::CODEC string2Codec(const std::string& codec)
@@ -254,7 +265,7 @@ int main(int argc, char* argv[])
                     if (file.is_directory())
                         continue;
                     std::string currInputPath = file.path().string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".png")).string();
+                    std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
                     anime4k->loadImage(file.path().string());
                     anime4k->showInfo();
                     anime4k->showFiltersInfo();
@@ -289,12 +300,18 @@ int main(int argc, char* argv[])
                 anime4k->saveImage(currOnputPath);
             }
         }
-        else//Video
+        else // Video
         {
-            //output suffix check
-            if (std::string(".png.jpg.jpeg.bmp.PNG.JPG.JPEG.BMP")
-                .find(outputPath.extension().string()) != std::string::npos)
+            // output suffix
+            std::string outputSuffix = outputPath.extension().string();
+            // transform to lower
+            std::transform(outputSuffix.begin(), outputSuffix.end(), outputSuffix.begin(), ::tolower);
+
+            if (std::string(".png.jpg.jpeg.bmp")
+                .find(outputSuffix) != std::string::npos)
                 outputPath.replace_extension(".mkv");
+
+            bool gif = outputSuffix == std::string(".gif");
 
             bool ffmpeg = checkFFmpeg();
             std::string outputTmpName = outputPath.string();
@@ -314,8 +331,13 @@ int main(int argc, char* argv[])
                 {
                     if (file.is_directory())
                         continue;
+                    //Check GIF
+                    std::string inputSuffix = file.path().extension().string();
+                    std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
+                    gif = inputSuffix == std::string(".gif");
+
                     std::string currInputPath = file.path().string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().string() + ".mkv")).string();
+                    std::string currOutputPath = (outputPath / (file.path().filename().replace_extension(gif ? ".gif" : ".mkv"))).string();
 
                     anime4k->loadVideo(currInputPath);
                     anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
@@ -334,14 +356,25 @@ int main(int argc, char* argv[])
 
                     anime4k->saveVideo();
 
-                    if (ffmpeg && mergeAudio2Video(currOnputPath, currInputPath, outputTmpName))
-                        std::filesystem::remove(outputTmpName);
+                    if (ffmpeg)
+                    {
+                        if (!gif)
+                        {
+                            if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
+                                std::filesystem::remove(outputTmpName);
+                        }
+                        else
+                        {
+                            if (video2GIF(outputTmpName, currOutputPath))
+                                std::filesystem::remove(outputTmpName);
+                        }
+                    }
                 }
             }
             else
             {
                 std::string currInputPath = inputPath.string();
-                std::string currOnputPath = outputPath.string();
+                std::string currOutputPath = outputPath.string();
 
                 anime4k->loadVideo(currInputPath);
                 anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
@@ -360,8 +393,19 @@ int main(int argc, char* argv[])
 
                 anime4k->saveVideo();
 
-                if (ffmpeg && mergeAudio2Video(currOnputPath, currInputPath, outputTmpName))
-                    std::filesystem::remove(outputTmpName);
+                if (ffmpeg)
+                {
+                    if (!gif)
+                    {
+                        if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
+                            std::filesystem::remove(outputTmpName);
+                    }
+                    else
+                    {
+                        if (video2GIF(outputTmpName, currOutputPath))
+                            std::filesystem::remove(outputTmpName);
+                    }
+                } 
             }
         }
     }

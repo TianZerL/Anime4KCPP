@@ -42,7 +42,7 @@ enum ErrorType
 
 enum FileType
 {
-    IMAGE = 0, VIDEO = 1, ERROR_TYPE = 2
+    IMAGE = 0, VIDEO = 1, GIF = 2, ERROR_TYPE = 3
 };
 
 enum GPUMode
@@ -88,6 +88,9 @@ private:
     FileType fileType(const QFileInfo& file);
     QString getOutputPrefix();
     Anime4KCPP::CODEC getCodec(const QString& codec);
+    bool checkGIF(const QString& file);
+    bool mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile);
+    bool video2GIF(const QString& srcFile, const QString& dstFile);
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);

@@ -136,15 +136,19 @@ void MainWindow::dropEvent(QDropEvent* event)
     {
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo) == ERROR_TYPE)
+        FileType type = fileType(fileInfo);
+
+        if (type == ERROR_TYPE)
         {
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if (fileType(fileInfo) == VIDEO)
+        if (type == VIDEO)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+        else if (type == GIF)
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         inputPath = new QStandardItem(fileInfo.filePath());
@@ -168,7 +172,7 @@ void MainWindow::readConfig(const QSettings* conf)
     bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
 
     QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
-    QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov").toString();
+    QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov:gif").toString();
     QString outputPath = conf->value("/Output/path", QApplication::applicationDirPath() + "/output").toString();
     QString outputPrefix = conf->value("/Output/perfix", "output_anime4kcpp_").toString();
 
@@ -564,7 +568,12 @@ FileType MainWindow::fileType(const QFileInfo& file)
     if (imageSuffix.contains(file.suffix(), Qt::CaseInsensitive))
         return IMAGE;
     if (videoSuffix.contains(file.suffix(), Qt::CaseInsensitive))
-        return VIDEO;
+    {
+        if (checkGIF(file.filePath()))
+            return GIF;
+        else
+            return VIDEO;;
+    }
     return ERROR_TYPE;
 }
 
@@ -579,6 +588,30 @@ QString MainWindow::getOutputPrefix()
 inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
 {
     return codecSelector[codec];
+}
+
+bool MainWindow::checkGIF(const QString& file)
+{
+    return QFileInfo(file).suffix().toLower() == "gif";
+}
+
+bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile)
+{
+    return !QProcess::execute(
+        "ffmpeg -loglevel 40 -i \"" 
+        + tmpFile + "\" -i \"" 
+        + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" 
+        + dstFile + "\"");
+}
+
+bool MainWindow::video2GIF(const QString& srcFile, const QString& dstFile)
+{
+    bool flag = !QProcess::execute("ffmpeg -i \"" + srcFile + "\" -vf palettegen -y \"" + dstFile + "_palette.png\"")
+        && !QProcess::execute("ffmpeg -i \"" + srcFile + "\" -i \"" + dstFile + "_palette.png\" -y -lavfi paletteuse \"" + dstFile + "\"");
+    
+    QFile::remove(dstFile + "_palette.png");
+
+    return flag;
 }
 
 void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
@@ -657,15 +690,19 @@ void MainWindow::on_pushButtonPickFiles_clicked()
     {
         QFileInfo fileInfo(file);
 
-        if (fileType(fileInfo) == ERROR_TYPE)
+        FileType type = fileType(fileInfo);
+
+        if (type == ERROR_TYPE)
         {
             errorHandler(TYPE_NOT_ADD);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if (fileType(fileInfo) == VIDEO)
+        if (type == VIDEO)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+        else if (type == GIF)
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         inputPath = new QStandardItem(fileInfo.filePath());
@@ -710,15 +747,19 @@ void MainWindow::on_pushButtonWebVideo_clicked()
     QStandardItem* outputPath;
     QStandardItem* state;
 
-    if (fileType(fileInfo) == ERROR_TYPE)
+    FileType type = fileType(fileInfo);
+
+    if (type == ERROR_TYPE)
     {
         errorHandler(TYPE_NOT_ADD);
         return;
     }
 
     inputFile = new QStandardItem(fileInfo.fileName());
-    if (fileType(fileInfo) == VIDEO)
+    if (type == VIDEO)
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+    else if (type == GIF)
+        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
     else
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
     inputPath = new QStandardItem(urlStr);
@@ -1062,9 +1103,15 @@ void MainWindow::on_pushButtonStart_clicked()
                 if (ffmpeg)
                 {
                     QString tmpFilePath = video.first.second + "_tmp_out.mp4";
-                    if (!QProcess::execute("ffmpeg -loglevel 40 -i \"" + tmpFilePath + "\" -i \"" + video.first.first + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + video.first.second + "\""))
+                    if (!checkGIF(video.first.second))
                     {
-                        QFile::remove(tmpFilePath);
+                        if (mergeAudio2Video(video.first.second, video.first.first, tmpFilePath))
+                            QFile::remove(tmpFilePath);
+                    }
+                    else
+                    {
+                        if (video2GIF(tmpFilePath, video.first.second))
+                            QFile::remove(tmpFilePath);
                     }
                 }
 
@@ -1222,11 +1269,14 @@ void MainWindow::on_pushButtonPickFolder_clicked()
 
     for (QFileInfo& fileInfo : fileInfoList)
     {
-        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (fileType(fileInfo) != ERROR_TYPE))
+        FileType type = fileType(fileInfo);
+        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (type != ERROR_TYPE))
         {
             inputFile = new QStandardItem(fileInfo.fileName());
-            if (fileType(fileInfo) == VIDEO)
+            if (type == VIDEO)
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+            else if (type == GIF)
+                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
             else
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
             inputPath = new QStandardItem(fileInfo.filePath());
