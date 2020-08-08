@@ -305,7 +305,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     cl_int err;
     int i;
 
-    const size_t orgin[3] = { 0,0,0 };
+    constexpr size_t orgin[3] = { 0,0,0 };
     const size_t orgRegion[3] = { size_t(orgW),size_t(orgH),1 };
     const size_t dstRegion[3] = { size_t(W),size_t(H),1 };
     const size_t size[2] = { size_t(W),size_t(H) };

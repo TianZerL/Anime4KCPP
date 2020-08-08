@@ -267,13 +267,13 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     cl_image_desc dstDesc;
     cl_image_desc orgDesc;
 
-    const size_t orgin[3] = { 0,0,0 };
+    constexpr size_t orgin[3] = { 0,0,0 };
     const size_t orgRegion[3] = { size_t(orgImage.cols),size_t(orgImage.rows),1 };
     const size_t dstRegion[3] = { size_t(dstImage.cols),size_t(dstImage.rows),1 };
     const size_t orgSize[2] = { size_t(orgImage.cols),size_t(orgImage.rows) };
     const size_t dstSize[2] = { size_t(dstImage.cols),size_t(dstImage.rows) };
     
-    const cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
+    constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
     //init frame
     format.image_channel_data_type = CL_UNORM_INT8;

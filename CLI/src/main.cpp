@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
     opt.add<std::string>("output", 'o', "File for outputting", false, "output.png");
     opt.add<int>("passes", 'p', "Passes for processing", false, 2);
     opt.add<int>("pushColorCount", 'n', "Limit the number of color pushes", false, 2);
-    opt.add<float>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3F, cmdline::range(0.0F, 1.0F));
-    opt.add<float>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0F, cmdline::range(0.0F, 1.0F));
-    opt.add<float>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0F);
+    opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
+    opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
+    opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
     opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1, int(32 * std::thread::hardware_concurrency())));
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
         "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
     opt.add("version", 'V', "print version information");
-    opt.add<float>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0F);
+    opt.add<double>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0);
     opt.add("disableProgress", 'D', "disable progress display");
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
     std::string output = opt.get<std::string>("output");
     int passes = opt.get<int>("passes");
     int pushColorCount = opt.get<int>("pushColorCount");
-    float strengthColor = opt.get<float>("strengthColor");
-    float strengthGradient = opt.get<float>("strengthGradient");
-    float zoomFactor = opt.get<float>("zoomFactor");
+    double strengthColor = opt.get<double>("strengthColor");
+    double strengthGradient = opt.get<double>("strengthGradient");
+    double zoomFactor = opt.get<double>("zoomFactor");
     uint8_t preFilters = (uint8_t)opt.get<unsigned int>("preFilters");
     uint8_t postFilters = (uint8_t)opt.get<unsigned int>("postFilters");
     unsigned int threads = opt.get<unsigned int>("threads");
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     unsigned int dID = opt.get<unsigned int>("deviceID");
     std::string codec = opt.get<std::string>("codec");
     bool version = opt.exist("version");
-    float forceFps = opt.get<float>("forceFps");
+    double forceFps = opt.get<double>("forceFps");
     bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");

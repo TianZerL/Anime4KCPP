@@ -234,8 +234,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     Anime4KCPP::Parameters inputs(
         args[AC_passes].AsInt(),
         args[AC_pushColorCount].AsInt(),
-        args[AC_strengthColor].AsFloatf(),
-        args[AC_strengthGradient].AsFloatf(),
+        args[AC_strengthColor].AsFloat(),
+        args[AC_strengthGradient].AsFloat(),
         args[AC_zoomFactor].AsInt(),
         false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
         args[AC_HDN].AsBool(),

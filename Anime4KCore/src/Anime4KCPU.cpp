@@ -78,14 +78,14 @@ void Anime4KCPP::Anime4KCPU::process()
     }
 }
 
-inline void Anime4KCPP::Anime4KCPU::getGray(cv::InputArray img)
+inline void Anime4KCPP::Anime4KCPU::getGray(cv::Mat& img)
 {
     changEachPixelBGRA(img, [](const int i, const int j, RGBA pixel, Line curLine) {
         pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::pushColor(cv::InputArray img)
+inline void Anime4KCPP::Anime4KCPU::pushColor(cv::Mat& img)
 {
     const int lineStep = W * 4;
     changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
@@ -155,7 +155,7 @@ inline void Anime4KCPP::Anime4KCPU::pushColor(cv::InputArray img)
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::getGradient(cv::InputArray img)
+inline void Anime4KCPP::Anime4KCPU::getGradient(cv::Mat& img)
 {
     if (!fm)
     {
@@ -174,7 +174,7 @@ inline void Anime4KCPP::Anime4KCPU::getGradient(cv::InputArray img)
             int gradY =
                 (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
-            float Grad = sqrt(gradX * gradX + gradY * gradY);
+            double Grad = sqrt(gradX * gradX + gradY * gradY);
 
             pixel[A] = 255 - UNFLOAT(Grad);
             });
@@ -184,7 +184,7 @@ inline void Anime4KCPP::Anime4KCPU::getGradient(cv::InputArray img)
         cv::Mat tmpGradX(H, W, CV_16SC1), tmpGradY(H, W, CV_16SC1);
         cv::Mat gradX(H, W, CV_8UC1), gradY(H, W, CV_8UC1), alpha(H, W, CV_8UC1);
 
-        int fromTo_get[] = { A,0 };
+        constexpr int fromTo_get[] = { A,0 };
         cv::mixChannels(img, alpha, fromTo_get, 1);
 
         cv::Sobel(alpha, tmpGradX, CV_16SC1, 1, 0);
@@ -193,12 +193,12 @@ inline void Anime4KCPP::Anime4KCPU::getGradient(cv::InputArray img)
         cv::convertScaleAbs(tmpGradY, gradY);
         cv::addWeighted(gradX, 0.5, gradY, 0.5, 0, alpha);
 
-        int fromTo_set[] = { 0,A };
-        cv::mixChannels(255 - alpha, img.getMat(), fromTo_set, 1);
+        constexpr int fromTo_set[] = { 0,A };
+        cv::mixChannels(255 - alpha, img, fromTo_set, 1);
     }
 }
 
-inline void Anime4KCPP::Anime4KCPU::pushGradient(cv::InputArray img)
+inline void Anime4KCPP::Anime4KCPU::pushGradient(cv::Mat& img)
 {
     const int lineStep = W * 4;
     changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
@@ -263,10 +263,9 @@ inline void Anime4KCPP::Anime4KCPU::pushGradient(cv::InputArray img)
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
+inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::Mat& src,
     const std::function<void(const int, const int, RGBA, Line)>&& callBack)
 {
-    cv::Mat src = _src.getMat();
     cv::Mat tmp;
     src.copyTo(tmp);
 
@@ -291,21 +290,21 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
     }
 #endif //something crazy
 
-    tmp.copyTo(src);
+    src = tmp;
 }
 
 inline void Anime4KCPP::Anime4KCPU::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
-        mc[i] = mc[i] * (1 - sc) + (static_cast<float>(a[i] + b[i] + c[i]) / 3.0F) * sc + 0.5F;
+        mc[i] = mc[i] * (1.0 - sc) + ((a[i] + b[i] + c[i]) / 3.0) * sc + 0.5;
 }
 
 inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
-        mc[i] = mc[i] * (1 - sg) + (static_cast<float>(a[i] + b[i] + c[i]) / 3.0F) * sg + 0.5F;
+        mc[i] = mc[i] * (1.0 - sg) + ((a[i] + b[i] + c[i]) / 3.0) * sg + 0.5;
 
     mc[A] = 255;
 }

@@ -1,15 +1,15 @@
 #include "CNNProcessor.h"
 
-void Anime4KCPP::CNNProcessor::conv1To8(cv::InputArray img, const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CNNProcessor::conv1To8(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
-    const int lineStep = img.cols() * srcChannels;
+    const int lineStep = img.cols * srcChannels;
     changEachPixel1ToN(img, [&](const int i, const int j, ChanF outMat, LineB curLine) {
         const int orgJ = j / channels * srcChannels;
-        const int jp = orgJ < (img.cols() - 1)* srcChannels ? srcChannels : 0;
+        const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
-        const LineB pLineData = i < img.rows() - 1 ? curLine + lineStep : curLine;
+        const LineB pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
         const LineB cLineData = curLine;
         const LineB nLineData = i > 0 ? curLine - lineStep : curLine;
 
@@ -509,11 +509,10 @@ void Anime4KCPP::CNNProcessor::convTranspose8To1(cv::Mat& img, const double* ker
         }, tmpMat);
 }
 
-void Anime4KCPP::CNNProcessor::changEachPixel1ToN(cv::InputArray _src,
+void Anime4KCPP::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanF, LineB)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
-    cv::Mat src = _src.getMat();
     tmpMat.create(src.size(), CV_64FC(outChannels));
 
     const size_t srcChannels = src.channels();
@@ -573,12 +572,12 @@ void Anime4KCPP::CNNProcessor::changEachPixelNToN(
     }
 #endif
 
-    tmp.copyTo(tmpMat);
+    tmpMat = tmp;
 }
 
 void Anime4KCPP::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const std::function<void(int, int, ChanB, LineF)>&& callBack,
-    cv::Mat& tmpMat)
+    const cv::Mat& tmpMat)
 {
     cv::Mat tmp;
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;

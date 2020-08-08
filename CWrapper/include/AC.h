@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stddef.h>
+
 #ifdef _WIN32
 #define AC_API __stdcall
 #ifndef AC_DLL
@@ -68,9 +70,9 @@ extern "C"
     {
         int passes;
         int pushColorCount;
-        float strengthColor;
-        float strengthGradient;
-        float zoomFactor;
+        double strengthColor;
+        double strengthGradient;
+        double zoomFactor;
         ac_bool fastMode;
         ac_bool videoMode;
         ac_bool preprocessing;

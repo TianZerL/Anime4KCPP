@@ -1,15 +1,9 @@
 #include "filterprocessor.h"
 
-Anime4KCPP::FilterProcessor::FilterProcessor(cv::InputArray srcImg, uint8_t _filters) :
-    filters(_filters)
+Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, uint8_t _filters) :
+    filters(_filters), srcImgRef(srcImg)
 {
-    if (!((filters & BILATERAL_FILTER) || (filters & BILATERAL_FILTER_FAST)))
-        img = srcImg.getMat();
-    else
-    {
-        srcImg.copyTo(img);
-        tmpImg = srcImg.getMat();
-    }
+    img = srcImg;
     H = img.rows;
     W = img.cols;
 }
@@ -27,12 +21,18 @@ void Anime4KCPP::FilterProcessor::process()
     else if (filters & GAUSSIAN_BLUR)
         cv::GaussianBlur(img, img, cv::Size(3, 3), 1);
     if (filters & BILATERAL_FILTER)
+    {
         cv::bilateralFilter(img, tmpImg, 9, 30, 30);
+        srcImgRef = img;
+    }
     else if (filters & BILATERAL_FILTER_FAST)
+    {
         cv::bilateralFilter(img, tmpImg, 5, 35, 35);
+        srcImgRef = img;
+    }
 }
 
-inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::InputArray img)
+inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& img)
 {
     const int lineStep = W * 3;
     changEachPixelBGR(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
@@ -54,24 +54,23 @@ inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::InputArray img)
         const uint8_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
         const uint8_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
 
-        const float peak = LERP(-0.125F, -0.2F, 1);
-        const float wR = peak * sqrt(float(MIN(minR, 255 - maxR)) * REC(maxR));
-        const float wG = peak * sqrt(float(MIN(minG, 255 - maxG)) * REC(maxG));
-        const float wB = peak * sqrt(float(MIN(minB, 255 - maxB)) * REC(maxB));
+        constexpr double peak = LERP(-0.125, -0.2, 1.0);
+        const double wR = peak * sqrt(MIN(minR, 255 - maxR) * REC(maxR));
+        const double wG = peak * sqrt(MIN(minG, 255 - maxG) * REC(maxG));
+        const double wB = peak * sqrt(MIN(minB, 255 - maxB) * REC(maxB));
 
-        const float r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1 + 4 * wR);
-        const float g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1 + 4 * wG);
-        const float b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1 + 4 * wB);
+        const double r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
+        const double g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
+        const double b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
         pixel[R] = UNFLOAT(r);
         pixel[G] = UNFLOAT(g);
         pixel[B] = UNFLOAT(b);
         });
 }
 
-inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::InputArray _src, 
+inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::Mat& src,
     const std::function<void(const int, const int, RGBA, Line)>&& callBack)
 {
-    cv::Mat src = _src.getMat();
     cv::Mat tmp;
     src.copyTo(tmp);
 
@@ -94,5 +93,5 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::InputArray _src,
     }
 #endif
 
-    tmp.copyTo(src);
+    src = tmp;
 }

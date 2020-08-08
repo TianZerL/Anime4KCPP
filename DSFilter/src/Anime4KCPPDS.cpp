@@ -111,7 +111,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
 
     GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
-    zf = parameters.zoomFactor = zf >= 1.0F ? zf : 1.0F;
+    zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
 }
 
 inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
@@ -322,7 +322,7 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         srcW = pVi->bmiHeader.biWidth;
         dstH = srcH * zf;
         dstW = srcW * zf;
-        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf) * static_cast<size_t>(zf);
+        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
@@ -337,7 +337,7 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         srcW = pVi->bmiHeader.biWidth;
         dstH = srcH * zf;
         dstW = srcW * zf;
-        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf) * static_cast<size_t>(zf);
+        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
@@ -528,7 +528,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     return hr;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, float* zoomFactor, int* H, int* W)
+STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int* H, int* W)
 {
     *HDN = parameters.HDN;
     *HDNLevel = parameters.HDNLevel;
@@ -542,7 +542,7 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, un
     return NOERROR;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, float zoomFactor, int H, int W)
+STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W)
 {
     CAutoLock cAutoLock(&lock);
 

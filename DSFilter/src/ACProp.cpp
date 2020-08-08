@@ -68,7 +68,7 @@ HRESULT ACProp::OnActivate()
 
     TCHAR sz[STR_MAX_LENGTH];
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%f\0"), zoomFactor);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%lf\0"), zoomFactor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz);
 
     StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), HDNLevel);
@@ -123,7 +123,7 @@ void ACProp::GetValues()
     TCHAR sz[STR_MAX_LENGTH];
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz, STR_MAX_LENGTH);
     zoomFactor = _wtof(sz);
-    zoomFactor = zoomFactor >= 1.0F ? zoomFactor : 1.0F;
+    zoomFactor = zoomFactor >= 1.0 ? zoomFactor : 1.0;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_HDNLevel), sz, STR_MAX_LENGTH);
     HDNLevel = _wtoi(sz);

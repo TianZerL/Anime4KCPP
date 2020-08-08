@@ -21,7 +21,7 @@ extern "C"
             bool* CNN,
             unsigned int* pID,
             unsigned int* dID,
-            float* zoomFactor,
+            double* zoomFactor,
             int *H,
             int *W
             ) PURE;
@@ -32,7 +32,7 @@ extern "C"
             bool CNN,
             unsigned int pID,
             unsigned int dID,
-            float zoomFactor,
+            double zoomFactor,
             int H,
             int W
             ) PURE;
@@ -64,7 +64,7 @@ private:
     bool HDN, CNN;
     int HDNLevel;
     unsigned int pID, dID;
-    float zoomFactor;
+    double zoomFactor;
     int H, W;
     std::string GPUInfo;
 

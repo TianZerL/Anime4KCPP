@@ -25,11 +25,11 @@ public:
     virtual ~Anime4KCPU() = default;
     virtual void process() override;
 private:
-    void getGray(cv::InputArray img);
-    void pushColor(cv::InputArray img);
-    void getGradient(cv::InputArray img);
-    void pushGradient(cv::InputArray img);
-    void changEachPixelBGRA(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
+    void getGray(cv::Mat& img);
+    void pushColor(cv::Mat& img);
+    void getGradient(cv::Mat& img);
+    void pushGradient(cv::Mat& img);
+    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, RGBA, Line)>&& callBack);
     void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
     void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
 
