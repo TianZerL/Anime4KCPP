@@ -29,15 +29,15 @@ public:
     virtual ~Anime4KGPUCNN() = default;
     virtual void process() override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
-    static void releaseGPU();
+    static void releaseGPU() noexcept;
     static bool isInitializedGPU();
 private:
     void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::ACNetType type);
     static void initOpenCL(const CNNType type);
-    static void releaseOpenCL();
+    static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string& fileName);
 
-    virtual ProcessorType getProcessorType() override;
+    virtual ProcessorType getProcessorType() noexcept override;
 private:
     static bool isInitialized;
 

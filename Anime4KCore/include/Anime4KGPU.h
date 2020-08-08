@@ -23,7 +23,7 @@ public:
     virtual ~Anime4KGPU() = default;
     virtual void process() override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
-    static void releaseGPU();
+    static void releaseGPU() noexcept;
     static bool isInitializedGPU();
     //return platforms, devices of each platform, all devices infomation
     static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
@@ -32,10 +32,10 @@ public:
 private:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     static void initOpenCL();
-    static void releaseOpenCL();
+    static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string &fileName);
 
-    virtual ProcessorType getProcessorType() override;
+    virtual ProcessorType getProcessorType() noexcept override;
 private:
     static bool isInitialized;
 

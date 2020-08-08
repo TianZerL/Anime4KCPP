@@ -24,5 +24,5 @@ public:
     virtual void process() override;
 
 private:
-    virtual ProcessorType getProcessorType() override;
+    virtual ProcessorType getProcessorType() noexcept override;
 };

@@ -49,7 +49,8 @@ extern "C"
         AC_ERROR_INIT_VIDEO_WRITER,
         AC_ERROR_GPU_PROCESS,
         AC_ERROR_SAVE_TO_NULL_POINTER,
-        AC_ERROR_NOT_YUV444
+        AC_ERROR_NOT_YUV444,
+        AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME
     } ac_error;
 
     typedef enum ac_codec

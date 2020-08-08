@@ -30,8 +30,8 @@ private:
     void getGradient(cv::InputArray img);
     void pushGradient(cv::InputArray img);
     void changEachPixelBGRA(cv::InputArray _src, const std::function<void(int, int, RGBA, Line)>&& callBack);
-    void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c);
-    void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c);
+    void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
+    void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
 
-    virtual ProcessorType getProcessorType() override;
+    virtual ProcessorType getProcessorType() noexcept override;
 };

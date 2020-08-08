@@ -12,5 +12,5 @@ class Anime4KCPP::CNNCreator
 {
 public:
     static CNNProcessor* create(const CNNType& type);
-    static void release(CNNProcessor*& processor);
+    static void release(CNNProcessor*& processor) noexcept;
 };

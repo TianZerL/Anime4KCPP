@@ -135,27 +135,33 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
 
 void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
 {
-    if (inputAsRGB32)
+    switch (inputAsRGB32 + inputAsYUV444)
     {
-        inputRGB32 = true;
-        cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
-    }
-    else
-    {
+    case 0:
         inputRGB32 = false;
-        orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
-    }
-    if (inputAsYUV444)
-    {
-        inputYUV = true;
-        std::vector<cv::Mat> yuv(3);
-        cv::split(orgImg, yuv);
-        dstY = orgY = yuv[Y];
-        dstU = orgU = yuv[U];
-        dstV = orgV = yuv[V];
-    }
-    else
         inputYUV = false;
+        orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+        break;
+    case 1:
+        if (inputAsRGB32)
+        {
+            inputRGB32 = true;
+            cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+        }
+        else //YUV444
+        {
+            inputYUV = true;
+            std::vector<cv::Mat> yuv(3);
+            cv::split(orgImg, yuv);
+            dstY = orgY = yuv[Y];
+            dstU = orgU = yuv[U];
+            dstV = orgV = yuv[V];
+        }
+        break;
+    case 2:
+        throw "Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.";
+    }
+
     dstImg = orgImg;
     orgH = rows;
     orgW = cols;
@@ -219,7 +225,19 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
             throw "Only YUV444 can be saved to file";
     }
     if (checkAlphaChannel)
-        cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
+    {
+        std::string fileSuffix = dstFile.substr(dstFile.rfind('.'));
+        if (std::string(".jpg.jpeg.bmp").find(fileSuffix) != std::string::npos)
+        {
+            cv::Mat tmp;
+            cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
+            tmp.convertTo(tmp, CV_32FC3, 1.0 / 255.0);
+            cv::multiply(dstImg, tmp, dstImg, 1.0, CV_8UC3);
+        }
+        else
+            cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
+    }
+
     cv::imwrite(dstFile, dstImg);
 }
 
@@ -234,6 +252,8 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     }
     else if (inputRGB32)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+    else if (checkAlphaChannel)
+        cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
 
     dstImage = dstImg;
 }
@@ -518,7 +538,7 @@ std::string Anime4KCPP::Anime4K::getFiltersInfo()
     return std::string(oss.str());
 }
 
-size_t Anime4KCPP::Anime4K::getResultDataLength()
+size_t Anime4KCPP::Anime4K::getResultDataLength() noexcept
 {
     if (!inputYUV)
         return dstImg.step * static_cast<size_t>(H);
@@ -526,7 +546,7 @@ size_t Anime4KCPP::Anime4K::getResultDataLength()
         return dstY.step * 3 * static_cast<size_t>(H);
 }
 
-size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength()
+size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength() noexcept
 {
     return static_cast<size_t>(W) * static_cast<size_t>(H);
 }
@@ -627,7 +647,7 @@ void Anime4KCPP::Anime4K::processWithProgress(const std::function<void(double)>&
     }
 }
 
-void Anime4KCPP::Anime4K::stopVideoProcess()
+void Anime4KCPP::Anime4K::stopVideoProcess() noexcept
 {
     if (vm)
         videoIO->stopProcess();
@@ -642,7 +662,7 @@ void Anime4KCPP::Anime4K::pauseVideoProcess()
     }
 }
 
-void Anime4KCPP::Anime4K::continueVideoProcess()
+void Anime4KCPP::Anime4K::continueVideoProcess() noexcept
 {
     if (vm)
         videoIO->continueProcess();
@@ -654,7 +674,7 @@ inline void Anime4KCPP::Anime4K::initVideoIO()
         videoIO = new VideoIO;
 }
 
-inline void Anime4KCPP::Anime4K::releaseVideoIO()
+inline void Anime4KCPP::Anime4K::releaseVideoIO() noexcept
 {
     if (videoIO != nullptr)
     {
@@ -663,7 +683,7 @@ inline void Anime4KCPP::Anime4K::releaseVideoIO()
     }
 }
 
-void Anime4KCPP::Parameters::reset()
+void Anime4KCPP::Parameters::reset() noexcept
 {
     passes = 2;
     pushColorCount = 2;
@@ -698,7 +718,7 @@ Anime4KCPP::Parameters::Parameters(
     bool HDN,
     int HDNLevel,
     bool alpha
-) :
+) noexcept :
     passes(passes), pushColorCount(pushColorCount),
     strengthColor(strengthColor), strengthGradient(strengthGradient),
     zoomFactor(zoomFactor), fastMode(fastMode), videoMode(videoMode),

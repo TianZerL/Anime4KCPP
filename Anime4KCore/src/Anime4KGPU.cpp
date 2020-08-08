@@ -78,7 +78,7 @@ void Anime4KCPP::Anime4KGPU::initGPU(unsigned int platformID, unsigned int devic
     }
 }
 
-void Anime4KCPP::Anime4KGPU::releaseGPU()
+void Anime4KCPP::Anime4KGPU::releaseGPU() noexcept
 {
     if (isInitialized)
     {
@@ -611,7 +611,7 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     }
 }
 
-void Anime4KCPP::Anime4KGPU::releaseOpenCL()
+void Anime4KCPP::Anime4KGPU::releaseOpenCL() noexcept
 {
     if (program != nullptr)
         clReleaseProgram(program);
@@ -633,7 +633,7 @@ std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
     return std::string(source.str());
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPU::getProcessorType()
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPU::getProcessorType() noexcept
 {
     return ProcessorType::GPU;
 }

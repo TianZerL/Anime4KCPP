@@ -27,7 +27,7 @@ public:
     VideoIO(const VideoIO&) = delete;
     VideoIO& operator=(const VideoIO&) = delete;
     //initialize frame process callback function `p` and thread count `t`, it's ready to call process after this
-    VideoIO& init(std::function<void()> &&p, size_t t);
+    VideoIO& init(std::function<void()> &&p, size_t t) noexcept;
     void process();
     //initialize VideoCapture
     bool openReader(const std::string& srcFile);
@@ -38,13 +38,13 @@ public:
     void release();
     Frame read();
     void write(const Frame& frame);
-    double getProgress();
-    void stopProcess();
+    double getProgress() noexcept;
+    void stopProcess() noexcept;
     void pauseProcess();
-    void continueProcess();
-    bool isPaused();
+    void continueProcess() noexcept;
+    bool isPaused() noexcept;
 private:
-    void setProgress(double p);
+    void setProgress(double p) noexcept;
 private:
     size_t threads = 0;
     std::function<void()> processor;

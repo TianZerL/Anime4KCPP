@@ -17,7 +17,7 @@ Anime4KCPP::CNNProcessor* Anime4KCPP::CNNCreator::create(const CNNType& type)
 	}
 }
 
-void Anime4KCPP::CNNCreator::release(CNNProcessor*& processor)
+void Anime4KCPP::CNNCreator::release(CNNProcessor*& processor) noexcept
 {
 	if (processor != nullptr)
 	{

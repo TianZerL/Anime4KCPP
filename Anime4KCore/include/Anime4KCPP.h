@@ -28,5 +28,5 @@ public:
     Anime4KCreator(bool initGPU, bool initCNN, unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     ~Anime4KCreator();
     Anime4K* create(const Parameters& parameters, const ProcessorType type);
-    void release(Anime4K*& anime4K);
+    void release(Anime4K*& anime4K) noexcept;
 };

@@ -184,7 +184,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
     CNNCreator::release(processor);
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPUCNN::getProcessorType()
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPUCNN::getProcessorType() noexcept
 {
     return ProcessorType::CPUCNN;
 }

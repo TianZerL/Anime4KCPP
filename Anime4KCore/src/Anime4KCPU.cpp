@@ -294,14 +294,14 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::InputArray _src,
     tmp.copyTo(src);
 }
 
-inline void Anime4KCPP::Anime4KCPU::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
+inline void Anime4KCPP::Anime4KCPU::getLightest(RGBA mc, const RGBA a, const RGBA b, const RGBA c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
         mc[i] = mc[i] * (1 - sc) + (static_cast<float>(a[i] + b[i] + c[i]) / 3.0F) * sc + 0.5F;
 }
 
-inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c)
+inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
@@ -310,7 +310,7 @@ inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA
     mc[A] = 255;
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPU::getProcessorType()
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPU::getProcessorType() noexcept
 {
     return ProcessorType::CPU;
 }

@@ -236,7 +236,7 @@ void Anime4KCPP::Anime4KGPUCNN::initGPU(unsigned int platformID, unsigned int de
     }
 }
 
-void Anime4KCPP::Anime4KGPUCNN::releaseGPU()
+void Anime4KCPP::Anime4KGPUCNN::releaseGPU() noexcept
 {
     if (isInitialized)
     {
@@ -833,7 +833,7 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     }
 }
 
-void Anime4KCPP::Anime4KGPUCNN::releaseOpenCL()
+void Anime4KCPP::Anime4KGPUCNN::releaseOpenCL() noexcept
 {
     for (int i = HDNL0; i < TotalTypeCount; i++)
     {
@@ -858,7 +858,7 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
     return std::string(source.str());
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType()
+Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType() noexcept
 {
     return ProcessorType::GPUCNN;
 }

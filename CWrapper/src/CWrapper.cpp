@@ -400,6 +400,9 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
+        if (inputAsRGB32 && inputAsYUV444)
+            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
+
         static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
 
         return AC_OK;

@@ -6,7 +6,7 @@ Anime4KCPP::VideoIO::~VideoIO()
     reader.release();
 }
 
-Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t t)
+Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t t) noexcept
 {
     processor = std::move(p);
     threads = t;
@@ -173,12 +173,12 @@ void Anime4KCPP::VideoIO::write(const Frame& frame)
     cndWrite.notify_all();
 }
 
-double Anime4KCPP::VideoIO::getProgress()
+double Anime4KCPP::VideoIO::getProgress() noexcept
 {
     return progress;
 }
 
-void Anime4KCPP::VideoIO::stopProcess()
+void Anime4KCPP::VideoIO::stopProcess() noexcept
 {
     stop = 1;
 }
@@ -193,17 +193,17 @@ void Anime4KCPP::VideoIO::pauseProcess()
     }
 }
 
-void Anime4KCPP::VideoIO::continueProcess()
+void Anime4KCPP::VideoIO::continueProcess() noexcept
 {
     pause = false;
 }
 
-bool Anime4KCPP::VideoIO::isPaused()
+bool Anime4KCPP::VideoIO::isPaused() noexcept
 {
     return pause;
 }
 
-inline void Anime4KCPP::VideoIO::setProgress(double p)
+inline void Anime4KCPP::VideoIO::setProgress(double p) noexcept
 {
     progress = p;
 }

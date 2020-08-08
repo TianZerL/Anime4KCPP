@@ -80,7 +80,7 @@ struct Anime4KCPP::Parameters
     bool alpha;
     int HDNLevel;
 
-    void reset();
+    void reset() noexcept;
 
     Parameters(
         int passes = 2,
@@ -98,7 +98,7 @@ struct Anime4KCPP::Parameters
         bool HDN = false,
         int HDNLevel = 1,
         bool alpha = false
-    );
+    ) noexcept;
 };
 
 enum class Anime4KCPP::ProcessorType
@@ -158,8 +158,8 @@ public:
 
     std::string getInfo();
     std::string getFiltersInfo();
-    size_t getResultDataLength();
-    size_t getResultDataPerChannelLength();
+    size_t getResultDataLength() noexcept;
+    size_t getResultDataPerChannelLength() noexcept;
     std::array<int, 3> getResultShape();
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
@@ -168,14 +168,14 @@ public:
     // for video processing
     void processWithPrintProgress();
     void processWithProgress(const std::function<void(double)>&& callBack);
-    void stopVideoProcess();
+    void stopVideoProcess() noexcept;
     void pauseVideoProcess();
-    void continueVideoProcess();
+    void continueVideoProcess() noexcept;
 protected:
-    virtual ProcessorType getProcessorType() = 0;
+    virtual ProcessorType getProcessorType() noexcept = 0;
 private:
     void initVideoIO();
-    void releaseVideoIO();
+    void releaseVideoIO() noexcept;
 protected:
     int orgH, orgW, H, W;
     double fps;
