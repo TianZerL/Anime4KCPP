@@ -729,10 +729,18 @@ void MainWindow::on_pushButtonOutputPathPick_clicked()
 
 void MainWindow::on_pushButtonWebVideo_clicked()
 {
+    bool ok = false;
     QString urlStr = QInputDialog::getText(this,
         tr("Web Video"),
-        tr("Please input the url of web video")
+        tr("Please input the url of web video"),
+        QLineEdit::Normal,
+        QString(),
+        &ok
     ).simplified();
+
+    if (!ok)
+        return;
+
     QUrl url(urlStr);
     if (!QRegExp("^https?|ftp|file$").exactMatch(url.scheme()) || !url.isValid())
     {
