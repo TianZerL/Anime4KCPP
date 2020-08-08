@@ -26,7 +26,7 @@ Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does n
 
 # About ACNet
 ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.  
-HDN mode can better denoise.  
+HDN mode can better denoise, HDN level is from 1 to 3, higher for better denoising but may cause blur and lack of detail.  
 for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 
 # Why Anime4KCPP
@@ -146,11 +146,16 @@ For video processing, all you need do is to add the argument ```-v```, and waiti
       -q, --GPUMode             Enable GPU acceleration
       -w, --CNNMode             Enable ACNet
       -H, --HDN                 Enable HDN mode for ACNet
+      -L, --HDNLevel            Set HDN level (int [=1])
       -l, --listGPUs            list GPUs
       -h, --platformID          Specify the platform ID (unsigned int [=0])
       -d, --deviceID            Specify the device ID (unsigned int [=0])
       -C, --codec               Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windows), av01(not support in Windows) (string [=mp4v])
       -V, --version             print version information
+      -F, --forceFps            Set output video fps to the specifying number, 0 to disable (float [=0])
+      -D, --disableProgress     disable progress display
+      -W, --webVideo            process the video from URL
+      -A, --alpha               preserve the Alpha channel for transparent image
       -?, --help                print this message
 
 ## About GPU acceleration

@@ -11,7 +11,7 @@ Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，�
 
 # 关于ACNet
 ACNet是一个基于卷积神经网络的超分辨率算法，旨在同时提供高质量和高性能。  
-HDN模式能更好的降噪。    
+HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但可能导致模糊和缺少细节。    
 详情可见[wiki页面](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 
 # 为什么选择Anime4KCPP
@@ -132,11 +132,16 @@ Anime4KCPP现在提供Android版本, 使用你的手机处理您的图片，就�
       -q, --GPUMode             开启GPU加速  
       -w, --CNNMode             开启ACNet
       -H, --HDN                 为ACNet开启HDN模式
+      -L, --HDNLevel            设置HDN等级 (int [=1])
       -l, --listGPUs            列出GPU平台与设备
       -h, --platformID          指定平台ID (unsigned int [=0])
       -d, --deviceID            指定设备ID (unsigned int [=0])
       -C, --codec               指定编码器，包括 mp4v(推荐用于Windows), dxva(仅支持Windows), avc1(H264, 推荐用于Linux), vp09(非常慢), hevc(不支持Windows), av01(不支持Windows) (string [=mp4v])
       -V, --version             显示版本信息
+      -F, --forceFps            指定输出视频的FPS，设为0自动处理(float [=0])
+      -D, --disableProgress     关闭进度显示
+      -W, --webVideo            从URL处理(网络)文件
+      -A, --alpha               保留图像的alpha通道，如果有的话
       -?, --help                显示帮助信息
 
 ## GPU加速相关
