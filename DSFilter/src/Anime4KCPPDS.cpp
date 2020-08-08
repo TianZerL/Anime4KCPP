@@ -322,7 +322,7 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         srcW = pVi->bmiHeader.biWidth;
         dstH = srcH * zf;
         dstW = srcW * zf;
-        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf * zf);
+        dstDataLength = ceil(pVi->bmiHeader.biSizeImage * zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
@@ -337,7 +337,7 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         srcW = pVi->bmiHeader.biWidth;
         dstH = srcH * zf;
         dstW = srcW * zf;
-        dstDataLength = static_cast<size_t>(pVi->bmiHeader.biSizeImage) * static_cast<size_t>(zf * zf);
+        dstDataLength = ceil(pVi->bmiHeader.biSizeImage * zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
@@ -400,15 +400,15 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             ac->process();
             ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
 
-            for (LONG y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pYOut, dstTmpY.data + static_cast<size_t>(y) * static_cast<size_t>(dstW), dstW);
+                memcpy(pYOut, dstTmpY.data + y * dstW, dstW);
                 pYOut += stride;
                 if (y < dstHUV)
                 {
-                    memcpy(pUOut, dstTmpU.data + static_cast<size_t>(y) * static_cast<size_t>(dstWUV), dstWUV);
+                    memcpy(pUOut, dstTmpU.data + y * dstWUV, dstWUV);
                     pUOut += strideUV;
-                    memcpy(pVOut, dstTmpV.data + static_cast<size_t>(y) * static_cast<size_t>(dstWUV), dstWUV);
+                    memcpy(pVOut, dstTmpV.data + y * dstWUV, dstWUV);
                     pVOut += strideUV;
                 }
             }
@@ -454,13 +454,13 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
             cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
 
-            for (LONG y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pYOut, dstTmpY.data + static_cast<size_t>(y) * static_cast<size_t>(dstW), dstW);
+                memcpy(pYOut, dstTmpY.data + y * dstW, dstW);
                 pYOut += stride;
                 if (y < dstHUV)
                 {
-                    memcpy(pUVOut, dstUV.data + static_cast<size_t>(y) * static_cast<size_t>(dstW), dstW);
+                    memcpy(pUVOut, dstUV.data + y * dstW, dstW);
                     pUVOut += stride;
                 }
             }

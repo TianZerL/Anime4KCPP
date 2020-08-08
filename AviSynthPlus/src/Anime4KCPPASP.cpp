@@ -82,26 +82,26 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
     if (vi.IsYUV())
     {
-        int srcPitchY = src->GetPitch(PLANAR_Y);
-        int dstPitchY = dst->GetPitch(PLANAR_Y);
-        int srcPitchU = src->GetPitch(PLANAR_U);
-        int dstPitchU = dst->GetPitch(PLANAR_U);
-        int srcPitchV = src->GetPitch(PLANAR_V);
-        int dstPitchV = dst->GetPitch(PLANAR_V);
+        size_t srcPitchY = src->GetPitch(PLANAR_Y);
+        size_t dstPitchY = dst->GetPitch(PLANAR_Y);
+        size_t srcPitchU = src->GetPitch(PLANAR_U);
+        size_t dstPitchU = dst->GetPitch(PLANAR_U);
+        size_t srcPitchV = src->GetPitch(PLANAR_V);
+        size_t dstPitchV = dst->GetPitch(PLANAR_V);
 
-        int srcHY = src->GetHeight(PLANAR_Y);
-        int srcLY = src->GetRowSize(PLANAR_Y);
-        int srcHU = src->GetHeight(PLANAR_U);
-        int srcLU = src->GetRowSize(PLANAR_U);
-        int srcHV = src->GetHeight(PLANAR_V);
-        int srcLV = src->GetRowSize(PLANAR_V);
+        size_t srcHY = src->GetHeight(PLANAR_Y);
+        size_t srcLY = src->GetRowSize(PLANAR_Y);
+        size_t srcHU = src->GetHeight(PLANAR_U);
+        size_t srcLU = src->GetRowSize(PLANAR_U);
+        size_t srcHV = src->GetHeight(PLANAR_V);
+        size_t srcLV = src->GetRowSize(PLANAR_V);
 
-        int dstHY = dst->GetHeight(PLANAR_Y);
-        int dstLY = dst->GetRowSize(PLANAR_Y);
-        int dstHU = dst->GetHeight(PLANAR_U);
-        int dstLU = dst->GetRowSize(PLANAR_U);
-        int dstHV = dst->GetHeight(PLANAR_V);
-        int dstLV = dst->GetRowSize(PLANAR_V);
+        size_t dstHY = dst->GetHeight(PLANAR_Y);
+        size_t dstLY = dst->GetRowSize(PLANAR_Y);
+        size_t dstHU = dst->GetHeight(PLANAR_U);
+        size_t dstLU = dst->GetRowSize(PLANAR_U);
+        size_t dstHV = dst->GetHeight(PLANAR_V);
+        size_t dstLV = dst->GetRowSize(PLANAR_V);
 
         const unsigned char* srcpY = src->GetReadPtr(PLANAR_Y);
         const unsigned char* srcpU = src->GetReadPtr(PLANAR_U);
@@ -111,26 +111,26 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
         unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
 
-        unsigned char* srcDataY = new unsigned char[static_cast<size_t>(srcHY) * static_cast<size_t>(srcLY)];
-        unsigned char* srcDataU = new unsigned char[static_cast<size_t>(srcHU) * static_cast<size_t>(srcLU)];
-        unsigned char* srcDataV = new unsigned char[static_cast<size_t>(srcHV) * static_cast<size_t>(srcLV)];
+        unsigned char* srcDataY = new unsigned char[srcHY * srcLY];
+        unsigned char* srcDataU = new unsigned char[srcHU * srcLU];
+        unsigned char* srcDataV = new unsigned char[srcHV * srcLV];
 
         cv::Mat dstDataY;
         cv::Mat dstDataU;
         cv::Mat dstDataV;
 
-        for (int y = 0; y < srcHY; y++)
+        for (size_t y = 0; y < srcHY; y++)
         {
-            memcpy(srcDataY + y * static_cast<size_t>(srcLY), srcpY, srcLY);
+            memcpy(srcDataY + y * srcLY, srcpY, srcLY);
             srcpY += srcPitchY;
             if (y < srcHU)
             {
-                memcpy(srcDataU + y * static_cast<size_t>(srcLU), srcpU, srcLU);
+                memcpy(srcDataU + y * srcLU, srcpU, srcLU);
                 srcpU += srcPitchU;
             }
             if (y < srcHV)
             {
-                memcpy(srcDataV + y * static_cast<size_t>(srcLV), srcpV, srcLV);
+                memcpy(srcDataV + y * srcLV, srcpV, srcLV);
                 srcpV += srcPitchV;
             }
         }
@@ -152,18 +152,18 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         anime4K->process();
         anime4K->saveImage(dstDataY, dstDataU, dstDataV);
 
-        for (int y = 0; y < dstHY; y++)
+        for (size_t y = 0; y < dstHY; y++)
         {
-            memcpy(dstpY, dstDataY.data + y * static_cast<size_t>(dstLY), dstLY);
+            memcpy(dstpY, dstDataY.data + y * dstLY, dstLY);
             dstpY += dstPitchY;
             if (y < dstHU)
             {
-                memcpy(dstpU, dstDataU.data + y * static_cast<size_t>(dstLU), dstLU);
+                memcpy(dstpU, dstDataU.data + y * dstLU, dstLU);
                 dstpU += dstPitchU;
             }
             if (y < dstHV)
             {
-                memcpy(dstpV, dstDataV.data + y * static_cast<size_t>(dstLV), dstLV);
+                memcpy(dstpV, dstDataV.data + y * dstLV, dstLV);
                 dstpV += dstPitchV;
             }
         }
@@ -177,24 +177,24 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     }
     else
     {
-        int srcPitch = src->GetPitch();
-        int dstPitch = dst->GetPitch();
+        size_t srcPitch = src->GetPitch();
+        size_t dstPitch = dst->GetPitch();
 
-        int srcH = src->GetHeight();
-        int srcL = src->GetRowSize();
-        int dstH = dst->GetHeight();
-        int dstL = dst->GetRowSize();
+        size_t srcH = src->GetHeight();
+        size_t srcL = src->GetRowSize();
+        size_t dstH = dst->GetHeight();
+        size_t dstL = dst->GetRowSize();
 
         const unsigned char* srcp = src->GetReadPtr();
         unsigned char* dstp = dst->GetWritePtr();
 
-        unsigned char* srcData = new unsigned char[static_cast<size_t>(srcH) * static_cast<size_t>(srcL)];
+        unsigned char* srcData = new unsigned char[srcH * srcL];
 
         cv::Mat dstData;
 
-        for (int y = 0; y < srcH; y++)
+        for (size_t y = 0; y < srcH; y++)
         {
-            memcpy(srcData + y * static_cast<size_t>(srcL), srcp, srcL);
+            memcpy(srcData + y * srcL, srcp, srcL);
             srcp += srcPitch;
         }
 
@@ -215,9 +215,9 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         anime4K->process();
         anime4K->saveImage(dstData);
 
-        for (int y = 0; y < dstH; y++)
+        for (size_t y = 0; y < dstH; y++)
         {
-            memcpy(dstp, dstData.data + y * static_cast<size_t>(dstL), dstL);
+            memcpy(dstp, dstData.data + y * dstL, dstL);
             dstp += dstPitch;
         }
 
