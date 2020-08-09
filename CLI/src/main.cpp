@@ -104,12 +104,15 @@ int main(int argc, char* argv[])
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
-        "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v");
+        "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v",
+        cmdline::oneof<std::string>("mp4v", "dxva", "avc1", "vp09", "hevc", "av01", "other"));
     opt.add("version", 'V', "print version information");
     opt.add<double>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0);
     opt.add("disableProgress", 'D', "disable progress display");
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
+
+    opt.set_program_name("Anime4KCPP_CLI");
 
     opt.parse_check(argc, argv);
 
@@ -120,8 +123,8 @@ int main(int argc, char* argv[])
     double strengthColor = opt.get<double>("strengthColor");
     double strengthGradient = opt.get<double>("strengthGradient");
     double zoomFactor = opt.get<double>("zoomFactor");
-    uint8_t preFilters = (uint8_t)opt.get<unsigned int>("preFilters");
-    uint8_t postFilters = (uint8_t)opt.get<unsigned int>("postFilters");
+    uint8_t preFilters = opt.get<unsigned int>("preFilters");
+    uint8_t postFilters = opt.get<unsigned int>("postFilters");
     unsigned int threads = opt.get<unsigned int>("threads");
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
