@@ -27,9 +27,12 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 - 可调节参数，尝试不同的选项以获得更佳的质量或者更快的速度。
 - 滤镜支持，利用它们进行抗锯齿和降噪。  
 
-# 在MPC-HC, MPC-BE, Potplayer等播放器上使用Anime4KCPP
+# 在播放器上使用Anime4KCPP
+## 在MPC-HC, MPC-BE, Potplayer等基于DirectShow的播放器上使用
 Anime4KCPP支持DirectShow滤镜, 在Windows下使用非常简单, 查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)  
 Anime4KCPP也可以通过[AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases)在Windows平台上的绝大多数播放器中使用,查看[教程](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
+## 在基于MPV的播放器上使用
+参见[ACNetGLSL](https://github.com/TianZerL/ACNetGLSL), ACNet的GLSL实现.
 
 # 效果
 ### 原图

@@ -42,9 +42,12 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
 - More arguments for you, you can get a better quality than real-time playback.
 - Filters support, use them to denoise or anti-aliasing.
 
-# Use Anime4KCPP in MPC-HC, MPC-BE, Potplayer and other players
+# Use Anime4KCPP in players
+## For MPC-HC, MPC-BE, Potplayer and other DirectShow player
 Anime4KCPP support DirectShow filter, it is very easy to use the filter in most players on Windows, see [how](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
 Anime4KCPP also can be used in most players on Windows by [AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases), see [how](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
+## For MPV based player
+See [ACNetGLSL](https://github.com/TianZerL/ACNetGLSL), re-implemented ACNet in GLSL for MPV player.
 
 # Result
 ### origin
