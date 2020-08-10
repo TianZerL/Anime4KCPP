@@ -17,9 +17,7 @@
 
 # About Anime4KCPP
 Anime4KCPP provides an optimized [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and it also provides its own CNN algorithm [***ACNet***](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet), it provides a variety of way to use, including preprocessing and real-time playback, it aims to be a high performance tools to process both image and video.  
-This project is for learning and the exploration task of algorithm course in SWJTU.  
-
-***NOTICE: With CPU, it is fast enough to process normal image, It is about 12 times faster than [Go version](https://github.com/TianZerL/Anime4KGo), and 1300 times faster than [Python version](https://github.com/TianZerL/Anime4KPython). With GPU acceleration, it can be more than 10 times faster than CPU (depends on your graphic card), so it is suitable for video processing, just try this for higher quality and speed.***
+This project is for learning and the exploration task of algorithm course in SWJTU.
 
 # About Anime4K09
 Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does not use any machine learning approaches, and can be very fast in real-time processing or pretreatment.
@@ -27,27 +25,25 @@ Anime4K is a simple high-quality anime upscale algorithm. The version 0.9 does n
 # About ACNet
 ACNet is a CNN based anime upscale algorithm. It aims to provide both high-quality and high-performance.  
 HDN mode can better denoise, HDN level is from 1 to 3, higher for better denoising but may cause blur and lack of detail.  
-for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)
+for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 
 # Why Anime4KCPP
 - Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).
-- Wide compatibility, support both CPU and GPU.
-- easy to use with GUI or CLI.
-- Android supports.
-- VapourSynth plugin supports.
-- AviSynthPlus plugin supports.
-- High performance.
-- Low memory usage, usually less than 1G even in processing 1080P videos.
-- GPU acceleration support, use it to process your image or video in a short time.
-- More arguments for you, you can get a better quality than real-time playback.
-- Filters support, use them to denoise or anti-aliasing.
+- GPU acceleration support with all GPUs that implemented OpenCL 1.2 or newer.
+- High performance and low memory usage.
+- Support multiple usage methods.
 
-# Use Anime4KCPP in players
-## For MPC-HC, MPC-BE, Potplayer and other DirectShow player
-Anime4KCPP support DirectShow filter, it is very easy to use the filter in most players on Windows, see [how](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
-Anime4KCPP also can be used in most players on Windows by [AviSynthPlus plugin](https://github.com/TianZerL/Anime4KCPP/releases), see [how](https://github.com/TianZerL/Anime4KCPP/wiki/Use-in-player)
-## For MPV based player
-See [ACNetGLSL](https://github.com/TianZerL/ACNetGLSL), re-implemented ACNet in GLSL for MPV player.
+# Usage method
+- CLI
+- GUI
+- DirectShow Filter (Windows only, for MPC-HC/BE, potplayer and other DirectShow based players)
+- AviSynthPlus plugin
+- VapourSynth plugin
+- Android APP
+- C API binding
+- [Python API binding](https://github.com/TianZerL/pyanime4k)
+- [GLSL shader](https://github.com/TianZerL/ACNetGLSL)(For MPV based players)
+For more infomation on how to use them, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki).
 
 # Result
 ### origin
@@ -58,9 +54,6 @@ See [ACNetGLSL](https://github.com/TianZerL/ACNetGLSL), re-implemented ACNet in 
 ![Anime4K09 with filters](/images/Anime4K09Filters.png)
 ### ACNet
 ![examples](/images/ACNet.png)
-
-# GPU acceleration
-Anime4KCPP now supports GPU acceleration, which is implemented by original OpenCL for high performance, it supports any graphic card that implemented OpenCL 1.2 or newer, and can complete 1080 -> 4K image processing in 0.1s on *AMD Vege 8 Graphics* (integrated in *AMD Ryzen 3500U*).
 
 # Performance
 ### Desktop
@@ -109,165 +102,27 @@ algorithm: Anime4K09
     Video(Length: 1 min 32 seconds):
     480P  -> 1080P :       01 min 04 seconds
 
-# VapourSynth and AviSynthPlus plugin
-Anime4KCPP now provides VapourSynth and AviSynthPlus plugin.  
-For detail:  
-[VapourSynth plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/VapourSynth-plugin)  
-[AviSynthPlus plugin wiki](https://github.com/TianZerL/Anime4KCPP/wiki/AviSynthPlus-plugin)
-
-# GUI
-Anime4KCPP now provides a GUI interface, upscale your image or video by an easier way!  
-***NOTICE: please install [ffmpeg](https://ffmpeg.org) for video processing firstly***  
-
-# Android
-Anime4KCPP now provides an Android version, upscale your image by your phone as fast as your computer!  
-***NOTICE: Android version is full feature***  
-
-# CLI
-## Video processing
-For video processing, all you need do is to add the argument ```-v```, and waiting. The video processing supports multithreading, and by default uses all CPU threads, but you can adjust it manually by ```-t``` to specify the number of threads for processing.
-
-## Usage
-### arguments
-
-    options:
-      -i, --input               File for loading (string [=./pic/p1.png])
-      -o, --output              File for outputting (string [=output.png])
-      -p, --passes              Passes for processing (int [=2])
-      -n, --pushColorCount      Limit the number of color pushes (int [=2])
-      -c, --strengthColor       Strength for pushing color,range 0 to 1,higher for thinner (float [=0.3])
-      -g, --strengthGradient    Strength for pushing gradient,range 0 to 1,higher for sharper (float [=1])
-      -z, --zoomFactor          zoom factor for resizing (float [=2])
-      -t, --threads             Threads count for video processing (unsigned int [=12])
-      -f, --fastMode            Faster but maybe low quality
-      -v, --videoMode           Video process
-      -s, --preview             Preview image
-      -b, --preprocessing       Enable preprocessing
-      -a, --postprocessing      Enable postprocessing
-      -r, --preFilters          Enhancement filter, only working when preProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D) (unsigned int [=4])
-      -e, --postFilters         Enhancement filter, only working when postProcessing is true,there are 5 options by binary:Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P (unsigned int [=40])
-      -q, --GPUMode             Enable GPU acceleration
-      -w, --CNNMode             Enable ACNet
-      -H, --HDN                 Enable HDN mode for ACNet
-      -L, --HDNLevel            Set HDN level (int [=1])
-      -l, --listGPUs            list GPUs
-      -h, --platformID          Specify the platform ID (unsigned int [=0])
-      -d, --deviceID            Specify the device ID (unsigned int [=0])
-      -C, --codec               Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windows), av01(not support in Windows) (string [=mp4v])
-      -V, --version             print version information
-      -F, --forceFps            Set output video fps to the specifying number, 0 to disable (float [=0])
-      -D, --disableProgress     disable progress display
-      -W, --webVideo            process the video from URL
-      -A, --alpha               preserve the Alpha channel for transparent image
-      -?, --help                print this message
-
-## About GPU acceleration
-Use ```-q``` to enable GPU acceleration, and then use ```-l``` to list the platform ids and device ids, ```-h``` for specifying platform id, ```-d``` for specifying device id.
-
-## Filters (Only for Anime4K09)
-Enable filters can make the result be better, now Anime4kCPP support following filters:
-
-  - Median blur [0000001]
-  - Mean blur [0000010]
-  - [CAS Sharpening](https://gpuopen.com/gaming-product/fidelityfx) [0000100]
-  - Gaussian blur weak [0001000]
-  - Gaussian blur [0010000]
-  - Bilateral filter [0100000]
-  - Bilateral filter faster [1000000]
-
-You can freely combine them by their binary.  
-eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000(B)= 40(D)  
-
-you can use ```-b``` to enable preprocessing filters function, and then use ```-r``` to custom your own combination, normally, if you don't specify the ```-r``` manually it will be 4. You can use command like this:
-
-    Anime4KCPP -i input.png -o output.png -b -r 44
-
-
-Easily use ```-a``` to enable postprocessing filters function, and then use ```-e``` to custom your own combination, normally, if you don't specify the ```-e``` manually it will be 40. You can use command like this to enable Gaussian blur and Bilateral filter:
-
-    Anime4KCPP -i input.png -o output.png -a -e 48
-
-I recommend use 40(Gaussian blur weak + Bilateral filter) for image that < 1080P, 48(Gaussian blur + Bilateral filter) for image that >= 1080P, and 72(Gaussian blur weak + Bilateral filter faster) for video that < 1080P, 80(Gaussian blur + Bilateral filter faster) for video that >=1080P.
-
-It is not sure which will be better between pre and post processing, it depends on the specific image, you can try different combination for best quality.
-
-CAS is an adaptive sharpening technology which is open source by AMD, simple but efficient.
-
 # Building
-## building on Windows or Linux
-Please install [OpenCV Library](https://opencv.org) before building, and the [release version](https://github.com/TianZerL/Anime4KCPP/releases) have already included OpenCV runtime.  
+For information on how to compile Anime4KCPP, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki/Building).
 
-You need get a OpenCL SDK from your graphic card provider, this is [the one](https://github.com/GPUOpen-LibrariesAndSDKs/OCL-SDK/releases) that provided by AMD.
+# Related projects
+### pyanime4k  
+[pyanime4k](https://github.com/TianZerL/pyanime4k) is an Anime4KCPP API binding in Python, easy and fast. 
 
-And you need Qt open source version for building GUI.
-
-If you want to process video, please install [ffmpeg](https://ffmpeg.org) firstly, otherwise the output will be silent. And make sure you have [OpenH264 encoder](https://github.com/cisco/openh264/releases) for encoding.
-
-This project uses [cmake](https://cmake.org) to build.
-
-## building on macOS
-
-We need to install all the aforementioned dependencies via brew (excpet OpenCL which is provided by Apple):
-
-```
-brew install opencv qt ffmpeg openh264 cmake
-```
-
-For brew's qt to work you need to set these (see latest instructions by `brew info qt`):
-
-```
-If you need to have qt first in your PATH run:
-  echo 'export PATH="/usr/local/opt/qt/bin:$PATH"' >> ~/.zshrc
-
-For compilers to find qt you may need to set:
-  export LDFLAGS="-L/usr/local/opt/qt/lib"
-  export CPPFLAGS="-I/usr/local/opt/qt/include"
-
-For pkg-config to find qt you may need to set:
-  export PKG_CONFIG_PATH="/usr/local/opt/qt/lib/pkgconfig"
-```
-
-Now we need to fix macOS libomp problem (copied from [here](https://stackoverflow.com/a/54715120/1410221)):
-
-* Install LLVM with openmp and libomp with brew
-
-    ```
-     brew update
-     brew install llvm libomp
-    ```
-
-* Run CMake with the new compilers
-
-    ```
-     # in repo's root
-     cmake -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" .
-    ```
-
-Now we just run `make`. The binaries should have been installed to `./bin/`.
-
-Note that Apple has deprecated OpenCL (to force its own proprietary Metal API), and may remove support for it in later versions.
-
-
-# pyanime4k  
-[pyanime4k](https://github.com/TianZerL/pyanime4k) is a simply package to use Anime4KCPP in python, easy, fast and powerful, which support both image and video processing. 
-
-
-# Other implementations
-- Python
-  - [TianZerL/Anime4KPython](https://github.com/TianZerL/Anime4KPython)
-- Go
-  - [TianZerL/Anime4KGo](https://github.com/TianZerL/Anime4KGo)
-- C#
-  - [shadow578/Anime4kSharp](https://github.com/shadow578/Anime4kSharp)
-  - [net2cn/Anime4KSharp](https://github.com/net2cn/Anime4KSharp)
-- GLSL
-  - [bloc97/Anime4K](https://github.com/bloc97/Anime4K)
-- Rust
-  - [andraantariksa/Anime4K-rs](https://github.com/andraantariksa/Anime4K-rs)
+### ACNetGLSL
+[ACNetGLSL](https://github.com/TianZerL/ACNetGLSL) is an ACNet (Anime4KCPP Net) re-implemented in GLSL for real-time anime upscaling.
 
 # Projects that use Anime4KCPP
 - [AaronFeng753/Waifu2x-Extension-GUI](https://github.com/AaronFeng753/Waifu2x-Extension-GUI)
 - [k4yt3x/video2x](https://github.com/k4yt3x/video2x)
-  
+
+# Credits
+- [Anime4K](https://github.com/bloc97/Anime4K)
+- [cmdline](https://github.com/tanakh/cmdline)
+- [FFmpeg](https://ffmpeg.org/)
+- [OpenCL](https://www.khronos.org/opencl/)
+- [OpenCV](https://opencv.org/)
+- [Qt](https://www.qt.io/)
+
 # Acknowledgement
 All images are drawn by my friend ***King of learner*** and authorized to use, only for demonstration, do not use without permission.
