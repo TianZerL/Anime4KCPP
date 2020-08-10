@@ -27,18 +27,12 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 - Android APP
 - C API绑定
 - [Python API绑定](https://github.com/TianZerL/pyanime4k)
-- [GLSL着色器](https://github.com/TianZerL/ACNetGLSL)(支持基于MPV的播放器)  
+- [GLSL着色器](https://github.com/TianZerL/ACNetGLSL)(支持基于MPV的播放器)
+
 **了解如何使用和更多信息，请参阅[wiki](https://github.com/TianZerL/Anime4KCPP/wiki).**
 
 # 效果
-### 原图
 ![examples](/images/example.png)
-### Anime4K09
-![Anime4K09](/images/Anime4K09.png)
-### Anime4K09加滤镜
-![Anime4K09 with filters](/images/Anime4K09Filters.png)
-### ACNet
-![examples](/images/ACNet.png)
 
 # 性能
 ### 桌面

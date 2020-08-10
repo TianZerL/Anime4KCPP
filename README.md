@@ -42,18 +42,12 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 - Android APP
 - C API binding
 - [Python API binding](https://github.com/TianZerL/pyanime4k)
-- [GLSL shader](https://github.com/TianZerL/ACNetGLSL)(For MPV based players)  
+- [GLSL shader](https://github.com/TianZerL/ACNetGLSL)(For MPV based players)
+
 ***For more infomation on how to use them, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki).***
 
 # Result
-### origin
 ![examples](/images/example.png)
-### Anime4K09
-![Anime4K09](/images/Anime4K09.png)
-### Anime4K09 with filters
-![Anime4K09 with filters](/images/Anime4K09Filters.png)
-### ACNet
-![examples](/images/ACNet.png)
 
 # Performance
 ### Desktop
