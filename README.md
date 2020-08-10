@@ -16,7 +16,7 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # About Anime4KCPP
-Anime4KCPP provides an optimized [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and it also provides its own CNN algorithm [***ACNet***](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet), it provides a variety of way to use, including preprocessing and real-time playback, it aims to be a high performance tools to process both image and video.  
+Anime4KCPP provides an optimized [bloc97's Anime4K](https://github.com/bloc97/Anime4K) algorithm version 0.9, and it also provides its own CNN algorithm [ACNet](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet), it provides a variety of way to use, including preprocessing and real-time playback, it aims to be a high performance tools to process both image and video.  
 This project is for learning and the exploration task of algorithm course in SWJTU.
 
 # About Anime4K09
@@ -42,8 +42,8 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 - Android APP
 - C API binding
 - [Python API binding](https://github.com/TianZerL/pyanime4k)
-- [GLSL shader](https://github.com/TianZerL/ACNetGLSL)(For MPV based players)
-For more infomation on how to use them, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki).
+- [GLSL shader](https://github.com/TianZerL/ACNetGLSL)(For MPV based players)  
+***For more infomation on how to use them, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki).***
 
 # Result
 ### origin

@@ -2,7 +2,7 @@
 ### [**📖Wiki**](https://github.com/TianZerL/Anime4KCPP/wiki)
 
 # 关于Anime4KCPP
-Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法[**ACNet**](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)。Anime4KCPP提供多种使用方式，包括预处理与实时播放，其致力于成为高性能的视频或图像处理工具。
+Anime4KCPP提供一个改进后的[bloc97的Anime4K](https://github.com/bloc97/Anime4K)算法0.9版本，同时也提供自己的CNN算法[ACNet](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet)。Anime4KCPP提供多种使用方式，包括预处理与实时播放，其致力于成为高性能的视频或图像处理工具。
 
 # 关于Anime4K09算法
 Anime4K算法是一种简单且高质量的动漫类图像超分辨率算法，它并不使用机器学习，因此速度非常快，可用于实时处理和预处理。    
@@ -27,8 +27,8 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 - Android APP
 - C API绑定
 - [Python API绑定](https://github.com/TianZerL/pyanime4k)
-- [GLSL着色器](https://github.com/TianZerL/ACNetGLSL)(支持基于MPV的播放器)
-了解如何使用和更多信息，请参阅[wiki](https://github.com/TianZerL/Anime4KCPP/wiki).
+- [GLSL着色器](https://github.com/TianZerL/ACNetGLSL)(支持基于MPV的播放器)  
+**了解如何使用和更多信息，请参阅[wiki](https://github.com/TianZerL/Anime4KCPP/wiki).**
 
 # 效果
 ### 原图
