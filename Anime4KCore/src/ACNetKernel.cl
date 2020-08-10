@@ -2020,11 +2020,12 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
+    int2 pos = coord & 1;
+    int2 orgCoord = coord / 2;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    int2 pos = (int2)(x & 1, y & 1);
     float4 c;
 
     //180 degree rotation for kernel

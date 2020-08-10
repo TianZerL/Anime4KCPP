@@ -2909,11 +2909,12 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
+    int2 pos = coord & 1;
+    int2 orgCoord = coord / 2;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    int2 pos = (int2)(x & 1, y & 1);
     float4 c;
 
     if (pos.x == 0 && pos.y != 0)
@@ -5010,11 +5011,12 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
+    int2 pos = coord & 1;
+    int2 orgCoord = coord / 2;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    int2 pos = (int2)(x & 1, y & 1);
     float4 c;
 
     if (pos.x == 0 && pos.y != 0)
@@ -7113,20 +7115,16 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
+    int2 pos = coord & 1;
+    int2 orgCoord = coord / 2;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    int2 pos = (int2)(x & 1, y & 1);
     float4 c;
 
-    //180 degree rotation for kernel
-    //0 1  to  3 2
-    //2 3      1 0
     if (pos.x == 0 && pos.y != 0)
     {
-        //0 x
-        //0 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+2] +
             mc1.y * kernelsL10[1*4+2] +
@@ -7141,8 +7139,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x == 0 && pos.y == 0)
     {
-        //0 0
-        //0 x
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+0] +
             mc1.y * kernelsL10[1*4+0] +
@@ -7157,8 +7153,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x != 0 && pos.y == 0)
     {
-        //0 0
-        //x 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+1] +
             mc1.y * kernelsL10[1*4+1] +
@@ -7173,8 +7167,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x != 0 && pos.y != 0)
     {
-        //x 0
-        //0 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+3] +
             mc1.y * kernelsL10[1*4+3] +
@@ -9227,20 +9219,16 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
+    int2 pos = coord & 1;
+    int2 orgCoord = coord / 2;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x / 2, y / 2));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x / 2, y / 2));
+    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
+    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    int2 pos = (int2)(x & 1, y & 1);
     float4 c;
 
-    //180 degree rotation for kernel
-    //0 1  to  3 2
-    //2 3      1 0
     if (pos.x == 0 && pos.y != 0)
     {
-        //0 x
-        //0 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+2] +
             mc1.y * kernelsL10[1*4+2] +
@@ -9255,8 +9243,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x == 0 && pos.y == 0)
     {
-        //0 0
-        //0 x
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+0] +
             mc1.y * kernelsL10[1*4+0] +
@@ -9271,8 +9257,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x != 0 && pos.y == 0)
     {
-        //0 0
-        //x 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+1] +
             mc1.y * kernelsL10[1*4+1] +
@@ -9287,8 +9271,6 @@ __kernel void convTranspose8To1(
     }
     else if (pos.x != 0 && pos.y != 0)
     {
-        //x 0
-        //0 0
         float tmp = clamp(
             mc1.x * kernelsL10[0*4+3] +
             mc1.y * kernelsL10[1*4+3] +
