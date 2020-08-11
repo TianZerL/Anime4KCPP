@@ -47,6 +47,8 @@ private:
     static unsigned int pID;
     static unsigned int dID;
 
+    static size_t workGroupSizeLog;
+
     double nWidth;
     double nHeight;
 

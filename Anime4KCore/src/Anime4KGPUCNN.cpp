@@ -270,8 +270,16 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     constexpr size_t orgin[3] = { 0,0,0 };
     const size_t orgRegion[3] = { size_t(orgImage.cols),size_t(orgImage.rows),1 };
     const size_t dstRegion[3] = { size_t(dstImage.cols),size_t(dstImage.rows),1 };
-    const size_t orgSize[2] = { size_t(orgImage.cols),size_t(orgImage.rows) };
-    const size_t dstSize[2] = { size_t(dstImage.cols),size_t(dstImage.rows) };
+    const size_t orgSize[2] =
+    {
+        (((size_t(orgImage.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((size_t(orgImage.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+    const size_t dstSize[2] =
+    {
+        (((size_t(dstImage.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((size_t(dstImage.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
     
     constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
@@ -669,6 +677,7 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
 #endif // BUILT_IN_KERNEL
     const char* ACNetKernelSource[TotalTypeCount];
 
+    cl_kernel tmpKernel = nullptr;
     switch (type)
     {
     case CNNType::ACNet:
@@ -701,6 +710,19 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             delete[] buildError;
             throw"Kernel build error";
         }
+
+        tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        }
+        err = clGetKernelWorkGroupInfo(tmpKernel, device,
+            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to get workGroupSize";
+        }
+        workGroupSizeLog = log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL1:
 #ifndef BUILT_IN_KERNEL
@@ -732,6 +754,19 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             delete[] buildError;
             throw"Kernel build error";
         }
+
+        tmpKernel = clCreateKernel(program[HDNL1], "conv8To8", &err);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        }
+        err = clGetKernelWorkGroupInfo(tmpKernel, device,
+            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to get workGroupSize";
+        }
+        workGroupSizeLog = log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL2:
 #ifndef BUILT_IN_KERNEL
@@ -763,6 +798,19 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             delete[] buildError;
             throw"Kernel build error";
         }
+
+        tmpKernel = clCreateKernel(program[HDNL2], "conv8To8", &err);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        }
+        err = clGetKernelWorkGroupInfo(tmpKernel, device,
+            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to get workGroupSize";
+        }
+        workGroupSizeLog = log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL3:
 #ifndef BUILT_IN_KERNEL
@@ -794,6 +842,19 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             delete[] buildError;
             throw"Kernel build error";
         }
+
+        tmpKernel = clCreateKernel(program[HDNL3], "conv8To8", &err);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        }
+        err = clGetKernelWorkGroupInfo(tmpKernel, device,
+            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to get workGroupSize";
+        }
+        workGroupSizeLog = log2(workGroupSizeLog);
         break;
     case CNNType::Default:
 #ifndef BUILT_IN_KERNEL
@@ -829,6 +890,19 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
                 throw"Kernel build error";
             }
         }
+
+        tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        }
+        err = clGetKernelWorkGroupInfo(tmpKernel, device,
+            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
+        if (err != CL_SUCCESS)
+        {
+            throw"Failed to get workGroupSize";
+        }
+        workGroupSizeLog = log2(workGroupSizeLog);
         break;
     }
 }
@@ -871,6 +945,7 @@ cl_program Anime4KCPP::Anime4KGPUCNN::program[TotalTypeCount]{ nullptr };
 cl_device_id Anime4KCPP::Anime4KGPUCNN::device = nullptr;
 unsigned int Anime4KCPP::Anime4KGPUCNN::pID = 0U;
 unsigned int Anime4KCPP::Anime4KGPUCNN::dID = 0U;
+size_t Anime4KCPP::Anime4KGPUCNN::workGroupSizeLog = 5;
 
 #ifdef BUILT_IN_KERNEL
 const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString[TotalTypeCount]

@@ -308,7 +308,11 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     constexpr size_t orgin[3] = { 0,0,0 };
     const size_t orgRegion[3] = { size_t(orgW),size_t(orgH),1 };
     const size_t dstRegion[3] = { size_t(W),size_t(H),1 };
-    const size_t size[2] = { size_t(W),size_t(H) };
+    const size_t size[2] =
+    { 
+        (((size_t(W) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((size_t(H) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog 
+    };
 
     const cl_float pushColorStrength = sc;
     const cl_float pushGradientStrength = sg;
@@ -609,6 +613,19 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
         delete[] buildError;
         throw"Kernel build error";
     }
+
+    cl_kernel tmpKernel = clCreateKernel(program, "pushColor", &err);
+    if (err != CL_SUCCESS)
+    {
+        throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+    }
+    err = clGetKernelWorkGroupInfo(tmpKernel, device,
+        CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void *)&workGroupSizeLog, nullptr);
+    if (err != CL_SUCCESS)
+    {
+        throw"Failed to get workGroupSize";
+    }
+    workGroupSizeLog = log2(workGroupSizeLog);
 }
 
 void Anime4KCPP::Anime4KGPU::releaseOpenCL() noexcept
@@ -646,6 +663,7 @@ cl_program Anime4KCPP::Anime4KGPU::program = nullptr;
 cl_device_id Anime4KCPP::Anime4KGPU::device = nullptr;
 unsigned int Anime4KCPP::Anime4KGPU::pID = 0U;
 unsigned int Anime4KCPP::Anime4KGPU::dID = 0U;
+size_t Anime4KCPP::Anime4KGPU::workGroupSizeLog = 5;
 
 #ifdef BUILT_IN_KERNEL
 const std::string Anime4KCPP::Anime4KGPU::Anime4KCPPKernelSourceString =

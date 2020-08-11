@@ -46,6 +46,8 @@ private:
     static cl_program program[TotalTypeCount];
     static cl_device_id device;
 
+    static size_t workGroupSizeLog;
+
     static unsigned int pID;
     static unsigned int dID;
 
