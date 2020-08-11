@@ -2020,81 +2020,23 @@ __kernel void convTranspose8To1(
         return;
 
     int2 coord = (int2)(x, y);
-    int2 pos = coord & 1;
     int2 orgCoord = coord / 2;
+
+    int2 pos = coord & 1;
+    int index = pos.y * 2 + pos.x;
 
     float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
     float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
 
-    float4 c;
+    float c = clamp(
+        mc1.x * kernelsL10[0 + index] +
+        mc1.y * kernelsL10[4 + index] +
+        mc1.z * kernelsL10[8 + index] +
+        mc1.w * kernelsL10[12 + index] +
+        mc2.x * kernelsL10[16 + index] +
+        mc2.y * kernelsL10[20 + index] +
+        mc2.z * kernelsL10[24 + index] +
+        mc2.w * kernelsL10[28 + index], 0.0f, 1.0f);
 
-    //180 degree rotation for kernel
-    //0 1  to  3 2
-    //2 3      1 0
-    if (pos.x == 0 && pos.y != 0)
-    {
-        //0 x
-        //0 0
-        float tmp = clamp(
-            mc1.x * kernelsL10[0*4+2] +
-            mc1.y * kernelsL10[1*4+2] +
-            mc1.z * kernelsL10[2*4+2] +
-            mc1.w * kernelsL10[3*4+2] +
-            mc2.x * kernelsL10[4*4+2] +
-            mc2.y * kernelsL10[5*4+2] +
-            mc2.z * kernelsL10[6*4+2] +
-            mc2.w * kernelsL10[7*4+2], 0.0f, 1.0f);
-        
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-    }
-    else if (pos.x == 0 && pos.y == 0)
-    {
-        //0 0
-        //0 x
-        float tmp = clamp(
-            mc1.x * kernelsL10[0*4+0] +
-            mc1.y * kernelsL10[1*4+0] +
-            mc1.z * kernelsL10[2*4+0] +
-            mc1.w * kernelsL10[3*4+0] +
-            mc2.x * kernelsL10[4*4+0] +
-            mc2.y * kernelsL10[5*4+0] +
-            mc2.z * kernelsL10[6*4+0] +
-            mc2.w * kernelsL10[7*4+0], 0.0f, 1.0f);
-
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-    }
-    else if (pos.x != 0 && pos.y == 0)
-    {
-        //0 0
-        //x 0
-        float tmp = clamp(
-            mc1.x * kernelsL10[0*4+1] +
-            mc1.y * kernelsL10[1*4+1] +
-            mc1.z * kernelsL10[2*4+1] +
-            mc1.w * kernelsL10[3*4+1] +
-            mc2.x * kernelsL10[4*4+1] +
-            mc2.y * kernelsL10[5*4+1] +
-            mc2.z * kernelsL10[6*4+1] +
-            mc2.w * kernelsL10[7*4+1], 0.0f, 1.0f);
-            
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-    }
-    else if (pos.x != 0 && pos.y != 0)
-    {
-        //x 0
-        //0 0
-        float tmp = clamp(
-            mc1.x * kernelsL10[0*4+3] +
-            mc1.y * kernelsL10[1*4+3] +
-            mc1.z * kernelsL10[2*4+3] +
-            mc1.w * kernelsL10[3*4+3] +
-            mc2.x * kernelsL10[4*4+3] +
-            mc2.y * kernelsL10[5*4+3] +
-            mc2.z * kernelsL10[6*4+3] +
-            mc2.w * kernelsL10[7*4+3], 0.0f, 1.0f);
-            
-        c = (float4)(tmp, tmp, tmp, 1.0f);
-    }
-
-    write_imagef(dstImg, coord, c);
+    write_imagef(dstImg, coord, (float4)(c, 0.0f, 0.0f, 1.0f));
 }

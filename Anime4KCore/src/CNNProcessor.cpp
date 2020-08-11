@@ -428,83 +428,23 @@ void Anime4KCPP::CNNProcessor::conv8To8(const double* kernels, const double* bia
 void Anime4KCPP::CNNProcessor::convTranspose8To1(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
 {
     changEachPixelNTo1(img, [&](const int i, const int j, ChanB outMat, LineF inMat) {
-        int flag = 0;
-        int r = i & 1;
-        int c = j & 1;
-        if (r != 0 && c == 0)
-            flag = 0;
-        //0 x
-        //0 0
-        else if (r == 0 && c == 0)
-            flag = 1;
-        //0 0
-        //0 x
-        else if (r == 0 && c != 0)
-            flag = 2;
-        //0 0
-        //x 0
-
-        else if (r != 0 && c != 0)
-            flag = 3;
-        //x 0
-        //0 0
+        int index = ((i & 1) << 1) + (j & 1);
 
         //180 degree rotation for kernel
         //0 1  to  3 2
         //2 3      1 0
 
-        double tmp = 0;
-        switch (flag)
-        {
-        case 0:
-            tmp = (
-                inMat[0] * kernels[0 * 4 + 2] +
-                inMat[1] * kernels[1 * 4 + 2] +
-                inMat[2] * kernels[2 * 4 + 2] +
-                inMat[3] * kernels[3 * 4 + 2] +
-                inMat[4] * kernels[4 * 4 + 2] +
-                inMat[5] * kernels[5 * 4 + 2] +
-                inMat[6] * kernels[6 * 4 + 2] +
-                inMat[7] * kernels[7 * 4 + 2]) * 255.0;
-            *outMat = UNNORM(tmp);
-            break;
-        case 1:
-            tmp = (
-                inMat[0] * kernels[0 * 4 + 0] +
-                inMat[1] * kernels[1 * 4 + 0] +
-                inMat[2] * kernels[2 * 4 + 0] +
-                inMat[3] * kernels[3 * 4 + 0] +
-                inMat[4] * kernels[4 * 4 + 0] +
-                inMat[5] * kernels[5 * 4 + 0] +
-                inMat[6] * kernels[6 * 4 + 0] +
-                inMat[7] * kernels[7 * 4 + 0]) * 255.0;
-            *outMat = UNNORM(tmp);
-            break;
-        case 2:
-            tmp = (
-                inMat[0] * kernels[0 * 4 + 1] +
-                inMat[1] * kernels[1 * 4 + 1] +
-                inMat[2] * kernels[2 * 4 + 1] +
-                inMat[3] * kernels[3 * 4 + 1] +
-                inMat[4] * kernels[4 * 4 + 1] +
-                inMat[5] * kernels[5 * 4 + 1] +
-                inMat[6] * kernels[6 * 4 + 1] +
-                inMat[7] * kernels[7 * 4 + 1]) * 255.0;
-            *outMat = UNNORM(tmp);
-            break;
-        case 3:
-            tmp = (
-                inMat[0] * kernels[0 * 4 + 3] +
-                inMat[1] * kernels[1 * 4 + 3] +
-                inMat[2] * kernels[2 * 4 + 3] +
-                inMat[3] * kernels[3 * 4 + 3] +
-                inMat[4] * kernels[4 * 4 + 3] +
-                inMat[5] * kernels[5 * 4 + 3] +
-                inMat[6] * kernels[6 * 4 + 3] +
-                inMat[7] * kernels[7 * 4 + 3]) * 255.0;
-            *outMat = UNNORM(tmp);
-            break;
-        }
+        double luma = (
+            inMat[0] * kernels[0 + index] +
+            inMat[1] * kernels[4 + index] +
+            inMat[2] * kernels[8 + index] +
+            inMat[3] * kernels[12 + index] +
+            inMat[4] * kernels[16 + index] +
+            inMat[5] * kernels[20 + index] +
+            inMat[6] * kernels[24 + index] +
+            inMat[7] * kernels[28 + index]) * 255.0;
+
+        *outMat = UNNORM(luma);
 
         }, tmpMat);
 }
