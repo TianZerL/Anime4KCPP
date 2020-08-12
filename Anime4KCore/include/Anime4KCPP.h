@@ -5,7 +5,7 @@
 #include "Anime4KCPUCNN.h"
 #include "Anime4KGPUCNN.h"
 
-#define ANIME4KCPP_CORE_VERSION "2.3.0"
+#define ANIME4KCPP_CORE_VERSION "2.4.0"
 
 namespace Anime4KCPP
 {

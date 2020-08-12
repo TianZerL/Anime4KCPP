@@ -672,7 +672,7 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
 #ifndef BUILT_IN_KERNEL
     //read kernel files
     std::string ACNetKernelSourceString[TotalTypeCount];
-    std::string kernelFiles[TotalTypeCount]
+    std::string kernelFiles[TotalTypeCount] =
     { "ACNetKernel.cl", "ACNetHDNL1Kernel.cl" ,"ACNetHDNL2Kernel.cl" ,"ACNetHDNL3Kernel.cl" };
 #endif // BUILT_IN_KERNEL
     const char* ACNetKernelSource[TotalTypeCount];
@@ -941,14 +941,14 @@ Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType() noexcept
 bool Anime4KCPP::Anime4KGPUCNN::isInitialized = false;
 cl_context Anime4KCPP::Anime4KGPUCNN::context = nullptr;
 cl_command_queue Anime4KCPP::Anime4KGPUCNN::commandQueue = nullptr;
-cl_program Anime4KCPP::Anime4KGPUCNN::program[TotalTypeCount]{ nullptr };
+cl_program Anime4KCPP::Anime4KGPUCNN::program[TotalTypeCount] = { nullptr };
 cl_device_id Anime4KCPP::Anime4KGPUCNN::device = nullptr;
 unsigned int Anime4KCPP::Anime4KGPUCNN::pID = 0U;
 unsigned int Anime4KCPP::Anime4KGPUCNN::dID = 0U;
 size_t Anime4KCPP::Anime4KGPUCNN::workGroupSizeLog = 5;
 
 #ifdef BUILT_IN_KERNEL
-const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString[TotalTypeCount]
+const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString[TotalTypeCount] =
 {
 R"(#define RELU(x) fmax(x, 0.0f)
 
