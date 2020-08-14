@@ -2,7 +2,6 @@
 
 #include"Anime4K.h"
 #include"CNNProcessor.h"
-#include"filterprocessor.h"
 
 #include<fstream>
 

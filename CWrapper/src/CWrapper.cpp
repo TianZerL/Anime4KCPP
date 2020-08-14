@@ -4,6 +4,8 @@
 #include "Anime4KCPP.h"
 #include "AC.h"
 
+std::string lastCoreError("No error");
+
 Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
 {
     if (c_parameters == nullptr)
@@ -51,6 +53,7 @@ extern "C"
             {
                 if (error != nullptr)
                     *error = AC_ERROR_INIT_GPU;
+                lastCoreError = err;
                 return nullptr;
             }
         }
@@ -135,6 +138,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_LOAD_IMAGE;
         }
 
@@ -152,6 +156,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_LOAD_VIDEO;
         }
 
@@ -169,6 +174,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -186,6 +192,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -203,6 +210,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -224,6 +232,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -280,6 +289,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_NOT_YUV444;
         }
 
@@ -297,6 +307,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_INIT_VIDEO_WRITER;
         }
 
@@ -342,6 +353,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_INIT_GPU;
         }
 
@@ -363,6 +375,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_INIT_GPU;
         }
 
@@ -421,6 +434,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_NOT_YUV444;
         }
 
@@ -441,6 +455,7 @@ extern "C"
         }
         catch (const char* err)
         {
+            lastCoreError = err;
             return AC_ERROR_NOT_YUV444;
         }
 
@@ -569,5 +584,14 @@ extern "C"
     ac_bool acIsInitializedGPUCNN(void)
     {
         return ac_bool(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU());
+    }
+
+    void acGetLastCoreErrorString(char* err, size_t* length)
+    {
+        if (length != nullptr)
+            *length = lastCoreError.size() + 1;
+
+        if (err != nullptr)
+            memcpy(err, lastCoreError.c_str(), lastCoreError.size() + 1);
     }
 }

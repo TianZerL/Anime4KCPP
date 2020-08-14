@@ -90,6 +90,7 @@ extern "C"
         char coreVersion[6];
         char wrapperVersion[6];
     } ac_version;
+
     typedef void* ac_instance;
 
     AC_DLL ac_version AC_API acGetVersion(void);
@@ -138,12 +139,13 @@ extern "C"
     AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char* info, size_t* length);
     //acGetFiltersInfo may need to run two times for getting length of info string first
     AC_DLL ac_error AC_API acGetFiltersInfo(ac_instance instance, char* info, size_t* length);
-    //acCheckGPUSupport may need to run two times for getting length of info string firs
+    //acCheckGPUSupport may need to run two times for getting length of info string first
     AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
     //acCheckGPUSupport may need to run two times for getting length of info string and length(platforms) of devices first
     AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
+    AC_DLL void AC_API acGetLastCoreErrorString(char *err, size_t* length);
 #ifdef __cplusplus
 }
 #endif
