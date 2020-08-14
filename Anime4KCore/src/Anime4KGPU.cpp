@@ -2,6 +2,20 @@
 
 #include "Anime4KGPU.h"
 
+#define CLEAN_KERNEL_AND_THROW_ERROR(err) \
+{\
+clReleaseMemObject(imageBuffer3); \
+clReleaseMemObject(imageBuffer2); \
+clReleaseMemObject(imageBuffer1); \
+clReleaseMemObject(imageBuffer0); \
+clReleaseKernel(kernelGetGray); \
+clReleaseKernel(kernelPushColor); \
+clReleaseKernel(kernelGetGradient); \
+clReleaseKernel(kernelPushGradient); \
+throw err; \
+}
+
+
 Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
     Anime4K(parameters),
     nWidth(0.0), nHeight(0.0) {}
@@ -385,14 +399,14 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     cl_mem imageBuffer0 = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        throw"imageBuffer0 error";
+        throw"Request imageBuffer0 error, video memory may be insufficient.";
     }
     //tmp buffer 1
     cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
         clReleaseMemObject(imageBuffer0);
-        throw"imageBuffer1 error";
+        throw"Request imageBuffer1 error, video memory may be insufficient.";
     }
     //tmp buffer 2
     cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
@@ -400,7 +414,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     {
         clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
-        throw"imageBuffer2 error";
+        throw"Request imageBuffer2 error, video memory may be insufficient.";
     }
     //tmp buffer 3
     cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
@@ -409,7 +423,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
         clReleaseMemObject(imageBuffer2);
-        throw"imageBuffer3 error";
+        throw"Request imageBuffer3 error, video memory may be insufficient.";
     }
 
     //set arguments
@@ -419,24 +433,24 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     err |= clSetKernelArg(kernelGetGray, 2, sizeof(cl_float), &normalizedWidth);
     err |= clSetKernelArg(kernelGetGray, 3, sizeof(cl_float), &normalizedHeight);
     if (err != CL_SUCCESS)
-        throw"getGray clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error")
     //pushColor
     err = clSetKernelArg(kernelPushColor, 0, sizeof(cl_mem), &imageBuffer1);
     err |= clSetKernelArg(kernelPushColor, 1, sizeof(cl_mem), &imageBuffer2);
     err |= clSetKernelArg(kernelPushColor, 2, sizeof(cl_float), &pushColorStrength);
     if (err != CL_SUCCESS)
-        throw"pushColor clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error")
     //getGradient
     err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer2);
     err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer3);
     if (err != CL_SUCCESS)
-        throw"getGradient clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error")
     //pushGradient
     err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer3);
     err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
     err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
     if (err != CL_SUCCESS)
-        throw"pushGradient clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error")
 
     //enqueue
     clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
@@ -453,13 +467,13 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
         if (err != CL_SUCCESS)
-            throw"Reset getGradient clSetKernelArg error";
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error")
         //reset pushGradient
         err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
         err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
         if (err != CL_SUCCESS)
-            throw"Reset pushGradient clSetKernelArg error";
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error")
 
         while (i++ < ps)
         {

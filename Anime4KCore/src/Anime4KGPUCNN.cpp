@@ -2,6 +2,28 @@
 
 #include "Anime4KGPUCNN.h"
 
+#define CLEAN_KERNEL_AND_THROW_ERROR(err) \
+{\
+clReleaseMemObject(imageBufferOrg); \
+clReleaseMemObject(imageBufferTmp11); \
+clReleaseMemObject(imageBufferTmp21); \
+clReleaseMemObject(imageBufferTmp12); \
+clReleaseMemObject(imageBufferTmp22); \
+clReleaseMemObject(imageBufferDst); \
+clReleaseKernel(kernelConv1To8L1); \
+clReleaseKernel(kernelConv8To8L2); \
+clReleaseKernel(kernelConv8To8L3); \
+clReleaseKernel(kernelConv8To8L4); \
+clReleaseKernel(kernelConv8To8L5); \
+clReleaseKernel(kernelConv8To8L6); \
+clReleaseKernel(kernelConv8To8L7); \
+clReleaseKernel(kernelConv8To8L8); \
+clReleaseKernel(kernelConv8To8L9); \
+clReleaseKernel(kernelConvTranspose8To1L10); \
+throw err; \
+}
+
+
 Anime4KCPP::Anime4KGPUCNN::Anime4KGPUCNN(const Parameters& parameters) :
     Anime4K(parameters) {}
 
@@ -408,14 +430,14 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        throw"imageBufferOrg error";
+        throw"Request imageBufferOrg error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferTmp11 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
         clReleaseMemObject(imageBufferOrg);
-        throw"imageBufferTmp11 error";
+        throw"Request imageBufferTmp11 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferTmp21 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
@@ -423,7 +445,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     {
         clReleaseMemObject(imageBufferOrg);
         clReleaseMemObject(imageBufferTmp11);
-        throw"imageBufferTmp21 error";
+        throw"Request imageBufferTmp21 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferTmp12 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
@@ -432,7 +454,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseMemObject(imageBufferOrg);
         clReleaseMemObject(imageBufferTmp11);
         clReleaseMemObject(imageBufferTmp21);
-        throw"imageBufferTmp12 error";
+        throw"Request imageBufferTmp12 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferTmp22 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &orgDesc, nullptr, &err);
@@ -442,7 +464,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseMemObject(imageBufferTmp11);
         clReleaseMemObject(imageBufferTmp21);
         clReleaseMemObject(imageBufferTmp12);
-        throw"imageBufferTmp22 error";
+        throw"Request imageBufferTmp22 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
@@ -453,7 +475,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseMemObject(imageBufferTmp21);
         clReleaseMemObject(imageBufferTmp12);
         clReleaseMemObject(imageBufferTmp22);
-        throw"imageBufferDst error";
+        throw"Request imageBufferDst error, video memory may be insufficient.";
     }
 
     //L1
@@ -461,7 +483,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConv1To8L1, 2, sizeof(cl_mem), &imageBufferTmp21);
     if (err != CL_SUCCESS)
-        throw"L1 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error")
     //L2
     err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp21);
@@ -469,7 +491,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L2, 3, sizeof(cl_mem), &imageBufferTmp22);
     err |= clSetKernelArg(kernelConv8To8L2, 4, sizeof(cl_int), &L2);
     if (err != CL_SUCCESS)
-        throw"L2 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error")
     //L3
     err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp12);
     err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp22);
@@ -477,7 +499,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L3, 3, sizeof(cl_mem), &imageBufferTmp21);
     err |= clSetKernelArg(kernelConv8To8L3, 4, sizeof(cl_int), &L3);
     if (err != CL_SUCCESS)
-        throw"L3 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error")
     //L4
     err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp21);
@@ -485,7 +507,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L4, 3, sizeof(cl_mem), &imageBufferTmp22);
     err |= clSetKernelArg(kernelConv8To8L4, 4, sizeof(cl_int), &L4);
     if (err != CL_SUCCESS)
-        throw"L4 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error")
     //L5
     err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp12);
     err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp22);
@@ -493,7 +515,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L5, 3, sizeof(cl_mem), &imageBufferTmp21);
     err |= clSetKernelArg(kernelConv8To8L5, 4, sizeof(cl_int), &L5);
     if (err != CL_SUCCESS)
-        throw"L5 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error")
     //L6
     err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp21);
@@ -501,7 +523,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L6, 3, sizeof(cl_mem), &imageBufferTmp22);
     err |= clSetKernelArg(kernelConv8To8L6, 4, sizeof(cl_int), &L6);
     if (err != CL_SUCCESS)
-        throw"L6 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error")
     //L7
     err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp12);
     err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp22);
@@ -509,7 +531,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L7, 3, sizeof(cl_mem), &imageBufferTmp21);
     err |= clSetKernelArg(kernelConv8To8L7, 4, sizeof(cl_int), &L7);
     if (err != CL_SUCCESS)
-        throw"L7 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error")
     //L8
     err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp21);
@@ -517,7 +539,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L8, 3, sizeof(cl_mem), &imageBufferTmp22);
     err |= clSetKernelArg(kernelConv8To8L8, 4, sizeof(cl_int), &L8);
     if (err != CL_SUCCESS)
-        throw"L8 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error")
     //L9
     err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp12);
     err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp22);
@@ -525,13 +547,13 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     err |= clSetKernelArg(kernelConv8To8L9, 3, sizeof(cl_mem), &imageBufferTmp21);
     err |= clSetKernelArg(kernelConv8To8L9, 4, sizeof(cl_int), &L9);
     if (err != CL_SUCCESS)
-        throw"L9 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error")
     //L10
     err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp11);
     err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferTmp21);
     err |= clSetKernelArg(kernelConvTranspose8To1L10, 2, sizeof(cl_mem), &imageBufferDst);
     if (err != CL_SUCCESS)
-        throw"L10 clSetKernelArg error";
+        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error")
 
     clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
