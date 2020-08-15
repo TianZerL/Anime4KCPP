@@ -37,7 +37,7 @@ void Anime4KCPP::Anime4KGPU::process()
     {
         if (inputYUV)
         {
-            cv::merge(std::vector<cv::Mat>{ orgY,orgU,orgV }, orgImg);
+            cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
         dstImg.create(H, W, CV_8UC4);
@@ -209,7 +209,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
         delete[] device;
     }
 
-    std::pair<std::pair<int, std::vector<int>>, std::string> ret({platforms, devicesVector}, std::string(GPUInfo.str()));
+    std::pair<std::pair<int, std::vector<int>>, std::string> ret({ platforms, devicesVector }, std::string(GPUInfo.str()));
 
     delete[] platform;
 
@@ -510,8 +510,8 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
         std::cout << err << std::endl;
         throw"Failed to find OpenCL platform";
     }
-        
-    cl_platform_id *tmpPlatform = new cl_platform_id[platforms];
+
+    cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
     err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
     if (err != CL_SUCCESS)
     {
@@ -562,7 +562,6 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     }
 
     //init command queue
-    
 #ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
     commandQueue = clCreateCommandQueue(context, device, 0, &err);
     if (err != CL_SUCCESS)
@@ -634,7 +633,7 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
         throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
     }
     err = clGetKernelWorkGroupInfo(tmpKernel, device,
-        CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void *)&workGroupSizeLog, nullptr);
+        CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
     if (err != CL_SUCCESS)
     {
         throw"Failed to get workGroupSize";

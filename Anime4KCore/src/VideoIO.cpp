@@ -41,8 +41,8 @@ void Anime4KCPP::VideoIO::process()
     for (size_t i = 0; i < stop; i++)
     {
         cv::Mat frame;
-        if(!reader.read(frame))
-        {    
+        if (!reader.read(frame))
+        {
             stop = i;
             break;
         }
@@ -63,7 +63,7 @@ bool Anime4KCPP::VideoIO::openReader(const std::string& srcFile)
     return reader.isOpened();
 }
 
-bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile,const CODEC codec, const cv::Size& size,const double forceFps)
+bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size, const double forceFps)
 {
     double fps;
     if (!forceFps)
