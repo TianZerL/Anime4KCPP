@@ -1656,24 +1656,25 @@ __constant float kernelsL10[4 * 8] =
 
 __kernel void conv1To8(
     __read_only image2d_t srcImg, 
-    __write_only image2d_t tmpImgOut1, 
-    __write_only image2d_t tmpImgOut2)
+    __write_only image2d_array_t tmpImgOut)
 {
     const int x = get_global_id(0), y = get_global_id(1);
     if(x >= get_image_width(srcImg) || y >= get_image_height(srcImg))
         return;
-
+    
+    const int2 imgIndex1 = (int2)(0, 0);
+    const int2 imgIndex2 = (int2)(1, 0);
     int2 coord = (int2)(x, y);
 
-    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1,y-1));
-    float4 tc = read_imagef(srcImg, samplerN, (int2)(x,y-1));
-    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1,y-1));
-    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1,y));
+    float4 tl = read_imagef(srcImg, samplerN, (int2)(x-1, y-1));
+    float4 tc = read_imagef(srcImg, samplerN, (int2)(x, y-1));
+    float4 tr = read_imagef(srcImg, samplerN, (int2)(x+1, y-1));
+    float4 ml = read_imagef(srcImg, samplerN, (int2)(x-1, y));
     float4 mc = read_imagef(srcImg, samplerN, coord);
-    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1,y));
-    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1,y+1));
-    float4 bc = read_imagef(srcImg, samplerN, (int2)(x,y+1));
-    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1,y+1));
+    float4 mr = read_imagef(srcImg, samplerN, (int2)(x+1, y));
+    float4 bl = read_imagef(srcImg, samplerN, (int2)(x-1, y+1));
+    float4 bc = read_imagef(srcImg, samplerN, (int2)(x, y+1));
+    float4 br = read_imagef(srcImg, samplerN, (int2)(x+1, y+1));
 
     float4 c1234 = RELU((float4)(
         tl.x * kernelsL1[0*9+0] + tc.x * kernelsL1[0*9+1] + tr.x * kernelsL1[0*9+2] +
@@ -1710,42 +1711,43 @@ __kernel void conv1To8(
         bl.x * kernelsL1[7*9+6] + bc.x * kernelsL1[7*9+7] + br.x * kernelsL1[7*9+8] + biasL1[7]
     ));
 
-    write_imagef(tmpImgOut1, coord, c1234);
-    write_imagef(tmpImgOut2, coord, c5678);
+    write_imagef(tmpImgOut, (int4)(coord, imgIndex1), c1234);
+    write_imagef(tmpImgOut, (int4)(coord, imgIndex2), c5678);
 }
 
 __kernel void conv8To8(
-    __read_only image2d_t tmpImgIn1,
-    __read_only image2d_t tmpImgIn2, 
-    __write_only image2d_t tmpImgOut1, 
-    __write_only image2d_t tmpImgOut2,
+    __read_only image2d_array_t tmpImgIn,
+    __write_only image2d_array_t tmpImgOut,
     int l)
 {
     const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(tmpImgIn1) || y >= get_image_height(tmpImgIn1))
+    if(x >= get_image_width(tmpImgIn) || y >= get_image_height(tmpImgIn))
         return;
 
-    int2 coord = (int2)(x, y);
+    const int2 imgIndex1 = (int2)(0, 0);
+    const int2 imgIndex2 = (int2)(1, 0);
+    int4 coord1 = (int4)(x, y, imgIndex1);
+    int4 coord2 = (int4)(x, y, imgIndex2);
 
-    float4 tl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y-1));
-    float4 tc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y-1));
-    float4 tr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y-1));
-    float4 ml1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y));
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, coord);
-    float4 mr1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y));
-    float4 bl1 = read_imagef(tmpImgIn1, samplerN, (int2)(x-1,y+1));
-    float4 bc1 = read_imagef(tmpImgIn1, samplerN, (int2)(x,y+1));
-    float4 br1 = read_imagef(tmpImgIn1, samplerN, (int2)(x+1,y+1));
+    float4 tl1 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y-1, imgIndex1));
+    float4 tc1 = read_imagef(tmpImgIn, samplerN, (int4)(x, y-1, imgIndex1));
+    float4 tr1 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y-1, imgIndex1));
+    float4 ml1 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y, imgIndex1));
+    float4 mc1 = read_imagef(tmpImgIn, samplerN, coord1);
+    float4 mr1 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y, imgIndex1));
+    float4 bl1 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y+1, imgIndex1));
+    float4 bc1 = read_imagef(tmpImgIn, samplerN, (int4)(x, y+1, imgIndex1));
+    float4 br1 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y+1, imgIndex1));
 
-    float4 tl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y-1));
-    float4 tc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y-1));
-    float4 tr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y-1));
-    float4 ml2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y));
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, coord);
-    float4 mr2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y));
-    float4 bl2 = read_imagef(tmpImgIn2, samplerN, (int2)(x-1,y+1));
-    float4 bc2 = read_imagef(tmpImgIn2, samplerN, (int2)(x,y+1));
-    float4 br2 = read_imagef(tmpImgIn2, samplerN, (int2)(x+1,y+1));
+    float4 tl2 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y-1, imgIndex2));
+    float4 tc2 = read_imagef(tmpImgIn, samplerN, (int4)(x, y-1, imgIndex2));
+    float4 tr2 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y-1, imgIndex2));
+    float4 ml2 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y, imgIndex2));
+    float4 mc2 = read_imagef(tmpImgIn, samplerN, coord2);
+    float4 mr2 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y, imgIndex2));
+    float4 bl2 = read_imagef(tmpImgIn, samplerN, (int4)(x-1, y+1, imgIndex2));
+    float4 bc2 = read_imagef(tmpImgIn, samplerN, (int4)(x, y+1, imgIndex2));
+    float4 br2 = read_imagef(tmpImgIn, samplerN, (int4)(x+1, y+1, imgIndex2));
     
     float4 c1234 = RELU((float4)(
         tl1.x * kernelsL[l][0*72+0*9+0] + tc1.x * kernelsL[l][0*72+0*9+1] + tr1.x * kernelsL[l][0*72+0*9+2] +
@@ -2006,27 +2008,28 @@ __kernel void conv8To8(
         bl2.w * kernelsL[l][7*72+7*9+6] + bc2.w * kernelsL[l][7*72+7*9+7] + br2.w * kernelsL[l][7*72+7*9+8] + biasL[l][7]
     ));
 
-    write_imagef(tmpImgOut1, coord, c1234);
-    write_imagef(tmpImgOut2, coord, c5678);
+    write_imagef(tmpImgOut, coord1, c1234);
+    write_imagef(tmpImgOut, coord2, c5678);
 }
 
 __kernel void convTranspose8To1(
-    __read_only image2d_t tmpImgIn1,
-    __read_only image2d_t tmpImgIn2, 
+    __read_only image2d_array_t tmpImgIn,
     __write_only image2d_t dstImg)
 {
     const int x = get_global_id(0), y = get_global_id(1);
     if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
         return;
 
+    const int2 imgIndex1 = (int2)(0, 0);
+    const int2 imgIndex2 = (int2)(1, 0);
     int2 coord = (int2)(x, y);
     int2 orgCoord = coord / 2;
 
     int2 pos = coord & 1;
     int index = pos.y * 2 + pos.x;
 
-    float4 mc1 = read_imagef(tmpImgIn1, samplerN, orgCoord);
-    float4 mc2 = read_imagef(tmpImgIn2, samplerN, orgCoord);
+    float4 mc1 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex1));
+    float4 mc2 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex2));
 
     float c = clamp(
         mc1.x * kernelsL10[0 + index] +
