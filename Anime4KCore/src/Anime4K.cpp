@@ -182,7 +182,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
     {
         inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
-            cv::Mat(rows, cols, CV_8UC1, b),
+                cv::Mat(rows, cols, CV_8UC1, b),
                 cv::Mat(rows, cols, CV_8UC1, g),
                 cv::Mat(rows, cols, CV_8UC1, r) },
             orgImg);

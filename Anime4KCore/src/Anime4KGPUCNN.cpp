@@ -450,7 +450,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     if (err != CL_SUCCESS)
     {
         clReleaseMemObject(imageBufferOrg);
-        throw"Request imageBufferTmp11 error, video memory may be insufficient.";
+        throw"Request imageBufferTmp1 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
@@ -458,7 +458,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     {
         clReleaseMemObject(imageBufferOrg);
         clReleaseMemObject(imageBufferTmp1);
-        throw"Request imageBufferTmp21 error, video memory may be insufficient.";
+        throw"Request imageBufferTmp2 error, video memory may be insufficient.";
     }
 
     cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
@@ -921,8 +921,10 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
         throw"Read kernel error";
+
     std::ostringstream source;
     source << kernelFile.rdbuf();
+
     return std::string(source.str());
 }
 
@@ -1312,16 +1314,14 @@ __kernel void convTranspose8To1(
     if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
         return;
 
-    const int2 imgIndex1 = (int2)(0, 0);
-    const int2 imgIndex2 = (int2)(1, 0);
     int2 coord = (int2)(x, y);
     int2 orgCoord = coord / 2;
 
     int2 pos = coord & 1;
     int index = pos.y * 2 + pos.x;
 
-    float4 mc1 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex1));
-    float4 mc2 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex2));
+    float4 mc1 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, 0, 0));
+    float4 mc2 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, 1, 0));
 
     float c = clamp(
         mc1.x * kernelsL10[0 + index] +

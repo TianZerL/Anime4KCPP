@@ -2020,16 +2020,14 @@ __kernel void convTranspose8To1(
     if(x >= get_image_width(dstImg) || y >= get_image_height(dstImg))
         return;
 
-    const int2 imgIndex1 = (int2)(0, 0);
-    const int2 imgIndex2 = (int2)(1, 0);
     int2 coord = (int2)(x, y);
     int2 orgCoord = coord / 2;
 
     int2 pos = coord & 1;
     int index = pos.y * 2 + pos.x;
 
-    float4 mc1 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex1));
-    float4 mc2 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, imgIndex2));
+    float4 mc1 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, 0, 0));
+    float4 mc2 = read_imagef(tmpImgIn, samplerN, (int4)(orgCoord, 1, 0));
 
     float c = clamp(
         mc1.x * kernelsL10[0 + index] +
