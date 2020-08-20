@@ -136,6 +136,8 @@ private slots:
 
     void on_actionEnglish_triggered();
 
+    void on_actionSet_FFmpeg_path_triggered();
+
     void on_pushButtonClearText_clicked();
 
     void on_spinBoxFontSize_valueChanged(int arg1);
@@ -181,6 +183,7 @@ private:
     int imageCount;
     int videoCount;
     bool ffmpeg;
+    QString ffmpegPath;
     unsigned int totalTaskCount;
     Language currLanguage;
 

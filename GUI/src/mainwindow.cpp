@@ -170,6 +170,7 @@ void MainWindow::readConfig(const QSettings* conf)
     QString language = conf->value("/GUI/language", "en").toString();
     bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom", true).toBool();
     bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
+    ffmpegPath = conf->value("/GUI/ffmpegPath", "ffmpeg").toString();
 
     QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov:gif").toString();
@@ -316,6 +317,7 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/GUI/language", language);
     conf->setValue("/GUI/quitConfirmatiom", quitConfirmatiom);
     conf->setValue("/GUI/checkFFmpeg", checkFFmpegOnStart);
+    conf->setValue("/GUI/ffmpegPath", ffmpegPath);
 
     conf->setValue("/Suffix/image", imageSuffix);
     conf->setValue("/Suffix/video", videoSuffix);
@@ -449,20 +451,21 @@ void MainWindow::initTextBrowser()
 
 bool MainWindow::checkFFmpeg()
 {
-    if (!QProcess::execute("ffmpeg -version"))
+    if (!QProcess::execute(ffmpegPath + " -version"))
     {
         ui->textBrowserInfoOut->insertPlainText(
             "----------------------------------------------\n"
-            "               ffmpeg check OK                \n"
+            "               FFmpeg check OK                \n"
             "----------------------------------------------\n"
+            "FFmpeg path: " + ffmpegPath + "\n"
         );
         ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
         return true;
     }
-    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg did not fount"), QMessageBox::Ok);
+    QMessageBox::warning(this, tr("Warning"), tr("FFmpeg not found"), QMessageBox::Ok);
     ui->textBrowserInfoOut->insertPlainText(
         "----------------------------------------------\n"
-        "             ffmpeg check failed              \n"
+        "             FFmpeg check failed              \n"
         "----------------------------------------------\n"
     );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
@@ -598,7 +601,7 @@ bool MainWindow::checkGIF(const QString& file)
 bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile)
 {
     return !QProcess::execute(
-        "ffmpeg -loglevel 40 -i \"" 
+        ffmpegPath + " -loglevel 40 -i \""
         + tmpFile + "\" -i \"" 
         + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" 
         + dstFile + "\"");
@@ -606,8 +609,8 @@ bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile
 
 bool MainWindow::video2GIF(const QString& srcFile, const QString& dstFile)
 {
-    bool flag = !QProcess::execute("ffmpeg -i \"" + srcFile + "\" -vf palettegen -y \"" + dstFile + "_palette.png\"")
-        && !QProcess::execute("ffmpeg -i \"" + srcFile + "\" -i \"" + dstFile + "_palette.png\" -y -lavfi paletteuse \"" + dstFile + "\"");
+    bool flag = !QProcess::execute(ffmpegPath + " -i \"" + srcFile + "\" -vf palettegen -y \"" + dstFile + "_palette.png\"")
+        && !QProcess::execute(ffmpegPath + " -i \"" + srcFile + "\" -i \"" + dstFile + "_palette.png\" -y -lavfi paletteuse \"" + dstFile + "\"");
     
     QFile::remove(dstFile + "_palette.png");
 
@@ -1172,6 +1175,31 @@ void MainWindow::on_actionEnglish_triggered()
     qApp->removeTranslator(translator);
     ui->retranslateUi(this);
     currLanguage = en;
+}
+
+void MainWindow::on_actionSet_FFmpeg_path_triggered()
+{
+    QString tmpFFmpegPath = QFileDialog::getOpenFileName(this, tr("FFmpeg path"), "./");
+    bool ok = false;
+    tmpFFmpegPath = QInputDialog::getText(this,
+        tr("FFmpeg path"),
+        tr("Please input the FFmpeg path"),
+        QLineEdit::Normal,
+        tmpFFmpegPath,
+        &ok
+    ).simplified();
+
+    if (ok)
+    {
+        QString oldPath = ffmpegPath;
+        ffmpegPath = '"' + tmpFFmpegPath + '"';
+        if (!ffmpegPath.contains("ffmpeg", Qt::CaseInsensitive) || !checkFFmpeg())
+        {
+            errorHandler("The path is not correct");
+            ffmpegPath = oldPath;
+        }
+    }
+
 }
 
 void MainWindow::on_pushButtonClearText_clicked()

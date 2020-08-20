@@ -1100,6 +1100,7 @@
      </property>
      <addaction name="actionQuit_confirmation"/>
      <addaction name="actionCheck_FFmpeg"/>
+     <addaction name="actionSet_FFmpeg_path"/>
     </widget>
     <widget class="QMenu" name="menuGPU">
      <property name="title">
@@ -1157,6 +1158,11 @@
    </property>
    <property name="text">
     <string>Check FFmpeg</string>
+   </property>
+  </action>
+  <action name="actionSet_FFmpeg_path">
+   <property name="text">
+    <string>Set FFmpeg path</string>
    </property>
   </action>
  </widget>
