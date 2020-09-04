@@ -66,22 +66,27 @@ bool Anime4KCPP::VideoIO::openReader(const std::string& srcFile)
 bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size, const double forceFps)
 {
     double fps;
+
     if (!forceFps)
         fps = reader.get(cv::CAP_PROP_FPS);
     else
         fps = forceFps;
+
     switch (codec)
     {
     case CODEC::MP4V:
+#ifndef OLD_OPENCV_API
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
         if (!writer.isOpened())
+#endif // !OLD_OPENCV_API
         {
             writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
             if (!writer.isOpened())
                 return false;
         }
         break;
-#ifdef _WIN32 //DXVA encoding for windows
+
+#if defined _WIN32 && !defined OLD_OPENCV_API //DXVA encoding for windows
     case CODEC::DXVA:
         writer.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), std::ceil(fps), size);
         if (!writer.isOpened())
@@ -92,42 +97,55 @@ bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC cod
         }
         break;
 #endif
+
     case CODEC::AVC1:
+#ifndef OLD_OPENCV_API
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, size);
         if (!writer.isOpened())
+#endif // !OLD_OPENCV_API
         {
-            writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+            writer.open(dstFile, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, size);
             if (!writer.isOpened())
                 return false;
         }
         break;
+
     case CODEC::VP09:
+#ifndef OLD_OPENCV_API
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, size);
         if (!writer.isOpened())
+#endif // !OLD_OPENCV_API
         {
-            writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+            writer.open(dstFile, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, size);
             if (!writer.isOpened())
                 return false;
         }
         break;
+
     case CODEC::HEVC:
+#ifndef OLD_OPENCV_API
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, size);
         if (!writer.isOpened())
+#endif // !OLD_OPENCV_API
         {
-            writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+            writer.open(dstFile, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, size);
             if (!writer.isOpened())
                 return false;
         }
         break;
+
     case CODEC::AV01:
+#ifndef OLD_OPENCV_API
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, size);
         if (!writer.isOpened())
+#endif // !OLD_OPENCV_API
         {
-            writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+            writer.open(dstFile, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, size);
             if (!writer.isOpened())
                 return false;
         }
         break;
+
     case CODEC::OTHER:
         writer.open(dstFile, -1, fps, size);
         if (!writer.isOpened())

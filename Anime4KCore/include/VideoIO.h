@@ -7,6 +7,13 @@
 
 #include"threadpool.h"
 
+#if (CV_VERSION_MAJOR < 3)
+#error OpenCV3 is needed at least!
+#endif
+#if (CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR <= 2)
+#define OLD_OPENCV_API
+#endif
+
 namespace Anime4KCPP
 {
     class VideoIO;
