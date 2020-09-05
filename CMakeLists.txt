@@ -33,6 +33,7 @@ option(Build_AviSynthPlus_plugin "Build Anime4KCPP for AviSynthPlus plugin or no
 option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
+option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL")
 
 if(WIN32)
     option(Build_DS_Filter "Build Anime4KCPP for DirectShow or not" OFF)

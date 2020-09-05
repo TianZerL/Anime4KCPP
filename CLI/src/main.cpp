@@ -2,7 +2,14 @@
 #include <cmdline.h>
 
 #include <iostream>
+
+#ifdef USE_BOOST_FILESYSTEM
+#include<boost/filesystem.hpp>
+namespace filesystem = boost::filesystem;
+#else
 #include <filesystem>
+namespace filesystem = std::filesystem;
+#endif // USE_BOOST_FILESYSTEM
 
 #ifndef COMPILER
 #define COMPILER "Unknown"
@@ -33,7 +40,7 @@ bool video2GIF(const std::string& srcFile, const std::string& dstFile)
     std::cout << command2Gif << std::endl;
     
     bool flag = !system(commandGeneratePalette.data()) && !system(command2Gif.data());
-    std::filesystem::remove("palette.png");
+    filesystem::remove("palette.png");
     return flag;
 }
 
@@ -144,6 +151,7 @@ int main(int argc, char* argv[])
     bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");
+
     // -V
     if (version)
     {
@@ -160,8 +168,8 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    std::filesystem::path inputPath(input), outputPath(output);
-    if ((!videoMode || !webVideo) && !std::filesystem::exists(inputPath))
+    filesystem::path inputPath(input), outputPath(output);
+    if ((!videoMode || !webVideo) && !filesystem::exists(inputPath))
     {
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;
@@ -186,7 +194,6 @@ int main(int argc, char* argv[])
             break;
         }
     }
-
     else
         type = Anime4KCPP::CNNType::ACNet;
 
@@ -257,15 +264,15 @@ int main(int argc, char* argv[])
 
         if (!videoMode)//Image
         {
-            if (std::filesystem::is_directory(inputPath))
+            if (filesystem::is_directory(inputPath))
             {
-                if (!std::filesystem::is_directory(outputPath))
+                if (!filesystem::is_directory(outputPath))
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
-                std::filesystem::create_directories(outputPath);
-                std::filesystem::directory_iterator currDir(inputPath);
+                filesystem::create_directories(outputPath);
+                filesystem::directory_iterator currDir(inputPath);
                 for (auto& file : currDir)
                 {
-                    if (file.is_directory())
+                    if (filesystem::is_directory(file.path()))
                         continue;
                     std::string currInputPath = file.path().string();
                     std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
@@ -324,15 +331,15 @@ int main(int argc, char* argv[])
             else
                 outputTmpName = "tmp_out.mp4";
 
-            if (std::filesystem::is_directory(inputPath))
+            if (filesystem::is_directory(inputPath))
             {
-                if (!std::filesystem::is_directory(outputPath))
+                if (!filesystem::is_directory(outputPath))
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
-                std::filesystem::create_directories(outputPath);
-                std::filesystem::directory_iterator currDir(inputPath);
+                filesystem::create_directories(outputPath);
+                filesystem::directory_iterator currDir(inputPath);
                 for (auto& file : currDir)
                 {
-                    if (file.is_directory())
+                    if (filesystem::is_directory(file.path()))
                         continue;
                     //Check GIF
                     std::string inputSuffix = file.path().extension().string();
@@ -364,12 +371,12 @@ int main(int argc, char* argv[])
                         if (!gif)
                         {
                             if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
-                                std::filesystem::remove(outputTmpName);
+                                filesystem::remove(outputTmpName);
                         }
                         else
                         {
                             if (video2GIF(outputTmpName, currOutputPath))
-                                std::filesystem::remove(outputTmpName);
+                                filesystem::remove(outputTmpName);
                         }
                     }
                 }
@@ -401,12 +408,12 @@ int main(int argc, char* argv[])
                     if (!gif)
                     {
                         if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
-                            std::filesystem::remove(outputTmpName);
+                            filesystem::remove(outputTmpName);
                     }
                     else
                     {
                         if (video2GIF(outputTmpName, currOutputPath))
-                            std::filesystem::remove(outputTmpName);
+                            filesystem::remove(outputTmpName);
                     }
                 } 
             }
