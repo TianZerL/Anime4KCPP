@@ -31,18 +31,10 @@ include_directories(${TOP_DIR}/ThirdParty/include ${OpenCL_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
 
-
 if(Use_Boost_filesystem)
-
-find_package(Boost COMPONENTS filesystem REQUIRED)
-
-include_directories(${Boost_INCLUDE_DIR})
-
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-
-endif()
-
-# Just for G++-8 to enable filesystem
-if(CMAKE_CXX_COMPILE_ID MATCHES "GNU")
+    find_package(Boost COMPONENTS filesystem REQUIRED)
+    include_directories(${Boost_INCLUDE_DIR})
+    target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+elseif(CMAKE_CXX_COMPILE_ID MATCHES "GNU") # Just for G++-8 to enable filesystem
     target_link_libraries(${PROJECT_NAME} stdc++fs)
 endif()
