@@ -34,14 +34,21 @@ option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
 option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
+option(Use_TBB "Use TBB for parallel processing" OFF)
+
 
 if(WIN32)
     option(Build_DS_Filter "Build Anime4KCPP for DirectShow or not" OFF)
-    set(DirectShow_SDK_PATH "DirectShow BaseClass SDK PATH" CACHE PATH "Where to look for DirectShow SDK")
+    set(DirectShow_SDK_PATH "DirectShow BaseClass SDK path" CACHE PATH "Where to look for DirectShow SDK")
 endif()
 
-set(VapourSynth_SDK_PATH "VapourSynth SDK PATH" CACHE PATH "Where to look for VapourSynth SDK")
-set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK PATH" CACHE PATH "Where to look for AviSynthPlus SDK")
+set(VapourSynth_SDK_PATH "VapourSynth SDK path" CACHE PATH "Where to look for VapourSynth SDK")
+set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK path" CACHE PATH "Where to look for AviSynthPlus SDK")
+
+if(Use_TBB)
+    set(TBB_INCLUDE_PATH "TBB include path" CACHE PATH "Where to look for TBB include")
+    set(TBB_LIB_PATH "TBB lib path" CACHE PATH "Where to look for TBB lib")
+endif()
 
 macro(SUBDIRLIST result curdir)
     file(GLOB children RELATIVE ${curdir} ${curdir}/*)

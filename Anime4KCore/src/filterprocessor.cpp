@@ -75,8 +75,8 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::Mat& src,
     src.copyTo(tmp);
 
     int jMAX = W * 3;
-#ifdef _MSC_VER
-    Concurrency::parallel_for(0, H, [&](int i) {
+#if defined(_MSC_VER) || defined(USE_TBB)
+    Parallel::parallel_for(0, H, [&](int i) {
         Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         for (int j = 0; j < jMAX; j += 3)

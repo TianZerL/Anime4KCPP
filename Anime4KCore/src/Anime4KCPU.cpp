@@ -272,8 +272,8 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::Mat& src,
     const int jMAX = W * 4;
     const size_t step = jMAX;
 
-#ifdef _MSC_VER //let's do something crazy
-    Concurrency::parallel_for(0, H, [&](int i) {
+#if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
+    Parallel::parallel_for(0, H, [&](int i) {
         Line lineData = src.data + static_cast<size_t>(i) * step;
         Line tmpLineData = tmp.data + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += 4)

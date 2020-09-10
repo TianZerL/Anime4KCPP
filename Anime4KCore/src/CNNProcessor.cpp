@@ -462,8 +462,8 @@ void Anime4KCPP::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const int jMAX = w * outChannels;
     const size_t step = jMAX;
 
-#ifdef _MSC_VER
-    Concurrency::parallel_for(0, h, [&](int i) {
+#if defined(_MSC_VER) || defined(USE_TBB)
+    Parallel::parallel_for(0, h, [&](int i) {
         LineB lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(w) * srcChannels;
         LineF tmpLineData = reinterpret_cast<double*>(tmpMat.data) + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += outChannels)
@@ -494,8 +494,8 @@ void Anime4KCPP::CNNProcessor::changEachPixelNToN(
     const int jMAX = w * channels;
     const size_t step = jMAX;
 
-#ifdef _MSC_VER
-    Concurrency::parallel_for(0, h, [&](int i) {
+#if defined(_MSC_VER) || defined(USE_TBB)
+    Parallel::parallel_for(0, h, [&](int i) {
         LineF lineData = reinterpret_cast<double*>(tmpMat.data) + static_cast<size_t>(i) * step;
         LineF tmpLineData = reinterpret_cast<double*>(tmp.data) + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += channels)
@@ -527,8 +527,8 @@ void Anime4KCPP::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const size_t channels = tmpMat.channels();
     const size_t step = (jMAX >> 1) * channels;
 
-#ifdef _MSC_VER
-    Concurrency::parallel_for(0, h, [&](int i) {
+#if defined(_MSC_VER) || defined(USE_TBB)
+    Parallel::parallel_for(0, h, [&](int i) {
         LineF lineData = reinterpret_cast<double*>(tmpMat.data) + static_cast<size_t>(i >> 1) * step;
         LineB tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(w);
         for (int j = 0; j < jMAX; j++)

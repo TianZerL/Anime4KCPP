@@ -3,12 +3,6 @@
 #include"Anime4K.h"
 #include"filterprocessor.h"
 
-#ifdef _MSC_VER
-#include<ppl.h>
-#else
-#include<omp.h>
-#endif
-
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})
 #define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))

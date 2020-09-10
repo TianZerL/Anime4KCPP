@@ -86,7 +86,7 @@ bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC cod
         }
         break;
 
-#if defined _WIN32 && !defined OLD_OPENCV_API //DXVA encoding for windows
+#if defined(_WIN32) && !defined(OLD_OPENCV_API) //DXVA encoding for windows
     case CODEC::DXVA:
         writer.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), std::ceil(fps), size);
         if (!writer.isOpened())

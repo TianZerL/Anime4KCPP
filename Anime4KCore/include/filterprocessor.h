@@ -2,12 +2,6 @@
 
 #include"Anime4K.h"
 
-#ifdef _MSC_VER
-#include<ppl.h>
-#else
-#include<omp.h>
-#endif
-
 #define MAX5(a, b, c, d, e) std::max({a, b, c, d, e})
 #define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})
 #define LERP(x, y, w) ((x) * (1.0 - (w)) + (y) * (w))

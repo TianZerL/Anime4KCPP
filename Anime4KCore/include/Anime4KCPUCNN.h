@@ -1,12 +1,6 @@
 #pragma once
 #include "CNN.h"
 
-#ifdef _MSC_VER
-#include<ppl.h>
-#else
-#include<omp.h>
-#endif
-
 #define RULE(x) std::max(x, 0.0)
 #define NORM(X) (double(X) / 255.0)
 #define UNNORM(n) ((n) >= 255.0? uint8_t(255) : ((n) <= 0.0 ? uint8_t(0) : uint8_t(n)))
