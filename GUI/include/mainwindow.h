@@ -156,6 +156,8 @@ private slots:
 
     void on_actionList_GPUs_triggered();
 
+    void on_actionBenchmark_triggered();
+
     void on_pushButtonListGPUs_clicked();
 
     void on_spinBoxPlatformID_valueChanged(int arg1);

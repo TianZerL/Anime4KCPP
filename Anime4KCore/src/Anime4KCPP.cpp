@@ -56,3 +56,49 @@ void Anime4KCPP::Anime4KCreator::release(Anime4K*& anime4K) noexcept
         anime4K = nullptr;
     }
 }
+
+std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const unsigned int dID)
+{
+    std::pair<double, double> ret;
+
+    std::pair<bool, std::string> checkGPUResult = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+
+    Anime4KCPP::Parameters parameters;
+    Anime4KCPP::Anime4KCreator creator(checkGPUResult.first, true, pID, dID, Anime4KCPP::CNNType::ACNet);
+    Anime4KCPP::Anime4K* acCPU = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+
+    const size_t dataSize = 1920 * 1080 * 3;
+    uint8_t* testData = new uint8_t[dataSize];
+
+    for (size_t i = 0; i < dataSize; i += 3)
+    {
+        testData[i + 1] = 255 * cos(i / 3);
+        testData[i + 2] = 255 * sin(i / 3);
+        testData[i] = (testData[i + 1] + testData[i + 2]) / 2;
+    }
+
+    acCPU->loadImage(1920, 1080, testData, 0ULL, true);
+    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+    acCPU->process();
+    std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+    ret.first = 10000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+
+    creator.release(acCPU);
+
+    if (checkGPUResult.first)
+    {
+        Anime4KCPP::Anime4K* acGPU = creator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+
+        acGPU->loadImage(1920, 1080, testData, 0ULL, true);
+        s = std::chrono::steady_clock::now();
+        acGPU->process();
+        e = std::chrono::steady_clock::now();
+        ret.second = 10000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+
+        creator.release(acGPU);
+    }
+
+    delete[] testData;
+
+    return std::move(ret);
+}

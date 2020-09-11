@@ -119,6 +119,7 @@ int main(int argc, char* argv[])
     opt.add("disableProgress", 'D', "disable progress display");
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
+    opt.add("benchmark", 'B', "do benchmarking");
 
     opt.set_program_name("Anime4KCPP_CLI");
 
@@ -152,6 +153,7 @@ int main(int argc, char* argv[])
     bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");
+    bool doBenchmarking = opt.exist("benchmark");
 
     // -V
     if (version)
@@ -164,8 +166,27 @@ int main(int argc, char* argv[])
     {
         std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
         if (ret.first.first == 0)
-            std::cout << "Error:" << std::endl;
+            std::cout << "Error: No GPU found" << std::endl;
         std::cout << ret.second << std::endl;
+        return 0;
+    }
+    // -b
+    if (doBenchmarking)
+    {
+        std::cout << "Benchmarking..." << std::endl;
+
+        std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+        std::cout
+            << "CPU score: "
+            << ret.first
+            << std::endl;
+        std::cout
+            << "GPU score: "
+            << ret.second
+            << " (pID = " << pID << ", dID = " << dID << ")"
+            << std::endl;
+
         return 0;
     }
 

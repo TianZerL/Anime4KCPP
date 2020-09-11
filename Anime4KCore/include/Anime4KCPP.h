@@ -10,6 +10,7 @@
 namespace Anime4KCPP
 {
     class DLL Anime4KCreator;
+    DLL std::pair<double, double> benchmark(const unsigned int pID = 0, const unsigned int dID = 0);
 }
 
 //Anime4KCPP Processor Factory

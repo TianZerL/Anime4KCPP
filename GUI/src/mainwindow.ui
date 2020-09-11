@@ -1110,6 +1110,7 @@
     </widget>
     <addaction name="menuGUI"/>
     <addaction name="menuGPU"/>
+    <addaction name="actionBenchmark"/>
    </widget>
    <addaction name="menuMenu"/>
    <addaction name="menuLanguage"/>
@@ -1163,6 +1164,11 @@
   <action name="actionSet_FFmpeg_path">
    <property name="text">
     <string>Set FFmpeg path</string>
+   </property>
+  </action>
+  <action name="actionBenchmark">
+   <property name="text">
+    <string>Benchmark</string>
    </property>
   </action>
  </widget>

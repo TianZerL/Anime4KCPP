@@ -1393,6 +1393,22 @@ void MainWindow::on_actionList_GPUs_triggered()
     on_pushButtonListGPUs_clicked();
 }
 
+void MainWindow::on_actionBenchmark_triggered()
+{
+    int pID = ui->spinBoxPlatformID->value(), dID = ui->spinBoxDeviceID->value();
+    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+    QMessageBox::information(this,
+        tr("Benchmark"),
+        QString(
+            tr("Benchmark result:") +
+            "\n\nCPU score: %1\n"
+            "GPU score: %2\n"
+            "(pID = %3, dID = %4)\n"
+        ).arg(ret.first).arg(ret.second).arg(pID).arg(dID),
+        QMessageBox::Ok);
+}
+
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
     std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();

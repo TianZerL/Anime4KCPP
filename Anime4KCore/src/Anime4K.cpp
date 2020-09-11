@@ -151,6 +151,8 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
         else //YUV444
         {
             inputYUV = true;
+            orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+
             std::vector<cv::Mat> yuv(3);
             cv::split(orgImg, yuv);
             dstY = orgY = yuv[Y];

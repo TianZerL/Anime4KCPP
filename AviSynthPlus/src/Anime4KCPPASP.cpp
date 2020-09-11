@@ -314,12 +314,36 @@ AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* e
     return AVSValue();
 }
 
+AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* env)
+{
+    unsigned int pID = args[AC_platformID].AsInt();
+    unsigned int dID = args[AC_deviceID].AsInt();
+
+    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+    std::ostringstream oss;
+    oss << "Benchmark result:" << std::endl
+        << "CPU score: " << ret.first << std::endl
+        << "GPU score: " << ret.second << std::endl
+        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl;
+
+    env->ThrowError(oss.str().c_str());
+    return AVSValue();
+}
+
 const AVS_Linkage* AVS_linkage = 0;
 
 extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
 {
     AVS_linkage = vectors;
+
     env->AddFunction("listGPUs", "", listGPUs, 0);
+
+    env->AddFunction("benchmark", 
+        "[platformID]i"
+        "[deviceID]i", 
+        benchmark, 0);
+
     env->AddFunction("Anime4KCPP",
         "[src]c"
         "[passes]i"

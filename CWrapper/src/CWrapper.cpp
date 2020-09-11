@@ -594,4 +594,12 @@ extern "C"
         if (err != nullptr)
             memcpy(err, lastCoreError.c_str(), lastCoreError.size() + 1);
     }
+
+    void acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore)
+    {
+        std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+        *CPUScore = ret.first;
+        *GPUScore = ret.second;
+    }
 }

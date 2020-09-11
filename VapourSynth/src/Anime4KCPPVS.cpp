@@ -513,6 +513,28 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
     vsapi->logMessage(mtDebug, Anime4KCPP::Anime4KGPU::listGPUs().second.c_str());
 }
 
+static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
+{
+    int err;
+    int pID = vsapi->propGetInt(in, "platformID", 0, &err);
+    if (err || !pID)
+        pID = 0;
+
+    int dID = vsapi->propGetInt(in, "deviceID", 0, &err);
+    if (err || !dID)
+        dID = 0;
+
+    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+    
+    std::ostringstream oss;
+    oss << "Benchmark result:" << std::endl
+        << "CPU score: " << ret.first << std::endl
+        << "GPU score: " << ret.second << std::endl
+        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl;
+
+    vsapi->logMessage(mtDebug, oss.str().c_str());
+}
+
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin* plugin)
 {
     configFunc("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VAPOURSYNTH_API_VERSION, 1, plugin);
@@ -533,4 +555,9 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         Anime4KCPPCreate, nullptr, plugin);
 
     registerFunc("listGPUs", "", Anime4KCPPListGPUs, nullptr, plugin);
+
+    registerFunc("benchmark",
+        "platformID:int:opt;"
+        "deviceID:int:opt;",
+        Anime4KCPPBenchmark, nullptr, plugin);
 }

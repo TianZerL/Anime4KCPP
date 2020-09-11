@@ -146,6 +146,7 @@ extern "C"
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
     AC_DLL void AC_API acGetLastCoreErrorString(char *err, size_t* length);
+    AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
 #ifdef __cplusplus
 }
 #endif
