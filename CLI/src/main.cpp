@@ -69,6 +69,7 @@ inline void showVersionInfo()
     std::cerr
         << "Anime4KCPPCLI" << std::endl
         << "Anime4KCPP core version: " << ANIME4KCPP_CORE_VERSION << std::endl
+        << "Parallel library: "<< PARALLEL_LIBRARY <<std::endl
         << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
         << "Compiler: " << COMPILER << std::endl
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;

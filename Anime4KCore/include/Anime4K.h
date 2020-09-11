@@ -15,11 +15,14 @@
 #if defined(_MSC_VER) && !defined(USE_TBB)
 #include<ppl.h>
 namespace Parallel = Concurrency;
+#define PARALLEL_LIBRARY "PPL"
 #elif defined(USE_TBB)
 #include<tbb/parallel_for.h>
 namespace Parallel = tbb;
+#define PARALLEL_LIBRARY "TBB"
 #else
 #include<omp.h>
+#define PARALLEL_LIBRARY "OpenMP"
 #endif
 
 #ifdef _MSC_VER

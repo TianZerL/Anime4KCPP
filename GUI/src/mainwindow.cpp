@@ -1145,14 +1145,15 @@ void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::information(this,
         tr("About"),
-        QString("Anime4KCPP GUI\n\n"
+        QString(
+            "Anime4KCPP GUI\n\n"
             "Anime4KCPP GUI v%1\n"
             "Anime4KCPP core v%2\n\n"
-            "Build on %3 %4\n\n"
+            "Parallel library: %3\n\n"
+            "Build on %4 %5\n\n"
             "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
-            "Copyright (c) 2020 TianZerL").arg(ANIME4KCPP_GUI_VERSION,
-                ANIME4KCPP_CORE_VERSION,
-                __DATE__, __TIME__),
+            "Copyright (c) 2020 TianZerL")
+        .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION, PARALLEL_LIBRARY, __DATE__, __TIME__),
         QMessageBox::Ok);
 }
 
