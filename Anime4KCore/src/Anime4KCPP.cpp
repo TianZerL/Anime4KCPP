@@ -97,6 +97,8 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
         creator.release(acGPU);
     }
+    else
+        ret.second = 0;
 
     delete[] testData;
 

@@ -348,7 +348,7 @@ static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* 
 static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData tmpData;
-    int err;
+    int err = 0;
 
     tmpData.node = vsapi->propGetNode(in, "src", 0, 0);
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
@@ -515,7 +515,7 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
 
 static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
 {
-    int err;
+    int err = 0;
     int pID = vsapi->propGetInt(in, "platformID", 0, &err);
     if (err || !pID)
         pID = 0;
