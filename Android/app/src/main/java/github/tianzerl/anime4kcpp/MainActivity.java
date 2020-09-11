@@ -157,6 +157,16 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton("OK",null)
                         .show();
                 break;
+            case R.id.menuItemBenchmark:
+                double[] scores = Anime4K.benchmark();
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Benchmark")
+                        .setMessage("Benchmark result:\n"
+                                +"\nCPU score: " + scores[0]
+                                +"\nGPU score: " + scores[1])
+                        .setPositiveButton("OK",null)
+                        .show();
+                break;
             case R.id.menuItemQuit:
                 finish();
                 break;

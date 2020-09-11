@@ -51,4 +51,5 @@
     <string name="alpha_channel">Alpha Channel</string>
     <string name="hdn_level_1_3">HDN level (1-3)</string>
     <string name="default_HDN_level">1</string>
+    <string name="benchmark">Benchmark</string>
 </resources>

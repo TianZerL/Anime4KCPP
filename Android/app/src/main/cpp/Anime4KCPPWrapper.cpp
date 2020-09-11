@@ -387,4 +387,15 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_getCoreVersionAnime4K(
     return env->NewStringUTF(ANIME4KCPP_CORE_VERSION);
 }
 
+JNIEXPORT jdoubleArray JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_benchmarkAnime4K(
+        JNIEnv *env,
+        jclass clazz) {
+    std::pair<double, double> ret = Anime4KCPP::benchmark(0, 0);
+    double retCppArray[] = {ret.first, ret.second};
+    jdoubleArray retJavaArray = env->NewDoubleArray(2);
+    env->SetDoubleArrayRegion(retJavaArray, 0, 2, retCppArray);
+    return retJavaArray;
+}
+
 }

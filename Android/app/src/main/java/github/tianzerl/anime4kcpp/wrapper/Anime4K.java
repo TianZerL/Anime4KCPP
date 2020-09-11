@@ -70,6 +70,10 @@ public abstract class Anime4K {
         return getCoreVersionAnime4K();
     }
 
+    public static double[] benchmark() {
+        return benchmarkAnime4K();
+    }
+
     @Override
     protected void finalize() throws Throwable {
         super.finalize();
@@ -100,4 +104,5 @@ public abstract class Anime4K {
     protected native void saveImageAnime4K(long ptr, final String dst);
     protected native void saveVideoAnime4K(long ptr);
     protected native static String getCoreVersionAnime4K();
+    protected native static double[] benchmarkAnime4K();
 }
