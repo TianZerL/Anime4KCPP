@@ -10,16 +10,17 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(WIN32)
-    set(CMAKE_CXX_FLAGS "-O3 -fopenmp")
-else()
-    set(CMAKE_CXX_FLAGS "-O3 -lpthread -fopenmp")
-endif()
-
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "/EHsc")
+else()
+    set(CMAKE_CXX_FLAGS "-O3 -lpthread -fopenmp")
+    if (NOT CMAKE_BUILD_TYPE)
+        set (CMAKE_BUILD_TYPE "Release")
+        message (
+            STATUS "\nNo CMAKE_BUILD_TYPE selected, defaulting to ${CMAKE_BUILD_TYPE}\n"
+        )
+    endif ()
 endif()
-
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
@@ -36,6 +37,11 @@ option(Built_in_kernel "Built-in kernel or not" ON)
 option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 
+if(WIN32)
+    set(OpenCL_Provider "Intel" CACHE STRING "one of Intel;Nvidia;AMD;Auto")
+else()
+    set(OpenCL_Provider "Auto" CACHE STRING "one of Intel;Nvidia;AMD;Auto")
+endif()
 
 if(WIN32)
     option(Build_DS_Filter "Build Anime4KCPP for DirectShow or not" OFF)
@@ -48,6 +54,42 @@ set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK path" CACHE PATH "Where to look for 
 if(Use_TBB)
     set(TBB_INCLUDE_PATH "TBB include path" CACHE PATH "Where to look for TBB include")
     set(TBB_LIB_PATH "TBB lib path" CACHE PATH "Where to look for TBB lib")
+endif()
+
+if (OpenCL_Provider MATCHES "Intel")
+    if(DEFINED ENV{INTELOCLSDKROOT})
+        set(CMAKE_PREFIX_PATH $ENV{INTELOCLSDKROOT} CACHE PATH "Intel OpenCL SDK")
+    else()
+        message (
+            WARNING "\nCan't find Intel OpenCL SDK, set OpenCL_Provider to Auto\n"
+        )
+    endif()
+elseif(OpenCL_Provider MATCHES "AMD")
+    if(DEFINED ENV{OCL_ROOT})
+        set(CMAKE_PREFIX_PATH $ENV{OCL_ROOT} CACHE PATH "AMD OpenCL SDK")
+    else()
+        message (
+            WARNING "\nCan't find AMD OpenCL SDK, set OpenCL_Provider to Auto\n"
+        )
+    endif()
+elseif(OpenCL_Provider MATCHES "Nvidia")
+    if(DEFINED ENV{CUDA_PATH})
+        set(CMAKE_PREFIX_PATH $ENV{CUDA_PATH} CACHE PATH "Nvidia OpenCL SDK")
+    else()
+        message (
+            WARNING "\nCan't find Nvidia OpenCL SDK, set OpenCL_Provider to Auto\n"
+        )
+    endif()
+elseif(NOT OpenCL_Provider MATCHES "Auto")
+    message (
+        WARNING "\nUnkonw value of OpenCL_Provider, set to Auto\n"
+    )
+endif()
+
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(OS_64_Bit ON)
+else()
+    set(OS_64_Bit OFF)
 endif()
 
 macro(SUBDIRLIST result curdir)
