@@ -925,7 +925,7 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
     std::ostringstream source;
     source << kernelFile.rdbuf();
 
-    return std::string(source.str());
+    return source.str();
 }
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType() noexcept

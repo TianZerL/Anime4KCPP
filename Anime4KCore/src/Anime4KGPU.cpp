@@ -658,9 +658,11 @@ std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
         throw"Read kernel error";
+
     std::ostringstream source;
     source << kernelFile.rdbuf();
-    return std::string(source.str());
+
+    return source.str();
 }
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPU::getProcessorType() noexcept
