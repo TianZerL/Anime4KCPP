@@ -316,7 +316,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
         jlong ptrAnime4K,
         jstring dst) {
     try {
-        ((Anime4KCPP::Anime4K*)(ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
+        ((Anime4KCPP::Anime4K *) (ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
+    }
     catch (Anime4KCPP::ACBaseException& err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
     }
