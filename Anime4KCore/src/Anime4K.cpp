@@ -76,7 +76,7 @@ void Anime4KCPP::Anime4K::setVideoMode(const bool flag)
 void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
 {
     if (!videoIO->openReader(srcFile))
-        throw "Failed to load file: file doesn't not exist or decoder isn't installed.";
+        throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
     orgH = videoIO->get(cv::CAP_PROP_FRAME_HEIGHT);
     orgW = videoIO->get(cv::CAP_PROP_FRAME_WIDTH);
     fps = videoIO->get(cv::CAP_PROP_FPS);
@@ -111,11 +111,11 @@ void Anime4KCPP::Anime4K::loadImage(const std::string& srcFile)
             checkAlphaChannel = false;
             break;
         default:
-            throw "Failed to load file: incorrect file format.";
+            throw ACException<ExceptionType::IO>("Failed to load file: incorrect file format.");
         }
     }
     if (orgImg.empty())
-        throw "Failed to load file: file doesn't exist or incorrect file format.";
+        throw ACException<ExceptionType::IO>("Failed to load file: file doesn't exist or incorrect file format.");
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = zf * orgH;
@@ -126,7 +126,7 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
 {
     dstImg = orgImg = srcImage.getMat();
     if (orgImg.empty() || orgImg.type() != CV_8UC3)
-        throw "Empty image or it is not a BGR image data.";
+        throw ACException<ExceptionType::RunTimeError>("Empty image or it is not a BGR image data.");
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = zf * orgH;
@@ -161,7 +161,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
         }
         break;
     case 2:
-        throw "Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.";
+        throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
     }
 
     dstImg = orgImg;
@@ -211,7 +211,7 @@ void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int 
 void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
     if (!videoIO->openWriter(dstFile, codec, cv::Size(W, H), fps))
-        throw "Failed to initialize video writer.";
+        throw ACException<ExceptionType::IO>("Failed to initialize video writer.");
 }
 
 void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
@@ -224,7 +224,7 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
             cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
         }
         else
-            throw "Only YUV444 can be saved to file";
+            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to file");
     }
     if (checkAlphaChannel)
     {
@@ -250,7 +250,7 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
             cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
         else
-            throw "Only YUV444 can be saved to opencv Mat";
+            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to opencv Mat");
     }
     else if (inputRGB32)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
@@ -281,13 +281,13 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
 void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
 {
     if (data == nullptr)
-        throw "Pointer can not be nullptr";
+        throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
             cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
         else
-            throw "Only YUV444 can be saved to data pointer";
+            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to data pointer");
     }
     else if (inputRGB32)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
@@ -299,7 +299,7 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
 void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b)
 {
     if (r == nullptr || g == nullptr || b == nullptr)
-        throw "Pointers can not be nullptr";
+        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
     if (inputYUV)
     {
         memcpy(r, dstY.data, (size_t)dstY.cols * (size_t)dstY.rows);
@@ -574,7 +574,7 @@ void Anime4KCPP::Anime4K::showImage(bool R2B)
             cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
         }
         else
-            throw "Only YUV444 can be saved to file";
+            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to file");
     }
 
     if (checkAlphaChannel)

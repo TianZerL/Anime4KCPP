@@ -10,6 +10,7 @@
 #include<opencv2/videoio.hpp>
 #include<opencv2/core/hal/interface.h>
 
+#include"ACException.h"
 #include"VideoIO.h"
 
 #if defined(_MSC_VER) && !defined(USE_TBB)

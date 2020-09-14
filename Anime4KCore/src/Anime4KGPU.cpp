@@ -2,7 +2,7 @@
 
 #include "Anime4KGPU.h"
 
-#define CLEAN_KERNEL_AND_THROW_ERROR(err) \
+#define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\
 clReleaseMemObject(imageBuffer3); \
 clReleaseMemObject(imageBuffer2); \
@@ -12,7 +12,7 @@ clReleaseKernel(kernelGetGray); \
 clReleaseKernel(kernelPushColor); \
 clReleaseKernel(kernelGetGradient); \
 clReleaseKernel(kernelPushGradient); \
-throw err; \
+throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
 
@@ -370,20 +370,20 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
     if (err != CL_SUCCESS)
     {
-        throw"Failed to create OpenCL kernel getGray";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGray", err);
     }
     cl_kernel kernelPushColor = clCreateKernel(program, "pushColor", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelGetGray);
-        throw"Failed to create OpenCL kernel pushColor";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushColor", err);
     }
     cl_kernel kernelGetGradient = clCreateKernel(program, "getGradient", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelGetGray);
         clReleaseKernel(kernelPushColor);
-        throw"Failed to create OpenCL kernel getGradient";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGradient", err);
     }
     cl_kernel kernelPushGradient = clCreateKernel(program, "pushGradient", &err);
     if (err != CL_SUCCESS)
@@ -391,7 +391,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         clReleaseKernel(kernelGetGray);
         clReleaseKernel(kernelPushColor);
         clReleaseKernel(kernelGetGradient);
-        throw"Failed to create OpenCL kernel pushGradient";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushGradient", err);
     }
 
     //imageBuffer
@@ -399,14 +399,14 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     cl_mem imageBuffer0 = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        throw"Request imageBuffer0 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer0 error, video memory may be insufficient.", err);
     }
     //tmp buffer 1
     cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
         clReleaseMemObject(imageBuffer0);
-        throw"Request imageBuffer1 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer1 error, video memory may be insufficient.", err);
     }
     //tmp buffer 2
     cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
@@ -414,7 +414,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     {
         clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
-        throw"Request imageBuffer2 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer2 error, video memory may be insufficient.", err);
     }
     //tmp buffer 3
     cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
@@ -423,7 +423,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         clReleaseMemObject(imageBuffer0);
         clReleaseMemObject(imageBuffer1);
         clReleaseMemObject(imageBuffer2);
-        throw"Request imageBuffer3 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer3 error, video memory may be insufficient.", err);
     }
 
     //set arguments
@@ -433,24 +433,24 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     err |= clSetKernelArg(kernelGetGray, 2, sizeof(cl_float), &normalizedWidth);
     err |= clSetKernelArg(kernelGetGray, 3, sizeof(cl_float), &normalizedHeight);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error")
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error", err)
     //pushColor
     err = clSetKernelArg(kernelPushColor, 0, sizeof(cl_mem), &imageBuffer1);
     err |= clSetKernelArg(kernelPushColor, 1, sizeof(cl_mem), &imageBuffer2);
     err |= clSetKernelArg(kernelPushColor, 2, sizeof(cl_float), &pushColorStrength);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error")
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error", err)
     //getGradient
     err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer2);
     err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer3);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error")
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error", err)
     //pushGradient
     err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer3);
     err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
     err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error")
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error", err)
 
     //enqueue
     clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
@@ -467,13 +467,13 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
         if (err != CL_SUCCESS)
-            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error")
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
         //reset pushGradient
         err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
         err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
         if (err != CL_SUCCESS)
-            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error")
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
 
         while (i++ < ps)
         {
@@ -507,17 +507,15 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     err = clGetPlatformIDs(0, nullptr, &platforms);
     if (err != CL_SUCCESS || !platforms)
     {
-        std::cout << err << std::endl;
-        throw"Failed to find OpenCL platform";
+        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL platform", err);
     }
 
     cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
     err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         delete[] tmpPlatform;
-        throw"Failed to get OpenCL platform";
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform", err);
     }
 
 
@@ -532,17 +530,15 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
     if (err != CL_SUCCESS || !devices)
     {
-        std::cout << err << std::endl;
-        throw"Failed to find supported GPU";
+        throw ACException<ExceptionType::GPU, true>("Failed to find supported GPU", err);
     }
 
     cl_device_id* tmpDevice = new cl_device_id[devices];
     err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         delete[] tmpDevice;
-        throw"GPU initialization error";
+        throw ACException<ExceptionType::GPU, true>("GPU initialization error", err);
     }
 
     if (dID >= 0 && dID < devices)
@@ -556,9 +552,8 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         releaseOpenCL();
-        throw"Failed to create context";
+        throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
     }
 
     //init command queue
@@ -566,9 +561,8 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     commandQueue = clCreateCommandQueue(context, device, 0, &err);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         releaseOpenCL();
-        throw"Failed to create command queue";
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
     }
 #else
     commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
@@ -583,16 +577,14 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
             commandQueue = clCreateCommandQueue(context, device, 0, &err);
             if (err != CL_SUCCESS)
             {
-                std::cout << err << std::endl;
                 releaseOpenCL();
-                throw"Failed to create command queue";
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
             }
         }
         else
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create command queue";
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
         }
     }
 #endif // SPECIAL OPENCL VERSION
@@ -607,9 +599,8 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     program = clCreateProgramWithSource(context, 1, &Anime4KCPPKernelSource, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         releaseOpenCL();
-        throw"Failed to create OpenCL program";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
     }
 
     //build program
@@ -621,22 +612,21 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
         char* buildError = new char[buildErrorSize];
         clGetProgramBuildInfo(program, device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
         releaseOpenCL();
-        //print build info
-        std::cout << buildError << std::endl;
+        ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
         delete[] buildError;
-        throw"Kernel build error";
+        throw exception;
     }
 
     cl_kernel tmpKernel = clCreateKernel(program, "pushColor", &err);
     if (err != CL_SUCCESS)
     {
-        throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
     }
     err = clGetKernelWorkGroupInfo(tmpKernel, device,
         CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
     if (err != CL_SUCCESS)
     {
-        throw"Failed to get workGroupSize";
+        throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
     }
     workGroupSizeLog = log2(workGroupSizeLog);
 }
@@ -657,7 +647,7 @@ std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
 {
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
-        throw"Read kernel error";
+        throw ACException<ExceptionType::IO>("Failed to open kernel file.");
 
     std::ostringstream source;
     source << kernelFile.rdbuf();

@@ -245,8 +245,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadImageAnime4K(
     try {
         ((Anime4KCPP::Anime4K*)(ptrAnime4K))->loadImage(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
-    catch (const char* err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err);
+    catch (Anime4KCPP::ACBaseException& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
     }
 }
 
@@ -304,8 +304,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadVideoAnime4K(
     try {
         ((Anime4KCPP::Anime4K*)(ptrAnime4K))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
-    catch (const char* err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err);
+    catch (Anime4KCPP::ACBaseException& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
     }
 }
 
@@ -317,8 +317,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
         jstring dst) {
     try {
         ((Anime4KCPP::Anime4K*)(ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
-    } catch (const char* err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err);
+    catch (Anime4KCPP::ACBaseException& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
     }
 }
 

@@ -2,7 +2,7 @@
 
 #include "Anime4KGPUCNN.h"
 
-#define CLEAN_KERNEL_AND_THROW_ERROR(err) \
+#define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\
 clReleaseMemObject(imageBufferOrg); \
 clReleaseMemObject(imageBufferTmp1); \
@@ -18,7 +18,7 @@ clReleaseKernel(kernelConv8To8L7); \
 clReleaseKernel(kernelConv8To8L8); \
 clReleaseKernel(kernelConv8To8L9); \
 clReleaseKernel(kernelConvTranspose8To1L10); \
-throw err; \
+throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
 
@@ -346,20 +346,20 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     cl_kernel kernelConv1To8L1 = clCreateKernel(program[type], "conv1To8", &err);
     if (err != CL_SUCCESS)
     {
-        throw"Failed to create OpenCL kernel L1";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
     }
     cl_kernel kernelConv8To8L2 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
-        throw"Failed to create OpenCL kernel L2";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
     }
     cl_kernel kernelConv8To8L3 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
         clReleaseKernel(kernelConv8To8L2);
-        throw"Failed to create OpenCL kernel L3";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
     }
     cl_kernel kernelConv8To8L4 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -367,7 +367,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv1To8L1);
         clReleaseKernel(kernelConv8To8L2);
         clReleaseKernel(kernelConv8To8L3);
-        throw"Failed to create OpenCL kernel L4";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
     }
     cl_kernel kernelConv8To8L5 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -376,7 +376,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L2);
         clReleaseKernel(kernelConv8To8L3);
         clReleaseKernel(kernelConv8To8L4);
-        throw"Failed to create OpenCL kernel L5";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
     }
     cl_kernel kernelConv8To8L6 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -386,7 +386,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L3);
         clReleaseKernel(kernelConv8To8L4);
         clReleaseKernel(kernelConv8To8L5);
-        throw"Failed to create OpenCL kernel L6";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
     }
     cl_kernel kernelConv8To8L7 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -397,7 +397,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L4);
         clReleaseKernel(kernelConv8To8L5);
         clReleaseKernel(kernelConv8To8L6);
-        throw"Failed to create OpenCL kernel L7";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
     }
     cl_kernel kernelConv8To8L8 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -409,7 +409,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L5);
         clReleaseKernel(kernelConv8To8L6);
         clReleaseKernel(kernelConv8To8L7);
-        throw"Failed to create OpenCL kernel L8";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
     }
     cl_kernel kernelConv8To8L9 = clCreateKernel(program[type], "conv8To8", &err);
     if (err != CL_SUCCESS)
@@ -422,7 +422,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L6);
         clReleaseKernel(kernelConv8To8L7);
         clReleaseKernel(kernelConv8To8L8);
-        throw"Failed to create OpenCL kernel L9";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
     }
     cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[type], "convTranspose8To1", &err);
     if (err != CL_SUCCESS)
@@ -436,21 +436,21 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L7);
         clReleaseKernel(kernelConv8To8L8);
         clReleaseKernel(kernelConv8To8L9);
-        throw"Failed to create OpenCL kernel L10";
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
     }
 
 
     cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        throw"Request imageBufferOrg error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
     }
 
     cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
     if (err != CL_SUCCESS)
     {
         clReleaseMemObject(imageBufferOrg);
-        throw"Request imageBufferTmp1 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
     }
 
     cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
@@ -458,7 +458,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
     {
         clReleaseMemObject(imageBufferOrg);
         clReleaseMemObject(imageBufferTmp1);
-        throw"Request imageBufferTmp2 error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
     }
 
     cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
@@ -467,67 +467,67 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseMemObject(imageBufferOrg);
         clReleaseMemObject(imageBufferTmp1);
         clReleaseMemObject(imageBufferTmp2);
-        throw"Request imageBufferDst error, video memory may be insufficient.";
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
     }
 
     //L1
     err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
     err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
     //L2
     err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
     //L3
     err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
     //L4
     err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
     //L5
     err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
     //L6
     err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
     //L7
     err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
     //L8
     err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
     //L9
     err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
     err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
     //L10
     err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
     err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
     if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error")
+        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
 
     clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
@@ -572,17 +572,15 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     err = clGetPlatformIDs(0, nullptr, &platforms);
     if (err != CL_SUCCESS || !platforms)
     {
-        std::cout << err << std::endl;
-        throw"Failed to find OpenCL platform";
+        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL platform", err);
     }
 
     cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
     err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         delete[] tmpPlatform;
-        throw"Failed to get OpenCL platform";
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform", err);
     }
 
 
@@ -597,17 +595,15 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
     if (err != CL_SUCCESS || !devices)
     {
-        std::cout << err << std::endl;
-        throw"Failed to find supported GPU";
+        throw ACException<ExceptionType::GPU, true>("Failed to find supported GPU", err);
     }
 
     cl_device_id* tmpDevice = new cl_device_id[devices];
     err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         delete[] tmpDevice;
-        throw"GPU initialization error";
+        throw ACException<ExceptionType::GPU, true>("GPU initialization error", err);
     }
 
     if (dID >= 0 && dID < devices)
@@ -621,9 +617,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &err);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         releaseOpenCL();
-        throw"Failed to create context";
+        throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
     }
 
     //init command queue
@@ -632,9 +627,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     commandQueue = clCreateCommandQueue(context, device, 0, &err);
     if (err != CL_SUCCESS)
     {
-        std::cout << err << std::endl;
         releaseOpenCL();
-        throw"Failed to create command queue";
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
     }
 #else
     commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
@@ -649,16 +643,14 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             commandQueue = clCreateCommandQueue(context, device, 0, &err);
             if (err != CL_SUCCESS)
             {
-                std::cout << err << std::endl;
                 releaseOpenCL();
-                throw"Failed to create command queue";
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
             }
         }
         else
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create command queue";
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
         }
     }
 #endif // SPECIAL OPENCL VERSION
@@ -685,9 +677,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         program[HDNL0] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL0], nullptr, &err);
         if (err != CL_SUCCESS)
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create OpenCL program";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
         }
 
         //build program
@@ -699,22 +690,21 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             char* buildError = new char[buildErrorSize];
             clGetProgramBuildInfo(program[HDNL0], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
+            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
             delete[] buildError;
-            throw"Kernel build error";
+            throw exception;
         }
 
         tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to get workGroupSize";
+            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = log2(workGroupSizeLog);
         break;
@@ -729,9 +719,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         program[HDNL1] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL1], nullptr, &err);
         if (err != CL_SUCCESS)
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create OpenCL program";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
         }
 
         //build program
@@ -743,22 +732,21 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             char* buildError = new char[buildErrorSize];
             clGetProgramBuildInfo(program[HDNL1], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
+            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
             delete[] buildError;
-            throw"Kernel build error";
+            throw exception;
         }
 
         tmpKernel = clCreateKernel(program[HDNL1], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to get workGroupSize";
+            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = log2(workGroupSizeLog);
         break;
@@ -773,9 +761,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         program[HDNL2] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL2], nullptr, &err);
         if (err != CL_SUCCESS)
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create OpenCL program";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
         }
 
         //build program
@@ -787,22 +774,21 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             char* buildError = new char[buildErrorSize];
             clGetProgramBuildInfo(program[HDNL2], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
+            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
             delete[] buildError;
-            throw"Kernel build error";
+            throw exception;
         }
 
         tmpKernel = clCreateKernel(program[HDNL2], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to get workGroupSize";
+            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = log2(workGroupSizeLog);
         break;
@@ -817,9 +803,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
         program[HDNL3] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL3], nullptr, &err);
         if (err != CL_SUCCESS)
         {
-            std::cout << err << std::endl;
             releaseOpenCL();
-            throw"Failed to create OpenCL program";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
         }
 
         //build program
@@ -831,22 +816,21 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             char* buildError = new char[buildErrorSize];
             clGetProgramBuildInfo(program[HDNL3], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
             releaseOpenCL();
-            //print build info
-            std::cout << buildError << std::endl;
+            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
             delete[] buildError;
-            throw"Kernel build error";
+            throw exception;
         }
 
         tmpKernel = clCreateKernel(program[HDNL3], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to get workGroupSize";
+            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = log2(workGroupSizeLog);
         break;
@@ -864,9 +848,8 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
             program[i] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[i], nullptr, &err);
             if (err != CL_SUCCESS)
             {
-                std::cout << err << std::endl;
                 releaseOpenCL();
-                throw"Failed to create OpenCL program";
+                throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
             }
 
             //build programACNet
@@ -878,23 +861,22 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
                 char* buildError = new char[buildErrorSize];
                 clGetProgramBuildInfo(program[i], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
                 releaseOpenCL();
-                //print build info
-                std::cout << buildError << std::endl;
+                ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
                 delete[] buildError;
-                throw"Kernel build error";
+                throw exception;
             }
         }
 
         tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to create OpenCL kernel for getting workGroupSizeLog";
+            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
-            throw"Failed to get workGroupSize";
+            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = log2(workGroupSizeLog);
         break;
@@ -920,7 +902,7 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
 {
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
-        throw"Read kernel error";
+        throw ACException<ExceptionType::IO>("Failed to open kernel file.");
 
     std::ostringstream source;
     source << kernelFile.rdbuf();

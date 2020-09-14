@@ -49,11 +49,11 @@ extern "C"
             {
                 Anime4KCPP::Anime4KGPU::initGPU(platformID, deviceID);
             }
-            catch (const char* err)
+            catch (Anime4KCPP::ACBaseException& err)
             {
                 if (error != nullptr)
                     *error = AC_ERROR_INIT_GPU;
-                lastCoreError = err;
+                lastCoreError = err.what();
                 return nullptr;
             }
         }
@@ -64,10 +64,11 @@ extern "C"
             {
                 Anime4KCPP::Anime4KGPUCNN::initGPU(platformID, deviceID);
             }
-            catch (const char* err)
+            catch (Anime4KCPP::ACBaseException& err)
             {
                 if (error != nullptr)
                     *error = AC_ERROR_INIT_GPU;
+                lastCoreError = err.what();
                 return nullptr;
             }
         }
@@ -136,9 +137,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->loadImage(srcFile);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_LOAD_IMAGE;
         }
 
@@ -154,9 +155,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->loadVideo(srcFile);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_LOAD_VIDEO;
         }
 
@@ -172,9 +173,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->process();
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -190,9 +191,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->processWithPrintProgress();
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -208,9 +209,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->processWithProgress(callBack);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -230,9 +231,9 @@ extern "C"
                     callBack(v, time(nullptr) - start);
                 });
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_GPU_PROCESS;
         }
 
@@ -287,9 +288,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->saveImage(dstFile);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_NOT_YUV444;
         }
 
@@ -305,9 +306,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_INIT_VIDEO_WRITER;
         }
 
@@ -351,9 +352,9 @@ extern "C"
             if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
                 Anime4KCPP::Anime4KGPU::initGPU();
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_INIT_GPU;
         }
 
@@ -373,9 +374,9 @@ extern "C"
             if (!Anime4KCPP::Anime4KGPUCNN::isInitializedGPU())
                 Anime4KCPP::Anime4KGPUCNN::initGPU();
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_INIT_GPU;
         }
 
@@ -432,9 +433,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->saveImage(*r, *g, *b);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_NOT_YUV444;
         }
 
@@ -453,9 +454,9 @@ extern "C"
         {
             static_cast<Anime4KCPP::Anime4K*>(instance)->saveImage(*data);
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            lastCoreError = err;
+            lastCoreError = err.what();
             return AC_ERROR_NOT_YUV444;
         }
 

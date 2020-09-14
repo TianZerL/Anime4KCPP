@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     else
         type = Anime4KCPP::CNNType::ACNet;
 
-    Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID, type);
+
     Anime4KCPP::Anime4K* anime4k = nullptr;
     Anime4KCPP::Parameters parameters(
         passes,
@@ -241,6 +241,8 @@ int main(int argc, char* argv[])
 
     try
     {
+        Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID, type);
+
         if (CNN)
         {
             if (GPU)
@@ -440,13 +442,13 @@ int main(int argc, char* argv[])
                 } 
             }
         }
-    }
-    catch (const char* err)
-    {
-        std::cout << err << std::endl;
-    }
 
-    creator.release(anime4k);
+        creator.release(anime4k);
+    }
+    catch (Anime4KCPP::ACBaseException& err)
+    {
+        std::cerr << err << std::endl;
+    }
 
     return 0;
 }

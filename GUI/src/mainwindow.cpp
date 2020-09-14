@@ -921,9 +921,9 @@ void MainWindow::on_pushButtonPreview_clicked()
             anime4K->process();
             anime4K->showImage();
         }
-        catch (const char* err)
+        catch (Anime4KCPP::ACBaseException& err)
         {
-            errorHandler(err);
+            errorHandler(err.what().c_str());
         }
         break;
     case VIDEO:
@@ -1046,9 +1046,9 @@ void MainWindow::on_pushButtonStart_clicked()
                     endTime = std::chrono::steady_clock::now();
                     anime4K->saveImage(image.first.second.toLocal8Bit().constData());
                 }
-                catch (const char* err)
+                catch (Anime4KCPP::ACBaseException& err)
                 {
-                    emit cm.error(image.second, QString(err));
+                    emit cm.error(image.second, QString::fromStdString(err.what()));
                 }
 
                 imageCount--;
@@ -1100,9 +1100,9 @@ void MainWindow::on_pushButtonStart_clicked()
                     endTime = std::chrono::steady_clock::now();
                     anime4K->saveVideo();
                 }
-                catch (const char* err)
+                catch (Anime4KCPP::ACBaseException& err)
                 {
-                    emit cm.error(video.second, QString(err));
+                    emit cm.error(video.second, QString::fromStdString(err.what()));
                 }
 
                 if (stop)
@@ -1354,11 +1354,11 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
                     Anime4KCPP::Anime4KGPU::initGPU(currPlatFormID, currDeviceID);
             }
-            catch (const char* error)
+            catch (Anime4KCPP::ACBaseException& err)
             {
                 QMessageBox::warning(this,
                     tr("Warning"),
-                    QString(error),
+                    QString::fromStdString(err.what()),
                     QMessageBox::Ok);
 
                 ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
@@ -1529,11 +1529,11 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
                 if (!Anime4KCPP::Anime4KGPUCNN::isInitializedGPU())
                     Anime4KCPP::Anime4KGPUCNN::initGPU(currPlatFormID, currDeviceID);
             }
-            catch (const char* error)
+            catch (Anime4KCPP::ACBaseException& err)
             {
                 QMessageBox::warning(this,
                     tr("Warning"),
-                    QString(error),
+                    QString::fromStdString(err.what()),
                     QMessageBox::Ok);
 
                 ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
