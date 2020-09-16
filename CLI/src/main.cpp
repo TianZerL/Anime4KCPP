@@ -300,6 +300,7 @@ int main(int argc, char* argv[])
                         continue;
                     std::string currInputPath = file.path().string();
                     std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
+                    
                     anime4k->loadImage(file.path().string());
 
                     std::cout << anime4k->getInfo() << std::endl;

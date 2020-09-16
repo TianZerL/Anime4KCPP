@@ -28,7 +28,6 @@ namespace Anime4KCPP
 class Anime4KCPP::ACBaseException
 {
 public:
-    ACBaseException() = default;
     virtual std::string what() noexcept = 0;
 };
 
@@ -72,7 +71,9 @@ std::string Anime4KCPP::ACException<errType, false>::what() noexcept
 {
     std::ostringstream source;
     source
-        << "Error Type: " << errType::string << std::endl
+        << "An error occurred: " << std::endl
+        << "Error type: " << errType::string << std::endl
+        << std::endl
         << "Error message :" << std::endl
         << errorMessage;
 
@@ -92,11 +93,15 @@ std::string Anime4KCPP::ACException<errType, true>::what() noexcept
 {
     std::ostringstream source;
     source
-        << "Error Type: " << errType::string << std::endl
+        << "An error occurred: " << std::endl
+        << "Error type: " << errType::string << std::endl
+        << std::endl
         << "Error message :" << std::endl
         << errorMessage << std::endl
+        << std::endl
         << "Additional error code :" << std::endl
         << additionalErrorCode << std::endl
+        << std::endl
         << "Additional information :" << std::endl
         << additionalInformation;
 
