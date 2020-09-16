@@ -450,7 +450,10 @@ int main(int argc, char* argv[])
     }
     catch (Anime4KCPP::ACBaseException& err)
     {
-        std::cerr << err << std::endl;
+        std::cerr 
+            << std::endl
+            << err
+            << std::endl;
     }
 
     return 0;

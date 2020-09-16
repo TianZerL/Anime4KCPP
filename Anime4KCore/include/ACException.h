@@ -71,11 +71,12 @@ std::string Anime4KCPP::ACException<errType, false>::what() noexcept
 {
     std::ostringstream source;
     source
-        << "An error occurred: " << std::endl
+        << "An error occurred. " << std::endl
+        << std::endl
         << "Error type: " << errType::string << std::endl
         << std::endl
         << "Error message :" << std::endl
-        << errorMessage;
+        << errorMessage << std::endl;
 
     return source.str();
 }
@@ -93,7 +94,8 @@ std::string Anime4KCPP::ACException<errType, true>::what() noexcept
 {
     std::ostringstream source;
     source
-        << "An error occurred: " << std::endl
+        << "An error occurred. " << std::endl
+        << std::endl
         << "Error type: " << errType::string << std::endl
         << std::endl
         << "Error message :" << std::endl
@@ -103,7 +105,7 @@ std::string Anime4KCPP::ACException<errType, true>::what() noexcept
         << additionalErrorCode << std::endl
         << std::endl
         << "Additional information :" << std::endl
-        << additionalInformation;
+        << additionalInformation << std::endl;
 
     return source.str();
 }
