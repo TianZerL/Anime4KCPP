@@ -174,9 +174,9 @@ inline void Anime4KCPP::Anime4KCPU::getGradient(cv::Mat& img)
             int gradY =
                 (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
-            double Grad = sqrt(gradX * gradX + gradY * gradY);
+            double grad = sqrt(gradX * gradX + gradY * gradY);
 
-            pixel[A] = 255 - UNFLOAT(Grad);
+            pixel[A] = 255 - UNFLOAT(grad);
             });
     }
     else

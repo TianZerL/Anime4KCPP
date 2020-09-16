@@ -167,9 +167,6 @@ public:
     void saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b);
     void saveVideo();
 
-    void showInfo();
-    void showFiltersInfo();
-
     std::string getInfo();
     std::string getFiltersInfo();
     size_t getResultDataLength() noexcept;

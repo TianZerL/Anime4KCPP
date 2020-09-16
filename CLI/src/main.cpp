@@ -301,8 +301,9 @@ int main(int argc, char* argv[])
                     std::string currInputPath = file.path().string();
                     std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
                     anime4k->loadImage(file.path().string());
-                    anime4k->showInfo();
-                    anime4k->showFiltersInfo();
+
+                    std::cout << anime4k->getInfo() << std::endl;
+                    std::cout << anime4k->getFiltersInfo() << std::endl;
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -319,8 +320,9 @@ int main(int argc, char* argv[])
                 std::string currOnputPath = outputPath.string();
 
                 anime4k->loadImage(currInputPath);
-                anime4k->showInfo();
-                anime4k->showFiltersInfo();
+
+                std::cout << anime4k->getInfo() << std::endl;
+                std::cout << anime4k->getFiltersInfo() << std::endl;
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -376,8 +378,8 @@ int main(int argc, char* argv[])
                     anime4k->loadVideo(currInputPath);
                     anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                    anime4k->showInfo();
-                    anime4k->showFiltersInfo();
+                    std::cout << anime4k->getInfo() << std::endl;
+                    std::cout << anime4k->getFiltersInfo() << std::endl;
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -413,8 +415,8 @@ int main(int argc, char* argv[])
                 anime4k->loadVideo(currInputPath);
                 anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                anime4k->showInfo();
-                anime4k->showFiltersInfo();
+                std::cout << anime4k->getInfo() << std::endl;
+                std::cout << anime4k->getFiltersInfo() << std::endl;
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
