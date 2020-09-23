@@ -17,7 +17,7 @@ else()
     if (NOT CMAKE_BUILD_TYPE)
         set (CMAKE_BUILD_TYPE "Release")
         message (
-            STATUS "\nNo CMAKE_BUILD_TYPE selected, defaulting to ${CMAKE_BUILD_TYPE}\n"
+            STATUS "No CMAKE_BUILD_TYPE selected, defaulting to ${CMAKE_BUILD_TYPE}\n"
         )
     endif ()
 endif()
@@ -61,7 +61,7 @@ if (OpenCL_Provider MATCHES "Intel")
         set(CMAKE_PREFIX_PATH $ENV{INTELOCLSDKROOT} CACHE PATH "Intel OpenCL SDK")
     else()
         message (
-            WARNING "\nCan't find Intel OpenCL SDK, set OpenCL_Provider to Auto\n"
+            WARNING "Can't find Intel OpenCL SDK, set OpenCL_Provider to Auto\n"
         )
     endif()
 elseif(OpenCL_Provider MATCHES "AMD")
@@ -69,7 +69,7 @@ elseif(OpenCL_Provider MATCHES "AMD")
         set(CMAKE_PREFIX_PATH $ENV{OCL_ROOT} CACHE PATH "AMD OpenCL SDK")
     else()
         message (
-            WARNING "\nCan't find AMD OpenCL SDK, set OpenCL_Provider to Auto\n"
+            WARNING "Can't find AMD OpenCL SDK, set OpenCL_Provider to Auto\n"
         )
     endif()
 elseif(OpenCL_Provider MATCHES "Nvidia")
@@ -77,26 +77,31 @@ elseif(OpenCL_Provider MATCHES "Nvidia")
         set(CMAKE_PREFIX_PATH $ENV{CUDA_PATH} CACHE PATH "Nvidia OpenCL SDK")
     else()
         message (
-            WARNING "\nCan't find Nvidia OpenCL SDK, set OpenCL_Provider to Auto\n"
+            WARNING "Can't find Nvidia OpenCL SDK, set OpenCL_Provider to Auto\n"
         )
     endif()
 elseif(NOT OpenCL_Provider MATCHES "Auto")
     message (
-        WARNING "\nUnkonw value of OpenCL_Provider, set to Auto\n"
+        WARNING "Unkonw value of OpenCL_Provider, set to Auto\n"
     )
 endif()
 
 message(STATUS  
-"Build infomation:\n"
-    "    Build CLI ${Build_CLI}\n"
-    "    Build GUI ${Build_GUI}\n"
-    "    Build VapourSynth plugin ${Build_VapourSynth_plugin}\n"
-    "    Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}\n"
-    "    Build C wrapper ${Build_C_wrapper}"
+"Building infomation:\n"
+"   Build CLI ${Build_CLI}\n"
+"   Build GUI ${Build_GUI}\n"
+"   Build VapourSynth plugin ${Build_VapourSynth_plugin}\n"
+"   Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}\n"
+"   Build C wrapper ${Build_C_wrapper}\n\n"
+"   Build C wrapper with core ${Build_C_wrapper_with_core}\n"
+"   Built-in kernel ${Built_in_kernel}\n\n"
+"   Use Boost filesystem ${Use_Boost_filesystem}\n"
+"   Use TBB ${Use_TBB}\n"
 )
 if(WIN32)
 message(STATUS
-    "    Build DSFilter ${Build_DS_Filter}"
+"Extra building infomation for Windows:\n"
+"   Build DSFilter ${Build_DS_Filter}\n"
 )
 endif()
 
