@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.13)
 project(Anime4KCPP)
 
 if(APPLE)
@@ -84,6 +84,20 @@ elseif(NOT OpenCL_Provider MATCHES "Auto")
     message (
         WARNING "\nUnkonw value of OpenCL_Provider, set to Auto\n"
     )
+endif()
+
+message(STATUS  
+"Build infomation:"
+    "    Build CLI ${Build_CLI}"
+    "    Build GUI ${Build_GUI}"
+    "    Build VapourSynth plugin ${Build_VapourSynth_plugin}"
+    "    Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}"
+    "    Build C wrapper ${Build_C_wrapperI}"
+)
+if(WIN32)
+message(STATUS
+    "    Build DSFilter ${Build_DS_Filter}"
+)
 endif()
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
