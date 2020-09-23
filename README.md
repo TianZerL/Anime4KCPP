@@ -51,6 +51,7 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 
 # Performance
 Single image (RGB):
+
 |Processor|Type|Algorithm|1080p -> 4K|512p -> 1024p|Benchmark score|
 -|-|-|-|-|-
 |AMD Ryzen 2600|CPU|ACNet|0.630 s|0.025 s|17.0068|
@@ -60,6 +61,7 @@ Single image (RGB):
 |Snapdragon 855|CPU|ACNet|3.998 s|0.204 s *|3.732736|
 |Adreno 640|GPU|ACNet|1.611 s|0.060 s|6.389776|
 |Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
+
 *Snapdragon 855 may use Cortex-A55 core under low loads, which may lead to its performance not as good as Snapdragon 820
 
 # Building
