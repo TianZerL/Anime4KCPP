@@ -87,12 +87,12 @@ elseif(NOT OpenCL_Provider MATCHES "Auto")
 endif()
 
 message(STATUS  
-"Build infomation:"
-    "    Build CLI ${Build_CLI}"
-    "    Build GUI ${Build_GUI}"
-    "    Build VapourSynth plugin ${Build_VapourSynth_plugin}"
-    "    Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}"
-    "    Build C wrapper ${Build_C_wrapperI}"
+"Build infomation:\n"
+    "    Build CLI ${Build_CLI}\n"
+    "    Build GUI ${Build_GUI}\n"
+    "    Build VapourSynth plugin ${Build_VapourSynth_plugin}\n"
+    "    Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}\n"
+    "    Build C wrapper ${Build_C_wrapper}"
 )
 if(WIN32)
 message(STATUS
