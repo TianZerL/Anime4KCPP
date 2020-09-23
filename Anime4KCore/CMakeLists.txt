@@ -6,11 +6,11 @@ include_directories(include)
 file(GLOB INCLUDE include/*.h)
 
 if(Built_in_kernel)
-    add_compile_definitions(BUILT_IN_KERNEL)
+    add_definitions(-DBUILT_IN_KERNEL)
 endif()
 
 if(Use_TBB)
-    add_compile_definitions(USE_TBB)
+    add_definitions(-DUSE_TBB)
 endif()
 
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})

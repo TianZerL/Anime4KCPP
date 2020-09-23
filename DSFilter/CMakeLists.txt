@@ -10,7 +10,7 @@ if(Build_DS_Filter)
     enable_language(RC)
     list(APPEND SOURCE src/Anime4KCPPDS.rc src/Anime4KCPPDS.def)
 
-    add_compile_definitions(BUILT_IN_KERNEL UNICODE)
+    add_definitions(-DBUILT_IN_KERNEL -DUNICODE)
 
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE} ${Anime4KCPPCoreSource})
 

@@ -9,7 +9,7 @@ if(Build_C_wrapper)
     if(Build_C_wrapper_with_core)
         aux_source_directory(${TOP_DIR}/Anime4KCore/src Anime4KCPPCoreSource)
         list(APPEND SOURCE ${Anime4KCPPCoreSource})
-        add_compile_definitions(BUILT_IN_KERNEL)
+        add_definitions(-DBUILT_IN_KERNEL)
     endif()
 
     file(GLOB INCLUDE include/*.h)

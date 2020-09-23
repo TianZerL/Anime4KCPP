@@ -7,7 +7,7 @@ if(Build_VapourSynth_plugin)
 
     include_directories(${TOP_DIR}/Anime4KCore/include)
 
-    add_compile_definitions(BUILT_IN_KERNEL)
+    add_definitions(-DBUILT_IN_KERNEL)
 
     add_library(${PROJECT_NAME} SHARED ${SOURCE} ${Anime4KCPPCoreSource})
 
