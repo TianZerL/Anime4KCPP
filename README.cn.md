@@ -41,6 +41,8 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 -|-|-|-|-|-
 |AMD Ryzen 2600|CPU|ACNet|0.630 s|0.025 s|17.0068|
 |Nvidia GTX1660 Super|GPU|ACNet|0.067 s|0.005 s|250|
+|AMD Ryzen 2500U|CPU|ACNet|1.304 s|0.049 s|7.59301|
+|AMD Vega 8|GPU|ACNet|0.141 s|0.010 s|105.263|
 |Snapdragon 820|CPU|ACNet|5.532 s|0.180 s|1.963480|
 |Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
 |Snapdragon 855|CPU|ACNet|3.998 s|0.204 s *|3.732736|
