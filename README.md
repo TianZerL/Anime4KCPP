@@ -50,51 +50,14 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 ![examples](/images/example.png)
 
 # Performance
-### Desktop
-CPU: AMD Ryzen 3500U  
-GPU: AMD Vege 8 Graphics  
-RAM: 16G  
-Anime4KCPP Version : 1.7.0  
-Anime4KCPP Settings: balance  
-algorithm: Anime4K09  
-
-    CPU:
-    Image:
-    256x256 -> 512x512:   0.025s  
-    1080P   -> 4k:        0.650s  
-
-    Video(Length: 1 min 32 seconds):
-    480P  -> 1080P :       03 min 13 seconds
-    1080P -> 4K :          19 min 09 seconds
-
-    GPU:
-    Image:
-    256x256 -> 512x512:   0.006s  
-    1080P   -> 4k:        0.090s  
-
-    Video(Length: 1 min 32 seconds):
-    480P  -> 1080P :       00 min 29 seconds
-    1080P -> 4K :          02 min 55 seconds
-
-### Android
-SOC: Snapdragon 855  
-RAM: 8G  
-Anime4KCPP Version : 1.8.1  
-Anime4KCPP Settings: balance  
-algorithm: Anime4K09  
-
-    CPU:  
-    Image:  
-    256x256 -> 512x512:   0.045s  
-    1080P   -> 4k:        0.544s (That's even faster than R5 3500U, Amazing!)  
-
-    GPU:  
-    Image:  
-    256x256 -> 512x512:   0.008s  
-    1080P   -> 4k:        0.158s  
-
-    Video(Length: 1 min 32 seconds):
-    480P  -> 1080P :       01 min 04 seconds
+Single image (RGB):
+|Processor|Type|Algorithm|1080p -> 4K|512p -> 1024p|Benchmark score|
+-|-|-|-|-|-
+|AMD Ryzen 2600|CPU|ACNet|0.630 s|0.025 s|17.0068|
+|Nvidia GTX1660 Super|GPU|ACNet|0.067 s|0.005 s|250|
+|Snapdragon 820|CPU|ACNet|5.532 s|0.180 s|1.963480|
+|Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
+|Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
 
 # Building
 For information on how to compile Anime4KCPP, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki/Building).

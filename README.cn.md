@@ -35,51 +35,14 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 ![examples](/images/example.png)
 
 # 性能
-### 桌面
-CPU: AMD Ryzen 3500U  
-GPU: AMD Vege 8 Graphics  
-RAM: 16G  
-Anime4KCPP 版本 : 1.7.0  
-Anime4KCPP 设置: 平衡  
-算法: Anime4K09  
-
-    CPU:
-    图像:
-    256x256 -> 512x512:   0.025秒  
-    1080P   -> 4k:        0.650秒  
-
-    视频(长度: 1 分 32 秒):
-    480P  -> 1080P :       03 分 13 秒
-    1080P -> 4K :          19 分 09 秒
-
-    GPU:
-    图像:
-    256x256 -> 512x512:   0.006秒  
-    1080P   -> 4k:        0.090秒  
-
-    视频(长度: 1 分 32 秒):
-    480P  -> 1080P :       00 分 29 秒
-    1080P -> 4K :          02 分 55 秒
-
-### Android
-SOC: 高通骁龙855  
-RAM: 8G  
-Anime4KCPP 版本 : 1.7.1  
-Anime4KCPP 设置: 平衡  
-算法: Anime4K09  
-
-    CPU:  
-    图像:  
-    256x256 -> 512x512:   0.045秒  
-    1080P   -> 4k:        0.544秒 (比R5 3500U还要快，厉害！)  
-
-    GPU:  
-    图像:  
-    256x256 -> 512x512:   0.008秒  
-    1080P   -> 4k:        0.158秒  
-
-    视频(Length: 1 min 32 seconds):
-    480P  -> 1080P :       01 min 04 seconds
+单张图片 (RGB):
+|处理器|类型|算法|1080p -> 4K|512p -> 1024p|性能测试分数|
+-|-|-|-|-|-
+|AMD Ryzen 2600|CPU|ACNet|0.630 s|0.025 s|17.0068|
+|Nvidia GTX1660 Super|GPU|ACNet|0.067 s|0.005 s|250|
+|Snapdragon 820|CPU|ACNet|5.532 s|0.180 s|1.963480|
+|Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
+|Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
 
 # 编译
 关于如何编译Anime4KCPP，请参阅[wiki](https://github.com/TianZerL/Anime4KCPP/wiki/Building).
