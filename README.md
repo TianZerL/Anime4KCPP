@@ -57,7 +57,10 @@ Single image (RGB):
 |Nvidia GTX1660 Super|GPU|ACNet|0.067 s|0.005 s|250|
 |Snapdragon 820|CPU|ACNet|5.532 s|0.180 s|1.963480|
 |Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
+|Snapdragon 855|CPU|ACNet|3.998 s|0.204 s *|3.732736|
+|Adreno 640|GPU|ACNet|1.611 s|0.060 s|6.389776|
 |Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
+*Snapdragon 855 may use Cortex-A55 core under low loads, which may lead to its performance not as good as Snapdragon 820
 
 # Building
 For information on how to compile Anime4KCPP, see [wiki](https://github.com/TianZerL/Anime4KCPP/wiki/Building).

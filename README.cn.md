@@ -42,7 +42,10 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 |Nvidia GTX1660 Super|GPU|ACNet|0.067 s|0.005 s|250|
 |Snapdragon 820|CPU|ACNet|5.532 s|0.180 s|1.963480|
 |Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
+|Snapdragon 855|CPU|ACNet|3.998 s|0.204 s *|3.732736|
+|Adreno 640|GPU|ACNet|1.611 s|0.060 s|6.389776|
 |Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
+*骁龙855在低负载下可能使用Cortex-A55核心, 因此性能表现可能不如骁龙820
 
 # 编译
 关于如何编译Anime4KCPP，请参阅[wiki](https://github.com/TianZerL/Anime4KCPP/wiki/Building).
