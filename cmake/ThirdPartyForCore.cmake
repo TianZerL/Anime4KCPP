@@ -1,6 +1,10 @@
 if(Use_TBB)
     include_directories(${TBB_INCLUDE_PATH})
-    target_link_directories(${PROJECT_NAME} PRIVATE ${TBB_LIB_PATH})
+    find_library(TBB_LIBS 
+    NAMES tbb 
+    PATHS ${TBB_LIB_PATH} 
+    REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
 endif()
 
 find_package(OpenCV REQUIRED)

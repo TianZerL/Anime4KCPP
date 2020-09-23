@@ -10,6 +10,11 @@ if(Build_CLI)
         add_definitions(-DUSE_BOOST_FILESYSTEM) 
     endif()
 
+    if(Use_TBB)
+        include_directories(${TBB_INCLUDE_PATH})
+        add_definitions(-DUSE_TBB)
+    endif()
+
     add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
 
     add_executable(${PROJECT_NAME} ${SOURCE})
