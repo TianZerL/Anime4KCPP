@@ -62,6 +62,7 @@ Single image (RGB):
 |Adreno 530|GPU|ACNet|3.133 s|0.130 s|3.292723|
 |Snapdragon 855|CPU|ACNet|3.998 s|0.204 s *|3.732736|
 |Adreno 640|GPU|ACNet|1.611 s|0.060 s|6.389776|
+|Intel Atom N2800|CPU|ACNet|11.827 s|0.350 s|0.960984|
 |Raspberry Pi Zero W|CPU|ACNet|114.94 s|3.312 s|0.101158|
 
 *Snapdragon 855 may use Cortex-A55 core under low loads, which may lead to its performance not as good as Snapdragon 820
