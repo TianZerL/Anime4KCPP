@@ -18,6 +18,7 @@ namespace filesystem = std::filesystem;
 
 bool checkFFmpeg()
 {
+    std::cout << "Checking ffmpeg..." << std::endl;
     if (!system("ffmpeg -version"))
         return true;
     return false;
@@ -25,6 +26,7 @@ bool checkFFmpeg()
 
 bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
+    std::cout << "Merging audio..." << std::endl;
     std::string command("ffmpeg -loglevel 40 -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + dstFile + "\"");
     std::cout << command << std::endl;
 
@@ -442,7 +444,7 @@ int main(int argc, char* argv[])
                         if (video2GIF(outputTmpName, currOutputPath))
                             filesystem::remove(outputTmpName);
                     }
-                } 
+                }
             }
         }
     }
