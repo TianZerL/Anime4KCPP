@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     else
         type = Anime4KCPP::CNNType::ACNet;
 
-
+    std::shared_ptr<Anime4KCPP::Anime4KCreator> creator;
     Anime4KCPP::Anime4K* anime4k = nullptr;
     Anime4KCPP::Parameters parameters(
         passes,
@@ -241,7 +241,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        Anime4KCPP::Anime4KCreator creator(GPU, CNN, pID, dID, type);
+        creator = std::make_shared<Anime4KCPP::Anime4KCreator>(GPU, CNN, pID, dID, type);
 
         if (CNN)
         {
@@ -257,11 +257,11 @@ int main(int argc, char* argv[])
                 {
                     std::cout << ret.second << std::endl;
                 }
-                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
             }
             else
             {
-                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
             }
         }
         else
@@ -278,11 +278,11 @@ int main(int argc, char* argv[])
                 {
                     std::cout << ret.second << std::endl;
                 }
-                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPU);
             }
             else
             {
-                anime4k = creator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU);
             }
         }
 
@@ -445,8 +445,6 @@ int main(int argc, char* argv[])
                 } 
             }
         }
-
-        creator.release(anime4k);
     }
     catch (Anime4KCPP::ACBaseException& err)
     {
@@ -455,6 +453,8 @@ int main(int argc, char* argv[])
             << err
             << std::endl;
     }
+
+    creator->release(anime4k);
 
     return 0;
 }
