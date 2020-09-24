@@ -434,10 +434,12 @@ std::string Anime4KCPP::Anime4K::getFiltersInfo()
 
 size_t Anime4KCPP::Anime4K::getResultDataLength() noexcept
 {
-    if (!inputYUV)
-        return dstImg.step * static_cast<size_t>(H);
+    if (inputYUV)
+        return dstY.size().area() + dstU.size().area() + dstV.size().area();
+    else if (checkAlphaChannel || inputRGB32)
+        return 4 * static_cast<size_t>(H) * static_cast<size_t>(W);
     else
-        return dstY.step * 3 * static_cast<size_t>(H);
+        return 3 * static_cast<size_t>(H) * static_cast<size_t>(W);
 }
 
 size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength() noexcept

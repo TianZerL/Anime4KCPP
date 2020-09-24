@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
     {
         std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
         if (ret.first.first == 0)
-            std::cout << "Error: No GPU found" << std::endl;
-        std::cout << ret.second << std::endl;
+            std::cerr << "Error: No GPU found" << std::endl;
+        std::cerr << ret.second << std::endl;
         return 0;
     }
     // -b
@@ -250,12 +250,12 @@ int main(int argc, char* argv[])
                 std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
                 if (!ret.first)
                 {
-                    std::cout << ret.second << std::endl;
+                    std::cerr << ret.second << std::endl;
                     return 0;
                 }
                 else
                 {
-                    std::cout << ret.second << std::endl;
+                    std::cerr << ret.second << std::endl;
                 }
                 anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
             }
@@ -271,12 +271,12 @@ int main(int argc, char* argv[])
                 std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
                 if (!ret.first)
                 {
-                    std::cout << ret.second << std::endl;
+                    std::cerr << ret.second << std::endl;
                     return 0;
                 }
                 else
                 {
-                    std::cout << ret.second << std::endl;
+                    std::cerr << ret.second << std::endl;
                 }
                 anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPU);
             }
@@ -354,7 +354,7 @@ int main(int argc, char* argv[])
             std::string outputTmpName = outputPath.string();
 
             if (!ffmpeg)
-                std::cout << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
+                std::cerr << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
             else
                 outputTmpName = "tmp_out.mp4";
 
