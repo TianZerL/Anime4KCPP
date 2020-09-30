@@ -8,7 +8,6 @@ if(APPLE)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_CXX_FLAGS "/EHsc")
@@ -103,10 +102,10 @@ message(STATUS
 "   Use TBB ${Use_TBB}\n"
 )
 if(WIN32)
-message(STATUS
-"Extra building infomation for Windows:\n"
-"   Build DSFilter ${Build_DS_Filter}\n"
-)
+    message(STATUS
+    "Extra building infomation for Windows:\n"
+    "   Build DSFilter ${Build_DS_Filter}\n"
+    )
 endif()
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
