@@ -16,4 +16,9 @@ if(Build_DS_Filter)
 
     include(${TOP_DIR}/cmake/ThirdPartyForDS.cmake)
 
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION DSFilter
+    )
+
 endif()

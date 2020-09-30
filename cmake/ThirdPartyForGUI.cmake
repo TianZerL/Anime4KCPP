@@ -1,4 +1,3 @@
-find_package(Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
 

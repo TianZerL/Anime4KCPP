@@ -1165,7 +1165,10 @@ void MainWindow::on_tabWidgetMain_tabBarClicked(int index)
 
 void MainWindow::on_actionChinese_triggered()
 {
-    translator->load("./language/Anime4KCPP_GUI_zh_CN.qm");
+    QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_zh_CN.qm";
+    if (!QFileInfo(filePath).exists())
+        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_zh_CN.qm");
+    translator->load(filePath);
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
     currLanguage = zh_cn;

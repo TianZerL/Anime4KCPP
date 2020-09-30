@@ -13,4 +13,10 @@ if(Build_VapourSynth_plugin)
 
     include(${TOP_DIR}/cmake/ThirdPartyForVS.cmake)
 
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION VapourSynthPlugin
+        LIBRARY DESTINATION VapourSynthPlugin
+    )
+
 endif()

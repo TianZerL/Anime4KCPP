@@ -13,4 +13,10 @@ if(Build_AviSynthPlus_plugin)
 
     include(${TOP_DIR}/cmake/ThirdPartyForASP.cmake)
 
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION AviSynthPlusPlugin
+        LIBRARY DESTINATION AviSynthPlusPlugin
+    )
+
 endif()

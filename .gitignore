@@ -11,6 +11,8 @@ CTestTestfile.cmake
 _deps
 
 Build
+build
+install
 ThirdParty
 settings.ini
 logo.rc

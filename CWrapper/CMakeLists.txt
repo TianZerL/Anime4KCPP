@@ -18,4 +18,13 @@ if(Build_C_wrapper)
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION CWrapper/lib
+        LIBRARY DESTINATION CWrapper/lib
+        ARCHIVE DESTINATION CWrapper/lib
+    )
+    install(
+        FILES include/AC.h  DESTINATION CWrapper/include
+    )
 endif()

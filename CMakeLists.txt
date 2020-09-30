@@ -27,6 +27,10 @@ set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
+if(WIN32)
+    set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
+endif(WIN32)
+
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
 option(Build_VapourSynth_plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)

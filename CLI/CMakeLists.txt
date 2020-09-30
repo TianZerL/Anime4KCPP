@@ -21,4 +21,9 @@ if(Build_CLI)
 
     include(${TOP_DIR}/cmake/ThirdPartyForCLI.cmake)
 
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+    )
+
 endif()

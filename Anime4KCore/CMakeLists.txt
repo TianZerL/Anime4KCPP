@@ -16,3 +16,15 @@ endif()
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
+
+if(WIN32)
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+    )
+else()
+    install(
+        TARGETS ${PROJECT_NAME}
+        LIBRARY DESTINATION lib
+    )
+endif()

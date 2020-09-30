@@ -1,7 +1,8 @@
 project(Anime4KCPP_GUI LANGUAGES CXX)
 
 if(Build_GUI)
-
+    find_package(Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+    
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
     set(CMAKE_AUTOUIC ON)
@@ -25,17 +26,25 @@ if(Build_GUI)
         list(APPEND SOURCE src/logo.rc)
     endif()
 
+    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+
     add_executable(Anime4KCPP_GUI
         WIN32
         ${INCLUDE}
         ${SOURCE}
-        ${TS_FILES}
+        ${QM_FILES}
         ${UI_FILE}
         ${QRC_FILE}
     )
 
     include(${TOP_DIR}/cmake/ThirdPartyForGUI.cmake)
 
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    install(
+        TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+    )
+    install(
+        FILES ${QM_FILES} DESTINATION  bin/language
+    )
 
 endif()
