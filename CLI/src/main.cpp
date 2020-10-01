@@ -313,7 +313,7 @@ int main(int argc, char* argv[])
                     filePaths.emplace_back(std::make_pair(currInputPath, currOnputPath));
                 }
 
-                std::cout << filePaths.size() << " files total..." << std::endl
+                std::cout << filePaths.size() << " files total" << std::endl
                     << "Threads: " << threads << std::endl
                     << "Start processing..." << std::endl;
 
@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
                 {
                     threadPool.exec([i, &filePaths, &progress, &creator, &parameters, anime4k]()
                         {
-                            auto ac = creator->create(parameters, anime4k->getProcessorType());
+                            Anime4KCPP::Anime4K* ac = creator->create(parameters, anime4k->getProcessorType());
                             ac->loadImage(filePaths[i].first);
                             ac->process();
                             ac->saveImage(filePaths[i].second);
@@ -334,18 +334,17 @@ int main(int argc, char* argv[])
                         });
                 }
 
-                if (!disableProgress)
-                    for (;;)
+                for (;;)
+                {
+                    std::this_thread::yield();
+                    std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
+                    if (progress >= filePaths.size())
                     {
-                        std::this_thread::yield();
-                        std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
-                        if (progress >= filePaths.size())
-                        {
-                            std::cout << '\r' << '[' << filePaths.size() << '/' << filePaths.size() << ']';
-                            break;
-                        }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                        std::cout << '\r' << '[' << filePaths.size() << '/' << filePaths.size() << ']';
+                        break;
                     }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout
