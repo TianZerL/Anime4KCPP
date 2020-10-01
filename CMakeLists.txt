@@ -30,6 +30,8 @@ if(WIN32)
     set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 endif(WIN32)
 
+include(${TOP_DIR}/cmake/Detection.cmake)
+
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
 option(Build_VapourSynth_plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)
@@ -37,8 +39,18 @@ option(Build_AviSynthPlus_plugin "Build Anime4KCPP for AviSynthPlus plugin or no
 option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
-option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
+
+if(HAS_FILESYSTEM)
+    option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
+else()
+    message (
+        STATUS "Failed to complie has_filesystem.cpp, will use boost::filesystem instead of std::filesyste\n"
+        "Error message:\n"
+        ${HAS_FILESYSTEM_MSG}
+    )
+    option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" ON)
+endif()
 
 if(WIN32)
     set(OpenCL_Provider "Intel" CACHE STRING "one of Intel;Nvidia;AMD;Auto")
