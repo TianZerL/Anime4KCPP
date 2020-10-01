@@ -20,7 +20,6 @@ if(Build_GUI)
 
     if (WIN32)
         if(NOT EXISTS src/logo.rc)
-            file(TOUCH src/logo.rc)
             file(WRITE src/logo.rc "IDI_ICON1               ICON    \"../../images/Logo.ico\"")
         endif()
         list(APPEND SOURCE src/logo.rc)

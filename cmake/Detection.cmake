@@ -13,7 +13,6 @@ int main()
 
 if(NOT EXISTS ${DetectionSample_DIR}/has_filesystem.cpp)
     file(MAKE_DIRECTORY ${DetectionSample_DIR})
-    file(TOUCH ${DetectionSample_DIR}/has_filesystem.cpp)
     file(WRITE ${DetectionSample_DIR}/has_filesystem.cpp ${has_filesystem_cpp})
 
     # check std::filesystem

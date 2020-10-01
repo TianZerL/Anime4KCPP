@@ -47,7 +47,6 @@ else()
     message (
         STATUS 
         "Failed to complie has_filesystem.cpp, will use boost::filesystem instead of std::filesyste\n"
-        "Error message:\n"
         ${HAS_FILESYSTEM_MSG}
     )
     option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" ON)
