@@ -296,26 +296,62 @@ int main(int argc, char* argv[])
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
                 filesystem::create_directories(outputPath);
                 filesystem::directory_iterator currDir(inputPath);
+                std::vector<std::pair<std::string, std::string>> filePaths;
+
+                std::cout
+                    << anime4k->getInfo() << std::endl
+                    << anime4k->getFiltersInfo() << std::endl
+                    << "Scanning..." << std::endl;
+
                 for (auto& file : currDir)
                 {
                     if (filesystem::is_directory(file.path()))
                         continue;
                     std::string currInputPath = file.path().string();
                     std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
-                    
-                    anime4k->loadImage(file.path().string());
 
-                    std::cout << anime4k->getInfo() << std::endl;
-                    std::cout << anime4k->getFiltersInfo() << std::endl;
-
-                    std::cout << "Processing..." << std::endl;
-                    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                    anime4k->process();
-                    std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                    std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
-
-                    anime4k->saveImage(currOnputPath);
+                    filePaths.emplace_back(std::make_pair(currInputPath, currOnputPath));
                 }
+
+                std::cout << filePaths.size() << " files total..." << std::endl
+                    << "Threads: " << threads << std::endl
+                    << "Start processing..." << std::endl;
+
+                ThreadPool threadPool(threads);
+                std::atomic_uint64_t progress = 0;
+                std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+
+                for (int i = 0; i < filePaths.size(); i++)
+                {
+                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, anime4k]()
+                        {
+                            auto ac = creator->create(parameters, anime4k->getProcessorType());
+                            ac->loadImage(filePaths[i].first);
+                            ac->process();
+                            ac->saveImage(filePaths[i].second);
+                            progress++;
+                            creator->release(ac);
+                        });
+                }
+
+                if (!disableProgress)
+                    for (;;)
+                    {
+                        std::this_thread::yield();
+                        std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
+                        if (progress >= filePaths.size())
+                        {
+                            std::cout << '\r' << '[' << filePaths.size() << '/' << filePaths.size() << ']';
+                            break;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    }
+                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+
+                std::cout
+                    << std::endl
+                    << "Total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl
+                    << "All finished." << std::endl;
             }
             else
             {

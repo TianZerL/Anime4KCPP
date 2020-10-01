@@ -182,7 +182,6 @@ public:
     void stopVideoProcess() noexcept;
     void pauseVideoProcess();
     void continueVideoProcess() noexcept;
-protected:
     virtual ProcessorType getProcessorType() noexcept = 0;
 private:
     void initVideoIO();

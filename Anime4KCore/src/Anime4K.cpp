@@ -335,8 +335,11 @@ std::string Anime4KCPP::Anime4K::getInfo()
         oss << "Threads: " << mt << std::endl;
         oss << "Total frames: " << totalFrameCount << std::endl;
     }
-    oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
-    oss << "----------------------------------------------" << std::endl;
+    if (orgW && orgH)
+    {
+        oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
+        oss << "----------------------------------------------" << std::endl;
+    }
     oss << "Processor type: " << type << std::endl;
     oss << "----------------------------------------------" << std::endl;
     switch (type)
