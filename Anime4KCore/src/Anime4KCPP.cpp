@@ -61,10 +61,10 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 {
     std::pair<double, double> ret;
 
-    std::pair<bool, std::string> checkGPUResult = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+    Anime4KCPP::GPUInfo checkGPUResult = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
 
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::Anime4KCreator creator(checkGPUResult.first, true, pID, dID, Anime4KCPP::CNNType::ACNet);
+    Anime4KCPP::Anime4KCreator creator(checkGPUResult, true, pID, dID, Anime4KCPP::CNNType::ACNet);
     Anime4KCPP::Anime4K* acCPU = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
 
     const size_t dataSize = 1920 * 1080 * 3;
@@ -85,7 +85,7 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
     creator.release(acCPU);
 
-    if (checkGPUResult.first)
+    if (checkGPUResult)
     {
         Anime4KCPP::Anime4K* acGPU = creator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
 

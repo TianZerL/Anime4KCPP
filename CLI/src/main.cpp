@@ -166,10 +166,10 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
-        if (ret.first.first == 0)
+        Anime4KCPP::GPUList ret = Anime4KCPP::Anime4KGPU::listGPUs();
+        if (ret.platforms == 0)
             std::cerr << "Error: No GPU found" << std::endl;
-        std::cerr << ret.second << std::endl;
+        std::cerr << ret() << std::endl;
         return 0;
     }
     // -b
@@ -249,15 +249,15 @@ int main(int argc, char* argv[])
         {
             if (GPU)
             {
-                std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
-                if (!ret.first)
+                Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+                if (!ret)
                 {
-                    std::cerr << ret.second << std::endl;
+                    std::cerr << ret() << std::endl;
                     return 0;
                 }
                 else
                 {
-                    std::cerr << ret.second << std::endl;
+                    std::cerr << ret() << std::endl;
                 }
                 anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
             }
@@ -270,15 +270,15 @@ int main(int argc, char* argv[])
         {
             if (GPU)
             {
-                std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
-                if (!ret.first)
+                Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+                if (!ret)
                 {
-                    std::cerr << ret.second << std::endl;
+                    std::cerr << ret() << std::endl;
                     return 0;
                 }
                 else
                 {
-                    std::cerr << ret.second << std::endl;
+                    std::cerr << ret() << std::endl;
                 }
                 anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPU);
             }

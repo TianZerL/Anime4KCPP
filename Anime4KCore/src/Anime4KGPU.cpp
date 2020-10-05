@@ -15,6 +15,34 @@ clReleaseKernel(kernelPushGradient); \
 throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
+Anime4KCPP::GPUList::GPUList(
+    const int platforms,
+    const std::vector<int>& devices,
+    const std::string& message
+) :platforms(platforms), devices(devices), message(message) {}
+
+int Anime4KCPP::GPUList::operator[](int pID) const
+{
+    return devices[pID];
+}
+
+std::string& Anime4KCPP::GPUList::operator()() noexcept
+{
+    return message;
+}
+
+Anime4KCPP::GPUInfo::GPUInfo(const bool supported, const std::string& message) :
+    supported(supported), message(message) {};
+
+std::string& Anime4KCPP::GPUInfo::operator()() noexcept
+{
+    return message;
+}
+
+Anime4KCPP::GPUInfo::operator bool() const noexcept
+{
+    return supported;
+}
 
 Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
     Anime4K(parameters),
@@ -110,7 +138,7 @@ bool Anime4KCPP::Anime4KGPU::isInitializedGPU()
     return isInitialized;
 }
 
-std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU::listGPUs()
+Anime4KCPP::GPUList Anime4KCPP::Anime4KGPU::listGPUs()
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -123,20 +151,20 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
     char* platformName = nullptr;
     char* DeviceName = nullptr;
 
-    std::ostringstream GPUInfo;
+    std::ostringstream msg;
 
     std::vector<int> devicesVector;
 
     err = clGetPlatformIDs(0, nullptr, &platforms);
     if (err != CL_SUCCESS || !platforms)
-        return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "No suppoted platform");
+        return GPUList(0, { 0 }, "No suppoted platform");
 
     platform = new cl_platform_id[platforms];
     err = clGetPlatformIDs(platforms, platform, nullptr);
     if (err != CL_SUCCESS)
     {
         delete[] platform;
-        return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "inital platform error");
+        return GPUList(0, { 0 }, "inital platform error");
     }
 
     for (cl_uint i = 0; i < platforms; i++)
@@ -145,7 +173,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
         if (err != CL_SUCCESS)
         {
             delete[] platform;
-            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get platform name length infomation");
+            return GPUList( 0,{0} , "Failed to get platform name length infomation");
         }
 
 
@@ -155,9 +183,9 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
         {
             delete[] platformName;
             delete[] platform;
-            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get platform name infomation");
+            return GPUList( 0,{0} , "Failed to get platform name infomation");
         }
-        GPUInfo << "Platform " << i << ": " << platformName << std::endl;
+        msg << "Platform " << i << ": " << platformName << std::endl;
 
         delete[] platformName;
 
@@ -165,7 +193,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
         if (err != CL_SUCCESS || !devices)
         {
             delete[] platform;
-            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "No supported GPU");
+            return GPUList( 0,{0} , "No supported GPU");
         }
 
         devicesVector.push_back(devices);
@@ -176,7 +204,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
         {
             delete[] device;
             delete[] platform;
-            return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "inital GPU error");
+            return GPUList( 0,{0} , "inital GPU error");
         }
 
         for (cl_uint j = 0; j < devices; j++)
@@ -187,7 +215,7 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
                 clReleaseDevice(device[j]);
                 delete[] device;
                 delete[] platform;
-                return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get device name length infomation");
+                return GPUList( 0,{0} , "Failed to get device name length infomation");
             }
 
 
@@ -199,24 +227,21 @@ std::pair<std::pair<int, std::vector<int>>, std::string> Anime4KCPP::Anime4KGPU:
                 delete[] DeviceName;
                 delete[] device;
                 delete[] platform;
-                return std::pair<std::pair<int, std::vector<int>>, std::string>({ 0,{0} }, "Failed to get device name infomation");
+                return GPUList( 0,{0} , "Failed to get device name infomation");
             }
-            GPUInfo << "Device " << j << ": " << DeviceName << std::endl;
+            msg << "Device " << j << ": " << DeviceName << std::endl;
 
             delete[] DeviceName;
             clReleaseDevice(device[j]);
         }
         delete[] device;
     }
-
-    std::pair<std::pair<int, std::vector<int>>, std::string> ret({ platforms, devicesVector }, std::string(GPUInfo.str()));
-
     delete[] platform;
 
-    return ret;
+    return GPUList(platforms, devicesVector, msg.str());
 }
 
-std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
+Anime4KCPP::GPUInfo Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -231,14 +256,14 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
 
     err = clGetPlatformIDs(0, nullptr, &platforms);
     if (err != CL_SUCCESS || !platforms)
-        return std::pair<bool, std::string>(false, "No suppoted platform");
+        return GPUInfo(false, "No suppoted platform");
 
     cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
     err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
     if (err != CL_SUCCESS)
     {
         delete[] tmpPlatform;
-        return std::pair<bool, std::string>(false, "inital platform error");
+        return GPUInfo(false, "inital platform error");
     }
 
 
@@ -251,14 +276,14 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
 
     err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
     if (err != CL_SUCCESS)
-        return std::pair<bool, std::string>(false, "Failed to get platform name length infomation");
+        return GPUInfo(false, "Failed to get platform name length infomation");
 
     platformName = new char[platformNameLength];
     err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
     if (err != CL_SUCCESS)
     {
         delete[] platformName;
-        return std::pair<bool, std::string>(false, "Failed to get platform name infomation");
+        return GPUInfo(false, "Failed to get platform name infomation");
     }
 
 
@@ -266,7 +291,7 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
     if (err != CL_SUCCESS || !devices)
     {
         delete[] platformName;
-        return std::pair<bool, std::string>(false, "No supported GPU");
+        return GPUInfo(false, "No supported GPU");
     }
 
     cl_device_id* tmpDevice = new cl_device_id[devices];
@@ -275,7 +300,7 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
     {
         delete[] platformName;
         delete[] tmpDevice;
-        return std::pair<bool, std::string>(false, "No supported GPU");
+        return GPUInfo(false, "No supported GPU");
     }
 
     if (dID >= 0 && dID < devices)
@@ -290,7 +315,7 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
     {
         delete[] platformName;
         clReleaseDevice(device);
-        return std::pair<bool, std::string>(false, "Failed to get device name length infomation");
+        return GPUInfo(false, "Failed to get device name length infomation");
     }
 
 
@@ -301,10 +326,10 @@ std::pair<bool, std::string> Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned in
         delete[] DeviceName;
         delete[] platformName;
         clReleaseDevice(device);
-        return std::pair<bool, std::string>(false, "Failed to get device name infomation");
+        return GPUInfo(false, "Failed to get device name infomation");
     }
 
-    std::pair<bool, std::string> ret(true,
+    GPUInfo ret(true,
         std::string("Platform: ") + platformName + "\n" + "Device: " + DeviceName);
 
     delete[] DeviceName;

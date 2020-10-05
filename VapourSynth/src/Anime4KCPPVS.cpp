@@ -448,9 +448,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     if (tmpData.GPU)
     {
-        std::pair<std::pair<int, std::vector<int>>, std::string> GPUinfo = Anime4KCPP::Anime4KGPU::listGPUs();
-        if (tmpData.pID >= static_cast<unsigned int>(GPUinfo.first.first) ||
-            tmpData.dID >= static_cast<unsigned int>(GPUinfo.first.second[tmpData.pID]))
+        Anime4KCPP::GPUList list = Anime4KCPP::Anime4KGPU::listGPUs();
+        if (tmpData.pID >= static_cast<unsigned int>(list.platforms) ||
+            tmpData.dID >= static_cast<unsigned int>(list[tmpData.pID]))
         {
             std::ostringstream err;
             err << "Platform ID or device ID index out of range" << std::endl
@@ -462,9 +462,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->freeNode(tmpData.node);
             return;
         }
-        std::pair<bool, std::string> ret =
+        Anime4KCPP::GPUInfo ret =
             Anime4KCPP::Anime4KGPU::checkGPUSupport(tmpData.pID, tmpData.dID);
-        if (!ret.first)
+        if (!ret)
         {
             std::ostringstream err;
             err << "The current device is unavailable" << std::endl
@@ -472,12 +472,12 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 << "    platform ID: " << tmpData.pID << std::endl
                 << "    device ID: " << tmpData.dID << std::endl
                 << "Error: " << std::endl
-                << "    " + ret.second << std::endl;
+                << "    " + ret() << std::endl;
             vsapi->setError(out, err.str().c_str());
             vsapi->freeNode(tmpData.node);
             return;
         }
-        vsapi->logMessage(mtDebug, ("Current GPU infomation: \n" + ret.second).c_str());
+        vsapi->logMessage(mtDebug, ("Current GPU infomation: \n" + ret()).c_str());
     }
 
     if (tmpData.zoomFactor != 1.0)
@@ -510,7 +510,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
 static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
 {
-    vsapi->logMessage(mtDebug, Anime4KCPP::Anime4KGPU::listGPUs().second.c_str());
+    vsapi->logMessage(mtDebug, Anime4KCPP::Anime4KGPU::listGPUs()().c_str());
 }
 
 static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)

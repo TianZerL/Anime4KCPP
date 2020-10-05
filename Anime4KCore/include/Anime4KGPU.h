@@ -13,8 +13,31 @@
 
 namespace Anime4KCPP
 {
+    struct DLL GPUList;
+    struct DLL GPUInfo;
     class DLL Anime4KGPU;
 }
+
+struct Anime4KCPP::GPUList
+{
+    int platforms;
+    std::vector<int> devices;
+    std::string message;
+    
+    GPUList(const int platforms, const std::vector<int>& devices, const std::string& message);
+    int operator[](int pID) const;
+    std::string& operator()() noexcept;
+};
+
+struct Anime4KCPP::GPUInfo
+{
+    bool supported;
+    std::string message;
+
+    GPUInfo(const bool supported, const std::string& message);
+    std::string& operator()() noexcept;
+    operator bool() const noexcept;
+};
 
 class Anime4KCPP::Anime4KGPU :public Anime4K
 {
@@ -26,9 +49,9 @@ public:
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
     //return platforms, devices of each platform, all devices infomation
-    static std::pair<std::pair<int, std::vector<int>>, std::string> listGPUs();
+    static GPUList listGPUs();
     //return result and infomation
-    static std::pair<bool, std::string> checkGPUSupport(unsigned int pID, unsigned int dID);
+    static GPUInfo checkGPUSupport(unsigned int pID, unsigned int dID);
 private:
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     static void initOpenCL();

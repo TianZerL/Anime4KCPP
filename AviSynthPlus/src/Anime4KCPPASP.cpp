@@ -282,9 +282,9 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
     if (GPUMode)
     {
-        std::pair<bool, std::string> ret =
+        Anime4KCPP::GPUInfo ret =
             Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
-        if (!ret.first)
+        if (!ret)
         {
             std::ostringstream err;
             err << "Anime4KCPP: The current device is unavailable" << std::endl
@@ -292,7 +292,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                 << "    platform ID: " << pID << std::endl
                 << "    device ID: " << dID << std::endl
                 << "Error: " << std::endl
-                << "    " + ret.second << std::endl;
+                << "    " + ret() << std::endl;
             env->ThrowError(err.str().c_str());
         }
     }
@@ -310,7 +310,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
 AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
-    env->ThrowError(Anime4KCPP::Anime4KGPU::listGPUs().second.c_str());
+    env->ThrowError(Anime4KCPP::Anime4KGPU::listGPUs()().c_str());
     return AVSValue();
 }
 

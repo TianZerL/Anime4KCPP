@@ -574,9 +574,9 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
 
 STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
 {
-    auto GPUInfo = Anime4KCPP::Anime4KGPU::listGPUs();
+    Anime4KCPP::GPUList GPUInfo = Anime4KCPP::Anime4KGPU::listGPUs();
 
-    std::string tmpStr = GPUInfo.second;
+    std::string tmpStr = GPUInfo();
     size_t tmp = 0;
     std::vector<std::string> subInfo(4);
     for (size_t i = 0; i < tmpStr.size(); i++)

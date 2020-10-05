@@ -546,34 +546,34 @@ extern "C"
 
     ac_bool acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length)
     {
-        std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+        Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
 
-        ac_bool rst = ac_bool(ret.first);
+        ac_bool rst = ac_bool(ret.supported);
 
         if (length != nullptr)
-            *length = ret.second.size() + 1;
+            *length = ret().size() + 1;
 
         if (info != nullptr)
-            memcpy(info, ret.second.c_str(), ret.second.size() + 1);
+            memcpy(info, ret().c_str(), ret().size() + 1);
 
         return rst;
     }
 
     void acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices)
     {
-        std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
+        Anime4KCPP::GPUList ret = Anime4KCPP::Anime4KGPU::listGPUs();
 
         if (length != nullptr)
-            *length = ret.second.size() + 1;
+            *length = ret().size() + 1;
 
         if (info != nullptr)
-            memcpy(info, ret.second.c_str(), ret.second.size() + 1);
+            memcpy(info, ret().c_str(), ret().size() + 1);
 
         if (platforms != nullptr)
-            *platforms = ret.first.first;
+            *platforms = ret.platforms;
 
         if (devices != nullptr)
-            for (int i : ret.first.second)
+            for (int i : ret.devices)
                 *(devices++) = i;
     }
 

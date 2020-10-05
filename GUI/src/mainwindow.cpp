@@ -1340,12 +1340,12 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
     if ((state == Qt::Checked) && (GPU == GPUMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
-        if (!ret.first)
+        Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if (!ret)
         {
             QMessageBox::warning(this,
                 tr("Warning"),
-                QString::fromStdString(ret.second),
+                QString::fromStdString(ret()),
                 QMessageBox::Ok);
             GPU = GPUMODE_UNSUPPORT;
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
@@ -1372,9 +1372,9 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             QMessageBox::information(this,
                 tr("Notice"),
                 "initialize successful!\n" +
-                QString::fromStdString(ret.second),
+                QString::fromStdString(ret()),
                 QMessageBox::Ok);
-            ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
+            ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret()) + "\n");
             ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
             ui->spinBoxPlatformID->setEnabled(false);
             ui->spinBoxDeviceID->setEnabled(false);
@@ -1414,8 +1414,8 @@ void MainWindow::on_actionBenchmark_triggered()
 
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
-    std::pair<std::pair<int, std::vector<int>>, std::string> ret = Anime4KCPP::Anime4KGPU::listGPUs();
-    if (ret.first.first == 0)
+    Anime4KCPP::GPUList ret = Anime4KCPP::Anime4KGPU::listGPUs();
+    if (ret.platforms == 0)
     {
         QMessageBox::warning(this,
             tr("Warning"),
@@ -1425,11 +1425,11 @@ void MainWindow::on_pushButtonListGPUs_clicked()
     }
     QMessageBox::information(this,
         tr("Notice"),
-        QString::fromStdString(ret.second),
+        QString::fromStdString(ret()),
         QMessageBox::Ok);
-    platforms = ret.first.first;
-    devices = ret.first.second;
-    ui->spinBoxPlatformID->setRange(0, ret.first.first - 1);
+    platforms = ret.platforms;
+    devices = ret.devices;
+    ui->spinBoxPlatformID->setRange(0, ret.platforms - 1);
 }
 
 void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
@@ -1515,12 +1515,12 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
     if ((state == Qt::Checked) && (GPUCNN == GPUCNNMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        std::pair<bool, std::string> ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
-        if (!ret.first)
+        Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        if (!ret)
         {
             QMessageBox::warning(this,
                 tr("Warning"),
-                QString::fromStdString(ret.second),
+                QString::fromStdString(ret()),
                 QMessageBox::Ok);
             GPUCNN = GPUCNNMODE_UNSUPPORT;
             ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
@@ -1547,9 +1547,9 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
             QMessageBox::information(this,
                 tr("Notice"),
                 "initialize successful!\n" +
-                QString::fromStdString(ret.second),
+                QString::fromStdString(ret()),
                 QMessageBox::Ok);
-            ui->textBrowserInfoOut->insertPlainText("GPU for CNN initialize successfully!\n" + QString::fromStdString(ret.second) + "\n");
+            ui->textBrowserInfoOut->insertPlainText("GPU for CNN initialize successfully!\n" + QString::fromStdString(ret()) + "\n");
             ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
             ui->spinBoxPlatformID->setEnabled(false);
             ui->spinBoxDeviceID->setEnabled(false);
