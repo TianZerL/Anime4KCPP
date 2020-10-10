@@ -7,32 +7,32 @@ Anime4KCPP::Anime4KCPU::Anime4KCPU(const Parameters& parameters) :
 
 void Anime4KCPP::Anime4KCPU::process()
 {
-    if (!vm)
+    if (!param.videoMode)
     {
         if (inputYUV)
         {
             cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
-        int tmpPcc = this->pcc;
-        if (zf == 2.0F)
-            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
+        int tmpPcc = param.pushColorCount;
+        if (param.zoomFactor == 2.0F)
+            cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
         else
-            cv::resize(orgImg, dstImg, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
-        if (pre)
-            FilterProcessor(dstImg, pref).process();
+            cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        if (param.preprocessing)
+            FilterProcessor(dstImg, param.preFilters).process();
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
-        for (int i = 0; i < ps; i++)
+        for (int i = 0; i < param.passes; i++)
         {
             getGray(dstImg);
-            if (sc && (tmpPcc-- > 0))
+            if (param.strengthColor && (tmpPcc-- > 0))
                 pushColor(dstImg);
             getGradient(dstImg);
             pushGradient(dstImg);
         }
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-        if (post)//PostProcessing
-            FilterProcessor(dstImg, postf).process();
+        if (param.postprocessing)//PostProcessing
+            FilterProcessor(dstImg, param.postFilters).process();
         if (inputYUV)
         {
             cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
@@ -51,29 +51,29 @@ void Anime4KCPP::Anime4KCPU::process()
                 Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
-                int tmpPcc = this->pcc;
-                if (pre)
-                    FilterProcessor(orgFrame, pref).process();
+                int tmpPcc = param.pushColorCount;
+                if (param.preprocessing)
+                    FilterProcessor(orgFrame, param.preFilters).process();
                 cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-                if (zf == 2.0F)
-                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_LINEAR);
+                if (param.zoomFactor == 2.0F)
+                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
                 else
-                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), zf, zf, cv::INTER_CUBIC);
-                for (int i = 0; i < ps; i++)
+                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+                for (int i = 0; i < param.passes; i++)
                 {
                     getGray(dstFrame);
-                    if (sc && (tmpPcc-- > 0))
+                    if (param.strengthColor && (tmpPcc-- > 0))
                         pushColor(dstFrame);
                     getGradient(dstFrame);
                     pushGradient(dstFrame);
                 }
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-                if (post)//PostProcessing
-                    FilterProcessor(dstFrame, postf).process();
+                if (param.postprocessing)//PostProcessing
+                    FilterProcessor(dstFrame, param.postFilters).process();
                 frame.first = dstFrame;
                 videoIO->write(frame);
             }
-            , mt
+            , param.maxThreads
                 ).process();
     }
 }
@@ -157,7 +157,7 @@ inline void Anime4KCPP::Anime4KCPU::pushColor(cv::Mat& img)
 
 inline void Anime4KCPP::Anime4KCPU::getGradient(cv::Mat& img)
 {
-    if (!fm)
+    if (!param.fastMode)
     {
         const int lineStep = W * 4;
         changEachPixelBGRA(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
@@ -297,14 +297,14 @@ inline void Anime4KCPP::Anime4KCPU::getLightest(RGBA mc, const RGBA a, const RGB
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
-        mc[i] = mc[i] * (1.0 - sc) + ((a[i] + b[i] + c[i]) / 3.0) * sc + 0.5;
+        mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
 }
 
 inline void Anime4KCPP::Anime4KCPU::getAverage(RGBA mc, const RGBA a, const RGBA b, const RGBA c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
-        mc[i] = mc[i] * (1.0 - sg) + ((a[i] + b[i] + c[i]) / 3.0) * sg + 0.5;
+        mc[i] = mc[i] * (1.0 - param.strengthGradient) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthGradient + 0.5;
 
     mc[A] = 255;
 }

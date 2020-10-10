@@ -8,9 +8,9 @@ Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
 void Anime4KCPP::Anime4KCPUCNN::process()
 {
     CNNProcessor* processor;
-    if (HDN)
+    if (param.HDN)
     {
-        switch (HDNLevel)
+        switch (param.HDNLevel)
         {
         case 1:
             processor = CNNCreator::create(CNNType::ACNetHDNL1);
@@ -31,16 +31,16 @@ void Anime4KCPP::Anime4KCPUCNN::process()
         processor = CNNCreator::create(CNNType::ACNet);
     }
 
-    if (fm)
+    if (param.fastMode)
     {
-        if (!vm)
+        if (!param.videoMode)
         {
             if (!inputYUV)
             {
-                if (zf > 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
-                else if (zf < 2.0)
-                    cv::resize(orgImg, orgImg, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                if (param.zoomFactor > 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+                else if (param.zoomFactor < 2.0)
+                    cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
                 cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
 
                 processor->process(orgImg, dstImg);
@@ -52,15 +52,15 @@ void Anime4KCPP::Anime4KCPUCNN::process()
             }
             else
             {
-                if (zf > 2.0)
-                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
-                else if (zf < 2.0)
-                    cv::resize(orgY, orgY, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                if (param.zoomFactor > 2.0)
+                    cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+                else if (param.zoomFactor < 2.0)
+                    cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
                 processor->process(orgY, dstY);
 
-                cv::resize(orgU, dstU, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
-                cv::resize(orgV, dstV, cv::Size(0, 0), zf, zf, cv::INTER_LANCZOS4);
+                cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+                cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
             }
         }
         else
@@ -72,10 +72,10 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
-                    if (zf > 2.0)
-                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_LANCZOS4);
-                    else if (zf < 2.0)
-                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), zf / 2.0, zf / 2.0, cv::INTER_AREA);
+                    if (param.zoomFactor > 2.0)
+                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+                    else if (param.zoomFactor < 2.0)
+                        cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
                     cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2YUV);
 
                     processor->process(orgFrame, dstFrame);
@@ -88,18 +88,18 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     frame.first = dstFrame;
                     videoIO->write(frame);
                 }
-                , mt
+                , param.maxThreads
                     ).process();
         }
     }
     else
     {
-        double tmpZf = log2(zf);
+        double tmpZf = log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
         int tmpZfUp = ceil(tmpZf);
 
-        if (!vm)
+        if (!param.videoMode)
         {
             if (!inputYUV) //RGB
             {
@@ -138,7 +138,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                 }
                 if (tmpZfUp - tmpZf > 0.00001)
                 {
-                    double currZf = zf / exp2(tmpZfUp);
+                    double currZf = param.zoomFactor / exp2(tmpZfUp);
                     cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
                     cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
                     cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
@@ -177,7 +177,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     frame.first = dstFrame;
                     videoIO->write(frame);
                 }
-                , mt
+                , param.maxThreads
                     ).process();
         }
     }

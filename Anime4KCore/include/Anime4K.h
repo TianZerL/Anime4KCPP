@@ -151,7 +151,7 @@ public:
     virtual ~Anime4K();
 
     void setArguments(const Parameters& parameters);
-    void setVideoMode(const bool flag);
+    void setVideoMode(const bool value);
 
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
@@ -199,10 +199,5 @@ protected:
     bool checkAlphaChannel = false;
     VideoIO* videoIO = nullptr;
 
-protected://arguments
-    int ps, pcc, HDNLevel;
-    double sc, sg, zf;
-    bool fm, vm, pre, post, HDN, alpha;
-    uint8_t pref, postf;
-    unsigned int mt;
+    Parameters param;
 };

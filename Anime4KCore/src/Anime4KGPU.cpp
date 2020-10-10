@@ -50,7 +50,7 @@ Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
 
 void Anime4KCPP::Anime4KGPU::process()
 {
-    if (zf == 2.0)
+    if (param.zoomFactor == 2.0)
     {
         nWidth = 1.0 / static_cast<double>(W);
         nHeight = 1.0 / static_cast<double>(H);
@@ -61,7 +61,7 @@ void Anime4KCPP::Anime4KGPU::process()
         nHeight = static_cast<double>(orgH) / static_cast<double>(H);
     }
 
-    if (!vm)
+    if (!param.videoMode)
     {
         if (inputYUV)
         {
@@ -69,13 +69,13 @@ void Anime4KCPP::Anime4KGPU::process()
             cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
         }
         dstImg.create(H, W, CV_8UC4);
-        if (pre)//Pretprocessing(CPU)
-            FilterProcessor(orgImg, pref).process();
+        if (param.preprocessing)//Pretprocessing(CPU)
+            FilterProcessor(orgImg, param.preFilters).process();
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
         runKernel(orgImg, dstImg);
         cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-        if (post)//Postprocessing(CPU)
-            FilterProcessor(dstImg, postf).process();
+        if (param.postprocessing)//Postprocessing(CPU)
+            FilterProcessor(dstImg, param.postFilters).process();
         if (inputYUV)
         {
             cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
@@ -94,17 +94,17 @@ void Anime4KCPP::Anime4KGPU::process()
                 Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
-                if (pre)
-                    FilterProcessor(orgFrame, pref).process();
+                if (param.preprocessing)
+                    FilterProcessor(orgFrame, param.preFilters).process();
                 cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
                 runKernel(orgFrame, dstFrame);
                 cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-                if (post)//PostProcessing
-                    FilterProcessor(dstFrame, postf).process();
+                if (param.postprocessing)//PostProcessing
+                    FilterProcessor(dstFrame, param.postFilters).process();
                 frame.first = dstFrame;
                 videoIO->write(frame);
             }
-            , mt
+            , param.maxThreads
                 ).process();
     }
 }
@@ -353,8 +353,8 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         (((size_t(H) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog 
     };
 
-    const cl_float pushColorStrength = sc;
-    const cl_float pushGradientStrength = sg;
+    const cl_float pushColorStrength = param.strengthColor;
+    const cl_float pushGradientStrength = param.strengthGradient;
     const cl_float normalizedWidth = cl_float(nWidth);
     const cl_float normalizedHeight = cl_float(nHeight);
 
@@ -389,7 +389,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (zf == 2.0F)
+    if (param.zoomFactor == 2.0F)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -480,13 +480,13 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     //enqueue
     clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelGetGray, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
-    for (i = 0; i < ps && i < pcc; i++)//pcc for push color count
+    for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
     {
         clEnqueueNDRangeKernel(commandQueue, kernelPushColor, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
         clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
         clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
     }
-    if (i < ps)
+    if (i < param.pushColorCount)
     {
         //reset getGradient
         err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
@@ -500,7 +500,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         if (err != CL_SUCCESS)
             CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
 
-        while (i++ < ps)
+        while (i++ < param.passes)
         {
             clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
             clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
