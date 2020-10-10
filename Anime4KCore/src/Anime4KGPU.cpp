@@ -486,7 +486,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
         clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
         clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
     }
-    if (i < param.pushColorCount)
+    if (i < param.passes)
     {
         //reset getGradient
         err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
