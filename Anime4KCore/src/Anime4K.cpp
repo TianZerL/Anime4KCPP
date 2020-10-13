@@ -178,6 +178,18 @@ void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int 
     W = param.zoomFactor * orgW;
 }
 
+void Anime4KCPP::Anime4K::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v)
+{
+    inputYUV = true;
+    dstY = orgY = y;
+    dstU = orgU = u;
+    dstV = orgV = v;
+    orgH = y.rows;
+    orgW = y.cols;
+    H = param.zoomFactor * orgH;
+    W = param.zoomFactor * orgW;
+}
+
 void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
     if (!videoIO->openWriter(dstFile, codec, cv::Size(W, H), fps))
