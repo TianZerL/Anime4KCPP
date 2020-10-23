@@ -155,7 +155,7 @@ int main(int argc, char* argv[])
     bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");
-    bool doBenchmarking = opt.exist("benchmark");
+    bool doBenchmark = opt.exist("benchmark");
 
     // -V
     if (version)
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
         return 0;
     }
     // -b
-    if (doBenchmarking)
+    if (doBenchmark)
     {
         std::cout << "Benchmarking..." << std::endl;
 

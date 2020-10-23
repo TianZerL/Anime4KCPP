@@ -102,5 +102,5 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
     delete[] testData;
 
-    return std::move(ret);
+    return ret;
 }
