@@ -200,13 +200,12 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
 {
     if (inputYUV)
     {
-        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-        {
-            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
-        }
-        else
-            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to file");
+        if (dstY.size() != dstU.size())
+            cv::resize(dstU, dstU, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+        if (dstY.size() != dstV.size())
+            cv::resize(dstV, dstV, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+        cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
     }
     if (checkAlphaChannel)
     {

@@ -16,7 +16,7 @@ namespace filesystem = std::filesystem;
 #endif // !COMPILER
 
 
-bool checkFFmpeg()
+static bool checkFFmpeg()
 {
     std::cout << "Checking ffmpeg..." << std::endl;
     if (!system("ffmpeg -version"))
@@ -24,7 +24,7 @@ bool checkFFmpeg()
     return false;
 }
 
-bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
+static bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
     std::cout << "Merging audio..." << std::endl;
     std::string command("ffmpeg -loglevel 40 -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + dstFile + "\"");
@@ -33,7 +33,7 @@ bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, co
     return !system(command.data());
 }
 
-bool video2GIF(const std::string& srcFile, const std::string& dstFile)
+static bool video2GIF(const std::string& srcFile, const std::string& dstFile)
 {
     std::string commandGeneratePalette("ffmpeg -i \"" + srcFile + "\" -vf palettegen -y palette.png");
     std::cout << commandGeneratePalette << std::endl;
@@ -46,7 +46,7 @@ bool video2GIF(const std::string& srcFile, const std::string& dstFile)
     return flag;
 }
 
-Anime4KCPP::CODEC string2Codec(const std::string& codec)
+static Anime4KCPP::CODEC string2Codec(const std::string& codec)
 {
     if (codec == "mp4v")
         return Anime4KCPP::CODEC::MP4V;
@@ -66,7 +66,7 @@ Anime4KCPP::CODEC string2Codec(const std::string& codec)
         return Anime4KCPP::CODEC::MP4V;
 }
 
-inline void showVersionInfo()
+inline static void showVersionInfo()
 {
     std::cerr
         << "Anime4KCPPCLI" << std::endl
