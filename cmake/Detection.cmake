@@ -20,8 +20,7 @@ if(NOT EXISTS ${DetectionSample_DIR}/has_filesystem.cpp)
         try_compile(HAS_FILESYSTEM
             ${TMP_DIR}
             ${DetectionSample_DIR}/has_filesystem.cpp
-            CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-            LINK_LIBRARIES stdc++fs
+            CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON -DLINK_LIBRARIES=stdc++fs
             OUTPUT_VARIABLE HAS_FILESYSTEM_MSG
         )
     else()
