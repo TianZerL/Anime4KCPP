@@ -1,7 +1,7 @@
 #pragma once
 
 #include"Anime4K.h"
-#include"CNNProcessor.h"
+#include"CNN.h"
 
 #include<fstream>
 

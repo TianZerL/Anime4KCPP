@@ -9,18 +9,12 @@ namespace Anime4KCPP
 {
     class CNNProcessor;
 
-    enum Layer
+    enum ACNetLayer
     {
         L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7
     };
 
-    enum class CNNType;
 }
-
-enum class Anime4KCPP::CNNType
-{
-    Default, ACNet, ACNetHDNL1, ACNetHDNL2, ACNetHDNL3
-};
 
 class Anime4KCPP::CNNProcessor
 {
