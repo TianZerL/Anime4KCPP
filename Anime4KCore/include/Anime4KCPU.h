@@ -23,9 +23,9 @@ private:
     void pushColor(cv::Mat& img);
     void getGradient(cv::Mat& img);
     void pushGradient(cv::Mat& img);
-    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, RGBA, Line)>&& callBack);
-    void getLightest(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
-    void getAverage(RGBA mc, RGBA a, RGBA b, RGBA c) noexcept;
+    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelB, LineB)>&& callBack);
+    void getLightest(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
+    void getAverage(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
 
     virtual ProcessorType getProcessorType() noexcept override;
 };

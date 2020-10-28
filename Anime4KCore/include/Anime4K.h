@@ -41,16 +41,21 @@ namespace Parallel = tbb;
 
 namespace Anime4KCPP
 {
+    enum class ProcessorType;
+
     struct DLL Parameters;
     class DLL Anime4K;
-
-    enum class ProcessorType;
 
     std::ostream& operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type);
 
     enum BGRA
     {
         B = 0, G = 1, R = 2, A = 3
+    };
+
+    enum YUV
+    {
+        Y = 0, U = 1, V = 2
     };
 
     enum FilterType : uint8_t
@@ -60,14 +65,6 @@ namespace Anime4KCPP
         BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
     };
 
-    typedef unsigned char* RGBA;
-    typedef unsigned char* Line;
-
-    enum YUV
-    {
-        Y = 0, U = 1, V = 2
-    };
-
     typedef double* ChanF;
     typedef unsigned char* ChanB;
     typedef double* PixelF;
@@ -75,6 +72,11 @@ namespace Anime4KCPP
     typedef double* LineF;
     typedef unsigned char* LineB;
 }
+
+enum class Anime4KCPP::ProcessorType
+{
+    CPU, GPU, CPUCNN, GPUCNN
+};
 
 struct Anime4KCPP::Parameters
 {
@@ -114,34 +116,6 @@ struct Anime4KCPP::Parameters
         bool alpha = false
     ) noexcept;
 };
-
-enum class Anime4KCPP::ProcessorType
-{
-    CPU, GPU, CPUCNN, GPUCNN
-};
-
-inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type)
-{
-    switch (type)
-    {
-    case Anime4KCPP::ProcessorType::CPU:
-        stream << "CPU";
-        break;
-    case Anime4KCPP::ProcessorType::GPU:
-        stream << "GPU";
-        break;
-    case Anime4KCPP::ProcessorType::CPUCNN:
-        stream << "CPU CNN";
-        break;
-    case Anime4KCPP::ProcessorType::GPUCNN:
-        stream << "GPU CNN";
-        break;
-    default:
-        stream << "Error processor type";
-        break;
-    }
-    return stream;
-}
 
 //Base class for IO operation
 class Anime4KCPP::Anime4K
@@ -202,3 +176,26 @@ protected:
 
     Parameters param;
 };
+
+inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type)
+{
+    switch (type)
+    {
+    case Anime4KCPP::ProcessorType::CPU:
+        stream << "CPU";
+        break;
+    case Anime4KCPP::ProcessorType::GPU:
+        stream << "GPU";
+        break;
+    case Anime4KCPP::ProcessorType::CPUCNN:
+        stream << "CPU CNN";
+        break;
+    case Anime4KCPP::ProcessorType::GPUCNN:
+        stream << "GPU CNN";
+        break;
+    default:
+        stream << "Error processor type";
+        break;
+    }
+    return stream;
+}

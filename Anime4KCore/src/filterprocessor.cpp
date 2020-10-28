@@ -35,17 +35,17 @@ void Anime4KCPP::FilterProcessor::process()
 inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& img)
 {
     const int lineStep = W * 3;
-    changEachPixelBGR(img, [&](const int i, const int j, RGBA pixel, Line curLine) {
+    changEachPixelBGR(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
         const int jp = j < (W - 1) * 3 ? 3 : 0;
         const int jn = j > 3 ? -3 : 0;
 
-        const Line pLineData = i < H - 1 ? curLine + lineStep : curLine;
-        const Line cLineData = curLine;
-        const Line nLineData = i > 0 ? curLine - lineStep : curLine;
+        const LineB pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const LineB cLineData = curLine;
+        const LineB nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        const RGBA tc = nLineData + j;
-        const RGBA ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-        const RGBA bc = pLineData + j;
+        const PixelB tc = nLineData + j;
+        const PixelB ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const PixelB bc = pLineData + j;
 
         const uint8_t minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
         const uint8_t maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
@@ -69,7 +69,7 @@ inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& img)
 }
 
 inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::Mat& src,
-    const std::function<void(const int, const int, RGBA, Line)>&& callBack)
+    const std::function<void(const int, const int, PixelB, LineB)>&& callBack)
 {
     cv::Mat tmp;
     src.copyTo(tmp);
@@ -77,8 +77,8 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::Mat& src,
     int jMAX = W * 3;
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, H, [&](int i) {
-        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
-        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        LineB lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        LineB tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         for (int j = 0; j < jMAX; j += 3)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -86,8 +86,8 @@ inline void Anime4KCPP::FilterProcessor::changEachPixelBGR(cv::Mat& src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        Line lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
-        Line tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        LineB lineData = src.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
+        LineB tmpLineData = tmp.data + static_cast<size_t>(i) * static_cast<size_t>(W) * static_cast<size_t>(3);
         for (int j = 0; j < jMAX; j += 3)
             callBack(i, j, tmpLineData + j, lineData);
     }

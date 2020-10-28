@@ -20,7 +20,7 @@ public:
     void process();
 private:
     void CASSharpening(cv::Mat& src);
-    void changEachPixelBGR(cv::Mat& src, const std::function<void(const int, const int, RGBA, Line)>&& callBack);
+    void changEachPixelBGR(cv::Mat& src, const std::function<void(const int, const int, PixelB, LineB)>&& callBack);
 private:
     int H, W;
     cv::Mat img, tmpImg;
