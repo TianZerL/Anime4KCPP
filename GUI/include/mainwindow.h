@@ -189,8 +189,8 @@ private:
     unsigned int totalTaskCount;
     Language currLanguage;
 
-    GPUMode GPU;
-    GPUCNNMode GPUCNN;
+    GPUMode GPUState;
+    GPUCNNMode GPUCNNState;
     Anime4KCPP::Anime4KCreator anime4KCreator;
 
     std::vector<int> devices;

@@ -75,7 +75,7 @@ namespace Anime4KCPP
 
 enum class Anime4KCPP::ProcessorType
 {
-    CPU, GPU, CPUCNN, GPUCNN
+    CPU_Anime4K09, OpenCL_Anime4K09, CPU_ACNet, OpenCL_ACNet
 };
 
 struct Anime4KCPP::Parameters
@@ -181,17 +181,17 @@ inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::P
 {
     switch (type)
     {
-    case Anime4KCPP::ProcessorType::CPU:
-        stream << "CPU";
+    case Anime4KCPP::ProcessorType::CPU_Anime4K09:
+        stream << "CPU Anime4K09";
         break;
-    case Anime4KCPP::ProcessorType::GPU:
-        stream << "GPU";
+    case Anime4KCPP::ProcessorType::OpenCL_Anime4K09:
+        stream << "OpenCL Anime4K09";
         break;
-    case Anime4KCPP::ProcessorType::CPUCNN:
-        stream << "CPU CNN";
+    case Anime4KCPP::ProcessorType::CPU_ACNet:
+        stream << "CPU ACNet";
         break;
-    case Anime4KCPP::ProcessorType::GPUCNN:
-        stream << "GPU CNN";
+    case Anime4KCPP::ProcessorType::OpenCL_ACNet:
+        stream << "OpenCL ACNet";
         break;
     default:
         stream << "Error processor type";

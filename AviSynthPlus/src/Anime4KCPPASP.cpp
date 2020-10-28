@@ -139,14 +139,14 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         if (CNN)
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
         anime4K->process();
@@ -202,14 +202,14 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         if (CNN)
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(srcH, srcL / 3, srcData);
         anime4K->process();

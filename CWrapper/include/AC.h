@@ -27,10 +27,10 @@ extern "C"
 
     typedef enum ac_processType
     {
-        AC_CPU,
-        AC_GPU,
-        AC_CPUCNN,
-        AC_GPUCNN
+        AC_CPU_Anime4K09,
+        AC_OpenCL_Anime4K09,
+        AC_CPU_ACNet,
+        AC_OpenCL_ACNet
     } ac_processType;
 
     typedef enum ac_bool

@@ -259,11 +259,11 @@ int main(int argc, char* argv[])
                 {
                     std::cerr << ret() << std::endl;
                 }
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             }
             else
             {
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
             }
         }
         else
@@ -280,11 +280,11 @@ int main(int argc, char* argv[])
                 {
                     std::cerr << ret() << std::endl;
                 }
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             }
             else
             {
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
             }
         }
 

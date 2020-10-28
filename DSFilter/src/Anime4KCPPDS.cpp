@@ -363,9 +363,9 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
     Anime4KCPP::Anime4K* ac = nullptr;
     if (CNN)
-        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
     else
-        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::GPU);
+        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
 
     switch (colorFormat)
     {

@@ -75,16 +75,16 @@ extern "C"
 
         switch (type)
         {
-        case AC_CPU:
+        case AC_CPU_Anime4K09:
             return static_cast<ac_instance>(new Anime4KCPP::Anime4KCPU(getParameters(parameters)));
             break;
-        case AC_GPU:
+        case AC_OpenCL_Anime4K09:
             return static_cast<ac_instance>(new Anime4KCPP::Anime4KGPU(getParameters(parameters)));
             break;
-        case AC_CPUCNN:
+        case AC_CPU_ACNet:
             return static_cast<ac_instance>(new Anime4KCPP::Anime4KCPUCNN(getParameters(parameters)));
             break;
-        case AC_GPUCNN:
+        case AC_OpenCL_ACNet:
             return static_cast<ac_instance>(new Anime4KCPP::Anime4KGPUCNN(getParameters(parameters)));
             break;
         default:

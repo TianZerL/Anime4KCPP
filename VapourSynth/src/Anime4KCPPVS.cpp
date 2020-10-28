@@ -66,14 +66,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(h, srcSrtide, srcR, srcG, srcB);
         anime4K->process();
@@ -115,14 +115,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
 
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(h, srcSrtide, srcY, srcU, srcV, true);
         anime4K->process();
@@ -189,14 +189,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
 
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(srcH, srcW, srcRSafe, srcGSafe, srcBSafe);
         anime4K->process();
@@ -295,14 +295,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
 
         if (data->CNN)
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPUCNN);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
         else
             if (data->GPU)
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::GPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
             else
-                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU);
+                anime4K = data->anime4KCreator->create(data->parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
 
         anime4K->loadImage(srcHY, srcWY, srcYSafe, srcHU, srcWU, srcUSafe, srcHV, srcWV, srcVSafe);
         anime4K->process();

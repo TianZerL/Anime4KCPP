@@ -912,7 +912,7 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType() noexcept
 {
-    return ProcessorType::GPUCNN;
+    return ProcessorType::OpenCL_ACNet;
 }
 
 //init OpenCL arguments

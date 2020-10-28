@@ -30,16 +30,16 @@ Anime4KCPP::Anime4K* Anime4KCPP::Anime4KCreator::create(
 {
     switch (type)
     {
-    case ProcessorType::CPU:
+    case ProcessorType::CPU_Anime4K09:
         return new Anime4KCPU(parameters);
         break;
-    case ProcessorType::GPU:
+    case ProcessorType::OpenCL_Anime4K09:
         return new Anime4KGPU(parameters);
         break;
-    case ProcessorType::CPUCNN:
+    case ProcessorType::CPU_ACNet:
         return new Anime4KCPUCNN(parameters);
         break;
-    case ProcessorType::GPUCNN:
+    case ProcessorType::OpenCL_ACNet:
         return new Anime4KGPUCNN(parameters);
         break;
     default:
@@ -65,7 +65,7 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
     Anime4KCPP::Parameters parameters;
     Anime4KCPP::Anime4KCreator creator(checkGPUResult, true, pID, dID, Anime4KCPP::CNNType::ACNet);
-    Anime4KCPP::Anime4K* acCPU = creator.create(parameters, Anime4KCPP::ProcessorType::CPUCNN);
+    Anime4KCPP::Anime4K* acCPU = creator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
 
     const size_t dataSize = 1920 * 1080 * 3;
     uint8_t* testData = new uint8_t[dataSize];
@@ -87,7 +87,7 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
     if (checkGPUResult)
     {
-        Anime4KCPP::Anime4K* acGPU = creator.create(parameters, Anime4KCPP::ProcessorType::GPUCNN);
+        Anime4KCPP::Anime4K* acGPU = creator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
 
         acGPU->loadImage(1920, 1080, testData, 0ULL, true);
         s = std::chrono::steady_clock::now();

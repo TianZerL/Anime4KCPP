@@ -682,7 +682,7 @@ std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPU::getProcessorType() noexcept
 {
-    return ProcessorType::GPU;
+    return ProcessorType::OpenCL_Anime4K09;
 }
 
 //init OpenCL arguments

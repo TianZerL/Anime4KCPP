@@ -311,5 +311,5 @@ inline void Anime4KCPP::Anime4KCPU::getAverage(PixelB mc, const PixelB a, const 
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPU::getProcessorType() noexcept
 {
-    return ProcessorType::CPU;
+    return ProcessorType::CPU_Anime4K09;
 }

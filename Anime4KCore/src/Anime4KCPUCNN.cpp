@@ -186,5 +186,5 @@ void Anime4KCPP::Anime4KCPUCNN::process()
 
 Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPUCNN::getProcessorType() noexcept
 {
-    return ProcessorType::CPUCNN;
+    return ProcessorType::CPU_ACNet;
 }

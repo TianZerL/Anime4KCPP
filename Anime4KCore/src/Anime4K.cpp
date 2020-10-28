@@ -325,8 +325,8 @@ std::string Anime4KCPP::Anime4K::getInfo()
     oss << "----------------------------------------------" << std::endl;
     switch (type)
     {
-    case ProcessorType::CPU:
-    case ProcessorType::GPU:
+    case ProcessorType::CPU_Anime4K09:
+    case ProcessorType::OpenCL_Anime4K09:
         oss << "Passes: " << param.passes << std::endl
             << "pushColorCount: " << param.pushColorCount << std::endl
             << "Zoom Factor: " << param.zoomFactor << std::endl
@@ -335,8 +335,8 @@ std::string Anime4KCPP::Anime4K::getInfo()
             << "Strength Color: " << param.strengthColor << std::endl
             << "Strength Gradient: " << param.strengthGradient << std::endl;
         break;
-    case ProcessorType::CPUCNN:
-    case ProcessorType::GPUCNN:
+    case ProcessorType::CPU_ACNet:
+    case ProcessorType::OpenCL_ACNet:
         oss << "Zoom Factor: " << param.zoomFactor << std::endl
             << "HDN Mode: " << std::boolalpha << param.HDN << std::endl;
         if (param.HDN)
@@ -353,8 +353,8 @@ std::string Anime4KCPP::Anime4K::getFiltersInfo()
     std::ostringstream oss;
     switch (getProcessorType())
     {
-    case ProcessorType::CPU:
-    case ProcessorType::GPU:
+    case ProcessorType::CPU_Anime4K09:
+    case ProcessorType::OpenCL_Anime4K09:
         oss << "----------------------------------------------" << std::endl;
         oss << "Preprocessing filters list:" << std::endl;
         oss << "----------------------------------------------" << std::endl;
@@ -405,8 +405,8 @@ std::string Anime4KCPP::Anime4K::getFiltersInfo()
         }
         oss << "----------------------------------------------" << std::endl;
         break;
-    case ProcessorType::CPUCNN:
-    case ProcessorType::GPUCNN:
+    case ProcessorType::CPU_ACNet:
+    case ProcessorType::OpenCL_ACNet:
         oss
             << "----------------------------------------------" << std::endl
             << "Filters does not support CNN mode" << std::endl
