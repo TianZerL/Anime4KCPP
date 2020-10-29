@@ -1,6 +1,10 @@
-#include "CNNProcessor.h"
+#include "CPUCNNProcessor.hpp"
 
-void Anime4KCPP::CNNProcessor::conv1To8(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
+#define RULE(x) std::max(x, 0.0)
+#define NORM(X) (double(X) / 255.0)
+#define UNNORM(n) ((n) >= 255.0? uint8_t(255) : ((n) <= 0.0 ? uint8_t(0) : uint8_t(n)))
+
+void Anime4KCPP::CPU::CNNProcessor::conv1To8(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
@@ -71,7 +75,7 @@ void Anime4KCPP::CNNProcessor::conv1To8(const cv::Mat& img, const double* kernel
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CNNProcessor::conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int lineStep = tmpMat.cols * channels;
@@ -425,7 +429,7 @@ void Anime4KCPP::CNNProcessor::conv8To8(const double* kernels, const double* bia
         }, tmpMat);
 }
 
-void Anime4KCPP::CNNProcessor::convTranspose8To1(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
 {
     changEachPixelNTo1(img, [&](const int i, const int j, ChanB outMat, LineF inMat) {
         int index = ((i & 1) << 1) + (j & 1);
@@ -449,7 +453,7 @@ void Anime4KCPP::CNNProcessor::convTranspose8To1(cv::Mat& img, const double* ker
         }, tmpMat);
 }
 
-void Anime4KCPP::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
+void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanF, LineB)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
@@ -481,7 +485,7 @@ void Anime4KCPP::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 #endif
 }
 
-void Anime4KCPP::CNNProcessor::changEachPixelNToN(
+void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
     const std::function<void(int, int, ChanF, LineF)>&& callBack,
     cv::Mat& tmpMat)
 {
@@ -515,7 +519,7 @@ void Anime4KCPP::CNNProcessor::changEachPixelNToN(
     tmpMat = tmp;
 }
 
-void Anime4KCPP::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
+void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const std::function<void(int, int, ChanB, LineF)>&& callBack,
     const cv::Mat& tmpMat)
 {

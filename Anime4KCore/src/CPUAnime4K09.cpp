@@ -1,11 +1,15 @@
 #define DLL
 
-#include "Anime4KCPU.h"
+#include "CPUAnime4K09.hpp"
 
-Anime4KCPP::Anime4KCPU::Anime4KCPU(const Parameters& parameters) :
-    Anime4K(parameters) {}
+#define MAX3(a, b, c) std::max({a, b, c})
+#define MIN3(a, b, c) std::min({a, b, c})
+#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
 
-void Anime4KCPP::Anime4KCPU::process()
+Anime4KCPP::CPU::Anime4K09::Anime4K09(const Parameters& parameters) :
+    AC(parameters) {}
+
+void Anime4KCPP::CPU::Anime4K09::process()
 {
     if (!param.videoMode)
     {
@@ -48,7 +52,7 @@ void Anime4KCPP::Anime4KCPU::process()
         videoIO->init(
             [this]()
             {
-                Frame frame = videoIO->read();
+                Utils::Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 int tmpPcc = param.pushColorCount;
@@ -78,14 +82,57 @@ void Anime4KCPP::Anime4KCPU::process()
     }
 }
 
-inline void Anime4KCPP::Anime4KCPU::getGray(cv::Mat& img)
+std::string Anime4KCPP::CPU::Anime4K09::getInfo()
+{
+    std::ostringstream oss;
+    oss << AC::getInfo()
+        << "----------------------------------------------" << std::endl
+        << "Passes: " << param.passes << std::endl
+        << "pushColorCount: " << param.pushColorCount << std::endl
+        << "Zoom Factor: " << param.zoomFactor << std::endl
+        << "Video Mode: " << std::boolalpha << param.videoMode << std::endl
+        << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
+        << "Strength Color: " << param.strengthColor << std::endl
+        << "Strength Gradient: " << param.strengthGradient << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
+}
+
+std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
+{
+    std::ostringstream oss;
+    oss << AC::getFiltersInfo()
+        << "----------------------------------------------" << std::endl
+        << "Preprocessing filters list:" << std::endl
+        << "----------------------------------------------" << std::endl;
+    std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
+    if(preFiltersString.empty())
+        oss << "Preprocessing disabled" << std::endl;
+    else
+        for (auto& filters : preFiltersString)
+            oss << filters << std::endl;    
+    
+    oss << "----------------------------------------------" << std::endl
+        << "Postprocessing filters list:" << std::endl
+        << "----------------------------------------------" << std::endl;
+    std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
+    if(postFiltersString.empty())
+        oss << "Postprocessing disabled" << std::endl;
+    else
+        for (auto& filters : postFiltersString)
+            oss << filters << std::endl;
+
+    return oss.str();
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::getGray(cv::Mat& img)
 {
     changEachPixelBGRA(img, [](const int i, const int j, PixelB pixel, LineB curLine) {
         pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::pushColor(cv::Mat& img)
+inline void Anime4KCPP::CPU::Anime4K09::pushColor(cv::Mat& img)
 {
     const int lineStep = W * 4;
     changEachPixelBGRA(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
@@ -155,7 +202,7 @@ inline void Anime4KCPP::Anime4KCPU::pushColor(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::getGradient(cv::Mat& img)
+inline void Anime4KCPP::CPU::Anime4K09::getGradient(cv::Mat& img)
 {
     if (!param.fastMode)
     {
@@ -198,7 +245,7 @@ inline void Anime4KCPP::Anime4KCPU::getGradient(cv::Mat& img)
     }
 }
 
-inline void Anime4KCPP::Anime4KCPU::pushGradient(cv::Mat& img)
+inline void Anime4KCPP::CPU::Anime4K09::pushGradient(cv::Mat& img)
 {
     const int lineStep = W * 4;
     changEachPixelBGRA(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
@@ -263,7 +310,7 @@ inline void Anime4KCPP::Anime4KCPU::pushGradient(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::Mat& src,
+inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
     const std::function<void(const int, const int, PixelB, LineB)>&& callBack)
 {
     cv::Mat tmp;
@@ -293,14 +340,14 @@ inline void Anime4KCPP::Anime4KCPU::changEachPixelBGRA(cv::Mat& src,
     src = tmp;
 }
 
-inline void Anime4KCPP::Anime4KCPU::getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
+inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
         mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
 }
 
-inline void Anime4KCPP::Anime4KCPU::getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
+inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
@@ -309,7 +356,7 @@ inline void Anime4KCPP::Anime4KCPU::getAverage(PixelB mc, const PixelB a, const 
     mc[A] = 255;
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPU::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::CPU::Anime4K09::getProcessorType() noexcept
 {
-    return ProcessorType::CPU_Anime4K09;
+    return Processor::Type::CPU_Anime4K09;
 }

@@ -1,28 +1,17 @@
 #pragma once
-#include "Anime4K.h"
 
-#define RULE(x) std::max(x, 0.0)
-#define NORM(X) (double(X) / 255.0)
-#define UNNORM(n) ((n) >= 255.0? uint8_t(255) : ((n) <= 0.0 ? uint8_t(0) : uint8_t(n)))
+#include "AC.hpp"
 
 namespace Anime4KCPP
 {
-    class CNNProcessor;
-
-    enum ACNetLayer
+    namespace CPU
     {
-        L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7
-    };
-
+        class CNNProcessor;
+    }
 }
 
-class Anime4KCPP::CNNProcessor
+class Anime4KCPP::CPU::CNNProcessor
 {
-public:
-    CNNProcessor() = default;;
-    virtual ~CNNProcessor() = default;
-
-    virtual void process(const cv::Mat& src, cv::Mat& dst) = 0;
 protected:
     void conv1To8(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat);
     void conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat);

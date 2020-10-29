@@ -1,71 +1,91 @@
 #define DLL
 
-#include "Anime4KCPP.h"
+#include "Anime4KCPP.hpp"
 
-Anime4KCPP::Anime4KCreator::Anime4KCreator(bool initGPU, unsigned int platformID, unsigned int deviceID)
+Anime4KCPP::ACCreator::ACCreator(std::initializer_list<std::shared_ptr<Processor::Manager>> managerList, bool initNow)
+    : managers(managerList)
 {
-    if (initGPU && !Anime4KGPU::isInitializedGPU())
-        Anime4KGPU::initGPU(platformID, deviceID);
+    if (initNow)
+        init();
 }
 
-Anime4KCPP::Anime4KCreator::Anime4KCreator(bool initGPU, bool initCNN, unsigned int platformID, unsigned int deviceID, const CNNType type)
+Anime4KCPP::ACCreator::ACCreator(std::shared_ptr<Processor::Manager> manager, bool initNow)
 {
-    if (initGPU && initCNN && !Anime4KGPUCNN::isInitializedGPU())
-        Anime4KGPUCNN::initGPU(platformID, deviceID, type);
-    else if (initGPU && !Anime4KGPU::isInitializedGPU())
-        Anime4KGPU::initGPU(platformID, deviceID);
+    managers.emplace_back(manager);
+    if (initNow)
+        init();
 }
 
-Anime4KCPP::Anime4KCreator::~Anime4KCreator()
+Anime4KCPP::ACCreator::ACCreator(bool initGPU, bool initCNN, unsigned int platformID, unsigned int deviceID, const CNNType type)
 {
-    if (Anime4KGPU::isInitializedGPU())
-        Anime4KGPU::releaseGPU();
-    if (Anime4KGPUCNN::isInitializedGPU())
-        Anime4KGPUCNN::releaseGPU();
+    if (initGPU)
+    {
+        if (initCNN)
+            managers.emplace_back(std::make_shared<OpenCL::OpenCLManager<OpenCL::ACNet>>(platformID, deviceID, type));
+        else
+            managers.emplace_back(std::make_shared<OpenCL::OpenCLManager<OpenCL::Anime4K09>>(platformID, deviceID));
+        init();
+    }
 }
 
-Anime4KCPP::Anime4K* Anime4KCPP::Anime4KCreator::create(
-    const Parameters& parameters, const ProcessorType type
+Anime4KCPP::ACCreator::~ACCreator()
+{
+    for (auto& manager : managers)
+        manager->release();
+}
+
+#define AC_CASE_SP_ITEM
+#include"ACRegister.hpp"
+#undef AC_CASE_SP_ITEM
+std::shared_ptr<Anime4KCPP::AC> Anime4KCPP::ACCreator::createSP(
+    const Parameters& parameters, const Processor::Type type
 )
 {
     switch (type)
     {
-    case ProcessorType::CPU_Anime4K09:
-        return new Anime4KCPU(parameters);
-        break;
-    case ProcessorType::OpenCL_Anime4K09:
-        return new Anime4KGPU(parameters);
-        break;
-    case ProcessorType::CPU_ACNet:
-        return new Anime4KCPUCNN(parameters);
-        break;
-    case ProcessorType::OpenCL_ACNet:
-        return new Anime4KGPUCNN(parameters);
-        break;
-    default:
-        return nullptr;
-        break;
+        PROCESSOR_CASE_SP
+    }
+    return nullptr;
+}
+
+#define AC_CASE_ITEM
+#include"ACRegister.hpp"
+#undef AC_CASE_ITEM
+Anime4KCPP::AC* Anime4KCPP::ACCreator::create(
+    const Parameters& parameters, const Processor::Type type
+)
+{
+    switch (type)
+    {
+        PROCESSOR_CASE
+    }
+    return nullptr;
+}
+
+void Anime4KCPP::ACCreator::release(AC*& ac) noexcept
+{
+    if (ac != nullptr)
+    {
+        delete ac;
+        ac = nullptr;
     }
 }
 
-void Anime4KCPP::Anime4KCreator::release(Anime4K*& anime4K) noexcept
+void Anime4KCPP::ACCreator::init()
 {
-    if (anime4K != nullptr)
-    {
-        delete anime4K;
-        anime4K = nullptr;
-    }
+    for (auto& manager : managers)
+        manager->init();
 }
 
 std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const unsigned int dID)
 {
     std::pair<double, double> ret;
 
-    Anime4KCPP::GPUInfo checkGPUResult = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+    OpenCL::GPUInfo checkGPUResult = OpenCL::checkGPUSupport(pID, dID);
 
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::Anime4KCreator creator(checkGPUResult, true, pID, dID, Anime4KCPP::CNNType::ACNet);
-    Anime4KCPP::Anime4K* acCPU = creator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
+    Anime4KCPP::ACCreator creator(checkGPUResult, true, pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
+    Anime4KCPP::AC* acCPU = creator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
 
     const size_t dataSize = 1920 * 1080 * 3;
     uint8_t* testData = new uint8_t[dataSize];
@@ -87,7 +107,7 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
 
     if (checkGPUResult)
     {
-        Anime4KCPP::Anime4K* acGPU = creator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+        Anime4KCPP::AC* acGPU = creator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
 
         acGPU->loadImage(1920, 1080, testData, 0ULL, true);
         s = std::chrono::steady_clock::now();

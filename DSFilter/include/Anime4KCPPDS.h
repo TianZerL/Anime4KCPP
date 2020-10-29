@@ -5,7 +5,7 @@
 
 #include"ACuids.h"
 #include "ACProp.h"
-#include"Anime4KCPP.h"
+#include"Anime4KCPP.hpp"
 
 enum class ColorFormat
 {
@@ -40,7 +40,7 @@ private:
     BOOL IsYV12(const CMediaType* pMediaType) const;
     BOOL IsNV12(const CMediaType* pMediaType) const;
 private:
-    Anime4KCPP::Anime4KCreator acCreator;
+    std::shared_ptr<Anime4KCPP::ACCreator> acCreator;
     Anime4KCPP::Parameters parameters;
     unsigned int pID, dID;
     double zf;

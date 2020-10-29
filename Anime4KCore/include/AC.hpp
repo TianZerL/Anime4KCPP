@@ -1,7 +1,6 @@
 #pragma once
 
 #include<iostream>
-#include<sstream>
 #include<functional>
 #include<atomic>
 #include<future>
@@ -10,8 +9,9 @@
 #include<opencv2/videoio.hpp>
 #include<opencv2/core/hal/interface.h>
 
-#include"ACException.h"
-#include"VideoIO.h"
+#include"ACException.hpp"
+#include"VideoIO.hpp"
+#include"ACProcessor.hpp"
 
 #if defined(_MSC_VER) && !defined(USE_TBB)
 #include<ppl.h>
@@ -41,12 +41,8 @@ namespace Parallel = tbb;
 
 namespace Anime4KCPP
 {
-    enum class ProcessorType;
-
     struct DLL Parameters;
-    class DLL Anime4K;
-
-    std::ostream& operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type);
+    class DLL AC;
 
     enum BGRA
     {
@@ -72,11 +68,6 @@ namespace Anime4KCPP
     typedef double* LineF;
     typedef unsigned char* LineB;
 }
-
-enum class Anime4KCPP::ProcessorType
-{
-    CPU_Anime4K09, OpenCL_Anime4K09, CPU_ACNet, OpenCL_ACNet
-};
 
 struct Anime4KCPP::Parameters
 {
@@ -118,11 +109,11 @@ struct Anime4KCPP::Parameters
 };
 
 //Base class for IO operation
-class Anime4KCPP::Anime4K
+class Anime4KCPP::AC
 {
 public:
-    Anime4K(const Parameters& parameters);
-    virtual ~Anime4K();
+    AC(const Parameters& parameters);
+    virtual ~AC();
 
     void setArguments(const Parameters& parameters);
     void setVideoMode(const bool value);
@@ -142,8 +133,8 @@ public:
     void saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b);
     void saveVideo();
 
-    std::string getInfo();
-    std::string getFiltersInfo();
+    virtual std::string getInfo();
+    virtual std::string getFiltersInfo();
     size_t getResultDataLength() noexcept;
     size_t getResultDataPerChannelLength() noexcept;
     std::array<int, 3> getResultShape();
@@ -157,7 +148,7 @@ public:
     void stopVideoProcess() noexcept;
     void pauseVideoProcess();
     void continueVideoProcess() noexcept;
-    virtual ProcessorType getProcessorType() noexcept = 0;
+    virtual Processor::Type getProcessorType() noexcept = 0;
 private:
     void initVideoIO();
     void releaseVideoIO() noexcept;
@@ -172,30 +163,7 @@ protected:
     bool inputYUV = false;
     bool inputRGB32 = false;
     bool checkAlphaChannel = false;
-    VideoIO* videoIO = nullptr;
+    Utils::VideoIO* videoIO = nullptr;
 
     Parameters param;
 };
-
-inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::ProcessorType type)
-{
-    switch (type)
-    {
-    case Anime4KCPP::ProcessorType::CPU_Anime4K09:
-        stream << "CPU Anime4K09";
-        break;
-    case Anime4KCPP::ProcessorType::OpenCL_Anime4K09:
-        stream << "OpenCL Anime4K09";
-        break;
-    case Anime4KCPP::ProcessorType::CPU_ACNet:
-        stream << "CPU ACNet";
-        break;
-    case Anime4KCPP::ProcessorType::OpenCL_ACNet:
-        stream << "OpenCL ACNet";
-        break;
-    default:
-        stream << "Error processor type";
-        break;
-    }
-    return stream;
-}

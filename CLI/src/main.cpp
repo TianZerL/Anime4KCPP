@@ -1,7 +1,6 @@
-#include "Anime4KCPP.h"
-#include <cmdline.h>
-
 #include <iostream>
+
+#include <cmdline.h>
 
 #ifdef USE_BOOST_FILESYSTEM
 #include<boost/filesystem.hpp>
@@ -10,6 +9,8 @@ namespace filesystem = boost::filesystem;
 #include <filesystem>
 namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
+
+#include "Anime4KCPP.hpp"
 
 #ifndef COMPILER
 #define COMPILER "Unknown"
@@ -166,7 +167,7 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        Anime4KCPP::GPUList ret = Anime4KCPP::Anime4KGPU::listGPUs();
+        Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
         if (ret.platforms == 0)
             std::cerr << "Error: No GPU found" << std::endl;
         std::cerr << ret() << std::endl;
@@ -219,10 +220,10 @@ int main(int argc, char* argv[])
         }
     }
     else
-        type = Anime4KCPP::CNNType::ACNet;
+        type = Anime4KCPP::CNNType::ACNetHDNL0;
 
-    std::shared_ptr<Anime4KCPP::Anime4KCreator> creator;
-    Anime4KCPP::Anime4K* anime4k = nullptr;
+    std::shared_ptr<Anime4KCPP::ACCreator> creator;
+    std::shared_ptr<Anime4KCPP::AC> ac;
     Anime4KCPP::Parameters parameters(
         passes,
         pushColorCount,
@@ -243,13 +244,13 @@ int main(int argc, char* argv[])
 
     try
     {
-        creator = std::make_shared<Anime4KCPP::Anime4KCreator>(GPU, CNN, pID, dID, type);
+        creator = std::make_shared<Anime4KCPP::ACCreator>(GPU, CNN, pID, dID, type);
 
         if (CNN)
         {
             if (GPU)
             {
-                Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
                 if (!ret)
                 {
                     std::cerr << ret() << std::endl;
@@ -259,18 +260,18 @@ int main(int argc, char* argv[])
                 {
                     std::cerr << ret() << std::endl;
                 }
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             }
             else
             {
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
+                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             }
         }
         else
         {
             if (GPU)
             {
-                Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
                 if (!ret)
                 {
                     std::cerr << ret() << std::endl;
@@ -280,11 +281,11 @@ int main(int argc, char* argv[])
                 {
                     std::cerr << ret() << std::endl;
                 }
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
+                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             }
             else
             {
-                anime4k = creator->create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
+                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
             }
         }
 
@@ -299,8 +300,8 @@ int main(int argc, char* argv[])
                 std::vector<std::pair<std::string, std::string>> filePaths;
 
                 std::cout
-                    << anime4k->getInfo() << std::endl
-                    << anime4k->getFiltersInfo() << std::endl
+                    << ac->getInfo() << std::endl
+                    << ac->getFiltersInfo() << std::endl
                     << "Scanning..." << std::endl;
 
                 for (auto& file : currDir)
@@ -317,20 +318,20 @@ int main(int argc, char* argv[])
                     << "Threads: " << threads << std::endl
                     << "Start processing..." << std::endl;
 
-                ThreadPool threadPool(threads);
+                Anime4KCPP::Utils::ThreadPool threadPool(threads);
                 std::atomic_uint64_t progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
                 for (int i = 0; i < filePaths.size(); i++)
                 {
-                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, anime4k]()
+                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, ac]()
                         {
-                            Anime4KCPP::Anime4K* ac = creator->create(parameters, anime4k->getProcessorType());
-                            ac->loadImage(filePaths[i].first);
-                            ac->process();
-                            ac->saveImage(filePaths[i].second);
+                            Anime4KCPP::AC* currac = creator->create(parameters, ac->getProcessorType());
+                            currac->loadImage(filePaths[i].first);
+                            currac->process();
+                            currac->saveImage(filePaths[i].second);
                             progress++;
-                            creator->release(ac);
+                            creator->release(currac);
                         });
                 }
 
@@ -357,21 +358,21 @@ int main(int argc, char* argv[])
                 std::string currInputPath = inputPath.string();
                 std::string currOnputPath = outputPath.string();
 
-                anime4k->loadImage(currInputPath);
+                ac->loadImage(currInputPath);
 
-                std::cout << anime4k->getInfo() << std::endl;
-                std::cout << anime4k->getFiltersInfo() << std::endl;
+                std::cout << ac->getInfo() << std::endl;
+                std::cout << ac->getFiltersInfo() << std::endl;
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                anime4k->process();
+                ac->process();
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                 std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
 
                 if (preview)
-                    anime4k->showImage();
+                    ac->showImage();
 
-                anime4k->saveImage(currOnputPath);
+                ac->saveImage(currOnputPath);
             }
         }
         else // Video
@@ -413,22 +414,22 @@ int main(int argc, char* argv[])
                     std::string currInputPath = file.path().string();
                     std::string currOutputPath = (outputPath / (file.path().filename().replace_extension(gif ? ".gif" : ".mkv"))).string();
 
-                    anime4k->loadVideo(currInputPath);
-                    anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                    ac->loadVideo(currInputPath);
+                    ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                    std::cout << anime4k->getInfo() << std::endl;
-                    std::cout << anime4k->getFiltersInfo() << std::endl;
+                    std::cout << ac->getInfo() << std::endl;
+                    std::cout << ac->getFiltersInfo() << std::endl;
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
                     if (disableProgress)
-                        anime4k->process();
+                        ac->process();
                     else
-                        anime4k->processWithPrintProgress();
+                        ac->processWithPrintProgress();
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                     std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
-                    anime4k->saveVideo();
+                    ac->saveVideo();
 
                     if (ffmpeg)
                     {
@@ -450,22 +451,22 @@ int main(int argc, char* argv[])
                 std::string currInputPath = inputPath.string();
                 std::string currOutputPath = outputPath.string();
 
-                anime4k->loadVideo(currInputPath);
-                anime4k->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                ac->loadVideo(currInputPath);
+                ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                std::cout << anime4k->getInfo() << std::endl;
-                std::cout << anime4k->getFiltersInfo() << std::endl;
+                std::cout << ac->getInfo() << std::endl;
+                std::cout << ac->getFiltersInfo() << std::endl;
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
                 if (disableProgress)
-                    anime4k->process();
+                    ac->process();
                 else
-                    anime4k->processWithPrintProgress();
+                    ac->processWithPrintProgress();
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                 std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
-                anime4k->saveVideo();
+                ac->saveVideo();
 
                 if (ffmpeg)
                 {
@@ -490,8 +491,6 @@ int main(int argc, char* argv[])
             << err
             << std::endl;
     }
-
-    creator->release(anime4k);
 
     return 0;
 }

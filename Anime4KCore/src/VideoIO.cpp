@@ -1,19 +1,19 @@
-#include "VideoIO.h"
+#include "VideoIO.hpp"
 
-Anime4KCPP::VideoIO::~VideoIO()
+Anime4KCPP::Utils::VideoIO::~VideoIO()
 {
     writer.release();
     reader.release();
 }
 
-Anime4KCPP::VideoIO& Anime4KCPP::VideoIO::init(std::function<void()>&& p, size_t t) noexcept
+Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void()>&& p, size_t t) noexcept
 {
     processor = std::move(p);
     threads = t;
     return *this;
 }
 
-void Anime4KCPP::VideoIO::process()
+void Anime4KCPP::Utils::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
     stop = static_cast<size_t>(reader.get(cv::CAP_PROP_FRAME_COUNT));
@@ -56,14 +56,14 @@ void Anime4KCPP::VideoIO::process()
     }
 }
 
-bool Anime4KCPP::VideoIO::openReader(const std::string& srcFile)
+bool Anime4KCPP::Utils::VideoIO::openReader(const std::string& srcFile)
 {
     if (!reader.open(srcFile, cv::CAP_FFMPEG))
         return reader.open(srcFile);
     return reader.isOpened();
 }
 
-bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size, const double forceFps)
+bool Anime4KCPP::Utils::VideoIO::openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size, const double forceFps)
 {
     double fps;
 
@@ -159,18 +159,18 @@ bool Anime4KCPP::VideoIO::openWriter(const std::string& dstFile, const CODEC cod
     return true;
 }
 
-double Anime4KCPP::VideoIO::get(int p)
+double Anime4KCPP::Utils::VideoIO::get(int p)
 {
     return reader.get(p);
 }
 
-void Anime4KCPP::VideoIO::release()
+void Anime4KCPP::Utils::VideoIO::release()
 {
     writer.release();
     reader.release();
 }
 
-Anime4KCPP::Frame Anime4KCPP::VideoIO::read()
+Anime4KCPP::Utils::Frame Anime4KCPP::Utils::VideoIO::read()
 {
     Frame ret;
     {
@@ -182,7 +182,7 @@ Anime4KCPP::Frame Anime4KCPP::VideoIO::read()
     return ret;
 }
 
-void Anime4KCPP::VideoIO::write(const Frame& frame)
+void Anime4KCPP::Utils::VideoIO::write(const Frame& frame)
 {
     {
         std::lock_guard<std::mutex> lock(mtxWrite);
@@ -191,17 +191,17 @@ void Anime4KCPP::VideoIO::write(const Frame& frame)
     cndWrite.notify_all();
 }
 
-double Anime4KCPP::VideoIO::getProgress() noexcept
+double Anime4KCPP::Utils::VideoIO::getProgress() noexcept
 {
     return progress;
 }
 
-void Anime4KCPP::VideoIO::stopProcess() noexcept
+void Anime4KCPP::Utils::VideoIO::stopProcess() noexcept
 {
     stop = 1;
 }
 
-void Anime4KCPP::VideoIO::pauseProcess()
+void Anime4KCPP::Utils::VideoIO::pauseProcess()
 {
     pause = true;
     {
@@ -211,17 +211,17 @@ void Anime4KCPP::VideoIO::pauseProcess()
     }
 }
 
-void Anime4KCPP::VideoIO::continueProcess() noexcept
+void Anime4KCPP::Utils::VideoIO::continueProcess() noexcept
 {
     pause = false;
 }
 
-bool Anime4KCPP::VideoIO::isPaused() noexcept
+bool Anime4KCPP::Utils::VideoIO::isPaused() noexcept
 {
     return pause;
 }
 
-inline void Anime4KCPP::VideoIO::setProgress(double p) noexcept
+inline void Anime4KCPP::Utils::VideoIO::setProgress(double p) noexcept
 {
     progress = p;
 }

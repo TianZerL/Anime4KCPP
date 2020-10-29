@@ -1,5 +1,6 @@
 #include <avisynth.h>
-#include "Anime4KCPP.h"
+
+#include "Anime4KCPP.hpp"
 
 #ifdef _MSC_VER
 #define AC_STDCALL __stdcall
@@ -41,7 +42,7 @@ public:
     PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 private:
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::Anime4KCreator anime4KCreator;
+    Anime4KCPP::ACCreator anime4KCreator;
     bool GPUMode;
     bool CNN;
 };
@@ -135,22 +136,22 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             }
         }
 
-        Anime4KCPP::Anime4K* anime4K;
+        Anime4KCPP::AC* ac;
 
         if (CNN)
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 
-        anime4K->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
-        anime4K->process();
-        anime4K->saveImage(dstDataY, dstDataU, dstDataV);
+        ac->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
+        ac->process();
+        ac->saveImage(dstDataY, dstDataU, dstDataV);
 
         for (size_t y = 0; y < dstHY; y++)
         {
@@ -168,7 +169,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             }
         }
 
-        anime4KCreator.release(anime4K);
+        anime4KCreator.release(ac);
         delete[] srcDataY;
         delete[] srcDataU;
         delete[] srcDataV;
@@ -198,22 +199,22 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             srcp += srcPitch;
         }
 
-        Anime4KCPP::Anime4K* anime4K;
+        Anime4KCPP::AC* ac;
 
         if (CNN)
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
             if (GPUMode)
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             else
-                anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
+                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 
-        anime4K->loadImage(srcH, srcL / 3, srcData);
-        anime4K->process();
-        anime4K->saveImage(dstData);
+        ac->loadImage(srcH, srcL / 3, srcData);
+        ac->process();
+        ac->saveImage(dstData);
 
         for (size_t y = 0; y < dstH; y++)
         {
@@ -221,7 +222,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             dstp += dstPitch;
         }
 
-        anime4KCreator.release(anime4K);
+        anime4KCreator.release(ac);
         delete[] srcData;
 
         return dst;
@@ -282,8 +283,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
     if (GPUMode)
     {
-        Anime4KCPP::GPUInfo ret =
-            Anime4KCPP::Anime4KGPU::checkGPUSupport(pID, dID);
+        Anime4KCPP::OpenCL::GPUInfo ret =
+            Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
         if (!ret)
         {
             std::ostringstream err;
@@ -310,7 +311,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
 AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
-    env->ThrowError(Anime4KCPP::Anime4KGPU::listGPUs()().c_str());
+    env->ThrowError(Anime4KCPP::OpenCL::listGPUs()().c_str());
     return AVSValue();
 }
 

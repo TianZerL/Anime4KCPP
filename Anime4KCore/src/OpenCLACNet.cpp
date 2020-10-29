@@ -1,6 +1,6 @@
 #define DLL
 
-#include "Anime4KGPUCNN.h"
+#include "OpenCLACNet.hpp"
 
 #define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\
@@ -22,10 +22,10 @@ throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
 
-Anime4KCPP::Anime4KGPUCNN::Anime4KGPUCNN(const Parameters& parameters) :
-    Anime4K(parameters) {}
+Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
+    AC(parameters) {}
 
-void Anime4KCPP::Anime4KGPUCNN::process()
+void Anime4KCPP::OpenCL::ACNet::process()
 {
     std::function<void(cv::InputArray, cv::OutputArray)> runKernel;
     if (param.HDN)
@@ -116,7 +116,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             videoIO->init(
                 [this, &runKernel]()
                 {
-                    Frame frame = videoIO->read();
+                    Utils::Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -210,7 +210,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
             videoIO->init(
                 [this, tmpZfUp, tmpZf, &runKernel]()
                 {
-                    Frame frame = videoIO->read();
+                    Utils::Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -247,7 +247,7 @@ void Anime4KCPP::Anime4KGPUCNN::process()
     }
 }
 
-void Anime4KCPP::Anime4KGPUCNN::initGPU(unsigned int platformID, unsigned int deviceID, const CNNType type)
+void Anime4KCPP::OpenCL::ACNet::initGPU(unsigned int platformID, unsigned int deviceID, const CNNType type)
 {
     if (!isInitialized)
     {
@@ -258,7 +258,7 @@ void Anime4KCPP::Anime4KGPUCNN::initGPU(unsigned int platformID, unsigned int de
     }
 }
 
-void Anime4KCPP::Anime4KGPUCNN::releaseGPU() noexcept
+void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
 {
     if (isInitialized)
     {
@@ -272,12 +272,34 @@ void Anime4KCPP::Anime4KGPUCNN::releaseGPU() noexcept
     }
 }
 
-bool Anime4KCPP::Anime4KGPUCNN::isInitializedGPU()
+bool Anime4KCPP::OpenCL::ACNet::isInitializedGPU()
 {
     return isInitialized;
 }
 
-void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::ACNetType type)
+std::string Anime4KCPP::OpenCL::ACNet::getInfo()
+{
+    std::ostringstream oss;
+    oss << AC::getInfo()
+        << "----------------------------------------------" << std::endl
+        << "Zoom Factor: " << param.zoomFactor << std::endl
+        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
+        << "HDN level: " << param.HDNLevel << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
+}
+
+std::string Anime4KCPP::OpenCL::ACNet::getFiltersInfo()
+{
+    std::ostringstream oss;
+    oss << AC::getFiltersInfo()
+        << "----------------------------------------------" << std::endl
+        << "Filter not supported" << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
+}
+
+void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::OpenCL::ACNetType type)
 {
     cl_int err;
 
@@ -305,8 +327,6 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
         (((size_t(dstImage.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
         (((size_t(dstImage.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
-
-    constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
     //init frame
     format.image_channel_data_type = CL_UNORM_INT8;
@@ -561,7 +581,7 @@ void Anime4KCPP::Anime4KGPUCNN::runKernelACNet(cv::InputArray orgImg, cv::Output
 
 }
 
-void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
+void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -666,7 +686,7 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     cl_kernel tmpKernel = nullptr;
     switch (type)
     {
-    case CNNType::ACNet:
+    case CNNType::ACNetHDNL0:
 #ifndef BUILT_IN_KERNEL
         //read kernel files
         ACNetKernelSourceString[HDNL0] = readKernel(kernelFiles[HDNL0]);
@@ -883,7 +903,7 @@ void Anime4KCPP::Anime4KGPUCNN::initOpenCL(const CNNType type)
     }
 }
 
-void Anime4KCPP::Anime4KGPUCNN::releaseOpenCL() noexcept
+void Anime4KCPP::OpenCL::ACNet::releaseOpenCL() noexcept
 {
     for (int i = HDNL0; i < TotalTypeCount; i++)
     {
@@ -898,7 +918,7 @@ void Anime4KCPP::Anime4KGPUCNN::releaseOpenCL() noexcept
         clReleaseDevice(device);
 }
 
-std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
+std::string Anime4KCPP::OpenCL::ACNet::readKernel(const std::string& fileName)
 {
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
@@ -910,20 +930,20 @@ std::string Anime4KCPP::Anime4KGPUCNN::readKernel(const std::string& fileName)
     return source.str();
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPUCNN::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() noexcept
 {
-    return ProcessorType::OpenCL_ACNet;
+    return Processor::Type::OpenCL_ACNet;
 }
 
 //init OpenCL arguments
-bool Anime4KCPP::Anime4KGPUCNN::isInitialized = false;
-cl_context Anime4KCPP::Anime4KGPUCNN::context = nullptr;
-cl_command_queue Anime4KCPP::Anime4KGPUCNN::commandQueue = nullptr;
-cl_program Anime4KCPP::Anime4KGPUCNN::program[TotalTypeCount] = { nullptr };
-cl_device_id Anime4KCPP::Anime4KGPUCNN::device = nullptr;
-unsigned int Anime4KCPP::Anime4KGPUCNN::pID = 0U;
-unsigned int Anime4KCPP::Anime4KGPUCNN::dID = 0U;
-size_t Anime4KCPP::Anime4KGPUCNN::workGroupSizeLog = 5;
+bool Anime4KCPP::OpenCL::ACNet::isInitialized = false;
+cl_context Anime4KCPP::OpenCL::ACNet::context = nullptr;
+cl_command_queue Anime4KCPP::OpenCL::ACNet::commandQueue = nullptr;
+cl_program Anime4KCPP::OpenCL::ACNet::program[TotalTypeCount] = { nullptr };
+cl_device_id Anime4KCPP::OpenCL::ACNet::device = nullptr;
+unsigned int Anime4KCPP::OpenCL::ACNet::pID = 0U;
+unsigned int Anime4KCPP::OpenCL::ACNet::dID = 0U;
+size_t Anime4KCPP::OpenCL::ACNet::workGroupSizeLog = 5;
 
 #ifdef BUILT_IN_KERNEL
 constexpr const char* kernelFunction =
@@ -1318,7 +1338,7 @@ __kernel void convTranspose8To1(
     write_imagef(dstImg, coord, (float4)(c, 0.0f, 0.0f, 1.0f));
 })";
 
-const std::string Anime4KCPP::Anime4KGPUCNN::ACNetKernelSourceString[TotalTypeCount] =
+const std::string Anime4KCPP::OpenCL::ACNet::ACNetKernelSourceString[TotalTypeCount] =
 {
 std::string(
 R"(#define RELU(x) fmax(x, 0.0f)

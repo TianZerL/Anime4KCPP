@@ -5,7 +5,7 @@
 #include<queue>
 #include<unordered_map>
 
-#include"threadpool.h"
+#include"ThreadPool.hpp"
 
 #if (CV_VERSION_MAJOR < 3)
 #error OpenCV3 is needed at least!
@@ -16,9 +16,13 @@
 
 namespace Anime4KCPP
 {
-    class VideoIO;
+    namespace Utils
+    {
+        class VideoIO;
+        typedef std::pair<cv::Mat, size_t> Frame;
+    }
+
     enum class CODEC;
-    typedef std::pair<cv::Mat, size_t> Frame;
 }
 
 enum class Anime4KCPP::CODEC 
@@ -26,7 +30,7 @@ enum class Anime4KCPP::CODEC
     OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
 };
 
-class Anime4KCPP::VideoIO
+class Anime4KCPP::Utils::VideoIO
 {
 public:
     VideoIO() = default;

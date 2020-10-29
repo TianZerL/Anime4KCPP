@@ -4,7 +4,7 @@
 #include <streams.h>
 #include <strsafe.h>
 
-#include "Anime4KCPP.h"
+#include "Anime4KCPP.hpp"
 #include "resource.h"
 
 extern "C"

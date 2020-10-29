@@ -6,7 +6,15 @@
 #include<queue>
 #include<vector>
 
-class ThreadPool
+namespace Anime4KCPP
+{
+    namespace Utils
+    {
+        class ThreadPool;
+    }
+}
+
+class Anime4KCPP::Utils::ThreadPool
 {
 public:
     ThreadPool(size_t maxThreadCount);
@@ -21,7 +29,7 @@ private:
     bool stop;
 };
 
-inline ThreadPool::ThreadPool(size_t maxThreadCount)
+inline Anime4KCPP::Utils::ThreadPool::ThreadPool(size_t maxThreadCount)
     :stop(false)
 {
     for (int i = 0; i < maxThreadCount; i++)
@@ -46,7 +54,7 @@ inline ThreadPool::ThreadPool(size_t maxThreadCount)
             });
 }
 
-inline ThreadPool::~ThreadPool()
+inline Anime4KCPP::Utils::ThreadPool::~ThreadPool()
 {
     {
         std::lock_guard<std::mutex> lock(mtx);
@@ -57,7 +65,7 @@ inline ThreadPool::~ThreadPool()
 }
 
 template<typename F>
-void ThreadPool::exec(F&& f)
+void Anime4KCPP::Utils::ThreadPool::exec(F&& f)
 {
     {
         std::lock_guard<std::mutex> lock(mtx);

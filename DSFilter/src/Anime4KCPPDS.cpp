@@ -88,7 +88,6 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     LPUNKNOWN punk,
     HRESULT* phr) :
     CTransformFilter(tszName, punk, CLSID_Anime4KCPPDS),
-    acCreator(false, false),
     srcH(0), srcW(0), dstH(0), dstW(0), dstDataLength(0),
     colorFormat(ColorFormat::YV12)
 {
@@ -112,6 +111,18 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
+
+    if (CNN)
+        acCreator = std::make_shared<Anime4KCPP::ACCreator>(
+            std::make_shared<Anime4KCPP::OpenCL::OpenCLManager<Anime4KCPP::OpenCL::ACNet>>(pID, dID), 
+            false
+            );
+
+    else
+        acCreator = std::make_shared<Anime4KCPP::ACCreator>(
+            std::make_shared<Anime4KCPP::OpenCL::OpenCLManager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID), 
+            false
+            );
 }
 
 inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
@@ -236,17 +247,7 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
     CheckPointer(mtIn, E_POINTER);
     CheckPointer(mtOut, E_POINTER);
 
-    // init GPU
-    if (CNN)
-    {
-        if (!Anime4KCPP::Anime4KGPUCNN::isInitializedGPU())
-            Anime4KCPP::Anime4KGPUCNN::initGPU(pID, dID);
-    }
-    else
-    {
-        if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
-            Anime4KCPP::Anime4KGPU::initGPU(pID, dID);
-    }
+    acCreator->init();
 
     if (CNN && IsYV12(mtIn) && IsYV12(mtOut))
     {
@@ -361,11 +362,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     if (FAILED(hr))
         return hr;
 
-    Anime4KCPP::Anime4K* ac = nullptr;
+    /*Anime4KCPP::AC* ac = nullptr;*/
+    std::shared_ptr<Anime4KCPP::AC> ac;
     if (CNN)
-        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+        ac = acCreator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
     else
-        ac = acCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
+        ac = acCreator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 
     switch (colorFormat)
     {
@@ -523,7 +525,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     }
 
-    acCreator.release(ac);
+    //acCreator->release(ac);
 
     return hr;
 }
@@ -574,7 +576,7 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
 
 STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
 {
-    Anime4KCPP::GPUList GPUInfo = Anime4KCPP::Anime4KGPU::listGPUs();
+    Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
 
     std::string tmpStr = GPUInfo();
     size_t tmp = 0;

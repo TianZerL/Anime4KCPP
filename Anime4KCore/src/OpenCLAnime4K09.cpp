@@ -1,6 +1,6 @@
 #define DLL
 
-#include "Anime4KGPU.h"
+#include "OpenCLAnime4K09.hpp"
 
 #define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\
@@ -15,40 +15,11 @@ clReleaseKernel(kernelPushGradient); \
 throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
-Anime4KCPP::GPUList::GPUList(
-    const int platforms,
-    const std::vector<int>& devices,
-    const std::string& message
-) :platforms(platforms), devices(devices), message(message) {}
-
-int Anime4KCPP::GPUList::operator[](int pID) const
-{
-    return devices[pID];
-}
-
-std::string& Anime4KCPP::GPUList::operator()() noexcept
-{
-    return message;
-}
-
-Anime4KCPP::GPUInfo::GPUInfo(const bool supported, const std::string& message) :
-    supported(supported), message(message) {};
-
-std::string& Anime4KCPP::GPUInfo::operator()() noexcept
-{
-    return message;
-}
-
-Anime4KCPP::GPUInfo::operator bool() const noexcept
-{
-    return supported;
-}
-
-Anime4KCPP::Anime4KGPU::Anime4KGPU(const Parameters& parameters) :
-    Anime4K(parameters),
+Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
+    AC(parameters),
     nWidth(0.0), nHeight(0.0) {}
 
-void Anime4KCPP::Anime4KGPU::process()
+void Anime4KCPP::OpenCL::Anime4K09::process()
 {
     if (param.zoomFactor == 2.0)
     {
@@ -91,7 +62,7 @@ void Anime4KCPP::Anime4KGPU::process()
         videoIO->init(
             [this]()
             {
-                Frame frame = videoIO->read();
+                Utils::Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
                 cv::Mat dstFrame(H, W, CV_8UC4);
                 if (param.preprocessing)
@@ -109,7 +80,7 @@ void Anime4KCPP::Anime4KGPU::process()
     }
 }
 
-void Anime4KCPP::Anime4KGPU::initGPU(unsigned int platformID, unsigned int deviceID)
+void Anime4KCPP::OpenCL::Anime4K09::initGPU(unsigned int platformID, unsigned int deviceID)
 {
     if (!isInitialized)
     {
@@ -120,7 +91,7 @@ void Anime4KCPP::Anime4KGPU::initGPU(unsigned int platformID, unsigned int devic
     }
 }
 
-void Anime4KCPP::Anime4KGPU::releaseGPU() noexcept
+void Anime4KCPP::OpenCL::Anime4K09::releaseGPU() noexcept
 {
     if (isInitialized)
     {
@@ -133,213 +104,56 @@ void Anime4KCPP::Anime4KGPU::releaseGPU() noexcept
     }
 }
 
-bool Anime4KCPP::Anime4KGPU::isInitializedGPU()
+bool Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU()
 {
     return isInitialized;
 }
 
-Anime4KCPP::GPUList Anime4KCPP::Anime4KGPU::listGPUs()
+std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
 {
-    cl_int err = 0;
-    cl_uint platforms = 0;
-    cl_uint devices = 0;
-    cl_platform_id* platform = nullptr;
-    cl_device_id* device = nullptr;
-
-    size_t platformNameLength = 0;
-    size_t DeviceNameLength = 0;
-    char* platformName = nullptr;
-    char* DeviceName = nullptr;
-
-    std::ostringstream msg;
-
-    std::vector<int> devicesVector;
-
-    err = clGetPlatformIDs(0, nullptr, &platforms);
-    if (err != CL_SUCCESS || !platforms)
-        return GPUList(0, { 0 }, "No suppoted platform");
-
-    platform = new cl_platform_id[platforms];
-    err = clGetPlatformIDs(platforms, platform, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platform;
-        return GPUList(0, { 0 }, "inital platform error");
-    }
-
-    for (cl_uint i = 0; i < platforms; i++)
-    {
-        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
-        if (err != CL_SUCCESS)
-        {
-            delete[] platform;
-            return GPUList( 0,{0} , "Failed to get platform name length infomation");
-        }
-
-
-        platformName = new char[platformNameLength];
-        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            delete[] platformName;
-            delete[] platform;
-            return GPUList( 0,{0} , "Failed to get platform name infomation");
-        }
-        msg << "Platform " << i << ": " << platformName << std::endl;
-
-        delete[] platformName;
-
-        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
-        if (err != CL_SUCCESS || !devices)
-        {
-            delete[] platform;
-            return GPUList( 0,{0} , "No supported GPU");
-        }
-
-        devicesVector.push_back(devices);
-
-        device = new cl_device_id[devices];
-        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, devices, device, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            delete[] device;
-            delete[] platform;
-            return GPUList( 0,{0} , "inital GPU error");
-        }
-
-        for (cl_uint j = 0; j < devices; j++)
-        {
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
-            if (err != CL_SUCCESS)
-            {
-                clReleaseDevice(device[j]);
-                delete[] device;
-                delete[] platform;
-                return GPUList( 0,{0} , "Failed to get device name length infomation");
-            }
-
-
-            DeviceName = new char[DeviceNameLength];
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
-            if (err != CL_SUCCESS)
-            {
-                clReleaseDevice(device[j]);
-                delete[] DeviceName;
-                delete[] device;
-                delete[] platform;
-                return GPUList( 0,{0} , "Failed to get device name infomation");
-            }
-            msg << "Device " << j << ": " << DeviceName << std::endl;
-
-            delete[] DeviceName;
-            clReleaseDevice(device[j]);
-        }
-        delete[] device;
-    }
-    delete[] platform;
-
-    return GPUList(platforms, devicesVector, msg.str());
+    std::ostringstream oss;
+    oss << AC::getInfo()
+        << "----------------------------------------------" << std::endl
+        << "Passes: " << param.passes << std::endl
+        << "pushColorCount: " << param.pushColorCount << std::endl
+        << "Zoom Factor: " << param.zoomFactor << std::endl
+        << "Video Mode: " << std::boolalpha << param.videoMode << std::endl
+        << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
+        << "Strength Color: " << param.strengthColor << std::endl
+        << "Strength Gradient: " << param.strengthGradient << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
 }
 
-Anime4KCPP::GPUInfo Anime4KCPP::Anime4KGPU::checkGPUSupport(unsigned int pID, unsigned int dID)
+std::string Anime4KCPP::OpenCL::Anime4K09::getFiltersInfo()
 {
-    cl_int err = 0;
-    cl_uint platforms = 0;
-    cl_uint devices = 0;
-    cl_platform_id firstPlatform = nullptr;
-    cl_device_id device = nullptr;
+    std::ostringstream oss;
 
-    size_t platformNameLength = 0;
-    size_t DeviceNameLength = 0;
-    char* platformName = nullptr;
-    char* DeviceName = nullptr;
-
-    err = clGetPlatformIDs(0, nullptr, &platforms);
-    if (err != CL_SUCCESS || !platforms)
-        return GPUInfo(false, "No suppoted platform");
-
-    cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
-    err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] tmpPlatform;
-        return GPUInfo(false, "inital platform error");
-    }
-
-
-    if (pID >= 0 && pID < platforms)
-        firstPlatform = tmpPlatform[pID];
+    oss << AC::getFiltersInfo()
+        << "----------------------------------------------" << std::endl
+        << "Preprocessing filters list:" << std::endl
+        << "----------------------------------------------" << std::endl;
+    std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
+    if (preFiltersString.empty())
+        oss << "Preprocessing disabled" << std::endl;
     else
-        firstPlatform = tmpPlatform[0];
+        for (auto& filters : preFiltersString)
+            oss << filters << std::endl;
 
-    delete[] tmpPlatform;
-
-    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
-    if (err != CL_SUCCESS)
-        return GPUInfo(false, "Failed to get platform name length infomation");
-
-    platformName = new char[platformNameLength];
-    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platformName;
-        return GPUInfo(false, "Failed to get platform name infomation");
-    }
-
-
-    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
-    if (err != CL_SUCCESS || !devices)
-    {
-        delete[] platformName;
-        return GPUInfo(false, "No supported GPU");
-    }
-
-    cl_device_id* tmpDevice = new cl_device_id[devices];
-    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platformName;
-        delete[] tmpDevice;
-        return GPUInfo(false, "No supported GPU");
-    }
-
-    if (dID >= 0 && dID < devices)
-        device = tmpDevice[dID];
+    oss << "----------------------------------------------" << std::endl
+        << "Postprocessing filters list:" << std::endl
+        << "----------------------------------------------" << std::endl;
+    std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
+    if (postFiltersString.empty())
+        oss << "Postprocessing disabled" << std::endl;
     else
-        device = tmpDevice[0];
+        for (auto& filters : postFiltersString)
+            oss << filters << std::endl;
 
-    delete[] tmpDevice;
-
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platformName;
-        clReleaseDevice(device);
-        return GPUInfo(false, "Failed to get device name length infomation");
-    }
-
-
-    DeviceName = new char[DeviceNameLength];
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] DeviceName;
-        delete[] platformName;
-        clReleaseDevice(device);
-        return GPUInfo(false, "Failed to get device name infomation");
-    }
-
-    GPUInfo ret(true,
-        std::string("Platform: ") + platformName + "\n" + "Device: " + DeviceName);
-
-    delete[] DeviceName;
-    delete[] platformName;
-    clReleaseDevice(device);
-
-    return ret;
+    return oss.str();
 }
 
-void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
+void Anime4KCPP::OpenCL::Anime4K09::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
 {
     cl_int err;
     int i;
@@ -521,7 +335,7 @@ void Anime4KCPP::Anime4KGPU::runKernel(cv::InputArray orgImg, cv::OutputArray ds
     clReleaseKernel(kernelPushGradient);
 }
 
-void Anime4KCPP::Anime4KGPU::initOpenCL()
+void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -656,7 +470,7 @@ void Anime4KCPP::Anime4KGPU::initOpenCL()
     workGroupSizeLog = log2(workGroupSizeLog);
 }
 
-void Anime4KCPP::Anime4KGPU::releaseOpenCL() noexcept
+void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept
 {
     if (program != nullptr)
         clReleaseProgram(program);
@@ -668,7 +482,7 @@ void Anime4KCPP::Anime4KGPU::releaseOpenCL() noexcept
         clReleaseDevice(device);
 }
 
-std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
+std::string Anime4KCPP::OpenCL::Anime4K09::readKernel(const std::string& fileName)
 {
     std::ifstream kernelFile(fileName);
     if (!kernelFile.is_open())
@@ -680,23 +494,23 @@ std::string Anime4KCPP::Anime4KGPU::readKernel(const std::string& fileName)
     return source.str();
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KGPU::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() noexcept
 {
-    return ProcessorType::OpenCL_Anime4K09;
+    return Processor::Type::OpenCL_Anime4K09;
 }
 
 //init OpenCL arguments
-bool Anime4KCPP::Anime4KGPU::isInitialized = false;
-cl_context Anime4KCPP::Anime4KGPU::context = nullptr;
-cl_command_queue Anime4KCPP::Anime4KGPU::commandQueue = nullptr;
-cl_program Anime4KCPP::Anime4KGPU::program = nullptr;
-cl_device_id Anime4KCPP::Anime4KGPU::device = nullptr;
-unsigned int Anime4KCPP::Anime4KGPU::pID = 0U;
-unsigned int Anime4KCPP::Anime4KGPU::dID = 0U;
-size_t Anime4KCPP::Anime4KGPU::workGroupSizeLog = 5;
+bool Anime4KCPP::OpenCL::Anime4K09::isInitialized = false;
+cl_context Anime4KCPP::OpenCL::Anime4K09::context = nullptr;
+cl_command_queue Anime4KCPP::OpenCL::Anime4K09::commandQueue = nullptr;
+cl_program Anime4KCPP::OpenCL::Anime4K09::program = nullptr;
+cl_device_id Anime4KCPP::OpenCL::Anime4K09::device = nullptr;
+unsigned int Anime4KCPP::OpenCL::Anime4K09::pID = 0U;
+unsigned int Anime4KCPP::OpenCL::Anime4K09::dID = 0U;
+size_t Anime4KCPP::OpenCL::Anime4K09::workGroupSizeLog = 5;
 
 #ifdef BUILT_IN_KERNEL
-const std::string Anime4KCPP::Anime4KGPU::Anime4KCPPKernelSourceString =
+const std::string Anime4KCPP::OpenCL::Anime4K09::Anime4KCPPKernelSourceString =
 R"(#define MAX3(a, b, c) fmax(fmax(a,b),c)
 #define MIN3(a, b, c) fmin(fmin(a,b),c)
 

@@ -3,7 +3,7 @@ project(Anime4KCPPCore LANGUAGES CXX)
 aux_source_directory(src SOURCE)
 
 include_directories(include)
-file(GLOB INCLUDE include/*.h)
+file(GLOB INCLUDE include/*.hpp)
 
 if(Built_in_kernel)
     add_definitions(-DBUILT_IN_KERNEL)

@@ -1,8 +1,5 @@
 #pragma once
 
-#include"Anime4K.h"
-#include"CNN.h"
-
 #include<fstream>
 
 #ifdef __APPLE__
@@ -11,32 +8,44 @@
 #include<CL/cl.h>
 #endif // SPECIAL OS
 
+#include"AC.hpp"
+#include"CNN.hpp"
+
+
 namespace Anime4KCPP
 {
-    class DLL Anime4KGPUCNN;
-
-    enum ACNetType
+    namespace OpenCL
     {
-        HDNL0 = 0, HDNL1 = 1, HDNL2 = 2, HDNL3 = 3, TotalTypeCount = 4
-    };
+        constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
+
+        enum ACNetType
+        {
+            HDNL0 = 0, HDNL1, HDNL2, HDNL3, TotalTypeCount
+        };
+
+        class DLL ACNet;
+    }
 }
 
-class Anime4KCPP::Anime4KGPUCNN :public Anime4K
+class Anime4KCPP::OpenCL::ACNet :public AC
 {
 public:
-    Anime4KGPUCNN(const Parameters& parameters = Parameters());
-    virtual ~Anime4KGPUCNN() = default;
+    ACNet(const Parameters& parameters = Parameters());
+    virtual ~ACNet() = default;
     virtual void process() override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
+
+    virtual std::string getInfo() override;
+    virtual std::string getFiltersInfo() override;
 private:
-    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::ACNetType type);
+    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::OpenCL::ACNetType type);
     static void initOpenCL(const CNNType type);
     static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string& fileName);
 
-    virtual ProcessorType getProcessorType() noexcept override;
+    virtual Processor::Type getProcessorType() noexcept override;
 private:
     static bool isInitialized;
 

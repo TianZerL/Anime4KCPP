@@ -477,7 +477,7 @@ QString MainWindow::formatSuffixList(const QString&& type, QString str)
     return type + "( *." + str.replace(QRegExp(":"), " *.") + ");;";
 }
 
-void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
+void MainWindow::initAnime4K(Anime4KCPP::AC*& ac)
 {
     int passes = ui->spinBoxPasses->value();
     int pushColorCount = ui->spinBoxPushColorCount->value();
@@ -549,17 +549,17 @@ void MainWindow::initAnime4K(Anime4KCPP::Anime4K*& anime4K)
 
     if (ui->checkBoxACNet->isChecked())
         if (ui->checkBoxACNetGPU->isChecked())
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_ACNet);
+            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
         else
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_ACNet);
+            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
     else
         if (ui->checkBoxGPUMode->isChecked())
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::OpenCL_Anime4K09);
+            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
         else
-            anime4K = anime4KCreator.create(parameters, Anime4KCPP::ProcessorType::CPU_Anime4K09);
+            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 }
 
-void MainWindow::releaseAnime4K(Anime4KCPP::Anime4K*& anime4K)
+void MainWindow::releaseAnime4K(Anime4KCPP::AC*& anime4K)
 {
     anime4KCreator.release(anime4K);
 }
@@ -909,17 +909,17 @@ void MainWindow::on_pushButtonPreview_clicked()
 
     ui->pushButtonPreview->setEnabled(false);
 
-    Anime4KCPP::Anime4K* anime4K;
-    initAnime4K(anime4K);
+    Anime4KCPP::AC* ac;
+    initAnime4K(ac);
     switch (fileType(previewFile))
     {
     case IMAGE:
         try
         {
-            anime4K->setVideoMode(false);
-            anime4K->loadImage(previewFile.filePath().toLocal8Bit().constData());
-            anime4K->process();
-            anime4K->showImage();
+            ac->setVideoMode(false);
+            ac->loadImage(previewFile.filePath().toLocal8Bit().constData());
+            ac->process();
+            ac->showImage();
         }
         catch (Anime4KCPP::ACBaseException& err)
         {
@@ -934,7 +934,7 @@ void MainWindow::on_pushButtonPreview_clicked()
         break;
     }
 
-    releaseAnime4K(anime4K);
+    releaseAnime4K(ac);
 
     ui->pushButtonPreview->setEnabled(true);
 }
@@ -1026,25 +1026,25 @@ void MainWindow::on_pushButtonStart_clicked()
         connect(&cm, SIGNAL(allDone()), this, SLOT(solt_allDone_remindUser()));
         connect(&cm, SIGNAL(updateProgress(double, double, double)), this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
 
-        Anime4KCPP::Anime4K* anime4K;
-        initAnime4K(anime4K);
-        emit cm.showInfo(anime4K->getFiltersInfo());
+        Anime4KCPP::AC* ac;
+        initAnime4K(ac);
+        emit cm.showInfo(ac->getFiltersInfo());
 
         std::chrono::steady_clock::time_point startTime, endTime;
 
         if (imageCount)
         {
-            anime4K->setVideoMode(false);
+            ac->setVideoMode(false);
             for (QPair<QPair<QString, QString>, int> const& image : images)
             {
                 try
                 {
-                    anime4K->loadImage(image.first.first.toLocal8Bit().constData());
-                    emit cm.showInfo(anime4K->getInfo() + "processing...\n");
+                    ac->loadImage(image.first.first.toLocal8Bit().constData());
+                    emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    anime4K->process();
+                    ac->process();
                     endTime = std::chrono::steady_clock::now();
-                    anime4K->saveImage(image.first.second.toLocal8Bit().constData());
+                    ac->saveImage(image.first.second.toLocal8Bit().constData());
                 }
                 catch (Anime4KCPP::ACBaseException& err)
                 {
@@ -1060,34 +1060,34 @@ void MainWindow::on_pushButtonStart_clicked()
         }
         if (videoCount)
         {
-            anime4K->setVideoMode(true);
+            ac->setVideoMode(true);
             for (QPair<QPair<QString, QString>, int> const& video : videos)
             {
                 try
                 {
-                    anime4K->loadVideo(video.first.first.toLocal8Bit().constData());
-                    anime4K->setVideoSaveInfo(video.first.second.toLocal8Bit().constData() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
-                    emit cm.showInfo(anime4K->getInfo() + "processing...\n");
+                    ac->loadVideo(video.first.first.toLocal8Bit().constData());
+                    ac->setVideoSaveInfo(video.first.second.toLocal8Bit().constData() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
+                    emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    anime4K->processWithProgress([this, anime4K, &startTime, &cm](double v) {
+                    ac->processWithProgress([this, ac, &startTime, &cm](double v) {
                         if (stop)
                         {
                             if (pause == PAUSED)
                             {
-                                anime4K->continueVideoProcess();
+                                ac->continueVideoProcess();
                                 pause = NORMAL;
                             }
-                            anime4K->stopVideoProcess();
+                            ac->stopVideoProcess();
                             return;
                         }
                         if (pause == PAUSE)
                         {
-                            anime4K->pauseVideoProcess();
+                            ac->pauseVideoProcess();
                             pause = PAUSED;
                         }
                         else if (pause == CONTINUE)
                         {
-                            anime4K->continueVideoProcess();
+                            ac->continueVideoProcess();
                             pause = NORMAL;
                         }
                         else if (pause == NORMAL)
@@ -1098,7 +1098,7 @@ void MainWindow::on_pushButtonStart_clicked()
                         }
                         });
                     endTime = std::chrono::steady_clock::now();
-                    anime4K->saveVideo();
+                    ac->saveVideo();
                 }
                 catch (Anime4KCPP::ACBaseException& err)
                 {
@@ -1134,7 +1134,7 @@ void MainWindow::on_pushButtonStart_clicked()
             }
         }
 
-        releaseAnime4K(anime4K);
+        releaseAnime4K(ac);
 
         emit cm.allDone();
         });
@@ -1340,7 +1340,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
     if ((state == Qt::Checked) && (GPUState == GPUMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
         if (!ret)
         {
             QMessageBox::warning(this,
@@ -1354,8 +1354,8 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
             try
             {
-                if (!Anime4KCPP::Anime4KGPU::isInitializedGPU())
-                    Anime4KCPP::Anime4KGPU::initGPU(currPlatFormID, currDeviceID);
+                if (!Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
+                    Anime4KCPP::OpenCL::Anime4K09::initGPU(currPlatFormID, currDeviceID);
             }
             catch (Anime4KCPP::ACBaseException& err)
             {
@@ -1414,7 +1414,7 @@ void MainWindow::on_actionBenchmark_triggered()
 
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
-    Anime4KCPP::GPUList ret = Anime4KCPP::Anime4KGPU::listGPUs();
+    Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
     if (ret.platforms == 0)
     {
         QMessageBox::warning(this,
@@ -1451,9 +1451,9 @@ void MainWindow::on_pushButtonOutputPathOpen_clicked()
 
 void MainWindow::on_pushButtonReleaseGPU_clicked()
 {
-    if (Anime4KCPP::Anime4KGPU::isInitializedGPU() && GPUState == GPUMODE_INITIALZED)
+    if (Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU() && GPUState == GPUMODE_INITIALZED)
     {
-        Anime4KCPP::Anime4KGPU::releaseGPU();
+        Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
         GPUState = GPUMODE_UNINITIALZED;
         QMessageBox::information(this,
             tr("Notice"),
@@ -1465,9 +1465,9 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
         ui->pushButtonReleaseGPU->setEnabled(false);
     }
 
-    if (Anime4KCPP::Anime4KGPUCNN::isInitializedGPU() && GPUCNNState == GPUCNNMODE_INITIALZED)
+    if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU() && GPUCNNState == GPUCNNMODE_INITIALZED)
     {
-        Anime4KCPP::Anime4KGPUCNN::releaseGPU();
+        Anime4KCPP::OpenCL::ACNet::releaseGPU();
         GPUCNNState = GPUCNNMODE_UNINITIALZED;
         QMessageBox::information(this,
             tr("Notice"),
@@ -1515,7 +1515,7 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
     if ((state == Qt::Checked) && (GPUCNNState == GPUCNNMODE_UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        Anime4KCPP::GPUInfo ret = Anime4KCPP::Anime4KGPU::checkGPUSupport(currPlatFormID, currDeviceID);
+        Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
         if (!ret)
         {
             QMessageBox::warning(this,
@@ -1529,8 +1529,8 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
         {
             try
             {
-                if (!Anime4KCPP::Anime4KGPUCNN::isInitializedGPU())
-                    Anime4KCPP::Anime4KGPUCNN::initGPU(currPlatFormID, currDeviceID);
+                if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
+                    Anime4KCPP::OpenCL::ACNet::initGPU(currPlatFormID, currDeviceID);
             }
             catch (Anime4KCPP::ACBaseException& err)
             {

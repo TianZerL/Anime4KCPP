@@ -1,8 +1,8 @@
 #define DLL
 
-#include "Anime4K.h"
+#include "AC.hpp"
 
-Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters) :param(parameters)
+Anime4KCPP::AC::AC(const Parameters& parameters) :param(parameters)
 {
     orgH = orgW = H = W = 0;
     totalFrameCount = fps = 0.0;
@@ -11,7 +11,7 @@ Anime4KCPP::Anime4K::Anime4K(const Parameters& parameters) :param(parameters)
         initVideoIO();
 }
 
-Anime4KCPP::Anime4K::~Anime4K()
+Anime4KCPP::AC::~AC()
 {
     orgImg.release();
     dstImg.release();
@@ -25,7 +25,7 @@ Anime4KCPP::Anime4K::~Anime4K()
     releaseVideoIO();
 }
 
-void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
+void Anime4KCPP::AC::setArguments(const Parameters& parameters)
 {
     param = parameters;
 
@@ -36,14 +36,14 @@ void Anime4KCPP::Anime4K::setArguments(const Parameters& parameters)
         initVideoIO();
 }
 
-void Anime4KCPP::Anime4K::setVideoMode(const bool value)
+void Anime4KCPP::AC::setVideoMode(const bool value)
 {
     param.videoMode = value;
     if (param.videoMode)
         initVideoIO();
 }
 
-void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
+void Anime4KCPP::AC::loadVideo(const std::string& srcFile)
 {
     if (!videoIO->openReader(srcFile))
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
@@ -55,7 +55,7 @@ void Anime4KCPP::Anime4K::loadVideo(const std::string& srcFile)
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(const std::string& srcFile)
+void Anime4KCPP::AC::loadImage(const std::string& srcFile)
 {
     if (!param.alpha)
         dstImg = orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
@@ -92,7 +92,7 @@ void Anime4KCPP::Anime4K::loadImage(const std::string& srcFile)
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
+void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
 {
     dstImg = orgImg = srcImage.getMat();
     if (orgImg.empty() || orgImg.type() != CV_8UC3)
@@ -103,7 +103,7 @@ void Anime4KCPP::Anime4K::loadImage(cv::InputArray srcImage)
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
@@ -141,7 +141,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* data, siz
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
 {
     if (inputAsYUV444)
     {
@@ -166,7 +166,7 @@ void Anime4KCPP::Anime4K::loadImage(int rows, int cols, unsigned char* r, unsign
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
+void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
 {
     inputYUV = true;
     dstY = orgY = cv::Mat(rowsY, colsY, CV_8UC1, y);
@@ -178,7 +178,7 @@ void Anime4KCPP::Anime4K::loadImage(int rowsY, int colsY, unsigned char* y, int 
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v)
+void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v)
 {
     inputYUV = true;
     dstY = orgY = y;
@@ -190,13 +190,13 @@ void Anime4KCPP::Anime4K::loadImage(const cv::Mat& y, const cv::Mat& u, const cv
     W = param.zoomFactor * orgW;
 }
 
-void Anime4KCPP::Anime4K::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
+void Anime4KCPP::AC::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
     if (!videoIO->openWriter(dstFile, codec, cv::Size(W, H), fps))
         throw ACException<ExceptionType::IO>("Failed to initialize video writer.");
 }
 
-void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
+void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 {
     if (inputYUV)
     {
@@ -224,7 +224,7 @@ void Anime4KCPP::Anime4K::saveImage(const std::string& dstFile)
     cv::imwrite(dstFile, dstImg);
 }
 
-void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
+void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
 {
     if (inputYUV)
     {
@@ -241,7 +241,7 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& dstImage)
     dstImage = dstImg;
 }
 
-void Anime4KCPP::Anime4K::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
+void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
 {
     if (inputYUV)
     {
@@ -259,7 +259,7 @@ void Anime4KCPP::Anime4K::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
     }
 }
 
-void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
+void Anime4KCPP::AC::saveImage(unsigned char*& data)
 {
     if (data == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
@@ -277,7 +277,7 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& data)
     memcpy(data, dstImg.data, size);
 }
 
-void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b)
+void Anime4KCPP::AC::saveImage(unsigned char*& r, unsigned char*& g, unsigned char*& b)
 {
     if (r == nullptr || g == nullptr || b == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
@@ -298,125 +298,45 @@ void Anime4KCPP::Anime4K::saveImage(unsigned char*& r, unsigned char*& g, unsign
     }
 }
 
-void Anime4KCPP::Anime4K::saveVideo()
+void Anime4KCPP::AC::saveVideo()
 {
     videoIO->release();
 }
 
-std::string Anime4KCPP::Anime4K::getInfo()
+std::string Anime4KCPP::AC::getInfo()
 {
     std::ostringstream oss;
-    ProcessorType type = getProcessorType();
-    oss << "----------------------------------------------" << std::endl;
-    oss << "Welcome to Anime4KCPP" << std::endl;
-    oss << "----------------------------------------------" << std::endl;
+    Processor::Type type = getProcessorType();
+    oss << "----------------------------------------------" << std::endl
+        << "Parameter Infomation" << std::endl
+        << "----------------------------------------------" << std::endl;
     if (param.videoMode)
     {
-        oss << "FPS: " << fps << std::endl;
-        oss << "Threads: " << param.maxThreads << std::endl;
-        oss << "Total frames: " << totalFrameCount << std::endl;
+        oss << "FPS: " << fps << std::endl
+            << "Threads: " << param.maxThreads << std::endl
+            << "Total frames: " << totalFrameCount << std::endl;
     }
     if (orgW && orgH)
     {
-        oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl;
-        oss << "----------------------------------------------" << std::endl;
+        oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl
+            << "----------------------------------------------" << std::endl;
     }
     oss << "Processor type: " << type << std::endl;
-    oss << "----------------------------------------------" << std::endl;
-    switch (type)
-    {
-    case ProcessorType::CPU_Anime4K09:
-    case ProcessorType::OpenCL_Anime4K09:
-        oss << "Passes: " << param.passes << std::endl
-            << "pushColorCount: " << param.pushColorCount << std::endl
-            << "Zoom Factor: " << param.zoomFactor << std::endl
-            << "Video Mode: " << std::boolalpha << param.videoMode << std::endl
-            << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
-            << "Strength Color: " << param.strengthColor << std::endl
-            << "Strength Gradient: " << param.strengthGradient << std::endl;
-        break;
-    case ProcessorType::CPU_ACNet:
-    case ProcessorType::OpenCL_ACNet:
-        oss << "Zoom Factor: " << param.zoomFactor << std::endl
-            << "HDN Mode: " << std::boolalpha << param.HDN << std::endl;
-        if (param.HDN)
-            oss
-            << "HDN level: " << param.HDNLevel << std::endl;
-        break;
-    }
-    oss << "----------------------------------------------" << std::endl;
-    return std::string(oss.str());
+    
+    return oss.str();
 }
 
-std::string Anime4KCPP::Anime4K::getFiltersInfo()
+std::string Anime4KCPP::AC::getFiltersInfo()
 {
     std::ostringstream oss;
-    switch (getProcessorType())
-    {
-    case ProcessorType::CPU_Anime4K09:
-    case ProcessorType::OpenCL_Anime4K09:
-        oss << "----------------------------------------------" << std::endl;
-        oss << "Preprocessing filters list:" << std::endl;
-        oss << "----------------------------------------------" << std::endl;
-        if (!param.preprocessing)
-        {
-            oss << "Preprocessing disabled" << std::endl;
-        }
-        else
-        {
-            if (param.preFilters & MEDIAN_BLUR)
-                oss << "Median blur" << std::endl;
-            if (param.preFilters & MEAN_BLUR)
-                oss << "Mean blur" << std::endl;
-            if (param.preFilters & CAS_SHARPENING)
-                oss << "CAS Sharpening" << std::endl;
-            if (param.preFilters & GAUSSIAN_BLUR_WEAK)
-                oss << "Gaussian blur weak" << std::endl;
-            else if (param.preFilters & GAUSSIAN_BLUR)
-                oss << "Gaussian blur" << std::endl;
-            if (param.preFilters & BILATERAL_FILTER)
-                oss << "Bilateral filter" << std::endl;
-            else if (param.preFilters & BILATERAL_FILTER_FAST)
-                oss << "Bilateral filter faster" << std::endl;
-        }
-        oss << "----------------------------------------------" << std::endl;
-        oss << "Postprocessing filters list:" << std::endl;
-        oss << "----------------------------------------------" << std::endl;
-        if (!param.postprocessing)
-        {
-            oss << "Postprocessing disabled" << std::endl;
-        }
-        else
-        {
-            if (param.postFilters & MEDIAN_BLUR)
-                oss << "Median blur" << std::endl;
-            if (param.postFilters & MEAN_BLUR)
-                oss << "Mean blur" << std::endl;
-            if (param.postFilters & CAS_SHARPENING)
-                oss << "CAS Sharpening" << std::endl;
-            if (param.postFilters & GAUSSIAN_BLUR_WEAK)
-                oss << "Gaussian blur weak" << std::endl;
-            else if (param.postFilters & GAUSSIAN_BLUR)
-                oss << "Gaussian blur" << std::endl;
-            if (param.postFilters & BILATERAL_FILTER)
-                oss << "Bilateral filter" << std::endl;
-            else if (param.postFilters & BILATERAL_FILTER_FAST)
-                oss << "Bilateral filter faster" << std::endl;
-        }
-        oss << "----------------------------------------------" << std::endl;
-        break;
-    case ProcessorType::CPU_ACNet:
-    case ProcessorType::OpenCL_ACNet:
-        oss
-            << "----------------------------------------------" << std::endl
-            << "Filters does not support CNN mode" << std::endl
-            << "----------------------------------------------" << std::endl;
-        break;
-    }
-    return std::string(oss.str());
+    oss << "----------------------------------------------" << std::endl
+        << "Filter Infomation" << std::endl
+        << "----------------------------------------------" << std::endl;
+
+    return oss.str();
 }
 
-size_t Anime4KCPP::Anime4K::getResultDataLength() noexcept
+size_t Anime4KCPP::AC::getResultDataLength() noexcept
 {
     if (inputYUV)
         return dstY.size().area() + dstU.size().area() + dstV.size().area();
@@ -426,18 +346,18 @@ size_t Anime4KCPP::Anime4K::getResultDataLength() noexcept
         return 3 * static_cast<size_t>(H) * static_cast<size_t>(W);
 }
 
-size_t Anime4KCPP::Anime4K::getResultDataPerChannelLength() noexcept
+size_t Anime4KCPP::AC::getResultDataPerChannelLength() noexcept
 {
     return static_cast<size_t>(W) * static_cast<size_t>(H);
 }
 
-std::array<int, 3> Anime4KCPP::Anime4K::getResultShape()
+std::array<int, 3> Anime4KCPP::AC::getResultShape()
 {
     std::array<int, 3> shape = { H, W, 3 };
     return shape;
 }
 
-void Anime4KCPP::Anime4K::showImage(bool R2B)
+void Anime4KCPP::AC::showImage(bool R2B)
 {
     cv::Mat tmpImg = dstImg;
 
@@ -467,14 +387,14 @@ void Anime4KCPP::Anime4K::showImage(bool R2B)
     cv::waitKey();
 }
 
-void Anime4KCPP::Anime4K::processWithPrintProgress()
+void Anime4KCPP::AC::processWithPrintProgress()
 {
     if (!param.videoMode)
     {
         process();
         return;
     }
-    std::future<void> p = std::async(&Anime4K::process, this);
+    std::future<void> p = std::async(&AC::process, this);
     std::chrono::milliseconds timeout(1000);
     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
     for (;;)
@@ -504,14 +424,14 @@ void Anime4KCPP::Anime4K::processWithPrintProgress()
     }
 }
 
-void Anime4KCPP::Anime4K::processWithProgress(const std::function<void(double)>&& callBack)
+void Anime4KCPP::AC::processWithProgress(const std::function<void(double)>&& callBack)
 {
     if (!param.videoMode)
     {
         process();
         return;
     }
-    std::future<void> p = std::async(&Anime4K::process, this);
+    std::future<void> p = std::async(&AC::process, this);
     std::chrono::milliseconds timeout(1000);
     for (;;)
     {
@@ -527,34 +447,34 @@ void Anime4KCPP::Anime4K::processWithProgress(const std::function<void(double)>&
     }
 }
 
-void Anime4KCPP::Anime4K::stopVideoProcess() noexcept
+void Anime4KCPP::AC::stopVideoProcess() noexcept
 {
     if (param.videoMode)
         videoIO->stopProcess();
 }
 
-void Anime4KCPP::Anime4K::pauseVideoProcess()
+void Anime4KCPP::AC::pauseVideoProcess()
 {
     if (param.videoMode && !videoIO->isPaused())
     {
-        std::thread t(&VideoIO::pauseProcess, videoIO);
+        std::thread t(&Utils::VideoIO::pauseProcess, videoIO);
         t.detach();
     }
 }
 
-void Anime4KCPP::Anime4K::continueVideoProcess() noexcept
+void Anime4KCPP::AC::continueVideoProcess() noexcept
 {
     if (param.videoMode)
         videoIO->continueProcess();
 }
 
-inline void Anime4KCPP::Anime4K::initVideoIO()
+inline void Anime4KCPP::AC::initVideoIO()
 {
     if (videoIO == nullptr)
-        videoIO = new VideoIO;
+        videoIO = new Utils::VideoIO;
 }
 
-inline void Anime4KCPP::Anime4K::releaseVideoIO() noexcept
+inline void Anime4KCPP::AC::releaseVideoIO() noexcept
 {
     if (videoIO != nullptr)
     {

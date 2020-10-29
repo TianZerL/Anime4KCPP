@@ -1,23 +1,23 @@
 #pragma once
 
-#include"Anime4K.h"
-#include"filterprocessor.h"
-
-#define MAX3(a, b, c) std::max({a, b, c})
-#define MIN3(a, b, c) std::min({a, b, c})
-#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
+#include"FilterProcessor.hpp"
 
 namespace Anime4KCPP
 {
-    class DLL Anime4KCPU;
+    namespace CPU
+    {
+        class DLL Anime4K09;
+    }
 }
 
-class Anime4KCPP::Anime4KCPU :public Anime4K
+class Anime4KCPP::CPU::Anime4K09 :public AC
 {
 public:
-    Anime4KCPU(const Parameters& parameters = Parameters());
-    virtual ~Anime4KCPU() = default;
+    Anime4K09(const Parameters& parameters = Parameters());
+    virtual ~Anime4K09() = default;
     virtual void process() override;
+    virtual std::string getInfo() override;
+    virtual std::string getFiltersInfo() override;
 private:
     void getGray(cv::Mat& img);
     void pushColor(cv::Mat& img);
@@ -27,5 +27,5 @@ private:
     void getLightest(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
     void getAverage(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
 
-    virtual ProcessorType getProcessorType() noexcept override;
+    virtual Processor::Type getProcessorType() noexcept override;
 };

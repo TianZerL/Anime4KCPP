@@ -1,34 +1,34 @@
 #define DLL
 
-#include "Anime4KCPUCNN.h"
+#include "CPUACNet.hpp"
 
-Anime4KCPP::Anime4KCPUCNN::Anime4KCPUCNN(const Parameters& parameters) :
-    Anime4K(parameters) {}
+Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
+    AC(parameters) {}
 
-void Anime4KCPP::Anime4KCPUCNN::process()
+void Anime4KCPP::CPU::ACNet::process()
 {
-    CNNProcessor* processor;
+    ACNetProcessor* processor;
     if (param.HDN)
     {
         switch (param.HDNLevel)
         {
         case 1:
-            processor = CNNCreator::create(CNNType::ACNetHDNL1);
+            processor = createACNetProcessor(CNNType::ACNetHDNL1);
             break;
         case 2:
-            processor = CNNCreator::create(CNNType::ACNetHDNL2);
+            processor = createACNetProcessor(CNNType::ACNetHDNL2);
             break;
         case 3:
-            processor = CNNCreator::create(CNNType::ACNetHDNL3);
+            processor = createACNetProcessor(CNNType::ACNetHDNL3);
             break;
         default:
-            processor = CNNCreator::create(CNNType::ACNetHDNL1);
+            processor = createACNetProcessor(CNNType::ACNetHDNL1);
             break;
         }
     }
     else
     {
-        processor = CNNCreator::create(CNNType::ACNet);
+        processor = createACNetProcessor(CNNType::ACNetHDNL0);
     }
 
     if (param.fastMode)
@@ -68,7 +68,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
             videoIO->init(
                 [this, processor]()
                 {
-                    Frame frame = videoIO->read();
+                    Utils::Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -150,7 +150,7 @@ void Anime4KCPP::Anime4KCPUCNN::process()
             videoIO->init(
                 [this, tmpZfUp, tmpZf, processor]()
                 {
-                    Frame frame = videoIO->read();
+                    Utils::Frame frame = videoIO->read();
                     cv::Mat orgFrame = frame.first;
                     cv::Mat dstFrame;
 
@@ -181,10 +181,32 @@ void Anime4KCPP::Anime4KCPUCNN::process()
                     ).process();
         }
     }
-    CNNCreator::release(processor);
+    releaseACNetProcessor(processor);
 }
 
-Anime4KCPP::ProcessorType Anime4KCPP::Anime4KCPUCNN::getProcessorType() noexcept
+std::string Anime4KCPP::CPU::ACNet::getInfo()
 {
-    return ProcessorType::CPU_ACNet;
+    std::ostringstream oss;
+    oss << AC::getInfo()
+        << "----------------------------------------------" << std::endl
+        << "Zoom Factor: " << param.zoomFactor << std::endl
+        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
+        << "HDN level: " << param.HDNLevel << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
+}
+
+std::string Anime4KCPP::CPU::ACNet::getFiltersInfo()
+{
+    std::ostringstream oss;
+    oss << AC::getFiltersInfo()
+        << "----------------------------------------------" << std::endl
+        << "Filter not supported" << std::endl
+        << "----------------------------------------------" << std::endl;
+    return oss.str();
+}
+
+Anime4KCPP::Processor::Type Anime4KCPP::CPU::ACNet::getProcessorType() noexcept
+{
+    return Processor::Type::CPU_ACNet;
 }

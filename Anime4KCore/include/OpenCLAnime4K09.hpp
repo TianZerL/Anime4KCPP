@@ -1,0 +1,60 @@
+#pragma once
+
+#include<fstream>
+
+#ifdef __APPLE__
+#include<OpenCL/opencl.h>
+#else
+#include<CL/cl.h>
+#endif // SPECIAL OS
+
+#include"FilterProcessor.hpp"
+
+namespace Anime4KCPP
+{
+    namespace OpenCL
+    {
+        class DLL Anime4K09;
+    }
+}
+
+class Anime4KCPP::OpenCL::Anime4K09 :public AC
+{
+public:
+    Anime4K09(const Parameters& parameters = Parameters());
+    virtual ~Anime4K09() = default;
+    virtual void process() override;
+    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
+    static void releaseGPU() noexcept;
+    static bool isInitializedGPU();
+
+    virtual std::string getInfo() override;
+    virtual std::string getFiltersInfo() override;
+private:
+    void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
+    static void initOpenCL();
+    static void releaseOpenCL() noexcept;
+    static std::string readKernel(const std::string &fileName);
+
+    virtual Processor::Type getProcessorType() noexcept override;
+private:
+    static bool isInitialized;
+
+    static cl_context context;
+    static cl_command_queue commandQueue;
+    static cl_program program;
+    static cl_device_id device;
+
+    static unsigned int pID;
+    static unsigned int dID;
+
+    static size_t workGroupSizeLog;
+
+    double nWidth;
+    double nHeight;
+
+#ifdef BUILT_IN_KERNEL
+    static const std::string Anime4KCPPKernelSourceString;
+#endif // BUILT_IN_KERNEL
+
+};

@@ -1,4 +1,10 @@
-#include "filterprocessor.h"
+#include "FilterProcessor.hpp"
+
+#define MAX5(a, b, c, d, e) std::max({a, b, c, d, e})
+#define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})
+#define LERP(x, y, w) ((x) * (1.0 - (w)) + (y) * (w))
+#define REC(n) ((n) < 1 ? 1.0 : 1.0 / (n))
+#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
 
 Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, uint8_t _filters) :
     filters(_filters), srcImgRef(srcImg)
@@ -30,6 +36,26 @@ void Anime4KCPP::FilterProcessor::process()
         cv::bilateralFilter(img, tmpImg, 5, 35, 35);
         srcImgRef = img;
     }
+}
+
+std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(uint8_t filters)
+{
+    std::vector<std::string> ret;
+    if (filters & MEDIAN_BLUR)
+        ret.emplace_back("Median blur");
+    if (filters & MEAN_BLUR)
+        ret.emplace_back("Mean blur");
+    if (filters & CAS_SHARPENING)
+        ret.emplace_back("CAS Sharpening");
+    if (filters & GAUSSIAN_BLUR_WEAK)
+        ret.emplace_back("Gaussian blur weak");
+    else if (filters & GAUSSIAN_BLUR)
+        ret.emplace_back("Gaussian blur");
+    if (filters & BILATERAL_FILTER)
+        ret.emplace_back("Bilateral filter");
+    else if (filters & BILATERAL_FILTER_FAST)
+        ret.emplace_back("Bilateral filter faster");
+    return ret;
 }
 
 inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& img)
