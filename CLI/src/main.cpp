@@ -41,7 +41,7 @@ static bool video2GIF(const std::string& srcFile, const std::string& dstFile)
 
     std::string command2Gif("ffmpeg -i \"" + srcFile + "\" -i palette.png -y -lavfi paletteuse \"" + dstFile + "\"");
     std::cout << command2Gif << std::endl;
-    
+
     bool flag = !system(commandGeneratePalette.data()) && !system(command2Gif.data());
     filesystem::remove("palette.png");
     return flag;
@@ -72,7 +72,7 @@ inline static void showVersionInfo()
     std::cerr
         << "Anime4KCPPCLI" << std::endl
         << "Anime4KCPP core version: " << ANIME4KCPP_CORE_VERSION << std::endl
-        << "Parallel library: "<< PARALLEL_LIBRARY <<std::endl
+        << "Parallel library: " << PARALLEL_LIBRARY << std::endl
         << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
         << "Compiler: " << COMPILER << std::endl
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
@@ -222,8 +222,8 @@ int main(int argc, char* argv[])
     else
         type = Anime4KCPP::CNNType::ACNetHDNL0;
 
-    std::shared_ptr<Anime4KCPP::ACCreator> creator;
-    std::shared_ptr<Anime4KCPP::AC> ac;
+    std::unique_ptr<Anime4KCPP::ACCreator> creator;
+    std::unique_ptr<Anime4KCPP::AC> ac;
     Anime4KCPP::Parameters parameters(
         passes,
         pushColorCount,
@@ -242,53 +242,48 @@ int main(int argc, char* argv[])
         alpha
     );
 
+    std::cout
+        << "----------------------------------------------" << std::endl
+        << "Welcome to Anime4KCPP" << std::endl
+        << "----------------------------------------------" << std::endl;
+
     try
     {
-        creator = std::make_shared<Anime4KCPP::ACCreator>(GPU, CNN, pID, dID, type);
-
-        if (CNN)
+        //init
+        creator = std::make_unique<Anime4KCPP::ACCreator>();
+        if (GPU)
         {
-            if (GPU)
+            creator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+            if (CNN)
+                creator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
+            creator->init();
+        }
+        //create instance
+        if (GPU)
+        {
+            Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+            if (!ret)
             {
-                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
-                if (!ret)
-                {
-                    std::cerr << ret() << std::endl;
-                    return 0;
-                }
-                else
-                {
-                    std::cerr << ret() << std::endl;
-                }
-                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                std::cerr << ret() << std::endl;
+                return 0;
             }
             else
             {
-                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                std::cerr << ret() << std::endl;
             }
+            if (CNN)
+                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            else
+                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
         }
         else
         {
-            if (GPU)
-            {
-                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
-                if (!ret)
-                {
-                    std::cerr << ret() << std::endl;
-                    return 0;
-                }
-                else
-                {
-                    std::cerr << ret() << std::endl;
-                }
-                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
-            }
+            if (CNN)
+                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-            {
-                ac = creator->createSP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
-            }
+                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
-
+        //processing
         if (!videoMode)//Image
         {
             if (filesystem::is_directory(inputPath))
@@ -324,7 +319,7 @@ int main(int argc, char* argv[])
 
                 for (int i = 0; i < filePaths.size(); i++)
                 {
-                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, ac]()
+                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, &ac]()
                         {
                             Anime4KCPP::AC* currac = creator->create(parameters, ac->getProcessorType());
                             currac->loadImage(filePaths[i].first);
@@ -486,7 +481,7 @@ int main(int argc, char* argv[])
     }
     catch (Anime4KCPP::ACBaseException& err)
     {
-        std::cerr 
+        std::cerr
             << std::endl
             << err
             << std::endl;

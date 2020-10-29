@@ -88,6 +88,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     LPUNKNOWN punk,
     HRESULT* phr) :
     CTransformFilter(tszName, punk, CLSID_Anime4KCPPDS),
+    acCreator(std::make_unique<Anime4KCPP::ACCreator>()),
     srcH(0), srcW(0), dstH(0), dstW(0), dstDataLength(0),
     colorFormat(ColorFormat::YV12)
 {
@@ -113,16 +114,10 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
 
     if (CNN)
-        acCreator = std::make_shared<Anime4KCPP::ACCreator>(
-            std::make_shared<Anime4KCPP::OpenCL::OpenCLManager<Anime4KCPP::OpenCL::ACNet>>(pID, dID), 
-            false
-            );
-
+        acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
     else
-        acCreator = std::make_shared<Anime4KCPP::ACCreator>(
-            std::make_shared<Anime4KCPP::OpenCL::OpenCLManager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID), 
-            false
-            );
+        acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+
 }
 
 inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
@@ -362,12 +357,11 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     if (FAILED(hr))
         return hr;
 
-    /*Anime4KCPP::AC* ac = nullptr;*/
-    std::shared_ptr<Anime4KCPP::AC> ac;
+    Anime4KCPP::AC* ac = nullptr;
     if (CNN)
-        ac = acCreator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+        ac = acCreator->create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
     else
-        ac = acCreator->createSP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+        ac = acCreator->create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 
     switch (colorFormat)
     {
@@ -525,7 +519,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     }
 
-    //acCreator->release(ac);
+    acCreator->release(ac);
 
     return hr;
 }

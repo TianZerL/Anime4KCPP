@@ -6,8 +6,8 @@
 #define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: stream << #P+std::string(" ")+#A; break;
 #elif defined(AC_CASE_ITEM)
 #define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return new P##::##A(parameters);
-#elif defined(AC_CASE_SP_ITEM)
-#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return std::make_shared<P##::##A>(parameters);
+#elif defined(AC_CASE_UP_ITEM)
+#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return std::make_unique<P##::##A>(parameters);
 #endif
 
 
@@ -31,6 +31,6 @@ REGISTER_PROCESSOR(OpenCL, ACNet)
 #define PROCESSOR_STREAM PROCESSORS
 #elif defined(AC_CASE_ITEM)
 #define PROCESSOR_CASE PROCESSORS
-#elif defined(AC_CASE_SP_ITEM)
-#define PROCESSOR_CASE_SP PROCESSORS
+#elif defined(AC_CASE_UP_ITEM)
+#define PROCESSOR_CASE_UP PROCESSORS
 #endif

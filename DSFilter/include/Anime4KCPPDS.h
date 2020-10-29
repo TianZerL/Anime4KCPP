@@ -40,7 +40,7 @@ private:
     BOOL IsYV12(const CMediaType* pMediaType) const;
     BOOL IsNV12(const CMediaType* pMediaType) const;
 private:
-    std::shared_ptr<Anime4KCPP::ACCreator> acCreator;
+    std::unique_ptr<Anime4KCPP::ACCreator> acCreator;
     Anime4KCPP::Parameters parameters;
     unsigned int pID, dID;
     double zf;

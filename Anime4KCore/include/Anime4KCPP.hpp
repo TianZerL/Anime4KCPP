@@ -16,15 +16,30 @@ namespace Anime4KCPP
 class Anime4KCPP::ACCreator
 {
 public:
+    using ManagerSP = std::shared_ptr<Processor::Manager>;
+    using ManagerSPList = std::initializer_list<std::shared_ptr<Processor::Manager>>;
+    using ManagerSPVector = std::vector<std::shared_ptr<Processor::Manager>>;
+
     ACCreator() = default;
-    ACCreator(std::initializer_list<std::shared_ptr<Processor::Manager>> managerList, bool initNow = false);
-    ACCreator(std::shared_ptr<Processor::Manager> manager, bool initNow = false);
+    ACCreator(const ManagerSP& manager, const bool initNow = true);
+    ACCreator(ManagerSPList&& managerList, const  bool initNow = true);
+    ACCreator(const ManagerSPVector& managerList, const  bool initNow = true);
     ACCreator(bool initGPU, bool initCNN, unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     ~ACCreator();
-    std::shared_ptr<AC> createSP(const Parameters& parameters, const Processor::Type type);
+    std::unique_ptr<AC> createUP(const Parameters& parameters, const Processor::Type type);
     AC* create(const Parameters& parameters, const Processor::Type type);
     void release(AC*& ac) noexcept;
+
+    template<typename Manager, typename... Types>
+    void pushManager(Types&&... args);
+
     void init();
 private:
-    std::vector<std::shared_ptr<Processor::Manager>> managers;
+    ManagerSPVector managers;
 };
+
+template<typename Manager, typename... Types>
+inline void Anime4KCPP::ACCreator::pushManager(Types&&... args)
+{
+    managers.emplace_back(std::make_shared<Manager>(std::forward<Types>(args)...));
+}

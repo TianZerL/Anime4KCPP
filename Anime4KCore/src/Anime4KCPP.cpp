@@ -2,16 +2,23 @@
 
 #include "Anime4KCPP.hpp"
 
-Anime4KCPP::ACCreator::ACCreator(std::initializer_list<std::shared_ptr<Processor::Manager>> managerList, bool initNow)
+Anime4KCPP::ACCreator::ACCreator(const ManagerSP& manager, const bool initNow)
+{
+    managers.emplace_back(manager);
+    if (initNow)
+        init();
+}
+
+Anime4KCPP::ACCreator::ACCreator(ManagerSPList&& managerList, const  bool initNow)
     : managers(managerList)
 {
     if (initNow)
         init();
 }
 
-Anime4KCPP::ACCreator::ACCreator(std::shared_ptr<Processor::Manager> manager, bool initNow)
+Anime4KCPP::ACCreator::ACCreator(const ManagerSPVector& managerList, const bool initNow)
+    : managers(managerList)
 {
-    managers.emplace_back(manager);
     if (initNow)
         init();
 }
@@ -21,9 +28,13 @@ Anime4KCPP::ACCreator::ACCreator(bool initGPU, bool initCNN, unsigned int platfo
     if (initGPU)
     {
         if (initCNN)
-            managers.emplace_back(std::make_shared<OpenCL::OpenCLManager<OpenCL::ACNet>>(platformID, deviceID, type));
+            managers.emplace_back(
+                std::make_shared<OpenCL::Manager<OpenCL::ACNet>>(platformID, deviceID, type)
+            );
         else
-            managers.emplace_back(std::make_shared<OpenCL::OpenCLManager<OpenCL::Anime4K09>>(platformID, deviceID));
+            managers.emplace_back(
+                std::make_shared<OpenCL::Manager<OpenCL::Anime4K09>>(platformID, deviceID)
+            );
         init();
     }
 }
@@ -34,16 +45,16 @@ Anime4KCPP::ACCreator::~ACCreator()
         manager->release();
 }
 
-#define AC_CASE_SP_ITEM
+#define AC_CASE_UP_ITEM
 #include"ACRegister.hpp"
-#undef AC_CASE_SP_ITEM
-std::shared_ptr<Anime4KCPP::AC> Anime4KCPP::ACCreator::createSP(
+#undef AC_CASE_UP_ITEM
+std::unique_ptr<Anime4KCPP::AC> Anime4KCPP::ACCreator::createUP(
     const Parameters& parameters, const Processor::Type type
 )
 {
     switch (type)
     {
-        PROCESSOR_CASE_SP
+        PROCESSOR_CASE_UP
     }
     return nullptr;
 }
