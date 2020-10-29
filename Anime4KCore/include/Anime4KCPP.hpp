@@ -24,7 +24,6 @@ public:
     ACCreator(const ManagerSP& manager, const bool initNow = true);
     ACCreator(ManagerSPList&& managerList, const  bool initNow = true);
     ACCreator(const ManagerSPVector& managerList, const  bool initNow = true);
-    ACCreator(bool initGPU, bool initCNN, unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     ~ACCreator();
     std::unique_ptr<AC> createUP(const Parameters& parameters, const Processor::Type type);
     AC* create(const Parameters& parameters, const Processor::Type type);

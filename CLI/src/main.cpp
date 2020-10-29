@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
     else
         type = Anime4KCPP::CNNType::ACNetHDNL0;
 
-    std::unique_ptr<Anime4KCPP::ACCreator> creator;
+    Anime4KCPP::ACCreator creator;
     std::unique_ptr<Anime4KCPP::AC> ac;
     Anime4KCPP::Parameters parameters(
         passes,
@@ -250,13 +250,13 @@ int main(int argc, char* argv[])
     try
     {
         //init
-        creator = std::make_unique<Anime4KCPP::ACCreator>();
         if (GPU)
         {
-            creator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
             if (CNN)
-                creator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
-            creator->init();
+                creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
+            else
+                creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+            creator.init();
         }
         //create instance
         if (GPU)
@@ -272,16 +272,16 @@ int main(int argc, char* argv[])
                 std::cerr << ret() << std::endl;
             }
             if (CNN)
-                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
         }
         else
         {
             if (CNN)
-                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = creator->createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
         //processing
         if (!videoMode)//Image
@@ -321,12 +321,12 @@ int main(int argc, char* argv[])
                 {
                     threadPool.exec([i, &filePaths, &progress, &creator, &parameters, &ac]()
                         {
-                            Anime4KCPP::AC* currac = creator->create(parameters, ac->getProcessorType());
+                            Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
                             currac->loadImage(filePaths[i].first);
                             currac->process();
                             currac->saveImage(filePaths[i].second);
                             progress++;
-                            creator->release(currac);
+                            creator.release(currac);
                         });
                 }
 

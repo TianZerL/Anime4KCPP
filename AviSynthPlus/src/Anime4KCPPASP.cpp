@@ -42,7 +42,7 @@ public:
     PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 private:
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::ACCreator anime4KCreator;
+    Anime4KCPP::ACCreator acCreator;
     bool GPUMode;
     bool CNN;
 };
@@ -58,7 +58,7 @@ Anime4KCPPF::Anime4KCPPF(
 ) :
     GenericVideoFilter(_child),
     parameters(inputs),
-    anime4KCreator(GPUMode, CNN, pID, dID),
+    acCreator(),
     GPUMode(GPUMode),
     CNN(CNN)
 {
@@ -74,6 +74,15 @@ Anime4KCPPF::Anime4KCPPF(
 
     vi.height *= inputs.zoomFactor;
     vi.width *= inputs.zoomFactor;
+
+    if (GPUMode)
+    {
+        if (CNN)
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+        else
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+        acCreator.init();
+    }
 }
 
 PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
@@ -140,14 +149,14 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         if (CNN)
             if (GPUMode)
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
             if (GPUMode)
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             else
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 
         ac->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
         ac->process();
@@ -169,7 +178,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             }
         }
 
-        anime4KCreator.release(ac);
+        acCreator.release(ac);
         delete[] srcDataY;
         delete[] srcDataU;
         delete[] srcDataV;
@@ -203,14 +212,14 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
         if (CNN)
             if (GPUMode)
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
             if (GPUMode)
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             else
-                ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 
         ac->loadImage(srcH, srcL / 3, srcData);
         ac->process();
@@ -222,7 +231,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
             dstp += dstPitch;
         }
 
-        anime4KCreator.release(ac);
+        acCreator.release(ac);
         delete[] srcData;
 
         return dst;

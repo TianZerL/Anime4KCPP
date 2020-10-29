@@ -191,7 +191,7 @@ private:
 
     GPUMode GPUState;
     GPUCNNMode GPUCNNState;
-    Anime4KCPP::ACCreator anime4KCreator;
+    Anime4KCPP::ACCreator acCreator;
 
     std::vector<int> devices;
     int platforms;

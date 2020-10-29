@@ -23,22 +23,6 @@ Anime4KCPP::ACCreator::ACCreator(const ManagerSPVector& managerList, const bool 
         init();
 }
 
-Anime4KCPP::ACCreator::ACCreator(bool initGPU, bool initCNN, unsigned int platformID, unsigned int deviceID, const CNNType type)
-{
-    if (initGPU)
-    {
-        if (initCNN)
-            managers.emplace_back(
-                std::make_shared<OpenCL::Manager<OpenCL::ACNet>>(platformID, deviceID, type)
-            );
-        else
-            managers.emplace_back(
-                std::make_shared<OpenCL::Manager<OpenCL::Anime4K09>>(platformID, deviceID)
-            );
-        init();
-    }
-}
-
 Anime4KCPP::ACCreator::~ACCreator()
 {
     for (auto& manager : managers)
@@ -95,7 +79,12 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
     OpenCL::GPUInfo checkGPUResult = OpenCL::checkGPUSupport(pID, dID);
 
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::ACCreator creator(checkGPUResult, true, pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
+    Anime4KCPP::ACCreator creator;
+    if (checkGPUResult)
+    {
+        creator.pushManager<OpenCL::Manager<OpenCL::ACNet>>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
+        creator.init();
+    }
     Anime4KCPP::AC* acCPU = creator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
 
     const size_t dataSize = 1920 * 1080 * 3;

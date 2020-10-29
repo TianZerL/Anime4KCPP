@@ -549,19 +549,19 @@ void MainWindow::initAnime4K(Anime4KCPP::AC*& ac)
 
     if (ui->checkBoxACNet->isChecked())
         if (ui->checkBoxACNetGPU->isChecked())
-            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
         else
-            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
     else
         if (ui->checkBoxGPUMode->isChecked())
-            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
         else
-            ac = anime4KCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 }
 
 void MainWindow::releaseAnime4K(Anime4KCPP::AC*& anime4K)
 {
-    anime4KCreator.release(anime4K);
+    acCreator.release(anime4K);
 }
 
 FileType MainWindow::fileType(const QFileInfo& file)
