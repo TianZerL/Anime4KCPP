@@ -4,9 +4,9 @@
 
 Anime4KCPP::OpenCL::GPUList::GPUList(
     const int platforms,
-    const std::vector<int>& devices,
-    const std::string& message
-) :platforms(platforms), devices(devices), message(message) {}
+    std::vector<int> devices,
+    std::string message
+) :platforms(platforms), devices(std::move(devices)), message(std::move(message)) {}
 
 int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
 {
@@ -18,8 +18,8 @@ std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
     return message;
 }
 
-Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, const std::string& message) :
-    supported(supported), message(message) {};
+Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
+    supported(supported), message(std::move(message)) {};
 
 std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
 {

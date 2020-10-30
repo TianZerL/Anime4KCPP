@@ -92,7 +92,7 @@ struct Anime4KCPP::OpenCL::GPUList
     std::vector<int> devices;
     std::string message;
 
-    GPUList(const int platforms, const std::vector<int>& devices, const std::string& message);
+    GPUList(const int platforms, std::vector<int> devices, std::string message);
     int operator[](int pID) const;
     std::string& operator()() noexcept;
 };
@@ -102,7 +102,7 @@ struct Anime4KCPP::OpenCL::GPUInfo
     bool supported;
     std::string message;
 
-    GPUInfo(const bool supported, const std::string& message);
+    GPUInfo(const bool supported, std::string message);
     std::string& operator()() noexcept;
     operator bool() const noexcept;
 };

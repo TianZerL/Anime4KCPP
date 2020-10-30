@@ -2,12 +2,18 @@
 
 #if defined(AC_ENUM_ITEM)
 #define REGISTER_PROCESSOR(P, A) P##_##A,
-#elif defined(AC_STREAM_ITEM)
+#endif
+
+#if defined(AC_STREAM_ITEM)
 #define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: stream << #P+std::string(" ")+#A; break;
-#elif defined(AC_CASE_ITEM)
-#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return new P##::##A(parameters);
-#elif defined(AC_CASE_UP_ITEM)
-#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return std::make_unique<P##::##A>(parameters);
+#endif
+
+#if defined(AC_CASE_ITEM)
+#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return new P::A(parameters);
+#endif
+
+#if defined(AC_CASE_UP_ITEM)
+#define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return std::make_unique<P::A>(parameters);
 #endif
 
 
@@ -25,12 +31,22 @@ REGISTER_PROCESSOR(OpenCL, ACNet)
 
 
 
+#undef PROCESSOR_ENUM
 #if defined(AC_ENUM_ITEM)
 #define PROCESSOR_ENUM PROCESSORS
-#elif defined(AC_STREAM_ITEM)
+#endif
+
+#undef PROCESSOR_STREAM
+#if defined(AC_STREAM_ITEM)
 #define PROCESSOR_STREAM PROCESSORS
-#elif defined(AC_CASE_ITEM)
+#endif
+
+#undef PROCESSOR_CASE
+#if defined(AC_CASE_ITEM)
 #define PROCESSOR_CASE PROCESSORS
-#elif defined(AC_CASE_UP_ITEM)
+#endif
+
+#undef PROCESSOR_CASE_UP
+#if defined(AC_CASE_UP_ITEM)
 #define PROCESSOR_CASE_UP PROCESSORS
 #endif

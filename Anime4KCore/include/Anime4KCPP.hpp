@@ -22,12 +22,12 @@ public:
 
     ACCreator() = default;
     ACCreator(const ManagerSP& manager, const bool initNow = true);
-    ACCreator(ManagerSPList&& managerList, const  bool initNow = true);
-    ACCreator(const ManagerSPVector& managerList, const  bool initNow = true);
+    ACCreator(ManagerSPList&& managerList, const bool initNow = true);
+    ACCreator(ManagerSPVector managerList, const bool initNow = true);
     ~ACCreator();
-    std::unique_ptr<AC> createUP(const Parameters& parameters, const Processor::Type type);
-    AC* create(const Parameters& parameters, const Processor::Type type);
-    void release(AC*& ac) noexcept;
+    static std::unique_ptr<AC> createUP(const Parameters& parameters, const Processor::Type type);
+    static AC* create(const Parameters& parameters, const Processor::Type type);
+    static void release(AC*& ac) noexcept;
 
     template<typename Manager, typename... Types>
     void pushManager(Types&&... args);

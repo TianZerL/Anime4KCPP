@@ -26,7 +26,7 @@ inline std::ostream& Anime4KCPP::Processor::operator<<(std::ostream& stream, Ani
 {
     switch (type)
     {
-        PROCESSOR_STREAM;
+        PROCESSOR_STREAM
 
     default:
         stream << "Error processor type";

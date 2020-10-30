@@ -67,7 +67,7 @@ bool Anime4KCPP::Utils::VideoIO::openWriter(const std::string& dstFile, const CO
 {
     double fps;
 
-    if (!forceFps)
+    if (forceFps < 1.0)
         fps = reader.get(cv::CAP_PROP_FPS);
     else
         fps = forceFps;

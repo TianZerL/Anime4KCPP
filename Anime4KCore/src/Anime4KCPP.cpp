@@ -9,15 +9,15 @@ Anime4KCPP::ACCreator::ACCreator(const ManagerSP& manager, const bool initNow)
         init();
 }
 
-Anime4KCPP::ACCreator::ACCreator(ManagerSPList&& managerList, const  bool initNow)
+Anime4KCPP::ACCreator::ACCreator(ManagerSPList&& managerList, const bool initNow)
     : managers(managerList)
 {
     if (initNow)
         init();
 }
 
-Anime4KCPP::ACCreator::ACCreator(const ManagerSPVector& managerList, const bool initNow)
-    : managers(managerList)
+Anime4KCPP::ACCreator::ACCreator(ManagerSPVector managerList, const bool initNow)
+    : managers(std::move(managerList))
 {
     if (initNow)
         init();
@@ -88,7 +88,7 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
     Anime4KCPP::AC* acCPU = creator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
 
     const size_t dataSize = 1920 * 1080 * 3;
-    uint8_t* testData = new uint8_t[dataSize];
+    auto testData = new uint8_t[dataSize];
 
     for (size_t i = 0; i < dataSize; i += 3)
     {
