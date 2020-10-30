@@ -32,7 +32,7 @@ class Anime4KCPP::OpenCL::ACNet :public AC
 public:
     ACNet(const Parameters& parameters = Parameters());
     virtual ~ACNet() = default;
-    virtual void process() override;
+    virtual void setArguments(const Parameters& parameters) override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
@@ -40,6 +40,10 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 private:
+    virtual void processYUVImage() override;
+    virtual void processRGBImage() override;
+    virtual void processRGBVideo() override;
+
     void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::OpenCL::ACNetType type);
     static void initOpenCL(const CNNType type);
     static void releaseOpenCL() noexcept;
@@ -48,6 +52,7 @@ private:
     virtual Processor::Type getProcessorType() noexcept override;
 private:
     static bool isInitialized;
+    std::function<void(cv::InputArray, cv::OutputArray)> runKernel;
 
     static cl_context context;
     static cl_command_queue commandQueue;

@@ -115,7 +115,7 @@ public:
     AC(const Parameters& parameters);
     virtual ~AC();
 
-    void setArguments(const Parameters& parameters);
+    virtual void setArguments(const Parameters& parameters);
     void setVideoMode(const bool value);
 
     void loadVideo(const std::string& srcFile);
@@ -141,7 +141,7 @@ public:
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
 
-    virtual void process() = 0;
+    void process();
     // for video processing
     void processWithPrintProgress();
     void processWithProgress(const std::function<void(double)>&& callBack);
@@ -153,16 +153,21 @@ private:
     void initVideoIO();
     void releaseVideoIO() noexcept;
 protected:
-    int orgH, orgW, H, W;
+    virtual void processYUVImage() = 0;
+    virtual void processRGBImage() = 0;
+    virtual void processRGBVideo() = 0;
+private:
     double fps;
     double totalFrameCount;
+    cv::Mat alphaChannel;
+    bool inputRGB32 = false;
+    bool checkAlphaChannel = false;
+    bool inputYUV = false;
+protected:
+    int orgH, orgW, H, W;
     cv::Mat orgImg, dstImg;
     cv::Mat orgY, orgU, orgV;
     cv::Mat dstY, dstU, dstV;
-    cv::Mat alphaChannel;
-    bool inputYUV = false;
-    bool inputRGB32 = false;
-    bool checkAlphaChannel = false;
     Utils::VideoIO* videoIO = nullptr;
 
     Parameters param;

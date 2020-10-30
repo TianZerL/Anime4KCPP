@@ -23,7 +23,6 @@ class Anime4KCPP::OpenCL::Anime4K09 :public AC
 public:
     Anime4K09(const Parameters& parameters = Parameters());
     virtual ~Anime4K09() = default;
-    virtual void process() override;
     static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0);
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
@@ -31,6 +30,10 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 private:
+    virtual void processYUVImage() override;
+    virtual void processRGBImage() override;
+    virtual void processRGBVideo() override;
+
     void runKernel(cv::InputArray orgImg, cv::OutputArray dstImg);
     static void initOpenCL();
     static void releaseOpenCL() noexcept;

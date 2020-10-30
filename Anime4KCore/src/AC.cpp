@@ -387,6 +387,21 @@ void Anime4KCPP::AC::showImage(bool R2B)
     cv::waitKey();
 }
 
+void Anime4KCPP::AC::process()
+{
+    if (!param.videoMode)
+    {
+        if (inputYUV)
+            processYUVImage();
+        else
+            processRGBImage();
+    }
+    else
+    {
+        processRGBVideo();
+    }
+}
+
 void Anime4KCPP::AC::processWithPrintProgress()
 {
     if (!param.videoMode)

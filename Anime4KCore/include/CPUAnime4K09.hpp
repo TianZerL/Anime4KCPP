@@ -15,10 +15,14 @@ class Anime4KCPP::CPU::Anime4K09 :public AC
 public:
     Anime4K09(const Parameters& parameters = Parameters());
     virtual ~Anime4K09() = default;
-    virtual void process() override;
+
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 private:
+    virtual void processYUVImage() override;
+    virtual void processRGBImage() override;
+    virtual void processRGBVideo() override;
+
     void getGray(cv::Mat& img);
     void pushColor(cv::Mat& img);
     void getGradient(cv::Mat& img);

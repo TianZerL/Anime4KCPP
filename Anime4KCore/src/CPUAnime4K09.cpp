@@ -9,79 +9,6 @@
 Anime4KCPP::CPU::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters) {}
 
-void Anime4KCPP::CPU::Anime4K09::process()
-{
-    if (!param.videoMode)
-    {
-        if (inputYUV)
-        {
-            cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
-        }
-        int tmpPcc = param.pushColorCount;
-        if (param.zoomFactor == 2.0F)
-            cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
-        else
-            cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        if (param.preprocessing)
-            FilterProcessor(dstImg, param.preFilters).process();
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
-        for (int i = 0; i < param.passes; i++)
-        {
-            getGray(dstImg);
-            if (param.strengthColor && (tmpPcc-- > 0))
-                pushColor(dstImg);
-            getGradient(dstImg);
-            pushGradient(dstImg);
-        }
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-        if (param.postprocessing)//PostProcessing
-            FilterProcessor(dstImg, param.postFilters).process();
-        if (inputYUV)
-        {
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-            std::vector<cv::Mat> yuv(3);
-            cv::split(dstImg, yuv);
-            dstY = yuv[Y];
-            dstU = yuv[U];
-            dstV = yuv[V];
-        }
-    }
-    else
-    {
-        videoIO->init(
-            [this]()
-            {
-                Utils::Frame frame = videoIO->read();
-                cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame(H, W, CV_8UC4);
-                int tmpPcc = param.pushColorCount;
-                if (param.preprocessing)
-                    FilterProcessor(orgFrame, param.preFilters).process();
-                cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-                if (param.zoomFactor == 2.0F)
-                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
-                else
-                    cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-                for (int i = 0; i < param.passes; i++)
-                {
-                    getGray(dstFrame);
-                    if (param.strengthColor && (tmpPcc-- > 0))
-                        pushColor(dstFrame);
-                    getGradient(dstFrame);
-                    pushGradient(dstFrame);
-                }
-                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-                if (param.postprocessing)//PostProcessing
-                    FilterProcessor(dstFrame, param.postFilters).process();
-                frame.first = dstFrame;
-                videoIO->write(frame);
-            }
-            , param.maxThreads
-                ).process();
-    }
-}
-
 std::string Anime4KCPP::CPU::Anime4K09::getInfo()
 {
     std::ostringstream oss;
@@ -106,23 +33,113 @@ std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
         << "Preprocessing filters list:" << std::endl
         << "----------------------------------------------" << std::endl;
     std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
-    if(preFiltersString.empty())
+    if (preFiltersString.empty())
         oss << "Preprocessing disabled" << std::endl;
     else
         for (auto& filters : preFiltersString)
-            oss << filters << std::endl;    
-    
+            oss << filters << std::endl;
+
     oss << "----------------------------------------------" << std::endl
         << "Postprocessing filters list:" << std::endl
         << "----------------------------------------------" << std::endl;
     std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
-    if(postFiltersString.empty())
+    if (postFiltersString.empty())
         oss << "Postprocessing disabled" << std::endl;
     else
         for (auto& filters : postFiltersString)
             oss << filters << std::endl;
 
     return oss.str();
+}
+
+void Anime4KCPP::CPU::Anime4K09::processYUVImage()
+{
+    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0F)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGray(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColor(dstImg);
+        getGradient(dstImg);
+        pushGradient(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//PostProcessing
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+    std::vector<cv::Mat> yuv(3);
+    cv::split(dstImg, yuv);
+    dstY = yuv[Y];
+    dstU = yuv[U];
+    dstV = yuv[V];
+}
+
+void Anime4KCPP::CPU::Anime4K09::processRGBImage()
+{
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0F)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)// preprocessing
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGray(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColor(dstImg);
+        getGradient(dstImg);
+        pushGradient(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)// postprocessing
+        FilterProcessor(dstImg, param.postFilters).process();
+}
+
+void Anime4KCPP::CPU::Anime4K09::processRGBVideo()
+{
+    videoIO->init(
+        [this]()
+        {
+            Utils::Frame frame = videoIO->read();
+            cv::Mat orgFrame = frame.first;
+            cv::Mat dstFrame(H, W, CV_8UC4);
+            int tmpPcc = param.pushColorCount;
+            if (param.preprocessing)
+                FilterProcessor(orgFrame, param.preFilters).process();
+            cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
+            if (param.zoomFactor == 2.0F)
+                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+            else
+                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+            for (int i = 0; i < param.passes; i++)
+            {
+                getGray(dstFrame);
+                if (param.strengthColor && (tmpPcc-- > 0))
+                    pushColor(dstFrame);
+                getGradient(dstFrame);
+                pushGradient(dstFrame);
+            }
+            cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
+            if (param.postprocessing)//PostProcessing
+                FilterProcessor(dstFrame, param.postFilters).process();
+            frame.first = dstFrame;
+            videoIO->write(frame);
+        }
+        , param.maxThreads
+            ).process();
 }
 
 inline void Anime4KCPP::CPU::Anime4K09::getGray(cv::Mat& img)

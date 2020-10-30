@@ -16,69 +16,7 @@ throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
 Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
-    AC(parameters),
-    nWidth(0.0), nHeight(0.0) {}
-
-void Anime4KCPP::OpenCL::Anime4K09::process()
-{
-    if (param.zoomFactor == 2.0)
-    {
-        nWidth = 1.0 / static_cast<double>(W);
-        nHeight = 1.0 / static_cast<double>(H);
-    }
-    else
-    {
-        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
-        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
-    }
-
-    if (!param.videoMode)
-    {
-        if (inputYUV)
-        {
-            cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
-        }
-        dstImg.create(H, W, CV_8UC4);
-        if (param.preprocessing)//Pretprocessing(CPU)
-            FilterProcessor(orgImg, param.preFilters).process();
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-        runKernel(orgImg, dstImg);
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-        if (param.postprocessing)//Postprocessing(CPU)
-            FilterProcessor(dstImg, param.postFilters).process();
-        if (inputYUV)
-        {
-            cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-            std::vector<cv::Mat> yuv(3);
-            cv::split(dstImg, yuv);
-            dstY = yuv[Y];
-            dstU = yuv[U];
-            dstV = yuv[V];
-        }
-    }
-    else
-    {
-        videoIO->init(
-            [this]()
-            {
-                Utils::Frame frame = videoIO->read();
-                cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame(H, W, CV_8UC4);
-                if (param.preprocessing)
-                    FilterProcessor(orgFrame, param.preFilters).process();
-                cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-                runKernel(orgFrame, dstFrame);
-                cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-                if (param.postprocessing)//PostProcessing
-                    FilterProcessor(dstFrame, param.postFilters).process();
-                frame.first = dstFrame;
-                videoIO->write(frame);
-            }
-            , param.maxThreads
-                ).process();
-    }
-}
+    AC(parameters), nWidth(0.0), nHeight(0.0) {};
 
 void Anime4KCPP::OpenCL::Anime4K09::initGPU(unsigned int platformID, unsigned int deviceID)
 {
@@ -151,6 +89,95 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getFiltersInfo()
             oss << filters << std::endl;
 
     return oss.str();
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::processYUVImage()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+
+    dstImg.create(H, W, CV_8UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernel(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+    std::vector<cv::Mat> yuv(3);
+    cv::split(dstImg, yuv);
+    dstY = yuv[Y];
+    dstU = yuv[U];
+    dstV = yuv[V];
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::processRGBImage()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    dstImg.create(H, W, CV_8UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernel(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::processRGBVideo()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    videoIO->init(
+        [this]()
+        {
+            Utils::Frame frame = videoIO->read();
+            cv::Mat orgFrame = frame.first;
+            cv::Mat dstFrame(H, W, CV_8UC4);
+            if (param.preprocessing)
+                FilterProcessor(orgFrame, param.preFilters).process();
+            cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
+            runKernel(orgFrame, dstFrame);
+            cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
+            if (param.postprocessing)//PostProcessing
+                FilterProcessor(dstFrame, param.postFilters).process();
+            frame.first = dstFrame;
+            videoIO->write(frame);
+        }
+        , param.maxThreads
+            ).process();
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
