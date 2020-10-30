@@ -1,7 +1,7 @@
 package github.tianzerl.anime4kcpp;
 
 public class CallbackProxy {
-    private MainActivity.Anime4KProcessor object;
+    private final MainActivity.Anime4KProcessor object;
     public CallbackProxy(MainActivity.Anime4KProcessor object) {
         this.object = object;
     }

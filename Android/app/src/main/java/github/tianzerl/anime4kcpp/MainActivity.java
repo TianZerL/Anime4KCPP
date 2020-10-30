@@ -66,11 +66,11 @@ public class MainActivity extends AppCompatActivity {
 
     AbstractFileFilter fileFilter = new AbstractFileFilter() {
         @Override
-        public @NonNull ArrayList<FileItemBeanImpl> doFilter(@NonNull ArrayList<FileItemBeanImpl> arrayList) {
+        public @NonNull
+        ArrayList<FileItemBeanImpl> doFilter(@NonNull ArrayList<FileItemBeanImpl> arrayList) {
             ArrayList<FileItemBeanImpl> newArrayList = new ArrayList<>();
-            for (FileItemBeanImpl file: arrayList)
-            {
-                if(file.isDir() || getFileType(file.getFilePath()) != FileType.Unknown)
+            for (FileItemBeanImpl file : arrayList) {
+                if (file.isDir() || getFileType(file.getFilePath()) != FileType.Unknown)
                     newArrayList.add(file);
             }
             return newArrayList;
@@ -86,22 +86,16 @@ public class MainActivity extends AppCompatActivity {
 
     private GPUState GPU = GPUState.UnInitialized;
     private GPUCNNState GPUCNN = GPUCNNState.UnInitialized;
-    private Anime4KCreator anime4KCreator = new Anime4KCreator(false,false);
+    private final Anime4KCreator anime4KCreator = new Anime4KCreator(false, false);
 
-    private Handler anime4KCPPHandler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            errorHandler(Error.Anime4KCPPError, new Exception((String)msg.obj));
-            return false;
-        }
+    private final Handler anime4KCPPHandler = new Handler(msg -> {
+        errorHandler(Error.Anime4KCPPError, new Exception((String) msg.obj));
+        return false;
     });
 
-    private Handler otherErrorHandler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            errorHandler((Error) msg.obj,null);
-            return false;
-        }
+    private final Handler otherErrorHandler = new Handler(msg -> {
+        errorHandler((Error) msg.obj, null);
+        return false;
     });
 
     @Override
@@ -116,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         adapterForProcessingList = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_list_item_multiple_choice,
-                new ArrayList<String>()
+                new ArrayList<>()
         );
 
         processingList = findViewById(R.id.processingList);
@@ -152,9 +146,9 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ABOUT")
                         .setMessage("Anime4KCPP for Android\n\n"
-                                +"Anime4KCPP core version: "+ Anime4K.getCoreVersion()
-                                +"\n\nGitHub: https://github.com/TianZerL/Anime4KCPP")
-                        .setPositiveButton("OK",null)
+                                + "Anime4KCPP core version: " + Anime4K.getCoreVersion()
+                                + "\n\nGitHub: https://github.com/TianZerL/Anime4KCPP")
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case R.id.menuItemBenchmark:
@@ -162,9 +156,9 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("Benchmark")
                         .setMessage("Benchmark result:\n"
-                                +"\nCPU score: " + scores[0]
-                                +"\nGPU score: " + scores[1])
-                        .setPositiveButton("OK",null)
+                                + "\nCPU score: " + scores[0]
+                                + "\nGPU score: " + scores[1])
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case R.id.menuItemQuit:
@@ -188,38 +182,37 @@ public class MainActivity extends AppCompatActivity {
 
     public void onClickButtonDelete(View v) {
         List<String> readyToRemove = new ArrayList<>();
-        for (int i = 0; i< processingList.getCount(); i++) {
-            if(processingList.isItemChecked(i))
+        for (int i = 0; i < processingList.getCount(); i++) {
+            if (processingList.isItemChecked(i))
                 readyToRemove.add(adapterForProcessingList.getItem(i));
         }
-        for (String item:readyToRemove) {
+        for (String item : readyToRemove) {
             adapterForProcessingList.remove(item);
         }
         adapterForProcessingList.notifyDataSetInvalidated();
     }
 
     public void onClickButtonStart(View v) {
-        if (adapterForProcessingList.isEmpty())
-        {
-            Toast.makeText(MainActivity.this,"Nothing to do",Toast.LENGTH_SHORT).show();
+        if (adapterForProcessingList.isEmpty()) {
+            Toast.makeText(MainActivity.this, "Nothing to do", Toast.LENGTH_SHORT).show();
             return;
         }
         EditText editTextOutputPath = findViewById(R.id.editTextOutputPath);
         EditText editTextOutputPrefix = findViewById(R.id.editTextOutputPrefix);
         new Anime4KProcessor(this)
                 .execute(editTextOutputPrefix.getText().toString(),
-                        "/storage/emulated/0/"+editTextOutputPath.getText().toString());
+                        "/storage/emulated/0/" + editTextOutputPath.getText().toString());
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode!=AppCompatActivity.RESULT_OK)
+        if (resultCode != AppCompatActivity.RESULT_OK)
             return;
         if (requestCode == 1) {
             List<String> files = FilePickerManager.INSTANCE.obtainData();
-            for (String file: files) {
-                if(file.isEmpty())
+            for (String file : files) {
+                if (file.isEmpty())
                     return;
                 adapterForProcessingList.add(file);
             }
@@ -227,11 +220,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private FileType getFileType(@NonNull String src) {
-        String imageSuffix = ((EditText)findViewById(R.id.editTextSuffixImage)).getText().toString();
-        String VideoSuffix = ((EditText)findViewById(R.id.editTextSuffixVideo)).getText().toString();
-        if(imageSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
+        String imageSuffix = ((EditText) findViewById(R.id.editTextSuffixImage)).getText().toString();
+        String VideoSuffix = ((EditText) findViewById(R.id.editTextSuffixVideo)).getText().toString();
+        if (imageSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
             return FileType.Image;
-        if(VideoSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
+        if (VideoSuffix.contains(src.substring(src.lastIndexOf('.') + 1)))
             return FileType.Video;
         return FileType.Unknown;
     }
@@ -241,19 +234,14 @@ public class MainActivity extends AppCompatActivity {
         GPUMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked && GPU == GPUState.UnInitialized)
-                {
+                if (isChecked && GPU == GPUState.UnInitialized) {
                     try {
-                        if (!Anime4KGPU.isInitializedGPU())
-                        {
-                            if (Anime4KGPU.checkGPUSupport())
-                            {
+                        if (!Anime4KGPU.isInitializedGPU()) {
+                            if (Anime4KGPU.checkGPUSupport()) {
                                 Toast.makeText(MainActivity.this, "GPU Mode enabled", Toast.LENGTH_SHORT).show();
                                 Anime4KGPU.initGPU();
                                 GPU = GPUState.Initialized;
-                            }
-                            else
-                            {
+                            } else {
                                 Toast.makeText(MainActivity.this, "Unsupported GPU Mode", Toast.LENGTH_SHORT).show();
                                 GPU = GPUState.Unsupported;
                                 buttonView.setChecked(false);
@@ -264,10 +252,8 @@ public class MainActivity extends AppCompatActivity {
                         GPU = GPUState.Unsupported;
                         buttonView.setChecked(false);
                     }
-                }
-                else if (isChecked && GPU == GPUState.Unsupported)
-                {
-                    Toast.makeText(MainActivity.this,"Unsupported GPU Mode",Toast.LENGTH_SHORT).show();
+                } else if (isChecked && GPU == GPUState.Unsupported) {
+                    Toast.makeText(MainActivity.this, "Unsupported GPU Mode", Toast.LENGTH_SHORT).show();
                     buttonView.setChecked(false);
                 }
             }
@@ -277,19 +263,14 @@ public class MainActivity extends AppCompatActivity {
         ACNetGPUMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked && GPUCNN == GPUCNNState.UnInitialized)
-                {
+                if (isChecked && GPUCNN == GPUCNNState.UnInitialized) {
                     try {
-                        if (!Anime4KGPUCNN.isInitializedGPU())
-                        {
-                            if (Anime4KGPU.checkGPUSupport())
-                            {
+                        if (!Anime4KGPUCNN.isInitializedGPU()) {
+                            if (Anime4KGPU.checkGPUSupport()) {
                                 Toast.makeText(MainActivity.this, "ACNet GPU Mode enabled", Toast.LENGTH_SHORT).show();
                                 Anime4KGPUCNN.initGPU();
                                 GPUCNN = GPUCNNState.Initialized;
-                            }
-                            else
-                            {
+                            } else {
                                 Toast.makeText(MainActivity.this, "Unsupported ACNet GPU Mode", Toast.LENGTH_SHORT).show();
                                 GPUCNN = GPUCNNState.Unsupported;
                                 buttonView.setChecked(false);
@@ -300,10 +281,8 @@ public class MainActivity extends AppCompatActivity {
                         GPUCNN = GPUCNNState.Unsupported;
                         buttonView.setChecked(false);
                     }
-                }
-                else if (isChecked && GPUCNN == GPUCNNState.Unsupported)
-                {
-                    Toast.makeText(MainActivity.this,"Unsupported ACNet GPU Mode",Toast.LENGTH_SHORT).show();
+                } else if (isChecked && GPUCNN == GPUCNNState.Unsupported) {
+                    Toast.makeText(MainActivity.this, "Unsupported ACNet GPU Mode", Toast.LENGTH_SHORT).show();
                     buttonView.setChecked(false);
                 }
             }
@@ -322,42 +301,42 @@ public class MainActivity extends AppCompatActivity {
         return sw.isChecked();
     }
 
-    private void errorHandler(@NonNull Error errorType,@Nullable Exception exp) {
+    private void errorHandler(@NonNull Error errorType, @Nullable Exception exp) {
         switch (errorType) {
             case Anime4KCPPError:
                 assert exp != null;
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage(exp.getMessage())
-                        .setPositiveButton("OK",null)
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case FailedToCreateFolders:
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to create folders")
-                        .setPositiveButton("OK",null)
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case FailedToDeleteTmpFile:
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to delete Temporary output video file, delete it manually.")
-                        .setPositiveButton("OK",null)
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case FailedToLoadConfig:
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to load or create config file.")
-                        .setPositiveButton("OK",null)
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
             case FailedToWriteConfig:
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("ERROR")
                         .setMessage("Failed to write config file.")
-                        .setPositiveButton("OK",null)
+                        .setPositiveButton("OK", null)
                         .show();
                 break;
         }
@@ -375,66 +354,66 @@ public class MainActivity extends AppCompatActivity {
         byte preFilters = 0;
         byte postFilters = 0;
         boolean HDN = getSwitchSate(R.id.switchHDN);
-        int HDNLevel = Integer.parseInt(((EditText)findViewById(R.id.editTextHDNLevel)).getText().toString());
+        int HDNLevel = Integer.parseInt(((EditText) findViewById(R.id.editTextHDNLevel)).getText().toString());
         boolean alpha = getSwitchSate(R.id.switchAlphaChannel);
 
         RadioGroup settingsGroup = findViewById(R.id.radioGroupSettings);
         switch (settingsGroup.getCheckedRadioButtonId()) {
             case R.id.radioButtonFast:
                 passes = 1;
-                preprocessing=false;
-                postprocessing=false;
+                preprocessing = false;
+                postprocessing = false;
                 break;
             case R.id.radioButtonBalance:
                 passes = 2;
-                preprocessing=false;
-                postprocessing=false;
+                preprocessing = false;
+                postprocessing = false;
                 break;
             case R.id.radioButtonQuality:
                 passes = 2;
-                preprocessing=true;
-                postprocessing=true;
-                preFilters=4;
-                postFilters=48;
+                preprocessing = true;
+                postprocessing = true;
+                preFilters = 4;
+                postFilters = 48;
                 break;
-            case  R.id.radioButtonCustom:
-                passes = Integer.parseInt(((EditText)findViewById(R.id.editTextPasses)).getText().toString());
-                pushColorCount = Integer.parseInt(((EditText)findViewById(R.id.editTextPushColorCount)).getText().toString());
-                strengthColor = Double.parseDouble(((EditText)findViewById(R.id.editTextStrengthColor)).getText().toString());
-                strengthGradient = Double.parseDouble(((EditText)findViewById(R.id.editTextStrengthGradien)).getText().toString());
-                zoomFactor = Double.parseDouble(((EditText)findViewById(R.id.editTextZoomFactor)).getText().toString());
-                preprocessing = ((Switch)findViewById(R.id.switchPreprocessing)).isChecked();
-                postprocessing = ((Switch)findViewById(R.id.switchPostprocessing)).isChecked();
+            case R.id.radioButtonCustom:
+                passes = Integer.parseInt(((EditText) findViewById(R.id.editTextPasses)).getText().toString());
+                pushColorCount = Integer.parseInt(((EditText) findViewById(R.id.editTextPushColorCount)).getText().toString());
+                strengthColor = Double.parseDouble(((EditText) findViewById(R.id.editTextStrengthColor)).getText().toString());
+                strengthGradient = Double.parseDouble(((EditText) findViewById(R.id.editTextStrengthGradien)).getText().toString());
+                zoomFactor = Double.parseDouble(((EditText) findViewById(R.id.editTextZoomFactor)).getText().toString());
+                preprocessing = ((Switch) findViewById(R.id.switchPreprocessing)).isChecked();
+                postprocessing = ((Switch) findViewById(R.id.switchPostprocessing)).isChecked();
 
-                if(((Switch)findViewById(R.id.switchPreprocessingMedianBlur)).isChecked())
-                    preFilters|=1;
-                if(((Switch)findViewById(R.id.switchPreprocessingMeanBlur)).isChecked())
-                    preFilters|=1<<1;
-                if(((Switch)findViewById(R.id.switchPreprocessingCAS)).isChecked())
-                    preFilters|=1<<2;
-                if(((Switch)findViewById(R.id.switchPreprocessingGaussianBlurWeak)).isChecked())
-                    preFilters|=1<<3;
-                if(((Switch)findViewById(R.id.switchPreprocessingGaussianBlur)).isChecked())
-                    preFilters|=1<<4;
-                if(((Switch)findViewById(R.id.switchPreprocessingBilateralFilter)).isChecked())
-                    preFilters|=1<<5;
-                if(((Switch)findViewById(R.id.switchPreprocessingBilateralFilterFaster)).isChecked())
-                    preFilters|=1<<6;
+                if (((Switch) findViewById(R.id.switchPreprocessingMedianBlur)).isChecked())
+                    preFilters |= 1;
+                if (((Switch) findViewById(R.id.switchPreprocessingMeanBlur)).isChecked())
+                    preFilters |= 1 << 1;
+                if (((Switch) findViewById(R.id.switchPreprocessingCAS)).isChecked())
+                    preFilters |= 1 << 2;
+                if (((Switch) findViewById(R.id.switchPreprocessingGaussianBlurWeak)).isChecked())
+                    preFilters |= 1 << 3;
+                if (((Switch) findViewById(R.id.switchPreprocessingGaussianBlur)).isChecked())
+                    preFilters |= 1 << 4;
+                if (((Switch) findViewById(R.id.switchPreprocessingBilateralFilter)).isChecked())
+                    preFilters |= 1 << 5;
+                if (((Switch) findViewById(R.id.switchPreprocessingBilateralFilterFaster)).isChecked())
+                    preFilters |= 1 << 6;
 
-                if(((Switch)findViewById(R.id.switchPostprocessingMedianBlur)).isChecked())
-                    postFilters|=1;
-                if(((Switch)findViewById(R.id.switchPostprocessingMeanBlur)).isChecked())
-                    postFilters|=1<<1;
-                if(((Switch)findViewById(R.id.switchPostprocessingCAS)).isChecked())
-                    postFilters|=1<<2;
-                if(((Switch)findViewById(R.id.switchPostprocessingGaussianBlurWeak)).isChecked())
-                    postFilters|=1<<3;
-                if(((Switch)findViewById(R.id.switchPostprocessingGaussianBlur)).isChecked())
-                    postFilters|=1<<4;
-                if(((Switch)findViewById(R.id.switchPostprocessingBilateralFilter)).isChecked())
-                    postFilters|=1<<5;
-                if(((Switch)findViewById(R.id.switchPostprocessingBilateralFilterFaster)).isChecked())
-                    postFilters|=1<<6;
+                if (((Switch) findViewById(R.id.switchPostprocessingMedianBlur)).isChecked())
+                    postFilters |= 1;
+                if (((Switch) findViewById(R.id.switchPostprocessingMeanBlur)).isChecked())
+                    postFilters |= 1 << 1;
+                if (((Switch) findViewById(R.id.switchPostprocessingCAS)).isChecked())
+                    postFilters |= 1 << 2;
+                if (((Switch) findViewById(R.id.switchPostprocessingGaussianBlurWeak)).isChecked())
+                    postFilters |= 1 << 3;
+                if (((Switch) findViewById(R.id.switchPostprocessingGaussianBlur)).isChecked())
+                    postFilters |= 1 << 4;
+                if (((Switch) findViewById(R.id.switchPostprocessingBilateralFilter)).isChecked())
+                    postFilters |= 1 << 5;
+                if (((Switch) findViewById(R.id.switchPostprocessingBilateralFilterFaster)).isChecked())
+                    postFilters |= 1 << 6;
                 break;
         }
 
@@ -455,25 +434,16 @@ public class MainActivity extends AppCompatActivity {
                 alpha
         );
 
-        if (getSwitchSate(R.id.switchACNet))
-        {
-            if (getSwitchSate(R.id.switchACNetGPUMode))
-            {
+        if (getSwitchSate(R.id.switchACNet)) {
+            if (getSwitchSate(R.id.switchACNetGPUMode)) {
                 return anime4KCreator.create(parameters, ProcessorType.GPUCNN);
-            }
-            else
-            {
+            } else {
                 return anime4KCreator.create(parameters, ProcessorType.CPUCNN);
             }
-        }
-        else
-        {
-            if (getSwitchSate(R.id.switchGPUMode))
-            {
+        } else {
+            if (getSwitchSate(R.id.switchGPUMode)) {
                 return anime4KCreator.create(parameters, ProcessorType.GPU);
-            }
-            else
-            {
+            } else {
                 return anime4KCreator.create(parameters, ProcessorType.CPU);
             }
         }
@@ -481,66 +451,66 @@ public class MainActivity extends AppCompatActivity {
 
     class Config {
         Properties properties;
-        File path = new File(getFilesDir(),"config.properties");
+        File path = new File(getFilesDir(), "config.properties");
+
         protected Config() {
             properties = new Properties();
-            if (path.exists())
-            {
+            if (path.exists()) {
                 try {
-                    FileInputStream fi =  new FileInputStream(path);
+                    FileInputStream fi = new FileInputStream(path);
                     properties.load(fi);
                     fi.close();
                 } catch (Exception ignored) {
-                    errorHandler(Error.FailedToLoadConfig,null);
+                    errorHandler(Error.FailedToLoadConfig, null);
                 }
-            }
-            else {
+            } else {
                 try {
-                    if(!path.createNewFile())
+                    if (!path.createNewFile())
                         throw new Exception();
-                    FileInputStream fi =  new FileInputStream(path);
+                    FileInputStream fi = new FileInputStream(path);
                     properties.load(fi);
                     fi.close();
                 } catch (Exception ignored) {
-                    errorHandler(Error.FailedToLoadConfig,null);
+                    errorHandler(Error.FailedToLoadConfig, null);
                 }
             }
         }
 
         protected void write() {
-            properties.setProperty("ouputPath",((EditText)findViewById(R.id.editTextOutputPath)).getText().toString());
-            properties.setProperty("ouputPrefix",((EditText)findViewById(R.id.editTextOutputPrefix)).getText().toString());
-            properties.setProperty("imageSuffix",((EditText)findViewById(R.id.editTextSuffixImage)).getText().toString());
-            properties.setProperty("videoSuffix",((EditText)findViewById(R.id.editTextSuffixVideo)).getText().toString());
+            properties.setProperty("ouputPath", ((EditText) findViewById(R.id.editTextOutputPath)).getText().toString());
+            properties.setProperty("ouputPrefix", ((EditText) findViewById(R.id.editTextOutputPrefix)).getText().toString());
+            properties.setProperty("imageSuffix", ((EditText) findViewById(R.id.editTextSuffixImage)).getText().toString());
+            properties.setProperty("videoSuffix", ((EditText) findViewById(R.id.editTextSuffixVideo)).getText().toString());
             try {
-                FileOutputStream fo =  new FileOutputStream(path);
-                properties.store(fo,null);
+                FileOutputStream fo = new FileOutputStream(path);
+                properties.store(fo, null);
                 fo.flush();
                 fo.close();
             } catch (Exception ignored) {
-                errorHandler(Error.FailedToWriteConfig,null);
+                errorHandler(Error.FailedToWriteConfig, null);
             }
         }
 
         protected void read() {
-            ((EditText)findViewById(R.id.editTextOutputPath))
-                    .setText(properties.getProperty("ouputPath","Android/data/github.tianzerl.anime4kcpp/files/output"));
-            ((EditText)findViewById(R.id.editTextOutputPrefix))
-                    .setText(properties.getProperty("ouputPrefix","anime4kcpp_output_"));
-            ((EditText)findViewById(R.id.editTextSuffixImage))
-                    .setText(properties.getProperty("imageSuffix","png:jpg:jpeg:bmp"));
-            ((EditText)findViewById(R.id.editTextSuffixVideo))
-                    .setText(properties.getProperty("videoSuffix","mp4:mkv:avi:m4v:flv:3gp:wmv:mov"));
+            ((EditText) findViewById(R.id.editTextOutputPath))
+                    .setText(properties.getProperty("ouputPath", "Android/data/github.tianzerl.anime4kcpp/files/output"));
+            ((EditText) findViewById(R.id.editTextOutputPrefix))
+                    .setText(properties.getProperty("ouputPrefix", "anime4kcpp_output_"));
+            ((EditText) findViewById(R.id.editTextSuffixImage))
+                    .setText(properties.getProperty("imageSuffix", "png:jpg:jpeg:bmp"));
+            ((EditText) findViewById(R.id.editTextSuffixVideo))
+                    .setText(properties.getProperty("videoSuffix", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov"));
         }
     }
 
-     static class Anime4KProcessor extends AsyncTask<String, Integer, Double> {
+    static class Anime4KProcessor extends AsyncTask<String, Integer, Double> {
 
-         private WeakReference<MainActivity> activityReference;
+        private final WeakReference<MainActivity> activityReference;
 
-         Anime4KProcessor(MainActivity context) {
-             activityReference = new WeakReference<>(context);
-         }
+        Anime4KProcessor(MainActivity context) {
+            super();
+            activityReference = new WeakReference<>(context);
+        }
 
         public void updateProgressForVideoProcessing(double v, double t) {
             publishProgress((int) (v * 100), (int) (t / v - t));
@@ -555,7 +525,7 @@ public class MainActivity extends AppCompatActivity {
             Button buttonStart = activity.findViewById(R.id.buttonStart);
 
             buttonStart.setEnabled(false);
-            Toast.makeText(activity,"Processing...",Toast.LENGTH_SHORT).show();
+            Toast.makeText(activity, "Processing...", Toast.LENGTH_SHORT).show();
             activity.textViewState.setText(R.string.processing);
         }
 
@@ -570,26 +540,24 @@ public class MainActivity extends AppCompatActivity {
             int taskCount = activity.adapterForProcessingList.getCount();
 
             File dstPath = new File(dst);
-            if(!dstPath.exists() && !dstPath.mkdirs())
-             {
-                 Message message = new Message();
-                 message.obj = Error.FailedToCreateFolders;
-                 activity.otherErrorHandler.sendMessage(message);
-             }
+            if (!dstPath.exists() && !dstPath.mkdirs()) {
+                Message message = new Message();
+                message.obj = Error.FailedToCreateFolders;
+                activity.otherErrorHandler.sendMessage(message);
+            }
 
-            List<Pair<String,Integer>> images = new ArrayList<>();
-            List<Pair<String,Integer>> videos = new ArrayList<>();
+            List<Pair<String, Integer>> images = new ArrayList<>();
+            List<Pair<String, Integer>> videos = new ArrayList<>();
 
             //add images and video to processing list
-            for(int i = 0; i < taskCount; i++)
-            {
+            for (int i = 0; i < taskCount; i++) {
                 String filePath = activity.adapterForProcessingList.getItem(i);
                 assert filePath != null;
                 FileType fileType = activity.getFileType(filePath);
-                if(fileType == FileType.Image)
-                    images.add(Pair.create(filePath,i));
-                else if(fileType == FileType.Video)
-                    videos.add(Pair.create(filePath,i));
+                if (fileType == FileType.Image)
+                    images.add(Pair.create(filePath, i));
+                else if (fileType == FileType.Video)
+                    videos.add(Pair.create(filePath, i));
             }
 
             Anime4K anime4K = activity.initAnime4KCPP();
@@ -601,7 +569,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 //processing images
                 anime4K.setVideoMode(false);
-                for (Pair<String,Integer> image: images) {
+                for (Pair<String, Integer> image : images) {
                     File srcFile = new File(image.first);
                     anime4K.loadImage(srcFile.getPath());
 
@@ -609,7 +577,7 @@ public class MainActivity extends AppCompatActivity {
                     anime4K.process();
                     long end = System.currentTimeMillis();
 
-                    anime4K.saveImage(dst+"/"+prefix+srcFile.getName());
+                    anime4K.saveImage(dst + "/" + prefix + srcFile.getName());
 
                     totalTime += end - start;
                     publishProgress((++imageCount) * 100 / taskCount, 0, image.second);
@@ -617,10 +585,10 @@ public class MainActivity extends AppCompatActivity {
 
                 //processing videos
                 anime4K.setVideoMode(true);
-                for (Pair<String,Integer> video: videos) {
+                for (Pair<String, Integer> video : videos) {
                     File srcFile = new File(video.first);
-                    String tmpOutputPath = dst + "/" + "tmpOutput" + videoCount +".mp4";
-                    String OutputPath = dst + "/" + prefix+srcFile.getName() + ".mp4";
+                    String tmpOutputPath = dst + "/" + "tmpOutput" + videoCount + ".mp4";
+                    String OutputPath = dst + "/" + prefix + srcFile.getName() + ".mp4";
 
                     anime4K.loadVideo(srcFile.getPath());
                     anime4K.setVideoSaveInfo(tmpOutputPath);
@@ -634,8 +602,7 @@ public class MainActivity extends AppCompatActivity {
 
                     new VideoAudioProcessor(srcFile.getPath(), tmpOutputPath, OutputPath).merge();
 
-                    if (!(new File(tmpOutputPath).delete()))
-                    {
+                    if (!(new File(tmpOutputPath).delete())) {
                         Message message = new Message();
                         message.obj = Error.FailedToDeleteTmpFile;
                         activity.otherErrorHandler.sendMessage(message);
@@ -650,7 +617,7 @@ public class MainActivity extends AppCompatActivity {
                 return 0.0;
             }
 
-            return (double)(totalTime) / 1000.0;
+            return (double) (totalTime) / 1000.0;
         }
 
         @Override
@@ -660,9 +627,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
 
             activity.mainProgressBar.setProgress(values[0]);
-            activity.textViewTime.setText(String.format(Locale.ENGLISH,"remaining time:  %d s", values[1]));
-            if(values.length > 2)
-            {
+            activity.textViewTime.setText(String.format(Locale.ENGLISH, "remaining time:  %d s", values[1]));
+            if (values.length > 2) {
                 activity.processingList.setItemChecked(values[2], true);
             }
 
@@ -678,16 +644,15 @@ public class MainActivity extends AppCompatActivity {
 
             buttonStart.setEnabled(true);
 
-            if (aDouble==0.0)
-            {
+            if (aDouble == 0.0) {
                 activity.mainProgressBar.setProgress(0);
                 return;
             }
 
             new AlertDialog.Builder(activity)
                     .setTitle("NOTICE")
-                    .setMessage("Finished in "+aDouble.toString()+"s")
-                    .setPositiveButton("OK",null)
+                    .setMessage("Finished in " + aDouble.toString() + "s")
+                    .setPositiveButton("OK", null)
                     .show();
             activity.textViewState.setText(R.string.waitting);
             activity.mainProgressBar.setProgress(0);

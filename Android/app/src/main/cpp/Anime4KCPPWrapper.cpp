@@ -1,6 +1,6 @@
 #include <jni.h>
 #include <string>
-#include "Anime4KCPP.h"
+#include "Anime4KCPP.hpp"
 
 #ifdef DEBUG
 #include <android/log.h>
@@ -15,7 +15,7 @@ JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPU(
         JNIEnv *env,
         jobject /* this */) {
-    return (jlong)(new Anime4KCPP::Anime4KCPU());
+    return (jlong)(new Anime4KCPP::CPU::Anime4K09());
 }
 
 JNIEXPORT jlong JNICALL
@@ -35,7 +35,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
         jbyte postFilters,
         jboolean alpha) {
 
-    return (jlong)(new Anime4KCPP::Anime4KCPU(
+    return (jlong)(new Anime4KCPP::CPU::Anime4K09(
         Anime4KCPP::Parameters(
             passes,
             pushColorCount,
@@ -60,7 +60,7 @@ JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPU(
         JNIEnv *env,
         jobject /* this */) {
-    return (jlong)(new Anime4KCPP::Anime4KGPU());
+    return (jlong)(new Anime4KCPP::OpenCL::Anime4K09());
 }
 
 JNIEXPORT jlong JNICALL
@@ -80,7 +80,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPUByArgs(
         jbyte postFilters,
         jboolean alpha) {
 
-    return (jlong)(new Anime4KCPP::Anime4KGPU(
+    return (jlong)(new Anime4KCPP::OpenCL::Anime4K09(
         Anime4KCPP::Parameters(
             passes,
             pushColorCount,
@@ -105,7 +105,7 @@ JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNN(
         JNIEnv *env,
         jobject /* this */) {
-    return (jlong)(new Anime4KCPP::Anime4KCPUCNN());
+    return (jlong)(new Anime4KCPP::CPU::ACNet());
 }
 
 JNIEXPORT jlong JNICALL
@@ -127,7 +127,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
         jint HDNLevel,
         jboolean alpha) {
 
-    return (jlong)(new Anime4KCPP::Anime4KCPUCNN(
+    return (jlong)(new Anime4KCPP::CPU::ACNet(
             Anime4KCPP::Parameters(
                     passes,
                     pushColorCount,
@@ -152,7 +152,7 @@ JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNN(
         JNIEnv *env,
         jobject /* this */) {
-    return (jlong)(new Anime4KCPP::Anime4KGPUCNN());
+    return (jlong)(new Anime4KCPP::OpenCL::ACNet());
 }
 
 JNIEXPORT jlong JNICALL
@@ -174,7 +174,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
         jint HDNLevel,
         jboolean alpha) {
 
-    return (jlong)(new Anime4KCPP::Anime4KGPUCNN(
+    return (jlong)(new Anime4KCPP::OpenCL::ACNet(
             Anime4KCPP::Parameters(
                     passes,
                     pushColorCount,
@@ -211,7 +211,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setArgumentsAnime4K(
         jboolean postprocessing,
         jbyte preFilters,
         jbyte postFilters) {
-    ((Anime4KCPP::Anime4K *)(ptrAnime4K))->setArguments(
+    ((Anime4KCPP::AC *)(ptrAnime4K))->setArguments(
         Anime4KCPP::Parameters(
             passes,
             pushColorCount,
@@ -233,7 +233,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_releaseAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
-    delete ((Anime4KCPP::Anime4K*)(ptrAnime4K));
+    delete ((Anime4KCPP::AC*)(ptrAnime4K));
 }
 
 JNIEXPORT void JNICALL
@@ -243,7 +243,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadImageAnime4K(
         jlong ptrAnime4K,
         jstring src) {
     try {
-        ((Anime4KCPP::Anime4K*)(ptrAnime4K))->loadImage(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
+        ((Anime4KCPP::AC*)(ptrAnime4K))->loadImage(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
     catch (Anime4KCPP::ACBaseException& err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
@@ -255,7 +255,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
-    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->process();
+    ((Anime4KCPP::AC*)(ptrAnime4K))->process();
 }
 
 JNIEXPORT void JNICALL
@@ -269,7 +269,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processWithProgressAnime4K(
 
     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->processWithProgress(
+    ((Anime4KCPP::AC*)(ptrAnime4K))->processWithProgress(
             [&env, &thiz, &callback, &s](double v)
             {
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
@@ -283,7 +283,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveImageAnime4K(
         jobject /* this */,
         jlong ptrAnime4K,
         jstring dst) {
-    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->saveImage(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
+    ((Anime4KCPP::AC*)(ptrAnime4K))->saveImage(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
 }
 
 JNIEXPORT void JNICALL
@@ -292,7 +292,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoModeAnime4K(
         jobject /* this */,
         jlong ptrAnime4K,
         jboolean flag) {
-    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->setVideoMode(flag);
+    ((Anime4KCPP::AC*)(ptrAnime4K))->setVideoMode(flag);
 }
 
 JNIEXPORT void JNICALL
@@ -302,7 +302,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadVideoAnime4K(
         jlong ptrAnime4K,
         jstring src) {
     try {
-        ((Anime4KCPP::Anime4K*)(ptrAnime4K))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
+        ((Anime4KCPP::AC*)(ptrAnime4K))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
     catch (Anime4KCPP::ACBaseException& err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
@@ -316,7 +316,7 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
         jlong ptrAnime4K,
         jstring dst) {
     try {
-        ((Anime4KCPP::Anime4K *) (ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
+        ((Anime4KCPP::AC*)(ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
     }
     catch (Anime4KCPP::ACBaseException& err) {
         env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
@@ -328,56 +328,56 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveVideoAnime4K(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
-    ((Anime4KCPP::Anime4K*)(ptrAnime4K))->saveVideo();
+    ((Anime4KCPP::AC*)(ptrAnime4K))->saveVideo();
 }
 
 JNIEXPORT jboolean JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_checkGPUSupportAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
-    return (jboolean)(Anime4KCPP::Anime4KGPU::checkGPUSupport(0, 0).first);
+    return (jboolean)(Anime4KCPP::OpenCL::checkGPUSupport(0, 0).supported);
 }
 
 JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_initGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
-    Anime4KCPP::Anime4KGPU::initGPU();
+    Anime4KCPP::OpenCL::Anime4K09::initGPU();
 }
 
 JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_initGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
-    Anime4KCPP::Anime4KGPUCNN::initGPU();
+    Anime4KCPP::OpenCL::ACNet::initGPU();
 }
 
 JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_releaseGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
-    Anime4KCPP::Anime4KGPU::releaseGPU();
+    Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
 }
 
 JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_releaseGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
-    Anime4KCPP::Anime4KGPUCNN::releaseGPU();
+    Anime4KCPP::OpenCL::ACNet::releaseGPU();
 }
 
 JNIEXPORT jboolean JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_isInitializedGPUAnime4KGPU(
         JNIEnv *env,
         jclass clazz) {
-    return (jboolean)(Anime4KCPP::Anime4KGPU::isInitializedGPU());
+    return (jboolean)(Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU());
 }
 
 JNIEXPORT jboolean JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_isInitializedGPUAnime4KGPUCNN(
         JNIEnv *env,
         jclass clazz) {
-    return (jboolean)(Anime4KCPP::Anime4KGPUCNN::isInitializedGPU());
+    return (jboolean)(Anime4KCPP::OpenCL::ACNet::isInitializedGPU());
 }
 
 

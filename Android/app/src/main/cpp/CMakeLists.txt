@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 # Set your libs path here
-set(OpenCV_DIR "D:/Code/Lib/OpenCV-android-sdk/sdk/native/jni")
-set(OpenCL_LIBRARY "D:/Code/Lib/opencl/lib/${ANDROID_ABI}/libOpenCL.so")
-set(OpenCL_INCLUDE_DIR "D:/Code/Lib/opencl/inc")
+set(OpenCV_DIR "E:/Libs/Android/OpenCV/sdk/native/jni")
+set(OpenCL_LIBRARY "E:/Libs/Android/OpenCL/lib/${ANDROID_ABI}/libOpenCL.so")
+set(OpenCL_INCLUDE_DIR "E:/Libs/Android/OpenCL/inc")
 
 find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
