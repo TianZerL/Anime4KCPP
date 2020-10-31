@@ -32,22 +32,32 @@ std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
         << "----------------------------------------------" << std::endl
         << "Preprocessing filters list:" << std::endl
         << "----------------------------------------------" << std::endl;
-    std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
-    if (preFiltersString.empty())
+    if (!param.preprocessing)
         oss << "Preprocessing disabled" << std::endl;
     else
-        for (auto& filters : preFiltersString)
-            oss << filters << std::endl;
+    {
+        std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
+        if (preFiltersString.empty())
+            oss << "Preprocessing disabled" << std::endl;
+        else
+            for (auto& filters : preFiltersString)
+                oss << filters << std::endl;
+    }
 
     oss << "----------------------------------------------" << std::endl
         << "Postprocessing filters list:" << std::endl
         << "----------------------------------------------" << std::endl;
-    std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
-    if (postFiltersString.empty())
+    if (!param.postprocessing)
         oss << "Postprocessing disabled" << std::endl;
     else
-        for (auto& filters : postFiltersString)
-            oss << filters << std::endl;
+    {
+        std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
+        if (postFiltersString.empty())
+            oss << "Postprocessing disabled" << std::endl;
+        else
+            for (auto& filters : postFiltersString)
+                oss << filters << std::endl;
+    }
 
     return oss.str();
 }

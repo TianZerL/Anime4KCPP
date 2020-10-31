@@ -96,12 +96,12 @@ int main(int argc, char* argv[])
     opt.add("preprocessing", 'b', "Enable preprocessing");
     opt.add("postprocessing", 'a', "Enable postprocessing");
     opt.add<unsigned int>("preFilters", 'r',
-        "Enhancement filter, only working when preProcessing is true,there are 5 options by binary:"
+        "Enhancement filter, only working when preprocessing is true,there are 5 options by binary:"
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
         "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D)",
         false, 4, cmdline::range(1, 127));
     opt.add<unsigned int>("postFilters", 'e',
-        "Enhancement filter, only working when postProcessing is true,there are 5 options by binary:"
+        "Enhancement filter, only working when postprocessing is true,there are 5 options by binary:"
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
         "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), "
         "so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, "
@@ -141,8 +141,8 @@ int main(int argc, char* argv[])
     bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
-    bool preProcessing = opt.exist("preprocessing");
-    bool postProcessing = opt.exist("postprocessing");
+    bool preprocessing = opt.exist("preprocessing");
+    bool postprocessing = opt.exist("postprocessing");
     bool GPU = opt.exist("GPUMode");
     bool CNN = opt.exist("CNNMode");
     bool HDN = opt.exist("HDN");
@@ -232,8 +232,8 @@ int main(int argc, char* argv[])
         zoomFactor,
         fastMode,
         videoMode,
-        preProcessing,
-        postProcessing,
+        preprocessing,
+        postprocessing,
         preFilters,
         postFilters,
         threads,
