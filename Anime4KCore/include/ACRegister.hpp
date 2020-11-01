@@ -21,11 +21,21 @@
 //Register processor here
 //---------------------------------------
 #ifndef PROCESSORS
+#ifdef ENABLE_CUDA
+#define PROCESSORS \
+REGISTER_PROCESSOR(CPU, Anime4K09) \
+REGISTER_PROCESSOR(CPU, ACNet) \
+REGISTER_PROCESSOR(OpenCL, Anime4K09) \
+REGISTER_PROCESSOR(OpenCL, ACNet) \
+REGISTER_PROCESSOR(Cuda, Anime4K09) \
+REGISTER_PROCESSOR(Cuda, ACNet)
+#else
 #define PROCESSORS \
 REGISTER_PROCESSOR(CPU, Anime4K09) \
 REGISTER_PROCESSOR(CPU, ACNet) \
 REGISTER_PROCESSOR(OpenCL, Anime4K09) \
 REGISTER_PROCESSOR(OpenCL, ACNet)
+#endif
 #endif
 //---------------------------------------
 

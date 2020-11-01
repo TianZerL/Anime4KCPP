@@ -29,7 +29,7 @@ QT_END_NAMESPACE
 
 enum Language
 {
-    en = 0, zh_cn = 1
+    en, zh_cn, zh_tw, ja_jp
 };
 
 enum ErrorType
@@ -132,7 +132,11 @@ private slots:
 
     void on_tabWidgetMain_tabBarClicked(int index);
 
-    void on_actionChinese_triggered();
+    void on_actionSimplifiedChinese_triggered();
+
+    void on_actionTraditionalChinese_triggered();
+    
+    void on_actionJapanese_triggered();
 
     void on_actionEnglish_triggered();
 

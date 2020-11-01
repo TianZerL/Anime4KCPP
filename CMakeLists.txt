@@ -40,6 +40,7 @@ option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
 option(Use_TBB "Use TBB for parallel processing" OFF)
+option(Enable_CUDA "Enable CUDA module" OFF)
 
 if(HAS_FILESYSTEM)
     option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
@@ -124,6 +125,10 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(OS_64_Bit ON)
 else()
     set(OS_64_Bit OFF)
+endif()
+
+if (Enable_CUDA)
+    add_definitions(-DENABLE_CUDA)
 endif()
 
 macro(SUBDIRLIST result curdir)

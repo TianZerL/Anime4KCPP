@@ -1088,7 +1088,9 @@
      <string>Language</string>
     </property>
     <addaction name="actionEnglish"/>
-    <addaction name="actionChinese"/>
+    <addaction name="actionSimplifiedChinese"/>
+    <addaction name="actionTraditionalChinese"/>
+    <addaction name="actionJapanese"/>
    </widget>
    <widget class="QMenu" name="menuOption">
     <property name="title">
@@ -1132,9 +1134,9 @@
     <string>English</string>
    </property>
   </action>
-  <action name="actionChinese">
+  <action name="actionSimplifiedChinese">
    <property name="text">
-    <string>Chinese</string>
+    <string>Simplified Chinese</string>
    </property>
   </action>
   <action name="actionQuit_confirmation">
@@ -1169,6 +1171,16 @@
   <action name="actionBenchmark">
    <property name="text">
     <string>Benchmark</string>
+   </property>
+  </action>
+  <action name="actionTraditionalChinese">
+   <property name="text">
+    <string>Traditional Chinese</string>
+   </property>
+  </action>
+  <action name="actionJapanese">
+   <property name="text">
+    <string>Japanese</string>
    </property>
   </action>
  </widget>

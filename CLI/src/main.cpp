@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
     opt.add("benchmark", 'B', "do benchmarking");
-
+    opt.add("cuda", 'N', "Enable CUDA acceleration");
     opt.set_program_name("Anime4KCPP_CLI");
 
     opt.parse_check(argc, argv);
@@ -157,6 +157,7 @@ int main(int argc, char* argv[])
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");
     bool doBenchmark = opt.exist("benchmark");
+    bool cuda = opt.exist("cuda");
 
     // -V
     if (version)
@@ -250,7 +251,17 @@ int main(int argc, char* argv[])
     try
     {
         //init
-        if (GPU)
+        if (cuda)
+        {
+#ifndef ENABLE_CUDA
+            std::cerr << "CUDA is not supported" << std::endl;
+            return 0;
+#else
+            creator.pushManager<Anime4KCPP::Cuda::Manager>();
+            creator.init();
+#endif
+        }
+        else if (GPU)
         {
             if (CNN)
                 creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
@@ -259,7 +270,16 @@ int main(int argc, char* argv[])
             creator.init();
         }
         //create instance
-        if (GPU)
+        if (cuda)
+        {
+#ifdef ENABLE_CUDA
+            if (CNN)
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+        }
+        else if (GPU)
         {
             Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
             if (!ret)

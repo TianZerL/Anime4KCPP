@@ -2,6 +2,11 @@
 
 #include"ACCPU.hpp"
 #include"ACOpenCL.hpp"
+
+#ifdef ENABLE_CUDA
+#include"ACCuda.hpp"
+#endif
+
 #include"ACManager.hpp"
 
 #define ANIME4KCPP_CORE_VERSION "2.4.1"

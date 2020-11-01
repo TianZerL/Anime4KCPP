@@ -220,7 +220,13 @@ void MainWindow::readConfig(const QSettings* conf)
         on_actionEnglish_triggered();
         break;
     case zh_cn:
-        on_actionChinese_triggered();
+        on_actionSimplifiedChinese_triggered();
+        break;
+    case zh_tw:
+        on_actionTraditionalChinese_triggered();
+        break;
+    case ja_jp:
+        on_actionJapanese_triggered();
         break;
     }
     ui->actionQuit_confirmation->setChecked(quitConfirmatiom);
@@ -372,7 +378,11 @@ inline QString MainWindow::getLanguage(const Language lang)
     case en:
         return "en";
     case zh_cn:
-        return "zh_cn";
+        return "zh_CN";
+    case zh_tw:
+        return "zh_TW";
+    case ja_jp:
+        return "ja_JP";
     default:
         return "en";
     }
@@ -1152,7 +1162,9 @@ void MainWindow::on_actionAbout_triggered()
             "Parallel library: %3\n\n"
             "Build on %4 %5\n\n"
             "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
-            "Copyright (c) 2020 TianZerL")
+            "Copyright (c) 2020 TianZerL\n\n"
+            "Thanks for:\n"
+            "semmyenator (Traditional Chinese and Japanese translation)")
         .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION, PARALLEL_LIBRARY, __DATE__, __TIME__),
         QMessageBox::Ok);
 }
@@ -1163,7 +1175,7 @@ void MainWindow::on_tabWidgetMain_tabBarClicked(int index)
         ui->radioButtonCustom->setChecked(true);
 }
 
-void MainWindow::on_actionChinese_triggered()
+void MainWindow::on_actionSimplifiedChinese_triggered()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_zh_CN.qm";
     if (!QFileInfo(filePath).exists())
@@ -1172,6 +1184,28 @@ void MainWindow::on_actionChinese_triggered()
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
     currLanguage = zh_cn;
+}
+
+void MainWindow::on_actionTraditionalChinese_triggered()
+{
+    QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_zh_TW.qm";
+    if (!QFileInfo(filePath).exists())
+        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_zh_TW.qm");
+    translator->load(filePath);
+    qApp->installTranslator(translator);
+    ui->retranslateUi(this);
+    currLanguage = zh_tw;
+}
+
+void MainWindow::on_actionJapanese_triggered()
+{
+    QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_ja_JP.qm";
+    if (!QFileInfo(filePath).exists())
+        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_ja_JP.qm");
+    translator->load(filePath);
+    qApp->installTranslator(translator);
+    ui->retranslateUi(this);
+    currLanguage = ja_jp;
 }
 
 void MainWindow::on_actionEnglish_triggered()

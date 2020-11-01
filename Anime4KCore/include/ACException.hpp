@@ -1,6 +1,6 @@
 #pragma once
 
-#include<string>
+#include<sstream>
 
 #define TYPE_ITEM(Name)\
 struct Name\
