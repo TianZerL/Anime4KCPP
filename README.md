@@ -30,6 +30,7 @@ for detail, see [wiki page](https://github.com/TianZerL/Anime4KCPP/wiki/ACNet).
 # Why Anime4KCPP
 - Cross-platform, building have already tested in Windows ,Linux, and macOS (Thanks for [NightMachinary](https://github.com/NightMachinary)).
 - GPU acceleration support with all GPUs that implemented OpenCL 1.2 or newer.
+- CUDA acceleration.
 - High performance and low memory usage.
 - Support multiple usage methods.
 

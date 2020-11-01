@@ -15,6 +15,7 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 # 为什么选择Anime4KCPP
 - 跨平台支持，已在Windows，Linux和macOS (感谢[NightMachinary](https://github.com/NightMachinary))上通过编译测试。
 - 支持GPU加速，只需一块实现了OpenCL1.2或更高版本的GPU。
+- CUDA加速同样支持。
 - 高性能，低内存占用。
 - 支持多种使用方式。
 

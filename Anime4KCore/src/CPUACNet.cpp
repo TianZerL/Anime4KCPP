@@ -61,7 +61,7 @@ std::string Anime4KCPP::CPU::ACNet::getInfo()
         << "----------------------------------------------" << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN level: " << param.HDNLevel << std::endl
+        << "HDN level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }

@@ -113,6 +113,7 @@ message(STATUS
 "   Built-in kernel ${Built_in_kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
+"   Enable CUDA ${Enable_CUDA}\n"
 )
 if(WIN32)
     message(STATUS

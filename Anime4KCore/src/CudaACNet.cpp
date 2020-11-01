@@ -14,7 +14,7 @@ std::string Anime4KCPP::Cuda::ACNet::getInfo()
         << "----------------------------------------------" << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN level: " << param.HDNLevel << std::endl
+        << "HDN level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }
@@ -31,7 +31,7 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 
 inline void Anime4KCPP::Cuda::ACNet::runKernel(cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,param.HDNLevel };
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
     runKernelACNet(orgImg.data, dstImg.data, &cuParam);
 }
 
