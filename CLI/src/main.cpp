@@ -168,11 +168,27 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
-        if (ret.platforms == 0)
-            std::cerr << "Error: No GPU found" << std::endl;
-        std::cerr << ret() << std::endl;
-        return 0;
+        if (cuda)
+        {
+#ifndef ENABLE_CUDA
+            std::cerr << "CUDA is not supported" << std::endl;
+            return 0;
+#else
+            Anime4KCPP::Cuda::GPUList ret = Anime4KCPP::Cuda::listGPUs();
+            if (ret.devices == 0)
+                std::cerr << "Error: No GPU found" << std::endl;
+            std::cerr << ret() << std::endl;
+            return 0;
+#endif
+        }
+        else
+        {
+            Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
+            if (ret.platforms == 0)
+                std::cerr << "Error: No GPU found" << std::endl;
+            std::cerr << ret() << std::endl;
+            return 0;
+        }
     }
     // -b
     if (doBenchmark)
@@ -273,6 +289,16 @@ int main(int argc, char* argv[])
         if (cuda)
         {
 #ifdef ENABLE_CUDA
+            Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
+            if (!ret)
+            {
+                std::cerr << ret() << std::endl;
+                return 0;
+            }
+            else
+            {
+                std::cerr << ret() << std::endl;
+            }
             if (CNN)
                 ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else

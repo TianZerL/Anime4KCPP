@@ -12,13 +12,13 @@ namespace Anime4KCPP
     {
         class Manager;
 
-        //struct DLL GPUList;
-        //struct DLL GPUInfo;
+        struct GPUList;
+        struct GPUInfo;
 
-        ////return platforms, devices of each platform, all devices infomation
-        //DLL GPUList listGPUs();
-        ////return result and infomation
-        //DLL GPUInfo checkGPUSupport(unsigned int pID, unsigned int dID);
+        //return platforms, devices of each platform, all devices infomation
+        GPUList listGPUs();
+        //return result and infomation
+        GPUInfo checkGPUSupport(const unsigned int dID);
     }
 }
 
@@ -37,12 +37,62 @@ inline Anime4KCPP::Cuda::Manager::Manager(const unsigned int dID)
 
 inline void Anime4KCPP::Cuda::Manager::init()
 {
-    initCuda(dID);
+    cuInitCuda(dID);
 }
 
 inline void Anime4KCPP::Cuda::Manager::release()
 {
-    releaseCuda();
+    cuReleaseCuda();
+}
+
+struct Anime4KCPP::Cuda::GPUList
+{
+    int devices;
+    std::string message;
+
+    GPUList(const int devices, std::string message);
+    std::string& operator()() noexcept;
+};
+
+inline Anime4KCPP::Cuda::GPUList::GPUList(const int devices, std::string message)
+    : devices(devices), message(std::move(message)) {}
+
+inline std::string& Anime4KCPP::Cuda::GPUList::operator()() noexcept
+{
+    return message;
+}
+
+struct Anime4KCPP::Cuda::GPUInfo
+{
+    bool supported;
+    std::string message;
+
+    GPUInfo(const bool supported, std::string message);
+    std::string& operator()() noexcept;
+    operator bool() const noexcept;
+};
+
+inline Anime4KCPP::Cuda::GPUInfo::GPUInfo(const bool supported, std::string message) :
+    supported(supported), message(std::move(message)) {};
+
+inline std::string& Anime4KCPP::Cuda::GPUInfo::operator()() noexcept
+{
+    return message;
+}
+
+inline Anime4KCPP::Cuda::GPUInfo::operator bool() const noexcept
+{
+    return supported;
+}
+
+inline Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs()
+{
+    return GPUList(cuGetDeviceCount(), cuGetCudaInfo());
+}
+
+inline Anime4KCPP::Cuda::GPUInfo Anime4KCPP::Cuda::checkGPUSupport(const unsigned int dID)
+{
+    return GPUInfo(cuCheckDeviceSupport(dID), cuGetDeviceInfo(dID));
 }
 
 #endif

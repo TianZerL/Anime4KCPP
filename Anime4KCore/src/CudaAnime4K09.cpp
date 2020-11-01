@@ -69,7 +69,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernel(cv::Mat& orgImg, cv::Mat& dst
         param.passes, param.pushColorCount,
         param.strengthColor,param.strengthGradient 
     };
-    runKernelAnime4K09(orgImg.data, dstImg.data, &cuParam);
+    cuRunKernelAnime4K09(orgImg.data, dstImg.data, &cuParam);
 }
 
 void Anime4KCPP::Cuda::Anime4K09::processYUVImage()

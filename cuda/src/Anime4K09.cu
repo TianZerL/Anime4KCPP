@@ -262,7 +262,7 @@ __global__ static void pushGradient(
     surf2Dwrite(mc, dstImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
 }
 
-void runKernelAnime4K09(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09 * param)
+void cuRunKernelAnime4K09(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09 * param)
 {
     cudaError_t err = cudaSuccess;
 

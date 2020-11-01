@@ -6749,7 +6749,7 @@ __global__ static void convTranspose8To1(
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
 
-void runKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
+void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
 {
     cudaError_t err = cudaSuccess;
 

@@ -2,6 +2,8 @@
 
 #ifdef ENABLE_CUDA
 
+#include <string>
+
 typedef struct
 {
     size_t orgW, orgH;
@@ -16,9 +18,13 @@ typedef struct
     int HDNLevel;
 }ACCudaParamACNet;
 
-void runKernelAnime4K09(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param);
-void runKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-void initCuda(const unsigned int id);
-void releaseCuda();
+void cuRunKernelAnime4K09(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param);
+void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+void cuInitCuda(const unsigned int id);
+void cuReleaseCuda();
+int cuGetDeviceCount();
+std::string cuGetDeviceInfo(const unsigned int id);
+std::string cuGetCudaInfo();
+bool cuCheckDeviceSupport(const unsigned int id);
 
 #endif

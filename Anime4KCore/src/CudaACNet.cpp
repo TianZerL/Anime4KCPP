@@ -32,7 +32,7 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 inline void Anime4KCPP::Cuda::ACNet::runKernel(cv::Mat& orgImg, cv::Mat& dstImg)
 {
     ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
-    runKernelACNet(orgImg.data, dstImg.data, &cuParam);
+    cuRunKernelACNet(orgImg.data, dstImg.data, &cuParam);
 }
 
 void Anime4KCPP::Cuda::ACNet::processYUVImage()
