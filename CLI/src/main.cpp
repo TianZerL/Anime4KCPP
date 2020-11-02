@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 #else
             Anime4KCPP::Cuda::GPUList ret = Anime4KCPP::Cuda::listGPUs();
             if (ret.devices == 0)
-                std::cerr << "Error: No GPU found" << std::endl;
+                std::cerr << "Error: No CUDA GPU found" << std::endl;
             std::cerr << ret() << std::endl;
             return 0;
 #endif
@@ -185,7 +185,7 @@ int main(int argc, char* argv[])
         {
             Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
             if (ret.platforms == 0)
-                std::cerr << "Error: No GPU found" << std::endl;
+                std::cerr << "Error: No OpenCL GPU found" << std::endl;
             std::cerr << ret() << std::endl;
             return 0;
         }
@@ -525,7 +525,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    catch (Anime4KCPP::ACBaseException& err)
+    catch (const Anime4KCPP::ACBaseException& err)
     {
         std::cerr
             << std::endl

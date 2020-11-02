@@ -3,7 +3,7 @@
 
 #include "Anime4KCPP.hpp"
 
-enum GPGPU
+enum class GPGPU
 {
     OpenCL, CUDA
 };
@@ -23,7 +23,7 @@ typedef struct Anime4KCPPData {
     unsigned int pID = 0, dID = 0;
     Anime4KCPP::ACCreator acCreator;
     Anime4KCPP::Parameters parameters;
-    GPGPU GPGPUModel = OpenCL;
+    GPGPU GPGPUModel = GPGPU::OpenCL;
 }Anime4KCPPData;
 
 static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSNode* node, VSCore* core, const VSAPI* vsapi)
@@ -34,13 +34,13 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
     {
         switch (data->GPGPUModel)
         {
-        case OpenCL:
+        case GPGPU::OpenCL:
             if (data->CNN)
                 data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(data->pID, data->dID);
             else
                 data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(data->pID, data->dID);
             break;
-        case CUDA:
+        case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             data->acCreator.pushManager<Anime4KCPP::Cuda::Manager>(data->dID);
 #endif // ENABLE_CUDA
@@ -90,13 +90,13 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
         {
             switch (data->GPGPUModel)
             {
-            case OpenCL:
+            case GPGPU::OpenCL:
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
                 break;
-            case CUDA:
+            case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
@@ -156,13 +156,13 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
         {
             switch (data->GPGPUModel)
             {
-            case OpenCL:
+            case GPGPU::OpenCL:
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
                 break;
-            case CUDA:
+            case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
@@ -247,13 +247,13 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReaso
         {
             switch (data->GPGPUModel)
             {
-            case OpenCL:
+            case GPGPU::OpenCL:
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
                 break;
-            case CUDA:
+            case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
@@ -370,13 +370,13 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
         {
             switch (data->GPGPUModel)
             {
-            case OpenCL:
+            case GPGPU::OpenCL:
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
                 break;
-            case CUDA:
+            case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
@@ -525,7 +525,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     std::transform(GPGPUModel.begin(), GPGPUModel.end(), GPGPUModel.begin(), ::tolower);
 
     if (GPGPUModel == "opencl")
-        tmpData.GPGPUModel = OpenCL;
+        tmpData.GPGPUModel = GPGPU::OpenCL;
     else if(GPGPUModel == "cuda")
     {
         
@@ -534,7 +534,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         vsapi->freeNode(tmpData.node);
         return;
 #endif // !ENABLE_CUDA
-        tmpData.GPGPUModel = CUDA;
+        tmpData.GPGPUModel = GPGPU::CUDA;
     }
     else
     {
@@ -565,84 +565,91 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (tmpData.GPU)
     {
         std::string info;
-        switch (tmpData.GPGPUModel)
+        try
         {
-        case OpenCL:
-        {
-            Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
-            if (tmpData.pID >= static_cast<unsigned int>(list.platforms) ||
-                tmpData.dID >= static_cast<unsigned int>(list[tmpData.pID]))
+            switch (tmpData.GPGPUModel)
             {
-                std::ostringstream err;
-                err << "Platform ID or device ID index out of range" << std::endl
-                    << "Run core.anim4kcpp.listGPUs for available platforms and devices" << std::endl
-                    << "Your input is: " << std::endl
-                    << "    platform ID: " << tmpData.pID << std::endl
-                    << "    device ID: " << tmpData.dID << std::endl;
-                vsapi->setError(out, err.str().c_str());
-                vsapi->freeNode(tmpData.node);
-                return;
-            }
-            Anime4KCPP::OpenCL::GPUInfo ret =
-                Anime4KCPP::OpenCL::checkGPUSupport(tmpData.pID, tmpData.dID);
-            if (!ret)
+            case GPGPU::OpenCL:
             {
-                std::ostringstream err;
-                err << "The current device is unavailable" << std::endl
-                    << "Your input is: " << std::endl
-                    << "    platform ID: " << tmpData.pID << std::endl
-                    << "    device ID: " << tmpData.dID << std::endl
-                    << "Error: " << std::endl
-                    << "    " + ret() << std::endl;
-                vsapi->setError(out, err.str().c_str());
-                vsapi->freeNode(tmpData.node);
-                return;
+                Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
+                if (tmpData.pID >= static_cast<unsigned int>(list.platforms) ||
+                    tmpData.dID >= static_cast<unsigned int>(list[tmpData.pID]))
+                {
+                    std::ostringstream err;
+                    err << "Platform ID or device ID index out of range" << std::endl
+                        << "Run core.anim4kcpp.listGPUs for available platforms and devices" << std::endl
+                        << "Your input is: " << std::endl
+                        << "    platform ID: " << tmpData.pID << std::endl
+                        << "    device ID: " << tmpData.dID << std::endl;
+                    vsapi->setError(out, err.str().c_str());
+                    vsapi->freeNode(tmpData.node);
+                    return;
+                }
+                Anime4KCPP::OpenCL::GPUInfo ret =
+                    Anime4KCPP::OpenCL::checkGPUSupport(tmpData.pID, tmpData.dID);
+                if (!ret)
+                {
+                    std::ostringstream err;
+                    err << "The current device is unavailable" << std::endl
+                        << "Your input is: " << std::endl
+                        << "    platform ID: " << tmpData.pID << std::endl
+                        << "    device ID: " << tmpData.dID << std::endl
+                        << "Error: " << std::endl
+                        << "    " + ret() << std::endl;
+                    vsapi->setError(out, err.str().c_str());
+                    vsapi->freeNode(tmpData.node);
+                    return;
+                }
+                info = ret();
             }
-            info = ret();
-        }
-        break;
-        case CUDA:
+            break;
+            case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-        {
-            Anime4KCPP::Cuda::GPUList list = Anime4KCPP::Cuda::listGPUs();
-            if (list.devices == 0)
             {
-                std::string err = "No CUDA device found\n";
-                vsapi->setError(out, err.c_str());
-                vsapi->freeNode(tmpData.node);
-                return;
+                Anime4KCPP::Cuda::GPUList list = Anime4KCPP::Cuda::listGPUs();
+                if (list.devices == 0)
+                {
+                    vsapi->setError(out, list().c_str());
+                    vsapi->freeNode(tmpData.node);
+                    return;
+                }
+                else if (tmpData.dID >= list.devices)
+                {
+                    std::ostringstream err;
+                    err << "Device ID index out of range" << std::endl
+                        << "Run core.anim4kcpp.listGPUs for available CUDA devices" << std::endl
+                        << "Your input is: " << std::endl
+                        << "    device ID: " << tmpData.dID << std::endl;
+                    vsapi->setError(out, err.str().c_str());
+                    vsapi->freeNode(tmpData.node);
+                    return;
+                }
+                Anime4KCPP::Cuda::GPUInfo ret =
+                    Anime4KCPP::Cuda::checkGPUSupport(tmpData.dID);
+                if (!ret)
+                {
+                    std::ostringstream err;
+                    err << "The current device is unavailable" << std::endl
+                        << "Your input is: " << std::endl
+                        << "    device ID: " << tmpData.dID << std::endl
+                        << "Error: " << std::endl
+                        << "    " + ret() << std::endl;
+                    vsapi->setError(out, err.str().c_str());
+                    vsapi->freeNode(tmpData.node);
+                    return;
+                }
+                info = ret();
             }
-            else if (tmpData.dID >= list.devices)
-            {
-                std::ostringstream err;
-                err << "Device ID index out of range" << std::endl
-                    << "Run core.anim4kcpp.listGPUs for available CUDA devices" << std::endl
-                    << "Your input is: " << std::endl
-                    << "    device ID: " << tmpData.dID << std::endl;
-                vsapi->setError(out, err.str().c_str());
-                vsapi->freeNode(tmpData.node);
-                return;
-            }
-            Anime4KCPP::Cuda::GPUInfo ret =
-                Anime4KCPP::Cuda::checkGPUSupport(tmpData.dID);
-            if (!ret)
-            {
-                std::ostringstream err;
-                err << "The current device is unavailable" << std::endl
-                    << "Your input is: " << std::endl
-                    << "    device ID: " << tmpData.dID << std::endl
-                    << "Error: " << std::endl
-                    << "    " + ret() << std::endl;
-                vsapi->setError(out, err.str().c_str());
-                vsapi->freeNode(tmpData.node);
-                return;
-            }
-            info = ret();
-        }
-        break;
+            break;
 #endif // ENABLE_CUDA
+            }
         }
-
+        catch (const Anime4KCPP::ACBaseException& err)
+        {
+            vsapi->setError(out, err.what().c_str());
+            vsapi->freeNode(tmpData.node);
+            return;
+        }
         vsapi->logMessage(mtDebug, ("Current GPU infomation: \n" + info).c_str());
     }
 

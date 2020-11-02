@@ -19,7 +19,7 @@ namespace Anime4KCPP
 
     class ACBaseException;
 
-    std::ostream& operator<< (std::ostream& stream, Anime4KCPP::ACBaseException& exception);
+    std::ostream& operator<< (std::ostream& stream, const Anime4KCPP::ACBaseException& exception);
 
     template<typename errType, bool addtlInfo = false>
     class ACException;
@@ -28,7 +28,7 @@ namespace Anime4KCPP
 class Anime4KCPP::ACBaseException
 {
 public:
-    virtual std::string what() noexcept = 0;
+    virtual std::string what() const noexcept = 0;
 };
 
 template<typename errType>
@@ -38,14 +38,14 @@ public:
     ACException(const std::string& errMsg, const int addltErrCode);
     ACException(const std::string& errMsg, const std::string& addtlInfo, const int addltErrCode);
 
-    virtual std::string what() noexcept override;
+    virtual std::string what() const noexcept override;
 private:
     std::string errorMessage;
     std::string additionalInformation;
     int additionalErrorCode;
 };
 
-inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, Anime4KCPP::ACBaseException& exception)
+inline std::ostream& Anime4KCPP::operator<< (std::ostream& stream, const Anime4KCPP::ACBaseException& exception)
 {
     stream << exception.what();
     return stream;
@@ -57,7 +57,7 @@ class Anime4KCPP::ACException<errType, false> :public Anime4KCPP::ACBaseExceptio
 public:
     ACException(const std::string& errMsg);
 
-    virtual std::string what() noexcept override;
+    virtual std::string what() const noexcept override;
 private:
     std::string errorMessage;
 };
@@ -67,7 +67,7 @@ Anime4KCPP::ACException<errType, false>::ACException(const std::string& errMsg) 
     errorMessage(errMsg) {}
 
 template<typename errType>
-std::string Anime4KCPP::ACException<errType, false>::what() noexcept
+std::string Anime4KCPP::ACException<errType, false>::what() const noexcept
 {
     std::ostringstream source;
     source
@@ -90,7 +90,7 @@ Anime4KCPP::ACException<errType, true>::ACException(const std::string& errMsg, c
     errorMessage(errMsg), additionalInformation(addtlInfo), additionalErrorCode(addltErrCode) {}
 
 template<typename errType>
-std::string Anime4KCPP::ACException<errType, true>::what() noexcept
+std::string Anime4KCPP::ACException<errType, true>::what() const noexcept
 {
     std::ostringstream source;
     source

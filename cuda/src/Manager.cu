@@ -38,8 +38,11 @@ std::string cuGetCudaInfo()
 {
     std::string info;
     int deviceCount = cuGetDeviceCount();
-    for (int i = 0; i < deviceCount; i++)
-        info += cuGetDeviceInfo(i) + "\n";
+    if (!deviceCount)
+        info = "No CUDA device found";
+    else
+        for (int i = 0; i < deviceCount; i++)
+            info += cuGetDeviceInfo(i) + "\n";
     return info;
 }
 
