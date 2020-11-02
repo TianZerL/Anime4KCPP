@@ -605,7 +605,14 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 #ifdef ENABLE_CUDA
         {
             Anime4KCPP::Cuda::GPUList list = Anime4KCPP::Cuda::listGPUs();
-            if (tmpData.dID >= list.devices)
+            if (list.devices == 0)
+            {
+                std::string err = "No CUDA device found\n";
+                vsapi->setError(out, err.c_str());
+                vsapi->freeNode(tmpData.node);
+                return;
+            }
+            else if (tmpData.dID >= list.devices)
             {
                 std::ostringstream err;
                 err << "Device ID index out of range" << std::endl

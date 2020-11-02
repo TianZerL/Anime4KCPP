@@ -4,35 +4,6 @@
 typedef unsigned char uchar;
 
 #define RELU(x) fmaxf(x, 0.0f)
-#define CHANNEL1TO8(n) \
-tl * kernelsL1[HDNLevel][n * 9 + 0] + tc * kernelsL1[HDNLevel][n * 9 + 1] + tr * kernelsL1[HDNLevel][n * 9 + 2] + \
-ml * kernelsL1[HDNLevel][n * 9 + 3] + mc * kernelsL1[HDNLevel][n * 9 + 4] + mr * kernelsL1[HDNLevel][n * 9 + 5] + \
-bl * kernelsL1[HDNLevel][n * 9 + 6] + bc * kernelsL1[HDNLevel][n * 9 + 7] + br * kernelsL1[HDNLevel][n * 9 + 8] + biasL1[HDNLevel][n]
-#define CHANNEL8TO8(n) \
-tl1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 0] + tc1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 1] + tr1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 2] +             \
-ml1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 3] + mc1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 4] + mr1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 5] +             \
-bl1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 6] + bc1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 7] + br1.x * kernelsL[HDNLevel][L][n * 72 + 0 * 9 + 8] +             \
-tl1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 0] + tc1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 1] + tr1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 2] +             \
-ml1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 3] + mc1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 4] + mr1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 5] +             \
-bl1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 6] + bc1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 7] + br1.y * kernelsL[HDNLevel][L][n * 72 + 1 * 9 + 8] +             \
-tl1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 0] + tc1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 1] + tr1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 2] +             \
-ml1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 3] + mc1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 4] + mr1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 5] +             \
-bl1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 6] + bc1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 7] + br1.z * kernelsL[HDNLevel][L][n * 72 + 2 * 9 + 8] +             \
-tl1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 0] + tc1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 1] + tr1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 2] +             \
-ml1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 3] + mc1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 4] + mr1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 5] +             \
-bl1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 6] + bc1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 7] + br1.w * kernelsL[HDNLevel][L][n * 72 + 3 * 9 + 8] +             \
-tl2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 0] + tc2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 1] + tr2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 2] +             \
-ml2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 3] + mc2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 4] + mr2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 5] +             \
-bl2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 6] + bc2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 7] + br2.x * kernelsL[HDNLevel][L][n * 72 + 4 * 9 + 8] +             \
-tl2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 0] + tc2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 1] + tr2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 2] +             \
-ml2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 3] + mc2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 4] + mr2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 5] +             \
-bl2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 6] + bc2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 7] + br2.y * kernelsL[HDNLevel][L][n * 72 + 5 * 9 + 8] +             \
-tl2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 0] + tc2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 1] + tr2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 2] +             \
-ml2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 3] + mc2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 4] + mr2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 5] +             \
-bl2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 6] + bc2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 7] + br2.z * kernelsL[HDNLevel][L][n * 72 + 6 * 9 + 8] +             \
-tl2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 0] + tc2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 1] + tr2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 2] +             \
-ml2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 3] + mc2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 4] + mr2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 5] +             \
-bl2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 6] + bc2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 7] + br2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 8] + biasL[HDNLevel][L][n]
 
 #define L2 0
 #define L3 1
@@ -43,13 +14,55 @@ bl2.w * kernelsL[HDNLevel][L][n * 72 + 7 * 9 + 6] + bc2.w * kernelsL[HDNLevel][L
 #define L8 6
 #define L9 7
 
+#define CHANNEL1TO8(n, Level) \
+tl * HDNL##Level##kernelsL1[n * 9 + 0] + tc * HDNL##Level##kernelsL1[n * 9 + 1] + tr * HDNL##Level##kernelsL1[n * 9 + 2] + \
+ml * HDNL##Level##kernelsL1[n * 9 + 3] + mc * HDNL##Level##kernelsL1[n * 9 + 4] + mr * HDNL##Level##kernelsL1[n * 9 + 5] + \
+bl * HDNL##Level##kernelsL1[n * 9 + 6] + bc * HDNL##Level##kernelsL1[n * 9 + 7] + br * HDNL##Level##kernelsL1[n * 9 + 8] + HDNL##Level##biasL1[n]
+
+#define CHANNEL8TO8(n, Level) \
+tl1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 0] + tc1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 1] + tr1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 2] +             \
+ml1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 3] + mc1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 4] + mr1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 5] +             \
+bl1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 6] + bc1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 7] + br1.x * HDNL##Level##kernelsL[L][n * 72 + 0 * 9 + 8] +             \
+tl1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 0] + tc1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 1] + tr1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 2] +             \
+ml1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 3] + mc1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 4] + mr1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 5] +             \
+bl1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 6] + bc1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 7] + br1.y * HDNL##Level##kernelsL[L][n * 72 + 1 * 9 + 8] +             \
+tl1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 0] + tc1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 1] + tr1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 2] +             \
+ml1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 3] + mc1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 4] + mr1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 5] +             \
+bl1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 6] + bc1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 7] + br1.z * HDNL##Level##kernelsL[L][n * 72 + 2 * 9 + 8] +             \
+tl1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 0] + tc1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 1] + tr1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 2] +             \
+ml1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 3] + mc1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 4] + mr1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 5] +             \
+bl1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 6] + bc1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 7] + br1.w * HDNL##Level##kernelsL[L][n * 72 + 3 * 9 + 8] +             \
+tl2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 0] + tc2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 1] + tr2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 2] +             \
+ml2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 3] + mc2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 4] + mr2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 5] +             \
+bl2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 6] + bc2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 7] + br2.x * HDNL##Level##kernelsL[L][n * 72 + 4 * 9 + 8] +             \
+tl2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 0] + tc2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 1] + tr2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 2] +             \
+ml2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 3] + mc2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 4] + mr2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 5] +             \
+bl2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 6] + bc2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 7] + br2.y * HDNL##Level##kernelsL[L][n * 72 + 5 * 9 + 8] +             \
+tl2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 0] + tc2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 1] + tr2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 2] +             \
+ml2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 3] + mc2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 4] + mr2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 5] +             \
+bl2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 6] + bc2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 7] + br2.z * HDNL##Level##kernelsL[L][n * 72 + 6 * 9 + 8] +             \
+tl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 0] + tc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 1] + tr2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 2] +             \
+ml2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 3] + mc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 4] + mr2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 5] +             \
+bl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 8] + HDNL##Level##biasL[L][n]
+
+#define RUNKERNEL(Level) \
+conv1To8HDNL##Level << <dimGrid, dimBlock >> > (inTex, surf1, param->orgW, param->orgH); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L2); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L3); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L4); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L5); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L6); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L7); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L8); \
+conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L9); \
+convTranspose8To1HDNL##Level << <dimGridout, dimBlock >> > (surf1, outSurf, W, H);
+
 inline __device__ float clamp(float f, float a, float b)
 {
     return fmaxf(a, fminf(f, b));
 }
 
-static __device__ __constant__ const float kernelsL1[4][9 * 8] =
-{
+static __device__ __constant__ const float HDNL0kernelsL1[9 * 8] =
 {
  0.0609,  0.1027, -0.0447,
 -0.1423,  0.7196,  0.1803,
@@ -75,105 +88,12 @@ static __device__ __constant__ const float kernelsL1[4][9 * 8] =
 -0.0040, -0.9122,  0.0181,
  0.0365,  0.8947, -0.0420,
 -0.0199,  0.0217,  0.0060
-},
-{
--6.6326e-02, -2.2316e-01,  4.2471e-02,
- 1.7064e-02, -6.8305e-01, -1.5978e-01,
- 6.7568e-01,  3.2212e-01,  8.3561e-02,
--4.6649e-01, -6.8789e-02,  5.3455e-01,
--5.0941e-01,  7.0657e-02,  4.5647e-01,
--2.3657e-02,  3.5302e-02, -1.8316e-02,
--2.0316e-01,  4.7021e-02, -2.2313e-01,
- 5.3465e-02,  7.0750e-01,  9.1366e-02,
--2.8566e-01, -2.0521e-02, -7.1786e-02,
- 4.8186e-02, -9.3429e-02,  2.4493e-03,
- 3.4654e-01,  7.2625e-02,  1.6615e-01,
- 3.2101e-01,  3.2923e-01, -9.8548e-02,
- 1.1916e-02,  2.0413e-01, -1.8920e-02,
- 6.0858e-02,  8.3548e-01,  1.4060e-01,
--9.1827e-01, -2.4551e-01, -4.6118e-02,
--5.2737e-02,  4.3151e-01,  1.7027e-01,
- 2.6647e-01,  5.5240e-01,  3.4745e-03,
- 5.3495e-02, -4.7059e-02, -2.6593e-02,
- 1.5691e-01,  4.7332e-01,  2.6651e-03,
- 1.7997e-02,  4.1367e-01,  1.3239e-02,
- 4.6932e-02,  1.0278e-01,  1.0699e-02,
--3.4319e-02, -7.6373e-01, -9.7022e-02,
--1.4160e-01,  2.9567e-01,  6.6220e-01,
- 7.3508e-05,  1.2683e-01, -6.3442e-02
-},
-{
--2.0676e-02,  6.7641e-03,  2.8287e-01,
- 2.5576e-01,  1.9765e-01, -2.4700e-01,
- 3.5056e-01,  2.9306e-01, -2.2245e-01,
- 8.4706e-02, -2.9455e-01, -5.5831e-02,
--8.4635e-02, -9.6835e-02,  3.1208e-01,
- 1.7690e-01,  2.7624e-02,  5.1954e-02,
--5.3869e-01,  7.2934e-02, -1.7662e-03,
--3.1402e-02,  3.1700e-01,  1.4965e-01,
- 3.8569e-02,  5.5025e-03, -6.6555e-03,
--4.2049e-38, -4.1971e-38, -4.1488e-38,
--4.2855e-38, -4.2871e-38, -4.2363e-38,
--4.1861e-38, -4.1974e-38, -4.1677e-38,
- 1.8451e-01, -5.4584e-02,  1.4494e-01,
- 1.3433e-01,  1.0073e-01,  2.6371e-01,
- 6.1261e-02,  2.2116e-01,  2.0074e-01,
- 5.9669e-02, -3.9168e-02,  2.1674e-01,
--2.9132e-01,  3.0285e-03,  1.2625e-01,
--4.3415e-02,  1.8663e-01, -1.6554e-01,
- 1.0102e-01,  6.3466e-02,  1.5225e-01,
- 2.1692e-01,  1.9860e-01, -7.0456e-02,
--1.6406e-03, -2.7834e-01, -3.5449e-01,
--3.0140e-01, -4.2348e-01, -5.8263e-01,
- 2.3140e-01, -2.6843e-01, -1.1069e-01,
--9.1484e-02,  1.1486e-02,  5.6396e-02
-},
-{
--0.0461,  0.1274,  0.2976,
--0.0393, -0.1251,  0.2527,
- 0.0791,  0.0600, -0.0303,
--0.0520, -0.5039, -0.3305,
--0.0115,  0.0456,  0.4370,
- 0.0601,  0.0780,  0.3106,
--0.0017, -0.0018, -0.0017,
--0.0017, -0.0018, -0.0018,
--0.0017, -0.0017, -0.0017,
- 0.2666,  0.1687,  0.2303,
--0.1901,  0.3825,  0.3024,
- 0.1811,  0.0581,  0.2080,
--0.1246,  0.0155, -0.4075,
- 0.1156,  0.5929,  0.1449,
--0.1080, -0.0171, -0.0516,
--0.0817,  0.2247,  0.0472,
- 0.0394,  0.1085,  0.1435,
--0.0480, -0.0135, -0.0606,
--0.0083,  0.2045,  0.1056,
--0.2239,  0.2823, -0.1926,
- 0.2581,  0.1362, -0.1914,
--0.0833,  0.0702,  0.0234,
- 0.3616,  0.3789, -0.1840,
- 0.0128,  0.1347, -0.0187
-}
 };
-
-static __device__ __constant__ const float biasL1[4][8] =
-{
+static __device__ __constant__ const float HDNL0biasL1[8] =
 {
 -0.7577, -0.0210,  0.0292, -0.0189,  0.0223,  0.0340,  0.0150, -0.0044
-},
-{
--0.0264, -0.0229, -0.3021, -0.2579, -0.0327, -0.0053, -0.7777,  0.0232
-},
-{
--9.0964e-02,  2.1136e-01, -1.2011e-02, -4.5657e-38, -1.4443e-01, 1.8968e-01, -2.9027e-02,  1.6199e-01
-},
-{
--0.1329, -0.0431, -0.0031, -0.0129,  0.2294, -0.2595, -0.2370, -0.0499
-}
 };
-
-static __device__ const float kernelsL[4][8][9 * 8 * 8] =
-{
+static __device__ __constant__ const float HDNL0kernelsL[8][9 * 8 * 8] =
 {
 {
  2.0611e-01,  6.6865e-02, -9.9123e-02,
@@ -1734,7 +1654,93 @@ static __device__ const float kernelsL[4][8][9 * 8 * 8] =
  3.4811e-02, -2.3033e-01,  1.1477e-02,
 -7.3744e-03,  1.9112e-02,  4.2251e-03
 }
-},
+};
+static __device__ __constant__ const float HDNL0biasL[8][8] =
+{
+{
+ 0.0272, -0.5743, -0.0333, -0.0334,  0.0082, -0.0263, -0.0048, -0.0167
+}
+,
+{
+-0.0239, -0.0385,  0.0026,  0.0288, -0.0225,  0.0082, -0.0191, -0.0185
+}
+,
+{
+-5.8305e-03, -8.6574e-02,  4.2228e-02, -4.3500e-02, -8.1892e-04, 3.3171e-03, -1.1582e-02, -4.1205e-40
+}
+,
+{
+-0.0053,  0.0053, -0.0114, -0.0127, -0.0039, -0.0426,  0.0053, -0.0017
+}
+,
+{
+-0.0046, -0.0104, -0.0087, -0.0040,  0.1077,  0.0347, -0.0165,  0.7296
+}
+,
+{
+ 8.7612e-02,  5.9126e-01,  4.6709e-03, -1.1559e-39,  2.3381e-02, -1.2136e-40, -5.6040e-39,  3.7100e-02
+}
+,
+{
+-3.3246e-39, -1.4536e-02, -6.3362e-02,  8.5347e-41,  7.9956e-02, 3.0679e-04, -1.0257e-02, -1.2037e-02
+}
+,
+{
+-0.0006,  0.0117,  0.0083,  0.0686, -0.0046,  0.0015, -0.0076,  0.0079
+}
+};
+static __device__ __constant__ const float HDNL0kernelsL10[4 * 8] =
+{
+ 0.4908, -0.0457,
+-0.1716, -0.2115,
+-0.0015, -0.3152,
+ 0.3045,  0.0330,
+-0.2981,  0.0912,
+ 0.0122,  0.2281,
+ 0.3331,  0.2853,
+ 0.2210,  0.2611,
+ 0.2364,  0.0792,
+ 0.2885, -0.7122,
+-0.3715,  0.1404,
+-0.0260,  0.2144,
+ 0.2378,  0.1570,
+-0.5734,  0.2077,
+-0.0851,  0.2771,
+ 0.0415, -0.1858
+};
+
+static __device__ __constant__ const float HDNL1kernelsL1[9 * 8] =
+{
+-6.6326e-02, -2.2316e-01,  4.2471e-02,
+ 1.7064e-02, -6.8305e-01, -1.5978e-01,
+ 6.7568e-01,  3.2212e-01,  8.3561e-02,
+-4.6649e-01, -6.8789e-02,  5.3455e-01,
+-5.0941e-01,  7.0657e-02,  4.5647e-01,
+-2.3657e-02,  3.5302e-02, -1.8316e-02,
+-2.0316e-01,  4.7021e-02, -2.2313e-01,
+ 5.3465e-02,  7.0750e-01,  9.1366e-02,
+-2.8566e-01, -2.0521e-02, -7.1786e-02,
+ 4.8186e-02, -9.3429e-02,  2.4493e-03,
+ 3.4654e-01,  7.2625e-02,  1.6615e-01,
+ 3.2101e-01,  3.2923e-01, -9.8548e-02,
+ 1.1916e-02,  2.0413e-01, -1.8920e-02,
+ 6.0858e-02,  8.3548e-01,  1.4060e-01,
+-9.1827e-01, -2.4551e-01, -4.6118e-02,
+-5.2737e-02,  4.3151e-01,  1.7027e-01,
+ 2.6647e-01,  5.5240e-01,  3.4745e-03,
+ 5.3495e-02, -4.7059e-02, -2.6593e-02,
+ 1.5691e-01,  4.7332e-01,  2.6651e-03,
+ 1.7997e-02,  4.1367e-01,  1.3239e-02,
+ 4.6932e-02,  1.0278e-01,  1.0699e-02,
+-3.4319e-02, -7.6373e-01, -9.7022e-02,
+-1.4160e-01,  2.9567e-01,  6.6220e-01,
+ 7.3508e-05,  1.2683e-01, -6.3442e-02
+};
+static __device__ __constant__ const float HDNL1biasL1[8] =
+{
+-0.0264, -0.0229, -0.3021, -0.2579, -0.0327, -0.0053, -0.7777,  0.0232
+};
+static __device__ __constant__ const float HDNL1kernelsL[8][9 * 8 * 8] =
 {
 {
 -7.8588e-41, -5.0770e-40, -2.3334e-40,
@@ -3295,7 +3301,94 @@ static __device__ const float kernelsL[4][8][9 * 8 * 8] =
 -2.9727e-40, -4.8454e-40,  3.0397e-40,
  1.1696e-40, -3.3028e-40, -2.2959e-40
 }
-},
+};
+static __device__ __constant__ const float HDNL1biasL[8][8] =
+{
+    {
+        -3.1869e-08, -3.8279e-01, -6.3693e-05, -5.9054e-02, 9.3774e-04, -2.9944e-02, -1.1156e-03, -7.5635e-02
+    }
+    ,
+{
+-1.7701e-01, -1.3417e-06, -3.0706e-40, -1.9022e-06, -1.2965e-02, -6.6444e-40,  1.4699e-02,  2.6082e-02
+}
+,
+{
+-3.7577e-07,  4.4550e-03, -8.1266e-04,  3.2408e-01, -1.1321e-07, -1.8907e-23, -1.9770e-25, -3.2394e-02
+}
+,
+{
+-2.1525e-14, -1.4130e-02, -1.9410e-02, -1.8703e-02, -2.9177e-02, -4.0635e-02,  7.8097e-02, -1.1643e-01
+}
+,
+{
+-2.6309e-02, -2.2238e-02,  6.8700e-03, -1.7973e-02, -1.0893e-02, -1.1888e-02, -4.9598e-03, -6.3663e-06
+}
+,
+{
+-1.2406e-03, -2.4901e-12, -9.7265e-07,  6.3490e-03,  1.3495e-01, -3.8411e-03, -6.6630e-03, -7.3614e-03
+}
+,
+{
+-2.7729e-03, -4.8174e-03, -6.3012e-03,  2.0491e-01, -2.0110e-03, -3.0974e-03,  5.1407e-01, -3.5016e-08
+}
+,
+{
+0.0324, 0.0140, 0.6750, 0.2661, 0.3646, 0.3591, 0.5597, 0.0816
+}
+};
+static __device__ __constant__ const float HDNL1kernelsL10[4 * 8] =
+{
+ 0.0882,  0.0422,
+ 0.3775,  0.4754,
+-0.3209, -0.4870,
+-0.0384,  0.0530,
+ 0.1034,  0.0173,
+ 0.5011,  0.3900,
+ 0.3621, -0.1645,
+-0.1304,  0.0013,
+ 0.2230,  0.3026,
+ 0.1618, -0.4514,
+-0.2097,  0.1894,
+-0.0326,  0.1434,
+ 0.2421,  0.3363,
+-0.0938,  0.3156,
+ 0.1137, -0.2165,
+ 0.2273, -0.1284
+};
+
+
+static __device__ __constant__ const float HDNL2kernelsL1[9 * 8] =
+{
+-2.0676e-02,  6.7641e-03,  2.8287e-01,
+ 2.5576e-01,  1.9765e-01, -2.4700e-01,
+ 3.5056e-01,  2.9306e-01, -2.2245e-01,
+ 8.4706e-02, -2.9455e-01, -5.5831e-02,
+-8.4635e-02, -9.6835e-02,  3.1208e-01,
+ 1.7690e-01,  2.7624e-02,  5.1954e-02,
+-5.3869e-01,  7.2934e-02, -1.7662e-03,
+-3.1402e-02,  3.1700e-01,  1.4965e-01,
+ 3.8569e-02,  5.5025e-03, -6.6555e-03,
+-4.2049e-38, -4.1971e-38, -4.1488e-38,
+-4.2855e-38, -4.2871e-38, -4.2363e-38,
+-4.1861e-38, -4.1974e-38, -4.1677e-38,
+ 1.8451e-01, -5.4584e-02,  1.4494e-01,
+ 1.3433e-01,  1.0073e-01,  2.6371e-01,
+ 6.1261e-02,  2.2116e-01,  2.0074e-01,
+ 5.9669e-02, -3.9168e-02,  2.1674e-01,
+-2.9132e-01,  3.0285e-03,  1.2625e-01,
+-4.3415e-02,  1.8663e-01, -1.6554e-01,
+ 1.0102e-01,  6.3466e-02,  1.5225e-01,
+ 2.1692e-01,  1.9860e-01, -7.0456e-02,
+-1.6406e-03, -2.7834e-01, -3.5449e-01,
+-3.0140e-01, -4.2348e-01, -5.8263e-01,
+ 2.3140e-01, -2.6843e-01, -1.1069e-01,
+-9.1484e-02,  1.1486e-02,  5.6396e-02
+};
+static __device__ __constant__ const float HDNL2biasL1[8] =
+{
+-9.0964e-02,  2.1136e-01, -1.2011e-02, -4.5657e-38, -1.4443e-01, 1.8968e-01, -2.9027e-02,  1.6199e-01
+};
+static __device__ __constant__ const float HDNL2kernelsL[8][9 * 8 * 8] =
 {
 {
  4.4561e-02,  4.3527e-01, -8.9737e-02,
@@ -4856,7 +4949,93 @@ static __device__ const float kernelsL[4][8][9 * 8 * 8] =
 -1.4341e-01,  3.6558e-01,  4.7332e-02,
 -3.9089e-02,  8.4188e-02,  2.7058e-02
 }
-},
+};
+static __device__ __constant__ const float HDNL2biasL[8][8] =
+{
+    {
+        7.2678e-02, 8.5350e-03, 5.0400e-02, 2.6268e-02, 6.2434e-02, 1.0483e-01, -7.1650e-39, 1.0062e-01
+    }
+    ,
+{
+-4.9844e-39, -1.8567e-39,  6.0627e-04, -1.9234e-38,  1.8331e-02, -1.1364e-01, -8.3962e-03, -1.7372e-04
+}
+,
+{
+-0.0091, -0.0055,  0.0237,  0.0093, -0.0479,  0.0188, -0.0034,  0.0399
+}
+,
+{
+ 6.5694e-03, -2.2259e-01, -1.1226e-02, -8.0327e-02, -1.0615e-36, 1.0402e-02,  7.6246e-03, -6.5940e-02
+}
+,
+{
+ 5.0711e-02,  7.1911e-02,  2.5293e-02, -1.5608e-02,  5.3835e-02, -1.6967e-38,  2.2243e-02,  3.2742e-02
+}
+,
+{
+ 1.5629e-02,  2.9703e-02,  2.6412e-02,  1.2301e-02,  1.8654e-01, -7.2260e-03,  2.4613e-02, -3.1853e-38
+}
+,
+{
+-0.0030, -0.0123,  0.0348,  0.0277, -0.0152,  0.0005, -0.0124, -0.0209
+}
+,
+{
+7.4856e-03, 7.2931e-04, 8.3015e-03, 6.4820e-03, 2.4008e-04, 7.0377e-06, 1.7948e-03, 8.9869e-03
+}
+};
+static __device__ __constant__ const float HDNL2kernelsL10[4 * 8] =
+{
+ 0.4240,  0.4165,
+ 0.1648,  0.1909,
+-0.0985, -0.4455,
+ 0.4639, -0.0533,
+-0.1368,  0.4413,
+ 0.2539,  0.3294,
+ 0.2458, -0.3256,
+-0.0479,  0.3200,
+-0.3977, -0.0422,
+-0.2736,  0.1053,
+ 0.3902,  0.0594,
+-0.0721, -0.2988,
+ 0.0495,  0.1309,
+-0.1703,  0.0033,
+ 0.3061,  0.1827,
+ 0.2443, -0.1259
+};
+
+static __device__ __constant__ const float HDNL3kernelsL1[9 * 8] =
+{
+-0.0461,  0.1274,  0.2976,
+-0.0393, -0.1251,  0.2527,
+ 0.0791,  0.0600, -0.0303,
+-0.0520, -0.5039, -0.3305,
+-0.0115,  0.0456,  0.4370,
+ 0.0601,  0.0780,  0.3106,
+-0.0017, -0.0018, -0.0017,
+-0.0017, -0.0018, -0.0018,
+-0.0017, -0.0017, -0.0017,
+ 0.2666,  0.1687,  0.2303,
+-0.1901,  0.3825,  0.3024,
+ 0.1811,  0.0581,  0.2080,
+-0.1246,  0.0155, -0.4075,
+ 0.1156,  0.5929,  0.1449,
+-0.1080, -0.0171, -0.0516,
+-0.0817,  0.2247,  0.0472,
+ 0.0394,  0.1085,  0.1435,
+-0.0480, -0.0135, -0.0606,
+-0.0083,  0.2045,  0.1056,
+-0.2239,  0.2823, -0.1926,
+ 0.2581,  0.1362, -0.1914,
+-0.0833,  0.0702,  0.0234,
+ 0.3616,  0.3789, -0.1840,
+ 0.0128,  0.1347, -0.0187
+};
+static __device__ __constant__ const float HDNL3biasL1[8] =
+{
+-0.1329, -0.0431, -0.0031, -0.0129,  0.2294, -0.2595, -0.2370, -0.0499
+};
+static __device__ const float HDNL3kernelsL[8][9 * 8 * 8] =
 {
 {
  1.4090e-01, -1.8985e-02, -6.8589e-02,
@@ -6417,110 +6596,8 @@ static __device__ const float kernelsL[4][8][9 * 8 * 8] =
  1.3538e-01, -4.7728e-01,  1.0868e-01,
 -8.6415e-02, -1.7061e-01,  1.0457e-02
 }
-}
 };
-
-static __device__ __constant__ const float biasL[4][8][8] =
-{
-{
-{
- 0.0272, -0.5743, -0.0333, -0.0334,  0.0082, -0.0263, -0.0048, -0.0167
-}
-,
-{
--0.0239, -0.0385,  0.0026,  0.0288, -0.0225,  0.0082, -0.0191, -0.0185
-}
-,
-{
--5.8305e-03, -8.6574e-02,  4.2228e-02, -4.3500e-02, -8.1892e-04, 3.3171e-03, -1.1582e-02, -4.1205e-40
-}
-,
-{
--0.0053,  0.0053, -0.0114, -0.0127, -0.0039, -0.0426,  0.0053, -0.0017
-}
-,
-{
--0.0046, -0.0104, -0.0087, -0.0040,  0.1077,  0.0347, -0.0165,  0.7296
-}
-,
-{
- 8.7612e-02,  5.9126e-01,  4.6709e-03, -1.1559e-39,  2.3381e-02, -1.2136e-40, -5.6040e-39,  3.7100e-02
-}
-,
-{
--3.3246e-39, -1.4536e-02, -6.3362e-02,  8.5347e-41,  7.9956e-02, 3.0679e-04, -1.0257e-02, -1.2037e-02
-}
-,
-{
--0.0006,  0.0117,  0.0083,  0.0686, -0.0046,  0.0015, -0.0076,  0.0079
-}
-},
-{
-{
--3.1869e-08, -3.8279e-01, -6.3693e-05, -5.9054e-02,  9.3774e-04, -2.9944e-02, -1.1156e-03, -7.5635e-02
-}
-,
-{
--1.7701e-01, -1.3417e-06, -3.0706e-40, -1.9022e-06, -1.2965e-02, -6.6444e-40,  1.4699e-02,  2.6082e-02
-}
-,
-{
--3.7577e-07,  4.4550e-03, -8.1266e-04,  3.2408e-01, -1.1321e-07, -1.8907e-23, -1.9770e-25, -3.2394e-02
-}
-,
-{
--2.1525e-14, -1.4130e-02, -1.9410e-02, -1.8703e-02, -2.9177e-02, -4.0635e-02,  7.8097e-02, -1.1643e-01
-}
-,
-{
--2.6309e-02, -2.2238e-02,  6.8700e-03, -1.7973e-02, -1.0893e-02, -1.1888e-02, -4.9598e-03, -6.3663e-06
-}
-,
-{
--1.2406e-03, -2.4901e-12, -9.7265e-07,  6.3490e-03,  1.3495e-01, -3.8411e-03, -6.6630e-03, -7.3614e-03
-}
-,
-{
--2.7729e-03, -4.8174e-03, -6.3012e-03,  2.0491e-01, -2.0110e-03, -3.0974e-03,  5.1407e-01, -3.5016e-08
-}
-,
-{
-0.0324, 0.0140, 0.6750, 0.2661, 0.3646, 0.3591, 0.5597, 0.0816
-}
-},
-{
-{
- 7.2678e-02,  8.5350e-03,  5.0400e-02,  2.6268e-02,  6.2434e-02, 1.0483e-01, -7.1650e-39,  1.0062e-01
-}
-,
-{
--4.9844e-39, -1.8567e-39,  6.0627e-04, -1.9234e-38,  1.8331e-02, -1.1364e-01, -8.3962e-03, -1.7372e-04
-}
-,
-{
--0.0091, -0.0055,  0.0237,  0.0093, -0.0479,  0.0188, -0.0034,  0.0399
-}
-,
-{
- 6.5694e-03, -2.2259e-01, -1.1226e-02, -8.0327e-02, -1.0615e-36, 1.0402e-02,  7.6246e-03, -6.5940e-02
-}
-,
-{
- 5.0711e-02,  7.1911e-02,  2.5293e-02, -1.5608e-02,  5.3835e-02, -1.6967e-38,  2.2243e-02,  3.2742e-02
-}
-,
-{
- 1.5629e-02,  2.9703e-02,  2.6412e-02,  1.2301e-02,  1.8654e-01, -7.2260e-03,  2.4613e-02, -3.1853e-38
-}
-,
-{
--0.0030, -0.0123,  0.0348,  0.0277, -0.0152,  0.0005, -0.0124, -0.0209
-}
-,
-{
-7.4856e-03, 7.2931e-04, 8.3015e-03, 6.4820e-03, 2.4008e-04, 7.0377e-06, 1.7948e-03, 8.9869e-03
-}
-},
+static __device__ __constant__ const float HDNL3biasL[8][8] =
 {
 {
 -0.1175, -0.0258, -0.0053, -0.0437, -0.0563, -0.1047, -0.3449,  0.0568
@@ -6553,65 +6630,8 @@ static __device__ __constant__ const float biasL[4][8][8] =
 {
  0.0063, 0.0093, 0.0729, 0.3734, 0.0006, 0.1915, 0.3186, 0.2636
 }
-}
 };
-
-static __device__ __constant__ const float kernelsL10[4][4 * 8] =
-{
-{
- 0.4908, -0.0457,
--0.1716, -0.2115,
--0.0015, -0.3152,
- 0.3045,  0.0330,
--0.2981,  0.0912,
- 0.0122,  0.2281,
- 0.3331,  0.2853,
- 0.2210,  0.2611,
- 0.2364,  0.0792,
- 0.2885, -0.7122,
--0.3715,  0.1404,
--0.0260,  0.2144,
- 0.2378,  0.1570,
--0.5734,  0.2077,
--0.0851,  0.2771,
- 0.0415, -0.1858
-},
-{
- 0.0882,  0.0422,
- 0.3775,  0.4754,
--0.3209, -0.4870,
--0.0384,  0.0530,
- 0.1034,  0.0173,
- 0.5011,  0.3900,
- 0.3621, -0.1645,
--0.1304,  0.0013,
- 0.2230,  0.3026,
- 0.1618, -0.4514,
--0.2097,  0.1894,
--0.0326,  0.1434,
- 0.2421,  0.3363,
--0.0938,  0.3156,
- 0.1137, -0.2165,
- 0.2273, -0.1284
-},
-{
- 0.4240,  0.4165,
- 0.1648,  0.1909,
--0.0985, -0.4455,
- 0.4639, -0.0533,
--0.1368,  0.4413,
- 0.2539,  0.3294,
- 0.2458, -0.3256,
--0.0479,  0.3200,
--0.3977, -0.0422,
--0.2736,  0.1053,
- 0.3902,  0.0594,
--0.0721, -0.2988,
- 0.0495,  0.1309,
--0.1703,  0.0033,
- 0.3061,  0.1827,
- 0.2443, -0.1259
-},
+static __device__ __constant__ const float HDNL3kernelsL10[4 * 8] =
 {
 -0.0967, -0.3094,
  0.3537,  0.5705,
@@ -6629,12 +6649,11 @@ static __device__ __constant__ const float kernelsL10[4][4 * 8] =
 -0.3396,  0.0336,
  0.1052, -0.4180,
  0.0799, -0.3587
-}
 };
 
-__global__ static void conv1To8(
+__global__ static void conv1To8HDNL0(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
-    int W, int H, int HDNLevel)
+    int W, int H)
 {
     const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
     const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -6653,25 +6672,138 @@ __global__ static void conv1To8(
     float br = tex2D<float>(srcImg, x + 1, y + 1);
 
     float4 c1234 = make_float4(
-        RELU(CHANNEL1TO8(0)),
-        RELU(CHANNEL1TO8(1)),
-        RELU(CHANNEL1TO8(2)),
-        RELU(CHANNEL1TO8(3))
+        RELU(CHANNEL1TO8(0, 0)),
+        RELU(CHANNEL1TO8(1, 0)),
+        RELU(CHANNEL1TO8(2, 0)),
+        RELU(CHANNEL1TO8(3, 0))
     );
     float4 c5678 = make_float4(
-        RELU(CHANNEL1TO8(4)),
-        RELU(CHANNEL1TO8(5)),
-        RELU(CHANNEL1TO8(6)),
-        RELU(CHANNEL1TO8(7))
+        RELU(CHANNEL1TO8(4, 0)),
+        RELU(CHANNEL1TO8(5, 0)),
+        RELU(CHANNEL1TO8(6, 0)),
+        RELU(CHANNEL1TO8(7, 0))
     );
 
     surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
     surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
 }
 
-__global__ static void conv8To8(
+__global__ static void conv1To8HDNL1(
+    cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float tl = tex2D<float>(srcImg, x - 1, y - 1);
+    float tc = tex2D<float>(srcImg, x, y - 1);
+    float tr = tex2D<float>(srcImg, x + 1, y - 1);
+    float ml = tex2D<float>(srcImg, x - 1, y);
+    float mc = tex2D<float>(srcImg, x, y);
+    float mr = tex2D<float>(srcImg, x + 1, y);
+    float bl = tex2D<float>(srcImg, x - 1, y + 1);
+    float bc = tex2D<float>(srcImg, x, y + 1);
+    float br = tex2D<float>(srcImg, x + 1, y + 1);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL1TO8(0, 1)),
+        RELU(CHANNEL1TO8(1, 1)),
+        RELU(CHANNEL1TO8(2, 1)),
+        RELU(CHANNEL1TO8(3, 1))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL1TO8(4, 1)),
+        RELU(CHANNEL1TO8(5, 1)),
+        RELU(CHANNEL1TO8(6, 1)),
+        RELU(CHANNEL1TO8(7, 1))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+__global__ static void conv1To8HDNL2(
+    cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float tl = tex2D<float>(srcImg, x - 1, y - 1);
+    float tc = tex2D<float>(srcImg, x, y - 1);
+    float tr = tex2D<float>(srcImg, x + 1, y - 1);
+    float ml = tex2D<float>(srcImg, x - 1, y);
+    float mc = tex2D<float>(srcImg, x, y);
+    float mr = tex2D<float>(srcImg, x + 1, y);
+    float bl = tex2D<float>(srcImg, x - 1, y + 1);
+    float bc = tex2D<float>(srcImg, x, y + 1);
+    float br = tex2D<float>(srcImg, x + 1, y + 1);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL1TO8(0, 2)),
+        RELU(CHANNEL1TO8(1, 2)),
+        RELU(CHANNEL1TO8(2, 2)),
+        RELU(CHANNEL1TO8(3, 2))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL1TO8(4, 2)),
+        RELU(CHANNEL1TO8(5, 2)),
+        RELU(CHANNEL1TO8(6, 2)),
+        RELU(CHANNEL1TO8(7, 2))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+__global__ static void conv1To8HDNL3(
+    cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float tl = tex2D<float>(srcImg, x - 1, y - 1);
+    float tc = tex2D<float>(srcImg, x, y - 1);
+    float tr = tex2D<float>(srcImg, x + 1, y - 1);
+    float ml = tex2D<float>(srcImg, x - 1, y);
+    float mc = tex2D<float>(srcImg, x, y);
+    float mr = tex2D<float>(srcImg, x + 1, y);
+    float bl = tex2D<float>(srcImg, x - 1, y + 1);
+    float bc = tex2D<float>(srcImg, x, y + 1);
+    float br = tex2D<float>(srcImg, x + 1, y + 1);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL1TO8(0, 3)),
+        RELU(CHANNEL1TO8(1, 3)),
+        RELU(CHANNEL1TO8(2, 3)),
+        RELU(CHANNEL1TO8(3, 3))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL1TO8(4, 3)),
+        RELU(CHANNEL1TO8(5, 3)),
+        RELU(CHANNEL1TO8(6, 3)),
+        RELU(CHANNEL1TO8(7, 3))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+
+
+__global__ static void conv8To8HDNL0(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
-    int W, int H, int L, int HDNLevel)
+    int W, int H, int L)
 {
     const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
     const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -6703,25 +6835,177 @@ __global__ static void conv8To8(
     surf2DLayeredread(&br2, srcImg, __umul24(sizeof(mc2), x + 1), y + 1, 1, cudaBoundaryModeZero);
 
     float4 c1234 = make_float4(
-        RELU(CHANNEL8TO8(0)), 
-        RELU(CHANNEL8TO8(1)), 
-        RELU(CHANNEL8TO8(2)), 
-        RELU(CHANNEL8TO8(3))
+        RELU(CHANNEL8TO8(0, 0)),
+        RELU(CHANNEL8TO8(1, 0)),
+        RELU(CHANNEL8TO8(2, 0)),
+        RELU(CHANNEL8TO8(3, 0))
     );
     float4 c5678 = make_float4(
-        RELU(CHANNEL8TO8(4)), 
-        RELU(CHANNEL8TO8(5)), 
-        RELU(CHANNEL8TO8(6)), 
-        RELU(CHANNEL8TO8(7))
+        RELU(CHANNEL8TO8(4, 0)),
+        RELU(CHANNEL8TO8(5, 0)),
+        RELU(CHANNEL8TO8(6, 0)),
+        RELU(CHANNEL8TO8(7, 0))
     );
 
     surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
     surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
 }
 
-__global__ static void convTranspose8To1(
+__global__ static void conv8To8HDNL1(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
-    int W, int H, int HDNLevel)
+    int W, int H, int L)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float4 tl1, tc1, tr1, ml1, mc1, mr1, bl1, bc1, br1;
+    float4 tl2, tc2, tr2, ml2, mc2, mr2, bl2, bc2, br2;
+
+    surf2DLayeredread(&tl1, srcImg, __umul24(sizeof(mc1), x - 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc1, srcImg, __umul24(sizeof(mc1), x), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr1, srcImg, __umul24(sizeof(mc1), x + 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml1, srcImg, __umul24(sizeof(mc1), x - 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr1, srcImg, __umul24(sizeof(mc1), x + 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl1, srcImg, __umul24(sizeof(mc1), x - 1), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc1, srcImg, __umul24(sizeof(mc1), x), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&br1, srcImg, __umul24(sizeof(mc1), x + 1), y + 1, 0, cudaBoundaryModeZero);
+
+    surf2DLayeredread(&tl2, srcImg, __umul24(sizeof(mc2), x - 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc2, srcImg, __umul24(sizeof(mc2), x), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr2, srcImg, __umul24(sizeof(mc2), x + 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml2, srcImg, __umul24(sizeof(mc2), x - 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), x), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr2, srcImg, __umul24(sizeof(mc2), x + 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl2, srcImg, __umul24(sizeof(mc2), x - 1), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc2, srcImg, __umul24(sizeof(mc2), x), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&br2, srcImg, __umul24(sizeof(mc2), x + 1), y + 1, 1, cudaBoundaryModeZero);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL8TO8(0, 1)),
+        RELU(CHANNEL8TO8(1, 1)),
+        RELU(CHANNEL8TO8(2, 1)),
+        RELU(CHANNEL8TO8(3, 1))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL8TO8(4, 1)),
+        RELU(CHANNEL8TO8(5, 1)),
+        RELU(CHANNEL8TO8(6, 1)),
+        RELU(CHANNEL8TO8(7, 1))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+__global__ static void conv8To8HDNL2(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H, int L)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float4 tl1, tc1, tr1, ml1, mc1, mr1, bl1, bc1, br1;
+    float4 tl2, tc2, tr2, ml2, mc2, mr2, bl2, bc2, br2;
+
+    surf2DLayeredread(&tl1, srcImg, __umul24(sizeof(mc1), x - 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc1, srcImg, __umul24(sizeof(mc1), x), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr1, srcImg, __umul24(sizeof(mc1), x + 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml1, srcImg, __umul24(sizeof(mc1), x - 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr1, srcImg, __umul24(sizeof(mc1), x + 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl1, srcImg, __umul24(sizeof(mc1), x - 1), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc1, srcImg, __umul24(sizeof(mc1), x), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&br1, srcImg, __umul24(sizeof(mc1), x + 1), y + 1, 0, cudaBoundaryModeZero);
+
+    surf2DLayeredread(&tl2, srcImg, __umul24(sizeof(mc2), x - 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc2, srcImg, __umul24(sizeof(mc2), x), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr2, srcImg, __umul24(sizeof(mc2), x + 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml2, srcImg, __umul24(sizeof(mc2), x - 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), x), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr2, srcImg, __umul24(sizeof(mc2), x + 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl2, srcImg, __umul24(sizeof(mc2), x - 1), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc2, srcImg, __umul24(sizeof(mc2), x), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&br2, srcImg, __umul24(sizeof(mc2), x + 1), y + 1, 1, cudaBoundaryModeZero);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL8TO8(0, 2)),
+        RELU(CHANNEL8TO8(1, 2)),
+        RELU(CHANNEL8TO8(2, 2)),
+        RELU(CHANNEL8TO8(3, 2))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL8TO8(4, 2)),
+        RELU(CHANNEL8TO8(5, 2)),
+        RELU(CHANNEL8TO8(6, 2)),
+        RELU(CHANNEL8TO8(7, 2))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+__global__ static void conv8To8HDNL3(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H, int L)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    float4 tl1, tc1, tr1, ml1, mc1, mr1, bl1, bc1, br1;
+    float4 tl2, tc2, tr2, ml2, mc2, mr2, bl2, bc2, br2;
+
+    surf2DLayeredread(&tl1, srcImg, __umul24(sizeof(mc1), x - 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc1, srcImg, __umul24(sizeof(mc1), x), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr1, srcImg, __umul24(sizeof(mc1), x + 1), y - 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml1, srcImg, __umul24(sizeof(mc1), x - 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr1, srcImg, __umul24(sizeof(mc1), x + 1), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl1, srcImg, __umul24(sizeof(mc1), x - 1), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc1, srcImg, __umul24(sizeof(mc1), x), y + 1, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&br1, srcImg, __umul24(sizeof(mc1), x + 1), y + 1, 0, cudaBoundaryModeZero);
+
+    surf2DLayeredread(&tl2, srcImg, __umul24(sizeof(mc2), x - 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tc2, srcImg, __umul24(sizeof(mc2), x), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&tr2, srcImg, __umul24(sizeof(mc2), x + 1), y - 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&ml2, srcImg, __umul24(sizeof(mc2), x - 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), x), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&mr2, srcImg, __umul24(sizeof(mc2), x + 1), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bl2, srcImg, __umul24(sizeof(mc2), x - 1), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&bc2, srcImg, __umul24(sizeof(mc2), x), y + 1, 1, cudaBoundaryModeZero);
+    surf2DLayeredread(&br2, srcImg, __umul24(sizeof(mc2), x + 1), y + 1, 1, cudaBoundaryModeZero);
+
+    float4 c1234 = make_float4(
+        RELU(CHANNEL8TO8(0, 3)),
+        RELU(CHANNEL8TO8(1, 3)),
+        RELU(CHANNEL8TO8(2, 3)),
+        RELU(CHANNEL8TO8(3, 3))
+    );
+    float4 c5678 = make_float4(
+        RELU(CHANNEL8TO8(4, 3)),
+        RELU(CHANNEL8TO8(5, 3)),
+        RELU(CHANNEL8TO8(6, 3)),
+        RELU(CHANNEL8TO8(7, 3))
+    );
+
+    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+}
+
+
+
+__global__ static void convTranspose8To1HDNL0(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
 {
     const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
     const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
@@ -6737,17 +7021,108 @@ __global__ static void convTranspose8To1(
     surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
 
     uchar c = clamp(
-        mc1.x * kernelsL10[HDNLevel][0 + index] +
-        mc1.y * kernelsL10[HDNLevel][4 + index] +
-        mc1.z * kernelsL10[HDNLevel][8 + index] +
-        mc1.w * kernelsL10[HDNLevel][12 + index] +
-        mc2.x * kernelsL10[HDNLevel][16 + index] +
-        mc2.y * kernelsL10[HDNLevel][20 + index] +
-        mc2.z * kernelsL10[HDNLevel][24 + index] +
-        mc2.w * kernelsL10[HDNLevel][28 + index], 0.0f, 1.0f) * 255.0f + 0.5f;
+        mc1.x * HDNL0kernelsL10[0 + index] +
+        mc1.y * HDNL0kernelsL10[4 + index] +
+        mc1.z * HDNL0kernelsL10[8 + index] +
+        mc1.w * HDNL0kernelsL10[12 + index] +
+        mc2.x * HDNL0kernelsL10[16 + index] +
+        mc2.y * HDNL0kernelsL10[20 + index] +
+        mc2.z * HDNL0kernelsL10[24 + index] +
+        mc2.w * HDNL0kernelsL10[28 + index], 0.0f, 1.0f) * 255.0f + 0.5f;
 
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
+
+__global__ static void convTranspose8To1HDNL1(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    uchar c = clamp(
+        mc1.x * HDNL1kernelsL10[0 + index] +
+        mc1.y * HDNL1kernelsL10[4 + index] +
+        mc1.z * HDNL1kernelsL10[8 + index] +
+        mc1.w * HDNL1kernelsL10[12 + index] +
+        mc2.x * HDNL1kernelsL10[16 + index] +
+        mc2.y * HDNL1kernelsL10[20 + index] +
+        mc2.z * HDNL1kernelsL10[24 + index] +
+        mc2.w * HDNL1kernelsL10[28 + index], 0.0f, 1.0f) * 255.0f + 0.5f;
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+__global__ static void convTranspose8To1HDNL2(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    uchar c = clamp(
+        mc1.x * HDNL2kernelsL10[0 + index] +
+        mc1.y * HDNL2kernelsL10[4 + index] +
+        mc1.z * HDNL2kernelsL10[8 + index] +
+        mc1.w * HDNL2kernelsL10[12 + index] +
+        mc2.x * HDNL2kernelsL10[16 + index] +
+        mc2.y * HDNL2kernelsL10[20 + index] +
+        mc2.z * HDNL2kernelsL10[24 + index] +
+        mc2.w * HDNL2kernelsL10[28 + index], 0.0f, 1.0f) * 255.0f + 0.5f;
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+__global__ static void convTranspose8To1HDNL3(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    uchar c = clamp(
+        mc1.x * HDNL3kernelsL10[0 + index] +
+        mc1.y * HDNL3kernelsL10[4 + index] +
+        mc1.z * HDNL3kernelsL10[8 + index] +
+        mc1.w * HDNL3kernelsL10[12 + index] +
+        mc2.x * HDNL3kernelsL10[16 + index] +
+        mc2.y * HDNL3kernelsL10[20 + index] +
+        mc2.z * HDNL3kernelsL10[24 + index] +
+        mc2.w * HDNL3kernelsL10[28 + index], 0.0f, 1.0f) * 255.0f + 0.5f;
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
 
 void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
 {
@@ -6826,16 +7201,24 @@ void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData,
         (param->orgH * 2 + dimBlock.y - 1) / dimBlock.y
     );
 
-    conv1To8 <<<dimGrid, dimBlock>>> (inTex, surf1, param->orgW, param->orgH, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf1, surf2, param->orgW, param->orgH, L2, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf2, surf1, param->orgW, param->orgH, L3, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf1, surf2, param->orgW, param->orgH, L4, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf2, surf1, param->orgW, param->orgH, L5, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf1, surf2, param->orgW, param->orgH, L6, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf2, surf1, param->orgW, param->orgH, L7, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf1, surf2, param->orgW, param->orgH, L8, param->HDNLevel);
-    conv8To8 <<<dimGrid, dimBlock>>> (surf2, surf1, param->orgW, param->orgH, L9, param->HDNLevel);
-    convTranspose8To1 <<<dimGridout, dimBlock>>> (surf1, outSurf, W, H, param->HDNLevel);
+    switch (param->HDNLevel)
+    {
+    case 0:
+        RUNKERNEL(0)
+        break;
+    case 1:
+        RUNKERNEL(1)
+        break;
+    case 2:
+        RUNKERNEL(2)
+        break;
+    case 3:
+        RUNKERNEL(3)
+        break;
+    default:
+        RUNKERNEL(0)
+        break;
+    }
 
     err = cudaMemcpy2DFromArray(outputData, param->orgW * 2,
         cuOutputArray, 0, 0, W, H,

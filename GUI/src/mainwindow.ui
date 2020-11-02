@@ -1091,6 +1091,7 @@
     <addaction name="actionSimplifiedChinese"/>
     <addaction name="actionTraditionalChinese"/>
     <addaction name="actionJapanese"/>
+    <addaction name="actionFrench"/>
    </widget>
    <widget class="QMenu" name="menuOption">
     <property name="title">
@@ -1181,6 +1182,11 @@
   <action name="actionJapanese">
    <property name="text">
     <string>Japanese</string>
+   </property>
+  </action>
+  <action name="actionFrench">
+   <property name="text">
+    <string>French</string>
    </property>
   </action>
  </widget>

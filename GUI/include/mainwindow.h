@@ -27,22 +27,22 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-enum Language
+enum class Language
 {
-    en, zh_cn, zh_tw, ja_jp
+    en, zh_CN, zh_TW, ja_JP, fr_FR
 };
 
-enum ErrorType
+enum class ErrorType
 {
     PROCESSING_LIST_EMPTY,
     FILE_NOT_EXIST, DIR_NOT_EXIST,
-    TYPE_NOT_IMAGE, TYPE_NOT_ADD,
-    URL_INVALID, ERROR_IMAGE_FORMAT
+    TYPE_NOT_IMAGE, BAD_TYPE,
+    URL_INVALID, IMAGE_FORMAT_INVALID
 };
 
-enum FileType
+enum class FileType
 {
-    IMAGE = 0, VIDEO = 1, GIF = 2, ERROR_TYPE = 3
+    IMAGE, VIDEO, GIF, BAD_TYPE
 };
 
 enum GPUMode
@@ -55,7 +55,7 @@ enum GPUCNNMode
     GPUCNNMODE_INITIALZED = 0, GPUCNNMODE_UNINITIALZED = 1, GPUCNNMODE_UNSUPPORT = 3
 };
 
-enum PauseFlag
+enum class ProcessingState
 {
     NORMAL, PAUSE, PAUSED, CONTINUE
 };
@@ -76,21 +76,25 @@ protected:
 private:
     void readConfig(const QSettings* conf);
     void writeConfig(QSettings* conf);
-    Language getLanguage(const QString& lang);
-    QString getLanguage(const Language lang);
+
+    Language getLanguageValue(const QString& lang);
+    QString getLanguageString(const Language lang);
+
     void errorHandler(const ErrorType err);
     void errorHandler(const QString& err);
+
     void initTextBrowser();
     bool checkFFmpeg();
     QString formatSuffixList(const QString&& type, QString str);
-    void initAnime4K(Anime4KCPP::AC*& anime4K);
-    void releaseAnime4K(Anime4KCPP::AC*& anime4K);
     FileType fileType(const QFileInfo& file);
     QString getOutputPrefix();
-    Anime4KCPP::CODEC getCodec(const QString& codec);
     bool checkGIF(const QString& file);
     bool mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile);
     bool video2GIF(const QString& srcFile, const QString& dstFile);
+
+    void initAnime4K(Anime4KCPP::AC*& anime4K);
+    void releaseAnime4K(Anime4KCPP::AC*& anime4K);
+    Anime4KCPP::CODEC getCodec(const QString& codec);
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
@@ -137,6 +141,8 @@ private slots:
     void on_actionTraditionalChinese_triggered();
     
     void on_actionJapanese_triggered();
+
+    void on_actionFrench_triggered();
 
     void on_actionEnglish_triggered();
 
@@ -185,10 +191,11 @@ private:
     QTranslator* translator;
     QStandardItemModel* tableModel;
     QSettings* config;
-    quint64 totalTime;
+
+    quint64 totalProcessingTime;
     int imageCount;
     int videoCount;
-    bool ffmpeg;
+    bool foundFFmpegFlag;
     QString ffmpegPath;
     unsigned int totalTaskCount;
     Language currLanguage;
@@ -197,13 +204,13 @@ private:
     GPUCNNMode GPUCNNState;
     Anime4KCPP::ACCreator acCreator;
 
-    std::vector<int> devices;
-    int platforms;
+    std::vector<int> OpenCLDevices;
+    int OpenCLPlatforms;
 
     QHash<QString, Language> languageSelector;
     QHash<QString, Anime4KCPP::CODEC> codecSelector;
 
     std::atomic<bool> stop;
-    std::atomic<PauseFlag> pause;
+    std::atomic<ProcessingState> pause;
 };
 #endif // MAINWINDOW_H

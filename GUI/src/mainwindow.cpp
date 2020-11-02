@@ -8,8 +8,11 @@ MainWindow::MainWindow(QWidget* parent)
     ui->setupUi(this);
     //initialize translator
     translator = new QTranslator(this);
-    languageSelector["en"] = en;
-    languageSelector["zh_cn"] = zh_cn;
+    languageSelector["en"] = Language::en;
+    languageSelector["zh_CN"] = Language::zh_CN;
+    languageSelector["zh_TW"] = Language::zh_TW;
+    languageSelector["ja_JP"] = Language::ja_JP;
+    languageSelector["fr_FR"] = Language::fr_FR;
     //initialize codec
     codecSelector["mp4v"] = Anime4KCPP::CODEC::MP4V;
     codecSelector["dxva"] = Anime4KCPP::CODEC::DXVA;
@@ -48,13 +51,13 @@ MainWindow::MainWindow(QWidget* parent)
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxZoomFactor->setRange(1.0, 10.0);
     //initialize time and count
-    totalTaskCount = totalTime = imageCount = videoCount = 0;
+    totalTaskCount = totalProcessingTime = imageCount = videoCount = 0;
     //initialize config
     config = new QSettings("settings.ini", QSettings::IniFormat, this);
     readConfig(config);
     //initialize ffmpeg
     if (ui->actionCheck_FFmpeg->isChecked())
-        ffmpeg = checkFFmpeg();
+        foundFFmpegFlag = checkFFmpeg();
     //initialize GPU
     GPUState = GPUMODE_UNINITIALZED;
     GPUCNNState = GPUCNNMODE_UNINITIALZED;
@@ -72,10 +75,10 @@ MainWindow::MainWindow(QWidget* parent)
         ui->checkBoxHDN->setEnabled(false);
         ui->spinBoxHDNLevel->setEnabled(false);
     }
-    platforms = 0;
+    OpenCLPlatforms = 0;
     //stop flag
     stop = false;
-    pause = NORMAL;
+    pause = ProcessingState::NORMAL;
     //Register
     qRegisterMetaType<std::string>("std::string");
 }
@@ -138,16 +141,16 @@ void MainWindow::dropEvent(QDropEvent* event)
 
         FileType type = fileType(fileInfo);
 
-        if (type == ERROR_TYPE)
+        if (type == FileType::BAD_TYPE)
         {
-            errorHandler(TYPE_NOT_ADD);
+            errorHandler(ErrorType::BAD_TYPE);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if (type == VIDEO)
+        if (type == FileType::VIDEO)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
-        else if (type == GIF)
+        else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
@@ -214,19 +217,22 @@ void MainWindow::readConfig(const QSettings* conf)
 
     //GUI options
     //set language
-    switch (getLanguage(language))
+    switch (getLanguageValue(language))
     {
-    case en:
+    case Language::en:
         on_actionEnglish_triggered();
         break;
-    case zh_cn:
+    case Language::zh_CN:
         on_actionSimplifiedChinese_triggered();
         break;
-    case zh_tw:
+    case Language::zh_TW:
         on_actionTraditionalChinese_triggered();
         break;
-    case ja_jp:
+    case Language::ja_JP:
         on_actionJapanese_triggered();
+        break;
+    case Language::fr_FR:
+        on_actionFrench_triggered();
         break;
     }
     ui->actionQuit_confirmation->setChecked(quitConfirmatiom);
@@ -276,7 +282,7 @@ void MainWindow::readConfig(const QSettings* conf)
 
 void MainWindow::writeConfig(QSettings* conf)
 {
-    QString language = getLanguage(currLanguage);
+    QString language = getLanguageString(currLanguage);
     bool quitConfirmatiom = ui->actionQuit_confirmation->isChecked();
     bool checkFFmpegOnStart = ui->actionCheck_FFmpeg->isChecked();
 
@@ -366,23 +372,25 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Postprocessing/BilateralFilterFaster", postBilateralFaster);
 }
 
-inline Language MainWindow::getLanguage(const QString& lang)
+inline Language MainWindow::getLanguageValue(const QString& lang)
 {
     return languageSelector[lang];
 }
 
-inline QString MainWindow::getLanguage(const Language lang)
+inline QString MainWindow::getLanguageString(const Language lang)
 {
     switch (lang)
     {
-    case en:
+    case Language::en:
         return "en";
-    case zh_cn:
+    case Language::zh_CN:
         return "zh_CN";
-    case zh_tw:
+    case Language::zh_TW:
         return "zh_TW";
-    case ja_jp:
+    case Language::ja_JP:
         return "ja_JP";
+    case Language::fr_FR:
+        return "fr_FR";
     default:
         return "en";
     }
@@ -392,43 +400,43 @@ void MainWindow::errorHandler(const ErrorType err)
 {
     switch (err)
     {
-    case PROCESSING_LIST_EMPTY:
+    case ErrorType::PROCESSING_LIST_EMPTY:
         QMessageBox::warning(this,
             tr("Error"),
             tr("Processing list empty"),
             QMessageBox::Ok);
         break;
-    case FILE_NOT_EXIST:
+    case ErrorType::FILE_NOT_EXIST:
         QMessageBox::warning(this,
             tr("Error"),
             tr("File does not exists"),
             QMessageBox::Ok);
         break;
-    case DIR_NOT_EXIST:
+    case ErrorType::DIR_NOT_EXIST:
         QMessageBox::warning(this,
             tr("Error"),
             tr("Dir does not exists"),
             QMessageBox::Ok);
         break;
-    case TYPE_NOT_IMAGE:
+    case ErrorType::TYPE_NOT_IMAGE:
         QMessageBox::warning(this,
             tr("Error"),
             tr("File type error, only image support"),
             QMessageBox::Ok);
         break;
-    case TYPE_NOT_ADD:
+    case ErrorType::BAD_TYPE:
         QMessageBox::warning(this,
             tr("Error"),
             tr("File type error, you can add it manually"),
             QMessageBox::Ok);
         break;
-    case URL_INVALID:
+    case ErrorType::URL_INVALID:
         QMessageBox::warning(this,
             tr("Error"),
             tr("Invalid url, please check your input"),
             QMessageBox::Ok);
         break;
-    case ERROR_IMAGE_FORMAT:
+    case ErrorType::IMAGE_FORMAT_INVALID:
         QMessageBox::warning(this,
             tr("Error"),
             tr("Error image format, please check your input"),
@@ -579,15 +587,15 @@ FileType MainWindow::fileType(const QFileInfo& file)
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
     if (imageSuffix.contains(file.suffix(), Qt::CaseInsensitive))
-        return IMAGE;
+        return FileType::IMAGE;
     if (videoSuffix.contains(file.suffix(), Qt::CaseInsensitive))
     {
         if (checkGIF(file.filePath()))
-            return GIF;
+            return FileType::GIF;
         else
-            return VIDEO;;
+            return FileType::VIDEO;;
     }
-    return ERROR_TYPE;
+    return FileType::BAD_TYPE;
 }
 
 QString MainWindow::getOutputPrefix()
@@ -633,7 +641,7 @@ void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
     ui->progressBarProcessingList->setValue(pro * 100);
     ui->textBrowserInfoOut->insertPlainText(QString("processing time: %1 s\ndone\n").arg(time / 1000.0));
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
-    totalTime += time;
+    totalProcessingTime += time;
 }
 
 void MainWindow::solt_error_renewState(int row, QString err)
@@ -648,9 +656,9 @@ void MainWindow::solt_allDone_remindUser()
     ui->labelRemaining->setText(QString("Remaining: 0.0 s"));
     QMessageBox::information(this,
         tr("Notice"),
-        QString("All tasks done\nTotal processing time: %1 s").arg(totalTime / 1000.0),
+        QString("All tasks done\nTotal processing time: %1 s").arg(totalProcessingTime / 1000.0),
         QMessageBox::Ok);
-    totalTime = 0;
+    totalProcessingTime = 0;
     ui->tableViewProcessingList->setEnabled(true);
     ui->progressBarProcessingList->setEnabled(false);
     ui->progressBarProcessingList->reset();
@@ -705,16 +713,16 @@ void MainWindow::on_pushButtonPickFiles_clicked()
 
         FileType type = fileType(fileInfo);
 
-        if (type == ERROR_TYPE)
+        if (type == FileType::BAD_TYPE)
         {
-            errorHandler(TYPE_NOT_ADD);
+            errorHandler(ErrorType::BAD_TYPE);
             continue;
         }
 
         inputFile = new QStandardItem(fileInfo.fileName());
-        if (type == VIDEO)
+        if (type == FileType::VIDEO)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
-        else if (type == GIF)
+        else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
@@ -757,7 +765,7 @@ void MainWindow::on_pushButtonWebVideo_clicked()
     QUrl url(urlStr);
     if (!QRegExp("^https?|ftp|file$").exactMatch(url.scheme()) || !url.isValid())
     {
-        errorHandler(URL_INVALID);
+        errorHandler(ErrorType::URL_INVALID);
         return;
     }
     QFileInfo fileInfo(url.path());
@@ -770,16 +778,16 @@ void MainWindow::on_pushButtonWebVideo_clicked()
 
     FileType type = fileType(fileInfo);
 
-    if (type == ERROR_TYPE)
+    if (type == FileType::BAD_TYPE)
     {
-        errorHandler(TYPE_NOT_ADD);
+        errorHandler(ErrorType::BAD_TYPE);
         return;
     }
 
     inputFile = new QStandardItem(fileInfo.fileName());
-    if (type == VIDEO)
+    if (type == FileType::VIDEO)
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
-    else if (type == GIF)
+    else if (type == FileType::GIF)
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
     else
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
@@ -913,7 +921,7 @@ void MainWindow::on_pushButtonPreview_clicked()
     QFileInfo previewFile(ui->lineEditPreview->text());
     if (!previewFile.exists())
     {
-        errorHandler(FILE_NOT_EXIST);
+        errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
 
@@ -923,7 +931,7 @@ void MainWindow::on_pushButtonPreview_clicked()
     initAnime4K(ac);
     switch (fileType(previewFile))
     {
-    case IMAGE:
+    case FileType::IMAGE:
         try
         {
             ac->setVideoMode(false);
@@ -936,11 +944,11 @@ void MainWindow::on_pushButtonPreview_clicked()
             errorHandler(err.what().c_str());
         }
         break;
-    case VIDEO:
-        errorHandler(TYPE_NOT_IMAGE);
+    case FileType::VIDEO:
+        errorHandler(ErrorType::TYPE_NOT_IMAGE);
         break;
-    case ERROR_TYPE:
-        errorHandler(TYPE_NOT_ADD);
+    case FileType::BAD_TYPE:
+        errorHandler(ErrorType::BAD_TYPE);
         break;
     }
 
@@ -977,7 +985,7 @@ void MainWindow::on_pushButtonStart_clicked()
     int rows = tableModel->rowCount();
     if (!rows)
     {
-        errorHandler(PROCESSING_LIST_EMPTY);
+        errorHandler(ErrorType::PROCESSING_LIST_EMPTY);
         return;
     }
 
@@ -1010,7 +1018,7 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 outputPathMaker.mkpath(outputPath);
 
-                if (fileType(filePath) == IMAGE)
+                if (fileType(filePath) == FileType::IMAGE)
                 {
                     images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
                         outputPath + "/" +
@@ -1082,25 +1090,25 @@ void MainWindow::on_pushButtonStart_clicked()
                     ac->processWithProgress([this, ac, &startTime, &cm](double v) {
                         if (stop)
                         {
-                            if (pause == PAUSED)
+                            if (pause == ProcessingState::PAUSED)
                             {
                                 ac->continueVideoProcess();
-                                pause = NORMAL;
+                                pause = ProcessingState::NORMAL;
                             }
                             ac->stopVideoProcess();
                             return;
                         }
-                        if (pause == PAUSE)
+                        if (pause == ProcessingState::PAUSE)
                         {
                             ac->pauseVideoProcess();
-                            pause = PAUSED;
+                            pause = ProcessingState::PAUSED;
                         }
-                        else if (pause == CONTINUE)
+                        else if (pause == ProcessingState::CONTINUE)
                         {
                             ac->continueVideoProcess();
-                            pause = NORMAL;
+                            pause = ProcessingState::NORMAL;
                         }
-                        else if (pause == NORMAL)
+                        else if (pause == ProcessingState::NORMAL)
                         {
                             double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
                             double remaining = elpsed / v - elpsed;
@@ -1121,7 +1129,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     break;
                 }
 
-                if (ffmpeg)
+                if (foundFFmpegFlag)
                 {
                     QString tmpFilePath = video.first.second + "_tmp_out.mp4";
                     if (!checkGIF(video.first.second))
@@ -1183,7 +1191,7 @@ void MainWindow::on_actionSimplifiedChinese_triggered()
     translator->load(filePath);
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage = zh_cn;
+    currLanguage = Language::zh_CN;
 }
 
 void MainWindow::on_actionTraditionalChinese_triggered()
@@ -1194,7 +1202,7 @@ void MainWindow::on_actionTraditionalChinese_triggered()
     translator->load(filePath);
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage = zh_tw;
+    currLanguage = Language::zh_TW;
 }
 
 void MainWindow::on_actionJapanese_triggered()
@@ -1205,14 +1213,25 @@ void MainWindow::on_actionJapanese_triggered()
     translator->load(filePath);
     qApp->installTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage = ja_jp;
+    currLanguage = Language::ja_JP;
+}
+
+void MainWindow::on_actionFrench_triggered()
+{
+    QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_fr_FR.qm";
+    if (!QFileInfo(filePath).exists())
+        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_fr_FR.qm");
+    translator->load(filePath);
+    qApp->installTranslator(translator);
+    ui->retranslateUi(this);
+    currLanguage = Language::fr_FR;
 }
 
 void MainWindow::on_actionEnglish_triggered()
 {
     qApp->removeTranslator(translator);
     ui->retranslateUi(this);
-    currLanguage = en;
+    currLanguage = Language::en;
 }
 
 void MainWindow::on_actionSet_FFmpeg_path_triggered()
@@ -1270,7 +1289,7 @@ void MainWindow::on_pushButtonPreviewOrgin_clicked()
     QString filePath = ui->lineEditPreview->text();
     if (filePath.isEmpty())
     {
-        errorHandler(FILE_NOT_EXIST);
+        errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
     QPixmap orginImage(filePath);
@@ -1288,7 +1307,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     QString filePath = ui->lineEditPreview->text();
     if (filePath.isEmpty())
     {
-        errorHandler(FILE_NOT_EXIST);
+        errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
     //read image by opencv for resizing by CUBIC
@@ -1315,7 +1334,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
             QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
         break;
     default:
-        errorHandler(ERROR_IMAGE_FORMAT);
+        errorHandler(ErrorType::IMAGE_FORMAT_INVALID);
         return;
     }
     QPixmap resizedImage(QPixmap::fromImage(originImage));
@@ -1344,12 +1363,12 @@ void MainWindow::on_pushButtonPickFolder_clicked()
     for (QFileInfo& fileInfo : fileInfoList)
     {
         FileType type = fileType(fileInfo);
-        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (type != ERROR_TYPE))
+        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (type != FileType::BAD_TYPE))
         {
             inputFile = new QStandardItem(fileInfo.fileName());
-            if (type == VIDEO)
+            if (type == FileType::VIDEO)
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
-            else if (type == GIF)
+            else if (type == FileType::GIF)
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
             else
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
@@ -1461,15 +1480,15 @@ void MainWindow::on_pushButtonListGPUs_clicked()
         tr("Notice"),
         QString::fromStdString(ret()),
         QMessageBox::Ok);
-    platforms = ret.platforms;
-    devices = ret.devices;
+    OpenCLPlatforms = ret.platforms;
+    OpenCLDevices = ret.devices;
     ui->spinBoxPlatformID->setRange(0, ret.platforms - 1);
 }
 
 void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
 {
-    if (value < int(devices.size()))
-        ui->spinBoxDeviceID->setRange(0, devices[value] - 1);
+    if (value < int(OpenCLDevices.size()))
+        ui->spinBoxDeviceID->setRange(0, OpenCLDevices[value] - 1);
 }
 
 void MainWindow::on_pushButtonOutputPathOpen_clicked()
@@ -1477,7 +1496,7 @@ void MainWindow::on_pushButtonOutputPathOpen_clicked()
     QDir outputPath(ui->lineEditOutputPath->text());
     if (!outputPath.exists())
     {
-        errorHandler(DIR_NOT_EXIST);
+        errorHandler(ErrorType::DIR_NOT_EXIST);
         return;
     }
     QDesktopServices::openUrl(QUrl("file:///" + outputPath.absolutePath(), QUrl::TolerantMode));
@@ -1612,14 +1631,14 @@ void MainWindow::on_pushButtonForceStop_clicked()
 
 void MainWindow::on_pushButtonPause_clicked()
 {
-    pause = PAUSE;
+    pause = ProcessingState::PAUSE;
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(true);
 }
 
 void MainWindow::on_pushButtonContinue_clicked()
 {
-    pause = CONTINUE;
+    pause = ProcessingState::CONTINUE;
     ui->pushButtonPause->setEnabled(true);
     ui->pushButtonContinue->setEnabled(false);
 }
