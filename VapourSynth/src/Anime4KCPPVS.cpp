@@ -644,9 +644,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 #endif // ENABLE_CUDA
             }
         }
-        catch (const Anime4KCPP::ACBaseException& err)
+        catch (const std::exception& err)
         {
-            vsapi->setError(out, err.what().c_str());
+            vsapi->setError(out, err.what());
             vsapi->freeNode(tmpData.node);
             return;
         }

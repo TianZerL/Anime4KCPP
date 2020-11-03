@@ -525,13 +525,12 @@ int main(int argc, char* argv[])
             }
         }
     }
-    catch (const Anime4KCPP::ACBaseException& err)
+    catch (const std::exception& err)
     {
         std::cerr
             << std::endl
-            << err
+            << err.what()
             << std::endl;
     }
-
     return 0;
 }

@@ -7,17 +7,17 @@ void cuInitCuda(const unsigned int id)
     CheckCudaErr(err);
 }
 
-void cuReleaseCuda()
+void cuReleaseCuda() noexcept
 {
-    cudaError_t err = cudaDeviceReset();
-    CheckCudaErr(err);
+    cudaDeviceReset();
 }
 
-inline int cuGetDeviceCount()
+inline int cuGetDeviceCount() noexcept
 {
     int deviceCount;
     cudaError_t err = cudaGetDeviceCount(&deviceCount);
-    CheckCudaErr(err);
+    if (err != cudaSuccess)
+        return 0;
     return deviceCount;
 }
 
@@ -46,7 +46,7 @@ std::string cuGetCudaInfo()
     return info;
 }
 
-bool cuCheckDeviceSupport(const unsigned int id)
+bool cuCheckDeviceSupport(const unsigned int id) noexcept
 {
     cudaDeviceProp deviceProp;
     cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);

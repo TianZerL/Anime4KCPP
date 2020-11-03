@@ -20,11 +20,13 @@ typedef struct
 
 void cuRunKernelAnime4K09(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param);
 void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+
 void cuInitCuda(const unsigned int id);
-void cuReleaseCuda();
-int cuGetDeviceCount();
+void cuReleaseCuda() noexcept;
+
+int cuGetDeviceCount() noexcept;
 std::string cuGetDeviceInfo(const unsigned int id);
 std::string cuGetCudaInfo();
-bool cuCheckDeviceSupport(const unsigned int id);
+bool cuCheckDeviceSupport(const unsigned int id) noexcept;
 
 #endif

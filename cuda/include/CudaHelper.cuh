@@ -13,7 +13,6 @@
 #include <texture_fetch_functions.h>
 
 #define CheckCudaErr(err) \
-if (cudaSuccess != err) \
-    throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(cudaGetErrorString(err), std::string(__FILE__), __LINE__)
+if (err != cudaSuccess) throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(cudaGetErrorString(err), std::string(__FILE__), __LINE__)
 
 #endif

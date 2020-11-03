@@ -406,9 +406,9 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
             break;
             }
         }
-        catch (const Anime4KCPP::ACBaseException& err)
+        catch (const std::exception& err)
         {
-            env->ThrowError(err.what().c_str());
+            env->ThrowError(err.what());
         }
     }
 

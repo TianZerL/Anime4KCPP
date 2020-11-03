@@ -939,9 +939,9 @@ void MainWindow::on_pushButtonPreview_clicked()
             ac->process();
             ac->showImage();
         }
-        catch (Anime4KCPP::ACBaseException& err)
+        catch (const std::exception& err)
         {
-            errorHandler(err.what().c_str());
+            errorHandler(err.what());
         }
         break;
     case FileType::VIDEO:
@@ -1064,7 +1064,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     endTime = std::chrono::steady_clock::now();
                     ac->saveImage(image.first.second.toLocal8Bit().constData());
                 }
-                catch (Anime4KCPP::ACBaseException& err)
+                catch (const std::exception& err)
                 {
                     emit cm.error(image.second, QString::fromStdString(err.what()));
                 }
@@ -1118,7 +1118,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     endTime = std::chrono::steady_clock::now();
                     ac->saveVideo();
                 }
-                catch (Anime4KCPP::ACBaseException& err)
+                catch (const std::exception& err)
                 {
                     emit cm.error(video.second, QString::fromStdString(err.what()));
                 }
@@ -1172,7 +1172,7 @@ void MainWindow::on_actionAbout_triggered()
             "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
             "Copyright (c) 2020 TianZerL\n\n"
             "Thanks for:\n"
-            "semmyenator (Traditional Chinese and Japanese translation)")
+            "semmyenator (Traditional Chinese,Japanese and French translation)")
         .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION, PARALLEL_LIBRARY, __DATE__, __TIME__),
         QMessageBox::Ok);
 }
@@ -1410,7 +1410,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 if (!Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
                     Anime4KCPP::OpenCL::Anime4K09::initGPU(currPlatFormID, currDeviceID);
             }
-            catch (Anime4KCPP::ACBaseException& err)
+            catch (const std::exception& err)
             {
                 QMessageBox::warning(this,
                     tr("Warning"),
@@ -1585,7 +1585,7 @@ void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
                 if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
                     Anime4KCPP::OpenCL::ACNet::initGPU(currPlatFormID, currDeviceID);
             }
-            catch (Anime4KCPP::ACBaseException& err)
+            catch (const std::exception& err)
             {
                 QMessageBox::warning(this,
                     tr("Warning"),
