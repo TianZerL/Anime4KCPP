@@ -16,6 +16,10 @@ namespace filesystem = std::filesystem;
 #define COMPILER "Unknown"
 #endif // !COMPILER
 
+enum class GPGPU
+{
+    OpenCL, CUDA
+};
 
 static bool checkFFmpeg()
 {
@@ -123,7 +127,7 @@ int main(int argc, char* argv[])
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
     opt.add("benchmark", 'B', "do benchmarking");
-    opt.add("cuda", 'N', "Enable CUDA acceleration");
+    opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.set_program_name("Anime4KCPP_CLI");
 
     opt.parse_check(argc, argv);
@@ -157,7 +161,19 @@ int main(int argc, char* argv[])
     bool webVideo = opt.exist("webVideo");
     bool alpha = opt.exist("alpha");
     bool doBenchmark = opt.exist("benchmark");
-    bool cuda = opt.exist("cuda");
+    std::string GPGPUModelString = opt.get<std::string>("GPGPUModel");
+
+    GPGPU GPGPUModel;
+    std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
+    if (GPGPUModelString == "opencl")
+        GPGPUModel = GPGPU::OpenCL;
+    else if (GPGPUModelString == "cuda")
+        GPGPUModel = GPGPU::CUDA;
+    else
+    {
+        std::cerr << "Unknown GPGPU model, it must be \"cuda\" or \"opencl\"" << std::endl;
+        return 0;
+    }
 
     // -V
     if (version)
@@ -168,7 +184,17 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        if (cuda)
+        switch (GPGPUModel)
+        {
+        case GPGPU::OpenCL:
+        {
+            Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
+            if (ret.platforms == 0)
+                std::cerr << "Error: No OpenCL GPU found" << std::endl;
+            std::cerr << ret() << std::endl;
+            return 0;
+        }
+        case GPGPU::CUDA:
         {
 #ifndef ENABLE_CUDA
             std::cerr << "CUDA is not supported" << std::endl;
@@ -181,13 +207,6 @@ int main(int argc, char* argv[])
             return 0;
 #endif
         }
-        else
-        {
-            Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
-            if (ret.platforms == 0)
-                std::cerr << "Error: No OpenCL GPU found" << std::endl;
-            std::cerr << ret() << std::endl;
-            return 0;
         }
     }
     // -b
@@ -267,60 +286,68 @@ int main(int argc, char* argv[])
     try
     {
         //init
-        if (cuda)
+        if (GPU)
         {
+            switch (GPGPUModel)
+            {
+            case GPGPU::OpenCL:
+                if (CNN)
+                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
+                else
+                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+                break;
+            case GPGPU::CUDA:
 #ifndef ENABLE_CUDA
-            std::cerr << "CUDA is not supported" << std::endl;
-            return 0;
+                std::cerr << "CUDA is not supported" << std::endl;
+                return 0;
 #else
-            creator.pushManager<Anime4KCPP::Cuda::Manager>();
-            creator.init();
+                creator.pushManager<Anime4KCPP::Cuda::Manager>();
+                break;
 #endif
-        }
-        else if (GPU)
-        {
-            if (CNN)
-                creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
-            else
-                creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+            }
             creator.init();
         }
+
         //create instance
-        if (cuda)
+        if (GPU)
         {
+            switch (GPGPUModel)
+            {
+            case GPGPU::OpenCL:
+            {
+                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+                if (!ret)
+                {
+                    std::cerr << ret() << std::endl;
+                    return 0;
+                }
+                else
+                    std::cerr << ret() << std::endl;
+                if (CNN)
+                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                else
+                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            }
+                break;
+            case GPGPU::CUDA:
+            {
 #ifdef ENABLE_CUDA
-            Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
-            if (!ret)
-            {
-                std::cerr << ret() << std::endl;
-                return 0;
-            }
-            else
-            {
-                std::cerr << ret() << std::endl;
-            }
-            if (CNN)
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
-            else
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
+                if (!ret)
+                {
+                    std::cerr << ret() << std::endl;
+                    return 0;
+                }
+                else
+                    std::cerr << ret() << std::endl;
+                if (CNN)
+                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                else
+                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
-        }
-        else if (GPU)
-        {
-            Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
-            if (!ret)
-            {
-                std::cerr << ret() << std::endl;
-                return 0;
             }
-            else
-            {
-                std::cerr << ret() << std::endl;
+                break;
             }
-            if (CNN)
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-            else
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
         }
         else
         {

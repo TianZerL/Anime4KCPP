@@ -85,42 +85,29 @@ std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const un
         creator.pushManager<OpenCL::Manager<OpenCL::ACNet>>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
         creator.init();
     }
-    Anime4KCPP::AC* acCPU = creator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+    cv::Mat testImg = cv::Mat::zeros(cv::Size(1920, 1080), CV_8UC1);
+    cv::randu(testImg, cv::Scalar::all(0), cv::Scalar::all(255));
 
-    const size_t dataSize = 1920 * 1080 * 3;
-    auto testData = new uint8_t[dataSize];
+    std::unique_ptr<Anime4KCPP::AC> acCPU = creator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
 
-    for (size_t i = 0; i < dataSize; i += 3)
-    {
-        testData[i + 1] = 255 * cos(i / 3);
-        testData[i + 2] = 255 * sin(i / 3);
-        testData[i] = (testData[i + 1] + testData[i + 2]) / 2;
-    }
-
-    acCPU->loadImage(1920, 1080, testData, 0ULL, true);
+    acCPU->loadImage(testImg, testImg, testImg); // YUV
     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
     acCPU->process();
     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
     ret.first = 10000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
 
-    creator.release(acCPU);
-
     if (checkGPUResult)
     {
-        Anime4KCPP::AC* acGPU = creator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+        std::unique_ptr<Anime4KCPP::AC> acGPU = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
 
-        acGPU->loadImage(1920, 1080, testData, 0ULL, true);
+        acGPU->loadImage(testImg, testImg, testImg);
         s = std::chrono::steady_clock::now();
         acGPU->process();
         e = std::chrono::steady_clock::now();
         ret.second = 10000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
-
-        creator.release(acGPU);
     }
     else
-        ret.second = 0;
-
-    delete[] testData;
+        ret.second = 0.0;
 
     return ret;
 }
