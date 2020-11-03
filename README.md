@@ -91,6 +91,6 @@ For information on how to compile Anime4KCPP, see [wiki](https://github.com/Tian
 - [Qt](https://www.qt.io/)
 
 # Acknowledgement
-[semmyenator](https://github.com/semmyenator) : Traditional Chinese and Japanese translation
+[semmyenator](https://github.com/semmyenator) : Traditional Chinese, Japanese and French translation
 
 All images are drawn by my friend ***King of learner*** and authorized to use, only for demonstration, do not use without permission.

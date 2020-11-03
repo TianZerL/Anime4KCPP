@@ -76,6 +76,6 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 - [Qt](https://www.qt.io/)
 
 # 致谢
-[semmyenator](https://github.com/semmyenator)：繁体中文与日语翻译
+[semmyenator](https://github.com/semmyenator)：繁体中文、日语与法语翻译
 
 项目中引用的所有动漫图像均由我的朋友 ***King of learner*** 绘制并授权使用，请勿在未经许可的情况下使用它们。
