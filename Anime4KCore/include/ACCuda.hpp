@@ -39,14 +39,20 @@ inline Anime4KCPP::Cuda::Manager::Manager(const unsigned int dID)
 
 inline void Anime4KCPP::Cuda::Manager::init()
 {
-    cuInitCuda(dID);
-    initialized = true;
+    if (!initialized)
+    {
+        cuInitCuda(dID);
+        initialized = true;
+    }
 }
 
 inline void Anime4KCPP::Cuda::Manager::release()
 {
-    cuReleaseCuda();
-    initialized = false;
+    if (initialized)
+    {
+        cuReleaseCuda();
+        initialized = false;
+    }
 }
 
 inline bool Anime4KCPP::Cuda::Manager::isInitialized()

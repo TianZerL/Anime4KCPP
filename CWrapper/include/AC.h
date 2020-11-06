@@ -17,6 +17,14 @@
 #endif
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+#define DEPRECATED __attribute__((deprecated))
+#elif defined(_MSC_VER)
+#define DEPRECATED __declspec(deprecated)
+#else
+#define DEPRECATED
+#endif
+
 #define acSaveImageYUV acSaveImageRGB
 #define acSaveImageYUV444Bytes acSaveImageRGBBytes
 
@@ -28,10 +36,42 @@ extern "C"
     typedef enum ac_processType
     {
         AC_CPU_Anime4K09,
-        AC_OpenCL_Anime4K09,
         AC_CPU_ACNet,
-        AC_OpenCL_ACNet
+        AC_OpenCL_Anime4K09,
+        AC_OpenCL_ACNet,
+        AC_Cuda_Anime4K09,
+        AC_Cuda_ACNet,
+        //deprecated, use AC_CPU_Anime4K09
+        AC_CPU = AC_CPU_Anime4K09,
+        //deprecated, use AC_CPU_ACNet
+        AC_CPUCNN = AC_CPU_ACNet,
+        //deprecated, use AC_OpenCL_Anime4K09
+        AC_GPU = AC_OpenCL_Anime4K09,
+        //deprecated, use AC_OpenCL_ACNet
+        AC_GPUCNN = AC_OpenCL_ACNet
     } ac_processType;
+
+    typedef enum ac_CNNType
+    {
+        AC_Default, 
+        AC_ACNetHDNL0, 
+        AC_ACNetHDNL1, 
+        AC_ACNetHDNL2, 
+        AC_ACNetHDNL3
+    } ac_CNNType;
+
+    typedef enum ac_GPGPU
+    {
+        AC_CUDA,
+        AC_OpenCL
+    } ac_GPGPU;
+
+    typedef enum ac_manager
+    {
+        AC_Manager_OpenCL_Anime4K09 = 1 << 0,
+        AC_Manager_OpenCL_ACNet = 1 << 1,
+        AC_Manager_Cuda = 1 << 2
+    } ac_manager;
 
     typedef enum ac_bool
     {
@@ -44,6 +84,7 @@ extern "C"
         AC_OK = 0,
         AC_ERROR_NULL_INSTANCE,
         AC_ERROR_NULL_PARAMETERS,
+        AC_ERROR_NULL_Data,
         AC_ERROR_INIT_GPU,
         AC_ERROR_PORCESSOR_TYPE,
         AC_ERROR_LOAD_IMAGE,
@@ -52,7 +93,8 @@ extern "C"
         AC_ERROR_GPU_PROCESS,
         AC_ERROR_SAVE_TO_NULL_POINTER,
         AC_ERROR_NOT_YUV444,
-        AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME
+        AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME,
+        AC_ERROR_CUDA_NOT_SUPPORTED
     } ac_error;
 
     typedef enum ac_codec
@@ -91,11 +133,34 @@ extern "C"
         char wrapperVersion[6];
     } ac_version;
 
+    typedef struct ac_OpenCLData
+    {
+        unsigned int pID;
+        unsigned int dID;
+        ac_CNNType CNNType;
+    } ac_OpenCLData;
+
+    typedef struct ac_CudaData
+    {
+        unsigned int dID;
+    } ac_CudaData;
+
     typedef void* ac_instance;
 
     AC_DLL ac_version AC_API acGetVersion(void);
-    AC_DLL ac_instance AC_API acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error);
-    AC_DLL void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
+    DEPRECATED AC_DLL ac_instance AC_API acGetInstance(
+        ac_bool initGPU, ac_bool initGPUCNN, 
+        unsigned int platformID, unsigned int deviceID, 
+        ac_parameters* parameters, ac_processType type, 
+        ac_error* error
+    );
+    AC_DLL ac_instance AC_API acGetInstance2(
+        unsigned int managers, void* managerData,
+        ac_parameters* parameters, ac_processType type,
+        ac_error* error
+    );
+    DEPRECATED AC_DLL void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
+    AC_DLL void AC_API acFreeInstance2(ac_instance instance);
     AC_DLL ac_error AC_API acInitParameters(ac_parameters* parameters);
     AC_DLL ac_error AC_API acLoadImage(ac_instance instance, const char* srcFile);
     AC_DLL ac_error AC_API acLoadVideo(ac_instance instance, const char* srcFile);
@@ -122,10 +187,12 @@ extern "C"
     AC_DLL ac_error AC_API acSaveVideo(ac_instance instance);
     AC_DLL ac_error AC_API acSetArguments(ac_instance instance, ac_parameters* parameters);
     AC_DLL ac_error AC_API acSetVideoMode(ac_instance instance, ac_bool flag);
-    AC_DLL ac_error AC_API acInitGPU(void);
-    AC_DLL void AC_API acReleaseGPU(void);
-    AC_DLL ac_error AC_API acInitGPUCNN(void);
-    AC_DLL void AC_API acReleaseGPUCNN(void);
+    DEPRECATED AC_DLL ac_error AC_API acInitGPU(void);
+    DEPRECATED AC_DLL void AC_API acReleaseGPU(void);
+    DEPRECATED AC_DLL ac_error AC_API acInitGPUCNN(void);
+    DEPRECATED AC_DLL void AC_API acReleaseGPUCNN(void);
+    AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, void* managerData);
+    AC_DLL void AC_API acReleaseGPU2(void);
     AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
     AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
     AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
@@ -140,7 +207,8 @@ extern "C"
     //acGetFiltersInfo may need to run two times for getting length of info string first
     AC_DLL ac_error AC_API acGetFiltersInfo(ac_instance instance, char* info, size_t* length);
     //acCheckGPUSupport may need to run two times for getting length of info string first
-    AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
+    DEPRECATED AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
+    AC_DLL ac_bool AC_API acCheckGPUSupport2(ac_GPGPU GPGPUModel, unsigned int pID, unsigned int dID, char* info, size_t* length);
     //acCheckGPUSupport may need to run two times for getting length of info string and length(platforms) of devices first
     AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);

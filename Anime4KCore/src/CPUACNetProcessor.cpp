@@ -6666,7 +6666,7 @@ const double Anime4KCPP::CPU::ACNetHDNL3::biases[8][8] =
 }
 };
 
-Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(const CNNType& type)
+Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(const CNNType type)
 {
     switch (type)
     {
@@ -6683,7 +6683,7 @@ Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(const CNN
     }
 }
 
-void Anime4KCPP::CPU::releaseACNetProcessor(ACNetProcessor*& processor) noexcept
+void Anime4KCPP::CPU::releaseACNetProcessor(ACNetProcessor* processor) noexcept
 {
     if (processor != nullptr)
     {

@@ -56,7 +56,7 @@ Anime4KCPP::AC* Anime4KCPP::ACCreator::create(
     return nullptr;
 }
 
-void Anime4KCPP::ACCreator::release(AC*& ac) noexcept
+void Anime4KCPP::ACCreator::release(AC* ac) noexcept
 {
     if (ac != nullptr)
     {

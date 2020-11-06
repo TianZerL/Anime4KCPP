@@ -15,8 +15,8 @@ namespace Anime4KCPP
         class ACNetHDNL2;
         class ACNetHDNL3;
 
-        ACNetProcessor* createACNetProcessor(const CNNType& type);
-        void releaseACNetProcessor(ACNetProcessor*& processor) noexcept;
+        ACNetProcessor* createACNetProcessor(const CNNType type);
+        void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
     }
 }
 
