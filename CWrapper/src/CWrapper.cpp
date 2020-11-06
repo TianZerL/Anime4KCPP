@@ -642,7 +642,7 @@ extern "C"
         return static_cast<Anime4KCPP::AC*>(instance)->getResultDataPerChannelLength();
     }
 
-    ac_error acGetResultShape(ac_instance instance, int* shape)
+    ac_error acGetResultShape(ac_instance instance, int shape[3])
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -790,5 +790,39 @@ extern "C"
 
         *CPUScore = ret.first;
         *GPUScore = ret.second;
+    }
+
+    ac_processType acGetProcessType(ac_instance instance, ac_error* error)
+    {
+        if (error != nullptr)
+            *error = AC_OK;
+
+        if (instance == nullptr)
+        {
+            if (error != nullptr)
+                *error = AC_ERROR_NULL_INSTANCE;
+            return AC_CPU_Anime4K09;
+        }
+
+        Anime4KCPP::Processor::Type type = static_cast<Anime4KCPP::AC*>(instance)->getProcessorType();
+        switch (type)
+        {
+        case Anime4KCPP::Processor::Type::CPU_Anime4K09:
+            return AC_CPU_Anime4K09;
+        case Anime4KCPP::Processor::Type::CPU_ACNet:
+            return AC_CPU_ACNet;
+        case Anime4KCPP::Processor::Type::OpenCL_Anime4K09:
+            return AC_OpenCL_Anime4K09;
+        case Anime4KCPP::Processor::Type::OpenCL_ACNet:
+            return AC_OpenCL_ACNet;
+#ifdef ENABLE_CUDA
+        case Anime4KCPP::Processor::Type::Cuda_Anime4K09:
+            return AC_Cuda_Anime4K09;
+        case Anime4KCPP::Processor::Type::Cuda_ACNet:
+            return AC_Cuda_ACNet;
+#endif
+        default:
+            return AC_CPU_Anime4K09;
+        }
     }
 }

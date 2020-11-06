@@ -201,7 +201,7 @@ extern "C"
     AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
     AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
     //shape should be int[3]
-    AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int* shape);
+    AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int shape[3]);
     //acGetInfo may need to run two times for getting length of info string first
     AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char* info, size_t* length);
     //acGetFiltersInfo may need to run two times for getting length of info string first
@@ -215,6 +215,7 @@ extern "C"
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
     AC_DLL void AC_API acGetLastCoreErrorString(char *err, size_t* length);
     AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
+    AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
 #ifdef __cplusplus
 }
 #endif
