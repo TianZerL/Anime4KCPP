@@ -99,6 +99,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     lpPath[iPathLen - 1] = L'i';
 
     TCHAR _zoomFactor[10];
+    TCHAR _GPGPUModelString[10];
     //read config
     pID = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"pID", 0, lpPath);
     dID = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"dID", 0, lpPath);
@@ -107,15 +108,44 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
     parameters.HDN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDN", 0, lpPath);
     parameters.HDNLevel = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDNLevel", 1, lpPath);
-
-    GetPrivateProfileStringW(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
+    
+    GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"OpenCL", _GPGPUModelString, 10, lpPath);
+    GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
 
-    if (CNN)
-        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+    if (!wcsicmp(_GPGPUModelString, L"OpenCL"))
+        GPGPUModel = GPGPU::OpenCL;
+    else if (!wcsicmp(_GPGPUModelString, L"CUDA"))
+        GPGPUModel = GPGPU::CUDA;
     else
-        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+        GPGPUModel = GPGPU::OpenCL;
+
+    if (!CheckGPUSupport())
+        GPUCheckResult = E_FAIL;
+    else
+        GPUCheckResult = NOERROR;
+
+    switch (GPGPUModel)
+    {
+    case GPGPU::OpenCL:
+        if (CNN)
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+        else
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+        break;
+    case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+        acCreator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+#else
+        if (CNN)
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+        else
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+#endif
+        break;
+    }
+
 
 }
 
@@ -188,7 +218,7 @@ CUnknown* Anime4KCPPDS::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
 {
     Anime4KCPPDS* pNewObject = new Anime4KCPPDS(NAME("Anime4KCPP for DirectShow"), punk, phr);
 
-    if (pNewObject == NULL)
+    if (pNewObject == nullptr)
     {
         if (phr)
             *phr = E_OUTOFMEMORY;
@@ -231,7 +261,7 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
 
     // Can we transform this type
     if (IsYV12(mtIn) || IsIYUV(mtIn) || IsNV12(mtIn) || IsRGB24(mtIn) || IsRGB32(mtIn))
-        return NOERROR;
+        return GPUCheckResult;
 
     return E_FAIL;
 }
@@ -357,19 +387,38 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         return hr;
 
     Anime4KCPP::AC* ac = nullptr;
-    if (CNN)
-        ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-    else
-        ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+    switch (GPGPUModel)
+    {
+    case GPGPU::OpenCL:
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+        break;
+    case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#else
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
+        break;
+    }
+
 
     switch (colorFormat)
     {
     case ColorFormat::YV12:
     case ColorFormat::IYUV:
     {
-        LONG srcSize = (pIn->GetActualDataLength() << 1) / 3;
-        LONG dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        LONG stride = dstSize / dstH;
+        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+        size_t stride = dstSize / dstH;
 
         BYTE* pYIn = pBufferIn,
             * pUIn = pYIn + srcSize,
@@ -386,9 +435,9 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
         else
         {
-            LONG dstHUV = dstH >> 1;
-            LONG dstWUV = dstW >> 1;
-            LONG strideUV = stride >> 1;
+            size_t dstHUV = dstH >> 1;
+            size_t dstWUV = dstW >> 1;
+            size_t strideUV = stride >> 1;
             cv::Mat dstTmpY, dstTmpU, dstTmpV;
 
             ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
@@ -412,9 +461,9 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     case ColorFormat::NV12:
     {
-        LONG srcSize = (pIn->GetActualDataLength() << 1) / 3;
-        LONG dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        LONG stride = dstSize / dstH;
+        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+        size_t stride = dstSize / dstH;
 
         BYTE* pYIn = pBufferIn,
             * pUVIn = pYIn + srcSize;
@@ -441,7 +490,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
         else
         {
-            LONG dstHUV = dstH >> 1;
+            size_t dstHUV = dstH >> 1;
 
             ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
             ac->process();
@@ -464,8 +513,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     case ColorFormat::RGB24:
     {
-        LONG stride = pOut->GetActualDataLength() / dstH;
-        LONG dataPerLine = dstW * 3;
+        size_t stride = pOut->GetActualDataLength() / dstH;
+        size_t dataPerLine = dstW * 3;
         if (stride == dataPerLine)
         {
             ac->loadImage(srcH, srcW, pBufferIn);
@@ -489,8 +538,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     break;
     case ColorFormat::RGB32:
     {
-        LONG stride = pOut->GetActualDataLength() / dstH;
-        LONG dataPerLine = dstW << 2;
+        size_t stride = pOut->GetActualDataLength() / dstH;
+        size_t dataPerLine = dstW << 2;
         if (stride == dataPerLine)
         {
             cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
@@ -523,7 +572,41 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     return hr;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int* H, int* W)
+BOOL Anime4KCPPDS::CheckGPUSupport()
+{
+    switch (GPGPUModel)
+    {
+    case GPGPU::OpenCL:
+    {
+        Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+        if (!ret)
+        {
+            MessageBoxExA(nullptr, ret().c_str(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+            return FALSE;
+        }
+    }
+    break;
+    case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+    {
+        Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
+        if (!ret)
+        {
+            MessageBoxExA(nullptr, ret().c_str(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+            return FALSE;
+        }
+    }
+#else
+        MessageBoxExA(nullptr, "CUDA is not supported", "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+        return FALSE;
+#endif 
+    break;
+    }
+
+    return TRUE;
+}
+
+STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int* H, int* W, int* GPGPUModel)
 {
     *HDN = parameters.HDN;
     *HDNLevel = parameters.HDNLevel;
@@ -533,15 +616,16 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, un
     *H = this->H;
     *W = this->W;
     *zoomFactor = zf;
+    *GPGPUModel = this->GPGPUModel;
 
     return NOERROR;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W)
+STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W, int GPGPUModel)
 {
     CAutoLock cAutoLock(&lock);
 
-    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10],_HDNLevel[10], _H[10], _W[10], _zoomFactor[10];
+    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10], _HDNLevel[10], _H[10], _W[10], _zoomFactor[10], * _GPGPUModel = nullptr;
 
     //convert to string
     _itow_s(pID, _pID, 10, 10);
@@ -553,7 +637,18 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
     _itow_s(HDNLevel, _HDNLevel, 10, 10);
 
     swprintf(_zoomFactor, 10, L"%f", zoomFactor);
-
+    switch (GPGPUModel)
+    {
+    case GPGPU::OpenCL:
+        _GPGPUModel = L"OpenCL";
+        break;
+    case GPGPU::CUDA:
+        _GPGPUModel = L"CUDA";
+        break;
+    default:
+        _GPGPUModel = L"OpenCL";
+    }
+    
     //write config
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"pID", _pID, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"dID", _dID, lpPath);
@@ -563,15 +658,38 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"H", _H, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"W", _W, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", _zoomFactor, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", _GPGPUModel, lpPath);
 
     return NOERROR;
 }
 
 STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
 {
-    Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
+    std::string tmpStr;
+    switch (GPGPUModel)
+    {
+    case GPGPU::OpenCL:
+    {
+        Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
+        tmpStr = GPUInfo();
+    }
+    break;
+    case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+    {
+        Anime4KCPP::Cuda::GPUList GPUInfo = Anime4KCPP::Cuda::listGPUs();
+        tmpStr = GPUInfo();
+    }
+#else
+    {
+        Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
+        tmpStr = GPUInfo();
+    }
+#endif
+    break;
+    }
 
-    std::string tmpStr = GPUInfo();
+
     size_t tmp = 0;
     std::vector<std::string> subInfo(4);
     for (size_t i = 0; i < tmpStr.size(); i++)

@@ -12,6 +12,11 @@ enum class ColorFormat
     YV12, IYUV, NV12, RGB24, RGB32
 };
 
+enum GPGPU
+{
+    OpenCL, CUDA
+};
+
 class Anime4KCPPDS :
     public CTransformFilter, ISpecifyPropertyPages, IAC
 {
@@ -26,8 +31,8 @@ public:
     virtual HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
-    STDMETHODIMP GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int *H, int* W);
-    STDMETHODIMP SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W);
+    STDMETHODIMP GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int *H, int* W, int* GPGPUModel);
+    STDMETHODIMP SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W, int GPGPUModel);
     STDMETHODIMP GetGPUInfo(std::string& info);
 
     STDMETHODIMP GetPages(CAUUID* pPages);
@@ -39,6 +44,7 @@ private:
     BOOL IsIYUV(const CMediaType* pMediaType) const;
     BOOL IsYV12(const CMediaType* pMediaType) const;
     BOOL IsNV12(const CMediaType* pMediaType) const;
+    BOOL CheckGPUSupport();
 private:
     Anime4KCPP::ACCreator acCreator;
     Anime4KCPP::Parameters parameters;
@@ -46,8 +52,10 @@ private:
     double zf;
     bool CNN;
     int H, W;
+    GPGPU GPGPUModel;
+    int GPUCheckResult;
 
-    LONG srcH, srcW, dstH, dstW;
+    size_t srcH, srcW, dstH, dstW;
     LONG dstDataLength;
     ColorFormat colorFormat;
     TCHAR lpPath[MAX_PATH];

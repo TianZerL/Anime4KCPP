@@ -23,7 +23,8 @@ extern "C"
             unsigned int* dID,
             double* zoomFactor,
             int *H,
-            int *W
+            int *W,
+            int *GPGPUModel
             ) PURE;
 
         STDMETHOD(SetParameters) (THIS_
@@ -34,7 +35,8 @@ extern "C"
             unsigned int dID,
             double zoomFactor,
             int H,
-            int W
+            int W,
+            int GPGPUModel
             ) PURE;
 
         STDMETHOD(GetGPUInfo) (THIS_
@@ -67,6 +69,7 @@ private:
     double zoomFactor;
     int H, W;
     std::string GPUInfo;
+    int GPGPUModelIdx;
 
     IAC* pIAC;
     BOOL bInit;

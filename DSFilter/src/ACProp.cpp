@@ -41,7 +41,7 @@ HRESULT ACProp::OnConnect(IUnknown* pUnk)
         return E_NOINTERFACE;
 
     CheckPointer(pIAC, E_FAIL);
-    pIAC->GetParameters(&HDN, &HDNLevel, &CNN, &pID, &dID, &zoomFactor, &H, &W);
+    pIAC->GetParameters(&HDN, &HDNLevel, &CNN, &pID, &dID, &zoomFactor, &H, &W, &GPGPUModelIdx);
 
     pIAC->GetGPUInfo(GPUInfo);
 
@@ -65,6 +65,12 @@ HRESULT ACProp::OnActivate()
 {
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN), HDN);
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), CNN);
+
+    ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"OpenCL");
+#ifdef ENABLE_CUDA
+    ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CUDA");
+#endif
+    ComboBox_SetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), GPGPUModelIdx);
 
     TCHAR sz[STR_MAX_LENGTH];
 
@@ -109,7 +115,7 @@ HRESULT ACProp::OnApplyChanges()
 {
     GetValues();
     CheckPointer(pIAC, E_POINTER);
-    pIAC->SetParameters(HDN, HDNLevel, CNN, pID, dID, zoomFactor, H, W);
+    pIAC->SetParameters(HDN, HDNLevel, CNN, pID, dID, zoomFactor, H, W, GPGPUModelIdx);
 
     return NOERROR;
 }
@@ -119,6 +125,8 @@ void ACProp::GetValues()
     HDN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN)) == BST_CHECKED;
 
     CNN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN)) == BST_CHECKED;
+
+    GPGPUModelIdx = ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU));
 
     TCHAR sz[STR_MAX_LENGTH];
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz, STR_MAX_LENGTH);
@@ -149,5 +157,5 @@ void ACProp::GetValues()
 ACProp::ACProp(LPUNKNOWN lpunk, HRESULT* phr) :
     CBasePropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), lpunk,
         IDD_ACPROP, IDS_TITLE),
-    HDN(false), CNN(false), HDNLevel(1), pID(0), dID(0), zoomFactor(2.0), H(1080), W(1920),
+    HDN(false), CNN(false), HDNLevel(1), pID(0), dID(0), zoomFactor(2.0), H(1080), W(1920), GPGPUModelIdx(0),
     pIAC(NULL), bInit(FALSE) {}

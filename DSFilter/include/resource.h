@@ -23,6 +23,8 @@
 #define IDC_STATIC_VERSION              1018
 #define IDC_EDIT_VERSION                1019
 #define IDC_STATIC_HDNLevel             1020
+#define IDC_STATIC_GPGPUModel           1021
+#define IDC_COMBO_GPGPU                 1022
 
 // Next default values for new objects
 // 
