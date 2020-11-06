@@ -9,7 +9,11 @@ if(Build_GUI)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
 
-    set(TS_FILES ./src/Anime4KCPP_GUI_zh_CN.ts)
+    set(TS_FILES 
+    ./src/Anime4KCPP_GUI_zh_CN.ts 
+    ./src/Anime4KCPP_GUI_zh_TW.ts 
+    ./src/Anime4KCPP_GUI_ja_JP.ts 
+    ./src/Anime4KCPP_GUI_fr_FR.ts)
     set(UI_FILE ./src/mainwindow.ui)
     set(QRC_FILE ./src/logo.qrc)
 

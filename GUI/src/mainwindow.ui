@@ -684,16 +684,6 @@
                </item>
               </layout>
              </item>
-             <item>
-              <widget class="QCheckBox" name="checkBoxACNetGPU">
-               <property name="statusTip">
-                <string>Enable GPU acceleration for ACNet, this will take a while, please don't close it.</string>
-               </property>
-               <property name="text">
-                <string>GPU acceleration for ACNet</string>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item row="1" column="0">
@@ -941,6 +931,23 @@
                <property name="text">
                 <string>GPU acceleration</string>
                </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="comboBoxGPGPU">
+               <property name="statusTip">
+                <string>GPGPU model</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string notr="true">OpenCL</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string notr="true">CUDA</string>
+                </property>
+               </item>
               </widget>
              </item>
             </layout>

@@ -25,8 +25,7 @@ Anime4KCPP::ACCreator::ACCreator(ManagerSPVector managerList, const bool initNow
 
 Anime4KCPP::ACCreator::~ACCreator()
 {
-    for (auto& manager : managers)
-        manager->release();
+    deinit();
 }
 
 #define AC_CASE_UP_ITEM
@@ -69,7 +68,22 @@ void Anime4KCPP::ACCreator::release(AC*& ac) noexcept
 void Anime4KCPP::ACCreator::init()
 {
     for (auto& manager : managers)
-        manager->init();
+    {
+        if (!manager->isInitialized())
+            manager->init();
+    }
+        
+}
+
+void Anime4KCPP::ACCreator::deinit(bool clearManager)
+{
+    for (auto& manager : managers)
+    {
+        if (manager->isInitialized())
+            manager->release();
+    }
+    if (clearManager)
+        managers.clear();
 }
 
 std::pair<double, double> Anime4KCPP::benchmark(const unsigned int pID, const unsigned int dID)

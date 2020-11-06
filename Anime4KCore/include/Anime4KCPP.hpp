@@ -38,6 +38,7 @@ public:
     void pushManager(Types&&... args);
 
     void init();
+    void deinit(bool clearManager = false);
 private:
     ManagerSPVector managers;
 };

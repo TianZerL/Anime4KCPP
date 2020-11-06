@@ -28,8 +28,10 @@ public:
     Manager(const unsigned int dID = 0);
     virtual void init() override;
     virtual void release() override;
+    virtual bool isInitialized() override;
 private:
     unsigned int dID;
+    bool initialized = false;
 };
 
 inline Anime4KCPP::Cuda::Manager::Manager(const unsigned int dID)
@@ -38,11 +40,18 @@ inline Anime4KCPP::Cuda::Manager::Manager(const unsigned int dID)
 inline void Anime4KCPP::Cuda::Manager::init()
 {
     cuInitCuda(dID);
+    initialized = true;
 }
 
 inline void Anime4KCPP::Cuda::Manager::release()
 {
     cuReleaseCuda();
+    initialized = false;
+}
+
+inline bool Anime4KCPP::Cuda::Manager::isInitialized()
+{
+    return initialized;
 }
 
 struct Anime4KCPP::Cuda::GPUList

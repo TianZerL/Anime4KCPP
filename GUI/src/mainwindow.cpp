@@ -59,8 +59,7 @@ MainWindow::MainWindow(QWidget* parent)
     if (ui->actionCheck_FFmpeg->isChecked())
         foundFFmpegFlag = checkFFmpeg();
     //initialize GPU
-    GPUState = GPUMODE_UNINITIALZED;
-    GPUCNNState = GPUCNNMODE_UNINITIALZED;
+    GPUState = GPUMode::UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
     ui->spinBoxDeviceID->setMinimum(0);
 
@@ -71,7 +70,6 @@ MainWindow::MainWindow(QWidget* parent)
 
     if (!ui->checkBoxACNet->isChecked())
     {
-        ui->checkBoxACNetGPU->setEnabled(false);
         ui->checkBoxHDN->setEnabled(false);
         ui->spinBoxHDNLevel->setEnabled(false);
     }
@@ -442,6 +440,12 @@ void MainWindow::errorHandler(const ErrorType err)
             tr("Error image format, please check your input"),
             QMessageBox::Ok);
         break;
+    case ErrorType::CUDA_NOT_SUPPORT:
+        QMessageBox::warning(this,
+            tr("Error"),
+            tr("CUDA is not supported"),
+            QMessageBox::Ok);
+        break;
     }
 }
 
@@ -495,7 +499,7 @@ QString MainWindow::formatSuffixList(const QString&& type, QString str)
     return type + "( *." + str.replace(QRegExp(":"), " *.") + ");;";
 }
 
-void MainWindow::initAnime4K(Anime4KCPP::AC*& ac)
+std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
 {
     int passes = ui->spinBoxPasses->value();
     int pushColorCount = ui->spinBoxPushColorCount->value();
@@ -565,21 +569,36 @@ void MainWindow::initAnime4K(Anime4KCPP::AC*& ac)
         alpha
     );
 
-    if (ui->checkBoxACNet->isChecked())
-        if (ui->checkBoxACNetGPU->isChecked())
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
-    else
-        if (ui->checkBoxGPUMode->isChecked())
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
-}
+    GPGPU GPGPUModel = (GPGPU)ui->comboBoxGPGPU->currentIndex();
+    bool GPUMode = ui->checkBoxGPUMode->isChecked();
+    bool ACNetMode = ui->checkBoxACNet->isChecked();
 
-void MainWindow::releaseAnime4K(Anime4KCPP::AC*& anime4K)
-{
-    acCreator.release(anime4K);
+    if(GPUMode)
+        switch (GPGPUModel)
+        {
+        case OpenCL:
+            if (ACNetMode)
+                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            else
+                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+        case CUDA:
+#ifdef ENABLE_CUDA
+            if (ACNetMode)
+                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#else
+            errorHandler(ErrorType::CUDA_NOT_SUPPORT);
+            return nullptr;
+#endif
+        }
+    else
+        if (ACNetMode)
+            return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+        else
+            return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+
+    return nullptr;
 }
 
 FileType MainWindow::fileType(const QFileInfo& file)
@@ -927,8 +946,7 @@ void MainWindow::on_pushButtonPreview_clicked()
 
     ui->pushButtonPreview->setEnabled(false);
 
-    Anime4KCPP::AC* ac;
-    initAnime4K(ac);
+    std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
     switch (fileType(previewFile))
     {
     case FileType::IMAGE:
@@ -951,8 +969,6 @@ void MainWindow::on_pushButtonPreview_clicked()
         errorHandler(ErrorType::BAD_TYPE);
         break;
     }
-
-    releaseAnime4K(ac);
 
     ui->pushButtonPreview->setEnabled(true);
 }
@@ -1044,8 +1060,7 @@ void MainWindow::on_pushButtonStart_clicked()
         connect(&cm, SIGNAL(allDone()), this, SLOT(solt_allDone_remindUser()));
         connect(&cm, SIGNAL(updateProgress(double, double, double)), this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
 
-        Anime4KCPP::AC* ac;
-        initAnime4K(ac);
+        std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
         emit cm.showInfo(ac->getFiltersInfo());
 
         std::chrono::steady_clock::time_point startTime, endTime;
@@ -1087,7 +1102,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     ac->setVideoSaveInfo(video.first.second.toLocal8Bit().constData() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    ac->processWithProgress([this, ac, &startTime, &cm](double v) {
+                    ac->processWithProgress([this, &ac, &startTime, &cm](double v) {
                         if (stop)
                         {
                             if (pause == ProcessingState::PAUSED)
@@ -1151,8 +1166,6 @@ void MainWindow::on_pushButtonStart_clicked()
 
             }
         }
-
-        releaseAnime4K(ac);
 
         emit cm.allDone();
         });
@@ -1390,25 +1403,63 @@ void MainWindow::on_pushButtonPickFolder_clicked()
 
 void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 {
-    if ((state == Qt::Checked) && (GPUState == GPUMODE_UNINITIALZED))
+    if ((state == Qt::Checked) && (GPUState == GPUMode::UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
-        if (!ret)
+        GPGPU GPGPUModel = (GPGPU)ui->comboBoxGPGPU->currentIndex();
+        bool ACNetMode = ui->checkBoxACNet->isChecked();
+        bool supported = false;
+        std::string info;
+
+        switch (GPGPUModel)
+        {
+        case OpenCL:
+            {
+                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
+                supported = ret;
+                info = ret();
+                if (supported)
+                {
+                    if (ACNetMode)
+                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(currPlatFormID, currDeviceID);
+                    else
+                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(currPlatFormID, currDeviceID);
+                }
+            }
+            break;
+        case CUDA:
+#ifdef ENABLE_CUDA
+        {
+            Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
+            supported = ret;
+            info = ret();
+            if (supported)
+            {
+                acCreator.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
+            }
+        }
+#else
+            errorHandler(ErrorType::CUDA_NOT_SUPPORT);
+            ui->comboBoxGPGPU->setCurrentIndex(GPGPU::OpenCL);
+            ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+#endif 
+            break;
+        }
+
+        if (!supported)
         {
             QMessageBox::warning(this,
                 tr("Warning"),
-                QString::fromStdString(ret()),
+                QString::fromStdString(info),
                 QMessageBox::Ok);
-            GPUState = GPUMODE_UNSUPPORT;
+            GPUState = GPUMode::UNSUPPORT;
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
         }
         else
         {
             try
             {
-                if (!Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
-                    Anime4KCPP::OpenCL::Anime4K09::initGPU(currPlatFormID, currDeviceID);
+                acCreator.init();
             }
             catch (const std::exception& err)
             {
@@ -1421,20 +1472,20 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 return;
             }
 
-            GPUState = GPUMODE_INITIALZED;
+            GPUState = GPUMode::INITIALZED;
             QMessageBox::information(this,
                 tr("Notice"),
                 "initialize successful!\n" +
-                QString::fromStdString(ret()),
+                QString::fromStdString(info),
                 QMessageBox::Ok);
-            ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(ret()) + "\n");
+            ui->textBrowserInfoOut->insertPlainText("GPU initialize successfully!\n" + QString::fromStdString(info) + "\n");
             ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
             ui->spinBoxPlatformID->setEnabled(false);
             ui->spinBoxDeviceID->setEnabled(false);
             ui->pushButtonReleaseGPU->setEnabled(true);
         }
     }
-    else if ((state == Qt::Checked) && (GPUState == GPUMODE_UNSUPPORT))
+    else if ((state == Qt::Checked) && (GPUState == GPUMode::UNSUPPORT))
     {
         QMessageBox::warning(this,
             tr("Warning"),
@@ -1504,29 +1555,15 @@ void MainWindow::on_pushButtonOutputPathOpen_clicked()
 
 void MainWindow::on_pushButtonReleaseGPU_clicked()
 {
-    if (Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU() && GPUState == GPUMODE_INITIALZED)
+    if (GPUState == GPUMode::INITIALZED)
     {
-        Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
-        GPUState = GPUMODE_UNINITIALZED;
+        acCreator.deinit(true);
+        GPUState = GPUMode::UNINITIALZED;
         QMessageBox::information(this,
             tr("Notice"),
             tr("Successfully release GPU"),
             QMessageBox::Ok);
         ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
-        ui->spinBoxPlatformID->setEnabled(true);
-        ui->spinBoxDeviceID->setEnabled(true);
-        ui->pushButtonReleaseGPU->setEnabled(false);
-    }
-
-    if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU() && GPUCNNState == GPUCNNMODE_INITIALZED)
-    {
-        Anime4KCPP::OpenCL::ACNet::releaseGPU();
-        GPUCNNState = GPUCNNMODE_UNINITIALZED;
-        QMessageBox::information(this,
-            tr("Notice"),
-            tr("Successfully release GPU for ACNet"),
-            QMessageBox::Ok);
-        ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
         ui->spinBoxPlatformID->setEnabled(true);
         ui->spinBoxDeviceID->setEnabled(true);
         ui->pushButtonReleaseGPU->setEnabled(false);
@@ -1543,8 +1580,6 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->doubleSpinBoxPushGradientStrength->setEnabled(false);
         ui->tabPreprocessing->setEnabled(false);
         ui->tabPostprocessing->setEnabled(false);
-        ui->checkBoxGPUMode->setEnabled(false);
-        ui->checkBoxACNetGPU->setEnabled(true);
         ui->checkBoxHDN->setEnabled(true);
         ui->spinBoxHDNLevel->setEnabled(true);
     }
@@ -1556,66 +1591,8 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
         ui->doubleSpinBoxPushGradientStrength->setEnabled(true);
         ui->tabPreprocessing->setEnabled(true);
         ui->tabPostprocessing->setEnabled(true);
-        ui->checkBoxACNetGPU->setEnabled(false);
-        ui->checkBoxGPUMode->setEnabled(true);
         ui->checkBoxHDN->setEnabled(false);
         ui->spinBoxHDNLevel->setEnabled(false);
-    }
-}
-
-void MainWindow::on_checkBoxACNetGPU_stateChanged(int state)
-{
-    if ((state == Qt::Checked) && (GPUCNNState == GPUCNNMODE_UNINITIALZED))
-    {
-        unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
-        if (!ret)
-        {
-            QMessageBox::warning(this,
-                tr("Warning"),
-                QString::fromStdString(ret()),
-                QMessageBox::Ok);
-            GPUCNNState = GPUCNNMODE_UNSUPPORT;
-            ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
-        }
-        else
-        {
-            try
-            {
-                if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-                    Anime4KCPP::OpenCL::ACNet::initGPU(currPlatFormID, currDeviceID);
-            }
-            catch (const std::exception& err)
-            {
-                QMessageBox::warning(this,
-                    tr("Warning"),
-                    QString::fromStdString(err.what()),
-                    QMessageBox::Ok);
-
-                ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
-                return;
-            }
-
-            GPUCNNState = GPUCNNMODE_INITIALZED;
-            QMessageBox::information(this,
-                tr("Notice"),
-                "initialize successful!\n" +
-                QString::fromStdString(ret()),
-                QMessageBox::Ok);
-            ui->textBrowserInfoOut->insertPlainText("GPU for CNN initialize successfully!\n" + QString::fromStdString(ret()) + "\n");
-            ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
-            ui->spinBoxPlatformID->setEnabled(false);
-            ui->spinBoxDeviceID->setEnabled(false);
-            ui->pushButtonReleaseGPU->setEnabled(true);
-        }
-    }
-    else if ((state == Qt::Checked) && (GPUCNNState == GPUCNNMODE_UNSUPPORT))
-    {
-        QMessageBox::warning(this,
-            tr("Warning"),
-            tr("Unsupport GPU acceleration for ACNet in this platform"),
-            QMessageBox::Ok);
-        ui->checkBoxACNetGPU->setCheckState(Qt::Unchecked);
     }
 }
 
@@ -1641,4 +1618,14 @@ void MainWindow::on_pushButtonContinue_clicked()
     pause = ProcessingState::CONTINUE;
     ui->pushButtonPause->setEnabled(true);
     ui->pushButtonContinue->setEnabled(false);
+}
+
+void MainWindow::on_comboBoxGPGPU_currentIndexChanged(int idx)
+{
+    acCreator.deinit(true);
+    GPUState = GPUMode::UNINITIALZED;
+    ui->spinBoxPlatformID->setEnabled(true);
+    ui->spinBoxDeviceID->setEnabled(true);
+    ui->pushButtonReleaseGPU->setEnabled(false);
+    on_checkBoxGPUMode_stateChanged(ui->checkBoxGPUMode->checkState());
 }

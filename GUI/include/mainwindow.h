@@ -21,7 +21,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define ANIME4KCPP_GUI_VERSION "1.11.0"
+#define ANIME4KCPP_GUI_VERSION "1.12.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -37,7 +37,8 @@ enum class ErrorType
     PROCESSING_LIST_EMPTY,
     FILE_NOT_EXIST, DIR_NOT_EXIST,
     TYPE_NOT_IMAGE, BAD_TYPE,
-    URL_INVALID, IMAGE_FORMAT_INVALID
+    URL_INVALID, IMAGE_FORMAT_INVALID,
+    CUDA_NOT_SUPPORT
 };
 
 enum class FileType
@@ -45,19 +46,19 @@ enum class FileType
     IMAGE, VIDEO, GIF, BAD_TYPE
 };
 
-enum GPUMode
+enum class GPUMode
 {
-    GPUMODE_INITIALZED = 0, GPUMODE_UNINITIALZED = 1, GPUMODE_UNSUPPORT = 3
-};
-
-enum GPUCNNMode
-{
-    GPUCNNMODE_INITIALZED = 0, GPUCNNMODE_UNINITIALZED = 1, GPUCNNMODE_UNSUPPORT = 3
+    INITIALZED, UNINITIALZED, UNSUPPORT
 };
 
 enum class ProcessingState
 {
     NORMAL, PAUSE, PAUSED, CONTINUE
+};
+
+enum GPGPU
+{
+    OpenCL = 0, CUDA = 1
 };
 
 class MainWindow : public QMainWindow
@@ -92,8 +93,7 @@ private:
     bool mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile);
     bool video2GIF(const QString& srcFile, const QString& dstFile);
 
-    void initAnime4K(Anime4KCPP::AC*& anime4K);
-    void releaseAnime4K(Anime4KCPP::AC*& anime4K);
+    std::unique_ptr<Anime4KCPP::AC> getACUP();
     Anime4KCPP::CODEC getCodec(const QString& codec);
 
 private slots:
@@ -178,14 +178,13 @@ private slots:
 
     void on_checkBoxACNet_stateChanged(int arg1);
 
-    void on_checkBoxACNetGPU_stateChanged(int arg1);
-
     void on_pushButtonForceStop_clicked();
 
     void on_pushButtonPause_clicked();
 
     void on_pushButtonContinue_clicked();
 
+    void on_comboBoxGPGPU_currentIndexChanged(int idx);
 private:
     Ui::MainWindow* ui;
     QTranslator* translator;
@@ -201,7 +200,7 @@ private:
     Language currLanguage;
 
     GPUMode GPUState;
-    GPUCNNMode GPUCNNState;
+
     Anime4KCPP::ACCreator acCreator;
 
     std::vector<int> OpenCLDevices;

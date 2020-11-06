@@ -37,6 +37,7 @@ public:
     Manager(const unsigned int pID = 0, const unsigned int dID = 0);
     virtual void init() override;
     virtual void release() override;
+    virtual bool isInitialized() override;
 private:
     unsigned int pID, dID;
 };
@@ -59,6 +60,12 @@ inline void Anime4KCPP::OpenCL::Manager<T>::release()
         T::releaseGPU();
 }
 
+template<typename T>
+inline bool Anime4KCPP::OpenCL::Manager<T>::isInitialized()
+{
+    return T::isInitializedGPU();
+}
+
 template<>
 class Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet> : public Anime4KCPP::Processor::Manager
 {
@@ -66,6 +73,7 @@ public:
     Manager(const unsigned int pID = 0, const unsigned int dID = 0, const CNNType type = CNNType::Default);
     virtual void init() override;
     virtual void release() override;
+    virtual bool isInitialized() override;
 private:
     unsigned int pID, dID;
     CNNType type;
@@ -84,6 +92,11 @@ inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::release()
 {
     if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
         Anime4KCPP::OpenCL::ACNet::releaseGPU();
+}
+
+inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isInitialized()
+{
+    return Anime4KCPP::OpenCL::ACNet::isInitializedGPU();
 }
 
 struct Anime4KCPP::OpenCL::GPUList
