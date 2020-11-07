@@ -85,7 +85,7 @@ inline double Anime4KCPP::benchmark(Types && ...args)
 {
     Anime4KCPP::ACCreator creator;
 
-    creator.pushManager<Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
+    creator.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
     try
     {
         creator.init();

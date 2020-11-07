@@ -7,9 +7,7 @@ namespace Anime4KCPP
         class Manager;
 
         template<typename T>
-        struct GetManager {
-            using Manager = std::nullptr_t;
-        };
+        struct GetManager {};
     }
 }
 
