@@ -184,30 +184,20 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        switch (GPGPUModel)
-        {
-        case GPGPU::OpenCL:
-        {
-            Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
-            if (ret.platforms == 0)
-                std::cerr << "Error: No OpenCL GPU found" << std::endl;
-            std::cerr << ret() << std::endl;
-            return 0;
-        }
-        case GPGPU::CUDA:
-        {
-#ifndef ENABLE_CUDA
-            std::cerr << "CUDA is not supported" << std::endl;
-            return 0;
-#else
-            Anime4KCPP::Cuda::GPUList ret = Anime4KCPP::Cuda::listGPUs();
-            if (ret.devices == 0)
-                std::cerr << "Error: No CUDA GPU found" << std::endl;
-            std::cerr << ret() << std::endl;
-            return 0;
+        std::cout << "OpenCL:" << std::endl;
+        Anime4KCPP::OpenCL::GPUList OpenCGPUList = Anime4KCPP::OpenCL::listGPUs();
+        if (OpenCGPUList.platforms == 0)
+            std::cerr << "Error: No OpenCL GPU found" << std::endl;
+        std::cout << OpenCGPUList() << std::endl;
+
+#ifdef ENABLE_CUDA
+        std::cout << "Cuda:" << std::endl;
+        Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
+        if (CUDAGPUList.devices == 0)
+            std::cerr << "Error: No CUDA GPU found" << std::endl;
+        std::cout << CUDAGPUList() << std::endl;
 #endif
-        }
-        }
+        return 0;
     }
     // -b
     if (doBenchmark)
