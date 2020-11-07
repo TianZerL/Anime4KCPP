@@ -14,7 +14,12 @@
 namespace Anime4KCPP
 {
     class DLL ACCreator;
-    DLL std::pair<double, double> benchmark(const unsigned int pID = 0, const unsigned int dID = 0);
+
+    template<typename T>
+    double benchmark();
+
+    template<typename T, typename ...Types>
+    double benchmark(Types&&... args);
 }
 
 //Anime4KCPP Processor Factory
@@ -47,4 +52,48 @@ template<typename Manager, typename... Types>
 inline void Anime4KCPP::ACCreator::pushManager(Types&&... args)
 {
     managers.emplace_back(std::make_shared<Manager>(std::forward<Types>(args)...));
+}
+
+template<typename T>
+inline double Anime4KCPP::benchmark()
+{
+    cv::Mat testImg = cv::Mat::zeros(cv::Size(1920, 1080), CV_8UC1);
+    cv::randu(testImg, cv::Scalar::all(0), cv::Scalar::all(255));
+
+    double avg = 0.0;
+    std::chrono::steady_clock::time_point s;
+    std::chrono::steady_clock::time_point e;
+
+    T ac;
+    ac.loadImage(testImg, testImg, testImg); // YUV
+    ac.process();
+
+    for (int i = 0; i < 3; i++)
+    {
+        ac.loadImage(testImg, testImg, testImg);
+        s = std::chrono::steady_clock::now();
+        ac.process();
+        e = std::chrono::steady_clock::now();
+        avg += 10000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+    }
+
+    return avg / 3.0;
+}
+
+template<typename T, typename ...Types>
+inline double Anime4KCPP::benchmark(Types && ...args)
+{
+    Anime4KCPP::ACCreator creator;
+
+    creator.pushManager<Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
+    try
+    {
+        creator.init();
+    }
+    catch (const std::exception&)
+    {
+        return 0.0;
+    }
+
+    return benchmark<T>();
 }

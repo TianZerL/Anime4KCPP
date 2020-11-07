@@ -1503,17 +1503,29 @@ void MainWindow::on_actionList_GPUs_triggered()
 void MainWindow::on_actionBenchmark_triggered()
 {
     int pID = ui->spinBoxPlatformID->value(), dID = ui->spinBoxDeviceID->value();
-    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+#ifdef ENABLE_CUDA
+    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
 
     QMessageBox::information(this,
         tr("Benchmark"),
         QString(
             tr("Benchmark result:") +
             "\n\nCPU score: %1\n"
-            "GPU score: %2\n"
+            "OpenCL score: %2\n"
             "(pID = %3, dID = %4)\n"
-        ).arg(ret.first).arg(ret.second).arg(pID).arg(dID),
-        QMessageBox::Ok);
+#ifdef ENABLE_CUDA
+            "CUDA score: %5\n"
+            "(dID = %6)\n"
+#endif
+        ).arg(CPUScore).arg(OpenCLScore).arg(pID).arg(dID)
+#ifdef ENABLE_CUDA
+        .arg(CudaScore).arg(dID)
+#endif
+        ,QMessageBox::Ok);
 }
 
 void MainWindow::on_pushButtonListGPUs_clicked()

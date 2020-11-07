@@ -536,7 +536,7 @@
     <message>
         <location filename="mainwindow.ui" line="1181"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="992"/>
-        <location filename="mainwindow.cpp" line="1509"/>
+        <location filename="mainwindow.cpp" line="1514"/>
         <source>Benchmark</source>
         <translation>Performance Test</translation>
     </message>
@@ -883,7 +883,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="98"/>
-        <location filename="mainwindow.cpp" line="1601"/>
+        <location filename="mainwindow.cpp" line="1613"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
@@ -947,7 +947,7 @@
         <location filename="mainwindow.cpp" line="1452"/>
         <location filename="mainwindow.cpp" line="1467"/>
         <location filename="mainwindow.cpp" line="1491"/>
-        <location filename="mainwindow.cpp" line="1525"/>
+        <location filename="mainwindow.cpp" line="1537"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -975,8 +975,8 @@
         <location filename="mainwindow.cpp" line="989"/>
         <location filename="mainwindow.cpp" line="1295"/>
         <location filename="mainwindow.cpp" line="1477"/>
-        <location filename="mainwindow.cpp" line="1531"/>
-        <location filename="mainwindow.cpp" line="1563"/>
+        <location filename="mainwindow.cpp" line="1543"/>
+        <location filename="mainwindow.cpp" line="1575"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
@@ -1021,7 +1021,7 @@
         <translation>Journal copié dans le presse-papiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1511"/>
+        <location filename="mainwindow.cpp" line="1516"/>
         <source>Benchmark result:</source>
         <translation>Résultats des tests de performance:</translation>
     </message>
@@ -1034,7 +1034,7 @@
         <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1602"/>
+        <location filename="mainwindow.cpp" line="1614"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
@@ -1045,12 +1045,12 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1492"/>
-        <location filename="mainwindow.cpp" line="1526"/>
+        <location filename="mainwindow.cpp" line="1538"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1564"/>
+        <location filename="mainwindow.cpp" line="1576"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>

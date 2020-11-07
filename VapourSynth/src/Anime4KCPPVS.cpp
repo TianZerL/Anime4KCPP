@@ -714,14 +714,22 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
     if (err || !dID)
         dID = 0;
 
-    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+#ifdef ENABLE_CUDA
+    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
     
     std::ostringstream oss;
     oss << "Benchmark result:" << std::endl
-        << "CPU score: " << ret.first << std::endl
-        << "GPU score: " << ret.second << std::endl
-        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl;
-
+        << "CPU score: " << CPUScore << std::endl
+        << "OpenCL score: " << OpenCLScore << std::endl
+        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+#ifdef ENABLE_CUDA
+        << "CUDA score: " << OpenCLScore << std::endl
+        << " (dID = " << dID << ")" << std::endl
+#endif 
+        ;
     vsapi->logMessage(mtDebug, oss.str().c_str());
 }
 

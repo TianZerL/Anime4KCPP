@@ -5,6 +5,11 @@ namespace Anime4KCPP
     namespace Processor
     {
         class Manager;
+
+        template<typename T>
+        struct GetManager {
+            using Manager = std::nullptr_t;
+        };
     }
 }
 

@@ -214,7 +214,8 @@ extern "C"
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
     AC_DLL void AC_API acGetLastCoreErrorString(char *err, size_t* length);
-    AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
+    DEPRECATED AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
+    AC_DLL double AC_API acBenchmark2(ac_processType processType);
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
 #ifdef __cplusplus
 }

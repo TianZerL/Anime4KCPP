@@ -452,14 +452,23 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
     unsigned int pID = args[AC_platformID].AsInt();
     unsigned int dID = args[AC_deviceID].AsInt();
 
-    std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+#ifdef ENABLE_CUDA
+    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
 
     std::ostringstream oss;
     oss << "Benchmark result:" << std::endl
-        << "CPU score: " << ret.first << std::endl
-        << "GPU score: " << ret.second << std::endl
-        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl;
-
+        << "CPU score: " << CPUScore << std::endl
+        << "OpenCL score: " << OpenCLScore << std::endl
+        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+#ifdef ENABLE_CUDA
+        << "CUDA score: " << OpenCLScore << std::endl
+        << " (dID = " << dID << ")" << std::endl
+#endif 
+    ;
     env->ThrowError(oss.str().c_str());
     return AVSValue();
 }

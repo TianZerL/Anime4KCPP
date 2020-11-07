@@ -28,6 +28,18 @@ namespace Anime4KCPP
         //return result and infomation
         DLL GPUInfo checkGPUSupport(unsigned int pID, unsigned int dID);
     }
+
+    namespace Processor
+    {
+        template<>
+        struct GetManager<OpenCL::ACNet> {
+            using Manager = OpenCL::Manager<OpenCL::ACNet>;
+        };
+        template<>
+        struct GetManager<OpenCL::Anime4K09> {
+            using Manager = OpenCL::Manager<OpenCL::Anime4K09>;
+        };
+    }
 }
 
 template<typename T>

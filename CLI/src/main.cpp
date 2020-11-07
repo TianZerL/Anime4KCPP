@@ -214,18 +214,30 @@ int main(int argc, char* argv[])
     {
         std::cout << "Benchmarking..." << std::endl;
 
-        std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+        double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+        double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+#ifdef ENABLE_CUDA
+        double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
 
         std::cout
             << "CPU score: "
-            << ret.first
+            << CPUScore
             << std::endl;
+
         std::cout
-            << "GPU score: "
-            << ret.second
+            << "OpenCL score: "
+            << OpenCLScore
             << " (pID = " << pID << ", dID = " << dID << ")"
             << std::endl;
 
+#ifdef ENABLE_CUDA
+        std::cout
+            << "CUDA score: "
+            << CudaScore
+            << " (dID = " << dID << ")"
+            << std::endl;
+#endif 
         return 0;
     }
 

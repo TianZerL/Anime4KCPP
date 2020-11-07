@@ -20,6 +20,18 @@ namespace Anime4KCPP
         //return result and infomation
         GPUInfo checkGPUSupport(const unsigned int dID);
     }
+
+    namespace Processor
+    {
+        template<>
+        struct GetManager<Cuda::ACNet> {
+            using Manager = Cuda::Manager;
+        };
+        template<>
+        struct GetManager<Cuda::Anime4K09> {
+            using Manager = Cuda::Manager;
+        };
+    }
 }
 
 class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager

@@ -786,10 +786,34 @@ extern "C"
 
     void acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore)
     {
-        std::pair<double, double> ret = Anime4KCPP::benchmark(pID, dID);
+        double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+        double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
 
-        *CPUScore = ret.first;
-        *GPUScore = ret.second;
+        *CPUScore = _CPUScore;
+        *GPUScore = _OpenCLScore;
+    }
+
+    double acBenchmark2(ac_processType processType)
+    {
+        switch (processType)
+        {
+        case AC_CPU_Anime4K09:
+            return Anime4KCPP::benchmark<Anime4KCPP::CPU::Anime4K09>();
+        case AC_CPU_ACNet:
+            return Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+        case AC_OpenCL_Anime4K09:
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09>();
+        case AC_OpenCL_ACNet:
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>();
+#ifdef ENABLE_CUDA
+        case AC_Cuda_Anime4K09:
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09>();
+        case AC_Cuda_ACNet:
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>();
+#endif // ENABLE_CUDA
+        default:
+            return 0.0;
+        }
     }
 
     ac_processType acGetProcessType(ac_instance instance, ac_error* error)

@@ -524,7 +524,7 @@
     <message>
         <location filename="mainwindow.ui" line="1181"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="992"/>
-        <location filename="mainwindow.cpp" line="1509"/>
+        <location filename="mainwindow.cpp" line="1514"/>
         <source>Benchmark</source>
         <translation>性能测试</translation>
     </message>
@@ -879,7 +879,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="98"/>
-        <location filename="mainwindow.cpp" line="1601"/>
+        <location filename="mainwindow.cpp" line="1613"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
@@ -943,7 +943,7 @@
         <location filename="mainwindow.cpp" line="1452"/>
         <location filename="mainwindow.cpp" line="1467"/>
         <location filename="mainwindow.cpp" line="1491"/>
-        <location filename="mainwindow.cpp" line="1525"/>
+        <location filename="mainwindow.cpp" line="1537"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -971,8 +971,8 @@
         <location filename="mainwindow.cpp" line="989"/>
         <location filename="mainwindow.cpp" line="1295"/>
         <location filename="mainwindow.cpp" line="1477"/>
-        <location filename="mainwindow.cpp" line="1531"/>
-        <location filename="mainwindow.cpp" line="1563"/>
+        <location filename="mainwindow.cpp" line="1543"/>
+        <location filename="mainwindow.cpp" line="1575"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -1017,7 +1017,7 @@
         <translation>日志已拷贝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1511"/>
+        <location filename="mainwindow.cpp" line="1516"/>
         <source>Benchmark result:</source>
         <translation>性能测试结果:</translation>
     </message>
@@ -1030,7 +1030,7 @@
         <translation type="vanished">不支持将GPU加速用于ACNet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1602"/>
+        <location filename="mainwindow.cpp" line="1614"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>确认停止所有任务？</translation>
     </message>
@@ -1041,12 +1041,12 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1492"/>
-        <location filename="mainwindow.cpp" line="1526"/>
+        <location filename="mainwindow.cpp" line="1538"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平台不支持GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1564"/>
+        <location filename="mainwindow.cpp" line="1576"/>
         <source>Successfully release GPU</source>
         <translation>成功释放GPU</translation>
     </message>
