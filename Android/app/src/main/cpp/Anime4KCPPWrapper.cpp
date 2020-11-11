@@ -245,8 +245,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadImageAnime4K(
     try {
         ((Anime4KCPP::AC*)(ptrAnime4K))->loadImage(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
-    catch (Anime4KCPP::ACBaseException& err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
+    catch (const std::exception& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
     }
 }
 
@@ -304,8 +304,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadVideoAnime4K(
     try {
         ((Anime4KCPP::AC*)(ptrAnime4K))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
     }
-    catch (Anime4KCPP::ACBaseException& err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
+    catch (const std::exception& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
     }
 }
 
@@ -318,8 +318,8 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
     try {
         ((Anime4KCPP::AC*)(ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
     }
-    catch (Anime4KCPP::ACBaseException& err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what().c_str());
+    catch (const std::exception& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
     }
 }
 
@@ -392,8 +392,9 @@ JNIEXPORT jdoubleArray JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_benchmarkAnime4K(
         JNIEnv *env,
         jclass clazz) {
-    std::pair<double, double> ret = Anime4KCPP::benchmark(0, 0);
-    double retCppArray[] = {ret.first, ret.second};
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+    double GPUScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(0, 0);
+    double retCppArray[] = {CPUScore, GPUScore};
     jdoubleArray retJavaArray = env->NewDoubleArray(2);
     env->SetDoubleArrayRegion(retJavaArray, 0, 2, retCppArray);
     return retJavaArray;
