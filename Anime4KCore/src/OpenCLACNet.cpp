@@ -737,6 +737,11 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
     const char* ACNetKernelSource[TotalTypeCount];
 
     cl_kernel tmpKernel = nullptr;
+#ifdef ENABLE_FAST_MATH
+    const char* buildFlags = "-cl-fast-relaxed-math";
+#else
+    const char* buildFlags = nullptr;
+#endif // ENABLE_FAST_MATH
     switch (type)
     {
     case CNNType::ACNetHDNL0:
@@ -755,7 +760,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(program[HDNL0], 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL0], 1, &device, buildFlags, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
@@ -797,7 +802,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(program[HDNL1], 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL1], 1, &device, buildFlags, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
@@ -839,7 +844,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(program[HDNL2], 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL2], 1, &device, buildFlags, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
@@ -881,7 +886,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         }
 
         //build program
-        err = clBuildProgram(program[HDNL3], 1, &device, nullptr, nullptr, nullptr);
+        err = clBuildProgram(program[HDNL3], 1, &device, buildFlags, nullptr, nullptr);
         if (err != CL_SUCCESS)
         {
             size_t buildErrorSize = 0;
@@ -926,7 +931,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             //build programACNet
-            err = clBuildProgram(program[i], 1, &device, nullptr, nullptr, nullptr);
+            err = clBuildProgram(program[i], 1, &device, buildFlags, nullptr, nullptr);
             if (err != CL_SUCCESS)
             {
                 size_t buildErrorSize = 0;

@@ -1,7 +1,7 @@
 project(CUDA_Module)
 
 if(Enable_CUDA)
-    find_package(CUDA)
+    find_package(CUDA REQUIRED)
 
     set(CUDA_NVCC_FLAGS 
     "-O3"
@@ -15,6 +15,10 @@ if(Enable_CUDA)
     "-gencode=arch=compute_80,code=sm_80"
     "-gencode=arch=compute_80,code=compute_80"
     )
+
+    if(Enable_Fast_Math)
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --use_fast_math")
+    endif()
 
     include_directories(${TOP_DIR}/Anime4KCore/include include)
     file(GLOB SOURCE  src/*.cu)

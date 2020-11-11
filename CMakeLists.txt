@@ -9,18 +9,6 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    set(CMAKE_CXX_FLAGS "/EHsc")
-else()
-    set(CMAKE_CXX_FLAGS "-O3 -lpthread -fopenmp")
-    if (NOT CMAKE_BUILD_TYPE)
-        set (CMAKE_BUILD_TYPE "Release")
-        message (
-            STATUS "No CMAKE_BUILD_TYPE selected, defaulting to ${CMAKE_BUILD_TYPE}\n"
-        )
-    endif ()
-endif()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -29,8 +17,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 if(WIN32)
     set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 endif(WIN32)
-
-include(${TOP_DIR}/cmake/Detection.cmake)
 
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
@@ -41,6 +27,33 @@ option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
+option(Enable_Fast_Math "Enable fast math" OFF)
+
+include(${TOP_DIR}/cmake/Detection.cmake)
+
+if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    option(Use_OpenCV_with_MSVC_for_Clang "Use OpenCV build by MSVC for Clang" ON)
+    option(Use_OpenCV_with_MINGW_for_Clang "Use OpenCV build by MinGW for Clang" OFF)
+    if(Use_OpenCV_with_MSVC_for_Clang AND Use_OpenCV_with_MINGW_for_Clang)
+        message(FATAL_ERROR "Use_OpenCV_with_MSVC_for_Clang and Use_OpenCV_with_MINGW_for_Clang cannot be true at same time")
+    endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_CXX_FLAGS "/EHsc")
+    if(Enable_Fast_Math)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
+    endif()
+else()
+    set(CMAKE_CXX_FLAGS "-O3 -fopenmp")
+    if(UNIX)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lpthread")
+    endif()
+    if(Enable_Fast_Math)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
+    endif()
+    set (CMAKE_BUILD_TYPE "Release")
+endif()
 
 if(HAS_FILESYSTEM)
     option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
@@ -101,6 +114,11 @@ elseif(NOT OpenCL_Provider MATCHES "Auto")
         WARNING "Unkonw value of OpenCL_Provider, set to Auto\n"
     )
 endif()
+
+message(STATUS  
+"C++ compiler flags:\n"
+    ${CMAKE_CXX_FLAGS}
+)
 
 message(STATUS  
 "Building infomation:\n"

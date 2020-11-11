@@ -479,8 +479,13 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
     }
 
+#ifdef ENABLE_FAST_MATH
+    const char* buildFlags = "-cl-fast-relaxed-math";
+#else
+    const char* buildFlags = nullptr;
+#endif // ENABLE_FAST_MATH
     //build program
-    err = clBuildProgram(program, 1, &device, nullptr, nullptr, nullptr);
+    err = clBuildProgram(program, 1, &device, buildFlags, nullptr, nullptr);
     if (err != CL_SUCCESS)
     {
         size_t buildErrorSize = 0;
