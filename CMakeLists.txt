@@ -148,6 +148,10 @@ endif()
 
 if (Enable_CUDA)
     add_definitions(-DENABLE_CUDA)
+    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
+        enable_language(CUDA)
+        set(CMAKE_CUDA_ARCHITECTURES 35-real 50-real 52-real 60-real 61-real 70-real 75-real 80-real)
+    endif()
 endif()
 
 macro(SUBDIRLIST result curdir)
