@@ -67,7 +67,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernel(cv::Mat& orgImg, cv::Mat& dst
         orgImg.cols, orgImg.rows,
         dstImg.cols, dstImg.rows,
         param.passes, param.pushColorCount,
-        param.strengthColor,param.strengthGradient 
+        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };
     cuRunKernelAnime4K09(orgImg.data, dstImg.data, &cuParam);
 }

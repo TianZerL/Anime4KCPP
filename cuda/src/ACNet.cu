@@ -46,16 +46,16 @@ ml2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 3] + mc2.w * HDNL##Level##kern
 bl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 8] + HDNL##Level##biasL[L][n]
 
 #define RUNKERNEL(Level) \
-conv1To8HDNL##Level << <dimGrid, dimBlock >> > (inTex, surf1, param->orgW, param->orgH); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L2); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L3); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L4); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L5); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L6); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L7); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf1, surf2, param->orgW, param->orgH, L8); \
-conv8To8HDNL##Level << <dimGrid, dimBlock >> > (surf2, surf1, param->orgW, param->orgH, L9); \
-convTranspose8To1HDNL##Level << <dimGridout, dimBlock >> > (surf1, outSurf, W, H);
+conv1To8HDNL##Level <<<dimGrid, dimBlock >>> (inTex, surf1, param->orgW, param->orgH); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L2); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L3); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L4); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L5); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L6); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L7); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L8); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L9); \
+convTranspose8To1HDNL##Level <<<dimGridout, dimBlock >>> (surf1, outSurf, W, H);
 
 inline __device__ float clamp(float f, float a, float b)
 {
@@ -7132,7 +7132,7 @@ void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData,
     cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
     cudaExtent extent = make_cudaExtent(param->orgW, param->orgH, 2);
 
-    const size_t W = 2 * param->orgW, H = 2 * param->orgH;
+    const int W = 2 * param->orgW, H = 2 * param->orgH;
 
     cudaArray_t cuInputArray;
     err = cudaMallocArray(&cuInputArray, &inoutChannelDesc, 

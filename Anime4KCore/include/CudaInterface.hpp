@@ -6,15 +6,15 @@
 
 typedef struct
 {
-    size_t orgW, orgH;
-    size_t W, H;
+    int orgW, orgH;
+    int W, H;
     int passes, pushColorCount;
     float strengthColor, strengthGradient;
 }ACCudaParamAnime4K09;
 
 typedef struct
 {
-    size_t orgW, orgH;
+    int orgW, orgH;
     int HDNLevel;
 }ACCudaParamACNet;
 
