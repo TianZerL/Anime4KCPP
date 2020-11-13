@@ -221,11 +221,11 @@ public:
         return outputFile.is_open();
     }
 
-    void write()
+    void write(const std::string& header = "config file")
     {
         if (!outputFile.is_open())
             return;
-        outputFile <<"# Anime4KCPP_CLI config file\n" << std::endl;
+        outputFile << "# " << header << std::endl << std::endl;
         for (auto& kv : kvMap)
         {
             outputFile << kv.first << " = " << kv.second << std::endl;

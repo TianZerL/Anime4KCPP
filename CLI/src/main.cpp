@@ -88,7 +88,7 @@ static bool genConfigTemplate(const std::string& path, Config& config)
     if (!configWriter.initFile(path))
         return false;
     configWriter.set(config);
-    configWriter.write();
+    configWriter.write("Anime4KCPP_CLI config file");
     return true;
 }
 
