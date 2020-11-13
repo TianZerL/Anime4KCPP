@@ -4,7 +4,8 @@ if(Build_CLI)
 
     aux_source_directory(src SOURCE)
 
-    include_directories(${TOP_DIR}/Anime4KCore/include)
+    include_directories(${TOP_DIR}/Anime4KCore/include include)
+    file(GLOB INCLUDE include/*.hpp)
 
     if(Use_Boost_filesystem)
         add_definitions(-DUSE_BOOST_FILESYSTEM) 
@@ -17,7 +18,7 @@ if(Build_CLI)
 
     add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
 
-    add_executable(${PROJECT_NAME} ${SOURCE})
+    add_executable(${PROJECT_NAME} ${INCLUDE} ${SOURCE})
 
     include(${TOP_DIR}/cmake/ThirdPartyForCLI.cmake)
 

@@ -1,7 +1,5 @@
 #include <iostream>
 
-#include <cmdline.h>
-
 #ifdef USE_BOOST_FILESYSTEM
 #include<boost/filesystem.hpp>
 namespace filesystem = boost::filesystem;
@@ -11,6 +9,8 @@ namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
 
 #include "Anime4KCPP.hpp"
+
+#include "Config.hpp"
 
 #ifndef COMPILER
 #define COMPILER "Unknown"
@@ -82,10 +82,21 @@ inline static void showVersionInfo()
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
 }
 
+static bool genConfigTemplate(const std::string& path, Config& config)
+{
+    ConfigWriter configWriter;
+    if (!configWriter.initFile(path))
+        return false;
+    configWriter.set(config);
+    configWriter.write();
+    return true;
+}
+
 int main(int argc, char* argv[])
 {
+    Config config;
+    auto& opt = config.getParser();
     //Options
-    cmdline::parser opt;
     opt.add<std::string>("input", 'i', "File for loading", false, "./pic/p1.png");
     opt.add<std::string>("output", 'o', "File for outputting", false, "output.png");
     opt.add<int>("passes", 'p', "Passes for processing", false, 2);
@@ -129,40 +140,58 @@ int main(int argc, char* argv[])
     opt.add("benchmark", 'B', "do benchmarking");
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.set_program_name("Anime4KCPP_CLI");
+    opt.add<std::string>("configTemplate", '\000', "Generate config template", false, "./config");
 
     opt.parse_check(argc, argv);
 
+    if (!opt.rest().empty() && !config.initFile(opt.rest().front()).parseFile())
+    {
+        config.getLastError().printErrorInfo();
+        return 0;
+    }
+
     std::string input = opt.get<std::string>("input");
     std::string output = opt.get<std::string>("output");
-    int passes = opt.get<int>("passes");
-    int pushColorCount = opt.get<int>("pushColorCount");
-    double strengthColor = opt.get<double>("strengthColor");
-    double strengthGradient = opt.get<double>("strengthGradient");
-    double zoomFactor = opt.get<double>("zoomFactor");
-    uint8_t preFilters = opt.get<unsigned int>("preFilters");
-    uint8_t postFilters = opt.get<unsigned int>("postFilters");
-    unsigned int threads = opt.get<unsigned int>("threads");
-    bool fastMode = opt.exist("fastMode");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
-    bool preprocessing = opt.exist("preprocessing");
-    bool postprocessing = opt.exist("postprocessing");
-    bool GPU = opt.exist("GPUMode");
-    bool CNN = opt.exist("CNNMode");
-    bool HDN = opt.exist("HDN");
-    int HDNLevel = opt.get<int>("HDNLevel");
     bool listGPUs = opt.exist("listGPUs");
-    unsigned int pID = opt.get<unsigned int>("platformID");
-    unsigned int dID = opt.get<unsigned int>("deviceID");
-    std::string codec = opt.get<std::string>("codec");
     bool version = opt.exist("version");
-    double forceFps = opt.get<double>("forceFps");
-    bool disableProgress = opt.exist("disableProgress");
     bool webVideo = opt.exist("webVideo");
-    bool alpha = opt.exist("alpha");
     bool doBenchmark = opt.exist("benchmark");
-    std::string GPGPUModelString = opt.get<std::string>("GPGPUModel");
 
+    int passes = config.get<int>("passes");
+    int pushColorCount = config.get<int>("pushColorCount");
+    int HDNLevel = config.get<int>("HDNLevel");
+    double strengthColor = config.get<double>("strengthColor");
+    double strengthGradient = config.get<double>("strengthGradient");
+    double zoomFactor = config.get<double>("zoomFactor");
+    double forceFps = config.get<double>("forceFps");
+    bool fastMode = config.get<bool>("fastMode");
+    bool preprocessing = config.get<bool>("preprocessing");
+    bool postprocessing = config.get<bool>("postprocessing");
+    bool GPU = config.get<bool>("GPUMode");
+    bool CNN = config.get<bool>("CNNMode");
+    bool HDN = config.get<bool>("HDN");
+    bool disableProgress = config.get<bool>("disableProgress");
+    bool alpha = config.get<bool>("alpha");
+    uint8_t preFilters = config.get<unsigned int>("preFilters");
+    uint8_t postFilters = config.get<unsigned int>("postFilters");
+    unsigned int pID = config.get<unsigned int>("platformID");
+    unsigned int dID = config.get<unsigned int>("deviceID");
+    unsigned int threads = config.get<unsigned int>("threads");
+    std::string codec = config.get<std::string>("codec");
+    std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
+
+    if (opt.exist("configTemplate"))
+    {
+        const std::string& path = opt.get<std::string>("configTemplate");
+        if (genConfigTemplate(path, config))
+            std::cout << "Generated config template to: " << path << std::endl;
+        else
+            std::cerr << "Failed to generate config template." << path << std::endl;
+        return 0;
+    }
+    
     GPGPU GPGPUModel;
     std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
     if (GPGPUModelString == "opencl")
