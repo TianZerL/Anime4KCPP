@@ -1,4 +1,37 @@
+#ifndef __AC_REGISTER__
+#define __AC_REGISTER__
+
+#define REGISTER_PROCESSOR_IF(C, P, A) REGISTER_PROCESSOR_IF_IMPL(C, P, A) 
+#define REGISTER_PROCESSOR_IF_IMPL(C, P, A) REGISTER_PROCESSOR_IF_##C(P, A) 
+
+#define REGISTER_PROCESSOR_IF_1(P, A) REGISTER_PROCESSOR(P, A)
+#define REGISTER_PROCESSOR_IF_0(P, A)
+
+//Add flag here
+//---------------------------------------
+#ifdef ENABLE_CUDA
+#define CUDA_FLAG 1
+#else
+#define CUDA_FLAG 0
+#endif
+//---------------------------------------
+
+//Register processor here
+//---------------------------------------
+#define PROCESSORS \
+REGISTER_PROCESSOR(CPU, Anime4K09) \
+REGISTER_PROCESSOR(CPU, ACNet) \
+REGISTER_PROCESSOR(OpenCL, Anime4K09) \
+REGISTER_PROCESSOR(OpenCL, ACNet) \
+REGISTER_PROCESSOR_IF(CUDA_FLAG, Cuda, Anime4K09) \
+REGISTER_PROCESSOR_IF(CUDA_FLAG, Cuda, ACNet)
+//---------------------------------------
+#endif
+
+
+#if defined(REGISTER_PROCESSOR)
 #undef REGISTER_PROCESSOR
+#endif
 
 #if defined(AC_ENUM_ITEM)
 #define REGISTER_PROCESSOR(P, A) P##_##A,
@@ -16,35 +49,11 @@
 #define REGISTER_PROCESSOR(P, A) case Processor::Type::P##_##A: return std::make_unique<P::A>(parameters);
 #endif
 
-
-
-//Register processor here
-//---------------------------------------
-#ifndef PROCESSORS
-#ifdef ENABLE_CUDA
-#define PROCESSORS \
-REGISTER_PROCESSOR(CPU, Anime4K09) \
-REGISTER_PROCESSOR(CPU, ACNet) \
-REGISTER_PROCESSOR(OpenCL, Anime4K09) \
-REGISTER_PROCESSOR(OpenCL, ACNet) \
-REGISTER_PROCESSOR(Cuda, Anime4K09) \
-REGISTER_PROCESSOR(Cuda, ACNet)
-#else
-#define PROCESSORS \
-REGISTER_PROCESSOR(CPU, Anime4K09) \
-REGISTER_PROCESSOR(CPU, ACNet) \
-REGISTER_PROCESSOR(OpenCL, Anime4K09) \
-REGISTER_PROCESSOR(OpenCL, ACNet)
-#endif
-#endif
-//---------------------------------------
-
-
-
 #undef PROCESSOR_ENUM
 #if defined(AC_ENUM_ITEM)
 #define PROCESSOR_ENUM PROCESSORS
 #endif
+
 
 #undef PROCESSOR_STREAM
 #if defined(AC_STREAM_ITEM)
