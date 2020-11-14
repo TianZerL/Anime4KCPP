@@ -107,6 +107,7 @@ int main(int argc, char* argv[])
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
+    opt.add<unsigned int>("start", 'S', "Specify the start frame number for video previewing", false, 0);
     opt.add("preprocessing", 'b', "Enable preprocessing");
     opt.add("postprocessing", 'a', "Enable postprocessing");
     opt.add<unsigned int>("preFilters", 'r',
@@ -157,6 +158,7 @@ int main(int argc, char* argv[])
     bool version = opt.exist("version");
     bool webVideo = opt.exist("webVideo");
     bool doBenchmark = opt.exist("benchmark");
+    unsigned int frameStart = opt.get<unsigned int>("start");
 
     int passes = config.get<int>("passes");
     int pushColorCount = config.get<int>("pushColorCount");
@@ -190,7 +192,7 @@ int main(int argc, char* argv[])
             std::cerr << "Failed to generate config template." << path << std::endl;
         return 0;
     }
-    
+
     GPGPU GPGPUModel;
     std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
     if (GPGPUModelString == "opencl")
@@ -358,7 +360,7 @@ int main(int argc, char* argv[])
                 else
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
             }
-                break;
+            break;
             case GPGPU::CUDA:
             {
 #ifdef ENABLE_CUDA
@@ -376,7 +378,7 @@ int main(int argc, char* argv[])
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             }
-                break;
+            break;
             }
         }
         else
@@ -469,48 +471,163 @@ int main(int argc, char* argv[])
 
                 if (preview)
                     ac->showImage();
-
-                ac->saveImage(currOnputPath);
+                else
+                    ac->saveImage(currOnputPath);
             }
         }
         else // Video
         {
-            // output suffix
-            std::string outputSuffix = outputPath.extension().string();
-            // transform to lower
-            std::transform(outputSuffix.begin(), outputSuffix.end(), outputSuffix.begin(), ::tolower);
-
-            if (std::string(".png.jpg.jpeg.bmp")
-                .find(outputSuffix) != std::string::npos)
-                outputPath.replace_extension(".mkv");
-
-            bool gif = outputSuffix == std::string(".gif");
-
-            bool ffmpeg = checkFFmpeg();
-            std::string outputTmpName = outputPath.string();
-
-            if (!ffmpeg)
-                std::cerr << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
-            else
-                outputTmpName = "tmp_out.mp4";
-
-            if (filesystem::is_directory(inputPath))
+            if (preview)
             {
-                if (!filesystem::is_directory(outputPath))
-                    outputPath = outputPath.parent_path().append(outputPath.stem().native());
-                filesystem::create_directories(outputPath);
-                filesystem::directory_iterator currDir(inputPath);
-                for (auto& file : currDir)
-                {
-                    if (filesystem::is_directory(file.path()))
-                        continue;
-                    //Check GIF
-                    std::string inputSuffix = file.path().extension().string();
-                    std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
-                    gif = inputSuffix == std::string(".gif");
+                std::string currInputPath = inputPath.string();
+                ac->loadVideo(currInputPath);
 
-                    std::string currInputPath = file.path().string();
-                    std::string currOutputPath = (outputPath / (file.path().filename().replace_extension(gif ? ".gif" : ".mkv"))).string();
+                std::cout << ac->getInfo() << std::endl;
+                std::cout << ac->getFiltersInfo() << std::endl;
+
+                cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+                if (!videoCapture.isOpened())
+                    throw std::runtime_error("Error: Unable to open the video file");
+
+                size_t totalFrameCount = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
+                if (frameStart >= totalFrameCount)
+                    throw std::runtime_error(
+                        "Error: Unable to locate frame position: " +
+                        std::to_string(frameStart) + " of " +
+                        std::to_string(totalFrameCount - 1));
+
+                videoCapture.set(cv::CAP_PROP_POS_FRAMES, frameStart);
+                int delay = 500.0 / (forceFps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : forceFps);
+                char keyCode = 'q';
+                cv::Mat frame;
+
+                std::cout << "Previewing..." << std::endl;
+                ac->setVideoMode(false);
+                while (videoCapture.read(frame))
+                {
+                    ac->loadImage(frame);
+                    ac->process();
+                    ac->saveImage(frame);
+                    cv::imshow(
+                        "Previewing, press 'q','ESC' or 'Enter' to exit, "
+                        "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+                        "'w' to forward, 's' to backward",
+                        frame);
+
+                    keyCode = cv::waitKey(delay) & 0xff;
+
+                    if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                        break;
+                    else if (keyCode == 0x20)
+                    {
+                        keyCode = cv::waitKey(0);
+                        if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                            break;
+                    }
+                    else
+                    {
+                        switch (keyCode)
+                        {
+                        case 'a':
+                            videoCapture.set(
+                                cv::CAP_PROP_POS_FRAMES,
+                                videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                            break;
+                        case 'd':
+                            videoCapture.set(
+                                cv::CAP_PROP_POS_FRAMES,
+                                videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                            break;
+                        case 's':
+                            videoCapture.set(
+                                cv::CAP_PROP_POS_FRAMES,
+                                videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                            break;
+                        case 'w':
+                            videoCapture.set(
+                                cv::CAP_PROP_POS_FRAMES,
+                                videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                            break;
+                        }
+                    }
+                }
+                std::cout << "Exit" << std::endl;
+            }
+            else
+            {
+                // output suffix
+                std::string outputSuffix = outputPath.extension().string();
+                // transform to lower
+                std::transform(outputSuffix.begin(), outputSuffix.end(), outputSuffix.begin(), ::tolower);
+
+                if (std::string(".png.jpg.jpeg.bmp")
+                    .find(outputSuffix) != std::string::npos)
+                    outputPath.replace_extension(".mkv");
+
+                bool gif = outputSuffix == std::string(".gif");
+
+                bool ffmpeg = checkFFmpeg();
+                std::string outputTmpName = outputPath.string();
+
+                if (!ffmpeg)
+                    std::cerr << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
+                else
+                    outputTmpName = "tmp_out.mp4";
+
+                if (filesystem::is_directory(inputPath))
+                {
+                    if (!filesystem::is_directory(outputPath))
+                        outputPath = outputPath.parent_path().append(outputPath.stem().native());
+                    filesystem::create_directories(outputPath);
+                    filesystem::directory_iterator currDir(inputPath);
+                    for (auto& file : currDir)
+                    {
+                        if (filesystem::is_directory(file.path()))
+                            continue;
+                        //Check GIF
+                        std::string inputSuffix = file.path().extension().string();
+                        std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
+                        gif = inputSuffix == std::string(".gif");
+
+                        std::string currInputPath = file.path().string();
+                        std::string currOutputPath = (outputPath / (file.path().filename().replace_extension(gif ? ".gif" : ".mkv"))).string();
+
+                        ac->loadVideo(currInputPath);
+                        ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+
+                        std::cout << ac->getInfo() << std::endl;
+                        std::cout << ac->getFiltersInfo() << std::endl;
+
+                        std::cout << "Processing..." << std::endl;
+                        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+                        if (disableProgress)
+                            ac->process();
+                        else
+                            ac->processWithPrintProgress();
+                        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+
+                        ac->saveVideo();
+
+                        if (ffmpeg)
+                        {
+                            if (!gif)
+                            {
+                                if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
+                                    filesystem::remove(outputTmpName);
+                            }
+                            else
+                            {
+                                if (video2GIF(outputTmpName, currOutputPath))
+                                    filesystem::remove(outputTmpName);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    std::string currInputPath = inputPath.string();
+                    std::string currOutputPath = outputPath.string();
 
                     ac->loadVideo(currInputPath);
                     ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
@@ -541,42 +658,6 @@ int main(int argc, char* argv[])
                             if (video2GIF(outputTmpName, currOutputPath))
                                 filesystem::remove(outputTmpName);
                         }
-                    }
-                }
-            }
-            else
-            {
-                std::string currInputPath = inputPath.string();
-                std::string currOutputPath = outputPath.string();
-
-                ac->loadVideo(currInputPath);
-                ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
-
-                std::cout << ac->getInfo() << std::endl;
-                std::cout << ac->getFiltersInfo() << std::endl;
-
-                std::cout << "Processing..." << std::endl;
-                std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                if (disableProgress)
-                    ac->process();
-                else
-                    ac->processWithPrintProgress();
-                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
-
-                ac->saveVideo();
-
-                if (ffmpeg)
-                {
-                    if (!gif)
-                    {
-                        if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
-                            filesystem::remove(outputTmpName);
-                    }
-                    else
-                    {
-                        if (video2GIF(outputTmpName, currOutputPath))
-                            filesystem::remove(outputTmpName);
                     }
                 }
             }
