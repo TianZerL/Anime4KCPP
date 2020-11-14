@@ -1,14 +1,14 @@
 #pragma once
 
-#include <cmdline.h>
-
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <fstream>
 #include <unordered_map>
 
-std::string& ltrim(std::string& s)
+#include <cmdline.h>
+
+inline std::string& ltrim(std::string& s)
 {
     size_t pos = s.find_first_not_of(" \n\r\t");
     if (pos != std::string::npos)
@@ -16,7 +16,7 @@ std::string& ltrim(std::string& s)
     return s;
 }
 
-std::string& rtrim(std::string& s)
+inline std::string& rtrim(std::string& s)
 {
     size_t pos = s.find_last_not_of(" \n\r\t");
     if (pos != std::string::npos)
@@ -24,7 +24,7 @@ std::string& rtrim(std::string& s)
     return s;
 }
 
-std::string& trim(std::string& s)
+inline std::string& trim(std::string& s)
 {
     ltrim(s);
     rtrim(s);
@@ -145,7 +145,7 @@ public:
     }
 
     template <>
-    std::string get(const std::string& key)
+    std::string get<std::string>(const std::string& key)
     {
         if (!inputFile.is_open())
         {
@@ -215,6 +215,7 @@ class ConfigWriter
 {
 public:
     ConfigWriter() = default;
+
     bool initFile(const std::string& path)
     {
         outputFile.open(path);
@@ -232,9 +233,10 @@ public:
         }
     }
 
-    void set(Config& config)
+    ConfigWriter& set(Config& config)
     {
         kvMap = config.getMap();
+        return *this;
     }
 
 private:
