@@ -504,12 +504,17 @@ int main(int argc, char* argv[])
                     "Previewing, press 'q','ESC' or 'Enter' to exit, "
                     "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
                     "'w' to forward, 's' to backward";
-                std::cout << "Previewing..." << std::endl;
-                ac->setVideoMode(false);
                 cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
                 cv::resizeWindow(windowName,
                     videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
                     videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
+                ac->setVideoMode(false);
+
+                std::cout
+                    << "Previewing..." << std::endl
+                    << "  Start frame: " << frameStart << std::endl
+                    << "  Total frame: " << totalFrameCount << std::endl;
+            
                 while (videoCapture.read(frame))
                 {
                     ac->loadImage(frame);
