@@ -500,23 +500,27 @@ int main(int argc, char* argv[])
                 int delay = 500.0 / (forceFps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : forceFps);
                 char keyCode = 'q';
                 cv::Mat frame;
-
+                std::string windowName =
+                    "Previewing, press 'q','ESC' or 'Enter' to exit, "
+                    "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+                    "'w' to forward, 's' to backward";
                 std::cout << "Previewing..." << std::endl;
                 ac->setVideoMode(false);
+                cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+                cv::resizeWindow(windowName,
+                    videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
+                    videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
                 while (videoCapture.read(frame))
                 {
                     ac->loadImage(frame);
                     ac->process();
                     ac->saveImage(frame);
-                    cv::imshow(
-                        "Previewing, press 'q','ESC' or 'Enter' to exit, "
-                        "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
-                        "'w' to forward, 's' to backward",
-                        frame);
+                    cv::imshow(windowName, frame);
 
                     keyCode = cv::waitKey(delay) & 0xff;
 
-                    if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                        keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
                         break;
                     else if (keyCode == 0x20)
                     {
@@ -551,6 +555,8 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
+                videoCapture.release();
+                cv::destroyAllWindows();
                 std::cout << "Exit" << std::endl;
             }
             else
