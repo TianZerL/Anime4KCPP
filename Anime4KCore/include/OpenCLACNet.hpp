@@ -33,26 +33,29 @@ public:
     ACNet(const Parameters& parameters = Parameters());
     virtual ~ACNet() = default;
     virtual void setArguments(const Parameters& parameters) override;
-    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
-    static void releaseGPU() noexcept;
-    static bool isInitializedGPU();
 
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
+
+    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
+    static void releaseGPU() noexcept;
+    static bool isInitializedGPU();
 private:
     virtual void processYUVImage() override;
     virtual void processRGBImage() override;
     virtual void processRGBVideo() override;
 
-    void runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::OpenCL::ACNetType type);
+    virtual Processor::Type getProcessorType() noexcept override;
+
+    void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg);
+
     static void initOpenCL(const CNNType type);
     static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string& fileName);
-
-    virtual Processor::Type getProcessorType() noexcept override;
 private:
+    int currACNetypeIndex;
+
     static bool isInitialized;
-    std::function<void(cv::InputArray, cv::OutputArray)> runKernel;
 
     static cl_context context;
     static cl_command_queue commandQueue;

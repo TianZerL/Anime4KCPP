@@ -190,52 +190,42 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBVideo()
             ).process();
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::runKernel(cv::InputArray orgImg, cv::OutputArray dstImg)
+void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     cl_int err;
     int i;
 
+    cl_image_format format{};
+
+    cl_image_desc dstDesc{};
+    cl_image_desc orgDesc{};
+
     constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { size_t(orgW),size_t(orgH),1 };
-    const size_t dstRegion[3] = { size_t(W),size_t(H),1 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
     const size_t size[2] =
     { 
-        (((size_t(W) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((size_t(H) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog 
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
 
-    const cl_float pushColorStrength = param.strengthColor;
-    const cl_float pushGradientStrength = param.strengthGradient;
-    const cl_float normalizedWidth = cl_float(nWidth);
-    const cl_float normalizedHeight = cl_float(nHeight);
-
-    cv::Mat orgImage = orgImg.getMat();
-    cv::Mat dstImage = dstImg.getMat();
-
-    cl_image_format format;
-    cl_image_desc dstDesc;
-    cl_image_desc orgDesc;
+    const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
+    const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
+    const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
+    const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
 
     //init frame
     format.image_channel_data_type = CL_UNORM_INT8;
     format.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgH;
-    orgDesc.image_width = orgW;
-    orgDesc.image_row_pitch = 0;
-    orgDesc.image_slice_pitch = 0;
-    orgDesc.num_mip_levels = 0;
-    orgDesc.num_samples = 0;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
     orgDesc.buffer = nullptr;
 
     dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = H;
-    dstDesc.image_width = W;
-    dstDesc.image_row_pitch = 0;
-    dstDesc.image_slice_pitch = 0;
-    dstDesc.num_mip_levels = 0;
-    dstDesc.num_samples = 0;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
     //kernel for each thread
@@ -329,7 +319,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(cv::InputArray orgImg, cv::OutputA
         CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error", err)
 
     //enqueue
-    clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
+    clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelGetGray, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
     for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
     {
@@ -358,7 +348,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(cv::InputArray orgImg, cv::OutputA
         }
     }
     //blocking read
-    clEnqueueReadImage(commandQueue, imageBuffer1, CL_TRUE, orgin, dstRegion, dstImage.step, 0, dstImage.data, 0, nullptr, nullptr);
+    clEnqueueReadImage(commandQueue, imageBuffer1, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
 
     //clean
     clReleaseMemObject(imageBuffer3);
@@ -395,7 +385,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
     }
 
 
-    if (pID >= 0 && pID < platforms)
+    if (pID < platforms)
         currentplatform = tmpPlatform[pID];
     else
         currentplatform = tmpPlatform[0];
@@ -417,7 +407,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         throw ACException<ExceptionType::GPU, true>("GPU initialization error", err);
     }
 
-    if (dID >= 0 && dID < devices)
+    if (dID < devices)
         device = tmpDevice[dID];
     else
         device = tmpDevice[0];

@@ -30,42 +30,22 @@ Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
         switch (param.HDNLevel)
         {
         case 1:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL1);
-            };
+            currACNetypeIndex = HDNL1;
             break;
         case 2:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL2);
-            };
+            currACNetypeIndex = HDNL2;
             break;
         case 3:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL3);
-            };
+            currACNetypeIndex = HDNL3;
             break;
         default:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL1);
-            };
+            currACNetypeIndex = HDNL1;
             break;
         }
     }
     else
     {
-        runKernel =
-            [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-        {
-            runKernelACNet(orgImg, dstImg, HDNL0);
-        };
+        currACNetypeIndex = HDNL0;
     }
 }
 
@@ -77,42 +57,22 @@ void Anime4KCPP::OpenCL::ACNet::setArguments(const Parameters& parameters)
         switch (param.HDNLevel)
         {
         case 1:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL1);
-            };
+            currACNetypeIndex = HDNL1;
             break;
         case 2:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL2);
-            };
+            currACNetypeIndex = HDNL2;
             break;
         case 3:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL3);
-            };
+            currACNetypeIndex = HDNL3;
             break;
         default:
-            runKernel =
-                [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-            {
-                runKernelACNet(orgImg, dstImg, HDNL1);
-            };
+            currACNetypeIndex = HDNL1;
             break;
         }
     }
     else
     {
-        runKernel =
-            [this](cv::InputArray orgImg, cv::OutputArray dstImg)
-        {
-            runKernelACNet(orgImg, dstImg, HDNL0);
-        };
+        currACNetypeIndex = HDNL0;
     }
 }
 
@@ -352,33 +312,30 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::OutputArray dstImg, Anime4KCPP::OpenCL::ACNetType type)
+void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     cl_int err;
 
-    cv::Mat orgImage = orgImg.getMat();
-    cv::Mat dstImage = dstImg.getMat();
+    cl_image_format format{};
+    cl_image_format tmpFormat{};
 
-    cl_image_format format;
-    cl_image_format tmpFormat;
-
-    cl_image_desc dstDesc;
-    cl_image_desc tmpDesc;
-    cl_image_desc orgDesc;
+    cl_image_desc dstDesc{};
+    cl_image_desc tmpDesc{};
+    cl_image_desc orgDesc{};
 
     constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { size_t(orgImage.cols),size_t(orgImage.rows),1 };
-    const size_t dstRegion[3] = { size_t(dstImage.cols),size_t(dstImage.rows),1 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
 
     const size_t orgSize[2] =
     {
-        (((size_t(orgImage.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((size_t(orgImage.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
     const size_t dstSize[2] =
     {
-        (((size_t(dstImage.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((size_t(dstImage.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
 
     //init frame
@@ -389,52 +346,40 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImage.rows;
-    orgDesc.image_width = orgImage.cols;
-    orgDesc.image_row_pitch = 0;
-    orgDesc.image_slice_pitch = 0;
-    orgDesc.num_mip_levels = 0;
-    orgDesc.num_samples = 0;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
     orgDesc.buffer = nullptr;
 
     tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImage.rows;
-    tmpDesc.image_width = orgImage.cols;
+    tmpDesc.image_height = orgImg.rows;
+    tmpDesc.image_width = orgImg.cols;
     tmpDesc.image_array_size = 2;
-    tmpDesc.image_row_pitch = 0;
-    tmpDesc.image_slice_pitch = 0;
-    tmpDesc.num_mip_levels = 0;
-    tmpDesc.num_samples = 0;
     tmpDesc.buffer = nullptr;
 
     dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImage.rows;
-    dstDesc.image_width = dstImage.cols;
-    dstDesc.image_row_pitch = 0;
-    dstDesc.image_slice_pitch = 0;
-    dstDesc.num_mip_levels = 0;
-    dstDesc.num_samples = 0;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[type], "conv1To8", &err);
+    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
     if (err != CL_SUCCESS)
     {
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
     }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
     }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
         clReleaseKernel(kernelConv8To8L2);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
     }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -442,7 +387,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L3);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
     }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -451,7 +396,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L4);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
     }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -461,7 +406,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L5);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
     }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -472,7 +417,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L6);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
     }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -484,7 +429,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L7);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
     }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[type], "conv8To8", &err);
+    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -497,7 +442,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
         clReleaseKernel(kernelConv8To8L8);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
     }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[type], "convTranspose8To1", &err);
+    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
     if (err != CL_SUCCESS)
     {
         clReleaseKernel(kernelConv1To8L1);
@@ -602,7 +547,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
     if (err != CL_SUCCESS)
         CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
 
-    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImage.step, 0, orgImage.data, 0, nullptr, nullptr);
+    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
@@ -613,7 +558,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
     clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
     clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImage.step, 0, dstImage.data, 0, nullptr, nullptr);
+    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
 
     //clean
     clReleaseMemObject(imageBufferOrg);
@@ -631,7 +576,6 @@ void Anime4KCPP::OpenCL::ACNet::runKernelACNet(cv::InputArray orgImg, cv::Output
     clReleaseKernel(kernelConv8To8L8);
     clReleaseKernel(kernelConv8To8L9);
     clReleaseKernel(kernelConvTranspose8To1L10);
-
 }
 
 void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
@@ -657,7 +601,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
     }
 
 
-    if (pID >= 0 && pID < platforms)
+    if (pID < platforms)
         currentplatform = tmpPlatform[pID];
     else
         currentplatform = tmpPlatform[0];
@@ -679,7 +623,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         throw ACException<ExceptionType::GPU, true>("GPU initialization error", err);
     }
 
-    if (dID >= 0 && dID < devices)
+    if (dID < devices)
         device = tmpDevice[dID];
     else
         device = tmpDevice[0];
