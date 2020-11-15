@@ -61,7 +61,7 @@ std::string Anime4KCPP::Cuda::Anime4K09::getFiltersInfo()
     return oss.str();
 }
 
-inline void Anime4KCPP::Cuda::Anime4K09::runKernel(cv::Mat& orgImg, cv::Mat& dstImg)
+inline void Anime4KCPP::Cuda::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     ACCudaParamAnime4K09 cuParam{
         orgImg.cols, orgImg.rows,

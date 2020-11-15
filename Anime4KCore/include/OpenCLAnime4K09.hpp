@@ -43,6 +43,9 @@ private:
     static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string &fileName);
 private:
+    double nWidth;
+    double nHeight;
+
     static bool isInitialized;
 
     static cl_context context;
@@ -55,11 +58,7 @@ private:
 
     static size_t workGroupSizeLog;
 
-    double nWidth;
-    double nHeight;
-
 #ifdef BUILT_IN_KERNEL
     static const std::string Anime4KCPPKernelSourceString;
 #endif // BUILT_IN_KERNEL
-
 };

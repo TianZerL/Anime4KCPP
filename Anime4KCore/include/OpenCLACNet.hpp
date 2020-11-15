@@ -70,5 +70,4 @@ private:
 #ifdef BUILT_IN_KERNEL
     static const std::string ACNetKernelSourceString[TotalTypeCount];
 #endif // BUILT_IN_KERNEL
-
 };

@@ -22,7 +22,7 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 private:
-    void runKernel(cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     virtual void processYUVImage() override;
     virtual void processRGBImage() override;

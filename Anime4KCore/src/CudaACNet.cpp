@@ -29,7 +29,7 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
     return oss.str();
 }
 
-inline void Anime4KCPP::Cuda::ACNet::runKernel(cv::Mat& orgImg, cv::Mat& dstImg)
+inline void Anime4KCPP::Cuda::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
     cuRunKernelACNet(orgImg.data, dstImg.data, &cuParam);
