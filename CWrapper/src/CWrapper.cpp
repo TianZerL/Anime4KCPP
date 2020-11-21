@@ -121,35 +121,35 @@ extern "C"
         }
     }
 
-    ac_instance acGetInstance2(unsigned int managers, void* managerData, ac_parameters* parameters, ac_processType type, ac_error* error)
+    ac_instance acGetInstance2(unsigned int managers, ac_managerData* managerData, ac_parameters* parameters, ac_processType type, ac_error* error)
     {
         if (error != nullptr)
-            *error = AC_OK;        
+            *error = AC_OK;
 
         acCreator = std::make_unique<Anime4KCPP::ACCreator>();
 
         if (managers | AC_Manager_OpenCL_Anime4K09)
         {
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
             {
                 if (error != nullptr)
                     *error = AC_ERROR_NULL_Data;
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (((ac_OpenCLData*)managerData)->pID, ((ac_OpenCLData*)managerData)->dID);
+                (managerData->OpenCLAnime4K09Data->pID, managerData->OpenCLAnime4K09Data->dID);
         }
         if (managers | AC_Manager_OpenCL_ACNet)
         {
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
             {
                 if (error != nullptr)
                     *error = AC_ERROR_NULL_Data;
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (((ac_OpenCLData*)managerData)->pID, ((ac_OpenCLData*)managerData)->dID, 
-                    static_cast<Anime4KCPP::CNNType>(((ac_OpenCLData*)managerData)->CNNType));
+                (managerData->OpenCLACNetData->pID, managerData->OpenCLACNetData->dID,
+                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType));
         }
         if (managers | AC_Manager_Cuda)
         {
@@ -158,13 +158,13 @@ extern "C"
                 *error = AC_ERROR_CUDA_NOT_SUPPORTED;
             return nullptr;
 #else
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->CUDAData == nullptr)
             {
                 if (error != nullptr)
                     *error = AC_ERROR_NULL_Data;
                 return nullptr;
             }
-            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(((ac_CudaData*)managerData)->dID);
+            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
 #endif // !CUDA_ENABLE
         }
 
@@ -202,7 +202,7 @@ extern "C"
     {
         acCreator->release(static_cast<Anime4KCPP::AC*>(instance));
 
-        if (acCreator!=nullptr)
+        if (acCreator != nullptr)
             acCreator->deinit(true);
     }
 
@@ -489,33 +489,33 @@ extern "C"
             Anime4KCPP::OpenCL::ACNet::releaseGPU();
     }
 
-    ac_error acInitGPU2(unsigned int managers, void* managerData)
+    ac_error acInitGPU2(unsigned int managers, ac_managerData* managerData)
     {
         acCreator = std::make_unique<Anime4KCPP::ACCreator>();
 
         if (managers | AC_Manager_OpenCL_Anime4K09)
         {
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (((ac_OpenCLData*)managerData)->pID, ((ac_OpenCLData*)managerData)->dID);
+                (managerData->OpenCLAnime4K09Data->pID, managerData->OpenCLAnime4K09Data->dID);
         }
         if (managers | AC_Manager_OpenCL_ACNet)
         {
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (((ac_OpenCLData*)managerData)->pID, ((ac_OpenCLData*)managerData)->dID,
-                    static_cast<Anime4KCPP::CNNType>(((ac_OpenCLData*)managerData)->CNNType));
+                (managerData->OpenCLACNetData->pID, managerData->OpenCLACNetData->dID,
+                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType));
         }
         if (managers | AC_Manager_Cuda)
         {
 #ifndef ENABLE_CUDA
-                return AC_ERROR_CUDA_NOT_SUPPORTED;
+            return AC_ERROR_CUDA_NOT_SUPPORTED;
 #else
-            if (managerData == nullptr)
+            if (managerData == nullptr || managerData->CUDAData == nullptr)
                 return AC_ERROR_NULL_Data;
-            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(((ac_CudaData*)managerData)->dID);
+            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
 #endif // !CUDA_ENABLE
         }
 
@@ -710,7 +710,7 @@ extern "C"
     ac_bool acCheckGPUSupport2(ac_GPGPU GPGPUModel, unsigned int pID, unsigned int dID, char* info, size_t* length)
     {
         std::string infoString;
-        ac_bool rst ;
+        ac_bool rst;
 
         switch (GPGPUModel)
         {
@@ -736,7 +736,6 @@ extern "C"
         }
         break;
         }
-        
 
         if (length != nullptr)
             *length = infoString.size() + 1;

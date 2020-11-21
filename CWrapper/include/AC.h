@@ -53,10 +53,10 @@ extern "C"
 
     typedef enum ac_CNNType
     {
-        AC_Default, 
-        AC_ACNetHDNL0, 
-        AC_ACNetHDNL1, 
-        AC_ACNetHDNL2, 
+        AC_Default,
+        AC_ACNetHDNL0,
+        AC_ACNetHDNL1,
+        AC_ACNetHDNL2,
         AC_ACNetHDNL3
     } ac_CNNType;
 
@@ -133,29 +133,42 @@ extern "C"
         char wrapperVersion[6];
     } ac_version;
 
-    typedef struct ac_OpenCLData
+    typedef struct ac_OpenCLAnime4K09Data
+    {
+        unsigned int pID;
+        unsigned int dID;
+    } ac_OpenCLAnime4K09Data;
+
+    typedef struct ac_OpenCLACNetData
     {
         unsigned int pID;
         unsigned int dID;
         ac_CNNType CNNType;
-    } ac_OpenCLData;
+    } ac_OpenCLACNetData;
 
-    typedef struct ac_CudaData
+    typedef struct ac_CUDAData
     {
         unsigned int dID;
-    } ac_CudaData;
+    } ac_CUDAData;
+
+    typedef struct ac_managerData
+    {
+        ac_OpenCLAnime4K09Data* OpenCLAnime4K09Data;
+        ac_OpenCLACNetData* OpenCLACNetData;
+        ac_CUDAData* CUDAData;
+    } ac_managerData;
 
     typedef void* ac_instance;
 
     AC_DLL ac_version AC_API acGetVersion(void);
     DEPRECATED AC_DLL ac_instance AC_API acGetInstance(
-        ac_bool initGPU, ac_bool initGPUCNN, 
-        unsigned int platformID, unsigned int deviceID, 
-        ac_parameters* parameters, ac_processType type, 
+        ac_bool initGPU, ac_bool initGPUCNN,
+        unsigned int platformID, unsigned int deviceID,
+        ac_parameters* parameters, ac_processType type,
         ac_error* error
     );
     AC_DLL ac_instance AC_API acGetInstance2(
-        unsigned int managers, void* managerData,
+        unsigned int managers, ac_managerData* managerData,
         ac_parameters* parameters, ac_processType type,
         ac_error* error
     );
@@ -191,7 +204,7 @@ extern "C"
     DEPRECATED AC_DLL void AC_API acReleaseGPU(void);
     DEPRECATED AC_DLL ac_error AC_API acInitGPUCNN(void);
     DEPRECATED AC_DLL void AC_API acReleaseGPUCNN(void);
-    AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, void* managerData);
+    AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
     AC_DLL void AC_API acReleaseGPU2(void);
     AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
     AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
@@ -213,7 +226,7 @@ extern "C"
     AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
-    AC_DLL void AC_API acGetLastCoreErrorString(char *err, size_t* length);
+    AC_DLL void AC_API acGetLastCoreErrorString(char* err, size_t* length);
     DEPRECATED AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
     AC_DLL double AC_API acBenchmark2(ac_processType processType);
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
