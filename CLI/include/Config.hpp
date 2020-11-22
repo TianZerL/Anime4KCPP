@@ -122,69 +122,6 @@ public:
         return true;
     }
 
-    template <typename T>
-    T get(const std::string& key)
-    {
-        if (!inputFile.is_open())
-        {
-            const T& tmp = parser.get<T>(key);
-            kvMap.emplace(key, std::to_string(tmp));
-            return tmp;
-        }
-        auto it = kvMap.find(key);
-        if (it == kvMap.end())
-        {
-            const T& tmp = parser.get<T>(key);
-            kvMap.emplace(key, std::to_string(tmp));
-            return tmp;
-        }
-        std::istringstream converter(it->second);
-        T ret{};
-        converter >> ret;
-        return ret;
-    }
-
-    template <>
-    std::string get<std::string>(const std::string& key)
-    {
-        if (!inputFile.is_open())
-        {
-            const std::string& tmp = parser.get<std::string>(key);
-            kvMap.emplace(key, tmp);
-            return tmp;
-        }
-        auto it = kvMap.find(key);
-        if (it == kvMap.end())
-        {
-            const std::string& tmp = parser.get<std::string>(key);
-            kvMap.emplace(key, tmp);
-            return tmp;
-        }
-        return it->second;
-    }
-
-    template <>
-    bool get<bool>(const std::string& key)
-    {
-        if (!inputFile.is_open())
-        {
-            bool tmp = parser.exist(key);
-            kvMap.emplace(key, std::to_string(tmp));
-            return tmp;
-        }
-        auto it = kvMap.find(key);
-        if (it == kvMap.end())
-        {
-            bool tmp = parser.exist(key);
-            kvMap.emplace(key, std::to_string(tmp));
-            return tmp;
-        }
-        std::istringstream converter(it->second);
-        bool ret = false;
-        converter >> ret;
-        return ret;
-    }
-
     std::unordered_map<std::string, std::string>& getMap()
     {
         return kvMap;
@@ -194,6 +131,9 @@ public:
     {
         return err;
     }
+
+    template <typename T>
+    T get(const std::string& key);
 
 private:
     void setError(const std::string& lineData, size_t lineNumber, size_t pos)
@@ -243,3 +183,66 @@ private:
     std::unordered_map<std::string, std::string> kvMap;
     std::ofstream outputFile;
 };
+
+template<typename T>
+inline T Config::get(const std::string& key)
+{
+    if (!inputFile.is_open())
+    {
+        const T& tmp = parser.get<T>(key);
+        kvMap.emplace(key, std::to_string(tmp));
+        return tmp;
+    }
+    auto it = kvMap.find(key);
+    if (it == kvMap.end())
+    {
+        const T& tmp = parser.get<T>(key);
+        kvMap.emplace(key, std::to_string(tmp));
+        return tmp;
+    }
+    std::istringstream converter(it->second);
+    T ret{};
+    converter >> ret;
+    return ret;
+}
+
+template <>
+inline std::string Config::get<std::string>(const std::string& key)
+{
+    if (!inputFile.is_open())
+    {
+        const std::string& tmp = parser.get<std::string>(key);
+        kvMap.emplace(key, tmp);
+        return tmp;
+    }
+    auto it = kvMap.find(key);
+    if (it == kvMap.end())
+    {
+        const std::string& tmp = parser.get<std::string>(key);
+        kvMap.emplace(key, tmp);
+        return tmp;
+    }
+    return it->second;
+}
+
+template <>
+inline bool Config::get<bool>(const std::string& key)
+{
+    if (!inputFile.is_open())
+    {
+        bool tmp = parser.exist(key);
+        kvMap.emplace(key, std::to_string(tmp));
+        return tmp;
+    }
+    auto it = kvMap.find(key);
+    if (it == kvMap.end())
+    {
+        bool tmp = parser.exist(key);
+        kvMap.emplace(key, std::to_string(tmp));
+        return tmp;
+    }
+    std::istringstream converter(it->second);
+    bool ret = false;
+    converter >> ret;
+    return ret;
+}
