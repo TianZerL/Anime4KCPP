@@ -115,7 +115,7 @@ public:
             }
             else
             {
-                setError(lineData, lineNumber, pos);
+                setError(lineData, lineNumber, currLine.size());
                 return false;
             }
         }
