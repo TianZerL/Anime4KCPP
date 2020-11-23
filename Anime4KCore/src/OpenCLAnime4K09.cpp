@@ -499,7 +499,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
     {
         throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
     }
-    workGroupSizeLog = log2(workGroupSizeLog);
+    workGroupSizeLog = std::log2(workGroupSizeLog);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept

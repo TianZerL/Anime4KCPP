@@ -39,10 +39,10 @@ void Anime4KCPP::Cuda::ACNet::processYUVImage()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpY = orgY;
         dstU = orgU;
@@ -83,10 +83,10 @@ void Anime4KCPP::Cuda::ACNet::processRGBImage()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
@@ -140,10 +140,10 @@ void Anime4KCPP::Cuda::ACNet::processRGBVideo()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         videoIO->init(
             [this, tmpZfUp, tmpZf]()

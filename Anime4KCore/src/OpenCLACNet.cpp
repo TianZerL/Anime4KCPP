@@ -132,10 +132,10 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImage()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpY = orgY;
         dstU = orgU;
@@ -176,10 +176,10 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
@@ -233,10 +233,10 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
 {
     if (!param.fastMode)
     {
-        double tmpZf = log2(param.zoomFactor);
+        double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 0.0001)
             tmpZf = 1.0 - 0.0002;
-        int tmpZfUp = ceil(tmpZf);
+        int tmpZfUp = std::ceil(tmpZf);
 
         videoIO->init(
             [this, tmpZfUp, tmpZf]()
@@ -728,7 +728,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         {
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
-        workGroupSizeLog = log2(workGroupSizeLog);
+        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL1:
 #ifndef BUILT_IN_KERNEL
@@ -770,7 +770,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         {
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
-        workGroupSizeLog = log2(workGroupSizeLog);
+        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL2:
 #ifndef BUILT_IN_KERNEL
@@ -812,7 +812,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         {
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
-        workGroupSizeLog = log2(workGroupSizeLog);
+        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     case CNNType::ACNetHDNL3:
 #ifndef BUILT_IN_KERNEL
@@ -854,7 +854,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         {
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
-        workGroupSizeLog = log2(workGroupSizeLog);
+        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     case CNNType::Default:
 #ifndef BUILT_IN_KERNEL
@@ -900,7 +900,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         {
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
-        workGroupSizeLog = log2(workGroupSizeLog);
+        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     }
 }
