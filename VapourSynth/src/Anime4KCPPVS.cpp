@@ -673,7 +673,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     if (tmpData.zoomFactor != 1.0)
     {
-        if (!safeMode && tmpData.vi.width % 32 != 0)//32-byte alignment
+        if (!safeMode && tmpData.vi.format->sampleType != stFloat && tmpData.vi.width % 32 != 0)//32-byte alignment
         {
             tmpData.vi.width = ((tmpData.vi.width >> 5) + 1) << 5;
             vsapi->logMessage(mtWarning,

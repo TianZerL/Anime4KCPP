@@ -57,14 +57,14 @@ inline void Anime4KCPP::ACCreator::pushManager(Types&&... args)
 template<typename T>
 inline double Anime4KCPP::benchmark()
 {
-    cv::Mat testImg = cv::Mat::zeros(cv::Size(1920, 1080), CV_8UC1);
-    cv::randu(testImg, cv::Scalar::all(0), cv::Scalar::all(255));
+    cv::Mat testImg = cv::Mat::zeros(cv::Size(1920, 1080), CV_32FC1);
+    cv::randu(testImg, cv::Scalar::all(0.0f), cv::Scalar::all(1.0f));
 
     double avg = 0.0;
     std::chrono::steady_clock::time_point s;
     std::chrono::steady_clock::time_point e;
 
-    T ac;
+    T ac{};
     ac.loadImage(testImg, testImg, testImg); // YUV
     ac.process();
 

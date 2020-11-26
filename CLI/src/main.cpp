@@ -517,7 +517,6 @@ int main(int argc, char* argv[])
             
                 while (videoCapture.read(frame))
                 {
-                    frame.convertTo(frame, CV_32FC3, 1.0 / 255.0);
                     ac->loadImage(frame);
                     ac->process();
                     ac->saveImage(frame);
