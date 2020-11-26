@@ -76,7 +76,7 @@ std::string Anime4KCPP::CPU::ACNet::getFiltersInfo()
     return oss.str();
 }
 
-void Anime4KCPP::CPU::ACNet::processYUVImage()
+void Anime4KCPP::CPU::ACNet::processYUVImageB()
 {
     if (!param.fastMode)
     {
@@ -90,7 +90,7 @@ void Anime4KCPP::CPU::ACNet::processYUVImage()
         dstV = orgV;
         for (int i = 0; i < tmpZfUp; i++)
         {
-            processor->process(tmpY, dstY);
+            processor->processB(tmpY, dstY);
 
             cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -111,14 +111,14 @@ void Anime4KCPP::CPU::ACNet::processYUVImage()
         else if (param.zoomFactor < 2.0)
             cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        processor->process(orgY, dstY);
+        processor->processB(orgY, dstY);
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
         cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
     }
 }
 
-void Anime4KCPP::CPU::ACNet::processRGBImage()
+void Anime4KCPP::CPU::ACNet::processRGBImageB()
 {
     if (!param.fastMode)
     {
@@ -132,7 +132,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImage()
 
         for (int i = 0; i < tmpZfUp; i++)
         {
-            processor->process(tmpImg, dstImg);
+            processor->processB(tmpImg, dstImg);
 
             cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             tmpImg = dstImg;
@@ -155,7 +155,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImage()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
 
-        processor->process(orgImg, dstImg);
+        processor->processB(orgImg, dstImg);
         std::vector<cv::Mat> yuv(3);
         cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
         cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
@@ -164,7 +164,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImage()
     }
 }
 
-void Anime4KCPP::CPU::ACNet::processRGBVideo()
+void Anime4KCPP::CPU::ACNet::processRGBVideoB()
 {
     if (!param.fastMode)
     {
@@ -185,7 +185,7 @@ void Anime4KCPP::CPU::ACNet::processRGBVideo()
 
                 for (int i = 0; i < tmpZfUp; i++)
                 {
-                    processor->process(tmpFrame, dstFrame);
+                    processor->processB(tmpFrame, dstFrame);
 
                     cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     tmpFrame = dstFrame;
@@ -221,7 +221,7 @@ void Anime4KCPP::CPU::ACNet::processRGBVideo()
                     cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
                 cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2YUV);
 
-                processor->process(orgFrame, dstFrame);
+                processor->processB(orgFrame, dstFrame);
                 std::vector<cv::Mat> yuv(3);
                 cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                 cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
@@ -233,6 +233,94 @@ void Anime4KCPP::CPU::ACNet::processRGBVideo()
             }
             , param.maxThreads
                 ).process();
+    }
+}
+
+void Anime4KCPP::CPU::ACNet::processYUVImageF()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpY = orgY;
+        dstU = orgU;
+        dstV = orgV;
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            processor->processF(tmpY, dstY);
+
+            cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpY = dstY;
+        }
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            double currZf = param.zoomFactor / exp2(tmpZfUp);
+            cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        processor->processF(orgY, dstY);
+
+        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+    }
+}
+
+void Anime4KCPP::CPU::ACNet::processRGBImageF()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpImg = orgImg;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            processor->processF(tmpImg, dstImg);
+
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpImg = dstImg;
+        }
+
+        cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+        dstImg = orgImg;
+
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+
+        processor->processF(orgImg, dstImg);
+        std::vector<cv::Mat> yuv(3);
+        cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+        cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+        dstImg = orgImg;
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
     }
 }
 

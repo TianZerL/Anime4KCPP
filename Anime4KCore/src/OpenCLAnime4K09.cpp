@@ -101,7 +101,7 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getFiltersInfo()
     return oss.str();
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::processYUVImage()
+void Anime4KCPP::OpenCL::Anime4K09::processYUVImageB()
 {
     if (param.zoomFactor == 2.0)
     {
@@ -121,7 +121,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImage()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernel(orgImg, dstImg);
+    runKernelF(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -134,7 +134,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImage()
     dstV = yuv[V];
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::processRGBImage()
+void Anime4KCPP::OpenCL::Anime4K09::processRGBImageB()
 {
     if (param.zoomFactor == 2.0)
     {
@@ -151,13 +151,13 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImage()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernel(orgImg, dstImg);
+    runKernelF(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::processRGBVideo()
+void Anime4KCPP::OpenCL::Anime4K09::processRGBVideoB()
 {
     if (param.zoomFactor == 2.0)
     {
@@ -179,7 +179,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBVideo()
             if (param.preprocessing)
                 FilterProcessor(orgFrame, param.preFilters).process();
             cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            runKernel(orgFrame, dstFrame);
+            runKernelF(orgFrame, dstFrame);
             cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
             if (param.postprocessing)//PostProcessing
                 FilterProcessor(dstFrame, param.postFilters).process();
@@ -190,7 +190,63 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBVideo()
             ).process();
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
+void Anime4KCPP::OpenCL::Anime4K09::processYUVImageF()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+    std::vector<cv::Mat> yuv(3);
+    cv::split(dstImg, yuv);
+    dstY = yuv[Y];
+    dstU = yuv[U];
+    dstV = yuv[V];
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::processRGBImageF()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     cl_int err;
     int i;
@@ -216,6 +272,178 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& ds
 
     //init frame
     format.image_channel_data_type = CL_UNORM_INT8;
+    format.image_channel_order = CL_RGBA;
+
+    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
+    orgDesc.buffer = nullptr;
+
+    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
+    dstDesc.buffer = nullptr;
+
+    //kernel for each thread
+    cl_kernel kernelGetGray = nullptr;
+    if (param.zoomFactor == 2.0F)
+        kernelGetGray = clCreateKernel(program, "getGray", &err);
+    else
+        kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGray", err);
+    }
+    cl_kernel kernelPushColor = clCreateKernel(program, "pushColor", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushColor", err);
+    }
+    cl_kernel kernelGetGradient = clCreateKernel(program, "getGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGradient", err);
+    }
+    cl_kernel kernelPushGradient = clCreateKernel(program, "pushGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        clReleaseKernel(kernelGetGradient);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushGradient", err);
+    }
+
+    //imageBuffer
+    //for getGray
+    cl_mem imageBuffer0 = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer0 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 1
+    cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer1 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 2
+    cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer2 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 3
+    cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        clReleaseMemObject(imageBuffer2);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer3 error, video memory may be insufficient.", err);
+    }
+
+    //set arguments
+    //getGray
+    err = clSetKernelArg(kernelGetGray, 0, sizeof(cl_mem), &imageBuffer0);
+    err |= clSetKernelArg(kernelGetGray, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelGetGray, 2, sizeof(cl_float), &normalizedWidth);
+    err |= clSetKernelArg(kernelGetGray, 3, sizeof(cl_float), &normalizedHeight);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error", err)
+    //pushColor
+    err = clSetKernelArg(kernelPushColor, 0, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushColor, 1, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelPushColor, 2, sizeof(cl_float), &pushColorStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error", err)
+    //getGradient
+    err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer3);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error", err)
+    //pushGradient
+    err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer3);
+    err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error", err)
+
+    //enqueue
+    clEnqueueWriteImage(commandQueue, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelGetGray, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+    for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
+    {
+        clEnqueueNDRangeKernel(commandQueue, kernelPushColor, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+    }
+    if (i < param.passes)
+    {
+        //reset getGradient
+        err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
+        //reset pushGradient
+        err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
+        err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
+
+        while (i++ < param.passes)
+        {
+            clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+            clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        }
+    }
+    //blocking read
+    clEnqueueReadImage(commandQueue, imageBuffer1, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
+
+    //clean
+    clReleaseMemObject(imageBuffer3);
+    clReleaseMemObject(imageBuffer2);
+    clReleaseMemObject(imageBuffer1);
+    clReleaseMemObject(imageBuffer0);
+
+    clReleaseKernel(kernelGetGray);
+    clReleaseKernel(kernelPushColor);
+    clReleaseKernel(kernelGetGradient);
+    clReleaseKernel(kernelPushGradient);
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    cl_int err;
+    int i;
+
+    cl_image_format format{};
+
+    cl_image_desc dstDesc{};
+    cl_image_desc orgDesc{};
+
+    constexpr size_t orgin[3] = { 0,0,0 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+    const size_t size[2] =
+    {
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+
+    const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
+    const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
+    const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
+    const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
+
+    //init frame
+    format.image_channel_data_type = CL_FLOAT;
     format.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;

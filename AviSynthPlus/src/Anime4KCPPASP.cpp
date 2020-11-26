@@ -46,7 +46,12 @@ public:
         unsigned int dID,
         IScriptEnvironment* env
     );
-    PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
+    
+    PVideoFrame AC_STDCALL GetFrame(int n, IScriptEnvironment* env);
+    template <typename T>
+    PVideoFrame FilterYUV(PVideoFrame& src, PVideoFrame& dst);
+
+    PVideoFrame FilterRGB(PVideoFrame& src, PVideoFrame& dst);
 private:
     Anime4KCPP::Parameters parameters;
     Anime4KCPP::ACCreator acCreator;
@@ -72,14 +77,14 @@ Anime4KCPPF::Anime4KCPPF(
     GPUMode(GPUMode),
     GPGPUModel(GPGPUModel)
 {
-    if (!vi.IsRGB24() && (!vi.IsYUV() || vi.BitsPerComponent() != 8 || !vi.IsPlanar()))
+    if (!vi.IsRGB24() && (!vi.IsYUV() || (vi.BitsPerComponent() != 8 && vi.BitsPerComponent() != 32) || !vi.IsPlanar()))
     {
-        env->ThrowError("Anime4KCPP: RGB24 or planar YUV 8bit data only");
+        env->ThrowError("Anime4KCPP: support data type: RGB24, planar YUV 8bit, planar YUV 8bit 32bit float");
     }
 
     if (!vi.IsRGB24() && !vi.Is444() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: RGB24 or YUV444P8 is needed for Anime4K09");
+        env->ThrowError("Anime4KCPP: RGB or YUV444 is needed for Anime4K09");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -105,6 +110,7 @@ Anime4KCPPF::Anime4KCPPF(
     }
 }
 
+
 PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 {
     PVideoFrame src = child->GetFrame(n, env);
@@ -112,185 +118,194 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
     if (vi.IsYUV())
     {
-        size_t srcPitchY = src->GetPitch(PLANAR_Y);
-        size_t dstPitchY = dst->GetPitch(PLANAR_Y);
-        size_t srcPitchU = src->GetPitch(PLANAR_U);
-        size_t dstPitchU = dst->GetPitch(PLANAR_U);
-        size_t srcPitchV = src->GetPitch(PLANAR_V);
-        size_t dstPitchV = dst->GetPitch(PLANAR_V);
+        if (vi.BitsPerComponent() == 32)
+            return FilterYUV<float>(src, dst);
+        return FilterYUV<unsigned char>(src, dst);
+    }
+    return FilterRGB(src, dst);
+}
 
-        size_t srcHY = src->GetHeight(PLANAR_Y);
-        size_t srcLY = src->GetRowSize(PLANAR_Y);
-        size_t srcHU = src->GetHeight(PLANAR_U);
-        size_t srcLU = src->GetRowSize(PLANAR_U);
-        size_t srcHV = src->GetHeight(PLANAR_V);
-        size_t srcLV = src->GetRowSize(PLANAR_V);
+template<typename T>
+PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
+{
+    size_t srcPitchY = src->GetPitch(PLANAR_Y) / sizeof(T);
+    size_t dstPitchY = dst->GetPitch(PLANAR_Y) / sizeof(T);
+    size_t srcPitchU = src->GetPitch(PLANAR_U) / sizeof(T);
+    size_t dstPitchU = dst->GetPitch(PLANAR_U) / sizeof(T);
+    size_t srcPitchV = src->GetPitch(PLANAR_V) / sizeof(T);
+    size_t dstPitchV = dst->GetPitch(PLANAR_V) / sizeof(T);
 
-        size_t dstHY = dst->GetHeight(PLANAR_Y);
-        size_t dstLY = dst->GetRowSize(PLANAR_Y);
-        size_t dstHU = dst->GetHeight(PLANAR_U);
-        size_t dstLU = dst->GetRowSize(PLANAR_U);
-        size_t dstHV = dst->GetHeight(PLANAR_V);
-        size_t dstLV = dst->GetRowSize(PLANAR_V);
+    size_t srcHY = src->GetHeight(PLANAR_Y);
+    size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+    size_t srcHU = src->GetHeight(PLANAR_U);
+    size_t srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
+    size_t srcHV = src->GetHeight(PLANAR_V);
+    size_t srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
 
-        const unsigned char* srcpY = src->GetReadPtr(PLANAR_Y);
-        const unsigned char* srcpU = src->GetReadPtr(PLANAR_U);
-        const unsigned char* srcpV = src->GetReadPtr(PLANAR_V);
+    size_t dstHY = dst->GetHeight(PLANAR_Y);
+    size_t dstLY = dst->GetRowSize(PLANAR_Y) / sizeof(T);
+    size_t dstHU = dst->GetHeight(PLANAR_U);
+    size_t dstLU = dst->GetRowSize(PLANAR_U) / sizeof(T);
+    size_t dstHV = dst->GetHeight(PLANAR_V);
+    size_t dstLV = dst->GetRowSize(PLANAR_V) / sizeof(T);
 
-        unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
-        unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
-        unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
+    const T* srcpY = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y));
+    const T* srcpU = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U));
+    const T* srcpV = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_V));
 
-        unsigned char* srcDataY = new unsigned char[srcHY * srcLY];
-        unsigned char* srcDataU = new unsigned char[srcHU * srcLU];
-        unsigned char* srcDataV = new unsigned char[srcHV * srcLV];
+    T* dstpY = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_Y));
+    T* dstpU = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_U));
+    T* dstpV = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_V));
 
-        cv::Mat dstDataY;
-        cv::Mat dstDataU;
-        cv::Mat dstDataV;
+    T* srcDataY = new T[srcHY * srcLY];
+    T* srcDataU = new T[srcHU * srcLU];
+    T* srcDataV = new T[srcHV * srcLV];
 
-        for (size_t y = 0; y < srcHY; y++)
+    cv::Mat dstDataY;
+    cv::Mat dstDataU;
+    cv::Mat dstDataV;
+
+    for (size_t y = 0; y < srcHY; y++)
+    {
+        memcpy(srcDataY + y * srcLY, srcpY, srcLY * sizeof(T));
+        srcpY += srcPitchY;
+        if (y < srcHU)
         {
-            memcpy(srcDataY + y * srcLY, srcpY, srcLY);
-            srcpY += srcPitchY;
-            if (y < srcHU)
-            {
-                memcpy(srcDataU + y * srcLU, srcpU, srcLU);
-                srcpU += srcPitchU;
-            }
-            if (y < srcHV)
-            {
-                memcpy(srcDataV + y * srcLV, srcpV, srcLV);
-                srcpV += srcPitchV;
-            }
+            memcpy(srcDataU + y * srcLU, srcpU, srcLU * sizeof(T));
+            srcpU += srcPitchU;
         }
-
-        Anime4KCPP::AC* ac = nullptr;
-
-        if (GPUMode)
+        if (y < srcHV)
         {
-            switch (GPGPUModel)
-            {
-            case GPGPU::OpenCL:
-                if (CNN)
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-                else
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
-                break;
-            case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
-                if (CNN)
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
-                else
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
-#endif
-                break;
-            }
+            memcpy(srcDataV + y * srcLV, srcpV, srcLV * sizeof(T));
+            srcpV += srcPitchV;
         }
-        else
+    }
+
+    Anime4KCPP::AC* ac = nullptr;
+
+    if (GPUMode)
+    {
+        switch (GPGPUModel)
         {
+        case GPGPU::OpenCL:
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+            break;
         }
-
-        ac->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
-        ac->process();
-        ac->saveImage(dstDataY, dstDataU, dstDataV);
-
-        for (size_t y = 0; y < dstHY; y++)
-        {
-            memcpy(dstpY, dstDataY.data + y * dstLY, dstLY);
-            dstpY += dstPitchY;
-            if (y < dstHU)
-            {
-                memcpy(dstpU, dstDataU.data + y * dstLU, dstLU);
-                dstpU += dstPitchU;
-            }
-            if (y < dstHV)
-            {
-                memcpy(dstpV, dstDataV.data + y * dstLV, dstLV);
-                dstpV += dstPitchV;
-            }
-        }
-
-        acCreator.release(ac);
-        delete[] srcDataY;
-        delete[] srcDataU;
-        delete[] srcDataV;
-
-        return dst;
     }
     else
     {
-        size_t srcPitch = src->GetPitch();
-        size_t dstPitch = dst->GetPitch();
-
-        size_t srcH = src->GetHeight();
-        size_t srcL = src->GetRowSize();
-        size_t dstH = dst->GetHeight();
-        size_t dstL = dst->GetRowSize();
-
-        const unsigned char* srcp = src->GetReadPtr();
-        unsigned char* dstp = dst->GetWritePtr();
-
-        unsigned char* srcData = new unsigned char[srcH * srcL];
-
-        cv::Mat dstData;
-
-        for (size_t y = 0; y < srcH; y++)
-        {
-            memcpy(srcData + y * srcL, srcp, srcL);
-            srcp += srcPitch;
-        }
-
-        Anime4KCPP::AC* ac = nullptr;
-
-        if (GPUMode)
-        {
-            switch (GPGPUModel)
-            {
-            case GPGPU::OpenCL:
-                if (CNN)
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-                else
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
-                break;
-            case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
-                if (CNN)
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
-                else
-                    ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
-#endif
-                break;
-            }
-        }
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-        {
-            if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
-            else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
-        }
-
-        ac->loadImage(srcH, srcL / 3, srcData);
-        ac->process();
-        ac->saveImage(dstData);
-
-        for (size_t y = 0; y < dstH; y++)
-        {
-            memcpy(dstp, dstData.data + y * dstL, dstL);
-            dstp += dstPitch;
-        }
-
-        acCreator.release(ac);
-        delete[] srcData;
-
-        return dst;
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
+    ac->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
+    ac->process();
+    ac->saveImage(dstDataY, dstDataU, dstDataV);
+
+    for (size_t y = 0; y < dstHY; y++)
+    {
+        memcpy(dstpY, reinterpret_cast<T*>(dstDataY.data) + y * dstLY, dstLY * sizeof(T));
+        dstpY += dstPitchY;
+        if (y < dstHU)
+        {
+            memcpy(dstpU, reinterpret_cast<T*>(dstDataU.data) + y * dstLU, dstLU * sizeof(T));
+            dstpU += dstPitchU;
+        }
+        if (y < dstHV)
+        {
+            memcpy(dstpV, reinterpret_cast<T*>(dstDataV.data) + y * dstLV, dstLV * sizeof(T));
+            dstpV += dstPitchV;
+        }
+    }
+
+    acCreator.release(ac);
+    delete[] srcDataY;
+    delete[] srcDataU;
+    delete[] srcDataV;
+
+    return dst;
+}
+
+PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
+{
+    size_t srcPitch = src->GetPitch();
+    size_t dstPitch = dst->GetPitch();
+
+    size_t srcH = src->GetHeight();
+    size_t srcL = src->GetRowSize();
+    size_t dstH = dst->GetHeight();
+    size_t dstL = dst->GetRowSize();
+
+    const unsigned char* srcp = src->GetReadPtr();
+    unsigned char* dstp = dst->GetWritePtr();
+
+    unsigned char* srcData = new unsigned char[srcH * srcL];
+
+    cv::Mat dstData;
+
+    for (size_t y = 0; y < srcH; y++)
+    {
+        memcpy(srcData + y * srcL, srcp, srcL);
+        srcp += srcPitch;
+    }
+
+    Anime4KCPP::AC* ac = nullptr;
+
+    if (GPUMode)
+    {
+        switch (GPGPUModel)
+        {
+        case GPGPU::OpenCL:
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+            break;
+        }
+    }
+    else
+    {
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+    }
+
+    ac->loadImage(srcH, srcL / 3, srcData);
+    ac->process();
+    ac->saveImage(dstData);
+
+    for (size_t y = 0; y < dstH; y++)
+    {
+        memcpy(dstp, dstData.data + y * dstL, dstL);
+        dstp += dstPitch;
+    }
+
+    acCreator.release(ac);
+    delete[] srcData;
+
+    return dst;
 }
 
 AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)

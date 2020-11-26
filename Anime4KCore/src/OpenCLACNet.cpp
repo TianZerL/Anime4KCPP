@@ -128,7 +128,7 @@ std::string Anime4KCPP::OpenCL::ACNet::getFiltersInfo()
     return oss.str();
 }
 
-void Anime4KCPP::OpenCL::ACNet::processYUVImage()
+void Anime4KCPP::OpenCL::ACNet::processYUVImageB()
 {
     if (!param.fastMode)
     {
@@ -143,7 +143,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImage()
         for (int i = 0; i < tmpZfUp; i++)
         {
             dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_8UC1);
-            runKernel(tmpY, dstY);
+            runKernelB(tmpY, dstY);
 
             cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -165,14 +165,14 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImage()
             cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
         dstY.create(orgY.rows * 2, orgY.cols * 2, CV_8UC1);
-        runKernel(orgY, dstY);
+        runKernelB(orgY, dstY);
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
         cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::processRGBImage()
+void Anime4KCPP::OpenCL::ACNet::processRGBImageB()
 {
     if (!param.fastMode)
     {
@@ -191,7 +191,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
         for (int i = 0; i < tmpZfUp; i++)
         {
             dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, CV_8UC1);
-            runKernel(tmpImg, dstImg);
+            runKernelB(tmpImg, dstImg);
 
             cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
             cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -219,7 +219,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
         orgImg = yuv[Y];
 
         dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_8UC1);
-        runKernel(orgImg, dstImg);
+        runKernelB(orgImg, dstImg);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -229,7 +229,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
+void Anime4KCPP::OpenCL::ACNet::processRGBVideoB()
 {
     if (!param.fastMode)
     {
@@ -255,7 +255,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
                 for (int i = 0; i < tmpZfUp; i++)
                 {
                     dstFrame.create(tmpFrame.rows * 2, tmpFrame.cols * 2, CV_8UC1);
-                    runKernel(tmpFrame, dstFrame);
+                    runKernelB(tmpFrame, dstFrame);
 
                     cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                     cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -296,7 +296,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
                 orgFrame = yuv[Y];
 
                 dstFrame.create(orgFrame.rows * 2, orgFrame.cols * 2, CV_8UC1);
-                runKernel(orgFrame, dstFrame);
+                runKernelB(orgFrame, dstFrame);
 
                 cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
                 cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
@@ -312,7 +312,108 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideo()
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
+void Anime4KCPP::OpenCL::ACNet::processYUVImageF()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpY = orgY;
+        dstU = orgU;
+        dstV = orgV;
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_32FC1);
+            runKernelF(tmpY, dstY);
+
+            cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpY = dstY;
+        }
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            double currZf = param.zoomFactor / exp2(tmpZfUp);
+            cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        dstY.create(orgY.rows * 2, orgY.cols * 2, CV_32FC1);
+        runKernelF(orgY, dstY);
+
+        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+    }
+}
+
+void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpImg = orgImg;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(tmpImg, yuv);
+        tmpImg = yuv[Y];
+
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, CV_32FC1);
+            runKernelF(tmpImg, dstImg);
+
+            cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpImg = dstImg;
+        }
+
+        cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(orgImg, yuv);
+        orgImg = yuv[Y];
+
+        dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_32FC1);
+        runKernelF(orgImg, dstImg);
+
+        cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+        cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+        cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+    }
+}
+
+void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     cl_int err;
 
@@ -340,6 +441,272 @@ void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg
 
     //init frame
     format.image_channel_data_type = CL_UNORM_INT8;
+    format.image_channel_order = CL_R;
+
+    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_order = CL_RGBA;
+
+    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
+    orgDesc.buffer = nullptr;
+
+    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
+    tmpDesc.image_height = orgImg.rows;
+    tmpDesc.image_width = orgImg.cols;
+    tmpDesc.image_array_size = 2;
+    tmpDesc.buffer = nullptr;
+
+    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
+    dstDesc.buffer = nullptr;
+
+    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
+    }
+    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
+    }
+    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
+    }
+    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
+    }
+    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
+    }
+    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        clReleaseKernel(kernelConv8To8L5);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
+    }
+    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        clReleaseKernel(kernelConv8To8L5);
+        clReleaseKernel(kernelConv8To8L6);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
+    }
+    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        clReleaseKernel(kernelConv8To8L5);
+        clReleaseKernel(kernelConv8To8L6);
+        clReleaseKernel(kernelConv8To8L7);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
+    }
+    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        clReleaseKernel(kernelConv8To8L5);
+        clReleaseKernel(kernelConv8To8L6);
+        clReleaseKernel(kernelConv8To8L7);
+        clReleaseKernel(kernelConv8To8L8);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
+    }
+    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelConv1To8L1);
+        clReleaseKernel(kernelConv8To8L2);
+        clReleaseKernel(kernelConv8To8L3);
+        clReleaseKernel(kernelConv8To8L4);
+        clReleaseKernel(kernelConv8To8L5);
+        clReleaseKernel(kernelConv8To8L6);
+        clReleaseKernel(kernelConv8To8L7);
+        clReleaseKernel(kernelConv8To8L8);
+        clReleaseKernel(kernelConv8To8L9);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
+    }
+
+
+    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
+    }
+
+    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBufferOrg);
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
+    }
+
+    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBufferOrg);
+        clReleaseMemObject(imageBufferTmp1);
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
+    }
+
+    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBufferOrg);
+        clReleaseMemObject(imageBufferTmp1);
+        clReleaseMemObject(imageBufferTmp2);
+        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
+    }
+
+    //L1
+    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
+    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
+    //L2
+    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
+    //L3
+    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
+    //L4
+    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
+    //L5
+    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
+    //L6
+    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
+    //L7
+    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
+    //L8
+    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
+    //L9
+    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
+    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
+    //L10
+    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
+    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
+
+    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
+    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
+
+    //clean
+    clReleaseMemObject(imageBufferOrg);
+    clReleaseMemObject(imageBufferTmp1);
+    clReleaseMemObject(imageBufferTmp2);
+    clReleaseMemObject(imageBufferDst);
+
+    clReleaseKernel(kernelConv1To8L1);
+    clReleaseKernel(kernelConv8To8L2);
+    clReleaseKernel(kernelConv8To8L3);
+    clReleaseKernel(kernelConv8To8L4);
+    clReleaseKernel(kernelConv8To8L5);
+    clReleaseKernel(kernelConv8To8L6);
+    clReleaseKernel(kernelConv8To8L7);
+    clReleaseKernel(kernelConv8To8L8);
+    clReleaseKernel(kernelConv8To8L9);
+    clReleaseKernel(kernelConvTranspose8To1L10);
+}
+
+void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    cl_int err;
+
+    cl_image_format format{};
+    cl_image_format tmpFormat{};
+
+    cl_image_desc dstDesc{};
+    cl_image_desc tmpDesc{};
+    cl_image_desc orgDesc{};
+
+    constexpr size_t orgin[3] = { 0,0,0 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+
+    const size_t orgSize[2] =
+    {
+        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+    const size_t dstSize[2] =
+    {
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+
+    //init frame
+    format.image_channel_data_type = CL_FLOAT;
     format.image_channel_order = CL_R;
 
     tmpFormat.image_channel_data_type = CL_FLOAT;

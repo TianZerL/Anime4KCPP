@@ -61,7 +61,7 @@ std::string Anime4KCPP::Cuda::Anime4K09::getFiltersInfo()
     return oss.str();
 }
 
-inline void Anime4KCPP::Cuda::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg)
+inline void Anime4KCPP::Cuda::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     ACCudaParamAnime4K09 cuParam{
         orgImg.cols, orgImg.rows,
@@ -69,10 +69,21 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Ma
         param.passes, param.pushColorCount,
         static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };
-    cuRunKernelAnime4K09(orgImg.data, dstImg.data, &cuParam);
+    cuRunKernelAnime4K09B(orgImg.data, dstImg.data, &cuParam);
 }
 
-void Anime4KCPP::Cuda::Anime4K09::processYUVImage()
+inline void Anime4KCPP::Cuda::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    ACCudaParamAnime4K09 cuParam{
+        orgImg.cols, orgImg.rows,
+        dstImg.cols, dstImg.rows,
+        param.passes, param.pushColorCount,
+        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
+    };
+    cuRunKernelAnime4K09F(reinterpret_cast<const float*>(orgImg.data), reinterpret_cast<float*>(dstImg.data), &cuParam);
+}
+
+void Anime4KCPP::Cuda::Anime4K09::processYUVImageB()
 {
     cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
     cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
@@ -81,7 +92,7 @@ void Anime4KCPP::Cuda::Anime4K09::processYUVImage()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernel(orgImg, dstImg);
+    runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -94,19 +105,19 @@ void Anime4KCPP::Cuda::Anime4K09::processYUVImage()
     dstV = yuv[V];
 }
 
-void Anime4KCPP::Cuda::Anime4K09::processRGBImage()
+void Anime4KCPP::Cuda::Anime4K09::processRGBImageB()
 {
     dstImg.create(H, W, CV_8UC4);
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernel(orgImg, dstImg);
+    runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
-void Anime4KCPP::Cuda::Anime4K09::processRGBVideo()
+void Anime4KCPP::Cuda::Anime4K09::processRGBVideoB()
 {
     videoIO->init(
         [this]()
@@ -117,7 +128,7 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBVideo()
             if (param.preprocessing)
                 FilterProcessor(orgFrame, param.preFilters).process();
             cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            runKernel(orgFrame, dstFrame);
+            runKernelB(orgFrame, dstFrame);
             cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
             if (param.postprocessing)//PostProcessing
                 FilterProcessor(dstFrame, param.postFilters).process();
@@ -126,6 +137,40 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBVideo()
         }
         , param.maxThreads
             ).process();
+}
+
+void Anime4KCPP::Cuda::Anime4K09::processYUVImageF()
+{
+    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+    std::vector<cv::Mat> yuv(3);
+    cv::split(dstImg, yuv);
+    dstY = yuv[Y];
+    dstU = yuv[U];
+    dstV = yuv[V];
+}
+
+void Anime4KCPP::Cuda::Anime4K09::processRGBImageF()
+{
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
 }
 
 Anime4KCPP::Processor::Type Anime4KCPP::Cuda::Anime4K09::getProcessorType() noexcept

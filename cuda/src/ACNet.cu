@@ -45,7 +45,7 @@ tl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 0] + tc2.w * HDNL##Level##kern
 ml2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 3] + mc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 4] + mr2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 5] +             \
 bl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 8] + HDNL##Level##biasL[L][n]
 
-#define RUNKERNEL(Level) \
+#define RUNKERNEL(Level, type) \
 conv1To8HDNL##Level <<<dimGrid, dimBlock >>> (inTex, surf1, param->orgW, param->orgH); \
 conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L2); \
 conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L3); \
@@ -55,7 +55,7 @@ conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->
 conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L7); \
 conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L8); \
 conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L9); \
-convTranspose8To1HDNL##Level <<<dimGridout, dimBlock >>> (surf1, outSurf, W, H);
+convTranspose8To1HDNL##Level<type> <<<dimGridout, dimBlock >>> (surf1, outSurf, W, H);
 
 inline __device__ float clamp(float f, float a, float b)
 {
@@ -6800,7 +6800,6 @@ __global__ static void conv1To8HDNL3(
 }
 
 
-
 __global__ static void conv8To8HDNL0(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H, int L)
@@ -7002,8 +7001,132 @@ __global__ static void conv8To8HDNL3(
 }
 
 
-
+template<typename T>
 __global__ static void convTranspose8To1HDNL0(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    T c = clamp(
+        mc1.x * HDNL0kernelsL10[0 + index] +
+        mc1.y * HDNL0kernelsL10[4 + index] +
+        mc1.z * HDNL0kernelsL10[8 + index] +
+        mc1.w * HDNL0kernelsL10[12 + index] +
+        mc2.x * HDNL0kernelsL10[16 + index] +
+        mc2.y * HDNL0kernelsL10[20 + index] +
+        mc2.z * HDNL0kernelsL10[24 + index] +
+        mc2.w * HDNL0kernelsL10[28 + index], 0.0f, 1.0f);
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+template<typename T>
+__global__ static void convTranspose8To1HDNL1(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    T c = clamp(
+        mc1.x * HDNL1kernelsL10[0 + index] +
+        mc1.y * HDNL1kernelsL10[4 + index] +
+        mc1.z * HDNL1kernelsL10[8 + index] +
+        mc1.w * HDNL1kernelsL10[12 + index] +
+        mc2.x * HDNL1kernelsL10[16 + index] +
+        mc2.y * HDNL1kernelsL10[20 + index] +
+        mc2.z * HDNL1kernelsL10[24 + index] +
+        mc2.w * HDNL1kernelsL10[28 + index], 0.0f, 1.0f);
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+template<typename T>
+__global__ static void convTranspose8To1HDNL2(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    T c = clamp(
+        mc1.x * HDNL2kernelsL10[0 + index] +
+        mc1.y * HDNL2kernelsL10[4 + index] +
+        mc1.z * HDNL2kernelsL10[8 + index] +
+        mc1.w * HDNL2kernelsL10[12 + index] +
+        mc2.x * HDNL2kernelsL10[16 + index] +
+        mc2.y * HDNL2kernelsL10[20 + index] +
+        mc2.z * HDNL2kernelsL10[24 + index] +
+        mc2.w * HDNL2kernelsL10[28 + index], 0.0f, 1.0f);
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+template<typename T>
+__global__ static void convTranspose8To1HDNL3(
+    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    int W, int H)
+{
+    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
+    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+
+    if (x >= W || y >= H)
+        return;
+
+    int index = (y & 1) * 2 + (x & 1);
+
+    float4 mc1, mc2;
+    const unsigned int  srcX = x / 2, srcY = y / 2;
+    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
+    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    T c = clamp(
+        mc1.x * HDNL3kernelsL10[0 + index] +
+        mc1.y * HDNL3kernelsL10[4 + index] +
+        mc1.z * HDNL3kernelsL10[8 + index] +
+        mc1.w * HDNL3kernelsL10[12 + index] +
+        mc2.x * HDNL3kernelsL10[16 + index] +
+        mc2.y * HDNL3kernelsL10[20 + index] +
+        mc2.z * HDNL3kernelsL10[24 + index] +
+        mc2.w * HDNL3kernelsL10[28 + index], 0.0f, 1.0f);
+
+    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+}
+
+template<>
+__global__ static void convTranspose8To1HDNL0<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7033,7 +7156,8 @@ __global__ static void convTranspose8To1HDNL0(
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
 
-__global__ static void convTranspose8To1HDNL1(
+template<>
+__global__ static void convTranspose8To1HDNL1<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7063,7 +7187,8 @@ __global__ static void convTranspose8To1HDNL1(
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
 
-__global__ static void convTranspose8To1HDNL2(
+template<>
+__global__ static void convTranspose8To1HDNL2<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7093,7 +7218,8 @@ __global__ static void convTranspose8To1HDNL2(
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
 
-__global__ static void convTranspose8To1HDNL3(
+template<>
+__global__ static void convTranspose8To1HDNL3<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7124,7 +7250,7 @@ __global__ static void convTranspose8To1HDNL3(
 }
 
 
-void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
+void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
 {
     cudaError_t err = cudaSuccess;
 
@@ -7187,7 +7313,7 @@ void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData,
     CheckCudaErr(err);
 
     err = cudaMemcpy2DToArray(cuInputArray, 0, 0, inputData,
-        param->orgW, param->orgW, param->orgH,
+        sizeof(uchar) * param->orgW, sizeof(uchar) * param->orgW, param->orgH,
         cudaMemcpyHostToDevice);
     CheckCudaErr(err);
 
@@ -7204,24 +7330,134 @@ void cuRunKernelACNet(const unsigned char* inputData, unsigned char* outputData,
     switch (param->HDNLevel)
     {
     case 0:
-        RUNKERNEL(0)
+        RUNKERNEL(0, uchar)
         break;
     case 1:
-        RUNKERNEL(1)
+        RUNKERNEL(1, uchar)
         break;
     case 2:
-        RUNKERNEL(2)
+        RUNKERNEL(2, uchar)
         break;
     case 3:
-        RUNKERNEL(3)
+        RUNKERNEL(3, uchar)
         break;
     default:
-        RUNKERNEL(0)
+        RUNKERNEL(0, uchar)
         break;
     }
 
-    err = cudaMemcpy2DFromArray(outputData, param->orgW * 2,
-        cuOutputArray, 0, 0, W, H,
+    err = cudaMemcpy2DFromArray(outputData, sizeof(uchar) * W,
+        cuOutputArray, 0, 0, sizeof(uchar) * W, H,
+        cudaMemcpyDeviceToHost);
+    CheckCudaErr(err);
+
+    cudaDestroyTextureObject(inTex);
+    cudaDestroySurfaceObject(surf1);
+    cudaDestroySurfaceObject(surf2);
+    cudaDestroySurfaceObject(outSurf);
+
+    cudaFreeArray(cuInputArray);
+    cudaFreeArray(cuArray1);
+    cudaFreeArray(cuArray2);
+    cudaFreeArray(cuOutputArray);
+}
+
+void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACNet* param)
+{
+    cudaError_t err = cudaSuccess;
+
+    cudaChannelFormatDesc inoutChannelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
+    cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
+    cudaExtent extent = make_cudaExtent(param->orgW, param->orgH, 2);
+
+    const int W = 2 * param->orgW, H = 2 * param->orgH;
+
+    cudaArray_t cuInputArray;
+    err = cudaMallocArray(&cuInputArray, &inoutChannelDesc,
+        param->orgW, param->orgH);
+    CheckCudaErr(err);
+
+    cudaArray_t cuArray1;
+    err = cudaMalloc3DArray(&cuArray1, &tmpChannelDesc, extent,
+        cudaArraySurfaceLoadStore | cudaArrayLayered);
+    CheckCudaErr(err);
+
+    cudaArray_t cuArray2;
+    err = cudaMalloc3DArray(&cuArray2, &tmpChannelDesc, extent,
+        cudaArraySurfaceLoadStore | cudaArrayLayered);
+    CheckCudaErr(err);
+
+    cudaArray_t cuOutputArray;
+    err = cudaMallocArray(&cuOutputArray, &inoutChannelDesc,
+        W, H, cudaArraySurfaceLoadStore);
+    CheckCudaErr(err);
+
+    struct cudaResourceDesc resDesc;
+    struct cudaTextureDesc texDesc;
+    memset(&resDesc, 0, sizeof(resDesc));
+    memset(&texDesc, 0, sizeof(texDesc));
+
+    texDesc.addressMode[0] = cudaAddressModeBorder;
+    texDesc.addressMode[1] = cudaAddressModeBorder;
+
+    resDesc.resType = cudaResourceTypeArray;
+
+    resDesc.res.array.array = cuInputArray;
+    cudaTextureObject_t inTex = 0;
+    err = cudaCreateTextureObject(&inTex, &resDesc, &texDesc, NULL);
+    CheckCudaErr(err);
+
+    resDesc.res.array.array = cuArray1;
+    cudaSurfaceObject_t surf1 = 0;
+    err = cudaCreateSurfaceObject(&surf1, &resDesc);
+    CheckCudaErr(err);
+
+    resDesc.res.array.array = cuArray2;
+    cudaSurfaceObject_t surf2 = 0;
+    err = cudaCreateSurfaceObject(&surf2, &resDesc);
+    CheckCudaErr(err);
+
+    resDesc.res.array.array = cuOutputArray;
+    cudaSurfaceObject_t outSurf = 0;
+    err = cudaCreateSurfaceObject(&outSurf, &resDesc);
+    CheckCudaErr(err);
+
+    err = cudaMemcpy2DToArray(cuInputArray, 0, 0, inputData,
+        sizeof(float) * param->orgW, sizeof(float) * param->orgW, param->orgH,
+        cudaMemcpyHostToDevice);
+    CheckCudaErr(err);
+
+    dim3 dimBlock(16, 16);
+    dim3 dimGrid(
+        (param->orgW + dimBlock.x - 1) / dimBlock.x,
+        (param->orgH + dimBlock.y - 1) / dimBlock.y
+    );
+    dim3 dimGridout(
+        (param->orgW * 2 + dimBlock.x - 1) / dimBlock.x,
+        (param->orgH * 2 + dimBlock.y - 1) / dimBlock.y
+    );
+
+    switch (param->HDNLevel)
+    {
+    case 0:
+        RUNKERNEL(0, float)
+            break;
+    case 1:
+        RUNKERNEL(1, float)
+            break;
+    case 2:
+        RUNKERNEL(2, float)
+            break;
+    case 3:
+        RUNKERNEL(3, float)
+            break;
+    default:
+        RUNKERNEL(0, float)
+            break;
+    }
+
+    err = cudaMemcpy2DFromArray(outputData, sizeof(float) * W,
+        cuOutputArray, 0, 0, sizeof(float) * W, H,
         cudaMemcpyDeviceToHost);
     CheckCudaErr(err);
 

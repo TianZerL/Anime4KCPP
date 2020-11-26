@@ -19,9 +19,12 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 private:
-    virtual void processYUVImage() override;
-    virtual void processRGBImage() override;
-    virtual void processRGBVideo() override;
+    virtual void processYUVImageB() override;
+    virtual void processRGBImageB() override;
+    virtual void processRGBVideoB() override;
+
+    virtual void processYUVImageF() override;
+    virtual void processRGBImageF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
 private:

@@ -26,7 +26,8 @@ public:
     ACNetProcessor() = default;;
     virtual ~ACNetProcessor() = default;
 
-    virtual void process(const cv::Mat & src, cv::Mat & dst) = 0;
+    virtual void processB(const cv::Mat & src, cv::Mat & dst) = 0;
+    virtual void processF(const cv::Mat& src, cv::Mat& dst) = 0;
 };
 
 class Anime4KCPP::CPU::ACNetHDNL0 : public ACNetProcessor
@@ -34,7 +35,8 @@ class Anime4KCPP::CPU::ACNetHDNL0 : public ACNetProcessor
 public:
     ACNetHDNL0() = default;
     virtual ~ACNetHDNL0() = default;
-    virtual void process(const cv::Mat & src, cv::Mat & dst) override;
+    virtual void processB(const cv::Mat & src, cv::Mat & dst) override;
+    virtual void processF(const cv::Mat & src, cv::Mat & dst) override;
 private:
     const static double kernelsL1[9 * 8];
     const static double kernels[8][9 * 8 * 8];
@@ -48,7 +50,8 @@ class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor
 public:
     ACNetHDNL1() = default;
     virtual ~ACNetHDNL1() = default;
-    virtual void process(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];
     const static double kernels[8][9 * 8 * 8];
@@ -62,7 +65,8 @@ class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor
 public:
     ACNetHDNL2() = default;
     virtual ~ACNetHDNL2() = default;
-    virtual void process(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];
     const static double kernels[8][9 * 8 * 8];
@@ -76,7 +80,8 @@ class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor
 public:
     ACNetHDNL3() = default;
     virtual ~ACNetHDNL3() = default;
-    virtual void process(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];
     const static double kernels[8][9 * 8 * 8];

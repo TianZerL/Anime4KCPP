@@ -31,13 +31,17 @@ public:
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
 private:
-    virtual void processYUVImage() override;
-    virtual void processRGBImage() override;
-    virtual void processRGBVideo() override;
+    virtual void processYUVImageB() override;
+    virtual void processRGBImageB() override;
+    virtual void processRGBVideoB() override;
+
+    virtual void processYUVImageF() override;
+    virtual void processRGBImageF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
 
-    void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     static void initOpenCL();
     static void releaseOpenCL() noexcept;
