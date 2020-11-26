@@ -46,16 +46,16 @@ ml2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 3] + mc2.w * HDNL##Level##kern
 bl2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w * HDNL##Level##kernelsL[L][n * 72 + 7 * 9 + 8] + HDNL##Level##biasL[L][n]
 
 #define RUNKERNEL(Level, type) \
-conv1To8HDNL##Level <<<dimGrid, dimBlock >>> (inTex, surf1, param->orgW, param->orgH); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L2); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L3); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L4); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L5); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L6); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L7); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf1, surf2, param->orgW, param->orgH, L8); \
-conv8To8HDNL##Level <<<dimGrid, dimBlock >>> (surf2, surf1, param->orgW, param->orgH, L9); \
-convTranspose8To1HDNL##Level<type> <<<dimGridout, dimBlock >>> (surf1, outSurf, W, H);
+conv1To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (inTex, surf1, param->orgW, param->orgH); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->orgW, param->orgH, L2); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf1, param->orgW, param->orgH, L3); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->orgW, param->orgH, L4); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf1, param->orgW, param->orgH, L5); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->orgW, param->orgH, L6); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf1, param->orgW, param->orgH, L7); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->orgW, param->orgH, L8); \
+conv8To8HDNL##Level <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf1, param->orgW, param->orgH, L9); \
+convTranspose8To1HDNL##Level<type> <<<dimGridout, dimBlock, 0, stream >>> (surf1, outSurf, W, H);
 
 inline __device__ float clamp(float f, float a, float b)
 {
@@ -7254,6 +7254,9 @@ void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData
 {
     cudaError_t err = cudaSuccess;
 
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
     cudaChannelFormatDesc inoutChannelDesc = cudaCreateChannelDesc(8, 0, 0, 0, cudaChannelFormatKindUnsigned);
     cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
     cudaExtent extent = make_cudaExtent(param->orgW, param->orgH, 2);
@@ -7312,9 +7315,9 @@ void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData
     err = cudaCreateSurfaceObject(&outSurf, &resDesc);
     CheckCudaErr(err);
 
-    err = cudaMemcpy2DToArray(cuInputArray, 0, 0, inputData,
+    err = cudaMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
         sizeof(uchar) * param->orgW, sizeof(uchar) * param->orgW, param->orgH,
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
     dim3 dimBlock(16, 16);
@@ -7346,9 +7349,18 @@ void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData
         break;
     }
 
-    err = cudaMemcpy2DFromArray(outputData, sizeof(uchar) * W,
+    err = cudaHostRegister(outputData, sizeof(uchar) * W * H, cudaHostRegisterDefault);
+    CheckCudaErr(err);
+
+    err = cudaMemcpy2DFromArrayAsync(outputData, sizeof(uchar) * W,
         cuOutputArray, 0, 0, sizeof(uchar) * W, H,
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost, stream);
+    CheckCudaErr(err);
+
+    err = cudaStreamSynchronize(stream);
+    CheckCudaErr(err);
+
+    err = cudaHostUnregister(outputData);
     CheckCudaErr(err);
 
     cudaDestroyTextureObject(inTex);
@@ -7360,11 +7372,16 @@ void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData
     cudaFreeArray(cuArray1);
     cudaFreeArray(cuArray2);
     cudaFreeArray(cuOutputArray);
+
+    cudaStreamDestroy(stream);
 }
 
 void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACNet* param)
 {
     cudaError_t err = cudaSuccess;
+
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
 
     cudaChannelFormatDesc inoutChannelDesc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
     cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
@@ -7422,9 +7439,9 @@ void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACN
     err = cudaCreateSurfaceObject(&outSurf, &resDesc);
     CheckCudaErr(err);
 
-    err = cudaMemcpy2DToArray(cuInputArray, 0, 0, inputData,
+    err = cudaMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
         sizeof(float) * param->orgW, sizeof(float) * param->orgW, param->orgH,
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
     dim3 dimBlock(16, 16);
@@ -7456,9 +7473,18 @@ void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACN
             break;
     }
 
-    err = cudaMemcpy2DFromArray(outputData, sizeof(float) * W,
+    err = cudaHostRegister(outputData, sizeof(float) * W * H, cudaHostRegisterDefault);
+    CheckCudaErr(err);
+
+    err = cudaMemcpy2DFromArrayAsync(outputData, sizeof(float) * W,
         cuOutputArray, 0, 0, sizeof(float) * W, H,
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost, stream);
+    CheckCudaErr(err);
+
+    err = cudaStreamSynchronize(stream);
+    CheckCudaErr(err);
+
+    err = cudaHostUnregister(outputData);
     CheckCudaErr(err);
 
     cudaDestroyTextureObject(inTex);
@@ -7470,4 +7496,6 @@ void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACN
     cudaFreeArray(cuArray1);
     cudaFreeArray(cuArray2);
     cudaFreeArray(cuOutputArray);
+
+    cudaStreamDestroy(stream);
 }

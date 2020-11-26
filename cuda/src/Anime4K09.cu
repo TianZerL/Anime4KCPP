@@ -522,6 +522,9 @@ void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* output
 {
     cudaError_t err = cudaSuccess;
     
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
+
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(8, 8, 8, 8, cudaChannelFormatKindUnsigned);
 
     cudaArray_t cuArray0;
@@ -573,9 +576,9 @@ void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* output
     err = cudaCreateSurfaceObject(&surf3, &resDesc);
     CheckCudaErr(err);
 
-    err = cudaMemcpy2DToArray(cuArray0, 0, 0, inputData,
+    err = cudaMemcpy2DToArrayAsync(cuArray0, 0, 0, inputData,
         sizeof(uchar4) * param->orgW, sizeof(uchar4) * param->orgW, param->orgH,
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
     dim3 dimBlock(16, 16);
@@ -586,23 +589,32 @@ void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* output
 
     {
         int i;
-        getGrayB <<<dimGrid, dimBlock>>> (tex, surf1, param->W, param->H);
+        getGrayB <<<dimGrid, dimBlock, 0, stream >>> (tex, surf1, param->W, param->H);
         for (i = 0; i < param->passes && i < param->pushColorCount; i++)
         {
-            pushColorB <<<dimGrid, dimBlock>>> (surf1, surf2, param->W, param->H, param->strengthColor);
-            getGradientB <<<dimGrid, dimBlock>>> (surf2, surf3, param->W, param->H);
-            pushGradientB <<<dimGrid, dimBlock>>> (surf3, surf1, param->W, param->H, param->strengthGradient);
+            pushColorB <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->W, param->H, param->strengthColor);
+            getGradientB <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf3, param->W, param->H);
+            pushGradientB <<<dimGrid, dimBlock, 0, stream >>> (surf3, surf1, param->W, param->H, param->strengthGradient);
         }
         while (i++ < param->passes)
         {
-            getGradientB <<<dimGrid, dimBlock>>> (surf1, surf2, param->W, param->H);
-            pushGradientB <<<dimGrid, dimBlock>>> (surf2, surf1, param->W, param->H, param->strengthGradient);
+            getGradientB <<<dimGrid, dimBlock, 0, stream >>> (surf1, surf2, param->W, param->H);
+            pushGradientB <<<dimGrid, dimBlock, 0, stream >>> (surf2, surf1, param->W, param->H, param->strengthGradient);
         }
     }
 
-    err = cudaMemcpy2DFromArray(outputData, sizeof(uchar4) * param->W, cuArray1, 0, 0,
+    err = cudaHostRegister(outputData, sizeof(uchar4) * param->W * param->H, cudaHostRegisterDefault);
+    CheckCudaErr(err);
+
+    err = cudaMemcpy2DFromArrayAsync(outputData, sizeof(uchar4) * param->W, cuArray1, 0, 0,
         sizeof(uchar4) * param->W, param->H,
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost, stream);
+    CheckCudaErr(err);
+
+    err = cudaStreamSynchronize(stream);
+    CheckCudaErr(err);
+
+    err = cudaHostUnregister(outputData);
     CheckCudaErr(err);
 
     cudaDestroyTextureObject(tex);
@@ -614,11 +626,16 @@ void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* output
     cudaFreeArray(cuArray1);
     cudaFreeArray(cuArray2);
     cudaFreeArray(cuArray3);
+
+    cudaStreamDestroy(stream);
 }
 
 void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaParamAnime4K09* param)
 {
     cudaError_t err = cudaSuccess;
+
+    cudaStream_t stream;
+    cudaStreamCreate(&stream);
 
     cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
 
@@ -670,9 +687,9 @@ void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaPara
     err = cudaCreateSurfaceObject(&surf3, &resDesc);
     CheckCudaErr(err);
 
-    err = cudaMemcpy2DToArray(cuArray0, 0, 0, inputData,
+    err = cudaMemcpy2DToArrayAsync(cuArray0, 0, 0, inputData,
         sizeof(float4) * param->orgW, sizeof(float4) * param->orgW, param->orgH,
-        cudaMemcpyHostToDevice);
+        cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
     dim3 dimBlock(16, 16);
@@ -683,23 +700,32 @@ void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaPara
 
     {
         int i;
-        getGrayF << <dimGrid, dimBlock >> > (tex, surf1, param->W, param->H);
+        getGrayF << <dimGrid, dimBlock, 0, stream >> > (tex, surf1, param->W, param->H);
         for (i = 0; i < param->passes && i < param->pushColorCount; i++)
         {
-            pushColorF << <dimGrid, dimBlock >> > (surf1, surf2, param->W, param->H, param->strengthColor);
-            getGradientF << <dimGrid, dimBlock >> > (surf2, surf3, param->W, param->H);
-            pushGradientF << <dimGrid, dimBlock >> > (surf3, surf1, param->W, param->H, param->strengthGradient);
+            pushColorF << <dimGrid, dimBlock, 0, stream >> > (surf1, surf2, param->W, param->H, param->strengthColor);
+            getGradientF << <dimGrid, dimBlock, 0, stream >> > (surf2, surf3, param->W, param->H);
+            pushGradientF << <dimGrid, dimBlock, 0, stream >> > (surf3, surf1, param->W, param->H, param->strengthGradient);
         }
         while (i++ < param->passes)
         {
-            getGradientF << <dimGrid, dimBlock >> > (surf1, surf2, param->W, param->H);
-            pushGradientF << <dimGrid, dimBlock >> > (surf2, surf1, param->W, param->H, param->strengthGradient);
+            getGradientF << <dimGrid, dimBlock, 0, stream >> > (surf1, surf2, param->W, param->H);
+            pushGradientF << <dimGrid, dimBlock, 0, stream >> > (surf2, surf1, param->W, param->H, param->strengthGradient);
         }
     }
 
-    err = cudaMemcpy2DFromArray(outputData, sizeof(float4) * param->W, cuArray1, 0, 0,
+    err = cudaHostRegister(outputData, sizeof(float4) * param->W * param->H, cudaHostRegisterDefault);
+    CheckCudaErr(err);
+
+    err = cudaMemcpy2DFromArrayAsync(outputData, sizeof(float4) * param->W, cuArray1, 0, 0,
         sizeof(float4) * param->W, param->H,
-        cudaMemcpyDeviceToHost);
+        cudaMemcpyDeviceToHost, stream);
+    CheckCudaErr(err);
+
+    err = cudaStreamSynchronize(stream);
+    CheckCudaErr(err);
+
+    err = cudaHostUnregister(outputData);
     CheckCudaErr(err);
 
     cudaDestroyTextureObject(tex);
@@ -711,4 +737,6 @@ void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaPara
     cudaFreeArray(cuArray1);
     cudaFreeArray(cuArray2);
     cudaFreeArray(cuArray3);
+
+    cudaStreamDestroy(stream);
 }
