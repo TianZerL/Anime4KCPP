@@ -658,8 +658,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 }
                 info = ret();
             }
-            break;
 #endif // ENABLE_CUDA
+            break;
             }
         }
         catch (const std::exception& err)

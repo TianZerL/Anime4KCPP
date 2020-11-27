@@ -93,7 +93,6 @@ void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
     {
         releaseOpenCL();
         context = nullptr;
-        commandQueue = nullptr;
         for (int i = HDNL0; i < TotalTypeCount; i++)
             program[i] = nullptr;
         device = nullptr;
@@ -415,7 +414,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
 
 void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err;
+    cl_int err = CL_SUCCESS;
 
     cl_image_format format{};
     cl_image_format tmpFormat{};
@@ -462,6 +461,26 @@ void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstIm
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
+    //init command queue
+#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
+    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+#else
+    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+        {
+            commandQueue = clCreateCommandQueue(context, device, 0, &err);
+            if (err != CL_SUCCESS)
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+        else
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+    }
+#endif
+
     cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
     if (err != CL_SUCCESS)
     {
@@ -677,11 +696,13 @@ void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstIm
     clReleaseKernel(kernelConv8To8L8);
     clReleaseKernel(kernelConv8To8L9);
     clReleaseKernel(kernelConvTranspose8To1L10);
+
+    clReleaseCommandQueue(commandQueue);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err;
+    cl_int err = CL_SUCCESS;
 
     cl_image_format format{};
     cl_image_format tmpFormat{};
@@ -728,6 +749,26 @@ void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstIm
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
+    //init command queue
+#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
+    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+#else
+    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+        {
+            commandQueue = clCreateCommandQueue(context, device, 0, &err);
+            if (err != CL_SUCCESS)
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+        else
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+    }
+#endif
+
     cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
     if (err != CL_SUCCESS)
     {
@@ -943,11 +984,13 @@ void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstIm
     clReleaseKernel(kernelConv8To8L8);
     clReleaseKernel(kernelConv8To8L9);
     clReleaseKernel(kernelConvTranspose8To1L10);
+
+    clReleaseCommandQueue(commandQueue);
 }
 
 void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
 {
-    cl_int err = 0;
+    cl_int err = CL_SUCCESS;
     cl_uint platforms = 0;
     cl_uint devices = 0;
     cl_platform_id currentplatform = nullptr;
@@ -1004,40 +1047,6 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         releaseOpenCL();
         throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
     }
-
-    //init command queue
-
-#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
-    commandQueue = clCreateCommandQueue(context, device, 0, &err);
-    if (err != CL_SUCCESS)
-    {
-        releaseOpenCL();
-        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-    }
-#else
-    commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-        {
-#ifdef _MSC_VER
-#pragma warning (disable: 4996)// this is for building in MSVC
-#endif // _MSCV_VER
-            //do not worry about this warning, it is for compatibility
-            commandQueue = clCreateCommandQueue(context, device, 0, &err);
-            if (err != CL_SUCCESS)
-            {
-                releaseOpenCL();
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-            }
-        }
-        else
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-    }
-#endif // SPECIAL OPENCL VERSION
 
 #ifndef BUILT_IN_KERNEL
     //read kernel files
@@ -1279,8 +1288,6 @@ void Anime4KCPP::OpenCL::ACNet::releaseOpenCL() noexcept
         if (program[i] != nullptr)
             clReleaseProgram(program[i]);
     }
-    if (commandQueue != nullptr)
-        clReleaseCommandQueue(commandQueue);
     if (context != nullptr)
         clReleaseContext(context);
     if (device != nullptr)
@@ -1307,7 +1314,6 @@ Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() noexce
 //init OpenCL arguments
 bool Anime4KCPP::OpenCL::ACNet::isInitialized = false;
 cl_context Anime4KCPP::OpenCL::ACNet::context = nullptr;
-cl_command_queue Anime4KCPP::OpenCL::ACNet::commandQueue = nullptr;
 cl_program Anime4KCPP::OpenCL::ACNet::program[TotalTypeCount] = { nullptr };
 cl_device_id Anime4KCPP::OpenCL::ACNet::device = nullptr;
 unsigned int Anime4KCPP::OpenCL::ACNet::pID = 0U;

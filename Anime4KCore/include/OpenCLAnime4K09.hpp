@@ -2,6 +2,7 @@
 
 #include<fstream>
 
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #ifdef __APPLE__
 #include<OpenCL/opencl.h>
 #else
@@ -53,7 +54,6 @@ private:
     static bool isInitialized;
 
     static cl_context context;
-    static cl_command_queue commandQueue;
     static cl_program program;
     static cl_device_id device;
 

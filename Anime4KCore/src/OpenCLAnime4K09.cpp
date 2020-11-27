@@ -35,7 +35,6 @@ void Anime4KCPP::OpenCL::Anime4K09::releaseGPU() noexcept
     {
         releaseOpenCL();
         context = nullptr;
-        commandQueue = nullptr;
         program = nullptr;
         device = nullptr;
         isInitialized = false;
@@ -248,7 +247,8 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageF()
 
 void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err;
+    cl_int err = CL_SUCCESS;
+
     int i;
 
     cl_image_format format{};
@@ -284,6 +284,26 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& d
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
+    //init command queue
+#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
+    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+#else
+    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+        {
+            commandQueue = clCreateCommandQueue(context, device, 0, &err);
+            if (err != CL_SUCCESS)
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+        else
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+    }
+#endif
+
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
     if (param.zoomFactor == 2.0F)
@@ -416,11 +436,13 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& d
     clReleaseKernel(kernelPushColor);
     clReleaseKernel(kernelGetGradient);
     clReleaseKernel(kernelPushGradient);
+
+    clReleaseCommandQueue(commandQueue);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err;
+    cl_int err = CL_SUCCESS;
     int i;
 
     cl_image_format format{};
@@ -456,6 +478,26 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& d
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
+    //init command queue
+#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
+    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+#else
+    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+        {
+            commandQueue = clCreateCommandQueue(context, device, 0, &err);
+            if (err != CL_SUCCESS)
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+        else
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+    }
+#endif
+
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
     if (param.zoomFactor == 2.0F)
@@ -588,11 +630,13 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& d
     clReleaseKernel(kernelPushColor);
     clReleaseKernel(kernelGetGradient);
     clReleaseKernel(kernelPushGradient);
+
+    clReleaseCommandQueue(commandQueue);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
 {
-    cl_int err = 0;
+    cl_int err = CL_SUCCESS;
     cl_uint platforms = 0;
     cl_uint devices = 0;
     cl_platform_id currentplatform = nullptr;
@@ -650,39 +694,6 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
     }
 
-    //init command queue
-#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
-    commandQueue = clCreateCommandQueue(context, device, 0, &err);
-    if (err != CL_SUCCESS)
-    {
-        releaseOpenCL();
-        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-    }
-#else
-    commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-        {
-#ifdef _MSC_VER
-#pragma warning (disable: 4996)// this is for building in MSVC
-#endif // _MSCV_VER
-            //do not worry about this warning, it is for compatibility
-            commandQueue = clCreateCommandQueue(context, device, 0, &err);
-            if (err != CL_SUCCESS)
-            {
-                releaseOpenCL();
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-            }
-        }
-        else
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-    }
-#endif // SPECIAL OPENCL VERSION
-
 #ifndef BUILT_IN_KERNEL
     //read kernel files
     std::string Anime4KCPPKernelSourceString = readKernel("Anime4KCPPKernel.cl");
@@ -734,8 +745,6 @@ void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept
 {
     if (program != nullptr)
         clReleaseProgram(program);
-    if (commandQueue != nullptr)
-        clReleaseCommandQueue(commandQueue);
     if (context != nullptr)
         clReleaseContext(context);
     if (device != nullptr)
@@ -762,7 +771,6 @@ Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() no
 //init OpenCL arguments
 bool Anime4KCPP::OpenCL::Anime4K09::isInitialized = false;
 cl_context Anime4KCPP::OpenCL::Anime4K09::context = nullptr;
-cl_command_queue Anime4KCPP::OpenCL::Anime4K09::commandQueue = nullptr;
 cl_program Anime4KCPP::OpenCL::Anime4K09::program = nullptr;
 cl_device_id Anime4KCPP::OpenCL::Anime4K09::device = nullptr;
 unsigned int Anime4KCPP::OpenCL::Anime4K09::pID = 0U;

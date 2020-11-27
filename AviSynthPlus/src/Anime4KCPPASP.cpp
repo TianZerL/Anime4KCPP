@@ -416,8 +416,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                         << "    " + ret() << std::endl;
                     env->ThrowError(err.str().c_str());
                 }
-#endif // ENABLE_CUDA
             }
+#endif // ENABLE_CUDA
             break;
             }
         }
