@@ -46,23 +46,25 @@ template<typename T>
 class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const unsigned int pID = 0, const unsigned int dID = 0);
+    Manager(const unsigned int pID = 0, const unsigned int dID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
 private:
     unsigned int pID, dID;
+    int OpenCLQueueNum;
+    bool OpenCLParallelIO;
 };
 
 template<typename T>
-inline Anime4KCPP::OpenCL::Manager<T>::Manager(const unsigned int pID, const unsigned int dID)
-    : pID(pID), dID(dID) {}
+inline Anime4KCPP::OpenCL::Manager<T>::Manager(const unsigned int pID, const unsigned int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO) {}
 
 template<typename T>
 inline void Anime4KCPP::OpenCL::Manager<T>::init()
 {
     if (!T::isInitializedGPU())
-        T::initGPU(pID, dID);
+        T::initGPU(pID, dID, OpenCLQueueNum, OpenCLParallelIO);
 }
 
 template<typename T>
@@ -82,22 +84,24 @@ template<>
 class Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet> : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const unsigned int pID = 0, const unsigned int dID = 0, const CNNType type = CNNType::Default);
+    Manager(const unsigned int pID = 0, const unsigned int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
 private:
     unsigned int pID, dID;
+    int OpenCLQueueNum;
+    bool OpenCLParallelIO;
     CNNType type;
 };
 
-inline Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::Manager(const unsigned int pID, const unsigned int dID, const CNNType type)
-    : pID(pID), dID(dID), type(type) {}
+inline Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::Manager(const unsigned int pID, const unsigned int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
 
 inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::init()
 {
     if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-        Anime4KCPP::OpenCL::ACNet::initGPU(pID, dID, type);
+        Anime4KCPP::OpenCL::ACNet::initGPU(pID, dID, type, OpenCLQueueNum, OpenCLParallelIO);
 }
 
 inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::release()

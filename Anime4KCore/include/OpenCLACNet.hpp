@@ -38,7 +38,11 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 
-    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const CNNType type = CNNType::Default);
+    static void initGPU(unsigned int platformID = 0, 
+        unsigned int deviceID = 0, 
+        const CNNType type = CNNType::Default, 
+        const int OpenCLQueueNum = 4,
+        const bool OpenCLParallelIO = false);
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
 private:
@@ -53,6 +57,8 @@ private:
 
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelPB(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelPF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     static void initOpenCL(const CNNType type);
     static void releaseOpenCL() noexcept;
@@ -63,6 +69,13 @@ private:
     static bool isInitialized;
 
     static cl_context context;
+
+    static int commandQueueNum;
+    static int commandQueueCount;
+    static std::vector<cl_command_queue> commandQueueList;
+    static bool parallelIO;
+    static cl_command_queue commandQueueIO;
+
     static cl_program program[TotalTypeCount];
     static cl_device_id device;
 

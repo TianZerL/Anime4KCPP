@@ -21,6 +21,8 @@ typedef struct Anime4KCPPData {
     bool HDN = false;
     int HDNLevel = 1;
     unsigned int pID = 0, dID = 0;
+    int OpenCLQueueNum = 4;
+    bool OpenCLParallelIO = false;
     Anime4KCPP::ACCreator acCreator;
     Anime4KCPP::Parameters parameters;
     GPGPU GPGPUModel = GPGPU::OpenCL;
@@ -36,9 +38,16 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
         {
         case GPGPU::OpenCL:
             if (data->CNN)
-                data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(data->pID, data->dID);
+                data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                    data->pID, data->dID, 
+                    Anime4KCPP::CNNType::Default, 
+                    data->OpenCLQueueNum,
+                    data->OpenCLParallelIO);
             else
-                data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(data->pID, data->dID);
+                data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                    data->pID, data->dID, 
+                    data->OpenCLQueueNum,
+                    data->OpenCLParallelIO);
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -565,6 +574,20 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err || !tmpData.GPU)
         tmpData.dID = 0;
 
+    tmpData.OpenCLQueueNum = vsapi->propGetInt(in, "OpenCLQueueNum", 0, &err);
+    if (err)
+        tmpData.OpenCLQueueNum = 4;
+    else if (tmpData.OpenCLQueueNum < 1)
+    {
+        vsapi->setError(out, "Anime4KCPP: OpenCLQueueNum must >= 1");
+        vsapi->freeNode(tmpData.node);
+        return;
+    }
+
+    tmpData.OpenCLParallelIO = vsapi->propGetInt(in, "OpenCLParallelIO", 0, &err);
+    if (err)
+        tmpData.OpenCLParallelIO = false;
+
     bool safeMode = vsapi->propGetInt(in, "safeMode", 0, &err);
     if (err)
         safeMode = true;
@@ -780,6 +803,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "HDNLevel:int:opt;"
         "platformID:int:opt;"
         "deviceID:int:opt;"
+        "OpenCLQueueNum:int:opt;"
+        "OpenCLParallelIO:int:opt;"
         "safeMode:int:opt",
         Anime4KCPPCreate, nullptr, plugin);
 

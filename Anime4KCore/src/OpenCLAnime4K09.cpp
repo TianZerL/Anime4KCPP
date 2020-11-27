@@ -18,12 +18,14 @@ throw ACException<ExceptionType::GPU, true>(err, errCode); \
 Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters), nWidth(0.0), nHeight(0.0) {};
 
-void Anime4KCPP::OpenCL::Anime4K09::initGPU(unsigned int platformID, unsigned int deviceID)
+void Anime4KCPP::OpenCL::Anime4K09::initGPU(unsigned int platformID, unsigned int deviceID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
 {
     if (!isInitialized)
     {
         pID = platformID;
         dID = deviceID;
+        commandQueueNum = OpenCLQueueNum;
+        parallelIO = OpenCLParallelIO;
         initOpenCL();
         isInitialized = true;
     }
@@ -35,6 +37,8 @@ void Anime4KCPP::OpenCL::Anime4K09::releaseGPU() noexcept
     {
         releaseOpenCL();
         context = nullptr;
+        std::fill(commandQueueList.begin(), commandQueueList.end(), nullptr);
+        commandQueueIO = nullptr;
         program = nullptr;
         device = nullptr;
         isInitialized = false;
@@ -120,7 +124,10 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImageB()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelB(orgImg, dstImg);
+    if (parallelIO)
+        runKernelPB(orgImg, dstImg);
+    else
+        runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -150,7 +157,10 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageB()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelB(orgImg, dstImg);
+    if (parallelIO)
+        runKernelPB(orgImg, dstImg);
+    else
+        runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -178,7 +188,10 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBVideoB()
             if (param.preprocessing)
                 FilterProcessor(orgFrame, param.preFilters).process();
             cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            runKernelB(orgFrame, dstFrame);
+            if (parallelIO)
+                runKernelPB(orgFrame, dstFrame);
+            else
+                runKernelB(orgFrame, dstFrame);
             cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
             if (param.postprocessing)//PostProcessing
                 FilterProcessor(dstFrame, param.postFilters).process();
@@ -209,7 +222,10 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImageF()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
+    if (parallelIO)
+        runKernelPF(orgImg, dstImg);
+    else
+        runKernelF(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -239,7 +255,10 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageF()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
+    if (parallelIO)
+        runKernelPF(orgImg, dstImg);
+    else
+        runKernelF(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -284,25 +303,9 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& d
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
-    //init command queue
-#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
-    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-#else
-    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-        {
-            commandQueue = clCreateCommandQueue(context, device, 0, &err);
-            if (err != CL_SUCCESS)
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-        else
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-    }
-#endif
+    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
+    if (commandQueueCount >= commandQueueNum)
+        commandQueueCount = 0;
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
@@ -436,8 +439,6 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& d
     clReleaseKernel(kernelPushColor);
     clReleaseKernel(kernelGetGradient);
     clReleaseKernel(kernelPushGradient);
-
-    clReleaseCommandQueue(commandQueue);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
@@ -478,25 +479,9 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& d
     dstDesc.image_width = dstImg.cols;
     dstDesc.buffer = nullptr;
 
-    //init command queue
-#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
-    cl_command_queue commandQueue = clCreateCommandQueue(context, device, 0, &err);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-#else
-    cl_command_queue commandQueue = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-        {
-            commandQueue = clCreateCommandQueue(context, device, 0, &err);
-            if (err != CL_SUCCESS)
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-        else
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-    }
-#endif
+    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
+    if (commandQueueCount >= commandQueueNum)
+        commandQueueCount = 0;
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
@@ -630,8 +615,376 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& d
     clReleaseKernel(kernelPushColor);
     clReleaseKernel(kernelGetGradient);
     clReleaseKernel(kernelPushGradient);
+}
 
-    clReleaseCommandQueue(commandQueue);
+void Anime4KCPP::OpenCL::Anime4K09::runKernelPB(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    cl_int err = CL_SUCCESS;
+    cl_event writeFinishedEvent = nullptr;
+    cl_event readReadyEvent = nullptr;
+    cl_event readFinishedEvent = nullptr;
+    int i;
+
+    cl_image_format format{};
+
+    cl_image_desc dstDesc{};
+    cl_image_desc orgDesc{};
+
+    constexpr size_t orgin[3] = { 0,0,0 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+    const size_t size[2] =
+    {
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+
+    const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
+    const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
+    const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
+    const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
+
+    //init frame
+    format.image_channel_data_type = CL_UNORM_INT8;
+    format.image_channel_order = CL_RGBA;
+
+    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
+    orgDesc.buffer = nullptr;
+
+    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
+    dstDesc.buffer = nullptr;
+
+    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
+    if (commandQueueCount >= commandQueueNum)
+        commandQueueCount = 0;
+
+    //kernel for each thread
+    cl_kernel kernelGetGray = nullptr;
+    if (param.zoomFactor == 2.0F)
+        kernelGetGray = clCreateKernel(program, "getGray", &err);
+    else
+        kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGray", err);
+    }
+    cl_kernel kernelPushColor = clCreateKernel(program, "pushColor", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushColor", err);
+    }
+    cl_kernel kernelGetGradient = clCreateKernel(program, "getGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGradient", err);
+    }
+    cl_kernel kernelPushGradient = clCreateKernel(program, "pushGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        clReleaseKernel(kernelGetGradient);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushGradient", err);
+    }
+
+    //imageBuffer
+    //for getGray
+    cl_mem imageBuffer0 = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer0 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 1
+    cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer1 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 2
+    cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer2 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 3
+    cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        clReleaseMemObject(imageBuffer2);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer3 error, video memory may be insufficient.", err);
+    }
+
+    //set arguments
+    //getGray
+    err = clSetKernelArg(kernelGetGray, 0, sizeof(cl_mem), &imageBuffer0);
+    err |= clSetKernelArg(kernelGetGray, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelGetGray, 2, sizeof(cl_float), &normalizedWidth);
+    err |= clSetKernelArg(kernelGetGray, 3, sizeof(cl_float), &normalizedHeight);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error", err)
+        //pushColor
+    err = clSetKernelArg(kernelPushColor, 0, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushColor, 1, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelPushColor, 2, sizeof(cl_float), &pushColorStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error", err)
+        //getGradient
+    err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer3);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error", err)
+        //pushGradient
+    err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer3);
+    err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error", err)
+
+    //enqueue
+    clEnqueueWriteImage(commandQueueIO, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, &writeFinishedEvent);
+    clEnqueueNDRangeKernel(commandQueue, kernelGetGray, 2, nullptr, size, nullptr, 1, &writeFinishedEvent, nullptr);
+    for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
+    {
+        clEnqueueNDRangeKernel(commandQueue, kernelPushColor, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+    }
+    if (i < param.passes)
+    {
+        //reset getGradient
+        err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
+            //reset pushGradient
+            err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
+        err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
+
+            while (i++ < param.passes)
+            {
+                clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+                clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+            }
+    }
+    clEnqueueMarker(commandQueue, &readReadyEvent);
+    clEnqueueReadImage(commandQueueIO, imageBuffer1, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
+
+    clWaitForEvents(1, &readFinishedEvent);
+
+    //clean
+    clReleaseMemObject(imageBuffer3);
+    clReleaseMemObject(imageBuffer2);
+    clReleaseMemObject(imageBuffer1);
+    clReleaseMemObject(imageBuffer0);
+
+    clReleaseKernel(kernelGetGray);
+    clReleaseKernel(kernelPushColor);
+    clReleaseKernel(kernelGetGradient);
+    clReleaseKernel(kernelPushGradient);
+
+    clReleaseEvent(writeFinishedEvent);
+    clReleaseEvent(readReadyEvent);
+    clReleaseEvent(readFinishedEvent);
+}
+
+void Anime4KCPP::OpenCL::Anime4K09::runKernelPF(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    cl_int err = CL_SUCCESS;
+    cl_event writeFinishedEvent = nullptr;
+    cl_event readReadyEvent = nullptr;
+    cl_event readFinishedEvent = nullptr;
+    int i;
+
+    cl_image_format format{};
+
+    cl_image_desc dstDesc{};
+    cl_image_desc orgDesc{};
+
+    constexpr size_t orgin[3] = { 0,0,0 };
+    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+    const size_t size[2] =
+    {
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+
+    const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
+    const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
+    const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
+    const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
+
+    //init frame
+    format.image_channel_data_type = CL_FLOAT;
+    format.image_channel_order = CL_RGBA;
+
+    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    orgDesc.image_height = orgImg.rows;
+    orgDesc.image_width = orgImg.cols;
+    orgDesc.buffer = nullptr;
+
+    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
+    dstDesc.image_height = dstImg.rows;
+    dstDesc.image_width = dstImg.cols;
+    dstDesc.buffer = nullptr;
+
+    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
+    if (commandQueueCount >= commandQueueNum)
+        commandQueueCount = 0;
+
+    //kernel for each thread
+    cl_kernel kernelGetGray = nullptr;
+    if (param.zoomFactor == 2.0F)
+        kernelGetGray = clCreateKernel(program, "getGray", &err);
+    else
+        kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGray", err);
+    }
+    cl_kernel kernelPushColor = clCreateKernel(program, "pushColor", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushColor", err);
+    }
+    cl_kernel kernelGetGradient = clCreateKernel(program, "getGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel getGradient", err);
+    }
+    cl_kernel kernelPushGradient = clCreateKernel(program, "pushGradient", &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseKernel(kernelGetGray);
+        clReleaseKernel(kernelPushColor);
+        clReleaseKernel(kernelGetGradient);
+        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel pushGradient", err);
+    }
+
+    //imageBuffer
+    //for getGray
+    cl_mem imageBuffer0 = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer0 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 1
+    cl_mem imageBuffer1 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer1 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 2
+    cl_mem imageBuffer2 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer2 error, video memory may be insufficient.", err);
+    }
+    //tmp buffer 3
+    cl_mem imageBuffer3 = clCreateImage(context, CL_MEM_READ_WRITE, &format, &dstDesc, nullptr, &err);
+    if (err != CL_SUCCESS)
+    {
+        clReleaseMemObject(imageBuffer0);
+        clReleaseMemObject(imageBuffer1);
+        clReleaseMemObject(imageBuffer2);
+        throw ACException<ExceptionType::GPU, true>("Request imageBuffer3 error, video memory may be insufficient.", err);
+    }
+
+    //set arguments
+    //getGray
+    err = clSetKernelArg(kernelGetGray, 0, sizeof(cl_mem), &imageBuffer0);
+    err |= clSetKernelArg(kernelGetGray, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelGetGray, 2, sizeof(cl_float), &normalizedWidth);
+    err |= clSetKernelArg(kernelGetGray, 3, sizeof(cl_float), &normalizedHeight);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGray error", err)
+    //pushColor
+    err = clSetKernelArg(kernelPushColor, 0, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushColor, 1, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelPushColor, 2, sizeof(cl_float), &pushColorStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushColor error", err)
+    //getGradient
+    err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer2);
+    err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer3);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: getGradient error", err)
+    //pushGradient
+    err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer3);
+    err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+    err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+    if (err != CL_SUCCESS)
+        CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: pushGradient error", err)
+
+    //enqueue
+    clEnqueueWriteImage(commandQueueIO, imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, &writeFinishedEvent);
+    clEnqueueNDRangeKernel(commandQueue, kernelGetGray, 2, nullptr, size, nullptr, 1, &writeFinishedEvent, nullptr);
+    for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
+    {
+        clEnqueueNDRangeKernel(commandQueue, kernelPushColor, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+    }
+    if (i < param.passes)
+    {
+        //reset getGradient
+        err = clSetKernelArg(kernelGetGradient, 0, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
+            //reset pushGradient
+            err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
+        err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
+        err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
+        if (err != CL_SUCCESS)
+            CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
+
+            while (i++ < param.passes)
+            {
+                clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+                clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+            }
+    }
+    clEnqueueMarker(commandQueue, &readReadyEvent);
+    clEnqueueReadImage(commandQueueIO, imageBuffer1, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
+
+    clWaitForEvents(1, &readFinishedEvent);
+
+    //clean
+    clReleaseMemObject(imageBuffer3);
+    clReleaseMemObject(imageBuffer2);
+    clReleaseMemObject(imageBuffer1);
+    clReleaseMemObject(imageBuffer0);
+
+    clReleaseKernel(kernelGetGray);
+    clReleaseKernel(kernelPushColor);
+    clReleaseKernel(kernelGetGradient);
+    clReleaseKernel(kernelPushGradient);
+
+    clReleaseEvent(writeFinishedEvent);
+    clReleaseEvent(readReadyEvent);
+    clReleaseEvent(readFinishedEvent);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
@@ -655,7 +1008,6 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         delete[] tmpPlatform;
         throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform", err);
     }
-
 
     if (pID < platforms)
         currentplatform = tmpPlatform[pID];
@@ -693,6 +1045,73 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         releaseOpenCL();
         throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
     }
+
+    //init command queue
+    commandQueueList.resize(commandQueueNum, nullptr);
+#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
+    for (int i = 0; i < commandQueueNum; i++)
+    {
+        commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
+        if (err != CL_SUCCESS)
+        {
+            releaseOpenCL();
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+    }
+    if (parallelIO)
+    {
+        commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
+        if (err != CL_SUCCESS)
+        {
+            releaseOpenCL();
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+        }
+    }
+
+#else
+    for (int i = 0; i < commandQueueNum; i++)
+    {
+        commandQueueList[i] = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+        if (err != CL_SUCCESS)
+        {
+            if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+            {
+                commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
+                if (err != CL_SUCCESS)
+                {
+                    releaseOpenCL();
+                    throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+                }
+            }
+            else
+            {
+                releaseOpenCL();
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+            }
+        }
+    }
+    if (parallelIO)
+    {
+        commandQueueIO = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+        if (err != CL_SUCCESS)
+        {
+            if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
+            {
+                commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
+                if (err != CL_SUCCESS)
+                {
+                    releaseOpenCL();
+                    throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+                }
+            }
+            else
+            {
+                releaseOpenCL();
+                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+            }
+        }
+    }
+#endif
 
 #ifndef BUILT_IN_KERNEL
     //read kernel files
@@ -743,6 +1162,13 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
 
 void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept
 {
+    for (auto& commandQueue : commandQueueList)
+    {
+        if (commandQueue != nullptr)
+            clReleaseCommandQueue(commandQueue);
+    }
+    if (commandQueueIO != nullptr)
+        clReleaseCommandQueue(commandQueueIO);
     if (program != nullptr)
         clReleaseProgram(program);
     if (context != nullptr)
@@ -771,6 +1197,11 @@ Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() no
 //init OpenCL arguments
 bool Anime4KCPP::OpenCL::Anime4K09::isInitialized = false;
 cl_context Anime4KCPP::OpenCL::Anime4K09::context = nullptr;
+int Anime4KCPP::OpenCL::Anime4K09::commandQueueNum = 4;
+int Anime4KCPP::OpenCL::Anime4K09::commandQueueCount = 0;
+std::vector<cl_command_queue> Anime4KCPP::OpenCL::Anime4K09::commandQueueList(commandQueueNum, nullptr);
+bool Anime4KCPP::OpenCL::Anime4K09::parallelIO = false;
+cl_command_queue Anime4KCPP::OpenCL::Anime4K09::commandQueueIO = nullptr;
 cl_program Anime4KCPP::OpenCL::Anime4K09::program = nullptr;
 cl_device_id Anime4KCPP::OpenCL::Anime4K09::device = nullptr;
 unsigned int Anime4KCPP::OpenCL::Anime4K09::pID = 0U;

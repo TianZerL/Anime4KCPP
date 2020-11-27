@@ -25,7 +25,9 @@ enum AC_Parameters
     AC_HDN = 9,
     AC_HDNLevel = 10,
     AC_platformID = 11,
-    AC_deviceID = 12
+    AC_deviceID = 12,
+    AC_OpenCLQueueNum = 13,
+    AC_OpenCLParallelIO = 14,
 };
 
 enum class GPGPU
@@ -44,6 +46,8 @@ public:
         GPGPU GPGPUModel,
         unsigned int pID,
         unsigned int dID,
+        int OpenCLQueueNum,
+        bool OpenCLParallelIO,
         IScriptEnvironment* env
     );
     
@@ -68,6 +72,8 @@ Anime4KCPPF::Anime4KCPPF(
     GPGPU GPGPUModel,
     unsigned int pID,
     unsigned int dID,
+    int OpenCLQueueNum,
+    bool OpenCLParallelIO,
     IScriptEnvironment* env
 ) :
     GenericVideoFilter(_child),
@@ -96,9 +102,16 @@ Anime4KCPPF::Anime4KCPPF(
         {
         case GPGPU::OpenCL:
             if (CNN)
-                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                    pID, dID, 
+                    Anime4KCPP::CNNType::Default,
+                    OpenCLQueueNum,
+                    OpenCLParallelIO);
             else
-                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                    pID, dID, 
+                    OpenCLQueueNum,
+                    OpenCLParallelIO);
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -325,6 +338,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     bool GPUMode = args[AC_GPUMode].AsBool();
     unsigned int pID = args[AC_platformID].AsInt();
     unsigned int dID = args[AC_deviceID].AsInt();
+    int OpenCLQueueNum = args[AC_OpenCLQueueNum].AsInt();
+    bool OpenCLParallelIO = args[AC_OpenCLParallelIO].AsBool();
     const char* GPGPUModelTmp = args[AC_GPGPUModel].AsString();
 
     if (!args[AC_passes].Defined())
@@ -345,6 +360,10 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         pID = 0;
     if (!args[AC_deviceID].Defined())
         dID = 0;
+    if (!args[AC_OpenCLQueueNum].Defined())
+        OpenCLQueueNum = 4;
+    if (!args[AC_OpenCLParallelIO].Defined())
+        OpenCLParallelIO = false;
     if(!args[AC_GPGPUModel].Defined())
         GPGPUModelTmp = "opencl";
 
@@ -375,6 +394,9 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
     if (inputs.HDNLevel < 1 || inputs.HDNLevel > 3)
         env->ThrowError("Anime4KCPP: HDNLevel must range from 1 to 3!");
+
+    if (OpenCLQueueNum < 1)
+        env->ThrowError("Anime4KCPP: OpenCLQueueNum must >= 1!");
 
     if (GPUMode)
     {
@@ -435,6 +457,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         GPGPUModel,
         pID,
         dID,
+        OpenCLQueueNum,
+        OpenCLParallelIO,
         env
     );
 }
@@ -514,7 +538,9 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[HDN]b"
         "[HDNLevel]i"
         "[platformID]i"
-        "[deviceID]i",
+        "[deviceID]i"
+        "[OpenCLQueueNum]i"
+        "[OpenCLParallelIO]b",
         createAnime4KCPP, 0);
     return "Anime4KCPP plugin for AviSynthPlus";
 }
