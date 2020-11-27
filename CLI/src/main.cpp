@@ -129,6 +129,8 @@ int main(int argc, char* argv[])
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
+    opt.add<int>("OpenCLQueueNumber", 'Q', "Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL", false, 1);
+    opt.add("OpenCLParallelIO", 'P', "Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL");
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
         "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v",
         cmdline::oneof<std::string>("mp4v", "dxva", "avc1", "vp09", "hevc", "av01", "other"));
@@ -179,6 +181,8 @@ int main(int argc, char* argv[])
     uint8_t postFilters = config.get<unsigned int>("postFilters");
     unsigned int pID = config.get<unsigned int>("platformID");
     unsigned int dID = config.get<unsigned int>("deviceID");
+    int OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
+    bool OpenCLParallelIO = config.get<bool>("OpenCLParallelIO");
     unsigned int threads = config.get<unsigned int>("threads");
     std::string codec = config.get<std::string>("codec");
     std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
@@ -324,9 +328,16 @@ int main(int argc, char* argv[])
             {
             case GPGPU::OpenCL:
                 if (CNN)
-                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID, type);
+                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                        pID, dID, 
+                        type,
+                        OpenCLQueueNum,
+                        OpenCLParallelIO);
                 else
-                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                        pID, dID,
+                        OpenCLQueueNum,
+                        OpenCLParallelIO);
                 break;
             case GPGPU::CUDA:
 #ifndef ENABLE_CUDA

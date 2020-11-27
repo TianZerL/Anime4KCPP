@@ -31,8 +31,16 @@ public:
     virtual HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
-    STDMETHODIMP GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int *H, int* W, int* GPGPUModel);
-    STDMETHODIMP SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W, int GPGPUModel);
+    STDMETHODIMP GetParameters(
+        bool* HDN, int* HDNLevel, bool* CNN, 
+        unsigned int* pID, unsigned int* dID, 
+        double* zoomFactor, int *H, int* W, int* GPGPUModel, 
+        int* OpenCLQueueNum, bool* OpenCLParallelIO);
+    STDMETHODIMP SetParameters(
+        bool HDN, int HDNLevel, bool CNN, 
+        unsigned int pID, unsigned int dID, 
+        double zoomFactor, int H, int W, int GPGPUModel, 
+        int OpenCLQueueNum, bool OpenCLParallelIO);
     STDMETHODIMP GetGPUInfo(std::string& info);
 
     STDMETHODIMP GetPages(CAUUID* pPages);
@@ -54,6 +62,8 @@ private:
     int H, W;
     GPGPU GPGPUModel;
     int GPUCheckResult;
+    int OpenCLQueueNum;
+    bool OpenCLParallelIO;
 
     size_t srcH, srcW, dstH, dstW;
     LONG dstDataLength;

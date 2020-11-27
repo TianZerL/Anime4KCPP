@@ -24,7 +24,9 @@ extern "C"
             double* zoomFactor,
             int *H,
             int *W,
-            int *GPGPUModel
+            int *GPGPUModel,
+            int* OpenCLQueueNum, 
+            bool* OpenCLParallelIO
             ) PURE;
 
         STDMETHOD(SetParameters) (THIS_
@@ -36,7 +38,9 @@ extern "C"
             double zoomFactor,
             int H,
             int W,
-            int GPGPUModel
+            int GPGPUModel,
+            int OpenCLQueueNum, 
+            bool OpenCLParallelIO
             ) PURE;
 
         STDMETHOD(GetGPUInfo) (THIS_
@@ -70,6 +74,8 @@ private:
     int H, W;
     std::string GPUInfo;
     int GPGPUModelIdx;
+    int OpenCLQueueNum;
+    bool OpenCLParallelIO;
 
     IAC* pIAC;
     BOOL bInit;

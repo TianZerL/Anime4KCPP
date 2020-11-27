@@ -82,7 +82,7 @@ void Anime4KCPP::OpenCL::ACNet::initGPU(unsigned int platformID, unsigned int de
     {
         pID = platformID;
         dID = deviceID;
-        commandQueueNum = OpenCLQueueNum;
+        commandQueueNum = OpenCLQueueNum >= 1 ? OpenCLQueueNum : 1;
         parallelIO = OpenCLParallelIO;
         initOpenCL(type);
         isInitialized = true;
@@ -117,6 +117,8 @@ std::string Anime4KCPP::OpenCL::ACNet::getInfo()
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
         << "HDN level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
+        << "Number of OpenCL command queues:" << commandQueueNum << std::endl
+        << "OpenCL parallel IO command queues:" << std::boolalpha << parallelIO << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }

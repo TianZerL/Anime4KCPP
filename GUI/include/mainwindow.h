@@ -96,6 +96,8 @@ private:
     std::unique_ptr<Anime4KCPP::AC> getACUP();
     Anime4KCPP::CODEC getCodec(const QString& codec);
 
+    void logToTextBrowser(const QString& info);
+
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
     void solt_error_renewState(int row, QString err);

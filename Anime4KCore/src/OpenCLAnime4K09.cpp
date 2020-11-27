@@ -24,7 +24,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initGPU(unsigned int platformID, unsigned in
     {
         pID = platformID;
         dID = deviceID;
-        commandQueueNum = OpenCLQueueNum;
+        commandQueueNum = OpenCLQueueNum >= 1 ? OpenCLQueueNum : 1;
         parallelIO = OpenCLParallelIO;
         initOpenCL();
         isInitialized = true;
@@ -62,6 +62,8 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
         << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
         << "Strength Color: " << param.strengthColor << std::endl
         << "Strength Gradient: " << param.strengthGradient << std::endl
+        << "Number of OpenCL command queues:" << commandQueueNum << std::endl
+        << "OpenCL parallel IO command queues:" << std::boolalpha << parallelIO << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }
@@ -768,20 +770,20 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelPB(const cv::Mat& orgImg, cv::Mat& 
         err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
         if (err != CL_SUCCESS)
             CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
-            //reset pushGradient
-            err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
+        //reset pushGradient
+        err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
         err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
         if (err != CL_SUCCESS)
             CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
 
-            while (i++ < param.passes)
-            {
-                clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
-                clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
-            }
+        while (i++ < param.passes)
+        {
+            clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+            clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        }
     }
-    clEnqueueMarker(commandQueue, &readReadyEvent);
+    clEnqueueMarkerWithWaitList(commandQueue, 0, nullptr, &readReadyEvent);
     clEnqueueReadImage(commandQueueIO, imageBuffer1, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
 
     clWaitForEvents(1, &readFinishedEvent);
@@ -953,20 +955,20 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelPF(const cv::Mat& orgImg, cv::Mat& 
         err |= clSetKernelArg(kernelGetGradient, 1, sizeof(cl_mem), &imageBuffer2);
         if (err != CL_SUCCESS)
             CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset getGradient error", err)
-            //reset pushGradient
-            err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
+        //reset pushGradient
+        err = clSetKernelArg(kernelPushGradient, 0, sizeof(cl_mem), &imageBuffer2);
         err |= clSetKernelArg(kernelPushGradient, 1, sizeof(cl_mem), &imageBuffer1);
         err |= clSetKernelArg(kernelPushGradient, 2, sizeof(cl_float), &pushGradientStrength);
         if (err != CL_SUCCESS)
             CLEAN_KERNEL_AND_THROW_ERROR("clSetKernelArg: reset pushGradient error", err)
 
-            while (i++ < param.passes)
-            {
-                clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
-                clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
-            }
+        while (i++ < param.passes)
+        {
+            clEnqueueNDRangeKernel(commandQueue, kernelGetGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+            clEnqueueNDRangeKernel(commandQueue, kernelPushGradient, 2, nullptr, size, nullptr, 0, nullptr, nullptr);
+        }
     }
-    clEnqueueMarker(commandQueue, &readReadyEvent);
+    clEnqueueMarkerWithWaitList(commandQueue, 0, nullptr, &readReadyEvent);
     clEnqueueReadImage(commandQueueIO, imageBuffer1, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
 
     clWaitForEvents(1, &readFinishedEvent);

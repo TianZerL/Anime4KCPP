@@ -953,6 +953,41 @@
             </layout>
            </item>
            <item row="9" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <item>
+                <widget class="QLabel" name="labelOpenCLQueueNum">
+                 <property name="statusTip">
+                  <string/>
+                 </property>
+                 <property name="text">
+                  <string>number of OpenCL command queue</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QSpinBox" name="spinBoxOpenCLQueueNum">
+                 <property name="statusTip">
+                  <string>Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkBoxOpenCLParallelIO">
+               <property name="statusTip">
+                <string>Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL</string>
+               </property>
+               <property name="text">
+                <string>OpenCL parallel IO command queue</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="10" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutIDs">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutPlatformID">

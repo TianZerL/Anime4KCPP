@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->doubleSpinBoxPushColorStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxZoomFactor->setRange(1.0, 10.0);
+    ui->spinBoxOpenCLQueueNum->setMinimum(1);
     //initialize time and count
     totalTaskCount = totalProcessingTime = imageCount = videoCount = 0;
     //initialize config
@@ -189,6 +190,8 @@ void MainWindow::readConfig(const QSettings* conf)
     double fps = conf->value("/Arguments/fps", 0.0).toDouble();
     unsigned int pID = conf->value("/Arguments/pID", 0).toUInt();
     unsigned int dID = conf->value("/Arguments/dID", 0).toUInt();
+    int OpenCLQueueNum = conf->value("/Arguments/OpenCLQueueNumber", 1).toInt();
+    bool OpenCLParallelIO = conf->value("/Arguments/OpenCLParallelIO", false).toBool();
     bool alphaChannel = conf->value("/Arguments/alphaChannel", false).toBool();
 
     bool ACNet = conf->value("/ACNet/ACNet", false).toBool();
@@ -253,6 +256,8 @@ void MainWindow::readConfig(const QSettings* conf)
     ui->doubleSpinBoxFPS->setValue(fps);
     ui->spinBoxPlatformID->setValue(pID);
     ui->spinBoxDeviceID->setValue(dID);
+    ui->spinBoxOpenCLQueueNum->setValue(OpenCLQueueNum);
+    ui->checkBoxOpenCLParallelIO->setChecked(OpenCLParallelIO);
     ui->checkBoxAlphaChannel->setChecked(alphaChannel);
     //ACNet
     ui->checkBoxACNet->setChecked(ACNet);
@@ -300,6 +305,8 @@ void MainWindow::writeConfig(QSettings* conf)
     double fps = ui->doubleSpinBoxFPS->value();
     unsigned int pID = ui->spinBoxPlatformID->value();
     unsigned int dID = ui->spinBoxDeviceID->value();
+    int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
+    bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
     bool alphaChannel = ui->checkBoxAlphaChannel->isChecked();
 
     bool ACNet = ui->checkBoxACNet->isChecked();
@@ -345,6 +352,8 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Arguments/fps", fps);
     conf->setValue("/Arguments/pID", pID);
     conf->setValue("/Arguments/dID", dID);
+    conf->setValue("/Arguments/OpenCLQueueNumber", OpenCLQueueNum);
+    conf->setValue("/Arguments/OpenCLParallelIO", OpenCLParallelIO);
     conf->setValue("/Arguments/alphaChannel", alphaChannel);
 
     conf->setValue("/ACNet/ACNet", ACNet);
@@ -473,7 +482,7 @@ void MainWindow::initTextBrowser()
 
 bool MainWindow::checkFFmpeg()
 {
-    if (!QProcess::execute(ffmpegPath + " -version"))
+    if (!QProcess::execute(ffmpegPath, QStringList() << "-version"))
     {
         ui->textBrowserInfoOut->insertPlainText(
             "----------------------------------------------\n"
@@ -630,6 +639,11 @@ inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
     return codecSelector[codec];
 }
 
+void MainWindow::logToTextBrowser(const QString& info)
+{
+    solt_showInfo_renewTextBrowser((info + "\n").toStdString());
+}
+
 bool MainWindow::checkGIF(const QString& file)
 {
     return QFileInfo(file).suffix().toLower() == "gif";
@@ -637,17 +651,42 @@ bool MainWindow::checkGIF(const QString& file)
 
 bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile)
 {
-    return !QProcess::execute(
-        ffmpegPath + " -loglevel 40 -i \""
-        + tmpFile + "\" -i \"" 
-        + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" 
-        + dstFile + "\"");
+    QProcess p(this);
+    p.setProcessChannelMode(QProcess::MergedChannels);
+    p.setProgram(ffmpegPath);
+    p.setArguments(QStringList()
+        << "-i" << tmpFile << "-i" << srcFile
+        << "-c" << "copy" << "-map"
+        << "0:v" << "-map" << "1"
+        << "-map" << "-1:v" << "-y" << dstFile);
+    logToTextBrowser("Merging audio with ffmpeg...");
+    p.start(QIODevice::OpenMode::enum_type::ReadOnly);
+    bool ret = p.waitForFinished(-1);
+    if (ret)
+    {
+        logToTextBrowser("Merge complete, ffmpeg information:");
+        logToTextBrowser(p.readAll());
+    }
+    else
+    {
+        logToTextBrowser("Merge error:");
+        logToTextBrowser(p.errorString());
+    }
+    return ret;
 }
 
 bool MainWindow::video2GIF(const QString& srcFile, const QString& dstFile)
 {
-    bool flag = !QProcess::execute(ffmpegPath + " -i \"" + srcFile + "\" -vf palettegen -y \"" + dstFile + "_palette.png\"")
-        && !QProcess::execute(ffmpegPath + " -i \"" + srcFile + "\" -i \"" + dstFile + "_palette.png\" -y -lavfi paletteuse \"" + dstFile + "\"");
+    bool flag =
+        !QProcess::execute(ffmpegPath, QStringList()
+            << "-i" << srcFile << "-vf"
+            << "palettegen" << "-y "
+            << dstFile << "_palette.png")
+        && 
+        !QProcess::execute(ffmpegPath, QStringList()
+            <<"-i" << srcFile << "-i" << dstFile 
+            << "_palette.png" << "-y" << "-lavfi" 
+            << "paletteuse" << dstFile);
     
     QFile::remove(dstFile + "_palette.png");
 
@@ -1415,15 +1454,24 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
         case OpenCL:
             {
+                int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
+                bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
                 Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
                 supported = ret;
                 info = ret();
                 if (supported)
                 {
                     if (ACNetMode)
-                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(currPlatFormID, currDeviceID);
+                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                            currPlatFormID, currDeviceID,
+                            Anime4KCPP::CNNType::Default,
+                            OpenCLQueueNum,
+                            OpenCLParallelIO);
                     else
-                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(currPlatFormID, currDeviceID);
+                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                            currPlatFormID, currDeviceID,
+                            OpenCLQueueNum,
+                            OpenCLParallelIO);
                 }
             }
             break;
@@ -1483,6 +1531,8 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             ui->spinBoxPlatformID->setEnabled(false);
             ui->spinBoxDeviceID->setEnabled(false);
             ui->pushButtonReleaseGPU->setEnabled(true);
+            ui->spinBoxOpenCLQueueNum->setEnabled(false);
+            ui->checkBoxOpenCLParallelIO->setEnabled(false);
         }
     }
     else if ((state == Qt::Checked) && (GPUState == GPUMode::UNSUPPORT))
@@ -1579,6 +1629,16 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
         ui->spinBoxPlatformID->setEnabled(true);
         ui->spinBoxDeviceID->setEnabled(true);
         ui->pushButtonReleaseGPU->setEnabled(false);
+        if (ui->comboBoxGPGPU->currentIndex() == GPGPU::OpenCL)
+        {
+            ui->spinBoxOpenCLQueueNum->setEnabled(true);
+            ui->checkBoxOpenCLParallelIO->setEnabled(true);
+        }
+        else if (ui->comboBoxGPGPU->currentIndex() == GPGPU::CUDA)
+        {
+            ui->spinBoxOpenCLQueueNum->setEnabled(false);
+            ui->checkBoxOpenCLParallelIO->setEnabled(false);
+        }
     }
 }
 
@@ -1639,5 +1699,15 @@ void MainWindow::on_comboBoxGPGPU_currentIndexChanged(int idx)
     ui->spinBoxPlatformID->setEnabled(true);
     ui->spinBoxDeviceID->setEnabled(true);
     ui->pushButtonReleaseGPU->setEnabled(false);
+    if (idx == GPGPU::OpenCL)
+    {
+        ui->spinBoxOpenCLQueueNum->setEnabled(true);
+        ui->checkBoxOpenCLParallelIO->setEnabled(true);
+    }
+    else if (idx == GPGPU::CUDA)
+    {
+        ui->spinBoxOpenCLQueueNum->setEnabled(false);
+        ui->checkBoxOpenCLParallelIO->setEnabled(false);
+    }
     on_checkBoxGPUMode_stateChanged(ui->checkBoxGPUMode->checkState());
 }

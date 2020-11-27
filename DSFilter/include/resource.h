@@ -5,6 +5,7 @@
 #define IDD_ACPROP                      104
 #define IDS_TITLE                       107
 #define IDC_CHECK_HDN                   1001
+#define IDC_CHECK_OpenCLParallelIO      1002
 #define IDC_CHECK_CNN                   1003
 #define IDC_EDIT_ZF                     1004
 #define IDC_EDIT_DID                    1005
@@ -25,6 +26,8 @@
 #define IDC_STATIC_HDNLevel             1020
 #define IDC_STATIC_GPGPUModel           1021
 #define IDC_COMBO_GPGPU                 1022
+#define IDC_EDIT_OpenCLQueueNum         1023
+#define IDC_STATIC_OpenCLQueueNum       1024
 
 // Next default values for new objects
 // 

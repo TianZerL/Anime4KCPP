@@ -108,7 +108,11 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     W = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"W", 1920, lpPath);
     parameters.HDN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDN", 0, lpPath);
     parameters.HDNLevel = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDNLevel", 1, lpPath);
-    
+    OpenCLParallelIO = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"OpenCLParallelIO", 0, lpPath);
+    OpenCLQueueNum = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"OpenCLQueueNum", 4, lpPath);
+    if (OpenCLQueueNum < 1)
+        OpenCLQueueNum = 1;
+
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"OpenCL", _GPGPUModelString, 10, lpPath);
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
@@ -130,9 +134,16 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     {
     case GPGPU::OpenCL:
         if (CNN)
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                pID, dID,
+                Anime4KCPP::CNNType::Default,
+                OpenCLQueueNum,
+                OpenCLParallelIO);
         else
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                pID, dID,
+                OpenCLQueueNum,
+                OpenCLParallelIO);
         break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -606,7 +617,7 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
     return TRUE;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int* H, int* W, int* GPGPUModel)
+STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, unsigned int* pID, unsigned int* dID, double* zoomFactor, int* H, int* W, int* GPGPUModel, int* OpenCLQueueNum, bool* OpenCLParallelIO)
 {
     *HDN = parameters.HDN;
     *HDNLevel = parameters.HDNLevel;
@@ -617,18 +628,23 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(bool* HDN, int* HDNLevel, bool* CNN, un
     *W = this->W;
     *zoomFactor = zf;
     *GPGPUModel = this->GPGPUModel;
+    *OpenCLQueueNum = this->OpenCLQueueNum;
+    *OpenCLParallelIO = this->OpenCLParallelIO;
 
     return NOERROR;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W, int GPGPUModel)
+STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsigned int pID, unsigned int dID, double zoomFactor, int H, int W, int GPGPUModel, int OpenCLQueueNum, bool OpenCLParallelIO)
 {
     CAutoLock cAutoLock(&lock);
 
-    TCHAR _pID[10], _dID[10], _CNN[10], _HDN[10], _HDNLevel[10], _H[10], _W[10], _zoomFactor[10], * _GPGPUModel = nullptr;
+    TCHAR _pID[10], _dID[10], _OpenCLQueueNum[10], _OpenCLParallelIO[10], _CNN[10], _HDN[10], _HDNLevel[10], _H[10], _W[10], _zoomFactor[10], * _GPGPUModel = nullptr;
 
     //convert to string
     _itow_s(pID, _pID, 10, 10);
+    _itow_s(dID, _dID, 10, 10);
+    _itow_s(OpenCLQueueNum, _OpenCLQueueNum, 10, 10);
+    _itow_s(OpenCLParallelIO, _OpenCLParallelIO, 10, 10);
     _itow_s(dID, _dID, 10, 10);
     _itow_s(CNN, _CNN, 10, 10);
     _itow_s(H, _H, 10, 10);
@@ -652,6 +668,8 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
     //write config
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"pID", _pID, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"dID", _dID, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"OpenCLQueueNum", _OpenCLQueueNum, lpPath);
+    WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"OpenCLParallelIO", _OpenCLParallelIO, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"ACNet", _CNN, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"HDN", _HDN, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"HDNLevel", _HDNLevel, lpPath);
