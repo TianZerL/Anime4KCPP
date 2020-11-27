@@ -120,7 +120,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImageB()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
+    runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -150,7 +150,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageB()
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(orgImg, param.preFilters).process();
     cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
+    runKernelB(orgImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -178,7 +178,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBVideoB()
             if (param.preprocessing)
                 FilterProcessor(orgFrame, param.preFilters).process();
             cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            runKernelF(orgFrame, dstFrame);
+            runKernelB(orgFrame, dstFrame);
             cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
             if (param.postprocessing)//PostProcessing
                 FilterProcessor(dstFrame, param.postFilters).process();
