@@ -267,28 +267,29 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     CheckPointer(mtIn, E_POINTER);
 
     // VIDEOINFOHEADER and VIDEOINFOHEADER2 is supported
-    if (*mtIn->FormatType() != FORMAT_VideoInfo && *mtIn->FormatType() != FORMAT_VideoInfo2)
-        return E_INVALIDARG;
+    if (!IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2) && 
+        !IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo))
+        return VFW_E_TYPE_NOT_ACCEPTED;
 
     //Resolution check
-    if (mtIn->formattype == FORMAT_VideoInfo2)
+    if (IsEqualGUID(mtIn->formattype, FORMAT_VideoInfo2))
     {
         VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)mtIn->pbFormat;
         if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
-            return E_INVALIDARG;
+            return VFW_E_TYPE_NOT_ACCEPTED;
     }
     else
     {
         VIDEOINFOHEADER* pVi = (VIDEOINFOHEADER*)mtIn->pbFormat;
         if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
-            return E_INVALIDARG;
+            return VFW_E_TYPE_NOT_ACCEPTED;
     }
 
     // Can we transform this type
     if (IsYV12(mtIn) || IsIYUV(mtIn) || IsNV12(mtIn) || IsRGB24(mtIn) || IsRGB32(mtIn) || IsP016(mtIn))
         return GPUCheckResult;
 
-    return E_FAIL;
+    return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
@@ -296,40 +297,44 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
     CheckPointer(mtIn, E_POINTER);
     CheckPointer(mtOut, E_POINTER);
 
+    if (!IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo2) && 
+        !IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo))
+        return VFW_E_TYPE_NOT_ACCEPTED;
+
     acCreator.init();
 
     if (CNN && IsYV12(mtIn) && IsYV12(mtOut))
     {
         colorFormat = ColorFormat::YV12;
-        return NOERROR;
+        return S_OK;
     }
     if (CNN && IsIYUV(mtIn) && IsIYUV(mtOut))
     {
         colorFormat = ColorFormat::IYUV;
-        return NOERROR;
+        return S_OK;
     }
     if (CNN && IsNV12(mtIn) && IsNV12(mtOut))
     {
         colorFormat = ColorFormat::NV12;
-        return NOERROR;
+        return S_OK;
     }
     if (CNN && IsP016(mtIn) && IsP016(mtOut))
     {
         colorFormat = ColorFormat::P016;
-        return NOERROR;
+        return S_OK;
     }
     if (IsRGB24(mtIn) && IsRGB24(mtOut))
     {
         colorFormat = ColorFormat::RGB24;
-        return NOERROR;
+        return S_OK;
     }
     if (IsRGB32(mtIn) && IsRGB32(mtOut))
     {
         colorFormat = ColorFormat::RGB32;
-        return NOERROR;
+        return S_OK;
     }
 
-    return E_FAIL;
+    return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT Anime4KCPPDS::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
@@ -340,27 +345,23 @@ HRESULT Anime4KCPPDS::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTI
 
     CheckPointer(pAlloc, E_POINTER);
     CheckPointer(pProperties, E_POINTER);
-    HRESULT hr = NOERROR;
 
     pProperties->cBuffers = 1;
     pProperties->cbBuffer = dstDataLength;
 
     ALLOCATOR_PROPERTIES Actual;
-    hr = pAlloc->SetProperties(pProperties, &Actual);
+    HRESULT hr = pAlloc->SetProperties(pProperties, &Actual);
     if (FAILED(hr))
         return hr;
 
     if (pProperties->cBuffers > Actual.cBuffers || pProperties->cbBuffer > Actual.cbBuffer)
         return E_FAIL;
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 {
-    if (m_pInput->IsConnected() == FALSE)
-        return E_UNEXPECTED;
-
     if (iPosition < 0)
         return E_INVALIDARG;
 
@@ -368,9 +369,13 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         return VFW_S_NO_MORE_ITEMS;
 
     CheckPointer(pMediaType, E_POINTER);
-    *pMediaType = m_pInput->CurrentMediaType();
+
+    HRESULT hr = m_pInput->ConnectionMediaType(pMediaType);
+    if (FAILED(hr))
+        return hr;
+
     //resize
-    if (pMediaType->formattype == FORMAT_VideoInfo2)
+    if (IsEqualGUID(pMediaType->formattype, FORMAT_VideoInfo2))
     {
         VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
         srcH = pVi->bmiHeader.biHeight;
@@ -382,8 +387,9 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
         pMediaType->SetSampleSize(dstDataLength);
-        SetRectEmpty(&pVi->rcSource);
-        SetRectEmpty(&pVi->rcTarget);
+
+        SetRect(&pVi->rcSource, 0, 0, dstW, dstH);
+        SetRect(&pVi->rcTarget, 0, 0, dstW, dstH);
     }
     else
     {
@@ -397,16 +403,17 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
         pVi->bmiHeader.biWidth = dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
         pMediaType->SetSampleSize(dstDataLength);
-        SetRectEmpty(&pVi->rcSource);
-        SetRectEmpty(&pVi->rcTarget);
+
+        SetRect(&pVi->rcSource, 0, 0, dstW, dstH);
+        SetRect(&pVi->rcTarget, 0, 0, dstW, dstH);
     }
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 {
-    HRESULT hr = NOERROR;
+    HRESULT hr = S_OK;
 
     BYTE* pBufferIn, * pBufferOut;
     hr = pIn->GetPointer(&pBufferIn);
