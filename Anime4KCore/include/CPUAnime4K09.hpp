@@ -23,6 +23,9 @@ private:
     virtual void processRGBImageB() override;
     virtual void processRGBVideoB() override;
 
+    virtual void processYUVImageW() override;
+    virtual void processRGBImageW() override;
+
     virtual void processYUVImageF() override;
     virtual void processRGBImageF() override;
 
@@ -30,16 +33,25 @@ private:
     void pushColorB(cv::Mat& img);
     void getGradientB(cv::Mat& img);
     void pushGradientB(cv::Mat& img);
+
+    void getGrayW(cv::Mat& img);
+    void pushColorW(cv::Mat& img);
+    void getGradientW(cv::Mat& img);
+    void pushGradientW(cv::Mat& img);
+
     void getGrayF(cv::Mat& img);
     void pushColorF(cv::Mat& img);
     void getGradientF(cv::Mat& img);
     void pushGradientF(cv::Mat& img);
 
     void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelB, LineB)>&& callBack);
+    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelW, LineW)>&& callBack);
     void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelF, LineF)>&& callBack);
     void getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept;
+    void getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept;
     void getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;
     void getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept;
+    void getAverage(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept;
     void getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;
 
     virtual Processor::Type getProcessorType() noexcept override;

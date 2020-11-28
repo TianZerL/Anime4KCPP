@@ -53,6 +53,8 @@ void Anime4KCPP::AC::loadVideo(const std::string& srcFile)
     totalFrameCount = videoIO->get(cv::CAP_PROP_FRAME_COUNT);
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
+
+    bitDepth = 8;
 }
 
 void Anime4KCPP::AC::loadImage(const std::string& srcFile)
@@ -92,7 +94,22 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
-    highPrecisionMode = false;
+    switch (orgImg.depth())
+    {
+    case CV_8U:
+        break;
+        bitDepth = 8;
+    case CV_16U:
+        bitDepth = 16;
+        break;
+    case CV_32F:
+        bitDepth = 32;
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>(
+            "Unsupported data type");
+        break;
+    }
 }
 
 void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
@@ -106,7 +123,7 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
         dstImg = orgImg;
         inputRGB32 = false;
         checkAlphaChannel = false;
-        highPrecisionMode = false;
+        bitDepth = 8;
         break;
     case CV_8UC4:
         if (!param.alpha)
@@ -124,13 +141,13 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
             cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
             dstImg = orgImg;
         }
-        highPrecisionMode = false;
+        bitDepth = 8;
         break;
     case CV_32FC3:
         dstImg = orgImg;
         inputRGB32 = false;
         checkAlphaChannel = false;
-        highPrecisionMode = true;
+        bitDepth = 32;
         break;
     case CV_32FC4:
         if (!param.alpha)
@@ -148,7 +165,7 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
             cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
             dstImg = orgImg;
         }
-        highPrecisionMode = true;
+        bitDepth = 32;
         break;
     default:
         throw ACException<ExceptionType::RunTimeError>("Error data type.");
@@ -200,8 +217,51 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 8;
     checkAlphaChannel = false;
-    highPrecisionMode = false;
+}
+
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
+{
+    switch (inputAsRGB32 + inputAsYUV444)
+    {
+    case 0:
+        inputRGB32 = false;
+        inputYUV = false;
+        orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+        break;
+    case 1:
+        if (inputAsRGB32)
+        {
+            inputRGB32 = true;
+            inputYUV = false;
+            cv::cvtColor(cv::Mat(rows, cols, CV_16UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+        }
+        else //YUV444
+        {
+            inputRGB32 = false;
+            inputYUV = true;
+            orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+
+            std::vector<cv::Mat> yuv(3);
+            cv::split(orgImg, yuv);
+            dstY = orgY = yuv[Y];
+            dstU = orgU = yuv[U];
+            dstV = orgV = yuv[V];
+        }
+        break;
+    case 2:
+        throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
+    }
+
+    dstImg = orgImg;
+    orgH = rows;
+    orgW = cols;
+    H = param.zoomFactor * orgH;
+    W = param.zoomFactor * orgW;
+
+    bitDepth = 16;
+    checkAlphaChannel = false;
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
@@ -243,8 +303,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerL
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 32;
     checkAlphaChannel = false;
-    highPrecisionMode = true;
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
@@ -271,9 +331,38 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned ch
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 8;
     inputRGB32 = false;
     checkAlphaChannel = false;
-    highPrecisionMode = false;
+}
+
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444)
+{
+    if (inputAsYUV444)
+    {
+        inputYUV = true;
+        dstY = orgY = cv::Mat(rows, cols, CV_16UC1, r);
+        dstU = orgU = cv::Mat(rows, cols, CV_16UC1, g);
+        dstV = orgV = cv::Mat(rows, cols, CV_16UC1, b);
+    }
+    else
+    {
+        inputYUV = false;
+        cv::merge(std::vector<cv::Mat>{
+            cv::Mat(rows, cols, CV_16UC1, b),
+                cv::Mat(rows, cols, CV_16UC1, g),
+                cv::Mat(rows, cols, CV_16UC1, r) },
+            orgImg);
+        dstImg = orgImg;
+    }
+    orgH = rows;
+    orgW = cols;
+    H = param.zoomFactor * orgH;
+    W = param.zoomFactor * orgW;
+
+    bitDepth = 16;
+    inputRGB32 = false;
+    checkAlphaChannel = false;
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, float* r, float* g, float* b, bool inputAsYUV444)
@@ -300,9 +389,9 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* r, float* g, float* b,
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 32;
     inputRGB32 = false;
     checkAlphaChannel = false;
-    highPrecisionMode = true;
 }
 
 void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
@@ -315,10 +404,26 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 8;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
-    highPrecisionMode = false;
+}
+
+void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v)
+{
+    dstY = orgY = cv::Mat(rowsY, colsY, CV_16UC1, y);
+    dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u);
+    dstV = orgV = cv::Mat(rowsV, colsV, CV_16UC1, v);
+    orgH = rowsY;
+    orgW = colsY;
+    H = param.zoomFactor * orgH;
+    W = param.zoomFactor * orgW;
+
+    bitDepth = 16;
+    inputYUV = true;
+    inputRGB32 = false;
+    checkAlphaChannel = false;
 }
 
 void Anime4KCPP::AC::loadImage(int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v)
@@ -331,10 +436,10 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, float* y, int rowsU, int co
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    bitDepth = 32;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
-    highPrecisionMode = true;
 }
 
 void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v)
@@ -351,10 +456,22 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    if (y.type() == CV_32FC1)
-        highPrecisionMode = true;
-    else
-        highPrecisionMode = false;
+    switch (y.depth())
+    {
+    case CV_8U:
+        break;
+        bitDepth = 8;
+    case CV_16U:
+        bitDepth = 16;
+        break;
+    case CV_32F:
+        bitDepth = 32;
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>(
+            "Unsupported data type");
+        break;
+    }
 }
 
 void Anime4KCPP::AC::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
@@ -374,7 +491,7 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
         cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
         cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
     }
-    if (highPrecisionMode)
+    if (bitDepth == 32)
     {
         dstImg.convertTo(dstImg, CV_8UC(dstImg.channels()), 255.0);
     }
@@ -434,7 +551,7 @@ void Anime4KCPP::AC::saveImage(unsigned char* data)
 {
     if (data == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
-    if (highPrecisionMode)
+    if (bitDepth == 32)
         throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
     if (inputYUV)
     {
@@ -449,12 +566,31 @@ void Anime4KCPP::AC::saveImage(unsigned char* data)
     memcpy(data, dstImg.data, dstImg.step * H);
 }
 
+void Anime4KCPP::AC::saveImage(unsigned short int* data)
+{
+    if (data == nullptr)
+        throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
+    if (bitDepth == 32)
+        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
+    if (inputYUV)
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+        else
+            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to data pointer");
+    }
+    else if (inputRGB32)
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+
+    memcpy(data, dstImg.data, dstImg.step * H * sizeof(unsigned short int));
+}
+
 void Anime4KCPP::AC::saveImage(float* data)
 {
     if (data == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
-    if(!highPrecisionMode)
-        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char pointer");
+    if(bitDepth != 32)
+        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char or unsigned short pointer");
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
@@ -473,7 +609,7 @@ void Anime4KCPP::AC::saveImage(unsigned char* r, unsigned char* g, unsigned char
 {
     if (r == nullptr || g == nullptr || b == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
-    if (highPrecisionMode)
+    if (bitDepth == 32)
         throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
     if (inputYUV)
     {
@@ -492,12 +628,35 @@ void Anime4KCPP::AC::saveImage(unsigned char* r, unsigned char* g, unsigned char
     }
 }
 
+void Anime4KCPP::AC::saveImage(unsigned short int* r, unsigned short int* g, unsigned short int* b)
+{
+    if (r == nullptr || g == nullptr || b == nullptr)
+        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
+    if (bitDepth == 32)
+        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
+    if (inputYUV)
+    {
+        memcpy(r, dstY.data, (size_t)dstY.cols * (size_t)dstY.rows * sizeof(unsigned short int));
+        memcpy(g, dstU.data, (size_t)dstU.cols * (size_t)dstU.rows * sizeof(unsigned short int));
+        memcpy(b, dstV.data, (size_t)dstV.cols * (size_t)dstV.rows * sizeof(unsigned short int));
+    }
+    else
+    {
+        size_t size = (size_t)W * (size_t)H * sizeof(unsigned short int);
+        std::vector<cv::Mat> bgr(3);
+        cv::split(dstImg, bgr);
+        memcpy(r, bgr[R].data, size);
+        memcpy(g, bgr[G].data, size);
+        memcpy(b, bgr[B].data, size);
+    }
+}
+
 void Anime4KCPP::AC::saveImage(float* r, float* g, float* b)
 {
     if (r == nullptr || g == nullptr || b == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
-    if (!highPrecisionMode)
-        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char pointer");
+    if (bitDepth != 32)
+        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char or unsigned short pointer");
     if (inputYUV)
     {
         std::copy(reinterpret_cast<float*>(dstY.data),
@@ -615,18 +774,9 @@ void Anime4KCPP::AC::showImage(bool R2B)
 
 void Anime4KCPP::AC::process()
 {
-    if (highPrecisionMode)
+    switch (bitDepth)
     {
-        if (!param.videoMode)
-        {
-            if (inputYUV)
-                processYUVImageF();
-            else
-                processRGBImageF();
-        }
-    }
-    else
-    {
+    case 8:
         if (!param.videoMode)
         {
             if (inputYUV)
@@ -638,6 +788,19 @@ void Anime4KCPP::AC::process()
         {
             processRGBVideoB();
         }
+        break;
+    case 16:
+        if (inputYUV)
+            processYUVImageW();
+        else
+            processRGBImageW();
+        break;
+    case 32:
+        if (inputYUV)
+            processYUVImageF();
+        else
+            processRGBImageF();
+        break;
     }
 }
 

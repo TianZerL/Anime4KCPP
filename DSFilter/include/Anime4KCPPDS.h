@@ -9,7 +9,7 @@
 
 enum class ColorFormat
 {
-    YV12, IYUV, NV12, RGB24, RGB32
+    YV12, IYUV, NV12, RGB24, RGB32, P016
 };
 
 enum GPGPU
@@ -52,6 +52,7 @@ private:
     BOOL IsIYUV(const CMediaType* pMediaType) const;
     BOOL IsYV12(const CMediaType* pMediaType) const;
     BOOL IsNV12(const CMediaType* pMediaType) const;
+    BOOL IsP016(const CMediaType* pMediaType) const;
     BOOL CheckGPUSupport();
 private:
     Anime4KCPP::ACCreator acCreator;

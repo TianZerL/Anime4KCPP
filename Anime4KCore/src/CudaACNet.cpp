@@ -35,6 +35,12 @@ inline void Anime4KCPP::Cuda::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& 
     cuRunKernelACNetB(orgImg.data, dstImg.data, &cuParam);
 }
 
+inline void Anime4KCPP::Cuda::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
+    cuRunKernelACNetW(reinterpret_cast<const unsigned short int*>(orgImg.data), reinterpret_cast<unsigned short int*>(dstImg.data), &cuParam);
+}
+
 inline void Anime4KCPP::Cuda::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
@@ -222,6 +228,107 @@ void Anime4KCPP::Cuda::ACNet::processRGBVideoB()
             }
             , param.maxThreads
                 ).process();
+    }
+}
+
+void Anime4KCPP::Cuda::ACNet::processYUVImageW()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpY = orgY;
+        dstU = orgU;
+        dstV = orgV;
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_16UC1);
+            runKernelW(tmpY, dstY);
+
+            cv::resize(dstU, dstU, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(dstV, dstV, cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpY = dstY;
+        }
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            double currZf = param.zoomFactor / exp2(tmpZfUp);
+            cv::resize(dstY, dstY, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstU, dstU, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+            cv::resize(dstV, dstV, cv::Size(0, 0), currZf, currZf, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        dstY.create(orgY.rows * 2, orgY.cols * 2, CV_16UC1);
+        runKernelW(orgY, dstY);
+
+        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+    }
+}
+
+void Anime4KCPP::Cuda::ACNet::processRGBImageW()
+{
+    if (!param.fastMode)
+    {
+        double tmpZf = std::log2(param.zoomFactor);
+        if (tmpZf < 0.0001)
+            tmpZf = 1.0 - 0.0002;
+        int tmpZfUp = std::ceil(tmpZf);
+
+        cv::Mat tmpImg = orgImg;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(tmpImg, yuv);
+        tmpImg = yuv[Y];
+
+        for (int i = 0; i < tmpZfUp; i++)
+        {
+            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, CV_16UC1);
+            runKernelW(tmpImg, dstImg);
+
+            cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+            tmpImg = dstImg;
+        }
+
+        cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        if (tmpZfUp - tmpZf > 0.00001)
+        {
+            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+        }
+    }
+    else
+    {
+        if (param.zoomFactor > 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_LANCZOS4);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(orgImg, yuv);
+        orgImg = yuv[Y];
+
+        dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_16UC1);
+        runKernelW(orgImg, dstImg);
+
+        cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+        cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_LANCZOS4);
+
+        cv::merge(std::vector<cv::Mat>{ dstImg, yuv[U], yuv[V] }, dstImg);
+        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
     }
 }
 

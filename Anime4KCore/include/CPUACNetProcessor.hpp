@@ -27,6 +27,7 @@ public:
     virtual ~ACNetProcessor() = default;
 
     virtual void processB(const cv::Mat & src, cv::Mat & dst) = 0;
+    virtual void processW(const cv::Mat & src, cv::Mat & dst) = 0;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) = 0;
 };
 
@@ -36,6 +37,7 @@ public:
     ACNetHDNL0() = default;
     virtual ~ACNetHDNL0() = default;
     virtual void processB(const cv::Mat & src, cv::Mat & dst) override;
+    virtual void processW(const cv::Mat & src, cv::Mat & dst) override;
     virtual void processF(const cv::Mat & src, cv::Mat & dst) override;
 private:
     const static double kernelsL1[9 * 8];
@@ -51,6 +53,7 @@ public:
     ACNetHDNL1() = default;
     virtual ~ACNetHDNL1() = default;
     virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];
@@ -66,6 +69,7 @@ public:
     ACNetHDNL2() = default;
     virtual ~ACNetHDNL2() = default;
     virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];
@@ -81,6 +85,7 @@ public:
     ACNetHDNL3() = default;
     virtual ~ACNetHDNL3() = default;
     virtual void processB(const cv::Mat& src, cv::Mat& dst) override;
+    virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
     const static double kernelsL1[9 * 8];

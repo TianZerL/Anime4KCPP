@@ -23,11 +23,15 @@ public:
     virtual std::string getFiltersInfo() override;
 private:
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
     virtual void processRGBVideoB() override;
+
+    virtual void processYUVImageW() override;
+    virtual void processRGBImageW() override;
 
     virtual void processYUVImageF() override;
     virtual void processRGBImageF() override;

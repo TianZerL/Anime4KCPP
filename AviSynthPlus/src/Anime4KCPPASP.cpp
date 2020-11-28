@@ -83,14 +83,15 @@ Anime4KCPPF::Anime4KCPPF(
     GPUMode(GPUMode),
     GPGPUModel(GPGPUModel)
 {
-    if (!vi.IsRGB24() && (!vi.IsYUV() || (vi.BitsPerComponent() != 8 && vi.BitsPerComponent() != 32) || !vi.IsPlanar()))
+    if ((!vi.IsRGB24() && (!vi.IsYUV() || !vi.IsPlanar())) ||
+        (vi.BitsPerComponent() != 8 && vi.BitsPerComponent() != 16 && vi.BitsPerComponent() != 32))
     {
-        env->ThrowError("Anime4KCPP: support data type: RGB24, planar YUV 8bit, planar YUV 8bit 32bit float");
+        env->ThrowError("Anime4KCPP: supported data type: RGB24 and YUV with 8 or 16bit integer or 32bit float)");
     }
 
     if (!vi.IsRGB24() && !vi.Is444() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: RGB or YUV444 is needed for Anime4K09");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV444 is needed for Anime4K09");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -131,9 +132,15 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 
     if (vi.IsYUV())
     {
-        if (vi.BitsPerComponent() == 32)
+        switch (vi.BitsPerComponent())
+        {
+        case 8:
+            return FilterYUV<unsigned char>(src, dst);
+        case 16:
+            return FilterYUV<unsigned short int>(src, dst);
+        case 32:
             return FilterYUV<float>(src, dst);
-        return FilterYUV<unsigned char>(src, dst);
+        }
     }
     return FilterRGB(src, dst);
 }

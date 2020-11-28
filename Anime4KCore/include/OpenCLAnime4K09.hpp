@@ -36,14 +36,20 @@ private:
     virtual void processRGBImageB() override;
     virtual void processRGBVideoB() override;
 
+    virtual void processYUVImageW() override;
+    virtual void processRGBImageW() override;
+
     virtual void processYUVImageF() override;
     virtual void processRGBImageF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
 
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
+
     void runKernelPB(const cv::Mat& orgImg, cv::Mat& dstImg);
+    void runKernelPW(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelPF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     static void initOpenCL();

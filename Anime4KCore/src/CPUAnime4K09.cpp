@@ -4,7 +4,8 @@
 
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})
-#define UNFLOAT(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
+#define UNFLOATB(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : int((n) + 0.5)))
+#define UNFLOATW(n) ((n) >= 65535 ? 65535 : ((n) <= 0 ? 0 : int((n) + 0.5)))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
 Anime4KCPP::CPU::Anime4K09::Anime4K09(const Parameters& parameters) :
@@ -151,6 +152,62 @@ void Anime4KCPP::CPU::Anime4K09::processRGBVideoB()
         }
         , param.maxThreads
             ).process();
+}
+
+void Anime4KCPP::CPU::Anime4K09::processYUVImageW()
+{
+    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
+
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0F)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGrayW(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColorW(dstImg);
+        getGradientW(dstImg);
+        pushGradientW(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//PostProcessing
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
+    std::vector<cv::Mat> yuv(3);
+    cv::split(dstImg, yuv);
+    dstY = yuv[Y];
+    dstU = yuv[U];
+    dstV = yuv[V];
+}
+
+void Anime4KCPP::CPU::Anime4K09::processRGBImageW()
+{
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0F)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)// preprocessing
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGrayW(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColorW(dstImg);
+        getGradientW(dstImg);
+        pushGradientW(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)// postprocessing
+        FilterProcessor(dstImg, param.postFilters).process();
 }
 
 void Anime4KCPP::CPU::Anime4K09::processYUVImageF()
@@ -307,7 +364,7 @@ inline void Anime4KCPP::CPU::Anime4K09::getGradientB(cv::Mat& img)
                 (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
             double grad = std::sqrt(gradX * gradX + gradY * gradY);
 
-            pixel[A] = 255 - UNFLOAT(grad);
+            pixel[A] = 255 - UNFLOATB(grad);
             });
     }
     else
@@ -394,6 +451,171 @@ inline void Anime4KCPP::CPU::Anime4K09::pushGradientB(cv::Mat& img)
         });
 }
 
+inline void Anime4KCPP::CPU::Anime4K09::getGrayW(cv::Mat& img)
+{
+    changEachPixelBGRA(img, [](const int i, const int j, PixelW pixel, LineW curLine) {
+        pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
+        });
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::pushColorW(cv::Mat& img)
+{
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+        const int jp = j < (W - 1) * 4 ? 4 : 0;
+        const int jn = j > 4 ? -4 : 0;
+        const LineW pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const LineW cLineData = curLine;
+        const LineW nLineData = i > 0 ? curLine - lineStep : curLine;
+
+        const PixelW tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
+        const PixelW ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const PixelW bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+
+        uint16_t maxD, minL;
+
+        //top and bottom
+        maxD = MAX3(bl[A], bc[A], br[A]);
+        minL = MIN3(tl[A], tc[A], tr[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            getLightest(mc, tl, tc, tr);
+        else
+        {
+            maxD = MAX3(tl[A], tc[A], tr[A]);
+            minL = MIN3(bl[A], bc[A], br[A]);
+            if (minL > mc[A] && mc[A] > maxD)
+                getLightest(mc, bl, bc, br);
+        }
+
+        //sundiagonal
+        maxD = MAX3(ml[A], mc[A], bc[A]);
+        minL = MIN3(tc[A], tr[A], mr[A]);
+        if (minL > maxD)
+            getLightest(mc, tc, tr, mr);
+        else
+        {
+            maxD = MAX3(tc[A], mc[A], mr[A]);
+            minL = MIN3(ml[A], bl[A], bc[A]);
+            if (minL > maxD)
+                getLightest(mc, ml, bl, bc);
+        }
+
+        //left and right
+        maxD = MAX3(tl[A], ml[A], bl[A]);
+        minL = MIN3(tr[A], mr[A], br[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            getLightest(mc, tr, mr, br);
+        else
+        {
+            maxD = MAX3(tr[A], mr[A], br[A]);
+            minL = MIN3(tl[A], ml[A], bl[A]);
+            if (minL > mc[A] && mc[A] > maxD)
+                getLightest(mc, tl, ml, bl);
+        }
+
+        //diagonal
+        maxD = MAX3(tc[A], mc[A], ml[A]);
+        minL = MIN3(mr[A], br[A], bc[A]);
+        if (minL > maxD)
+            getLightest(mc, mr, br, bc);
+        else
+        {
+            maxD = MAX3(bc[A], mc[A], mr[A]);
+            minL = MIN3(ml[A], tl[A], tc[A]);
+            if (minL > maxD)
+                getLightest(mc, ml, tl, tc);
+        }
+        });
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::getGradientW(cv::Mat& img)
+{
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+        if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
+            return;
+        const LineW pLineData = curLine + lineStep;
+        const LineW cLineData = curLine;
+        const LineW nLineData = curLine - lineStep;
+        const int jp = 4, jn = -4;
+
+        double gradX =
+            (double)(pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
+            (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
+        double gradY =
+            (double)(nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
+            (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
+        double grad = std::sqrt(gradX * gradX + gradY * gradY);
+
+        pixel[A] = 65535 - UNFLOATW(grad);
+        });
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::pushGradientW(cv::Mat& img)
+{
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+        const int jp = j < (W - 1) * 4 ? 4 : 0;
+        const int jn = j > 4 ? -4 : 0;
+
+        const LineW pLineData = i < H - 1 ? curLine + lineStep : curLine;
+        const LineW cLineData = curLine;
+        const LineW nLineData = i > 0 ? curLine - lineStep : curLine;
+
+        const PixelW tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
+        const PixelW ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
+        const PixelW bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+
+        uint16_t maxD, minL;
+
+        //top and bottom
+        maxD = MAX3(bl[A], bc[A], br[A]);
+        minL = MIN3(tl[A], tc[A], tr[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            return getAverage(mc, tl, tc, tr);
+
+        maxD = MAX3(tl[A], tc[A], tr[A]);
+        minL = MIN3(bl[A], bc[A], br[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            return getAverage(mc, bl, bc, br);
+
+        //sundiagonal
+        maxD = MAX3(ml[A], mc[A], bc[A]);
+        minL = MIN3(tc[A], tr[A], mr[A]);
+        if (minL > maxD)
+            return getAverage(mc, tc, tr, mr);
+
+        maxD = MAX3(tc[A], mc[A], mr[A]);
+        minL = MIN3(ml[A], bl[A], bc[A]);
+        if (minL > maxD)
+            return getAverage(mc, ml, bl, bc);
+
+        //left and right
+        maxD = MAX3(tl[A], ml[A], bl[A]);
+        minL = MIN3(tr[A], mr[A], br[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            return getAverage(mc, tr, mr, br);
+
+        maxD = MAX3(tr[A], mr[A], br[A]);
+        minL = MIN3(tl[A], ml[A], bl[A]);
+        if (minL > mc[A] && mc[A] > maxD)
+            return getAverage(mc, tl, ml, bl);
+
+        //diagonal
+        maxD = MAX3(tc[A], mc[A], ml[A]);
+        minL = MIN3(mr[A], br[A], bc[A]);
+        if (minL > maxD)
+            return getAverage(mc, mr, br, bc);
+
+        maxD = MAX3(bc[A], mc[A], mr[A]);
+        minL = MIN3(ml[A], tl[A], tc[A]);
+        if (minL > maxD)
+            return getAverage(mc, ml, tl, tc);
+
+        pixel[A] = 65535;
+        });
+}
+
 inline void Anime4KCPP::CPU::Anime4K09::getGrayF(cv::Mat& img)
 {
     changEachPixelBGRA(img, [](const int i, const int j, PixelF pixel, LineF curLine) {
@@ -473,45 +695,26 @@ inline void Anime4KCPP::CPU::Anime4K09::pushColorF(cv::Mat& img)
 
 inline void Anime4KCPP::CPU::Anime4K09::getGradientF(cv::Mat& img)
 {
-    if (!param.fastMode)
-    {
-        const int lineStep = W * 4;
-        changEachPixelBGRA(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
-            if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
-                return;
-            const LineF pLineData = curLine + lineStep;
-            const LineF cLineData = curLine;
-            const LineF nLineData = curLine - lineStep;
-            const int jp = 4, jn = -4;
+    const int lineStep = W * 4;
+    changEachPixelBGRA(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
+        if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
+            return;
+        const LineF pLineData = curLine + lineStep;
+        const LineF cLineData = curLine;
+        const LineF nLineData = curLine - lineStep;
+        const int jp = 4, jn = -4;
 
-            float gradX =
-                (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
-                (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
-            float gradY =
-                (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
-                (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
+        float gradX =
+            (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
+            (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
+        float gradY =
+            (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
+            (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
 
-            float grad = std::sqrtf(gradX * gradX + gradY * gradY);
+        float grad = std::sqrtf(gradX * gradX + gradY * gradY);
 
-            pixel[A] = 1.0f - CLAMP(grad, 0.0f, 1.0f);
-            });
-    }
-    else
-    {
-        cv::Mat gradX(H, W, CV_32FC1), gradY(H, W, CV_32FC1), alpha(H, W, CV_32FC1);
-
-        constexpr int fromTo_get[] = { A,0 };
-        cv::mixChannels(img, alpha, fromTo_get, 1);
-
-        cv::Sobel(alpha, gradX, CV_32FC1, 1, 0);
-        cv::Sobel(alpha, gradY, CV_32FC1, 0, 1);
-        cv::abs(gradX);
-        cv::abs(gradY);
-        cv::addWeighted(gradX, 0.5, gradY, 0.5, 0, alpha);
-
-        constexpr int fromTo_set[] = { 0,A };
-        cv::mixChannels(1.0f - alpha, img, fromTo_set, 1);
-    }
+        pixel[A] = 1.0f - CLAMP(grad, 0.0f, 1.0f);
+        });
 }
 
 inline void Anime4KCPP::CPU::Anime4K09::pushGradientF(cv::Mat& img)
@@ -591,7 +794,7 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
 #if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
     Parallel::parallel_for(0, H, [&](int i) {
         LineB lineData = src.data + static_cast<size_t>(i) * step;
-        LineB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
+        PixelB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -600,7 +803,37 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
     for (int i = 0; i < H; i++)
     {
         LineB lineData = src.data + static_cast<size_t>(i) * step;
-        LineB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
+        PixelB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
+        for (int j = 0; j < jMAX; j += 4)
+            callBack(i, j, tmpLineData + j, lineData);
+    }
+#endif //something crazy
+
+    src = tmp;
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
+    const std::function<void(const int, const int, PixelW, LineW)>&& callBack)
+{
+    cv::Mat tmp;
+    src.copyTo(tmp);
+
+    const int jMAX = W * 4;
+    const size_t step = jMAX;
+
+#if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
+    Parallel::parallel_for(0, H, [&](int i) {
+        LineW lineData = reinterpret_cast<LineW>(src.data) + static_cast<size_t>(i) * step;
+        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data) + static_cast<size_t>(i) * step;
+        for (int j = 0; j < jMAX; j += 4)
+            callBack(i, j, tmpLineData + j, lineData);
+        });
+#else //for gcc and others
+#pragma omp parallel for
+    for (int i = 0; i < H; i++)
+    {
+        LineW lineData = reinterpret_cast<LineW>(src.data) + static_cast<size_t>(i) * step;
+        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data) + static_cast<size_t>(i) * step;
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -646,6 +879,13 @@ inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelB mc, const PixelB a, c
         mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
 }
 
+inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
+{
+    //RGBA
+    for (int i = 0; i <= 3; i++)
+        mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
+}
+
 inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept
 {
     //RGBA
@@ -660,6 +900,15 @@ inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelB mc, const PixelB a, co
         mc[i] = mc[i] * (1.0 - param.strengthGradient) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthGradient + 0.5;
 
     mc[A] = 255;
+}
+
+inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
+{
+    //RGB
+    for (int i = 0; i <= 2; i++)
+        mc[i] = mc[i] * (1.0 - param.strengthGradient) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthGradient + 0.5;
+
+    mc[A] = 65535;
 }
 
 inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept

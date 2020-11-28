@@ -225,6 +225,20 @@ inline BOOL Anime4KCPPDS::IsNV12(const CMediaType* pMediaType) const
     return FALSE;
 }
 
+BOOL Anime4KCPPDS::IsP016(const CMediaType* pMediaType) const
+{
+    if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
+    {
+        if (IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_P010) ||
+            IsEqualGUID(*pMediaType->Subtype(), MEDIASUBTYPE_P016))
+        {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 CUnknown* Anime4KCPPDS::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
 {
     Anime4KCPPDS* pNewObject = new Anime4KCPPDS(NAME("Anime4KCPP for DirectShow"), punk, phr);
@@ -271,7 +285,7 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     }
 
     // Can we transform this type
-    if (IsYV12(mtIn) || IsIYUV(mtIn) || IsNV12(mtIn) || IsRGB24(mtIn) || IsRGB32(mtIn))
+    if (IsYV12(mtIn) || IsIYUV(mtIn) || IsNV12(mtIn) || IsRGB24(mtIn) || IsRGB32(mtIn) || IsP016(mtIn))
         return GPUCheckResult;
 
     return E_FAIL;
@@ -297,6 +311,11 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
     if (CNN && IsNV12(mtIn) && IsNV12(mtOut))
     {
         colorFormat = ColorFormat::NV12;
+        return NOERROR;
+    }
+    if (CNN && IsP016(mtIn) && IsP016(mtOut))
+    {
+        colorFormat = ColorFormat::P016;
         return NOERROR;
     }
     if (IsRGB24(mtIn) && IsRGB24(mtOut))
@@ -516,6 +535,58 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
                 if (y < dstHUV)
                 {
                     memcpy(pUVOut, dstUV.data + y * dstW, dstW);
+                    pUVOut += stride;
+                }
+            }
+        }
+    }
+    break;
+    case ColorFormat::P016:
+    {
+        size_t srcSize = (pIn->GetActualDataLength() << 1) / 6;
+        size_t dstSize = (pOut->GetActualDataLength() << 1) / 6;
+        size_t stride = dstSize / dstH;
+
+        WORD* pYIn = (WORD*)pBufferIn,
+            * pUVIn = pYIn + srcSize;
+        WORD* pYOut = (WORD*)pBufferOut,
+            * pUVOut = pYOut + dstSize;
+
+        cv::Mat dstTmpY, dstTmpU, dstTmpV;
+        cv::Mat dstUV;
+
+        cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
+        std::vector<cv::Mat> uv(2);
+        cv::split(srcUV, uv);
+        WORD* pUIn = (WORD*)uv[0].data;
+        WORD* pVIn = (WORD*)uv[1].data;
+
+        if (stride == dstW)
+        {
+            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->process();
+            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
+            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
+            memcpy(pYOut, (WORD*)dstTmpY.data, dstSize * sizeof(WORD));
+            memcpy(pUVOut, (WORD*)dstUV.data, dstSize * sizeof(WORD) >> 1);
+        }
+        else
+        {
+            size_t dstHUV = dstH >> 1;
+
+            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->process();
+            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
+
+            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
+
+            for (size_t y = 0; y < dstH; y++)
+            {
+                memcpy(pYOut, (WORD*)dstTmpY.data + y * dstW, dstW * sizeof(WORD));
+                pYOut += stride;
+                if (y < dstHUV)
+                {
+                    memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
                     pUVOut += stride;
                 }
             }

@@ -16,6 +16,7 @@ public:
 private:
     void CASSharpening(cv::Mat& src);
     void changEachPixelBGR(cv::Mat& src, const std::function<void(const int, const int, PixelB, LineB)>&& callBack);
+    void changEachPixelBGR(cv::Mat& src, const std::function<void(const int, const int, PixelW, LineW)>&& callBack);
     void changEachPixelBGR(cv::Mat& src, const std::function<void(const int, const int, PixelF, LineF)>&& callBack);
 private:
     int H, W;
