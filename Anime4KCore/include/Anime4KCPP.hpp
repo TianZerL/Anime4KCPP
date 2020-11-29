@@ -9,7 +9,7 @@
 
 #include"ACManager.hpp"
 
-#define ANIME4KCPP_CORE_VERSION "2.4.1"
+#define ANIME4KCPP_CORE_VERSION "2.5.0"
 
 namespace Anime4KCPP
 {

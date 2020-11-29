@@ -85,12 +85,13 @@ For information on how to compile Anime4KCPP, see [wiki](https://github.com/Tian
 # Credits
 - [Anime4K](https://github.com/bloc97/Anime4K)
 - [cmdline](https://github.com/tanakh/cmdline)
+- [CUDA](https://developer.nvidia.com/cuda-zone)
 - [FFmpeg](https://ffmpeg.org/)
 - [OpenCL](https://www.khronos.org/opencl/)
 - [OpenCV](https://opencv.org/)
 - [Qt](https://www.qt.io/)
 
 # Acknowledgement
-[semmyenator](https://github.com/semmyenator) : Traditional Chinese, Japanese and French translation
+[semmyenator](https://github.com/semmyenator) : Traditional Chinese, Japanese and French translation for GUI
 
 All images are drawn by my friend ***King of learner*** and authorized to use, only for demonstration, do not use without permission.

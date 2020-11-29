@@ -70,12 +70,13 @@ HDN模式能更好的降噪，HDN等级从1到3，越高降噪效果越好，但
 # 鸣谢
 - [Anime4K](https://github.com/bloc97/Anime4K)
 - [cmdline](https://github.com/tanakh/cmdline)
+- [CUDA](https://developer.nvidia.com/cuda-zone)
 - [FFmpeg](https://ffmpeg.org/)
 - [OpenCL](https://www.khronos.org/opencl/)
 - [OpenCV](https://opencv.org/)
 - [Qt](https://www.qt.io/)
 
 # 致谢
-[semmyenator](https://github.com/semmyenator)：繁体中文、日语与法语翻译
+[semmyenator](https://github.com/semmyenator)：GUI繁体中文、日语与法语翻译
 
 项目中引用的所有动漫图像均由我的朋友 ***King of learner*** 绘制并授权使用，请勿在未经许可的情况下使用它们。
