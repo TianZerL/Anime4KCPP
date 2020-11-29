@@ -1,10 +1,10 @@
 #include "CPUCNNProcessor.hpp"
 
 #define RULE(x) std::max(x, 0.0)
-#define NORMB(X) (double(X) / 255.0)
-#define NORMW(X) (double(X) / 65535.0)
-#define UNNORMB(n) ((n) >= 255.0? uint8_t(255) : ((n) <= 0.0 ? uint8_t(0) : uint8_t(n)))
-#define UNNORMW(n) ((n) >= 65535.0? uint16_t(65535.0) : ((n) <= 0.0 ? uint16_t(0) : uint16_t(n)))
+#define NORMB(X) (static_cast<double>(X) / 255.0)
+#define NORMW(X) (static_cast<double>(X) / 65535.0)
+#define UNNORMB(n) ((n) >= 1.0? (uint8_t)(255) : ((n) <= 0.0 ? (uint8_t)(0) : static_cast<uint8_t>(n * 255.0 + 0.5)))
+#define UNNORMW(n) ((n) >= 1.0? (uint16_t)(65535) : ((n) <= 0.0 ? (uint16_t)(0) : static_cast<uint16_t>(n * 65535.0 + 0.5)))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
 void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
@@ -591,7 +591,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const doubl
             inMat[4] * kernels[16 + index] +
             inMat[5] * kernels[20 + index] +
             inMat[6] * kernels[24 + index] +
-            inMat[7] * kernels[28 + index]) * 255.0;
+            inMat[7] * kernels[28 + index]);
 
         *outMat = UNNORMB(luma);
 
@@ -615,7 +615,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const doubl
             inMat[4] * kernels[16 + index] +
             inMat[5] * kernels[20 + index] +
             inMat[6] * kernels[24 + index] +
-            inMat[7] * kernels[28 + index]) * 65535.0;
+            inMat[7] * kernels[28 + index]);
 
         *outMat = UNNORMW(luma);
 
