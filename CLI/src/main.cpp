@@ -219,17 +219,19 @@ int main(int argc, char* argv[])
     if (listGPUs)
     {
         std::cout << "OpenCL:" << std::endl;
-        Anime4KCPP::OpenCL::GPUList OpenCGPUList = Anime4KCPP::OpenCL::listGPUs();
-        if (OpenCGPUList.platforms == 0)
+        Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
+        if (OpenCLGPUList.platforms == 0)
             std::cerr << "Error: No OpenCL GPU found" << std::endl;
-        std::cout << OpenCGPUList() << std::endl;
+        else
+            std::cout << OpenCLGPUList() << std::endl;
 
 #ifdef ENABLE_CUDA
         std::cout << "Cuda:" << std::endl;
         Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
         if (CUDAGPUList.devices == 0)
             std::cerr << "Error: No CUDA GPU found" << std::endl;
-        std::cout << CUDAGPUList() << std::endl;
+        else
+            std::cout << CUDAGPUList() << std::endl;
 #endif
         return 0;
     }

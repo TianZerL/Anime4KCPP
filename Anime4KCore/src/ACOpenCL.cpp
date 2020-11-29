@@ -85,8 +85,14 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
         err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
         if (err != CL_SUCCESS || !devices)
         {
-            delete[] platform;
-            return GPUList(0, { 0 }, "No supported GPU");
+            if (platforms == 1)
+            {
+                delete[] platform;
+                return GPUList(0, { 0 }, "No supported GPU");
+            }
+            devicesVector.push_back(0);
+            msg << " No supported GPU in this platform" << std::endl;
+            continue;
         }
 
         devicesVector.push_back(devices);
@@ -122,7 +128,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
                 delete[] platform;
                 return GPUList(0, { 0 }, "Failed to get device name infomation");
             }
-            msg << "Device " << j << ": " << DeviceName << std::endl;
+            msg << " Device " << j << ": " << DeviceName << std::endl;
 
             delete[] DeviceName;
             clReleaseDevice(device[j]);
