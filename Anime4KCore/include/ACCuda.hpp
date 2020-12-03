@@ -37,39 +37,32 @@ namespace Anime4KCPP
 class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const unsigned int dID = 0);
+    Manager(const int dID = 0);
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
 private:
-    unsigned int dID;
-    bool initialized = false;
+    int dID;
 };
 
-inline Anime4KCPP::Cuda::Manager::Manager(const unsigned int dID)
+inline Anime4KCPP::Cuda::Manager::Manager(const int dID)
     : dID(dID) {}
 
 inline void Anime4KCPP::Cuda::Manager::init()
 {
-    if (!initialized)
-    {
-        cuInitCuda(dID);
-        initialized = true;
-    }
+    if (cuGetDeviceID() != dID)
+        cuSetDeviceID(dID);
 }
 
 inline void Anime4KCPP::Cuda::Manager::release()
 {
-    if (initialized)
-    {
+    if (cuGetDeviceID() == dID)
         cuReleaseCuda();
-        initialized = false;
-    }
 }
 
 inline bool Anime4KCPP::Cuda::Manager::isInitialized()
 {
-    return initialized;
+    return cuGetDeviceID() == dID;
 }
 
 struct Anime4KCPP::Cuda::GPUList

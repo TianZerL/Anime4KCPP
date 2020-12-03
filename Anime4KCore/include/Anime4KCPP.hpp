@@ -15,9 +15,6 @@ namespace Anime4KCPP
 {
     class DLL ACCreator;
 
-    template<typename T>
-    double benchmark();
-
     template<typename T, typename ...Types>
     double benchmark(Types&&... args);
 }
@@ -54,9 +51,21 @@ inline void Anime4KCPP::ACCreator::pushManager(Types&&... args)
     managers.emplace_back(std::make_shared<Manager>(std::forward<Types>(args)...));
 }
 
-template<typename T>
-inline double Anime4KCPP::benchmark()
+template<typename T, typename ...Types>
+inline double Anime4KCPP::benchmark(Types && ...args)
 {
+    Anime4KCPP::ACCreator creator;
+
+    creator.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
+    try
+    {
+        creator.init();
+    }
+    catch (const std::exception&)
+    {
+        return 0.0;
+    }
+
     cv::Mat testImg = cv::Mat::zeros(cv::Size(1920, 1080), CV_32FC1);
     cv::randu(testImg, cv::Scalar::all(0.0f), cv::Scalar::all(1.0f));
 
@@ -78,22 +87,4 @@ inline double Anime4KCPP::benchmark()
     }
 
     return avg / 3.0;
-}
-
-template<typename T, typename ...Types>
-inline double Anime4KCPP::benchmark(Types && ...args)
-{
-    Anime4KCPP::ACCreator creator;
-
-    creator.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
-    try
-    {
-        creator.init();
-    }
-    catch (const std::exception&)
-    {
-        return 0.0;
-    }
-
-    return benchmark<T>();
 }

@@ -1,18 +1,28 @@
 #include"CudaHelper.cuh"
 #include"CudaInterface.hpp"
 
-void cuInitCuda(const unsigned int id)
+int Anime4KCPP::Cuda::currCudaDeviceID = 0;
+
+void Anime4KCPP::Cuda::cuSetDeviceID(const int id)
 {
-    cudaError_t err = cudaSetDevice(id);
-    CheckCudaErr(err);
+    if (id < 0 || id >= cuGetDeviceCount())
+        currCudaDeviceID = 0;
+    else
+        currCudaDeviceID = id;
 }
 
-void cuReleaseCuda() noexcept
+int Anime4KCPP::Cuda::cuGetDeviceID() noexcept
+{
+    return currCudaDeviceID;
+}
+
+void Anime4KCPP::Cuda::cuReleaseCuda() noexcept
 {
     cudaDeviceReset();
+    currCudaDeviceID = 0;
 }
 
-inline int cuGetDeviceCount() noexcept
+inline int Anime4KCPP::Cuda::cuGetDeviceCount() noexcept
 {
     int deviceCount;
     cudaError_t err = cudaGetDeviceCount(&deviceCount);
@@ -21,7 +31,7 @@ inline int cuGetDeviceCount() noexcept
     return deviceCount;
 }
 
-inline std::string cuGetDeviceInfo(const unsigned int id)
+inline std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const unsigned int id)
 {
     cudaDeviceProp deviceProp;
     cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);
@@ -34,7 +44,7 @@ inline std::string cuGetDeviceInfo(const unsigned int id)
         "\n Compute Capability: " + std::to_string(deviceProp.major) + "." + std::to_string(deviceProp.minor);
 }
 
-std::string cuGetCudaInfo()
+std::string Anime4KCPP::Cuda::cuGetCudaInfo()
 {
     std::string info;
     int deviceCount = cuGetDeviceCount();
@@ -46,7 +56,7 @@ std::string cuGetCudaInfo()
     return info;
 }
 
-bool cuCheckDeviceSupport(const unsigned int id) noexcept
+bool Anime4KCPP::Cuda::cuCheckDeviceSupport(const unsigned int id) noexcept
 {
     cudaDeviceProp deviceProp;
     cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);

@@ -7375,9 +7375,14 @@ __global__ static void convTranspose8To1HDNL3<ushort>(
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
 
-void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
+void Anime4KCPP::Cuda::cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet * param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -7501,9 +7506,14 @@ void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData
     cudaStreamDestroy(stream);
 }
 
-void cuRunKernelACNetW(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamACNet* param)
+void Anime4KCPP::Cuda::cuRunKernelACNetW(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamACNet* param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -7627,9 +7637,14 @@ void cuRunKernelACNetW(const unsigned short int* inputData, unsigned short int* 
     cudaStreamDestroy(stream);
 }
 
-void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACNet* param)
+void Anime4KCPP::Cuda::cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACNet* param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);

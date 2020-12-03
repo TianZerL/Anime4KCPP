@@ -775,9 +775,14 @@ __global__ static void pushGradientF(
     surf2Dwrite(mc, dstImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
 }
 
-void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param)
+void Anime4KCPP::Cuda::cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
     
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -887,9 +892,14 @@ void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* output
     cudaStreamDestroy(stream);
 }
 
-void cuRunKernelAnime4K09W(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamAnime4K09* param)
+void Anime4KCPP::Cuda::cuRunKernelAnime4K09W(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamAnime4K09* param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
@@ -999,9 +1009,14 @@ void cuRunKernelAnime4K09W(const unsigned short int* inputData, unsigned short i
     cudaStreamDestroy(stream);
 }
 
-void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaParamAnime4K09* param)
+void Anime4KCPP::Cuda::cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaParamAnime4K09* param)
 {
     cudaError_t err = cudaSuccess;
+    if (currCudaDeviceID)
+    {
+        err = cudaSetDevice(currCudaDeviceID);
+        CheckCudaErr(err);
+    }
 
     cudaStream_t stream;
     cudaStreamCreate(&stream);
