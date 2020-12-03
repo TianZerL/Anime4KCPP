@@ -57,6 +57,7 @@ private:
     virtual void processRGBImageF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
+    virtual std::string getProcessorInfo() override;
 
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg);

@@ -167,6 +167,7 @@ public:
     void pauseVideoProcess();
     void continueVideoProcess() noexcept;
     virtual Processor::Type getProcessorType() noexcept = 0;
+    virtual std::string getProcessorInfo() = 0;
 private:
     void initVideoIO();
     void releaseVideoIO() noexcept;

@@ -242,7 +242,7 @@ extern "C"
     //acCheckGPUSupport may need to run two times for getting length of info string first
     DEPRECATED AC_DLL ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
     AC_DLL ac_bool AC_API acCheckGPUSupport2(ac_GPGPU GPGPUModel, unsigned int pID, unsigned int dID, char* info, size_t* length);
-    //acCheckGPUSupport may need to run two times for getting length of info string and length(platforms) of devices first
+    //acCheckGPUSupport may need to run two times for getting length of info string and length (platforms) of devices first
     AC_DLL void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
     AC_DLL ac_bool AC_API acIsInitializedGPU(void);
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
@@ -250,6 +250,7 @@ extern "C"
     DEPRECATED AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
     AC_DLL double AC_API acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID);
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
+    AC_DLL ac_error AC_API acGetProcessInfo(ac_instance instance, char* info, size_t* length);
 #ifdef __cplusplus
 }
 #endif

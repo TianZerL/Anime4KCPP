@@ -55,6 +55,8 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
     std::ostringstream oss;
     oss << AC::getInfo()
         << "----------------------------------------------" << std::endl
+        << "OpenCL Platform ID:" << pID << std::endl
+        << "OpenCL Device ID:" << dID << std::endl
         << "Passes: " << param.passes << std::endl
         << "pushColorCount: " << param.pushColorCount << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
@@ -62,8 +64,8 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
         << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
         << "Strength Color: " << param.strengthColor << std::endl
         << "Strength Gradient: " << param.strengthGradient << std::endl
-        << "Number of OpenCL command queues:" << commandQueueNum << std::endl
-        << "OpenCL parallel IO command queues:" << std::boolalpha << parallelIO << std::endl
+        << "Number of OpenCL Command Queues:" << commandQueueNum << std::endl
+        << "OpenCL Parallel IO Command Queues:" << std::boolalpha << parallelIO << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }
@@ -1599,8 +1601,6 @@ void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept
         clReleaseProgram(program);
     if (context != nullptr)
         clReleaseContext(context);
-    if (device != nullptr)
-        clReleaseDevice(device);
 }
 
 std::string Anime4KCPP::OpenCL::Anime4K09::readKernel(const std::string& fileName)
@@ -1618,6 +1618,54 @@ std::string Anime4KCPP::OpenCL::Anime4K09::readKernel(const std::string& fileNam
 Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() noexcept
 {
     return Processor::Type::OpenCL_Anime4K09;
+}
+
+std::string Anime4KCPP::OpenCL::Anime4K09::getProcessorInfo()
+{
+    cl_int err = 0;
+    cl_platform_id platform = nullptr;
+    cl_device_id device = nullptr;
+
+    size_t platformNameLength = 0;
+    size_t deviceNameLength = 0;
+
+    auto tmpPlatform = std::make_unique<cl_platform_id[]>(static_cast<size_t>(pID) + 1);
+    err = clGetPlatformIDs(pID + 1, tmpPlatform.get(), nullptr);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL platforms.", err);
+
+    platform = tmpPlatform[pID];
+
+    err = clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform information.", err);
+
+    auto platformName = std::make_unique<char[]>(platformNameLength);
+    err = clGetPlatformInfo(platform, CL_PLATFORM_NAME, platformNameLength, platformName.get(), nullptr);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform information.", err);
+
+    auto tmpDevice = std::make_unique<cl_device_id[]>(static_cast<size_t>(dID) + 1);
+    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, dID + 1, tmpDevice.get(), nullptr);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL devices.", err);
+
+    device = tmpDevice[dID];
+
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL devices information.", err);
+
+    auto deviceName = std::make_unique<char[]>(deviceNameLength);
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, deviceNameLength, deviceName.get(), nullptr);
+    if (err != CL_SUCCESS)
+        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL devices information.", err);
+
+    std::ostringstream oss;
+    oss << "Processor type: " << getProcessorType() << std::endl
+        << "Current OpenCL devices:" << std::endl
+        << std::string("Platform: ") + platformName.get() + "\n Device: " + deviceName.get();
+    return oss.str();
 }
 
 //init OpenCL arguments

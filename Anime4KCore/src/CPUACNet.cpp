@@ -61,7 +61,7 @@ std::string Anime4KCPP::CPU::ACNet::getInfo()
         << "----------------------------------------------" << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }
@@ -415,4 +415,11 @@ void Anime4KCPP::CPU::ACNet::processRGBImageF()
 Anime4KCPP::Processor::Type Anime4KCPP::CPU::ACNet::getProcessorType() noexcept
 {
     return Processor::Type::CPU_ACNet;
+}
+
+std::string Anime4KCPP::CPU::ACNet::getProcessorInfo()
+{
+    std::ostringstream oss;
+    oss << "Processor type: " << getProcessorType();
+    return oss.str();
 }

@@ -693,7 +693,7 @@ std::string Anime4KCPP::AC::getInfo()
     std::ostringstream oss;
     Processor::Type type = getProcessorType();
     oss << "----------------------------------------------" << std::endl
-        << "Parameter Infomation" << std::endl
+        << "Parameter information" << std::endl
         << "----------------------------------------------" << std::endl;
     if (param.videoMode)
     {
@@ -715,7 +715,7 @@ std::string Anime4KCPP::AC::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << std::endl
-        << "Filter Infomation" << std::endl
+        << "Filter information" << std::endl
         << "----------------------------------------------" << std::endl;
 
     return oss.str();

@@ -692,7 +692,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->freeNode(tmpData.node);
             return;
         }
-        vsapi->logMessage(mtDebug, ("Current GPU infomation: \n" + info).c_str());
+        vsapi->logMessage(mtDebug, ("Current GPU information: \n" + info).c_str());
     }
 
     if (tmpData.zoomFactor != 1.0)

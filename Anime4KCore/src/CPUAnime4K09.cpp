@@ -924,3 +924,10 @@ Anime4KCPP::Processor::Type Anime4KCPP::CPU::Anime4K09::getProcessorType() noexc
 {
     return Processor::Type::CPU_Anime4K09;
 }
+
+std::string Anime4KCPP::CPU::Anime4K09::getProcessorInfo()
+{
+    std::ostringstream oss;
+    oss << "Processor type: " << getProcessorType();
+    return oss.str();
+}

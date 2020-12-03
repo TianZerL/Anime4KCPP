@@ -55,4 +55,5 @@ private:
     void getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;
 
     virtual Processor::Type getProcessorType() noexcept override;
+    virtual std::string getProcessorInfo() override;
 };

@@ -120,7 +120,7 @@ message(STATUS
 )
 
 message(STATUS  
-"Building infomation:\n"
+"Building information:\n"
 "   Build CLI ${Build_CLI}\n"
 "   Build GUI ${Build_GUI}\n"
 "   Build VapourSynth plugin ${Build_VapourSynth_plugin}\n"
@@ -134,7 +134,7 @@ message(STATUS
 )
 if(WIN32)
     message(STATUS
-    "Extra building infomation for Windows:\n"
+    "Extra building information for Windows:\n"
     "   Build DSFilter ${Build_DS_Filter}\n"
     )
 endif()

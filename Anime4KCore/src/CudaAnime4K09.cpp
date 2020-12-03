@@ -12,6 +12,7 @@ std::string Anime4KCPP::Cuda::Anime4K09::getInfo()
     std::ostringstream oss;
     oss << AC::getInfo()
         << "----------------------------------------------" << std::endl
+        << "CUDA Device ID:" << cuGetDeviceID() << std::endl
         << "Passes: " << param.passes << std::endl
         << "pushColorCount: " << param.pushColorCount << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
@@ -221,6 +222,15 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageF()
 Anime4KCPP::Processor::Type Anime4KCPP::Cuda::Anime4K09::getProcessorType() noexcept
 {
     return Processor::Type::Cuda_Anime4K09;
+}
+
+std::string Anime4KCPP::Cuda::Anime4K09::getProcessorInfo()
+{
+    std::ostringstream oss;
+    oss << "Processor type: " << getProcessorType() << std::endl
+        << "Current CUDA devices:" << std::endl
+        << cuGetDeviceInfo(cuGetDeviceID());
+    return oss.str();
 }
 
 #endif

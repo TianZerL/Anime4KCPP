@@ -12,9 +12,10 @@ std::string Anime4KCPP::Cuda::ACNet::getInfo()
     std::ostringstream oss;
     oss << AC::getInfo()
         << "----------------------------------------------" << std::endl
+        << "CUDA Device ID:" << cuGetDeviceID() << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();
 }
@@ -436,6 +437,15 @@ void Anime4KCPP::Cuda::ACNet::processRGBImageF()
 Anime4KCPP::Processor::Type Anime4KCPP::Cuda::ACNet::getProcessorType() noexcept
 {
     return Processor::Type::Cuda_ACNet;
+}
+
+std::string Anime4KCPP::Cuda::ACNet::getProcessorInfo()
+{
+    std::ostringstream oss;
+    oss << "Processor type: " << getProcessorType() << std::endl
+        << "Current CUDA devices:" << std::endl
+        << cuGetDeviceInfo(cuGetDeviceID());
+    return oss.str();
 }
 
 #endif

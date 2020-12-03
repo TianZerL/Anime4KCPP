@@ -23,9 +23,9 @@ namespace Anime4KCPP
         struct DLL GPUList;
         struct DLL GPUInfo;
 
-        //return platforms, devices of each platform, all devices infomation
+        //return platforms, devices of each platform, all devices information
         DLL GPUList listGPUs();
-        //return result and infomation
+        //return result and information
         DLL GPUInfo checkGPUSupport(unsigned int pID, unsigned int dID);
     }
 

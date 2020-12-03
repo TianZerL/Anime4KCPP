@@ -40,9 +40,9 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
     cl_device_id* device = nullptr;
 
     size_t platformNameLength = 0;
-    size_t DeviceNameLength = 0;
+    size_t deviceNameLength = 0;
     char* platformName = nullptr;
-    char* DeviceName = nullptr;
+    char* deviceName = nullptr;
 
     std::ostringstream msg;
 
@@ -66,7 +66,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
         if (err != CL_SUCCESS)
         {
             delete[] platform;
-            return GPUList(0, { 0 }, "Failed to get platform name length infomation");
+            return GPUList(0, { 0 }, "Failed to get platform name length information");
         }
 
 
@@ -76,7 +76,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
         {
             delete[] platformName;
             delete[] platform;
-            return GPUList(0, { 0 }, "Failed to get platform name infomation");
+            return GPUList(0, { 0 }, "Failed to get platform name information");
         }
         msg << "Platform " << i << ": " << platformName << std::endl;
 
@@ -108,30 +108,27 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
 
         for (cl_uint j = 0; j < devices; j++)
         {
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
+            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
             if (err != CL_SUCCESS)
             {
-                clReleaseDevice(device[j]);
                 delete[] device;
                 delete[] platform;
-                return GPUList(0, { 0 }, "Failed to get device name length infomation");
+                return GPUList(0, { 0 }, "Failed to get device name length information");
             }
 
 
-            DeviceName = new char[DeviceNameLength];
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
+            deviceName = new char[deviceNameLength];
+            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, deviceNameLength, deviceName, nullptr);
             if (err != CL_SUCCESS)
             {
-                clReleaseDevice(device[j]);
-                delete[] DeviceName;
+                delete[] deviceName;
                 delete[] device;
                 delete[] platform;
-                return GPUList(0, { 0 }, "Failed to get device name infomation");
+                return GPUList(0, { 0 }, "Failed to get device name information");
             }
-            msg << " Device " << j << ": " << DeviceName << std::endl;
+            msg << " Device " << j << ": " << deviceName << std::endl;
 
-            delete[] DeviceName;
-            clReleaseDevice(device[j]);
+            delete[] deviceName;
         }
         delete[] device;
     }
@@ -149,9 +146,9 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID
     cl_device_id device = nullptr;
 
     size_t platformNameLength = 0;
-    size_t DeviceNameLength = 0;
+    size_t deviceNameLength = 0;
     char* platformName = nullptr;
-    char* DeviceName = nullptr;
+    char* deviceName = nullptr;
 
     err = clGetPlatformIDs(0, nullptr, &platforms);
     if (err != CL_SUCCESS || !platforms)
@@ -175,14 +172,14 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID
 
     err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
     if (err != CL_SUCCESS)
-        return GPUInfo(false, "Failed to get platform name length infomation");
+        return GPUInfo(false, "Failed to get platform name length information");
 
     platformName = new char[platformNameLength];
     err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
     if (err != CL_SUCCESS)
     {
         delete[] platformName;
-        return GPUInfo(false, "Failed to get platform name infomation");
+        return GPUInfo(false, "Failed to get platform name information");
     }
 
 
@@ -209,31 +206,28 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID
 
     delete[] tmpDevice;
 
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &DeviceNameLength);
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
     if (err != CL_SUCCESS)
     {
         delete[] platformName;
-        clReleaseDevice(device);
-        return GPUInfo(false, "Failed to get device name length infomation");
+        return GPUInfo(false, "Failed to get device name length information");
     }
 
 
-    DeviceName = new char[DeviceNameLength];
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, DeviceNameLength, DeviceName, nullptr);
+    deviceName = new char[deviceNameLength];
+    err = clGetDeviceInfo(device, CL_DEVICE_NAME, deviceNameLength, deviceName, nullptr);
     if (err != CL_SUCCESS)
     {
-        delete[] DeviceName;
+        delete[] deviceName;
         delete[] platformName;
-        clReleaseDevice(device);
-        return GPUInfo(false, "Failed to get device name infomation");
+        return GPUInfo(false, "Failed to get device name information");
     }
 
     GPUInfo ret(true,
-        std::string("Platform: ") + platformName + "\n" + "Device: " + DeviceName);
+        std::string("Platform: ") + platformName + "\n" + " Device: " + deviceName);
 
-    delete[] DeviceName;
+    delete[] deviceName;
     delete[] platformName;
-    clReleaseDevice(device);
 
     return ret;
 }

@@ -38,6 +38,7 @@ private:
     virtual void processRGBImageF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
+    virtual std::string getProcessorInfo() override;
 };
 
 #endif

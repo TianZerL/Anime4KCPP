@@ -1008,4 +1008,23 @@ extern "C"
             return AC_CPU_Anime4K09;
         }
     }
+
+    ac_error acGetProcessInfo(ac_instance instance, char* info, size_t* length)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (info == nullptr && length == nullptr)
+            return AC_OK;
+
+        std::string ret = reinterpret_cast<Anime4KCPP::AC*>(instance)->getProcessorInfo();
+
+        if (length != nullptr)
+            *length = ret.size() + 1;
+
+        if (info != nullptr)
+            memcpy(info, ret.c_str(), ret.size() + 1);
+
+        return AC_OK;
+    }
 }
