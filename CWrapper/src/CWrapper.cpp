@@ -103,16 +103,16 @@ extern "C"
         switch (type)
         {
         case AC_CPU_Anime4K09:
-            return static_cast<ac_instance>(new Anime4KCPP::CPU::Anime4K09(getParameters(parameters)));
+            return reinterpret_cast<ac_instance>(new Anime4KCPP::CPU::Anime4K09(getParameters(parameters)));
             break;
         case AC_CPU_ACNet:
-            return static_cast<ac_instance>(new Anime4KCPP::CPU::ACNet(getParameters(parameters)));
+            return reinterpret_cast<ac_instance>(new Anime4KCPP::CPU::ACNet(getParameters(parameters)));
             break;
         case AC_OpenCL_Anime4K09:
-            return static_cast<ac_instance>(new Anime4KCPP::OpenCL::Anime4K09(getParameters(parameters)));
+            return reinterpret_cast<ac_instance>(new Anime4KCPP::OpenCL::Anime4K09(getParameters(parameters)));
             break;
         case AC_OpenCL_ACNet:
-            return static_cast<ac_instance>(new Anime4KCPP::OpenCL::ACNet(getParameters(parameters)));
+            return reinterpret_cast<ac_instance>(new Anime4KCPP::OpenCL::ACNet(getParameters(parameters)));
             break;
         default:
             if (error != nullptr)
@@ -128,7 +128,7 @@ extern "C"
 
         acCreator = std::make_unique<Anime4KCPP::ACCreator>();
 
-        if (managers | AC_Manager_OpenCL_Anime4K09)
+        if (managers & AC_Manager_OpenCL_Anime4K09)
         {
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
             {
@@ -137,9 +137,12 @@ extern "C"
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (managerData->OpenCLAnime4K09Data->pID, managerData->OpenCLAnime4K09Data->dID);
+                (managerData->OpenCLAnime4K09Data->pID, 
+                    managerData->OpenCLAnime4K09Data->dID, 
+                    managerData->OpenCLAnime4K09Data->OpenCLQueueNum, 
+                    static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
         }
-        if (managers | AC_Manager_OpenCL_ACNet)
+        if (managers & AC_Manager_OpenCL_ACNet)
         {
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
             {
@@ -148,10 +151,13 @@ extern "C"
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (managerData->OpenCLACNetData->pID, managerData->OpenCLACNetData->dID,
-                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType));
+                (managerData->OpenCLACNetData->pID, 
+                    managerData->OpenCLACNetData->dID,
+                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType),
+                    managerData->OpenCLACNetData->OpenCLQueueNum,
+                    static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
         }
-        if (managers | AC_Manager_Cuda)
+        if (managers & AC_Manager_Cuda)
         {
 #ifndef ENABLE_CUDA
             if (error != nullptr)
@@ -180,13 +186,13 @@ extern "C"
             return nullptr;
         }
 
-        return static_cast<ac_instance>(acCreator->create(getParameters(parameters), getProcessorType(type, error)));
+        return reinterpret_cast<ac_instance>(acCreator->create(getParameters(parameters), getProcessorType(type, error)));
     }
 
     void acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN)
     {
         if (instance != nullptr)
-            delete static_cast<Anime4KCPP::AC*>(instance);
+            delete reinterpret_cast<Anime4KCPP::AC*>(instance);
 
         if (releaseGPU == AC_TRUE && Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
             Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
@@ -200,7 +206,7 @@ extern "C"
 
     void acFreeInstance2(ac_instance instance)
     {
-        acCreator->release(static_cast<Anime4KCPP::AC*>(instance));
+        acCreator->release(reinterpret_cast<Anime4KCPP::AC*>(instance));
 
         if (acCreator != nullptr)
             acCreator->deinit(true);
@@ -235,7 +241,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->loadImage(srcFile);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(srcFile);
         }
         catch (const std::exception& err)
         {
@@ -253,7 +259,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->loadVideo(srcFile);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadVideo(srcFile);
         }
         catch (const std::exception& err)
         {
@@ -271,7 +277,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->process();
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->process();
         }
         catch (const std::exception& err)
         {
@@ -289,7 +295,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->processWithPrintProgress();
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithPrintProgress();
         }
         catch (const std::exception& err)
         {
@@ -307,7 +313,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->processWithProgress(callBack);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithProgress(callBack);
         }
         catch (const std::exception& err)
         {
@@ -326,7 +332,7 @@ extern "C"
         try
         {
             time_t start = time(nullptr);
-            static_cast<Anime4KCPP::AC*>(instance)->processWithProgress([&callBack, &start](double v)
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithProgress([&callBack, &start](double v)
                 {
                     callBack(v, time(nullptr) - start);
                 });
@@ -345,7 +351,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->stopVideoProcess();
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->stopVideoProcess();
 
         return AC_OK;
     }
@@ -355,7 +361,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->pauseVideoProcess();
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->pauseVideoProcess();
 
         return AC_OK;
     }
@@ -365,7 +371,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->continueVideoProcess();
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->continueVideoProcess();
 
         return AC_OK;
     }
@@ -375,7 +381,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->showImage(R2B);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->showImage(R2B);
 
         return AC_OK;
     }
@@ -386,7 +392,7 @@ extern "C"
             return AC_ERROR_NULL_INSTANCE;
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->saveImage(dstFile);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(dstFile);
         }
         catch (const std::exception& err)
         {
@@ -404,7 +410,7 @@ extern "C"
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
         }
         catch (const std::exception& err)
         {
@@ -420,7 +426,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->saveVideo();
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->saveVideo();
 
         return AC_OK;
     }
@@ -430,7 +436,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->setArguments(getParameters(parameters));
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->setArguments(getParameters(parameters));
 
         return AC_OK;
     }
@@ -440,7 +446,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->setVideoMode(flag);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->setVideoMode(flag);
 
         return AC_OK;
     }
@@ -493,22 +499,28 @@ extern "C"
     {
         acCreator = std::make_unique<Anime4KCPP::ACCreator>();
 
-        if (managers | AC_Manager_OpenCL_Anime4K09)
+        if (managers & AC_Manager_OpenCL_Anime4K09)
         {
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (managerData->OpenCLAnime4K09Data->pID, managerData->OpenCLAnime4K09Data->dID);
+                (managerData->OpenCLAnime4K09Data->pID,
+                    managerData->OpenCLAnime4K09Data->dID,
+                    managerData->OpenCLAnime4K09Data->OpenCLQueueNum,
+                    static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
         }
-        if (managers | AC_Manager_OpenCL_ACNet)
+        if (managers & AC_Manager_OpenCL_ACNet)
         {
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (managerData->OpenCLACNetData->pID, managerData->OpenCLACNetData->dID,
-                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType));
+                (managerData->OpenCLACNetData->pID,
+                    managerData->OpenCLACNetData->dID,
+                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType),
+                    managerData->OpenCLACNetData->OpenCLQueueNum,
+                    static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
         }
-        if (managers | AC_Manager_Cuda)
+        if (managers & AC_Manager_Cuda)
         {
 #ifndef ENABLE_CUDA
             return AC_ERROR_CUDA_NOT_SUPPORTED;
@@ -538,27 +550,27 @@ extern "C"
             acCreator->deinit(true);
     }
 
-    ac_error acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
+    ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
+    ac_error acLoadImageYUVPlanarB(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        static_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    ac_error acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -566,21 +578,21 @@ extern "C"
         if (inputAsRGB32 && inputAsYUV444)
             return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
 
-        static_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
 
         return AC_OK;
     }
 
-    ac_error acSaveImageRGB(ac_instance instance, unsigned char** r, unsigned char** g, unsigned char** b)
+    ac_error acSaveImageRGBPlanarB(ac_instance instance, unsigned char* r, unsigned char* g, unsigned char* b)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        if (*r == nullptr || *g == nullptr || *b == nullptr)
+        if (r == nullptr || g == nullptr || b == nullptr)
             return AC_ERROR_SAVE_TO_NULL_POINTER;
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->saveImage(*r, *g, *b);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
         }
         catch (const std::exception& err)
         {
@@ -591,17 +603,165 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acSaveImageRGBBytes(ac_instance instance, unsigned char** data)
+    ac_error acSaveImageRGBPackedB(ac_instance instance, unsigned char* data)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        if (*data == nullptr)
+        if (data == nullptr)
             return AC_ERROR_SAVE_TO_NULL_POINTER;
 
         try
         {
-            static_cast<Anime4KCPP::AC*>(instance)->saveImage(*data);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_NOT_YUV444;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageYUVPlanarW(ac_instance instance, int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (inputAsRGB32 && inputAsYUV444)
+            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
+
+        return AC_OK;
+    }
+
+    ac_error acSaveImageRGBPlanarW(ac_instance instance, unsigned short int* r, unsigned short int* g, unsigned short int* b)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (r == nullptr || g == nullptr || b == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
+        try
+        {
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_NOT_YUV444;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acSaveImageRGBPackedW(ac_instance instance, unsigned short int* data)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (data == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_NOT_YUV444;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, float* r, float* g, float* b, ac_bool inputAsYUV444)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageYUVPlanarF(ac_instance instance, int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (inputAsRGB32 && inputAsYUV444)
+            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
+
+        return AC_OK;
+    }
+
+    ac_error acSaveImageRGBPlanarF(ac_instance instance, float* r, float* g, float* b)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (r == nullptr || g == nullptr || b == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
+        try
+        {
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_NOT_YUV444;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acSaveImageRGBPackedF(ac_instance instance, float* data)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (data == nullptr)
+            return AC_ERROR_SAVE_TO_NULL_POINTER;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
         }
         catch (const std::exception& err)
         {
@@ -624,7 +784,7 @@ extern "C"
             return 0;
         }
 
-        return static_cast<Anime4KCPP::AC*>(instance)->getResultDataLength();
+        return reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultDataLength();
     }
 
     size_t acGetResultDataPerChannelLength(ac_instance instance, ac_error* error)
@@ -639,7 +799,7 @@ extern "C"
             return 0;
         }
 
-        return static_cast<Anime4KCPP::AC*>(instance)->getResultDataPerChannelLength();
+        return reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultDataPerChannelLength();
     }
 
     ac_error acGetResultShape(ac_instance instance, int shape[3])
@@ -647,7 +807,7 @@ extern "C"
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        std::array<int, 3> ret = static_cast<Anime4KCPP::AC*>(instance)->getResultShape();
+        std::array<int, 3> ret = reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultShape();
 
         for (int i = 0; i < 3; i++)
             shape[i] = ret[i];
@@ -663,7 +823,7 @@ extern "C"
         if (info == nullptr && length == nullptr)
             return AC_OK;
 
-        std::string ret = static_cast<Anime4KCPP::AC*>(instance)->getInfo();
+        std::string ret = reinterpret_cast<Anime4KCPP::AC*>(instance)->getInfo();
 
         if (length != nullptr)
             *length = ret.size() + 1;
@@ -682,7 +842,7 @@ extern "C"
         if (info == nullptr && length == nullptr)
             return AC_OK;
 
-        std::string ret = static_cast<Anime4KCPP::AC*>(instance)->getFiltersInfo();
+        std::string ret = reinterpret_cast<Anime4KCPP::AC*>(instance)->getFiltersInfo();
 
         if (length != nullptr)
             *length = ret.size() + 1;
@@ -792,7 +952,7 @@ extern "C"
         *GPUScore = _OpenCLScore;
     }
 
-    double acBenchmark2(ac_processType processType)
+    double acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID)
     {
         switch (processType)
         {
@@ -801,14 +961,14 @@ extern "C"
         case AC_CPU_ACNet:
             return Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
         case AC_OpenCL_Anime4K09:
-            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09>();
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09>(pID, dID);
         case AC_OpenCL_ACNet:
-            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>();
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
 #ifdef ENABLE_CUDA
         case AC_Cuda_Anime4K09:
-            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09>();
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09>(dID);
         case AC_Cuda_ACNet:
-            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>();
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
 #endif // ENABLE_CUDA
         default:
             return 0.0;
@@ -827,7 +987,7 @@ extern "C"
             return AC_CPU_Anime4K09;
         }
 
-        Anime4KCPP::Processor::Type type = static_cast<Anime4KCPP::AC*>(instance)->getProcessorType();
+        Anime4KCPP::Processor::Type type = reinterpret_cast<Anime4KCPP::AC*>(instance)->getProcessorType();
         switch (type)
         {
         case Anime4KCPP::Processor::Type::CPU_Anime4K09:

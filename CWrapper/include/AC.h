@@ -25,6 +25,12 @@
 #define DEPRECATED
 #endif
 
+#define acLoadImageRGB acLoadImageRGBPlanarB
+#define acLoadImageYUV acLoadImageYUVPlanarB
+#define acLoadImageRGBBytes acLoadImageRGBPackedB
+#define acSaveImageRGB acSaveImageRGBPlanarB
+#define acSaveImageRGBBytes acSaveImageRGBPackedB
+
 #define acSaveImageYUV acSaveImageRGB
 #define acSaveImageYUV444Bytes acSaveImageRGBBytes
 
@@ -137,12 +143,16 @@ extern "C"
     {
         unsigned int pID;
         unsigned int dID;
+        int OpenCLQueueNum;
+        ac_bool OpenCLParallelIO;
     } ac_OpenCLAnime4K09Data;
 
     typedef struct ac_OpenCLACNetData
     {
         unsigned int pID;
         unsigned int dID;
+        int OpenCLQueueNum;
+        ac_bool OpenCLParallelIO;
         ac_CNNType CNNType;
     } ac_OpenCLACNetData;
 
@@ -206,11 +216,21 @@ extern "C"
     DEPRECATED AC_DLL void AC_API acReleaseGPUCNN(void);
     AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
     AC_DLL void AC_API acReleaseGPU2(void);
-    AC_DLL ac_error AC_API acLoadImageRGB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
-    AC_DLL ac_error AC_API acLoadImageYUV(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
-    AC_DLL ac_error AC_API acLoadImageRGBBytes(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_DLL ac_error AC_API acSaveImageRGB(ac_instance instance, unsigned char** r, unsigned char** g, unsigned char** b);
-    AC_DLL ac_error AC_API acSaveImageRGBBytes(ac_instance instance, unsigned char** data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarB(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acSaveImageRGBPlanarB(ac_instance instance, unsigned char* r, unsigned char* g, unsigned char* b);
+    AC_DLL ac_error AC_API acSaveImageRGBPackedB(ac_instance instance, unsigned char* data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarW(ac_instance instance, int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acSaveImageRGBPlanarW(ac_instance instance, unsigned short int* r, unsigned short int* g, unsigned short int* b);
+    AC_DLL ac_error AC_API acSaveImageRGBPackedW(ac_instance instance, unsigned short int* data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, float* r, float* g, float* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarF(ac_instance instance, int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acSaveImageRGBPlanarF(ac_instance instance, float* r, float* g, float* b);
+    AC_DLL ac_error AC_API acSaveImageRGBPackedF(ac_instance instance, float* data);
     AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
     AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
     //shape should be int[3]
@@ -228,7 +248,7 @@ extern "C"
     AC_DLL ac_bool AC_API acIsInitializedGPUCNN(void);
     AC_DLL void AC_API acGetLastCoreErrorString(char* err, size_t* length);
     DEPRECATED AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
-    AC_DLL double AC_API acBenchmark2(ac_processType processType);
+    AC_DLL double AC_API acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID);
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
 #ifdef __cplusplus
 }
