@@ -1009,7 +1009,7 @@ extern "C"
         }
     }
 
-    ac_error acGetProcessInfo(ac_instance instance, char* info, size_t* length)
+    ac_error acGetProcessorInfo(ac_instance instance, char* info, size_t* length)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;

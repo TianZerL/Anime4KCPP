@@ -250,8 +250,8 @@ extern "C"
     DEPRECATED AC_DLL void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
     AC_DLL double AC_API acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID);
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
-    //acGetProcessInfo may need to run two times for getting length of info string first
-    AC_DLL ac_error AC_API acGetProcessInfo(ac_instance instance, char* info, size_t* length);
+    //acGetProcessorInfo may need to run two times for getting length of info string first
+    AC_DLL ac_error AC_API acGetProcessorInfo(ac_instance instance, char* info, size_t* length);
 
 #ifdef __cplusplus
 }
