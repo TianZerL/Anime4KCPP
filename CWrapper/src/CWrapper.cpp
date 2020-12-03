@@ -1,5 +1,5 @@
 #define AC_DLL
-#define C_WRAPPER_VERSION "1.2.0"
+#define C_WRAPPER_VERSION "1.5.0"
 
 #include "Anime4KCPP.hpp"
 #include "AC.h"
@@ -870,7 +870,7 @@ extern "C"
     ac_bool acCheckGPUSupport2(ac_GPGPU GPGPUModel, unsigned int pID, unsigned int dID, char* info, size_t* length)
     {
         std::string infoString;
-        ac_bool rst;
+        ac_bool rst = AC_FALSE;
 
         switch (GPGPUModel)
         {
