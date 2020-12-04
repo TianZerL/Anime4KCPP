@@ -145,6 +145,8 @@ else()
     set(OS_64_Bit OFF)
 endif()
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 if (Enable_CUDA)
     add_definitions(-DENABLE_CUDA)
     if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
