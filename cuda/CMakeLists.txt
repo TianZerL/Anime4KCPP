@@ -6,7 +6,7 @@ if(Enable_CUDA)
 
         set(CUDA_NVCC_FLAGS 
         "${CUDA_NVCC_FLAGS}
-        -O3
+        -O3 -fPIC
         -gencode=arch=compute_35,code=sm_35
         -gencode=arch=compute_50,code=sm_50
         -gencode=arch=compute_52,code=sm_52
@@ -57,9 +57,10 @@ if(Enable_CUDA)
         message(STATUS "CMAKE_CUDA_ARCHITECTURES:    ${CMAKE_CUDA_ARCHITECTURES}")
 
         add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
+        
+        set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE True)
     endif()
 
     set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
-    set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE True)
 
 endif()
