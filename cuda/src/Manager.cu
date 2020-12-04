@@ -22,7 +22,7 @@ void Anime4KCPP::Cuda::cuReleaseCuda() noexcept
     currCudaDeviceID = 0;
 }
 
-inline int Anime4KCPP::Cuda::cuGetDeviceCount() noexcept
+int Anime4KCPP::Cuda::cuGetDeviceCount() noexcept
 {
     int deviceCount;
     cudaError_t err = cudaGetDeviceCount(&deviceCount);
@@ -31,7 +31,7 @@ inline int Anime4KCPP::Cuda::cuGetDeviceCount() noexcept
     return deviceCount;
 }
 
-inline std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const unsigned int id)
+std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const unsigned int id)
 {
     cudaDeviceProp deviceProp;
     cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);
