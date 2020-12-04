@@ -2650,7 +2650,8 @@ std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << std::endl
         << "Current OpenCL devices:" << std::endl
-        << std::string("Platform: ") + platformName.get() + "\n Device: " + deviceName.get();
+        << " Platform " + std::to_string(pID) + ": " + platformName.get() << std::endl
+        << "  Device " + std::to_string(dID) + ": " + deviceName.get();
     return oss.str();
 }
 

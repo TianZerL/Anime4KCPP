@@ -4,6 +4,7 @@
 #include<functional>
 #include<atomic>
 #include<future>
+#include<cmath>
 
 #include<opencv2/opencv.hpp>
 #include<opencv2/videoio.hpp>
