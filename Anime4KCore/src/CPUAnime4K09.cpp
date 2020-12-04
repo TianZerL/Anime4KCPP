@@ -711,7 +711,7 @@ inline void Anime4KCPP::CPU::Anime4K09::getGradientF(cv::Mat& img)
             (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
             (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
 
-        float grad = std::sqrtf(gradX * gradX + gradY * gradY);
+        float grad = sqrtf(gradX * gradX + gradY * gradY);
 
         pixel[A] = 1.0f - CLAMP(grad, 0.0f, 1.0f);
         });

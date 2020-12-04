@@ -7,8 +7,6 @@
 #include<cmath>
 
 #include<opencv2/opencv.hpp>
-#include<opencv2/videoio.hpp>
-#include<opencv2/core/hal/interface.h>
 
 #include"ACException.hpp"
 #include"VideoIO.hpp"

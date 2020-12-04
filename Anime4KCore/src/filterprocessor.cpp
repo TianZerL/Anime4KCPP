@@ -152,9 +152,9 @@ inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& img)
             const float maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
 
             constexpr float peak = LERP(-0.125, -0.2, 1.0);
-            const float wR = peak * std::sqrtf(MIN(minR, 1.0f - maxR) * REC(maxR));
-            const float wG = peak * std::sqrtf(MIN(minG, 1.0f - maxG) * REC(maxG));
-            const float wB = peak * std::sqrtf(MIN(minB, 1.0f - maxB) * REC(maxB));
+            const float wR = peak * sqrtf(MIN(minR, 1.0f - maxR) * REC(maxR));
+            const float wG = peak * sqrtf(MIN(minG, 1.0f - maxG) * REC(maxG));
+            const float wB = peak * sqrtf(MIN(minB, 1.0f - maxB) * REC(maxB));
 
             const float r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0f + 4.0f * wR);
             const float g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0f + 4.0f * wG);
