@@ -41,7 +41,7 @@ if(Enable_CUDA)
         if(MSVC)
             set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
         else()
-            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3")
+            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3, -fPIC")
         endif()
         
         if(Enable_Fast_Math)
@@ -62,8 +62,6 @@ if(Enable_CUDA)
         message(STATUS "CMAKE_CUDA_ARCHITECTURES:    ${CMAKE_CUDA_ARCHITECTURES}")
 
         add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
-        
-        set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE True)
     endif()
 
     set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
