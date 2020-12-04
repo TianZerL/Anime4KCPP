@@ -41,7 +41,7 @@ if(Enable_CUDA)
         if(MSVC)
             set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
         else()
-            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3, -fPIC")
+            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3,-fPIC")
         endif()
         
         if(Enable_Fast_Math)
