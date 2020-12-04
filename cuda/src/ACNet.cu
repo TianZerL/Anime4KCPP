@@ -7127,7 +7127,7 @@ __global__ static void convTranspose8To1HDNL3(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL0<uchar>(
+__global__ void convTranspose8To1HDNL0<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7158,7 +7158,7 @@ __global__ static void convTranspose8To1HDNL0<uchar>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL1<uchar>(
+__global__ void convTranspose8To1HDNL1<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7189,7 +7189,7 @@ __global__ static void convTranspose8To1HDNL1<uchar>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL2<uchar>(
+__global__ void convTranspose8To1HDNL2<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7220,7 +7220,7 @@ __global__ static void convTranspose8To1HDNL2<uchar>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL3<uchar>(
+__global__ void convTranspose8To1HDNL3<uchar>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7252,7 +7252,7 @@ __global__ static void convTranspose8To1HDNL3<uchar>(
 
 
 template<>
-__global__ static void convTranspose8To1HDNL0<ushort>(
+__global__ void convTranspose8To1HDNL0<ushort>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7283,7 +7283,7 @@ __global__ static void convTranspose8To1HDNL0<ushort>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL1<ushort>(
+__global__ void convTranspose8To1HDNL1<ushort>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7314,7 +7314,7 @@ __global__ static void convTranspose8To1HDNL1<ushort>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL2<ushort>(
+__global__ void convTranspose8To1HDNL2<ushort>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
@@ -7345,7 +7345,7 @@ __global__ static void convTranspose8To1HDNL2<ushort>(
 }
 
 template<>
-__global__ static void convTranspose8To1HDNL3<ushort>(
+__global__ void convTranspose8To1HDNL3<ushort>(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     int W, int H)
 {
