@@ -4,6 +4,8 @@
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
+extern int currCudaDeviceID;
+
 #define MAX3(a, b, c) fmaxf(fmaxf(a,b),c)
 #define MIN3(a, b, c) fminf(fminf(a,b),c)
 #define TOUCHAR(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : (uchar)(n)))

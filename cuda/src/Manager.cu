@@ -1,7 +1,7 @@
 #include"CudaHelper.cuh"
 #include"CudaInterface.hpp"
 
-int Anime4KCPP::Cuda::currCudaDeviceID = 0;
+int currCudaDeviceID = 0;
 
 void Anime4KCPP::Cuda::cuSetDeviceID(const int id)
 {

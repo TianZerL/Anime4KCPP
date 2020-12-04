@@ -4,6 +4,8 @@
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 
+extern int currCudaDeviceID;
+
 #define RELU(x) fmaxf(x, 0.0f)
 
 #define L2 0
