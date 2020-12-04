@@ -38,7 +38,6 @@ if(Enable_CUDA)
         include(CheckLanguage)
         check_language(CUDA)
  
-        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
         if(Enable_Fast_Math)
             set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
         endif()
