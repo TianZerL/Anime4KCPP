@@ -6,7 +6,7 @@ if(Enable_CUDA)
 
         set(CUDA_NVCC_FLAGS 
         "${CUDA_NVCC_FLAGS}
-        -O3 -Xcompiler -fPIC
+        -O3 -Xcompiler=-fPIC
         -gencode=arch=compute_35,code=sm_35
         -gencode=arch=compute_50,code=sm_50
         -gencode=arch=compute_52,code=sm_52
@@ -40,6 +40,8 @@ if(Enable_CUDA)
  
         if(MSVC)
             set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
+        else()
+            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3")
         endif()
         
         if(Enable_Fast_Math)
