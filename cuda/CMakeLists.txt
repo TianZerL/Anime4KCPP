@@ -13,10 +13,14 @@ if(Enable_CUDA)
         -gencode=arch=compute_60,code=sm_60
         -gencode=arch=compute_61,code=sm_61
         -gencode=arch=compute_70,code=sm_70
-        -gencode=arch=compute_75,code=sm_75
-        -gencode=arch=compute_80,code=sm_80
-        -gencode=arch=compute_80,code=compute_80"
+        -gencode=arch=compute_75,code=sm_75"
         )
+
+        if(${CUDA_VERSION_MAJOR} LESS 11)
+            set(CUDA_NVCC_FLAGS  "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=compute_75")
+        else()
+            set(CUDA_NVCC_FLAGS  "${CUDA_NVCC_FLAGS} -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_80,code=compute_80")
+        endif()
 
         if(Enable_Fast_Math)
             set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --use_fast_math")
