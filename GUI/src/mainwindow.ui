@@ -359,8 +359,8 @@
           <property name="title">
            <string>Suffix</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_3">
-           <item>
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="0" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutImageSuffix">
              <item>
               <widget class="QLabel" name="labelImageSuffix">
@@ -381,7 +381,28 @@
              </item>
             </layout>
            </item>
-           <item>
+           <item row="0" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayoutImageOutputSuffix">
+             <item>
+              <widget class="QLabel" name="labelImageOutputSuffix">
+               <property name="text">
+                <string>image output</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEditImageSuffix</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditImageOutputSuffix">
+               <property name="statusTip">
+                <string>Specify output image suffix, leaving it empty means the same as the input</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutVideoSuffix">
              <item>
               <widget class="QLabel" name="labelVideoSuffix">
@@ -397,6 +418,27 @@
               <widget class="QLineEdit" name="lineEditVideoSuffix">
                <property name="statusTip">
                 <string>Video suffix</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item row="1" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayoutVideoOutputSuffix">
+             <item>
+              <widget class="QLabel" name="labelVideoOutputSuffix">
+               <property name="text">
+                <string>video output</string>
+               </property>
+               <property name="buddy">
+                <cstring>lineEditVideoSuffix</cstring>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditVideoOutputSuffix">
+               <property name="statusTip">
+                <string>Specify output video suffix, leaving it empty means &quot;mkv&quot;</string>
                </property>
               </widget>
              </item>

@@ -89,6 +89,8 @@ private:
     QString formatSuffixList(const QString&& type, QString str);
     FileType fileType(const QFileInfo& file);
     QString getOutputPrefix();
+    QString getImageOutputSuffix();
+    QString getVideoOutputSuffix();
     bool checkGIF(const QString& file);
     bool mergeAudio2Video(const QString& dstFile, const QString& srcFile, const QString& tmpFile);
     bool video2GIF(const QString& srcFile, const QString& dstFile);

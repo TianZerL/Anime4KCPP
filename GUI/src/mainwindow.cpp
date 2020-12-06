@@ -148,11 +148,13 @@ void MainWindow::dropEvent(QDropEvent* event)
 
         inputFile = new QStandardItem(fileInfo.fileName());
         if (type == FileType::VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
         else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else
+        else if (getImageOutputSuffix().isEmpty())
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
+        else
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
         inputPath = new QStandardItem(fileInfo.filePath());
         state = new QStandardItem(tr("ready"));
         if (ui->lineEditOutputPath->text().isEmpty())
@@ -176,6 +178,8 @@ void MainWindow::readConfig(const QSettings* conf)
 
     QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov:gif").toString();
+    QString imageOutputSuffix = conf->value("/Suffix/imageOutput", "").toString();
+    QString videoOutputSuffix = conf->value("/Suffix/videoOutput", "").toString();
     QString outputPath = conf->value("/Output/path", QApplication::applicationDirPath() + "/output").toString();
     QString outputPrefix = conf->value("/Output/perfix", "output_anime4kcpp_").toString();
 
@@ -241,6 +245,8 @@ void MainWindow::readConfig(const QSettings* conf)
     //suffix
     ui->lineEditImageSuffix->setText(imageSuffix);
     ui->lineEditVideoSuffix->setText(videoSuffix);
+    ui->lineEditImageOutputSuffix->setText(imageOutputSuffix);
+    ui->lineEditVideoOutputSuffix->setText(videoOutputSuffix);
     //output
     ui->lineEditOutputPath->setText(outputPath);
     ui->lineEditOutputPrefix->setText(outputPrefix);
@@ -291,6 +297,8 @@ void MainWindow::writeConfig(QSettings* conf)
 
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
+    QString imageOutputSuffix = ui->lineEditImageOutputSuffix->text();
+    QString videoOutputSuffix = ui->lineEditVideoOutputSuffix->text();
     QString outputPath = ui->lineEditOutputPath->text();
     QString outputPrefix = ui->lineEditOutputPrefix->text();
 
@@ -338,6 +346,8 @@ void MainWindow::writeConfig(QSettings* conf)
 
     conf->setValue("/Suffix/image", imageSuffix);
     conf->setValue("/Suffix/video", videoSuffix);
+    conf->setValue("/Suffix/imageOutput", imageOutputSuffix);
+    conf->setValue("/Suffix/videoOutput", videoOutputSuffix);
     conf->setValue("/Output/path", outputPath);
     conf->setValue("/Output/perfix", outputPrefix);
 
@@ -612,11 +622,14 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
 
 FileType MainWindow::fileType(const QFileInfo& file)
 {
-    QString imageSuffix = ui->lineEditImageSuffix->text();
-    QString videoSuffix = ui->lineEditVideoSuffix->text();
-    if (imageSuffix.contains(file.suffix(), Qt::CaseInsensitive))
+    QString imageSuffix = ui->lineEditImageSuffix->text().toLower();
+    QString videoSuffix = ui->lineEditVideoSuffix->text().toLower();
+    auto imageSuffixes = imageSuffix.splitRef(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    auto videoSuffixes = videoSuffix.splitRef(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    
+    if (imageSuffixes.contains(&file.suffix().toLower()))
         return FileType::IMAGE;
-    if (videoSuffix.contains(file.suffix(), Qt::CaseInsensitive))
+    if (videoSuffixes.contains(&file.suffix().toLower()))
     {
         if (checkGIF(file.filePath()))
             return FileType::GIF;
@@ -631,7 +644,20 @@ QString MainWindow::getOutputPrefix()
     QString prefix = ui->lineEditOutputPrefix->text();
     if (prefix.isEmpty())
         return "output_anime4kcpp_";
-    return ui->lineEditOutputPrefix->text();
+    return prefix;
+}
+
+QString MainWindow::getImageOutputSuffix()
+{
+    return "." + ui->lineEditImageOutputSuffix->text();
+}
+
+QString MainWindow::getVideoOutputSuffix()
+{
+    QString suffix = ui->lineEditVideoOutputSuffix->text();
+    if (suffix.isEmpty())
+        return ".mkv";
+    return "." + suffix;
 }
 
 inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
@@ -756,6 +782,8 @@ void MainWindow::on_pushButtonPickFiles_clicked()
     QStringList files = QFileDialog::getOpenFileNames(this, tr("pick files"), "./",
         formatSuffixList(tr("image"), ui->lineEditImageSuffix->text()) +
         formatSuffixList(tr("video"), ui->lineEditVideoSuffix->text()));
+    if (files.isEmpty())
+        return;
     files.removeDuplicates();
 
     QStandardItem* inputFile;
@@ -779,11 +807,13 @@ void MainWindow::on_pushButtonPickFiles_clicked()
 
         inputFile = new QStandardItem(fileInfo.fileName());
         if (type == FileType::VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
         else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else
+        else if (getImageOutputSuffix().isEmpty())
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
+        else
+            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
         inputPath = new QStandardItem(fileInfo.filePath());
         state = new QStandardItem(tr("ready"));
         if (ui->lineEditOutputPath->text().isEmpty())
@@ -844,11 +874,13 @@ void MainWindow::on_pushButtonWebVideo_clicked()
 
     inputFile = new QStandardItem(fileInfo.fileName());
     if (type == FileType::VIDEO)
-        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
     else if (type == FileType::GIF)
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-    else
+    else if (getImageOutputSuffix().isEmpty())
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
+    else
+        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
     inputPath = new QStandardItem(urlStr);
     state = new QStandardItem(tr("ready"));
     if (ui->lineEditOutputPath->text().isEmpty())
@@ -992,7 +1024,7 @@ void MainWindow::on_pushButtonPreview_clicked()
         try
         {
             ac->setVideoMode(false);
-            ac->loadImage(previewFile.filePath().toLocal8Bit().constData());
+            ac->loadImage(QFile::encodeName(previewFile.filePath()).toStdString());
             ac->process();
             ac->showImage();
         }
@@ -1017,6 +1049,8 @@ void MainWindow::on_pushButtonPreviewPick_clicked()
     QString fileName = QFileDialog::getOpenFileName(this, tr("pick files"), "./",
         formatSuffixList(tr("image"), ui->lineEditImageSuffix->text()) +
         formatSuffixList(tr("video"), ui->lineEditVideoSuffix->text()));
+    if (fileName.isEmpty())
+        return;
     ui->lineEditPreview->setText(fileName);
 }
 
@@ -1111,12 +1145,12 @@ void MainWindow::on_pushButtonStart_clicked()
             {
                 try
                 {
-                    ac->loadImage(image.first.first.toLocal8Bit().constData());
+                    ac->loadImage(QFile::encodeName(image.first.first).toStdString());
                     emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     ac->process();
                     endTime = std::chrono::steady_clock::now();
-                    ac->saveImage(image.first.second.toLocal8Bit().constData());
+                    ac->saveImage(QFile::encodeName(image.first.second).toStdString());
                 }
                 catch (const std::exception& err)
                 {
@@ -1137,8 +1171,8 @@ void MainWindow::on_pushButtonStart_clicked()
             {
                 try
                 {
-                    ac->loadVideo(video.first.first.toLocal8Bit().constData());
-                    ac->setVideoSaveInfo(video.first.second.toLocal8Bit().constData() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
+                    ac->loadVideo(QFile::encodeName(video.first.first).toStdString());
+                    ac->setVideoSaveInfo(QFile::encodeName(video.first.second).toStdString() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     ac->processWithProgress([this, &ac, &startTime, &cm](double v) {
@@ -1364,7 +1398,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     }
     //read image by opencv for resizing by CUBIC
     double factor = ui->doubleSpinBoxZoomFactor->value();
-    cv::Mat orgImg = cv::imread(filePath.toLocal8Bit().constData(), cv::IMREAD_UNCHANGED);
+    cv::Mat orgImg = cv::imread(QFile::encodeName(filePath).toStdString(), cv::IMREAD_UNCHANGED);
     cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
     QImage originImage;
@@ -1402,9 +1436,11 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
 
 void MainWindow::on_pushButtonPickFolder_clicked()
 {
-    QString folderPath = QFileDialog::getExistingDirectory(this, tr("output directory"), "./");
+    QString folderPath = QFileDialog::getExistingDirectory(this, tr("please select a folder"), "./");
+    if (folderPath.isEmpty())
+        return;
     QDir folder(folderPath);
-    QFileInfoList fileInfoList = folder.entryInfoList(QDir::Files);
+    QDirIterator folderIter(folderPath, QDir::Files, QDirIterator::Subdirectories);
 
     QStandardItem* inputFile;
     QStandardItem* outputFile;
@@ -1412,24 +1448,29 @@ void MainWindow::on_pushButtonPickFolder_clicked()
     QStandardItem* outputPath;
     QStandardItem* state;
 
-    for (QFileInfo& fileInfo : fileInfoList)
+    while (folderIter.hasNext())
     {
+        folderIter.next();
+        QFileInfo fileInfo = folderIter.fileInfo();
         FileType type = fileType(fileInfo);
-        if (!fileInfo.fileName().contains(QRegExp("[^\\x00-\\xff]")) && (type != FileType::BAD_TYPE))
+        QString path = folder.relativeFilePath(fileInfo.absolutePath());
+        if (type != FileType::BAD_TYPE)
         {
             inputFile = new QStandardItem(fileInfo.fileName());
             if (type == FileType::VIDEO)
-                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".mkv");
+                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
             else if (type == FileType::GIF)
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-            else
+            else if (getImageOutputSuffix().isEmpty())
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
+            else
+                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
             inputPath = new QStandardItem(fileInfo.filePath());
             state = new QStandardItem(tr("ready"));
             if (ui->lineEditOutputPath->text().isEmpty())
-                outputPath = new QStandardItem(QDir::currentPath());
+                outputPath = new QStandardItem(QDir::currentPath() + "/" + path);
             else
-                outputPath = new QStandardItem(ui->lineEditOutputPath->text());
+                outputPath = new QStandardItem(ui->lineEditOutputPath->text() + "/" + path);
             tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 
             totalTaskCount++;
@@ -1437,7 +1478,6 @@ void MainWindow::on_pushButtonPickFolder_clicked()
     }
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
-
 }
 
 void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
