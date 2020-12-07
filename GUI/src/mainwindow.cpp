@@ -1,11 +1,18 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#ifdef _WIN32
+#include <clocale>
+#endif
+
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+#ifdef _WIN32
+    std::setlocale(LC_CTYPE, ".UTF-8");
+#endif
     //initialize translator
     translator = new QTranslator(this);
     languageSelector["en"] = Language::en;
@@ -1024,7 +1031,7 @@ void MainWindow::on_pushButtonPreview_clicked()
         try
         {
             ac->setVideoMode(false);
-            ac->loadImage(QFile::encodeName(previewFile.filePath()).toStdString());
+            ac->loadImage(previewFile.filePath().toUtf8().toStdString());
             ac->process();
             ac->showImage();
         }
@@ -1145,12 +1152,12 @@ void MainWindow::on_pushButtonStart_clicked()
             {
                 try
                 {
-                    ac->loadImage(QFile::encodeName(image.first.first).toStdString());
+                    ac->loadImage(image.first.first.toUtf8().toStdString());
                     emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     ac->process();
                     endTime = std::chrono::steady_clock::now();
-                    ac->saveImage(QFile::encodeName(image.first.second).toStdString());
+                    ac->saveImage(image.first.second.toUtf8().toStdString());
                 }
                 catch (const std::exception& err)
                 {
@@ -1171,8 +1178,8 @@ void MainWindow::on_pushButtonStart_clicked()
             {
                 try
                 {
-                    ac->loadVideo(QFile::encodeName(video.first.first).toStdString());
-                    ac->setVideoSaveInfo(QFile::encodeName(video.first.second).toStdString() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
+                    ac->loadVideo(video.first.first.toUtf8().toStdString());
+                    ac->setVideoSaveInfo(video.first.second.toUtf8().toStdString() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(ac->getInfo() + "processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     ac->processWithProgress([this, &ac, &startTime, &cm](double v) {
@@ -1398,7 +1405,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     }
     //read image by opencv for resizing by CUBIC
     double factor = ui->doubleSpinBoxZoomFactor->value();
-    cv::Mat orgImg = cv::imread(QFile::encodeName(filePath).toStdString(), cv::IMREAD_UNCHANGED);
+    cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_UNCHANGED);
     cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
     //convert to QImage
     QImage originImage;
