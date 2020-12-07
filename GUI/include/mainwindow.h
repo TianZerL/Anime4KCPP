@@ -160,7 +160,7 @@ private slots:
 
     void on_pushButtonCopyText_clicked();
 
-    void on_pushButtonPreviewOrgin_clicked();
+    void on_pushButtonPreviewOriginal_clicked();
 
     void on_pushButtonPreviewOnlyResize_clicked();
 

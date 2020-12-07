@@ -1134,9 +1134,9 @@
               </widget>
              </item>
              <item>
-              <widget class="QPushButton" name="pushButtonPreviewOrgin">
+              <widget class="QPushButton" name="pushButtonPreviewOriginal">
                <property name="text">
-                <string>orgin image</string>
+                <string>original image</string>
                </property>
               </widget>
              </item>

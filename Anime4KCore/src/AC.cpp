@@ -770,6 +770,7 @@ void Anime4KCPP::AC::showImage(bool R2B)
 
     cv::imshow("preview", tmpImg);
     cv::waitKey();
+    cv::destroyWindow("preview");
 }
 
 void Anime4KCPP::AC::process()

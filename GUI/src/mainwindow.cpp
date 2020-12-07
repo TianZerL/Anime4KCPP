@@ -1021,6 +1021,11 @@ void MainWindow::on_pushButtonPreview_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
+    if (fileType(previewFile) == FileType::BAD_TYPE)
+    {
+        errorHandler(ErrorType::BAD_TYPE);
+        return;
+    }
 
     ui->pushButtonPreview->setEnabled(false);
 
@@ -1040,12 +1045,85 @@ void MainWindow::on_pushButtonPreview_clicked()
             errorHandler(err.what());
         }
         break;
+    case FileType::GIF:
     case FileType::VIDEO:
-        errorHandler(ErrorType::TYPE_NOT_IMAGE);
-        break;
-    case FileType::BAD_TYPE:
-        errorHandler(ErrorType::BAD_TYPE);
-        break;
+    {
+        try
+        {
+            std::string currInputPath = previewFile.absoluteFilePath().toUtf8().toStdString();
+
+            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+            if (!videoCapture.isOpened())
+                throw std::runtime_error("Error: Unable to open the video file");
+
+            double fps = ui->doubleSpinBoxFPS->value();
+            double zoomFactor = ui->doubleSpinBoxZoomFactor->value();
+            int delay = 500.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
+            char keyCode = 'q';
+            cv::Mat frame;
+            std::string windowName =
+                "Previewing, press 'q','ESC' or 'Enter' to exit, "
+                "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+                "'w' to forward, 's' to backward";
+            cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+            cv::resizeWindow(windowName,
+                videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
+                videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
+            ac->setVideoMode(false);
+
+            while (videoCapture.read(frame))
+            {
+                ac->loadImage(frame);
+                ac->process();
+                ac->saveImage(frame);
+                cv::imshow(windowName, frame);
+
+                keyCode = cv::waitKey(delay) & 0xff;
+
+                if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                    keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    break;
+                else if (keyCode == 0x20)
+                {
+                    keyCode = cv::waitKey(0);
+                    if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                        break;
+                }
+                else
+                {
+                    switch (keyCode)
+                    {
+                    case 'a':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 'd':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 's':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    case 'w':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    }
+                }
+            }
+            videoCapture.release();
+            cv::destroyWindow(windowName);
+        }
+        catch (const std::exception& err)
+        {
+            errorHandler(err.what());
+        }
+    }
     }
 
     ui->pushButtonPreview->setEnabled(true);
@@ -1377,7 +1455,7 @@ void MainWindow::on_pushButtonCopyText_clicked()
         QMessageBox::Ok);
 }
 
-void MainWindow::on_pushButtonPreviewOrgin_clicked()
+void MainWindow::on_pushButtonPreviewOriginal_clicked()
 {
     QString filePath = ui->lineEditPreview->text();
     if (filePath.isEmpty())
@@ -1385,14 +1463,105 @@ void MainWindow::on_pushButtonPreviewOrgin_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
-    QPixmap orginImage(filePath);
-    QWidget* orginImageWidget = new QWidget(this, Qt::Window);
-    orginImageWidget->setAttribute(Qt::WA_DeleteOnClose);
-    QLabel* orginImageLable = new QLabel(orginImageWidget);
-    orginImageLable->setPixmap(orginImage);
-    orginImageWidget->setWindowTitle("orgin image");
-    orginImageWidget->setFixedSize(orginImage.size());
-    orginImageWidget->show();
+    QFileInfo fileInfo(filePath);
+    if (fileType(fileInfo) == FileType::BAD_TYPE)
+    {
+        errorHandler(ErrorType::BAD_TYPE);
+        return;
+    }
+
+    ui->pushButtonPreviewOriginal->setEnabled(false);
+
+    switch (fileType(fileInfo))
+    {
+    case FileType::IMAGE:
+    {
+        cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_COLOR);
+        cv::imshow("original image", orgImg);
+        cv::waitKey();
+        cv::destroyWindow("original image");
+        break;
+    }
+    case FileType::GIF:
+    case FileType::VIDEO:
+    {
+        std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+
+        cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+        try
+        {
+            if (!videoCapture.isOpened())
+                throw std::runtime_error("Error: Unable to open the video file");
+        }
+        catch (const std::exception& err)
+        {
+            errorHandler(err.what());
+            break;
+        }
+
+        double fps = ui->doubleSpinBoxFPS->value();
+        int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
+        char keyCode = 'q';
+        std::string windowName =
+            "Previewing original image, press 'q','ESC' or 'Enter' to exit, "
+            "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+            "'w' to forward, 's' to backward";
+
+        cv::Mat frame;
+        cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+        cv::resizeWindow(windowName,
+            videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) + 0.5,
+            videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) + 0.5);
+
+        while (videoCapture.read(frame))
+        {
+            cv::imshow(windowName, frame);
+
+            keyCode = cv::waitKey(delay) & 0xff;
+
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                break;
+            else if (keyCode == 0x20)
+            {
+                keyCode = cv::waitKey(0);
+                if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    break;
+            }
+            else
+            {
+                switch (keyCode)
+                {
+                case 'a':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                    break;
+                case 'd':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                    break;
+                case 's':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                    break;
+                case 'w':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                    break;
+                }
+            }
+        }
+
+        videoCapture.release();
+        cv::destroyWindow(windowName);
+    }
+    }
+
+    ui->pushButtonPreviewOriginal->setEnabled(true);
 }
 
 void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
@@ -1403,42 +1572,108 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
-    //read image by opencv for resizing by CUBIC
-    double factor = ui->doubleSpinBoxZoomFactor->value();
-    cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_UNCHANGED);
-    cv::resize(orgImg, orgImg, cv::Size(0, 0), factor, factor, cv::INTER_CUBIC);
-    //convert to QImage
-    QImage originImage;
-    switch (orgImg.channels())
+    QFileInfo fileInfo(filePath);
+    if (fileType(fileInfo) == FileType::BAD_TYPE)
     {
-    case 4:
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2RGBA);
-        originImage = std::move(
-            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGBA8888));
-        break;
-    case 3:
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2RGB);
-        originImage = std::move(
-            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
-        break;
-    case 1:
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2RGB);
-        originImage = std::move(
-            QImage(orgImg.data, orgImg.cols, orgImg.rows, (int)(orgImg.step), QImage::Format_RGB888));
-        break;
-    default:
-        errorHandler(ErrorType::IMAGE_FORMAT_INVALID);
+        errorHandler(ErrorType::BAD_TYPE);
         return;
     }
-    QPixmap resizedImage(QPixmap::fromImage(originImage));
-    //show
-    QWidget* resizedImageWidget = new QWidget(this, Qt::Window);
-    resizedImageWidget->setAttribute(Qt::WA_DeleteOnClose);
-    QLabel* resizedImageLable = new QLabel(resizedImageWidget);
-    resizedImageLable->setPixmap(resizedImage);
-    resizedImageWidget->setWindowTitle("resized image");
-    resizedImageWidget->setFixedSize(resizedImage.size());
-    resizedImageWidget->show();
+
+    ui->pushButtonPreviewOnlyResize->setEnabled(false);
+
+    double zoomFactor = ui->doubleSpinBoxZoomFactor->value();
+    switch (fileType(fileInfo))
+    {
+    case FileType::IMAGE:
+    {
+        cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_COLOR);
+        cv::resize(orgImg, orgImg, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
+        cv::imshow("resized image", orgImg);
+        cv::waitKey();
+        cv::destroyWindow("resized image");
+        break;
+    }
+    case FileType::GIF:
+    case FileType::VIDEO:
+    {
+        std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+        cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+
+        try
+        {
+            if (!videoCapture.isOpened())
+                throw std::runtime_error("Error: Unable to open the video file");
+        }
+        catch (const std::exception& err)
+        {
+            errorHandler(err.what());
+            break;
+        }
+
+        double fps = ui->doubleSpinBoxFPS->value();
+        int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
+        char keyCode = 'q';
+        std::string windowName =
+            "Previewing resize only image, press 'q','ESC' or 'Enter' to exit, "
+            "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+            "'w' to forward, 's' to backward";
+
+        cv::Mat frame;
+        cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+        cv::resizeWindow(windowName,
+            videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
+            videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
+
+        while (videoCapture.read(frame))
+        {
+            cv::resize(frame, frame, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
+            cv::imshow(windowName, frame);
+
+            keyCode = cv::waitKey(delay) & 0xff;
+
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                break;
+            else if (keyCode == 0x20)
+            {
+                keyCode = cv::waitKey(0);
+                if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    break;
+            }
+            else
+            {
+                switch (keyCode)
+                {
+                case 'a':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                    break;
+                case 'd':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                    break;
+                case 's':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                    break;
+                case 'w':
+                    videoCapture.set(
+                        cv::CAP_PROP_POS_FRAMES,
+                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                    break;
+                }
+            }
+        }
+
+        videoCapture.release();
+        cv::destroyWindow(windowName);
+    }
+    }
+
+    ui->pushButtonPreviewOnlyResize->setEnabled(true);
 }
 
 void MainWindow::on_pushButtonPickFolder_clicked()

@@ -512,11 +512,12 @@ int main(int argc, char* argv[])
                 videoCapture.set(cv::CAP_PROP_POS_FRAMES, frameStart);
                 int delay = 500.0 / (forceFps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : forceFps);
                 char keyCode = 'q';
-                cv::Mat frame;
                 std::string windowName =
                     "Previewing, press 'q','ESC' or 'Enter' to exit, "
                     "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
                     "'w' to forward, 's' to backward";
+
+                cv::Mat frame;
                 cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
                 cv::resizeWindow(windowName,
                     videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
@@ -573,8 +574,9 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
+
                 videoCapture.release();
-                cv::destroyAllWindows();
+                cv::destroyWindow(windowName);
                 std::cout << "Exit" << std::endl;
             }
             else
