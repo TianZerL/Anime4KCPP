@@ -158,7 +158,7 @@ void MainWindow::dropEvent(QDropEvent* event)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
         else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else if (getImageOutputSuffix().size() == 1)
+        else if (getImageOutputSuffix().isEmpty())
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
@@ -656,6 +656,8 @@ QString MainWindow::getOutputPrefix()
 
 QString MainWindow::getImageOutputSuffix()
 {
+    if (ui->lineEditImageOutputSuffix->text().isEmpty())
+        return "";
     return "." + ui->lineEditImageOutputSuffix->text();
 }
 
@@ -817,7 +819,7 @@ void MainWindow::on_pushButtonPickFiles_clicked()
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
         else if (type == FileType::GIF)
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else if (getImageOutputSuffix().size() == 1)
+        else if (getImageOutputSuffix().isEmpty())
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
         else
             outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
@@ -884,7 +886,7 @@ void MainWindow::on_pushButtonWebVideo_clicked()
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
     else if (type == FileType::GIF)
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-    else if (getImageOutputSuffix().size() == 1)
+    else if (getImageOutputSuffix().isEmpty())
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
     else
         outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
@@ -1703,7 +1705,7 @@ void MainWindow::on_pushButtonPickFolder_clicked()
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
             else if (type == FileType::GIF)
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-            else if (getImageOutputSuffix().size() == 1)
+            else if (getImageOutputSuffix().isEmpty())
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
             else
                 outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
