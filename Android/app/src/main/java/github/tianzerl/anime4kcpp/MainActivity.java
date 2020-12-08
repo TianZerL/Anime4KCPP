@@ -362,12 +362,7 @@ public class MainActivity extends AppCompatActivity {
             passes = 1;
             preprocessing = false;
             postprocessing = false;
-        } else if (id == R.id.radioButtonBalance) {
-            passes = 2;
-            preprocessing = false;
-            postprocessing = false;
         } else if (id == R.id.radioButtonQuality) {
-            passes = 2;
             preprocessing = true;
             postprocessing = true;
             preFilters = 4;
