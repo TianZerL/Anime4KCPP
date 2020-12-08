@@ -25,18 +25,19 @@ public class Anime4KCPUCNN extends Anime4K {
     }
 
     private native long createAnime4KCPUCNN();
+
     private native long createAnime4KCPUCNNByArgs(int passes,
-                                               int pushColorCount,
-                                               double strengthColor,
-                                               double strengthGradient,
-                                               double zoomFactor,
-                                               boolean fastMode,
-                                               boolean videoMode,
-                                               boolean preprocessing,
-                                               boolean postProcessing,
-                                               byte preFilters,
-                                               byte postFilters,
-                                               boolean HDN,
-                                               int HDNLevel,
-                                               boolean alpha);
+                                                  int pushColorCount,
+                                                  double strengthColor,
+                                                  double strengthGradient,
+                                                  double zoomFactor,
+                                                  boolean fastMode,
+                                                  boolean videoMode,
+                                                  boolean preprocessing,
+                                                  boolean postProcessing,
+                                                  byte preFilters,
+                                                  byte postFilters,
+                                                  boolean HDN,
+                                                  int HDNLevel,
+                                                  boolean alpha);
 }

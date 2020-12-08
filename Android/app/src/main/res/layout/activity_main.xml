@@ -41,7 +41,6 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/buttonPick"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -51,7 +50,6 @@
                     android:textColor="#E91E63" />
 
                 <Button
-                    android:id="@+id/buttonDelete"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -61,7 +59,6 @@
                     android:textColor="#E91E63" />
 
                 <Button
-                    android:id="@+id/buttonClear"
                     style="?android:attr/buttonBarButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -92,7 +89,6 @@
                     android:layout_height="45dp" />
 
                 <View
-                    android:id="@+id/viewLine11"
                     android:layout_width="match_parent"
                     android:layout_height="3dp"
                     android:layout_margin="3dp"
@@ -108,7 +104,6 @@
                 android:text="@string/remaining_time_0_s" />
 
             <View
-                android:id="@+id/viewLine12"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -125,7 +120,6 @@
                 android:textColor="#E91E63" />
 
             <View
-                android:id="@+id/viewLine"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -133,7 +127,6 @@
                 android:padding="1dp" />
 
             <TextView
-                android:id="@+id/textViewSettings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -143,21 +136,20 @@
                 android:textColor="#E91E63" />
 
             <View
-                android:id="@+id/viewLine2"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
                 android:background="#8E8E8E"
                 android:padding="1dp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchACNet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/acnet" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchHDN"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -165,7 +157,6 @@
                 android:text="@string/hdn" />
 
             <TextView
-                android:id="@+id/textViewHDNLevel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -182,28 +173,28 @@
                 android:inputType="number"
                 android:text="@string/default_HDN_level" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchACNetGPUMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/acnet_gpu_mode" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchGPUMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/gpumode" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchFastMode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/fastmode" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchAlphaChannel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -211,7 +202,6 @@
                 android:text="@string/alpha_channel" />
 
             <View
-                android:id="@+id/viewLine3"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -251,7 +241,6 @@
             </RadioGroup>
 
             <View
-                android:id="@+id/viewLine4"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -259,7 +248,6 @@
                 android:padding="1dp" />
 
             <TextView
-                android:id="@+id/textViewOutputPath"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -277,7 +265,6 @@
                 android:text="@string/anime4kcpp_output_path" />
 
             <TextView
-                android:id="@+id/textViewOutputPrefix"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -295,7 +282,6 @@
                 android:text="@string/anime4kcpp_output_prefix" />
 
             <TextView
-                android:id="@+id/textViewSuffixImage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -313,7 +299,6 @@
                 android:text="@string/default_suffixImage" />
 
             <TextView
-                android:id="@+id/textViewSuffixVideo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -331,7 +316,6 @@
                 android:text="@string/default_suffixVideo" />
 
             <View
-                android:id="@+id/viewLine5"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -339,7 +323,6 @@
                 android:padding="1dp" />
 
             <TextView
-                android:id="@+id/textViewAdvancedSettings"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -349,7 +332,6 @@
                 android:textColor="#E91E63" />
 
             <View
-                android:id="@+id/viewLine6"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
@@ -357,7 +339,6 @@
                 android:padding="1dp" />
 
             <TextView
-                android:id="@+id/textViewZoomFactor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -376,7 +357,6 @@
                 tools:text="2" />
 
             <TextView
-                android:id="@+id/textViewPasses"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -395,7 +375,6 @@
                 tools:text="2" />
 
             <TextView
-                android:id="@+id/textViewPushColorCount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -414,7 +393,6 @@
                 tools:text="2" />
 
             <TextView
-                android:id="@+id/textViewStrengthColor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -433,7 +411,6 @@
                 tools:text="0.3" />
 
             <TextView
-                android:id="@+id/textViewStrengthGradien"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
@@ -452,14 +429,13 @@
                 tools:text="1.0" />
 
             <View
-                android:id="@+id/viewLine7"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
                 android:background="#8E8E8E"
                 android:padding="1dp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -467,56 +443,55 @@
                 android:text="@string/preprocessing" />
 
             <View
-                android:id="@+id/viewLine10"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="1dp"
                 android:background="#C1C1C1"
                 android:padding="1dp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingMedianBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/median_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingMeanBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/mean_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingCAS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/cas_sharpening" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingGaussianBlurWeak"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/gaussian_blur_weak" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingGaussianBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/gaussian_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingBilateralFilter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/bilateral_filter" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPreprocessingBilateralFilterFaster"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -524,14 +499,13 @@
                 android:text="@string/bilateral_filter_faster" />
 
             <View
-                android:id="@+id/viewLine8"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="3dp"
                 android:background="#8E8E8E"
                 android:padding="1dp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessing"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -539,56 +513,55 @@
                 android:text="@string/postprocessing" />
 
             <View
-                android:id="@+id/viewLine9"
                 android:layout_width="match_parent"
                 android:layout_height="3dp"
                 android:layout_margin="1dp"
                 android:background="#C1C1C1"
                 android:padding="1dp" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingMedianBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/median_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingMeanBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/mean_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingCAS"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/cas_sharpening" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingGaussianBlurWeak"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/gaussian_blur_weak" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingGaussianBlur"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/gaussian_blur" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingBilateralFilter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
                 android:text="@string/bilateral_filter" />
 
-            <Switch
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchPostprocessingBilateralFilterFaster"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

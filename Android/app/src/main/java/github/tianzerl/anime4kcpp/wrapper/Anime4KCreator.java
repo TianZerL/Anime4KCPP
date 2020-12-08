@@ -9,8 +9,7 @@ public class Anime4KCreator {
     }
 
     public Anime4K create(Parameters parameters, ProcessorType type) {
-        switch (type)
-        {
+        switch (type) {
             case CPU:
                 return new Anime4KCPU(parameters);
             case GPU:

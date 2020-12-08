@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class VideoAudioProcessor {
-    private String src;
-    private String tmp;
-    private String dst;
+    private final String src;
+    private final String tmp;
+    private final String dst;
 
     public VideoAudioProcessor(@NonNull String srcPath, @NonNull String tmpPath, @NonNull String dstPath) {
         src = srcPath;

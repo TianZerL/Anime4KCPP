@@ -40,6 +40,7 @@ public class Anime4KGPU extends Anime4K {
     }
 
     private native long createAnime4KGPU();
+
     private native long createAnime4KGPUByArgs(int passes,
                                                int pushColorCount,
                                                double strengthColor,
@@ -52,8 +53,12 @@ public class Anime4KGPU extends Anime4K {
                                                byte preFilters,
                                                byte postFilters,
                                                boolean alpha);
+
     private native static boolean checkGPUSupportAnime4KGPU();
+
     private native static void initGPUAnime4KGPU();
+
     private native static void releaseGPUAnime4KGPU();
+
     private native static boolean isInitializedGPUAnime4KGPU();
 }

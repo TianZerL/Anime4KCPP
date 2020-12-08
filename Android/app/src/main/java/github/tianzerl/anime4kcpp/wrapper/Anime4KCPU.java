@@ -24,6 +24,7 @@ public class Anime4KCPU extends Anime4K {
     }
 
     private native long createAnime4KCPU();
+
     private native long createAnime4KCPUByArgs(int passes,
                                                int pushColorCount,
                                                double strengthColor,

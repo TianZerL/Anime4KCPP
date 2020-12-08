@@ -37,21 +37,25 @@ public class Anime4KGPUCNN extends Anime4K {
     }
 
     private native long createAnime4KGPUCNN();
+
     private native long createAnime4KGPUCNNByArgs(int passes,
-                                               int pushColorCount,
-                                               double strengthColor,
-                                               double strengthGradient,
-                                               double zoomFactor,
-                                               boolean fastMode,
-                                               boolean videoMode,
-                                               boolean preprocessing,
-                                               boolean postProcessing,
-                                               byte preFilters,
-                                               byte postFilters,
-                                               boolean HDN,
-                                               int HDNLevel,
-                                               boolean alpha);
+                                                  int pushColorCount,
+                                                  double strengthColor,
+                                                  double strengthGradient,
+                                                  double zoomFactor,
+                                                  boolean fastMode,
+                                                  boolean videoMode,
+                                                  boolean preprocessing,
+                                                  boolean postProcessing,
+                                                  byte preFilters,
+                                                  byte postFilters,
+                                                  boolean HDN,
+                                                  int HDNLevel,
+                                                  boolean alpha);
+
     private native static void initGPUAnime4KGPUCNN();
+
     private native static void releaseGPUAnime4KGPUCNN();
+
     private native static boolean isInitializedGPUAnime4KGPUCNN();
 }
