@@ -676,7 +676,9 @@ inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
 
 void MainWindow::logToTextBrowser(const QString& info)
 {
-    solt_showInfo_renewTextBrowser((info + "\n").toStdString());
+    ui->textBrowserInfoOut->insertPlainText(
+        QDateTime::currentDateTime().toString(Qt::DateFormat::ISODateWithMs) + "  " + info + "\n");
+    ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
 bool MainWindow::checkGIF(const QString& file)
@@ -732,9 +734,10 @@ void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
 {
     tableModel->setData(tableModel->index(row, 4), tr("done"), Qt::DisplayRole);
     ui->progressBarProcessingList->setValue(pro * 100);
-    ui->textBrowserInfoOut->insertPlainText(QString("processing time: %1 s\ndone\n").arg(time / 1000.0));
+    ui->textBrowserInfoOut->insertPlainText(
+        (QDateTime::currentDateTime().toString(Qt::DateFormat::ISODateWithMs) + "  Finished " +
+            tableModel->data(tableModel->index(row, 0)).toString() + ", processing time: %1 s\n").arg(time / 1000.0));
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
-    totalProcessingTime += time;
 }
 
 void MainWindow::solt_error_renewState(int row, QString err)
@@ -749,7 +752,7 @@ void MainWindow::solt_allDone_remindUser()
     ui->labelRemaining->setText(QString("Remaining: 0.0 s"));
     QMessageBox::information(this,
         tr("Notice"),
-        QString("All tasks done\nTotal processing time: %1 s").arg(totalProcessingTime / 1000.0),
+        QString("All tasks done\nTotal time: %1 s").arg(totalProcessingTime / 1000.0),
         QMessageBox::Ok);
     totalProcessingTime = 0;
     ui->tableViewProcessingList->setEnabled(true);
@@ -770,7 +773,8 @@ void MainWindow::solt_allDone_remindUser()
 
 void MainWindow::solt_showInfo_renewTextBrowser(std::string info)
 {
-    ui->textBrowserInfoOut->insertPlainText(QString::fromStdString(info));
+    ui->textBrowserInfoOut->insertPlainText(
+        QDateTime::currentDateTime().toString(Qt::DateFormat::ISODateWithMs) + "  " + QString::fromStdString(info));
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
@@ -1177,6 +1181,7 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonPause->setEnabled(true);
 
     QtConcurrent::run([this, rows]() {
+
         //QList<<input_path,outpt_path>,row>
         QList<QPair<QPair<QString, QString>, int>> images;
         QList<QPair<QPair<QString, QString>, int>> videos;
@@ -1214,22 +1219,52 @@ void MainWindow::on_pushButtonStart_clicked()
         double total = imageCount + videoCount;
 
         Communicator cm;
-        connect(&cm, SIGNAL(done(int, double, quint64)), this, SLOT(solt_done_renewState(int, double, quint64)));
-        connect(&cm, SIGNAL(error(int, QString)), this, SLOT(solt_error_renewState(int, QString)));
-        connect(&cm, SIGNAL(showInfo(std::string)), this, SLOT(solt_showInfo_renewTextBrowser(std::string)));
-        connect(&cm, SIGNAL(allDone()), this, SLOT(solt_allDone_remindUser()));
-        connect(&cm, SIGNAL(updateProgress(double, double, double)), this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)));
-
-        std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
-        emit cm.showInfo(ac->getFiltersInfo());
-
-        std::chrono::steady_clock::time_point startTime, endTime;
-
+        connect(&cm, SIGNAL(done(int, double, quint64)),
+            this, SLOT(solt_done_renewState(int, double, quint64)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(error(int, QString)),
+            this, SLOT(solt_error_renewState(int, QString)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(showInfo(std::string)),
+            this, SLOT(solt_showInfo_renewTextBrowser(std::string)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(allDone()),
+            this, SLOT(solt_allDone_remindUser()), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(updateProgress(double, double, double)),
+            this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)), Qt::QueuedConnection);
+        std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
         if (imageCount)
         {
-            ac->setVideoMode(false);
-            for (QPair<QPair<QString, QString>, int> const& image : images)
+#if defined(_MSC_VER) || defined(USE_TBB)
+            Parallel::parallel_for(0, images.size(), [this, total, &images, &cm](int i) {
+                std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
+                std::chrono::steady_clock::time_point startTime, endTime;
+                ac->setVideoMode(false);
+                auto& image = images.at(i);
+                try
+                {
+                    ac->loadImage(image.first.first.toUtf8().toStdString());
+                    emit cm.showInfo(("Image: " + image.first.first).toStdString() + ", start processing...\n");
+                    startTime = std::chrono::steady_clock::now();
+                    ac->process();
+                    endTime = std::chrono::steady_clock::now();
+                    ac->saveImage(image.first.second.toUtf8().toStdString());
+                }
+                catch (const std::exception& err)
+                {
+                    emit cm.error(image.second, QString::fromStdString(err.what()));
+                }
+
+                imageCount--;
+                
+                emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
+                    std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+                });
+#else
+#pragma omp parallel for
+            for (int i = 0; i < images.size(); i++)
             {
+                std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
+                std::chrono::steady_clock::time_point startTime, endTime;
+                ac->setVideoMode(false);
+                auto& image = images.at(i);
                 try
                 {
                     ac->loadImage(image.first.first.toUtf8().toStdString());
@@ -1248,19 +1283,24 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
-
             }
+#endif
         }
         if (videoCount)
         {
+            std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
+            std::chrono::steady_clock::time_point startTime, endTime;
             ac->setVideoMode(true);
             for (QPair<QPair<QString, QString>, int> const& video : videos)
             {
                 try
                 {
                     ac->loadVideo(video.first.first.toUtf8().toStdString());
-                    ac->setVideoSaveInfo(video.first.second.toUtf8().toStdString() + std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), ui->doubleSpinBoxFPS->value());
-                    emit cm.showInfo(ac->getInfo() + "processing...\n");
+                    ac->setVideoSaveInfo(
+                        video.first.second.toUtf8().toStdString() + 
+                        std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), 
+                        ui->doubleSpinBoxFPS->value());
+                    emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     ac->processWithProgress([this, &ac, &startTime, &cm](double v) {
                         if (stop)
@@ -1323,13 +1363,14 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 emit cm.done(video.second, 1.0 - (videoCount / total),
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
-
             }
         }
-
+        
+        std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
+        totalProcessingTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll).count();
+        
         emit cm.allDone();
         });
-
 }
 
 void MainWindow::on_actionAbout_triggered()

@@ -196,7 +196,7 @@ private:
     QSettings* config;
 
     quint64 totalProcessingTime;
-    int imageCount;
+    std::atomic_int imageCount;
     int videoCount;
     bool foundFFmpegFlag;
     QString ffmpegPath;
