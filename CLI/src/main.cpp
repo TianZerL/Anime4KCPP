@@ -71,7 +71,7 @@ static Anime4KCPP::CODEC string2Codec(const std::string& codec)
         return Anime4KCPP::CODEC::MP4V;
 }
 
-inline static void showVersionInfo()
+static void showVersionInfo()
 {
     std::cerr
         << "Anime4KCPPCLI" << std::endl
@@ -80,6 +80,55 @@ inline static void showVersionInfo()
         << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
         << "Compiler: " << COMPILER << std::endl
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
+}
+
+static void showGPUList()
+{
+    std::cout << "OpenCL:" << std::endl;
+    Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
+    if (OpenCLGPUList.platforms == 0)
+        std::cerr << "Error: No OpenCL GPU found" << std::endl;
+    else
+        std::cout << OpenCLGPUList() << std::endl;
+
+#ifdef ENABLE_CUDA
+    std::cout << "Cuda:" << std::endl;
+    Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
+    if (CUDAGPUList.devices == 0)
+        std::cerr << "Error: No CUDA GPU found" << std::endl;
+    else
+        std::cout << CUDAGPUList() << std::endl;
+#endif
+}
+
+static void benchmark(unsigned int pID, unsigned int dID)
+{
+    std::cout << "Benchmarking..." << std::endl;
+
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+#ifdef ENABLE_CUDA
+    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
+
+    std::cout
+        << "CPU score: "
+        << CPUScore
+        << std::endl;
+
+    std::cout
+        << "OpenCL score: "
+        << OpenCLScore
+        << " (pID = " << pID << ", dID = " << dID << ")"
+        << std::endl;
+
+#ifdef ENABLE_CUDA
+    std::cout
+        << "CUDA score: "
+        << CudaScore
+        << " (dID = " << dID << ")"
+        << std::endl;
+#endif 
 }
 
 static bool genConfigTemplate(const std::string& path, Config& config)
@@ -218,52 +267,13 @@ int main(int argc, char* argv[])
     // -l
     if (listGPUs)
     {
-        std::cout << "OpenCL:" << std::endl;
-        Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
-        if (OpenCLGPUList.platforms == 0)
-            std::cerr << "Error: No OpenCL GPU found" << std::endl;
-        else
-            std::cout << OpenCLGPUList() << std::endl;
-
-#ifdef ENABLE_CUDA
-        std::cout << "Cuda:" << std::endl;
-        Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
-        if (CUDAGPUList.devices == 0)
-            std::cerr << "Error: No CUDA GPU found" << std::endl;
-        else
-            std::cout << CUDAGPUList() << std::endl;
-#endif
+        showGPUList();
         return 0;
     }
     // -b
     if (doBenchmark)
     {
-        std::cout << "Benchmarking..." << std::endl;
-
-        double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-        double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
-#ifdef ENABLE_CUDA
-        double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
-#endif 
-
-        std::cout
-            << "CPU score: "
-            << CPUScore
-            << std::endl;
-
-        std::cout
-            << "OpenCL score: "
-            << OpenCLScore
-            << " (pID = " << pID << ", dID = " << dID << ")"
-            << std::endl;
-
-#ifdef ENABLE_CUDA
-        std::cout
-            << "CUDA score: "
-            << CudaScore
-            << " (dID = " << dID << ")"
-            << std::endl;
-#endif 
+        benchmark(pID, dID);
         return 0;
     }
 
@@ -441,8 +451,11 @@ int main(int argc, char* argv[])
                     currac->process();
                     currac->saveImage(filePaths[i].second);
                     creator.release(currac);
-                    progress++;
-                    std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
+                    if (!disableProgress)
+                    {
+                        progress++;
+                        std::cout << '\r' << progress << '/' << filePaths.size();
+                    }
                     });
 #else
 #pragma omp parallel for
@@ -453,8 +466,11 @@ int main(int argc, char* argv[])
                     currac->process();
                     currac->saveImage(filePaths[i].second);
                     creator.release(currac);
-                    progress++;
-                    std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
+                    if (!disableProgress)
+                    {
+                        progress++;
+                        std::cout << '\r' << progress << '/' << filePaths.size();
+                    }
                 }
 #endif
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
