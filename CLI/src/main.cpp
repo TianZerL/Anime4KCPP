@@ -408,8 +408,7 @@ int main(int argc, char* argv[])
             {
                 if (!filesystem::is_directory(outputPath))
                     outputPath = outputPath.parent_path().append(outputPath.stem().native());
-                filesystem::create_directories(outputPath);
-                filesystem::directory_iterator currDir(inputPath);
+                filesystem::recursive_directory_iterator currDir(inputPath);
                 std::vector<std::pair<std::string, std::string>> filePaths;
 
                 std::cout
@@ -420,45 +419,44 @@ int main(int argc, char* argv[])
                 for (auto& file : currDir)
                 {
                     if (filesystem::is_directory(file.path()))
-                        continue;
+                        continue;             
+                    auto tmpOutputPath = outputPath / filesystem::relative(file.path(), inputPath);
+                    filesystem::create_directories(tmpOutputPath.parent_path());
                     std::string currInputPath = file.path().string();
-                    std::string currOnputPath = (outputPath / (file.path().filename().replace_extension(".png"))).string();
+                    std::string currOutputPath = tmpOutputPath.string();
 
-                    filePaths.emplace_back(std::make_pair(currInputPath, currOnputPath));
+                    filePaths.emplace_back(std::make_pair(currInputPath, currOutputPath));
                 }
 
                 std::cout << filePaths.size() << " files total" << std::endl
-                    << "Threads: " << threads << std::endl
                     << "Start processing..." << std::endl;
 
-                Anime4KCPP::Utils::ThreadPool threadPool(threads);
                 std::atomic_uint64_t progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-                for (int i = 0; i < filePaths.size(); i++)
-                {
-                    threadPool.exec([i, &filePaths, &progress, &creator, &parameters, &ac]()
-                        {
-                            Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
-                            currac->loadImage(filePaths[i].first);
-                            currac->process();
-                            currac->saveImage(filePaths[i].second);
-                            progress++;
-                            creator.release(currac);
-                        });
-                }
-
-                for (;;)
-                {
-                    std::this_thread::yield();
+#if defined(_MSC_VER) || defined(USE_TBB)
+                Parallel::parallel_for(static_cast<size_t>(0), filePaths.size(), [&](size_t i) {
+                    Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
+                    currac->loadImage(filePaths[i].first);
+                    currac->process();
+                    currac->saveImage(filePaths[i].second);
+                    creator.release(currac);
+                    progress++;
                     std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
-                    if (progress >= filePaths.size())
-                    {
-                        std::cout << '\r' << '[' << filePaths.size() << '/' << filePaths.size() << ']';
-                        break;
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    });
+#else
+#pragma omp parallel for
+                for (size_t i = 0; i < filePaths.size(); i++)
+                {
+                    Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
+                    currac->loadImage(filePaths[i].first);
+                    currac->process();
+                    currac->saveImage(filePaths[i].second);
+                    creator.release(currac);
+                    progress++;
+                    std::cout << '\r' << '[' << progress << '/' << filePaths.size() << ']';
                 }
+#endif
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout
@@ -604,8 +602,8 @@ int main(int argc, char* argv[])
                 {
                     if (!filesystem::is_directory(outputPath))
                         outputPath = outputPath.parent_path().append(outputPath.stem().native());
-                    filesystem::create_directories(outputPath);
-                    filesystem::directory_iterator currDir(inputPath);
+
+                    filesystem::recursive_directory_iterator currDir(inputPath);
                     for (auto& file : currDir)
                     {
                         if (filesystem::is_directory(file.path()))
@@ -615,8 +613,10 @@ int main(int argc, char* argv[])
                         std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
                         gif = inputSuffix == std::string(".gif");
 
+                        auto tmpOutputPath = outputPath / filesystem::relative(file.path(), inputPath);
+                        filesystem::create_directories(tmpOutputPath.parent_path());
                         std::string currInputPath = file.path().string();
-                        std::string currOutputPath = (outputPath / (file.path().filename().replace_extension(gif ? ".gif" : ".mkv"))).string();
+                        std::string currOutputPath = tmpOutputPath.replace_extension(gif ? ".gif" : ".mkv").string();
 
                         ac->loadVideo(currInputPath);
                         ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
