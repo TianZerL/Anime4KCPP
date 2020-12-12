@@ -127,10 +127,10 @@ public:
 
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
-    void loadImage(cv::InputArray srcImage);
-    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false);
-    void loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false);
-    void loadImage(int rows, int cols, float* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false);
+    void loadImage(const cv::Mat& srcImage);
+    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, float* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444 = false);
     void loadImage(int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444 = false);
     void loadImage(int rows, int cols, float* r, float* g, float* b, bool inputAsYUV444 = false);
@@ -173,13 +173,16 @@ private:
 protected:
     virtual void processYUVImageB() = 0;
     virtual void processRGBImageB() = 0;
+    virtual void processGrayscaleB() = 0;
     virtual void processRGBVideoB() = 0;
 
     virtual void processYUVImageW() = 0;
     virtual void processRGBImageW() = 0;
+    virtual void processGrayscaleW() = 0;
 
     virtual void processYUVImageF() = 0;
     virtual void processRGBImageF() = 0;
+    virtual void processGrayscaleF() = 0;
 private:
     double fps;
     double totalFrameCount;
@@ -187,6 +190,7 @@ private:
     bool inputRGB32 = false;
     bool checkAlphaChannel = false;
     bool inputYUV = false;
+    bool inputGrayscale = false;
 protected:
     int bitDepth = 8;
     int orgH, orgW, H, W;

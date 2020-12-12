@@ -507,37 +507,34 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         BYTE* pYOut = pBufferOut,
             * pUVOut = pYOut + dstSize;
 
-        cv::Mat dstTmpY, dstTmpU, dstTmpV;
+        cv::Mat dstY;
         cv::Mat dstUV;
 
+        cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
         cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_8UC2, pUVIn);
-        std::vector<cv::Mat> uv(2);
-        cv::split(srcUV, uv);
-        BYTE* pUIn = uv[0].data;
-        BYTE* pVIn = uv[1].data;
 
         if (stride == dstW)
         {
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->loadImage(srcY);
             ac->process();
-            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
-            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
-            memcpy(pYOut, dstTmpY.data, dstSize);
+            ac->saveImage(dstY);
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
+            memcpy(pYOut, dstY.data, dstSize);
             memcpy(pUVOut, dstUV.data, dstSize >> 1);
         }
         else
         {
             size_t dstHUV = dstH >> 1;
 
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->loadImage(srcY);
             ac->process();
-            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
+            ac->saveImage(dstY);
 
-            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
 
             for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pYOut, dstTmpY.data + y * dstW, dstW);
+                memcpy(pYOut, dstY.data + y * dstW, dstW);
                 pYOut += stride;
                 if (y < dstHUV)
                 {
@@ -559,37 +556,34 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         WORD* pYOut = (WORD*)pBufferOut,
             * pUVOut = pYOut + dstSize;
 
-        cv::Mat dstTmpY, dstTmpU, dstTmpV;
+        cv::Mat dstY;
         cv::Mat dstUV;
 
+        cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
         cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
-        std::vector<cv::Mat> uv(2);
-        cv::split(srcUV, uv);
-        WORD* pUIn = (WORD*)uv[0].data;
-        WORD* pVIn = (WORD*)uv[1].data;
 
         if (stride == dstW)
         {
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->loadImage(srcY);
             ac->process();
-            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
-            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
-            memcpy(pYOut, (WORD*)dstTmpY.data, dstSize * sizeof(WORD));
+            ac->saveImage(dstY);
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
+            memcpy(pYOut, (WORD*)dstY.data, dstSize * sizeof(WORD));
             memcpy(pUVOut, (WORD*)dstUV.data, dstSize * sizeof(WORD) >> 1);
         }
         else
         {
             size_t dstHUV = dstH >> 1;
 
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
+            ac->loadImage(srcY);
             ac->process();
-            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
+            ac->saveImage(dstY);
 
-            cv::merge(std::vector<cv::Mat>{dstTmpU, dstTmpV}, dstUV);
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
 
             for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pYOut, (WORD*)dstTmpY.data + y * dstW, dstW * sizeof(WORD));
+                memcpy(pYOut, (WORD*)dstY.data + y * dstW, dstW * sizeof(WORD));
                 pYOut += stride;
                 if (y < dstHUV)
                 {

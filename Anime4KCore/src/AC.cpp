@@ -68,7 +68,7 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
         {
         case 4:
             cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
             dstImg = orgImg;
             checkAlphaChannel = true;
@@ -78,8 +78,8 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
             checkAlphaChannel = false;
             break;
         case 1:
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
             dstImg = orgImg;
+            inputGrayscale = true;
             checkAlphaChannel = false;
             break;
         default:
@@ -110,19 +110,30 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
             "Unsupported data type");
         break;
     }
+
+    inputRGB32 = false;
+    inputYUV = false;
 }
 
-void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
+void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
 {
-    orgImg = srcImage.getMat();
+    orgImg = srcImage;
     if (orgImg.empty())
         throw ACException<ExceptionType::RunTimeError>("Empty image.");
     switch (orgImg.type())
     {
+    case CV_8UC1:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        checkAlphaChannel = false;
+        inputGrayscale = true;
+        bitDepth = 8;
+        break;
     case CV_8UC3:
         dstImg = orgImg;
         inputRGB32 = false;
         checkAlphaChannel = false;
+        inputGrayscale = false;
         bitDepth = 8;
         break;
     case CV_8UC4:
@@ -137,16 +148,58 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
             inputRGB32 = false;
             checkAlphaChannel = true;
             cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
             dstImg = orgImg;
         }
+        inputGrayscale = false;
         bitDepth = 8;
+        break;
+    case CV_16UC1:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        checkAlphaChannel = false;
+        inputGrayscale = true;
+        bitDepth = 16;
+        break;
+    case CV_16UC3:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        checkAlphaChannel = false;
+        inputGrayscale = false;
+        bitDepth = 16;
+        break;
+    case CV_16UC4:
+        if (!param.alpha)
+        {
+            inputRGB32 = true;
+            checkAlphaChannel = false;
+            cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
+        }
+        else
+        {
+            inputRGB32 = false;
+            checkAlphaChannel = true;
+            cv::extractChannel(orgImg, alphaChannel, A);
+            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
+            dstImg = orgImg;
+        }
+        inputGrayscale = false;
+        bitDepth = 16;
+        break;
+    case CV_32FC1:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        checkAlphaChannel = false;
+        inputGrayscale = true;
+        bitDepth = 32;
         break;
     case CV_32FC3:
         dstImg = orgImg;
         inputRGB32 = false;
         checkAlphaChannel = false;
+        inputGrayscale = false;
         bitDepth = 32;
         break;
     case CV_32FC4:
@@ -161,10 +214,11 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
             inputRGB32 = false;
             checkAlphaChannel = true;
             cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LANCZOS4);
+            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
             cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
             dstImg = orgImg;
         }
+        inputGrayscale = false;
         bitDepth = 32;
         break;
     default:
@@ -178,14 +232,25 @@ void Anime4KCPP::AC::loadImage(cv::InputArray srcImage)
     inputYUV = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
     case 0:
-        inputRGB32 = false;
-        inputYUV = false;
-        orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+        if (inputAsGrayscale)
+        {
+            inputGrayscale = true;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_8UC1, data, bytesPerLine);
+        }
+        else
+        {
+            inputGrayscale = false;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+        }
         break;
     case 1:
         if (inputAsRGB32)
@@ -206,6 +271,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
             dstU = orgU = yuv[U];
             dstV = orgV = yuv[V];
         }
+        inputGrayscale = false;
         break;
     case 2:
         throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
@@ -221,14 +287,24 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
+void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
-    case 0:
-        inputRGB32 = false;
-        inputYUV = false;
-        orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+        if (inputAsGrayscale)
+        {
+            inputGrayscale = true;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_16UC1, data, bytesPerLine);
+        }
+        else
+        {
+            inputGrayscale = false;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+        }
         break;
     case 1:
         if (inputAsRGB32)
@@ -249,6 +325,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
             dstU = orgU = yuv[U];
             dstV = orgV = yuv[V];
         }
+        inputGrayscale = false;
         break;
     case 2:
         throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
@@ -264,14 +341,25 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32)
+void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
     case 0:
-        inputRGB32 = false;
-        inputYUV = false;
-        orgImg = cv::Mat(rows, cols, CV_32FC3, data, bytesPerLine);
+        if (inputAsGrayscale)
+        {
+            inputGrayscale = true;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_32FC1, data, bytesPerLine);
+        }
+        else
+        {
+            inputGrayscale = false;
+            inputRGB32 = false;
+            inputYUV = false;
+            orgImg = cv::Mat(rows, cols, CV_32FC3, data, bytesPerLine);
+        }
         break;
     case 1:
         if (inputAsRGB32)
@@ -292,6 +380,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerL
             dstU = orgU = yuv[U];
             dstV = orgV = yuv[V];
         }
+        inputGrayscale = false;
         break;
     case 2:
         throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
@@ -332,6 +421,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned ch
     W = param.zoomFactor * orgW;
 
     bitDepth = 8;
+    inputGrayscale = false;
     inputRGB32 = false;
     checkAlphaChannel = false;
 }
@@ -361,6 +451,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* r, unsign
     W = param.zoomFactor * orgW;
 
     bitDepth = 16;
+    inputGrayscale = false;
     inputRGB32 = false;
     checkAlphaChannel = false;
 }
@@ -390,6 +481,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* r, float* g, float* b,
     W = param.zoomFactor * orgW;
 
     bitDepth = 32;
+    inputGrayscale = false;
     inputRGB32 = false;
     checkAlphaChannel = false;
 }
@@ -405,6 +497,7 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU
     W = param.zoomFactor * orgW;
 
     bitDepth = 8;
+    inputGrayscale = false;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
@@ -421,6 +514,7 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned short int* y, int 
     W = param.zoomFactor * orgW;
 
     bitDepth = 16;
+    inputGrayscale = false;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
@@ -437,6 +531,7 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, float* y, int rowsU, int co
     W = param.zoomFactor * orgW;
 
     bitDepth = 32;
+    inputGrayscale = false;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
@@ -452,6 +547,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     H = param.zoomFactor * orgH;
     W = param.zoomFactor * orgW;
 
+    inputGrayscale = false;
     inputYUV = true;
     inputRGB32 = false;
     checkAlphaChannel = false;
@@ -485,9 +581,9 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
     if (inputYUV)
     {
         if (dstY.size() != dstU.size())
-            cv::resize(dstU, dstU, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+            cv::resize(dstU, dstU, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
         if (dstY.size() != dstV.size())
-            cv::resize(dstV, dstV, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+            cv::resize(dstV, dstV, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
         cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
         cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
     }
@@ -753,9 +849,9 @@ void Anime4KCPP::AC::showImage(bool R2B)
     {
         cv::Mat tmpU, tmpV;
         if (dstY.size() != dstU.size())
-            cv::resize(dstU, tmpU, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+            cv::resize(dstU, tmpU, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
         if (dstY.size() != dstV.size())
-            cv::resize(dstV, tmpV, dstY.size(), 0.0, 0.0, cv::INTER_LANCZOS4);
+            cv::resize(dstV, tmpV, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
         cv::merge(std::vector<cv::Mat>{ dstY, tmpU, tmpV }, tmpImg);
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
     }
@@ -782,6 +878,8 @@ void Anime4KCPP::AC::process()
         {
             if (inputYUV)
                 processYUVImageB();
+            else if (inputGrayscale)
+                processGrayscaleB();
             else
                 processRGBImageB();
         }
@@ -793,12 +891,16 @@ void Anime4KCPP::AC::process()
     case 16:
         if (inputYUV)
             processYUVImageW();
+        else if (inputGrayscale)
+            processGrayscaleW();
         else
             processRGBImageW();
         break;
     case 32:
         if (inputYUV)
             processYUVImageF();
+        else if (inputGrayscale)
+            processGrayscaleF();
         else
             processRGBImageF();
         break;

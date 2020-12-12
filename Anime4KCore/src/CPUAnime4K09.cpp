@@ -70,7 +70,7 @@ void Anime4KCPP::CPU::Anime4K09::processYUVImageB()
     cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
 
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -100,7 +100,7 @@ void Anime4KCPP::CPU::Anime4K09::processYUVImageB()
 void Anime4KCPP::CPU::Anime4K09::processRGBImageB()
 {
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -120,6 +120,33 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageB()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::CPU::Anime4K09::processGrayscaleB()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)// preprocessing
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGrayB(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColorB(dstImg);
+        getGradientB(dstImg);
+        pushGradientB(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)// postprocessing
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::CPU::Anime4K09::processRGBVideoB()
 {
     videoIO->init(
@@ -132,7 +159,7 @@ void Anime4KCPP::CPU::Anime4K09::processRGBVideoB()
             if (param.preprocessing)
                 FilterProcessor(orgFrame, param.preFilters).process();
             cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            if (param.zoomFactor == 2.0F)
+            if (param.zoomFactor == 2.0)
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
             else
                 cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -160,7 +187,7 @@ void Anime4KCPP::CPU::Anime4K09::processYUVImageW()
     cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
 
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -190,7 +217,7 @@ void Anime4KCPP::CPU::Anime4K09::processYUVImageW()
 void Anime4KCPP::CPU::Anime4K09::processRGBImageW()
 {
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -210,13 +237,40 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageW()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::CPU::Anime4K09::processGrayscaleW()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)// preprocessing
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGrayW(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColorW(dstImg);
+        getGradientW(dstImg);
+        pushGradientW(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)// postprocessing
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::CPU::Anime4K09::processYUVImageF()
 {
     cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
     cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
 
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -246,7 +300,7 @@ void Anime4KCPP::CPU::Anime4K09::processYUVImageF()
 void Anime4KCPP::CPU::Anime4K09::processRGBImageF()
 {
     int tmpPcc = param.pushColorCount;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
         cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -264,6 +318,33 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageF()
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)// postprocessing
         FilterProcessor(dstImg, param.postFilters).process();
+}
+
+void Anime4KCPP::CPU::Anime4K09::processGrayscaleF()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    int tmpPcc = param.pushColorCount;
+    if (param.zoomFactor == 2.0)
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+    else
+        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+    if (param.preprocessing)// preprocessing
+        FilterProcessor(dstImg, param.preFilters).process();
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
+    for (int i = 0; i < param.passes; i++)
+    {
+        getGrayF(dstImg);
+        if (param.strengthColor && (tmpPcc-- > 0))
+            pushColorF(dstImg);
+        getGradientF(dstImg);
+        pushGradientF(dstImg);
+    }
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)// postprocessing
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
 }
 
 inline void Anime4KCPP::CPU::Anime4K09::getGrayB(cv::Mat& img)

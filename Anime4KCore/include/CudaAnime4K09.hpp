@@ -28,13 +28,16 @@ private:
 
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
+    virtual void processGrayscaleB() override;
     virtual void processRGBVideoB() override;
 
     virtual void processYUVImageW() override;
     virtual void processRGBImageW() override;
+    virtual void processGrayscaleW() override;
 
     virtual void processYUVImageF() override;
     virtual void processRGBImageF() override;
+    virtual void processGrayscaleF() override;
 
     virtual Processor::Type getProcessorType() noexcept override;
     virtual std::string getProcessorInfo() override;

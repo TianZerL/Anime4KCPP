@@ -170,6 +170,36 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageB()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleB()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_8UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    if (parallelIO)
+        runKernelPB(orgImg, dstImg);
+    else
+        runKernelB(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::OpenCL::Anime4K09::processRGBVideoB()
 {
     if (param.zoomFactor == 2.0)
@@ -268,6 +298,36 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageW()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleW()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_16UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    if (parallelIO)
+        runKernelPW(orgImg, dstImg);
+    else
+        runKernelW(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::OpenCL::Anime4K09::processYUVImageF()
 {
     if (param.zoomFactor == 2.0)
@@ -330,6 +390,36 @@ void Anime4KCPP::OpenCL::Anime4K09::processRGBImageF()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleF()
+{
+    if (param.zoomFactor == 2.0)
+    {
+        nWidth = 1.0 / static_cast<double>(W);
+        nHeight = 1.0 / static_cast<double>(H);
+    }
+    else
+    {
+        nWidth = static_cast<double>(orgW) / static_cast<double>(W);
+        nHeight = static_cast<double>(orgH) / static_cast<double>(H);
+    }
+
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    if (parallelIO)
+        runKernelPF(orgImg, dstImg);
+    else
+        runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
     cl_int err = CL_SUCCESS;
@@ -375,7 +465,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& d
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -552,7 +642,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelW(const cv::Mat& orgImg, cv::Mat& d
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -728,7 +818,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& d
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -907,7 +997,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelPB(const cv::Mat& orgImg, cv::Mat& 
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -1092,7 +1182,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelPW(const cv::Mat& orgImg, cv::Mat& 
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);
@@ -1277,7 +1367,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelPF(const cv::Mat& orgImg, cv::Mat& 
 
     //kernel for each thread
     cl_kernel kernelGetGray = nullptr;
-    if (param.zoomFactor == 2.0F)
+    if (param.zoomFactor == 2.0)
         kernelGetGray = clCreateKernel(program, "getGray", &err);
     else
         kernelGetGray = clCreateKernel(program, "getGrayLanczos4", &err);

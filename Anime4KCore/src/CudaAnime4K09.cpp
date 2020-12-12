@@ -129,6 +129,22 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageB()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::Cuda::Anime4K09::processGrayscaleB()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_8UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelB(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::Cuda::Anime4K09::processRGBVideoB()
 {
     videoIO->init(
@@ -185,6 +201,22 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageW()
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
+void Anime4KCPP::Cuda::Anime4K09::processGrayscaleW()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_16UC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelW(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
+}
+
 void Anime4KCPP::Cuda::Anime4K09::processYUVImageF()
 {
     cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
@@ -217,6 +249,22 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageF()
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
+}
+
+void Anime4KCPP::Cuda::Anime4K09::processGrayscaleF()
+{
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+
+    dstImg.create(H, W, CV_32FC4);
+    if (param.preprocessing)//Pretprocessing(CPU)
+        FilterProcessor(orgImg, param.preFilters).process();
+    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+    runKernelF(orgImg, dstImg);
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
+    if (param.postprocessing)//Postprocessing(CPU)
+        FilterProcessor(dstImg, param.postFilters).process();
+
+    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
 }
 
 Anime4KCPP::Processor::Type Anime4KCPP::Cuda::Anime4K09::getProcessorType() noexcept
