@@ -583,6 +583,16 @@ extern "C"
         return AC_OK;
     }
 
+    ac_error acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
+
+        return AC_OK;
+    }
+
     ac_error acSaveImageRGBPlanarB(ac_instance instance, unsigned char* r, unsigned char* g, unsigned char* b)
     {
         if (instance == nullptr)
@@ -657,6 +667,16 @@ extern "C"
         return AC_OK;
     }
 
+    ac_error acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
+
+        return AC_OK;
+    }
+
     ac_error acSaveImageRGBPlanarW(ac_instance instance, unsigned short int* r, unsigned short int* g, unsigned short int* b)
     {
         if (instance == nullptr)
@@ -727,6 +747,16 @@ extern "C"
             return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
 
         reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
 
         return AC_OK;
     }
