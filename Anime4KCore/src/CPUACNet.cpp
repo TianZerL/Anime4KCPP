@@ -254,7 +254,6 @@ void Anime4KCPP::CPU::ACNet::processRGBVideoB()
                 cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2YUV);
 
                 processor->processB(orgFrame, dstFrame);
-                std::vector<cv::Mat> yuv(3);
                 cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
                 cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
                 dstFrame = orgFrame;

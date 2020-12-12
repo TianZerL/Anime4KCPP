@@ -204,6 +204,69 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
 }
 
 template<typename T>
+static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+{
+    Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
+
+    if (activationReason == arInitial)
+        vsapi->requestFrameFilter(n, data->node, frameCtx);
+    else if (activationReason == arAllFramesReady)
+    {
+        const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
+
+        int h = vsapi->getFrameHeight(src, 0);
+
+        VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
+
+        int srcSrtide = vsapi->getStride(src, 0) / sizeof(T);
+
+        T* srcY = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
+
+        T* dstY = reinterpret_cast<T*>(vsapi->getWritePtr(dst, 0));
+
+        Anime4KCPP::AC* ac = nullptr;
+
+        if (data->GPU)
+        {
+            switch (data->GPGPUModel)
+            {
+            case GPGPU::OpenCL:
+                if (data->CNN)
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                else
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                break;
+            case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+                if (data->CNN)
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                else
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+                break;
+            }
+        }
+        else
+        {
+            if (data->CNN)
+                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            else
+                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+        }
+
+        ac->loadImage(h, srcSrtide, srcY, 0, false, false, true);
+        ac->process();
+        ac->saveImage(dstY);
+
+        data->acCreator.release(ac);
+        vsapi->freeFrame(src);
+
+        return dst;
+    }
+    return nullptr;
+}
+
+template<typename T>
 static const VSFrameRef* VS_CC Anime4KCPPGetFrameSafe(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
@@ -440,6 +503,94 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUVSafe(int n, int activationRe
     return nullptr;
 }
 
+template<typename T>
+static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscaleSafe(int n, int activationReason, void** instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+{
+    Anime4KCPPData* data = (Anime4KCPPData*)(*instanceData);
+
+    if (activationReason == arInitial)
+        vsapi->requestFrameFilter(n, data->node, frameCtx);
+    else if (activationReason == arAllFramesReady)
+    {
+        const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
+
+        size_t srcH = vsapi->getFrameHeight(src, 0);
+        size_t srcW = vsapi->getFrameWidth(src, 0);
+
+        size_t srcSrtide = vsapi->getStride(src, 0) / sizeof(T);
+
+        VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
+
+        size_t dstH = vsapi->getFrameHeight(dst, 0);
+        size_t dstW = vsapi->getFrameWidth(dst, 0);
+
+        size_t dstSrtide = vsapi->getStride(dst, 0) / sizeof(T);
+
+        const T* srcY = reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0));
+
+        T* srcYSafe = new T[srcH * srcW];
+
+        T* dstY = reinterpret_cast<T*>(vsapi->getWritePtr(dst, 0));
+
+        cv::Mat dstYSafe;
+
+        for (size_t y = 0; y < srcH; y++)
+        {
+            memcpy(srcYSafe + y * srcW, srcY, srcW * sizeof(T));
+            srcY += srcSrtide;
+        }
+
+        Anime4KCPP::AC* ac = nullptr;
+
+        if (data->GPU)
+        {
+            switch (data->GPGPUModel)
+            {
+            case GPGPU::OpenCL:
+                if (data->CNN)
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                else
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                break;
+            case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+                if (data->CNN)
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                else
+                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+                break;
+            }
+        }
+        else
+        {
+            if (data->CNN)
+                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            else
+                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+        }
+
+        ac->loadImage(srcH, srcW, srcYSafe, 0, false, false, true);
+        ac->process();
+        ac->saveImage(dstYSafe);
+
+        for (size_t y = 0; y < dstH; y++)
+        {
+            memcpy(dstY, reinterpret_cast<T*>(dstYSafe.data) + y * dstW, dstW * sizeof(T));
+            dstY += dstSrtide;
+        }
+
+        data->acCreator.release(ac);
+
+        delete[] srcYSafe;
+
+        vsapi->freeFrame(src);
+
+        return dst;
+    }
+    return nullptr;
+}
+
 static void VS_CC Anime4KCPPFree(void* instanceData, VSCore* core, const VSAPI* vsapi)
 {
     Anime4KCPPData* data = (Anime4KCPPData*)instanceData;
@@ -456,11 +607,11 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     tmpData.vi = *vsapi->getVideoInfo(tmpData.node);
 
     if (!isConstantFormat(&tmpData.vi) ||
-        (tmpData.vi.format->colorFamily != cmYUV && tmpData.vi.format->colorFamily != cmRGB) ||
+        (tmpData.vi.format->colorFamily != cmYUV && tmpData.vi.format->colorFamily != cmRGB && tmpData.vi.format->colorFamily != cmGray) ||
         (tmpData.vi.format->bitsPerSample != 8 && tmpData.vi.format->bitsPerSample != 16 && tmpData.vi.format->bitsPerSample != 32))
     {
         vsapi->setError(out, 
-            "Anime4KCPP: supported data type: RGB and YUV, depth with 8 or 16bit integer or 32bit float)");
+            "Anime4KCPP: supported data type: RGB, YUV and Grayscale, depth with 8 or 16bit integer or 32bit float)");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -507,7 +658,10 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         tmpData.CNN = false;
 
-    if (tmpData.vi.format->id != pfRGB24 && 
+    if (tmpData.vi.format->id != pfGray16 &&
+        tmpData.vi.format->id != pfGray8 &&
+        tmpData.vi.format->id != pfGrayS &&
+        tmpData.vi.format->id != pfRGB24 && 
         tmpData.vi.format->id != pfRGB48 &&
         tmpData.vi.format->id != pfRGBS &&
         tmpData.vi.format->id != pfYUV444P8 && 
@@ -515,7 +669,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         tmpData.vi.format->id != pfYUV444PS &&
         tmpData.CNN == false)
     {
-        vsapi->setError(out, "Anime4KCPP: RGB or YUV444 only for Anime4K09");
+        vsapi->setError(out, "Anime4KCPP: RGB or YUV444 or Grayscale only for Anime4K09");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -592,6 +746,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         safeMode = true;
 
     if (!safeMode && 
+        tmpData.vi.format->id != pfGray16 &&
+        tmpData.vi.format->id != pfGray8 &&
+        tmpData.vi.format->id != pfGrayS &&
         tmpData.vi.format->id != pfRGB24 &&
         tmpData.vi.format->id != pfRGB48 &&
         tmpData.vi.format->id != pfRGBS &&
@@ -599,7 +756,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         tmpData.vi.format->id != pfYUV444P16 &&
         tmpData.vi.format->id != pfYUV444PS)
     {
-        vsapi->setError(out, "Anime4KCPP: RGB or YUV444 only if safeMode was disabled");
+        vsapi->setError(out, "Anime4KCPP: RGB or YUV444 or Grayscale only if safeMode was disabled");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -719,7 +876,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     *data = tmpData;
 
     if (safeMode)
+    {
         if (tmpData.vi.format->colorFamily == cmYUV)
+        {
             if (tmpData.vi.format->sampleType == stFloat)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUVSafe<float>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
@@ -727,7 +886,19 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUVSafe<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
                 else
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUVSafe<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+        }
+        else if (tmpData.vi.format->colorFamily == cmGray)
+        {
+            if (tmpData.vi.format->sampleType == stFloat)
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscaleSafe<float>, Anime4KCPPFree, fmParallel, 0, data, core);
+            else
+                if (tmpData.vi.format->bitsPerSample == 8)
+                    vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscaleSafe<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
+                else
+                    vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscaleSafe<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+        }
         else
+        {
             if (tmpData.vi.format->sampleType == stFloat)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameSafe<float>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
@@ -735,8 +906,12 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameSafe<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
                 else
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameSafe<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+        }
+    }
     else
+    {
         if (tmpData.vi.format->colorFamily == cmYUV)
+        {
             if (tmpData.vi.format->sampleType == stFloat)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<float>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
@@ -744,7 +919,20 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
                 else
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+
+        }
+        else if (tmpData.vi.format->colorFamily == cmGray)
+        {
+            if (tmpData.vi.format->sampleType == stFloat)
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<float>, Anime4KCPPFree, fmParallel, 0, data, core);
+            else
+                if (tmpData.vi.format->bitsPerSample == 8)
+                    vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
+                else
+                    vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+        }
         else
+        {
             if (tmpData.vi.format->sampleType == stFloat)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<float>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
@@ -752,6 +940,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
                 else
                     vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+        }
+    }
 }
 
 static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)

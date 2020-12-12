@@ -54,6 +54,8 @@ public:
     PVideoFrame AC_STDCALL GetFrame(int n, IScriptEnvironment* env);
     template <typename T>
     PVideoFrame FilterYUV(PVideoFrame& src, PVideoFrame& dst);
+    template <typename T>
+    PVideoFrame FilterGrayscale(PVideoFrame& src, PVideoFrame& dst);
 
     PVideoFrame FilterRGB(PVideoFrame& src, PVideoFrame& dst);
 private:
@@ -83,15 +85,15 @@ Anime4KCPPF::Anime4KCPPF(
     GPUMode(GPUMode),
     GPGPUModel(GPGPUModel)
 {
-    if ((!vi.IsRGB24() && (!vi.IsYUV() || !vi.IsPlanar())) ||
+    if ((!vi.IsRGB24() && (!vi.IsYUV() || !vi.IsPlanar()) && !vi.IsY()) ||
         (vi.BitsPerComponent() != 8 && vi.BitsPerComponent() != 16 && vi.BitsPerComponent() != 32))
     {
-        env->ThrowError("Anime4KCPP: supported data type: RGB24 and YUV with 8 or 16bit integer or 32bit float)");
+        env->ThrowError("Anime4KCPP: supported data type: RGB24 and Grayscale or YUV with 8 or 16bit integer or 32bit float)");
     }
 
-    if (!vi.IsRGB24() && !vi.Is444() && !CNN)
+    if (!vi.IsRGB24() && !vi.Is444() && !vi.IsY() && !CNN)
     {
-        env->ThrowError("Anime4KCPP: RGB24 or YUV444 is needed for Anime4K09");
+        env->ThrowError("Anime4KCPP: RGB24 or YUV444 or Grayscale is needed for Anime4K09");
     }
 
     vi.height *= inputs.zoomFactor;
@@ -130,6 +132,18 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
+    if (vi.IsY())
+    {
+        switch (vi.BitsPerComponent())
+        {
+        case 8:
+            return FilterGrayscale<unsigned char>(src, dst);
+        case 16:
+            return FilterGrayscale<unsigned short int>(src, dst);
+        case 32:
+            return FilterGrayscale<float>(src, dst);
+        }
+    }
     if (vi.IsYUV())
     {
         switch (vi.BitsPerComponent())
@@ -255,6 +269,78 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     delete[] srcDataY;
     delete[] srcDataU;
     delete[] srcDataV;
+
+    return dst;
+}
+
+template<typename T>
+PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
+{
+    size_t srcPitchY = src->GetPitch(PLANAR_Y) / sizeof(T);
+    size_t dstPitchY = dst->GetPitch(PLANAR_Y) / sizeof(T);
+
+    size_t srcHY = src->GetHeight(PLANAR_Y);
+    size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+
+    size_t dstHY = dst->GetHeight(PLANAR_Y);
+    size_t dstLY = dst->GetRowSize(PLANAR_Y) / sizeof(T);
+
+    const T* srcpY = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y));
+
+    T* dstpY = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_Y));
+
+    T* srcDataY = new T[srcHY * srcLY];
+
+    cv::Mat dstDataY;
+
+    for (size_t y = 0; y < srcHY; y++)
+    {
+        memcpy(srcDataY + y * srcLY, srcpY, srcLY * sizeof(T));
+        srcpY += srcPitchY;
+    }
+
+    Anime4KCPP::AC* ac = nullptr;
+
+    if (GPUMode)
+    {
+        switch (GPGPUModel)
+        {
+        case GPGPU::OpenCL:
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+            break;
+        }
+    }
+    else
+    {
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+    }
+
+    ac->loadImage(srcHY, srcLY, srcDataY, 0, false, false, true);
+    ac->process();
+    ac->saveImage(dstDataY);
+
+    for (size_t y = 0; y < dstHY; y++)
+    {
+        memcpy(dstpY, reinterpret_cast<T*>(dstDataY.data) + y * dstLY, dstLY * sizeof(T));
+        dstpY += dstPitchY;
+    }
+
+    acCreator.release(ac);
+    delete[] srcDataY;
 
     return dst;
 }
