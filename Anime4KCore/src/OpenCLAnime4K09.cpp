@@ -1667,15 +1667,18 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
     cl_kernel tmpKernel = clCreateKernel(program, "pushColor", &err);
     if (err != CL_SUCCESS)
     {
+        clReleaseKernel(tmpKernel);
         throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
     }
     err = clGetKernelWorkGroupInfo(tmpKernel, device,
         CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
     if (err != CL_SUCCESS)
     {
+        clReleaseKernel(tmpKernel);
         throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
     }
     workGroupSizeLog = std::log2(workGroupSizeLog);
+    clReleaseKernel(tmpKernel);
 }
 
 void Anime4KCPP::OpenCL::Anime4K09::releaseOpenCL() noexcept

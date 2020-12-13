@@ -25,7 +25,7 @@ Anime4KCPP::ACCreator::ACCreator(ManagerSPVector managerList, const bool initNow
 
 Anime4KCPP::ACCreator::~ACCreator()
 {
-    deinit();
+    deinit(true);
 }
 
 #define AC_CASE_UP_ITEM

@@ -2506,12 +2506,14 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = std::log2(workGroupSizeLog);
@@ -2548,12 +2550,14 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         tmpKernel = clCreateKernel(program[HDNL1], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = std::log2(workGroupSizeLog);
@@ -2590,12 +2594,14 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         tmpKernel = clCreateKernel(program[HDNL2], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = std::log2(workGroupSizeLog);
@@ -2632,12 +2638,14 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         tmpKernel = clCreateKernel(program[HDNL3], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = std::log2(workGroupSizeLog);
@@ -2678,17 +2686,20 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
         }
         err = clGetKernelWorkGroupInfo(tmpKernel, device,
             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
         if (err != CL_SUCCESS)
         {
+            clReleaseKernel(tmpKernel);
             throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
         }
         workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
     }
+    clReleaseKernel(tmpKernel);
 }
 
 void Anime4KCPP::OpenCL::ACNet::releaseOpenCL() noexcept

@@ -128,15 +128,38 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     if (!CheckGPUSupport())
         GPUCheckResult = E_FAIL;
     else
-        GPUCheckResult = NOERROR;
+        GPUCheckResult = S_OK;
 
+    Anime4KCPP::CNNType type;
+    if (parameters.HDN)
+    {
+        switch (parameters.HDNLevel)
+        {
+        case 1:
+            type = Anime4KCPP::CNNType::ACNetHDNL1;
+            break;
+        case 2:
+            type = Anime4KCPP::CNNType::ACNetHDNL2;
+            break;
+        case 3:
+            type = Anime4KCPP::CNNType::ACNetHDNL3;
+            break;
+        default:
+            type = Anime4KCPP::CNNType::ACNetHDNL1;
+            break;
+        }
+    }
+    else
+        type = Anime4KCPP::CNNType::ACNetHDNL0;
+
+    acCreator.deinit(true);
     switch (GPGPUModel)
     {
     case GPGPU::OpenCL:
         if (CNN)
             acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                 pID, dID,
-                Anime4KCPP::CNNType::Default,
+                type,
                 OpenCLQueueNum,
                 OpenCLParallelIO);
         else
@@ -150,17 +173,22 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
         acCreator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
 #else
         if (CNN)
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(pID, dID);
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                pID, dID,
+                Anime4KCPP::CNNType::Default,
+                OpenCLQueueNum,
+                OpenCLParallelIO);
         else
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(pID, dID);
+            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                pID, dID,
+                OpenCLQueueNum,
+                OpenCLParallelIO);
 #endif
         break;
     }
-
-
 }
 
-inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
+BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
@@ -173,7 +201,7 @@ inline BOOL Anime4KCPPDS::IsRGB24(const CMediaType* pMediaType) const
     return FALSE;
 }
 
-inline BOOL Anime4KCPPDS::IsRGB32(const CMediaType* pMediaType) const
+BOOL Anime4KCPPDS::IsRGB32(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
@@ -186,7 +214,7 @@ inline BOOL Anime4KCPPDS::IsRGB32(const CMediaType* pMediaType) const
     return FALSE;
 }
 
-inline BOOL Anime4KCPPDS::IsIYUV(const CMediaType* pMediaType) const
+BOOL Anime4KCPPDS::IsIYUV(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
@@ -199,7 +227,7 @@ inline BOOL Anime4KCPPDS::IsIYUV(const CMediaType* pMediaType) const
     return FALSE;
 }
 
-inline BOOL Anime4KCPPDS::IsYV12(const CMediaType* pMediaType) const
+BOOL Anime4KCPPDS::IsYV12(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
@@ -212,7 +240,7 @@ inline BOOL Anime4KCPPDS::IsYV12(const CMediaType* pMediaType) const
     return FALSE;
 }
 
-inline BOOL Anime4KCPPDS::IsNV12(const CMediaType* pMediaType) const
+BOOL Anime4KCPPDS::IsNV12(const CMediaType* pMediaType) const
 {
     if (IsEqualGUID(*pMediaType->Type(), MEDIATYPE_Video))
     {
@@ -450,8 +478,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
     switch (colorFormat)
     {
-    case ColorFormat::YV12:
     case ColorFormat::IYUV:
+    case ColorFormat::YV12:
     {
         size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
         size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
