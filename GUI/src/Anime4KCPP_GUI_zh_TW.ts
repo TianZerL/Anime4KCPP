@@ -930,7 +930,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="106"/>
-        <location filename="mainwindow.cpp" line="1998"/>
+        <location filename="mainwindow.cpp" line="2007"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
@@ -1023,7 +1023,7 @@
         <location filename="mainwindow.cpp" line="1496"/>
         <location filename="mainwindow.cpp" line="1850"/>
         <location filename="mainwindow.cpp" line="1918"/>
-        <location filename="mainwindow.cpp" line="1950"/>
+        <location filename="mainwindow.cpp" line="1952"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -1086,7 +1086,7 @@
         <translation type="vanished">不支援將GPU加速用於ACNet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1999"/>
+        <location filename="mainwindow.cpp" line="2008"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>確認停止所有任務？</translation>
     </message>
@@ -1102,7 +1102,7 @@
         <translation>本平臺不支援GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1951"/>
+        <location filename="mainwindow.cpp" line="1953"/>
         <source>Successfully release GPU</source>
         <translation>成功釋放GPU</translation>
     </message>

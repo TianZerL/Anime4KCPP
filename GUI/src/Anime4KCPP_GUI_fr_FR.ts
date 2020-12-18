@@ -934,7 +934,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="106"/>
-        <location filename="mainwindow.cpp" line="1998"/>
+        <location filename="mainwindow.cpp" line="2007"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
@@ -1027,7 +1027,7 @@
         <location filename="mainwindow.cpp" line="1496"/>
         <location filename="mainwindow.cpp" line="1850"/>
         <location filename="mainwindow.cpp" line="1918"/>
-        <location filename="mainwindow.cpp" line="1950"/>
+        <location filename="mainwindow.cpp" line="1952"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
@@ -1090,7 +1090,7 @@
         <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1999"/>
+        <location filename="mainwindow.cpp" line="2008"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
@@ -1106,7 +1106,7 @@
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1951"/>
+        <location filename="mainwindow.cpp" line="1953"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>

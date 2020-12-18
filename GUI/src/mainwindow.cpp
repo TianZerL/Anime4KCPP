@@ -1946,29 +1946,38 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
     {
         acCreator.deinit(true);
         GPUState = GPUMode::UNINITIALZED;
-        QMessageBox::information(this,
-            tr("Notice"),
-            tr("Successfully release GPU"),
-            QMessageBox::Ok);
-        ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
-        ui->spinBoxPlatformID->setEnabled(true);
-        ui->spinBoxDeviceID->setEnabled(true);
-        ui->pushButtonReleaseGPU->setEnabled(false);
-        if (ui->comboBoxGPGPU->currentIndex() == GPGPU::OpenCL)
-        {
-            ui->spinBoxOpenCLQueueNum->setEnabled(true);
-            ui->checkBoxOpenCLParallelIO->setEnabled(true);
-        }
-        else if (ui->comboBoxGPGPU->currentIndex() == GPGPU::CUDA)
-        {
-            ui->spinBoxOpenCLQueueNum->setEnabled(false);
-            ui->checkBoxOpenCLParallelIO->setEnabled(false);
-        }
+    }
+
+    QMessageBox::information(this,
+        tr("Notice"),
+        tr("Successfully release GPU"),
+        QMessageBox::Ok);
+
+    ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+    ui->spinBoxPlatformID->setEnabled(true);
+    ui->spinBoxDeviceID->setEnabled(true);
+    ui->pushButtonReleaseGPU->setEnabled(false);
+
+    if (ui->comboBoxGPGPU->currentIndex() == GPGPU::OpenCL)
+    {
+        ui->spinBoxOpenCLQueueNum->setEnabled(true);
+        ui->checkBoxOpenCLParallelIO->setEnabled(true);
+    }
+    else if (ui->comboBoxGPGPU->currentIndex() == GPGPU::CUDA)
+    {
+        ui->spinBoxOpenCLQueueNum->setEnabled(false);
+        ui->checkBoxOpenCLParallelIO->setEnabled(false);
     }
 }
 
 void MainWindow::on_checkBoxACNet_stateChanged(int state)
 {
+    if (GPUState == GPUMode::INITIALZED)
+    {
+        acCreator.deinit(true);
+        GPUState = GPUMode::UNINITIALZED;
+        on_checkBoxGPUMode_stateChanged(ui->checkBoxGPUMode->checkState());
+    }
     if (state == Qt::Checked)
     {
         ui->spinBoxPasses->setEnabled(false);
