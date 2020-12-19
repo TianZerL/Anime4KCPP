@@ -542,8 +542,13 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         }
     }
 
+    PClip clip = args[0].AsClip();
+
+    if (clip == nullptr)
+        env->ThrowError("Anime4KCPP: No input clip found, has clip input of 'src' paramenter been specified ?");
+
     return new Anime4KCPPF(
-        args[0].AsClip(),
+        clip,
         inputs,
         CNN,
         GPUMode,
