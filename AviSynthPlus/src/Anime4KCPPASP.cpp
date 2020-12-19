@@ -416,6 +416,11 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
 
 AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
+    PClip clip = args[0].AsClip();
+
+    if (clip == nullptr)
+        env->ThrowError("Anime4KCPP: No input clip found, has clip of 'src' paramenter been specified ?");
+
     Anime4KCPP::Parameters inputs(
         args[AC_passes].AsInt(),
         args[AC_pushColorCount].AsInt(),
@@ -541,11 +546,6 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
             env->ThrowError(err.what());
         }
     }
-
-    PClip clip = args[0].AsClip();
-
-    if (clip == nullptr)
-        env->ThrowError("Anime4KCPP: No input clip found, has clip input of 'src' paramenter been specified ?");
 
     return new Anime4KCPPF(
         clip,
