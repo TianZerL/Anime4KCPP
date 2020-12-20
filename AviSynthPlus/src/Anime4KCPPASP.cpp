@@ -616,14 +616,32 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
 {
     AVS_linkage = vectors;
 
-    env->AddFunction("listGPUs", "[GPGPUModel]s", listGPUs, 0);
+    env->AddFunction("listGPUs", "[GPGPUModel]s", listGPUs, nullptr);
 
     env->AddFunction("benchmark", 
         "[platformID]i"
         "[deviceID]i", 
-        benchmark, 0);
+        benchmark, nullptr);
 
     env->AddFunction("Anime4KCPP",
+        "c"
+        "[passes]i"
+        "[pushColorCount]i"
+        "[strengthColor]f"
+        "[strengthGradient]f"
+        "[zoomFactor]i"
+        "[ACNet]b"
+        "[GPUMode]b"
+        "[GPGPUModel]s"
+        "[HDN]b"
+        "[HDNLevel]i"
+        "[platformID]i"
+        "[deviceID]i"
+        "[OpenCLQueueNum]i"
+        "[OpenCLParallelIO]b",
+        createAnime4KCPP, nullptr);
+
+    env->AddFunction("Anime4KCPP2",
         "[src]c"
         "[passes]i"
         "[pushColorCount]i"
@@ -639,6 +657,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[deviceID]i"
         "[OpenCLQueueNum]i"
         "[OpenCLParallelIO]b",
-        createAnime4KCPP, 0);
+        createAnime4KCPP, nullptr);
+
     return "Anime4KCPP plugin for AviSynthPlus";
 }
