@@ -291,6 +291,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
+    case 0:
         if (inputAsGrayscale)
         {
             inputGrayscale = true;
