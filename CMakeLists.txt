@@ -25,6 +25,7 @@ option(Build_AviSynthPlus_plugin "Build Anime4KCPP for AviSynthPlus plugin or no
 option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
 option(Built_in_kernel "Built-in kernel or not" ON)
+option(Use_Legacy_opencl_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)

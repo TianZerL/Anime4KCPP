@@ -9,6 +9,10 @@ if(Built_in_kernel)
     add_definitions(-DBUILT_IN_KERNEL)
 endif()
 
+if(Use_Legacy_opencl_API)
+    add_definitions(-DLEGACY_OPENCL_API)
+endif()
+
 if(Use_TBB)
     add_definitions(-DUSE_TBB)
 endif()

@@ -2416,44 +2416,28 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
 #else
     for (int i = 0; i < commandQueueNum; i++)
     {
+#ifdef LEGACY_OPENCL_API
+        commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
+#else
         commandQueueList[i] = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+#endif
         if (err != CL_SUCCESS)
         {
-            if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-            {
-                commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
-                if (err != CL_SUCCESS)
-                {
-                    releaseOpenCL();
-                    throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-                }
-            }
-            else
-            {
-                releaseOpenCL();
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-            }
+            releaseOpenCL();
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
         }
     }
     if (parallelIO)
     {
+#ifdef LEGACY_OPENCL_API
+        commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
+#else
         commandQueueIO = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
+#endif
         if (err != CL_SUCCESS)
         {
-            if (err == CL_INVALID_DEVICE)//for GPUs that only support OpenCL1.2
-            {
-                commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
-                if (err != CL_SUCCESS)
-                {
-                    releaseOpenCL();
-                    throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-                }
-            }
-            else
-            {
-                releaseOpenCL();
-                throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-            }
+            releaseOpenCL();
+            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
         }
     }
 #endif
