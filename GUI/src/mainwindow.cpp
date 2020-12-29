@@ -629,14 +629,14 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
 
 FileType MainWindow::fileType(const QFileInfo& file)
 {
-    QString imageSuffix = ui->lineEditImageSuffix->text().toLower();
-    QString videoSuffix = ui->lineEditVideoSuffix->text().toLower();
-    auto imageSuffixes = imageSuffix.splitRef(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
-    auto videoSuffixes = videoSuffix.splitRef(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    QString imageSuffix = ui->lineEditImageSuffix->text();
+    QString videoSuffix = ui->lineEditVideoSuffix->text();
+    auto imageSuffixes = imageSuffix.split(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    auto videoSuffixes = videoSuffix.split(":", Qt::SplitBehaviorFlags::SkipEmptyParts);
     
-    if (imageSuffixes.contains(&file.suffix().toLower()))
+    if (imageSuffixes.contains(file.suffix(), Qt::CaseInsensitive))
         return FileType::IMAGE;
-    if (videoSuffixes.contains(&file.suffix().toLower()))
+    if (videoSuffixes.contains(file.suffix(), Qt::CaseInsensitive))
     {
         if (checkGIF(file.filePath()))
             return FileType::GIF;
@@ -1027,7 +1027,10 @@ void MainWindow::on_pushButtonPreview_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
-    if (fileType(previewFile) == FileType::BAD_TYPE)
+
+    FileType type = fileType(previewFile);
+
+    if (type == FileType::BAD_TYPE)
     {
         errorHandler(ErrorType::BAD_TYPE);
         return;
@@ -1036,7 +1039,7 @@ void MainWindow::on_pushButtonPreview_clicked()
     ui->pushButtonPreview->setEnabled(false);
 
     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
-    switch (fileType(previewFile))
+    switch (type)
     {
     case FileType::IMAGE:
         try
@@ -1506,8 +1509,11 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
+
     QFileInfo fileInfo(filePath);
-    if (fileType(fileInfo) == FileType::BAD_TYPE)
+    FileType type = fileType(fileInfo);
+
+    if (type == FileType::BAD_TYPE)
     {
         errorHandler(ErrorType::BAD_TYPE);
         return;
@@ -1515,7 +1521,7 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
 
     ui->pushButtonPreviewOriginal->setEnabled(false);
 
-    switch (fileType(fileInfo))
+    switch (type)
     {
     case FileType::IMAGE:
     {
@@ -1615,8 +1621,11 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
+
     QFileInfo fileInfo(filePath);
-    if (fileType(fileInfo) == FileType::BAD_TYPE)
+    FileType type = fileType(fileInfo);
+
+    if (type == FileType::BAD_TYPE)
     {
         errorHandler(ErrorType::BAD_TYPE);
         return;
@@ -1625,7 +1634,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     ui->pushButtonPreviewOnlyResize->setEnabled(false);
 
     double zoomFactor = ui->doubleSpinBoxZoomFactor->value();
-    switch (fileType(fileInfo))
+    switch (type)
     {
     case FileType::IMAGE:
     {
