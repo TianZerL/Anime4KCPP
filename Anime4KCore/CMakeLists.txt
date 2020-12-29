@@ -9,7 +9,7 @@ if(Built_in_kernel)
     add_definitions(-DBUILT_IN_KERNEL)
 endif()
 
-if(Use_Legacy_opencl_API)
+if(Use_Legacy_OpenCL_API)
     add_definitions(-DLEGACY_OPENCL_API)
 endif()
 
