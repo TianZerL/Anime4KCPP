@@ -631,8 +631,14 @@ FileType MainWindow::fileType(const QFileInfo& file)
 {
     QString imageSuffix = ui->lineEditImageSuffix->text();
     QString videoSuffix = ui->lineEditVideoSuffix->text();
+
+#if (QT_VERSION <= QT_VERSION_CHECK(5,14,0))
+    auto imageSuffixes = imageSuffix.split(":", QString::SkipEmptyParts);
+    auto videoSuffixes = videoSuffix.split(":", QString::SkipEmptyParts);
+#else
     auto imageSuffixes = imageSuffix.split(":", Qt::SkipEmptyParts);
     auto videoSuffixes = videoSuffix.split(":", Qt::SkipEmptyParts);
+#endif
     
     if (imageSuffixes.contains(file.suffix(), Qt::CaseInsensitive))
         return FileType::IMAGE;
