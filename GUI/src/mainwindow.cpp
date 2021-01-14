@@ -81,7 +81,6 @@ MainWindow::MainWindow(QWidget* parent)
         ui->checkBoxHDN->setEnabled(false);
         ui->spinBoxHDNLevel->setEnabled(false);
     }
-    OpenCLPlatforms = 0;
     //stop flag
     stop = false;
     pause = ProcessingState::NORMAL;
@@ -1482,6 +1481,11 @@ void MainWindow::on_actionSet_FFmpeg_path_triggered()
 
 }
 
+void MainWindow::on_actionSet_FFmpeg_path_hovered()
+{
+    ui->actionSet_FFmpeg_path->setStatusTip("FFmpeg: " + ffmpegPath);
+}
+
 void MainWindow::on_pushButtonClearText_clicked()
 {
     ui->textBrowserInfoOut->clear();
@@ -1920,8 +1924,19 @@ void MainWindow::on_actionBenchmark_triggered()
 
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
-    Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
-    if (ret.platforms == 0)
+    Anime4KCPP::OpenCL::GPUList openclGPUList = Anime4KCPP::OpenCL::listGPUs();
+
+    bool flag = openclGPUList.platforms == 0;
+
+    std::string displayInfo ="OpenCL:\n" + openclGPUList();
+
+#ifdef ENABLE_CUDA
+    Anime4KCPP::Cuda::GPUList cudaGPUList = Anime4KCPP::Cuda::listGPUs();
+    flag = flag && (cudaGPUList.devices == 0);
+    displayInfo += "\nCUDA:\n" + cudaGPUList();
+#endif
+
+    if (flag)
     {
         QMessageBox::warning(this,
             tr("Warning"),
@@ -1929,19 +1944,11 @@ void MainWindow::on_pushButtonListGPUs_clicked()
             QMessageBox::Ok);
         return;
     }
+
     QMessageBox::information(this,
         tr("Notice"),
-        QString::fromStdString(ret()),
+        QString::fromStdString(displayInfo),
         QMessageBox::Ok);
-    OpenCLPlatforms = ret.platforms;
-    OpenCLDevices = ret.devices;
-    ui->spinBoxPlatformID->setRange(0, ret.platforms - 1);
-}
-
-void MainWindow::on_spinBoxPlatformID_valueChanged(int value)
-{
-    if (value < int(OpenCLDevices.size()))
-        ui->spinBoxDeviceID->setRange(0, OpenCLDevices[value] - 1);
 }
 
 void MainWindow::on_pushButtonOutputPathOpen_clicked()

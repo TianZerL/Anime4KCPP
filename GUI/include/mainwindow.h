@@ -152,6 +152,8 @@ private slots:
 
     void on_actionSet_FFmpeg_path_triggered();
 
+    void on_actionSet_FFmpeg_path_hovered();
+
     void on_pushButtonClearText_clicked();
 
     void on_spinBoxFontSize_valueChanged(int arg1);
@@ -173,8 +175,6 @@ private slots:
     void on_actionBenchmark_triggered();
 
     void on_pushButtonListGPUs_clicked();
-
-    void on_spinBoxPlatformID_valueChanged(int arg1);
 
     void on_pushButtonOutputPathOpen_clicked();
 
@@ -206,9 +206,6 @@ private:
     GPUMode GPUState;
 
     Anime4KCPP::ACCreator acCreator;
-
-    std::vector<int> OpenCLDevices;
-    int OpenCLPlatforms;
 
     QHash<QString, Language> languageSelector;
     QHash<QString, Anime4KCPP::CODEC> codecSelector;
