@@ -9,6 +9,10 @@ if(Build_AviSynthPlus_plugin)
 
     add_definitions(-DBUILT_IN_KERNEL)
 
+    if(Use_Legacy_OpenCL_API)
+        add_definitions(-DLEGACY_OPENCL_API)
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${SOURCE} ${Anime4KCPPCoreSource})
 
     include(${TOP_DIR}/cmake/ThirdPartyForASP.cmake)
