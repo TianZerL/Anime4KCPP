@@ -34,37 +34,6 @@ namespace Anime4KCPP
     }
 }
 
-class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager
-{
-public:
-    Manager(const int dID = 0);
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-private:
-    int dID;
-};
-
-inline Anime4KCPP::Cuda::Manager::Manager(const int dID)
-    : dID(dID) {}
-
-inline void Anime4KCPP::Cuda::Manager::init()
-{
-    if (cuGetDeviceID() != dID)
-        cuSetDeviceID(dID);
-}
-
-inline void Anime4KCPP::Cuda::Manager::release()
-{
-    if (cuGetDeviceID() == dID)
-        cuReleaseCuda();
-}
-
-inline bool Anime4KCPP::Cuda::Manager::isInitialized()
-{
-    return cuGetDeviceID() == dID;
-}
-
 struct Anime4KCPP::Cuda::GPUList
 {
     int devices;
@@ -103,6 +72,43 @@ inline std::string& Anime4KCPP::Cuda::GPUInfo::operator()() noexcept
 inline Anime4KCPP::Cuda::GPUInfo::operator bool() const noexcept
 {
     return supported;
+}
+
+class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager
+{
+public:
+    Manager(const int dID = 0);
+    virtual void init() override;
+    virtual void release() override;
+    virtual bool isInitialized() override;
+    virtual bool isSupport() override;
+private:
+    int dID;
+};
+
+inline Anime4KCPP::Cuda::Manager::Manager(const int dID)
+    : dID(dID) {}
+
+inline void Anime4KCPP::Cuda::Manager::init()
+{
+    if (cuGetDeviceID() != dID)
+        cuSetDeviceID(dID);
+}
+
+inline void Anime4KCPP::Cuda::Manager::release()
+{
+    if (cuGetDeviceID() == dID)
+        cuReleaseCuda();
+}
+
+inline bool Anime4KCPP::Cuda::Manager::isInitialized()
+{
+    return cuGetDeviceID() == dID;
+}
+
+inline bool Anime4KCPP::Cuda::Manager::isSupport()
+{
+    return Anime4KCPP::Cuda::checkGPUSupport(dID);
 }
 
 inline Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs()

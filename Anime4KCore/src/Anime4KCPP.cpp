@@ -69,10 +69,11 @@ void Anime4KCPP::ACCreator::init()
 {
     for (auto& manager : managers)
     {
+        if (!manager->isSupport())
+            throw ACException<ExceptionType::RunTimeError>("Try initializing unsupported processor");
         if (!manager->isInitialized())
             manager->init();
     }
-        
 }
 
 void Anime4KCPP::ACCreator::deinit(bool clearManager)

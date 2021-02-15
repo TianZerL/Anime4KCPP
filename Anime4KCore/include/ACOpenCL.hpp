@@ -42,6 +42,27 @@ namespace Anime4KCPP
     }
 }
 
+struct Anime4KCPP::OpenCL::GPUList
+{
+    int platforms;
+    std::vector<int> devices;
+    std::string message;
+
+    GPUList(const int platforms, std::vector<int> devices, std::string message);
+    int operator[](int pID) const;
+    std::string& operator()() noexcept;
+};
+
+struct Anime4KCPP::OpenCL::GPUInfo
+{
+    bool supported;
+    std::string message;
+
+    GPUInfo(const bool supported, std::string message);
+    std::string& operator()() noexcept;
+    operator bool() const noexcept;
+};
+
 template<typename T>
 class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
@@ -50,6 +71,7 @@ public:
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
+    virtual bool isSupport() override;
 private:
     unsigned int pID, dID;
     int OpenCLQueueNum;
@@ -80,6 +102,12 @@ inline bool Anime4KCPP::OpenCL::Manager<T>::isInitialized()
     return T::isInitializedGPU();
 }
 
+template<typename T>
+inline bool Anime4KCPP::OpenCL::Manager<T>::isSupport()
+{
+    return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+}
+
 template<>
 class Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet> : public Anime4KCPP::Processor::Manager
 {
@@ -88,6 +116,7 @@ public:
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
+    virtual bool isSupport() override;
 private:
     unsigned int pID, dID;
     int OpenCLQueueNum;
@@ -115,23 +144,7 @@ inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isInitialize
     return Anime4KCPP::OpenCL::ACNet::isInitializedGPU();
 }
 
-struct Anime4KCPP::OpenCL::GPUList
+inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isSupport()
 {
-    int platforms;
-    std::vector<int> devices;
-    std::string message;
-
-    GPUList(const int platforms, std::vector<int> devices, std::string message);
-    int operator[](int pID) const;
-    std::string& operator()() noexcept;
-};
-
-struct Anime4KCPP::OpenCL::GPUInfo
-{
-    bool supported;
-    std::string message;
-
-    GPUInfo(const bool supported, std::string message);
-    std::string& operator()() noexcept;
-    operator bool() const noexcept;
-};
+    return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+}
