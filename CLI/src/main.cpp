@@ -483,7 +483,7 @@ int main(int argc, char* argv[])
             else
             {
                 std::string currInputPath = inputPath.string();
-                std::string currOnputPath = outputPath.string();
+                std::string currOutputPath = outputPath.string();
 
                 ac->loadImage(currInputPath);
 
@@ -499,7 +499,7 @@ int main(int argc, char* argv[])
                 if (preview)
                     ac->showImage();
                 else
-                    ac->saveImage(currOnputPath);
+                    ac->saveImage(currOutputPath);
             }
         }
         else // Video
