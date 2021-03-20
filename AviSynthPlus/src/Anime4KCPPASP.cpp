@@ -162,12 +162,12 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
 template<typename T>
 PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
 {
-    size_t srcPitchY = src->GetPitch(PLANAR_Y) / sizeof(T);
-    size_t dstPitchY = dst->GetPitch(PLANAR_Y) / sizeof(T);
-    size_t srcPitchU = src->GetPitch(PLANAR_U) / sizeof(T);
-    size_t dstPitchU = dst->GetPitch(PLANAR_U) / sizeof(T);
-    size_t srcPitchV = src->GetPitch(PLANAR_V) / sizeof(T);
-    size_t dstPitchV = dst->GetPitch(PLANAR_V) / sizeof(T);
+    size_t srcPitchY = src->GetPitch(PLANAR_Y);
+    size_t dstPitchY = dst->GetPitch(PLANAR_Y);
+    size_t srcPitchU = src->GetPitch(PLANAR_U);
+    size_t dstPitchU = dst->GetPitch(PLANAR_U);
+    size_t srcPitchV = src->GetPitch(PLANAR_V);
+    size_t dstPitchV = dst->GetPitch(PLANAR_V);
 
     size_t srcHY = src->GetHeight(PLANAR_Y);
     size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
@@ -175,13 +175,6 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     size_t srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
     size_t srcHV = src->GetHeight(PLANAR_V);
     size_t srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
-
-    size_t dstHY = dst->GetHeight(PLANAR_Y);
-    size_t dstLY = dst->GetRowSize(PLANAR_Y) / sizeof(T);
-    size_t dstHU = dst->GetHeight(PLANAR_U);
-    size_t dstLU = dst->GetRowSize(PLANAR_U) / sizeof(T);
-    size_t dstHV = dst->GetHeight(PLANAR_V);
-    size_t dstLV = dst->GetRowSize(PLANAR_V) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
     T* srcpU = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U)));
@@ -236,14 +229,11 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
 template<typename T>
 PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
 {
-    size_t srcPitchY = src->GetPitch(PLANAR_Y) / sizeof(T);
-    size_t dstPitchY = dst->GetPitch(PLANAR_Y) / sizeof(T);
+    size_t srcPitchY = src->GetPitch(PLANAR_Y);
+    size_t dstPitchY = dst->GetPitch(PLANAR_Y);
 
     size_t srcHY = src->GetHeight(PLANAR_Y);
     size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
-
-    size_t dstHY = dst->GetHeight(PLANAR_Y);
-    size_t dstLY = dst->GetRowSize(PLANAR_Y) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
 
@@ -295,8 +285,6 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
 
     size_t srcH = src->GetHeight();
     size_t srcL = src->GetRowSize();
-    size_t dstH = dst->GetHeight();
-    size_t dstL = dst->GetRowSize();
 
     unsigned char* srcp = const_cast<unsigned char*>(src->GetReadPtr());
     unsigned char* dstp = dst->GetWritePtr();

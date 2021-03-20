@@ -87,9 +87,6 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        size_t dstH = vsapi->getFrameHeight(dst, 0);
-        size_t dstW = vsapi->getFrameWidth(dst, 0);
-
         size_t dstSrtide = vsapi->getStride(dst, 0);
 
         T* srcR = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
@@ -167,13 +164,6 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        size_t dstHY = vsapi->getFrameHeight(dst, 0);
-        size_t dstWY = vsapi->getFrameWidth(dst, 0);
-        size_t dstHU = vsapi->getFrameHeight(dst, 1);
-        size_t dstWU = vsapi->getFrameWidth(dst, 1);
-        size_t dstHV = vsapi->getFrameHeight(dst, 2);
-        size_t dstWV = vsapi->getFrameWidth(dst, 2);
-
         size_t dstSrtideY = vsapi->getStride(dst, 0);
         size_t dstSrtideU = vsapi->getStride(dst, 1);
         size_t dstSrtideV = vsapi->getStride(dst, 2);
@@ -249,9 +239,6 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
         size_t srcSrtide = vsapi->getStride(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
-
-        size_t dstH = vsapi->getFrameHeight(dst, 0);
-        size_t dstW = vsapi->getFrameWidth(dst, 0);
 
         size_t dstSrtide = vsapi->getStride(dst, 0);
 

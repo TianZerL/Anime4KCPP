@@ -23,7 +23,7 @@ namespace Anime4KCPP
 class Anime4KCPP::CPU::ACNetProcessor : public CNNProcessor
 {
 public:
-    ACNetProcessor() = default;;
+    ACNetProcessor() = default;
     virtual ~ACNetProcessor() = default;
 
     virtual void processB(const cv::Mat & src, cv::Mat & dst) = 0;
