@@ -32,19 +32,19 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
     cuRunKernelACNetB(orgImg.data, dstImg.data, &cuParam);
 }
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
     cuRunKernelACNetW(reinterpret_cast<const unsigned short int*>(orgImg.data), reinterpret_cast<unsigned short int*>(dstImg.data), &cuParam);
 }
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows,(param.HDN ? param.HDNLevel : 0) };
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
     cuRunKernelACNetF(reinterpret_cast<const float *>(orgImg.data), reinterpret_cast<float*>(dstImg.data), &cuParam);
 }
 

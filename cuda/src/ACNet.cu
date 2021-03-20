@@ -7448,7 +7448,7 @@ void Anime4KCPP::Cuda::cuRunKernelACNetB(const unsigned char* inputData, unsigne
     CheckCudaErr(err);
 
     err = cudaMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
-        sizeof(uchar) * param->orgW, sizeof(uchar) * param->orgW, param->orgH,
+        param->stride, sizeof(uchar) * param->orgW, param->orgH,
         cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
@@ -7579,7 +7579,7 @@ void Anime4KCPP::Cuda::cuRunKernelACNetW(const unsigned short int* inputData, un
     CheckCudaErr(err);
 
     err = cudaMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
-        sizeof(ushort) * param->orgW, sizeof(ushort) * param->orgW, param->orgH,
+        param->stride, sizeof(ushort) * param->orgW, param->orgH,
         cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 
@@ -7708,7 +7708,7 @@ void Anime4KCPP::Cuda::cuRunKernelACNetF(const float* inputData, float* outputDa
     CheckCudaErr(err);
 
     err = cudaMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
-        sizeof(float) * param->orgW, sizeof(float) * param->orgW, param->orgH,
+        param->stride, sizeof(float) * param->orgW, param->orgH,
         cudaMemcpyHostToDevice, stream);
     CheckCudaErr(err);
 

@@ -475,7 +475,6 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         break;
     }
 
-
     switch (colorFormat)
     {
     case ColorFormat::IYUV:
@@ -483,7 +482,8 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     {
         size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
         size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        size_t stride = dstSize / dstH;
+        size_t strideY = dstSize / dstH;
+        size_t strideUV = strideY >> 1;
 
         BYTE* pYIn = pBufferIn,
             * pUIn = pYIn + srcSize,
@@ -492,36 +492,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             * pUOut = pYOut + dstSize,
             * pVOut = pUOut + (dstSize >> 2);
 
-        if (stride == dstW)
-        {
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
-            ac->process();
-            ac->saveImage(pYOut, pUOut, pVOut);
-        }
-        else
-        {
-            size_t dstHUV = dstH >> 1;
-            size_t dstWUV = dstW >> 1;
-            size_t strideUV = stride >> 1;
-            cv::Mat dstTmpY, dstTmpU, dstTmpV;
-
-            ac->loadImage(srcH, srcW, pYIn, srcH >> 1, srcW >> 1, pUIn, srcH >> 1, srcW >> 1, pVIn);
-            ac->process();
-            ac->saveImage(dstTmpY, dstTmpU, dstTmpV);
-
-            for (size_t y = 0; y < dstH; y++)
-            {
-                memcpy(pYOut, dstTmpY.data + y * dstW, dstW);
-                pYOut += stride;
-                if (y < dstHUV)
-                {
-                    memcpy(pUOut, dstTmpU.data + y * dstWUV, dstWUV);
-                    pUOut += strideUV;
-                    memcpy(pVOut, dstTmpV.data + y * dstWUV, dstWUV);
-                    pVOut += strideUV;
-                }
-            }
-        }
+        ac->loadImage(
+            srcH, srcW, 0, pYIn,
+            srcH >> 1, srcW >> 1, 0, pUIn,
+            srcH >> 1, srcW >> 1, 0, pVIn);
+        ac->process();
+        ac->saveImage(pYOut, strideY, pUOut, strideUV, pVOut, strideUV);
     }
     break;
     case ColorFormat::NV12:
@@ -535,89 +511,63 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         BYTE* pYOut = pBufferOut,
             * pUVOut = pYOut + dstSize;
 
-        cv::Mat dstY;
         cv::Mat dstUV;
 
         cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
         cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_8UC2, pUVIn);
+        
+        ac->loadImage(srcY);
+        ac->process();
+        ac->saveImage(pYOut, stride);
 
+        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
         if (stride == dstW)
         {
-            ac->loadImage(srcY);
-            ac->process();
-            ac->saveImage(dstY);
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
-            memcpy(pYOut, dstY.data, dstSize);
             memcpy(pUVOut, dstUV.data, dstSize >> 1);
         }
         else
         {
             size_t dstHUV = dstH >> 1;
-
-            ac->loadImage(srcY);
-            ac->process();
-            ac->saveImage(dstY);
-
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
-
-            for (size_t y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstHUV; y++)
             {
-                memcpy(pYOut, dstY.data + y * dstW, dstW);
-                pYOut += stride;
-                if (y < dstHUV)
-                {
-                    memcpy(pUVOut, dstUV.data + y * dstW, dstW);
-                    pUVOut += stride;
-                }
+                memcpy(pUVOut, dstUV.data + y * dstW, dstW);
+                pUVOut += stride;
             }
         }
     }
     break;
     case ColorFormat::P016:
     {
-        size_t srcSize = (pIn->GetActualDataLength() << 1) / 6;
-        size_t dstSize = (pOut->GetActualDataLength() << 1) / 6;
+        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
         size_t stride = dstSize / dstH;
 
-        WORD* pYIn = (WORD*)pBufferIn,
+        BYTE* pYIn = pBufferIn,
             * pUVIn = pYIn + srcSize;
-        WORD* pYOut = (WORD*)pBufferOut,
+        BYTE* pYOut = pBufferOut,
             * pUVOut = pYOut + dstSize;
 
-        cv::Mat dstY;
         cv::Mat dstUV;
 
         cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
         cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
 
+        ac->loadImage(srcY);
+        ac->process();
+        ac->saveImage(pYOut, stride);
+
+        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
         if (stride == dstW)
         {
-            ac->loadImage(srcY);
-            ac->process();
-            ac->saveImage(dstY);
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
-            memcpy(pYOut, (WORD*)dstY.data, dstSize * sizeof(WORD));
-            memcpy(pUVOut, (WORD*)dstUV.data, dstSize * sizeof(WORD) >> 1);
+            memcpy(pUVOut, dstUV.data, dstSize >> 1);
         }
         else
         {
             size_t dstHUV = dstH >> 1;
-
-            ac->loadImage(srcY);
-            ac->process();
-            ac->saveImage(dstY);
-
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
-
-            for (size_t y = 0; y < dstH; y++)
+            for (size_t y = 0; y < dstHUV; y++)
             {
-                memcpy(pYOut, (WORD*)dstY.data + y * dstW, dstW * sizeof(WORD));
-                pYOut += stride;
-                if (y < dstHUV)
-                {
-                    memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
-                    pUVOut += stride;
-                }
+                memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
+                pUVOut += stride;
             }
         }
     }
@@ -625,55 +575,21 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     case ColorFormat::RGB24:
     {
         size_t stride = pOut->GetActualDataLength() / dstH;
-        size_t dataPerLine = dstW * 3;
-        if (stride == dataPerLine)
-        {
-            ac->loadImage(srcH, srcW, pBufferIn);
-            ac->process();
-            ac->saveImage(pBufferOut);
-        }
-        else
-        {
-            BYTE* dstRGB = pBufferOut;
-            cv::Mat dstTmp;
-            ac->loadImage(srcH, srcW, pBufferIn);
-            ac->process();
-            ac->saveImage(dstTmp);
-            for (size_t y = 0; y < dstH; y++)
-            {
-                memcpy(dstRGB, dstTmp.data + y * dataPerLine, dataPerLine);
-                dstRGB += stride;
-            }
-        }
+        cv::Mat srcTmp(srcH, srcW, CV_8UC3, pBufferIn);
+        cv::flip(srcTmp, srcTmp, 0);
+        ac->loadImage(srcH, srcW, 0, srcTmp.data);
+        ac->process();
+        ac->saveImage(pBufferOut, stride);
     }
     break;
     case ColorFormat::RGB32:
     {
         size_t stride = pOut->GetActualDataLength() / dstH;
-        size_t dataPerLine = dstW << 2;
-        if (stride == dataPerLine)
-        {
-            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
-            cv::flip(srcTmp, srcTmp, 0);
-            ac->loadImage(srcH, srcW, srcTmp.data, 0Ui64, false, true);
-            ac->process();
-            ac->saveImage(pBufferOut);
-        }
-        else
-        {
-            BYTE* dstRGBA = pBufferOut;
-            cv::Mat dstTmp;
-            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
-            cv::flip(srcTmp, srcTmp, 0); // upside down ???
-            ac->loadImage(srcH, srcW, srcTmp.data, 0Ui64, false, true);
-            ac->process();
-            ac->saveImage(dstTmp);
-            for (size_t y = 0; y < dstH; y++)
-            {
-                memcpy(dstRGBA, dstTmp.data + y * dataPerLine, dataPerLine);
-                dstRGBA += stride;
-            }
-        }
+        cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
+        cv::flip(srcTmp, srcTmp, 0);
+        ac->loadImage(srcH, srcW, 0, srcTmp.data, false, true);
+        ac->process();
+        ac->saveImage(pBufferOut, stride);
     }
     break;
     }

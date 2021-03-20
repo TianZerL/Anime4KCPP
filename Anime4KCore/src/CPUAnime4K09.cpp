@@ -870,7 +870,7 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
     src.copyTo(tmp);
 
     const int jMAX = W * 4;
-    const size_t step = jMAX;
+    const size_t step = src.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
     Parallel::parallel_for(0, H, [&](int i) {
@@ -900,12 +900,12 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
     src.copyTo(tmp);
 
     const int jMAX = W * 4;
-    const size_t step = jMAX;
+    const size_t step = src.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
     Parallel::parallel_for(0, H, [&](int i) {
-        LineW lineData = reinterpret_cast<LineW>(src.data) + static_cast<size_t>(i) * step;
-        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data) + static_cast<size_t>(i) * step;
+        LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * step);
+        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -913,8 +913,8 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        LineW lineData = reinterpret_cast<LineW>(src.data) + static_cast<size_t>(i) * step;
-        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data) + static_cast<size_t>(i) * step;
+        LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * step);
+        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -930,12 +930,12 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
     src.copyTo(tmp);
 
     const int jMAX = W * 4;
-    const size_t step = jMAX;
+    const size_t step = src.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
     Parallel::parallel_for(0, H, [&](int i) {
-        LineF lineData = reinterpret_cast<LineF>(src.data) + static_cast<size_t>(i) * step;
-        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data) + static_cast<size_t>(i) * step;
+        LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * step);
+        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -943,8 +943,8 @@ inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
 #pragma omp parallel for
     for (int i = 0; i < H; i++)
     {
-        LineF lineData = reinterpret_cast<LineF>(src.data) + static_cast<size_t>(i) * step;
-        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data) + static_cast<size_t>(i) * step;
+        LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * step);
+        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += 4)
             callBack(i, j, tmpLineData + j, lineData);
     }

@@ -216,24 +216,29 @@ extern "C"
     DEPRECATED AC_DLL void AC_API acReleaseGPUCNN(void);
     AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
     AC_DLL void AC_API acReleaseGPU2(void);
-    AC_DLL ac_error AC_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
-    AC_DLL ac_error AC_API acLoadImageYUVPlanarB(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
-    AC_DLL ac_error AC_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_DLL ac_error AC_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine);
-    AC_DLL ac_error AC_API acSaveImageRGBPlanarB(ac_instance instance, unsigned char* r, unsigned char* g, unsigned char* b);
-    AC_DLL ac_error AC_API acSaveImageRGBPackedB(ac_instance instance, unsigned char* data);
-    AC_DLL ac_error AC_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444);
-    AC_DLL ac_error AC_API acLoadImageYUVPlanarW(ac_instance instance, int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v);
-    AC_DLL ac_error AC_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_DLL ac_error AC_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine);
-    AC_DLL ac_error AC_API acSaveImageRGBPlanarW(ac_instance instance, unsigned short int* r, unsigned short int* g, unsigned short int* b);
-    AC_DLL ac_error AC_API acSaveImageRGBPackedW(ac_instance instance, unsigned short int* data);
-    AC_DLL ac_error AC_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, float* r, float* g, float* b, ac_bool inputAsYUV444);
-    AC_DLL ac_error AC_API acLoadImageYUVPlanarF(ac_instance instance, int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v);
-    AC_DLL ac_error AC_API acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_DLL ac_error AC_API acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine);
-    AC_DLL ac_error AC_API acSaveImageRGBPlanarF(ac_instance instance, float* r, float* g, float* b);
-    AC_DLL ac_error AC_API acSaveImageRGBPackedF(ac_instance instance, float* data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarB(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, unsigned char* y,
+        int rowsU, int colsU, size_t strideU, unsigned char* u,
+        int rowsV, int colsV, size_t strideV, unsigned char* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarW(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, unsigned short int* y,
+        int rowsU, int colsU, size_t strideU, unsigned short int* u,
+        int rowsV, int colsV, size_t strideV, unsigned short int* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, size_t stride, float* r, float* g, float* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageYUVPlanarF(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, float* y,
+        int rowsU, int colsU, size_t strideU, float* u,
+        int rowsV, int colsV, size_t strideV, float* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, size_t stride, float* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, size_t stride, float* data);
+    AC_DLL ac_error AC_API acSaveImageRGBPlanar(ac_instance instance, unsigned char* r, size_t strideR, unsigned char* g, size_t strideG, unsigned char* b, size_t strideB);
+    AC_DLL ac_error AC_API acSaveImageRGBPacked(ac_instance instance, unsigned char* data, size_t stride);
     AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
     AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
     //shape should be int[3]

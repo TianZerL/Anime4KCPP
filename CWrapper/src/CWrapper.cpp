@@ -550,27 +550,33 @@ extern "C"
             acCreator->deinit(true);
     }
 
-    ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
+    ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, r, g, b, inputAsYUV444);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageYUVPlanarB(ac_instance instance, int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
+    ac_error acLoadImageYUVPlanarB(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, unsigned char* y,
+        int rowsU, int colsU, size_t strideU, unsigned char* u,
+        int rowsV, int colsV, size_t strideV, unsigned char* v)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
+            rowsY, colsY, strideY, y, 
+            rowsU, colsU, strideU, u,
+            rowsV, colsV, strideV, v);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    ac_error acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -578,22 +584,123 @@ extern "C"
         if (inputAsRGB32 && inputAsYUV444)
             return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
 
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, inputAsYUV444, inputAsRGB32);
 
         return AC_OK;
     }
 
-    ac_error acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, unsigned char* data, size_t bytesPerLine)
+    ac_error acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, false, false, true);
 
         return AC_OK;
     }
 
-    ac_error acSaveImageRGBPlanarB(ac_instance instance, unsigned char* r, unsigned char* g, unsigned char* b)
+    ac_error acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, r, g, b, inputAsYUV444);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageYUVPlanarW(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, unsigned short int* y,
+        int rowsU, int colsU, size_t strideU, unsigned short int* u,
+        int rowsV, int colsV, size_t strideV, unsigned short int* v)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
+            rowsY, colsY, strideY, y,
+            rowsU, colsU, strideU, u,
+            rowsV, colsV, strideV, v);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (inputAsRGB32 && inputAsYUV444)
+            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, inputAsYUV444, inputAsRGB32);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, false, false, true);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, size_t stride, float* r, float* g, float* b, ac_bool inputAsYUV444)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, r, g, b, inputAsYUV444);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageYUVPlanarF(ac_instance instance, 
+        int rowsY, int colsY, size_t strideY, float* y,
+        int rowsU, int colsU, size_t strideU, float* u,
+        int rowsV, int colsV, size_t strideV, float* v)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
+            rowsY, colsY, strideY, y,
+            rowsU, colsU, strideU, u,
+            rowsV, colsV, strideV, v);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, size_t stride, float* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (inputAsRGB32 && inputAsYUV444)
+            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, inputAsYUV444, inputAsRGB32);
+
+        return AC_OK;
+    }
+
+    ac_error acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, size_t stride, float* data)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, stride, data, false, false, true);
+
+        return AC_OK;
+    }
+
+    ac_error acSaveImageRGBPlanar(ac_instance instance,
+        unsigned char* r, size_t strideR,
+        unsigned char* g, size_t strideG,
+        unsigned char* b, size_t strideB)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -602,7 +709,7 @@ extern "C"
             return AC_ERROR_SAVE_TO_NULL_POINTER;
         try
         {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, strideR, g, strideG, b, strideB);
         }
         catch (const std::exception& err)
         {
@@ -613,7 +720,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acSaveImageRGBPackedB(ac_instance instance, unsigned char* data)
+    ac_error acSaveImageRGBPacked(ac_instance instance, unsigned char* data, size_t stride)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -623,175 +730,7 @@ extern "C"
 
         try
         {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_NOT_YUV444;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageYUVPlanarW(ac_instance instance, int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (inputAsRGB32 && inputAsYUV444)
-            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, unsigned short int* data, size_t bytesPerLine)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
-
-        return AC_OK;
-    }
-
-    ac_error acSaveImageRGBPlanarW(ac_instance instance, unsigned short int* r, unsigned short int* g, unsigned short int* b)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (r == nullptr || g == nullptr || b == nullptr)
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_NOT_YUV444;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acSaveImageRGBPackedW(ac_instance instance, unsigned short int* data)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (data == nullptr)
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
-
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_NOT_YUV444;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, float* r, float* g, float* b, ac_bool inputAsYUV444)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, r, g, b, inputAsYUV444);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageYUVPlanarF(ac_instance instance, int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rowsY, colsY, y, rowsU, colsU, u, rowsV, colsV, v);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (inputAsRGB32 && inputAsYUV444)
-            return AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, inputAsYUV444, inputAsRGB32);
-
-        return AC_OK;
-    }
-
-    ac_error acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, float* data, size_t bytesPerLine)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(rows, cols, data, bytesPerLine, false, false, true);
-
-        return AC_OK;
-    }
-
-    ac_error acSaveImageRGBPlanarF(ac_instance instance, float* r, float* g, float* b)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (r == nullptr || g == nullptr || b == nullptr)
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(r, g, b);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_NOT_YUV444;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acSaveImageRGBPackedF(ac_instance instance, float* data)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        if (data == nullptr)
-            return AC_ERROR_SAVE_TO_NULL_POINTER;
-
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data);
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(data, stride);
         }
         catch (const std::exception& err)
         {

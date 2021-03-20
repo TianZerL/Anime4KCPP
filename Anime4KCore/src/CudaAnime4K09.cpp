@@ -67,6 +67,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::M
     ACCudaParamAnime4K09 cuParam{
         orgImg.cols, orgImg.rows,
         dstImg.cols, dstImg.rows,
+        orgImg.step,
         param.passes, param.pushColorCount,
         static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };
@@ -78,6 +79,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernelW(const cv::Mat& orgImg, cv::M
     ACCudaParamAnime4K09 cuParam{
         orgImg.cols, orgImg.rows,
         dstImg.cols, dstImg.rows,
+        orgImg.step,
         param.passes, param.pushColorCount,
         static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };
@@ -89,6 +91,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::M
     ACCudaParamAnime4K09 cuParam{
         orgImg.cols, orgImg.rows,
         dstImg.cols, dstImg.rows,
+        orgImg.step,
         param.passes, param.pushColorCount,
         static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };

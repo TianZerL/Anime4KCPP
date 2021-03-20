@@ -183,37 +183,13 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     size_t dstHV = dst->GetHeight(PLANAR_V);
     size_t dstLV = dst->GetRowSize(PLANAR_V) / sizeof(T);
 
-    const T* srcpY = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y));
-    const T* srcpU = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U));
-    const T* srcpV = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_V));
+    T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
+    T* srcpU = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U)));
+    T* srcpV = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_V)));
 
-    T* dstpY = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_Y));
-    T* dstpU = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_U));
-    T* dstpV = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_V));
-
-    T* srcDataY = new T[srcHY * srcLY];
-    T* srcDataU = new T[srcHU * srcLU];
-    T* srcDataV = new T[srcHV * srcLV];
-
-    cv::Mat dstDataY;
-    cv::Mat dstDataU;
-    cv::Mat dstDataV;
-
-    for (size_t y = 0; y < srcHY; y++)
-    {
-        memcpy(srcDataY + y * srcLY, srcpY, srcLY * sizeof(T));
-        srcpY += srcPitchY;
-        if (y < srcHU)
-        {
-            memcpy(srcDataU + y * srcLU, srcpU, srcLU * sizeof(T));
-            srcpU += srcPitchU;
-        }
-        if (y < srcHV)
-        {
-            memcpy(srcDataV + y * srcLV, srcpV, srcLV * sizeof(T));
-            srcpV += srcPitchV;
-        }
-    }
+    unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
+    unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
+    unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
 
     Anime4KCPP::AC* ac = nullptr;
 
@@ -245,30 +221,14 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(srcHY, srcLY, srcDataY, srcHU, srcLU, srcDataU, srcHV, srcLV, srcDataV);
+    ac->loadImage(
+        srcHY, srcLY, srcPitchY, srcpY, 
+        srcHU, srcLU, srcPitchU, srcpU,
+        srcHV, srcLV, srcPitchV, srcpV);
     ac->process();
-    ac->saveImage(dstDataY, dstDataU, dstDataV);
-
-    for (size_t y = 0; y < dstHY; y++)
-    {
-        memcpy(dstpY, reinterpret_cast<T*>(dstDataY.data) + y * dstLY, dstLY * sizeof(T));
-        dstpY += dstPitchY;
-        if (y < dstHU)
-        {
-            memcpy(dstpU, reinterpret_cast<T*>(dstDataU.data) + y * dstLU, dstLU * sizeof(T));
-            dstpU += dstPitchU;
-        }
-        if (y < dstHV)
-        {
-            memcpy(dstpV, reinterpret_cast<T*>(dstDataV.data) + y * dstLV, dstLV * sizeof(T));
-            dstpV += dstPitchV;
-        }
-    }
+    ac->saveImage(dstpY, dstPitchY, dstpU, dstPitchU, dstpV, dstPitchV);
 
     acCreator.release(ac);
-    delete[] srcDataY;
-    delete[] srcDataU;
-    delete[] srcDataV;
 
     return dst;
 }
@@ -285,19 +245,9 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
     size_t dstHY = dst->GetHeight(PLANAR_Y);
     size_t dstLY = dst->GetRowSize(PLANAR_Y) / sizeof(T);
 
-    const T* srcpY = reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y));
+    T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
 
-    T* dstpY = reinterpret_cast<T*>(dst->GetWritePtr(PLANAR_Y));
-
-    T* srcDataY = new T[srcHY * srcLY];
-
-    cv::Mat dstDataY;
-
-    for (size_t y = 0; y < srcHY; y++)
-    {
-        memcpy(srcDataY + y * srcLY, srcpY, srcLY * sizeof(T));
-        srcpY += srcPitchY;
-    }
+    unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
 
     Anime4KCPP::AC* ac = nullptr;
 
@@ -329,18 +279,11 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(srcHY, srcLY, srcDataY, 0, false, false, true);
+    ac->loadImage(srcHY, srcLY, srcPitchY, srcpY, false, false, true);
     ac->process();
-    ac->saveImage(dstDataY);
-
-    for (size_t y = 0; y < dstHY; y++)
-    {
-        memcpy(dstpY, reinterpret_cast<T*>(dstDataY.data) + y * dstLY, dstLY * sizeof(T));
-        dstpY += dstPitchY;
-    }
+    ac->saveImage(dstpY, dstPitchY);
 
     acCreator.release(ac);
-    delete[] srcDataY;
 
     return dst;
 }
@@ -355,18 +298,8 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
     size_t dstH = dst->GetHeight();
     size_t dstL = dst->GetRowSize();
 
-    const unsigned char* srcp = src->GetReadPtr();
+    unsigned char* srcp = const_cast<unsigned char*>(src->GetReadPtr());
     unsigned char* dstp = dst->GetWritePtr();
-
-    unsigned char* srcData = new unsigned char[srcH * srcL];
-
-    cv::Mat dstData;
-
-    for (size_t y = 0; y < srcH; y++)
-    {
-        memcpy(srcData + y * srcL, srcp, srcL);
-        srcp += srcPitch;
-    }
 
     Anime4KCPP::AC* ac = nullptr;
 
@@ -398,18 +331,11 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(srcH, srcL / 3, srcData);
+    ac->loadImage(srcH, srcL / 3, srcPitch, srcp);
     ac->process();
-    ac->saveImage(dstData);
-
-    for (size_t y = 0; y < dstH; y++)
-    {
-        memcpy(dstp, dstData.data + y * dstL, dstL);
-        dstp += dstPitch;
-    }
+    ac->saveImage(dstp, dstPitch);
 
     acCreator.release(ac);
-    delete[] srcData;
 
     return dst;
 }

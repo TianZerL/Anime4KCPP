@@ -232,7 +232,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
     inputYUV = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
@@ -242,14 +242,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
             inputGrayscale = true;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_8UC1, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_8UC1, data, stride);
         }
         else
         {
             inputGrayscale = false;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_8UC3, data, stride);
         }
         break;
     case 1:
@@ -257,13 +257,13 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
         {
             inputRGB32 = true;
             inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+            cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
         }
         else //YUV444
         {
             inputRGB32 = false;
             inputYUV = true;
-            orgImg = cv::Mat(rows, cols, CV_8UC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_8UC3, data, stride);
 
             std::vector<cv::Mat> yuv(3);
             cv::split(orgImg, yuv);
@@ -287,7 +287,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* data, size_t b
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short int* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
@@ -297,14 +297,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
             inputGrayscale = true;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_16UC1, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_16UC1, data, stride);
         }
         else
         {
             inputGrayscale = false;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_16UC3, data, stride);
         }
         break;
     case 1:
@@ -312,13 +312,13 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
         {
             inputRGB32 = true;
             inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_16UC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+            cv::cvtColor(cv::Mat(rows, cols, CV_16UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
         }
         else //YUV444
         {
             inputRGB32 = false;
             inputYUV = true;
-            orgImg = cv::Mat(rows, cols, CV_16UC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_16UC3, data, stride);
 
             std::vector<cv::Mat> yuv(3);
             cv::split(orgImg, yuv);
@@ -342,7 +342,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* data, siz
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerLine, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
@@ -352,14 +352,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerL
             inputGrayscale = true;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_32FC1, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_32FC1, data, stride);
         }
         else
         {
             inputGrayscale = false;
             inputRGB32 = false;
             inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_32FC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_32FC3, data, stride);
         }
         break;
     case 1:
@@ -367,13 +367,13 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerL
         {
             inputRGB32 = true;
             inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_32FC4, data, bytesPerLine), orgImg, cv::COLOR_RGBA2RGB);
+            cv::cvtColor(cv::Mat(rows, cols, CV_32FC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
         }
         else //YUV444
         {
             inputRGB32 = false;
             inputYUV = true;
-            orgImg = cv::Mat(rows, cols, CV_32FC3, data, bytesPerLine);
+            orgImg = cv::Mat(rows, cols, CV_32FC3, data, stride);
 
             std::vector<cv::Mat> yuv(3);
             cv::split(orgImg, yuv);
@@ -397,22 +397,22 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* data, size_t bytesPerL
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
 {
     if (inputAsYUV444)
     {
         inputYUV = true;
-        dstY = orgY = cv::Mat(rows, cols, CV_8UC1, r);
-        dstU = orgU = cv::Mat(rows, cols, CV_8UC1, g);
-        dstV = orgV = cv::Mat(rows, cols, CV_8UC1, b);
+        dstY = orgY = cv::Mat(rows, cols, CV_8UC1, r, stride);
+        dstU = orgU = cv::Mat(rows, cols, CV_8UC1, g, stride);
+        dstV = orgV = cv::Mat(rows, cols, CV_8UC1, b, stride);
     }
     else
     {
         inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
-                cv::Mat(rows, cols, CV_8UC1, b),
-                cv::Mat(rows, cols, CV_8UC1, g),
-                cv::Mat(rows, cols, CV_8UC1, r) },
+                cv::Mat(rows, cols, CV_8UC1, b, stride),
+                cv::Mat(rows, cols, CV_8UC1, g, stride),
+                cv::Mat(rows, cols, CV_8UC1, r, stride)},
             orgImg);
         dstImg = orgImg;
     }
@@ -427,22 +427,22 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned char* r, unsigned ch
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444)
 {
     if (inputAsYUV444)
     {
         inputYUV = true;
-        dstY = orgY = cv::Mat(rows, cols, CV_16UC1, r);
-        dstU = orgU = cv::Mat(rows, cols, CV_16UC1, g);
-        dstV = orgV = cv::Mat(rows, cols, CV_16UC1, b);
+        dstY = orgY = cv::Mat(rows, cols, CV_16UC1, r, stride);
+        dstU = orgU = cv::Mat(rows, cols, CV_16UC1, g, stride);
+        dstV = orgV = cv::Mat(rows, cols, CV_16UC1, b, stride);
     }
     else
     {
         inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
-            cv::Mat(rows, cols, CV_16UC1, b),
-                cv::Mat(rows, cols, CV_16UC1, g),
-                cv::Mat(rows, cols, CV_16UC1, r) },
+            cv::Mat(rows, cols, CV_16UC1, b, stride),
+            cv::Mat(rows, cols, CV_16UC1, g, stride),
+            cv::Mat(rows, cols, CV_16UC1, r, stride)},
             orgImg);
         dstImg = orgImg;
     }
@@ -457,22 +457,22 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, unsigned short int* r, unsign
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, float* r, float* g, float* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
 {
     if (inputAsYUV444)
     {
         inputYUV = true;
-        dstY = orgY = cv::Mat(rows, cols, CV_32FC1, r);
-        dstU = orgU = cv::Mat(rows, cols, CV_32FC1, g);
-        dstV = orgV = cv::Mat(rows, cols, CV_32FC1, b);
+        dstY = orgY = cv::Mat(rows, cols, CV_32FC1, r, stride);
+        dstU = orgU = cv::Mat(rows, cols, CV_32FC1, g, stride);
+        dstV = orgV = cv::Mat(rows, cols, CV_32FC1, b, stride);
     }
     else
     {
         inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
-            cv::Mat(rows, cols, CV_32FC1, b),
-                cv::Mat(rows, cols, CV_32FC1, g),
-                cv::Mat(rows, cols, CV_32FC1, r) },
+            cv::Mat(rows, cols, CV_32FC1, b, stride),
+            cv::Mat(rows, cols, CV_32FC1, g, stride),
+            cv::Mat(rows, cols, CV_32FC1, r, stride)},
             orgImg);
         dstImg = orgImg;
     }
@@ -487,11 +487,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, float* r, float* g, float* b,
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v)
+void Anime4KCPP::AC::loadImage(
+    int rowsY, int colsY, size_t strideY, unsigned char* y,
+    int rowsU, int colsU, size_t strideU, unsigned char* u,
+    int rowsV, int colsV, size_t strideV, unsigned char* v) 
 {
-    dstY = orgY = cv::Mat(rowsY, colsY, CV_8UC1, y);
-    dstU = orgU = cv::Mat(rowsU, colsU, CV_8UC1, u);
-    dstV = orgV = cv::Mat(rowsV, colsV, CV_8UC1, v);
+    dstY = orgY = cv::Mat(rowsY, colsY, CV_8UC1, y, strideY);
+    dstU = orgU = cv::Mat(rowsU, colsU, CV_8UC1, u, strideU);
+    dstV = orgV = cv::Mat(rowsV, colsV, CV_8UC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
     H = param.zoomFactor * orgH;
@@ -504,11 +507,14 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned char* y, int rowsU
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v)
+void Anime4KCPP::AC::loadImage(
+    int rowsY, int colsY, size_t strideY, unsigned short int* y,
+    int rowsU, int colsU, size_t strideU, unsigned short int* u,
+    int rowsV, int colsV, size_t strideV, unsigned short int* v) 
 {
-    dstY = orgY = cv::Mat(rowsY, colsY, CV_16UC1, y);
-    dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u);
-    dstV = orgV = cv::Mat(rowsV, colsV, CV_16UC1, v);
+    dstY = orgY = cv::Mat(rowsY, colsY, CV_16UC1, y, strideY);
+    dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u, strideU);
+    dstV = orgV = cv::Mat(rowsV, colsV, CV_16UC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
     H = param.zoomFactor * orgH;
@@ -521,11 +527,14 @@ void Anime4KCPP::AC::loadImage(int rowsY, int colsY, unsigned short int* y, int 
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v)
+void Anime4KCPP::AC::loadImage(
+    int rowsY, int colsY, size_t strideY, float* y,
+    int rowsU, int colsU, size_t strideU, float* u,
+    int rowsV, int colsV, size_t strideV, float* v) 
 {
-    dstY = orgY = cv::Mat(rowsY, colsY, CV_32FC1, y);
-    dstU = orgU = cv::Mat(rowsU, colsU, CV_32FC1, u);
-    dstV = orgV = cv::Mat(rowsV, colsV, CV_32FC1, v);
+    dstY = orgY = cv::Mat(rowsY, colsY, CV_32FC1, y, strideY);
+    dstU = orgU = cv::Mat(rowsU, colsU, CV_32FC1, u, strideU);
+    dstV = orgV = cv::Mat(rowsV, colsV, CV_32FC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
     H = param.zoomFactor * orgH;
@@ -644,12 +653,10 @@ void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
     }
 }
 
-void Anime4KCPP::AC::saveImage(unsigned char* data)
+void Anime4KCPP::AC::saveImage(unsigned char* data, size_t dstStride)
 {
     if (data == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
-    if (bitDepth == 32)
-        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
@@ -660,123 +667,92 @@ void Anime4KCPP::AC::saveImage(unsigned char* data)
     else if (inputRGB32)
         cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
 
-    memcpy(data, dstImg.data, dstImg.step * H);
+    size_t stride = dstImg.step;
+    size_t step = dstStride > stride ? dstStride : stride;
+    if (stride == step)
+    {
+        memcpy(data, dstImg.data, stride * H);
+    }
+    else
+    {
+        for (size_t i = 0; i < H; i++)
+        {
+            memcpy(data, dstImg.data + i * stride, stride);
+            data += step;
+        }
+    }
 }
 
-void Anime4KCPP::AC::saveImage(unsigned short int* data)
+void Anime4KCPP::AC::saveImage(
+    unsigned char* r, size_t dstStrideR,
+    unsigned char* g, size_t dstStrideG,
+    unsigned char* b, size_t dstStrideB)
 {
-    if (data == nullptr)
-        throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
-    if (bitDepth == 32)
-        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
+    if (r == nullptr || g == nullptr || b == nullptr)
+        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
     if (inputYUV)
     {
-        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+        size_t strideY = dstY.step;
+        size_t strideU = dstU.step;
+        size_t strideV = dstV.step;
+
+        size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
+        size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
+        size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
+
+        size_t HY = dstY.rows;
+        size_t HUV = dstU.rows;
+
+        if (strideY == stepY && strideU == stepU && strideV == stepV)
+        {
+            memcpy(r, dstY.data, strideY * HY);
+            memcpy(g, dstU.data, strideU * HUV);
+            memcpy(b, dstV.data, strideV * HUV);
+        }
         else
-            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to data pointer");
+        {
+            for (size_t i = 0; i < HY; i++)
+            {
+                memcpy(r, dstY.data + i * strideY, strideY);
+                r += stepY;
+
+                if (i < HUV)
+                {
+                    memcpy(g, dstU.data + i * strideU, strideU);
+                    memcpy(b, dstV.data + i * strideV, strideV);
+                    b += stepV;
+                    g += stepU;
+                }
+            }
+        }
     }
-    else if (inputRGB32)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
-
-    memcpy(data, dstImg.data, dstImg.step * H * sizeof(unsigned short int));
-}
-
-void Anime4KCPP::AC::saveImage(float* data)
-{
-    if (data == nullptr)
-        throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
-    if(bitDepth != 32)
-        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char or unsigned short pointer");
-    if (inputYUV)
+    else
     {
-        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+        std::vector<cv::Mat> bgr(3);
+        cv::split(dstImg, bgr);
+
+        size_t stride = bgr[R].step;
+        size_t step = dstStrideR > stride ? dstStrideR : stride;
+
+        if (stride == step)
+        {
+            memcpy(b, bgr[B].data, stride * H);
+            memcpy(g, bgr[G].data, stride * H);
+            memcpy(r, bgr[R].data, stride * H);
+        }
         else
-            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to data pointer");
-    }
-    else if (inputRGB32)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+        {
+            for (size_t i = 0; i < H; i++)
+            {
+                memcpy(b, bgr[B].data + i * stride, stride);
+                memcpy(g, bgr[G].data + i * stride, stride);
+                memcpy(r, bgr[R].data + i * stride, stride);
 
-    std::copy(reinterpret_cast<float*>(dstImg.data),
-        reinterpret_cast<float*>(dstImg.data) + dstImg.step * H, data);
-}
-
-void Anime4KCPP::AC::saveImage(unsigned char* r, unsigned char* g, unsigned char* b)
-{
-    if (r == nullptr || g == nullptr || b == nullptr)
-        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
-    if (bitDepth == 32)
-        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
-    if (inputYUV)
-    {
-        memcpy(r, dstY.data, (size_t)dstY.cols * (size_t)dstY.rows);
-        memcpy(g, dstU.data, (size_t)dstU.cols * (size_t)dstU.rows);
-        memcpy(b, dstV.data, (size_t)dstV.cols * (size_t)dstV.rows);
-    }
-    else
-    {
-        size_t size = (size_t)W * (size_t)H;
-        std::vector<cv::Mat> bgr(3);
-        cv::split(dstImg, bgr);
-        memcpy(r, bgr[R].data, size);
-        memcpy(g, bgr[G].data, size);
-        memcpy(b, bgr[B].data, size);
-    }
-}
-
-void Anime4KCPP::AC::saveImage(unsigned short int* r, unsigned short int* g, unsigned short int* b)
-{
-    if (r == nullptr || g == nullptr || b == nullptr)
-        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
-    if (bitDepth == 32)
-        throw ACException<ExceptionType::RunTimeError>("High precision mode expect a float pointer");
-    if (inputYUV)
-    {
-        memcpy(r, dstY.data, (size_t)dstY.cols * (size_t)dstY.rows * sizeof(unsigned short int));
-        memcpy(g, dstU.data, (size_t)dstU.cols * (size_t)dstU.rows * sizeof(unsigned short int));
-        memcpy(b, dstV.data, (size_t)dstV.cols * (size_t)dstV.rows * sizeof(unsigned short int));
-    }
-    else
-    {
-        size_t size = (size_t)W * (size_t)H * sizeof(unsigned short int);
-        std::vector<cv::Mat> bgr(3);
-        cv::split(dstImg, bgr);
-        memcpy(r, bgr[R].data, size);
-        memcpy(g, bgr[G].data, size);
-        memcpy(b, bgr[B].data, size);
-    }
-}
-
-void Anime4KCPP::AC::saveImage(float* r, float* g, float* b)
-{
-    if (r == nullptr || g == nullptr || b == nullptr)
-        throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
-    if (bitDepth != 32)
-        throw ACException<ExceptionType::RunTimeError>("Non high precision mode expect a unsigned char or unsigned short pointer");
-    if (inputYUV)
-    {
-        std::copy(reinterpret_cast<float*>(dstY.data),
-            reinterpret_cast<float*>(dstY.data) +
-            static_cast<size_t>(dstY.cols) * static_cast<size_t>(dstY.rows), r);
-        std::copy(reinterpret_cast<float*>(dstU.data),
-            reinterpret_cast<float*>(dstU.data) + 
-            static_cast<size_t>(dstU.cols) * static_cast<size_t>(dstU.rows), g);
-        std::copy(reinterpret_cast<float*>(dstV.data),
-            reinterpret_cast<float*>(dstV.data) + 
-            static_cast<size_t>(dstV.cols) * static_cast<size_t>(dstV.rows), b);
-    }
-    else
-    {
-        size_t size = static_cast<size_t>(W) * static_cast<size_t>(H);
-        std::vector<cv::Mat> bgr(3);
-        cv::split(dstImg, bgr);
-        std::copy(reinterpret_cast<float*>(bgr[R].data),
-            reinterpret_cast<float*>(bgr[R].data) + size, r);
-        std::copy(reinterpret_cast<float*>(bgr[G].data),
-            reinterpret_cast<float*>(bgr[G].data) + size, g);
-        std::copy(reinterpret_cast<float*>(bgr[B].data),
-            reinterpret_cast<float*>(bgr[B].data) + size, b);
+                b += step;
+                g += step;
+                r += step;
+            }
+        }
     }
 }
 

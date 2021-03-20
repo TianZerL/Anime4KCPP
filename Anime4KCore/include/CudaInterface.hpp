@@ -12,6 +12,7 @@ namespace Anime4KCPP
         {
             int orgW, orgH;
             int W, H;
+            size_t stride;
             int passes, pushColorCount;
             float strengthColor, strengthGradient;
         }ACCudaParamAnime4K09;
@@ -19,6 +20,7 @@ namespace Anime4KCPP
         typedef struct
         {
             int orgW, orgH;
+            size_t stride;
             int HDNLevel;
         }ACCudaParamACNet;
 

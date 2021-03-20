@@ -128,26 +128,34 @@ public:
     void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
     void loadImage(const cv::Mat& srcImage);
-    void loadImage(int rows, int cols, unsigned char* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, unsigned short int* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, float* data, size_t bytesPerLine = 0ULL, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444 = false);
-    void loadImage(int rows, int cols, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444 = false);
-    void loadImage(int rows, int cols, float* r, float* g, float* b, bool inputAsYUV444 = false);
-    void loadImage(int rowsY, int colsY, unsigned char* y, int rowsU, int colsU, unsigned char* u, int rowsV, int colsV, unsigned char* v);
-    void loadImage(int rowsY, int colsY, unsigned short int* y, int rowsU, int colsU, unsigned short int* u, int rowsV, int colsV, unsigned short int* v);
-    void loadImage(int rowsY, int colsY, float* y, int rowsU, int colsU, float* u, int rowsV, int colsV, float* v);
+    void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, size_t stride, unsigned short int* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444 = false);
+    void loadImage(int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444 = false);
+    void loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444 = false);
+    void loadImage(
+        int rowsY, int colsY, size_t strideY, unsigned char* y,
+        int rowsU, int colsU, size_t strideU, unsigned char* u,
+        int rowsV, int colsV, size_t strideV, unsigned char* v);
+    void loadImage(
+        int rowsY, int colsY, size_t strideY, unsigned short int* y,
+        int rowsU, int colsU, size_t strideU, unsigned short int* u,
+        int rowsV, int colsV, size_t strideV, unsigned short int* v);
+    void loadImage(
+        int rowsY, int colsY, size_t strideY, float* y,
+        int rowsU, int colsU, size_t strideU, float* u,
+        int rowsV, int colsV, size_t strideV, float* v);
     void loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v);
     void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V, const double fps = 0.0);
     void saveImage(const std::string& dstFile);
     void saveImage(cv::Mat& dstImage);
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
-    void saveImage(unsigned char* data);
-    void saveImage(unsigned short int* data);
-    void saveImage(float* data);
-    void saveImage(unsigned char* r, unsigned char* g, unsigned char* b);
-    void saveImage(unsigned short int* r, unsigned short int* g, unsigned short int* b);
-    void saveImage(float* r, float* g, float* b);
+    void saveImage(unsigned char* data, size_t dstStride = 0);
+    void saveImage(
+        unsigned char* r, size_t dstStrideR, 
+        unsigned char* g, size_t dstStrideG, 
+        unsigned char* b, size_t dstStrideB);
     void saveVideo();
 
     virtual std::string getInfo();
