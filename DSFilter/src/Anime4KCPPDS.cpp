@@ -303,13 +303,17 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     if (IsEqualGUID(mtIn->formattype, FORMAT_VideoInfo2))
     {
         VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)mtIn->pbFormat;
-        if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
+        CheckPointer(pVi, E_INVALIDARG);
+
+        if (H < std::abs(pVi->bmiHeader.biHeight) || W < pVi->bmiHeader.biWidth)
             return VFW_E_TYPE_NOT_ACCEPTED;
     }
     else
     {
         VIDEOINFOHEADER* pVi = (VIDEOINFOHEADER*)mtIn->pbFormat;
-        if (H < abs(pVi->bmiHeader.biHeight) || W < abs(pVi->bmiHeader.biWidth))
+        CheckPointer(pVi, E_INVALIDARG);
+
+        if (H < std::abs(pVi->bmiHeader.biHeight) || W < pVi->bmiHeader.biWidth)
             return VFW_E_TYPE_NOT_ACCEPTED;
     }
 
@@ -368,14 +372,18 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
 HRESULT Anime4KCPPDS::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pProperties)
 {
     // Is the input pin connecte
-    if (m_pInput->IsConnected() == FALSE)
+    if (!m_pInput->IsConnected())
         return E_UNEXPECTED;
 
     CheckPointer(pAlloc, E_POINTER);
     CheckPointer(pProperties, E_POINTER);
 
-    pProperties->cBuffers = 1;
     pProperties->cbBuffer = dstDataLength;
+
+    if (pProperties->cbAlign == 0)
+        pProperties->cbAlign = 1;
+    if (pProperties->cBuffers == 0)
+        pProperties->cBuffers = 1;
 
     ALLOCATOR_PROPERTIES Actual;
     HRESULT hr = pAlloc->SetProperties(pProperties, &Actual);
@@ -409,8 +417,10 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
     if (IsEqualGUID(pMediaType->formattype, FORMAT_VideoInfo2))
     {
         VIDEOINFOHEADER2* pVi = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
-        srcH = pVi->bmiHeader.biHeight;
-        srcW = pVi->bmiHeader.biWidth;
+        CheckPointer(pVi, E_INVALIDARG);
+
+        srcH = std::abs(pVi->bmiHeader.biHeight);
+        srcW = std::abs(pVi->bmiHeader.biWidth);
         dstH = srcH * zf;
         dstW = srcW * zf;
         dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * zf * zf);
@@ -425,8 +435,10 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
     else
     {
         VIDEOINFOHEADER* pVi = (VIDEOINFOHEADER*)pMediaType->pbFormat;
-        srcH = pVi->bmiHeader.biHeight;
-        srcW = pVi->bmiHeader.biWidth;
+        CheckPointer(pVi, E_INVALIDARG);
+
+        srcH = std::abs(pVi->bmiHeader.biHeight);
+        srcW = std::abs(pVi->bmiHeader.biWidth);
         dstH = srcH * zf;
         dstW = srcW * zf;
         dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * zf * zf);
