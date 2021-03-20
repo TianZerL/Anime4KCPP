@@ -390,6 +390,9 @@ HRESULT Anime4KCPPDS::DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTI
 
 HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 {
+    if (!m_pInput->IsConnected())
+        return E_UNEXPECTED;
+
     if (iPosition < 0)
         return E_INVALIDARG;
 
