@@ -520,12 +520,14 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
         size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
         size_t stride = dstSize / dstH;
+        size_t dstHUV = dstH >> 1;
 
         BYTE* pYIn = pBufferIn,
             * pUVIn = pYIn + srcSize;
         BYTE* pYOut = pBufferOut,
             * pUVOut = pYOut + dstSize;
 
+        cv::Mat dstY;
         cv::Mat dstUV;
 
         cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
@@ -533,20 +535,26 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         
         ac->loadImage(srcY);
         ac->process();
-        ac->saveImage(pYOut, stride);
+        ac->saveImage(dstY);
 
-        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
+        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+
         if (stride == dstW)
         {
+            memcpy(pYOut, dstY.data, dstSize);
             memcpy(pUVOut, dstUV.data, dstSize >> 1);
         }
         else
         {
-            size_t dstHUV = dstH >> 1;
-            for (size_t y = 0; y < dstHUV; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pUVOut, dstUV.data + y * dstW, dstW);
-                pUVOut += stride;
+                memcpy(pYOut, dstY.data + y * dstW, dstW);
+                pYOut += stride;
+                if (y < dstHUV)
+                {
+                    memcpy(pUVOut, dstUV.data + y * dstW, dstW);
+                    pUVOut += stride;
+                }
             }
         }
     }
@@ -556,12 +564,14 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
         size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
         size_t stride = dstSize / dstH;
+        size_t dstHUV = dstH >> 1;
 
         BYTE* pYIn = pBufferIn,
             * pUVIn = pYIn + srcSize;
         BYTE* pYOut = pBufferOut,
             * pUVOut = pYOut + dstSize;
 
+        cv::Mat dstY;
         cv::Mat dstUV;
 
         cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
@@ -569,20 +579,26 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
         ac->loadImage(srcY);
         ac->process();
-        ac->saveImage(pYOut, stride);
+        ac->saveImage(dstY);
 
-        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstH >> 1), 0.0, 0.0, cv::INTER_CUBIC);
+        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+
         if (stride == dstW)
         {
+            memcpy(pYOut, dstY.data, dstSize);
             memcpy(pUVOut, dstUV.data, dstSize >> 1);
         }
         else
         {
-            size_t dstHUV = dstH >> 1;
-            for (size_t y = 0; y < dstHUV; y++)
+            for (size_t y = 0; y < dstH; y++)
             {
-                memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
-                pUVOut += stride;
+                memcpy(pYOut, (WORD*)dstY.data + y * dstW, dstW * sizeof(WORD));
+                pYOut += stride;
+                if (y < dstHUV)
+                {
+                    memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
+                    pUVOut += stride;
+                }
             }
         }
     }
