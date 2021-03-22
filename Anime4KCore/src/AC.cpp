@@ -901,9 +901,9 @@ void Anime4KCPP::AC::processWithPrintProgress()
         {
             std::cout
                 << std::fixed << std::setprecision(2)
-                << std::setw(5) << 100.0 << '%'
-                << "  elpsed: " << std::setw(5) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
-                << "  remaining: " << std::setw(5) << 0.0 << 's'
+                << std::setw(7) << 100.0 << '%'
+                << "    elpsed: " << std::setw(10) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
+                << "    remaining: " << std::setw(10) << 0.0 << 's'
                 << std::endl;
             // get any possible exception
             p.get();
@@ -914,9 +914,9 @@ void Anime4KCPP::AC::processWithPrintProgress()
         double progress = videoIO->getProgress();
         std::cout
             << std::fixed << std::setprecision(2)
-            << std::setw(5) << progress * 100 << '%'
-            << "  elpsed: " << std::setw(5) << currTime << 's'
-            << "  remaining: " << std::setw(5) << currTime / progress - currTime << 's'
+            << std::setw(7) << progress * 100 << '%'
+            << "    elpsed: " << std::setw(10) << currTime << 's'
+            << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
             << '\r';
     }
 }
