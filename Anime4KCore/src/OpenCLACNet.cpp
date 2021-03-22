@@ -141,7 +141,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageB()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpY = orgY;
@@ -186,7 +186,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageB()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
@@ -249,7 +249,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleB()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
@@ -288,7 +288,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideoB()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         videoIO->init(
@@ -377,7 +377,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageW()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpY = orgY;
@@ -422,7 +422,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageW()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
@@ -485,7 +485,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleW()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
@@ -524,7 +524,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageF()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpY = orgY;
@@ -569,7 +569,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
@@ -632,7 +632,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleF()
     {
         double tmpZf = std::log2(param.zoomFactor);
         if (tmpZf < 1e-4)
-            tmpZf = 0.9;
+            tmpZf = 0.5;
         int tmpZfUp = std::ceil(tmpZf);
 
         cv::Mat tmpImg = orgImg;
