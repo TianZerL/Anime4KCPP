@@ -340,7 +340,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         args[AC_pushColorCount].AsInt(),
         args[AC_strengthColor].AsFloat(),
         args[AC_strengthGradient].AsFloat(),
-        args[AC_zoomFactor].AsInt(),
+        args[AC_zoomFactor].AsFloat(),
         false, false, false, false, 4, 40, std::thread::hardware_concurrency(),
         args[AC_HDN].AsBool(),
         args[AC_HDNLevel].AsInt()
@@ -363,7 +363,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     if (!args[AC_strengthGradient].Defined())
         inputs.strengthGradient = 1.0;
     if (!args[AC_zoomFactor].Defined())
-        inputs.zoomFactor = 1.0;
+        inputs.zoomFactor = 2.0;
     if (!args[AC_ACNet].Defined())
         CNN = false;
     if (!args[AC_GPUMode].Defined())
@@ -402,7 +402,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         env->ThrowError("Anime4KCPP: strengthGradient must range from 0 to 1!");
 
     if (inputs.zoomFactor < 1.0)
-        env->ThrowError("Anime4KCPP: zoomFactor must be an integer which >= 1!");
+        env->ThrowError("Anime4KCPP: zoomFactor must >= 1.0!");
 
     if (inputs.HDNLevel < 1 || inputs.HDNLevel > 3)
         env->ThrowError("Anime4KCPP: HDNLevel must range from 1 to 3!");
@@ -543,7 +543,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[pushColorCount]i"
         "[strengthColor]f"
         "[strengthGradient]f"
-        "[zoomFactor]i"
+        "[zoomFactor]f"
         "[ACNet]b"
         "[GPUMode]b"
         "[GPGPUModel]s"
@@ -561,7 +561,7 @@ extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment 
         "[pushColorCount]i"
         "[strengthColor]f"
         "[strengthGradient]f"
-        "[zoomFactor]i"
+        "[zoomFactor]f"
         "[ACNet]b"
         "[GPUMode]b"
         "[GPGPUModel]s"

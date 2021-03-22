@@ -11,11 +11,12 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const double* 
 {
     const int channels = 8;
     const int srcChannels = img.channels();
-    const int lineStep = img.cols * srcChannels;
+    const size_t lineStep = img.step;
     changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineB curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
+
         const LineB pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
         const LineB cLineData = curLine;
         const LineB nLineData = i > 0 ? curLine - lineStep : curLine;
@@ -82,14 +83,16 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const double* 
 {
     const int channels = 8;
     const int srcChannels = img.channels();
-    const int lineStep = img.cols * srcChannels;
+    const size_t lineStep = img.step;
     changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineW curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
-        const LineW pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+
+        const LineB tempLine = reinterpret_cast<LineB>(curLine);
+        const LineW pLineData = i < img.rows - 1 ? reinterpret_cast<LineW>(tempLine + lineStep) : curLine;
         const LineW cLineData = curLine;
-        const LineW nLineData = i > 0 ? curLine - lineStep : curLine;
+        const LineW nLineData = i > 0 ? reinterpret_cast<LineW>(tempLine - lineStep) : curLine;
 
         const PixelW tl = nLineData + orgJ + jn, tc = nLineData + orgJ, tr = nLineData + orgJ + jp;
         const PixelW ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
@@ -153,14 +156,16 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const double* 
 {
     const int channels = 8;
     const int srcChannels = img.channels();
-    const int lineStep = img.cols * srcChannels;
+    const size_t lineStep = img.step;
     changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineF curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
-        const LineF pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+
+        const LineB tempLine = reinterpret_cast<LineB>(curLine);
+        const LineF pLineData = i < img.rows - 1 ? reinterpret_cast<LineF>(tempLine + lineStep) : curLine;
         const LineF cLineData = curLine;
-        const LineF nLineData = i > 0 ? curLine - lineStep : curLine;
+        const LineF nLineData = i > 0 ? reinterpret_cast<LineF>(tempLine - lineStep) : curLine;
 
         const PixelF tl = nLineData + orgJ + jn, tc = nLineData + orgJ, tr = nLineData + orgJ + jp;
         const PixelF ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
@@ -223,10 +228,11 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const double* 
 void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
-    const int lineStep = tmpMat.cols * channels;
+    const size_t lineStep = tmpMat.step1();
     changEachPixelNToN([&](const int i, const int j, ChanD outMat, LineD curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
+
         const LineD pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
         const LineD cLineData = curLine;
         const LineD nLineData = i > 0 ? curLine - lineStep : curLine;
@@ -650,13 +656,12 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanD, LineB)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
-    tmpMat.create(src.size(), CV_64FC(outChannels));
+    const int h = src.rows, w = src.cols;
+    const int jMAX = w * outChannels;
+
+    tmpMat.create(h, w, CV_64FC(outChannels));
 
     const size_t srcStep = src.step;
-
-    const int h = src.rows, w = src.cols;
-
-    const int jMAX = w * outChannels;
     const size_t step = tmpMat.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
@@ -682,13 +687,12 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanD, LineW)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
-    tmpMat.create(src.size(), CV_64FC(outChannels));
+    const int h = src.rows, w = src.cols;
+    const int jMAX = w * outChannels;
+
+    tmpMat.create(h, w, CV_64FC(outChannels));
 
     const size_t srcStep = src.step;
-
-    const int h = src.rows, w = src.cols;
-
-    const int jMAX = w * outChannels;
     const size_t step = tmpMat.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
@@ -714,13 +718,12 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanD, LineF)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
-    tmpMat.create(src.size(), CV_64FC(outChannels));
+    const int h = src.rows, w = src.cols;
+    const int jMAX = w * outChannels;
+
+    tmpMat.create(h, w, CV_64FC(outChannels));
 
     const size_t srcStep = src.step;
-
-    const int h = src.rows, w = src.cols;
-
-    const int jMAX = w * outChannels;
     const size_t step = tmpMat.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
@@ -746,14 +749,13 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
     const std::function<void(int, int, ChanD, LineD)>&& callBack,
     cv::Mat& tmpMat)
 {
-    cv::Mat tmp;
-    tmp.create(tmpMat.size(), tmpMat.type());
-
     const int h = tmpMat.rows, w = tmpMat.cols;
-
     const int channels = tmpMat.channels();
     const int jMAX = w * channels;
     const size_t step = tmpMat.step;
+
+    cv::Mat tmp;
+    tmp.create(h, w, tmpMat.type());
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
@@ -780,19 +782,18 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const std::function<void(int, int, ChanB, LineD)>&& callBack,
     const cv::Mat& tmpMat)
 {
-    cv::Mat tmp;
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
-    tmp.create(h, w, CV_8UC1);
+    img.create(h, w, CV_8UC1);
 
     const int jMAX = w;
     const size_t channels = tmpMat.channels();
     const size_t step = tmpMat.step;
-    const size_t dstStep = tmp.step;
+    const size_t dstStep = img.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanB tmpLineData = tmp.data + static_cast<size_t>(i) * dstStep;
+        ChanB tmpLineData = img.data + static_cast<size_t>(i) * dstStep;
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
         });
@@ -801,32 +802,29 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     for (int i = 0; i < h; i++)
     {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanB tmpLineData = tmp.data + static_cast<size_t>(i) * dstStep;
+        ChanB tmpLineData = img.data + static_cast<size_t>(i) * dstStep;
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
     }
 #endif
-
-    img = tmp;
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const std::function<void(int, int, ChanW, LineD)>&& callBack,
     const cv::Mat& tmpMat)
 {
-    cv::Mat tmp;
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
-    tmp.create(h, w, CV_16UC1);
+    img.create(h, w, CV_16UC1);
 
     const int jMAX = w;
     const size_t channels = tmpMat.channels();
     const size_t step = tmpMat.step;
-    const size_t dstStep = tmp.step;
+    const size_t dstStep = img.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanW tmpLineData = reinterpret_cast<ChanW>(tmp.data + static_cast<size_t>(i) * dstStep);
+        ChanW tmpLineData = reinterpret_cast<ChanW>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
         });
@@ -835,32 +833,29 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     for (int i = 0; i < h; i++)
     {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanW tmpLineData = reinterpret_cast<ChanW>(tmp.data + static_cast<size_t>(i) * dstStep);
+        ChanW tmpLineData = reinterpret_cast<ChanW>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
     }
 #endif
-
-    img = tmp;
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     const std::function<void(int, int, ChanF, LineD)>&& callBack,
     const cv::Mat& tmpMat)
 {
-    cv::Mat tmp;
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
-    tmp.create(h, w, CV_32FC1);
+    img.create(h, w, CV_32FC1);
 
     const int jMAX = w;
     const size_t channels = tmpMat.channels();
     const size_t step = tmpMat.step;
-    const size_t dstStep = tmp.step;
+    const size_t dstStep = img.step;
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanF tmpLineData = reinterpret_cast<ChanF>(tmp.data + static_cast<size_t>(i) * dstStep);
+        ChanF tmpLineData = reinterpret_cast<ChanF>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
         });
@@ -869,11 +864,9 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     for (int i = 0; i < h; i++)
     {
         LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-        ChanF tmpLineData = reinterpret_cast<ChanF>(tmp.data + static_cast<size_t>(i) * dstStep);
+        ChanF tmpLineData = reinterpret_cast<ChanF>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
     }
 #endif
-
-    img = tmp;
 }

@@ -342,12 +342,12 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         return;
     }
 
-    tmpData.zoomFactor = vsapi->propGetInt(in, "zoomFactor", 0, &err);
+    tmpData.zoomFactor = vsapi->propGetFloat(in, "zoomFactor", 0, &err);
     if (err)
-        tmpData.zoomFactor = 1.0;
+        tmpData.zoomFactor = 2.0;
     else if (tmpData.zoomFactor < 1.0)
     {
-        vsapi->setError(out, "Anime4KCPP: zoomFactor must be an integer which >= 1");
+        vsapi->setError(out, "Anime4KCPP: zoomFactor must >= 1.0");
         vsapi->freeNode(tmpData.node);
         return;
     }
@@ -632,7 +632,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         "pushColorCount:int:opt;"
         "strengthColor:float:opt;"
         "strengthGradient:float:opt;"
-        "zoomFactor:int:opt;"
+        "zoomFactor:float:opt;"
         "ACNet:int:opt;"
         "GPUMode:int:opt;"
         "GPGPUModel:data:opt;"
