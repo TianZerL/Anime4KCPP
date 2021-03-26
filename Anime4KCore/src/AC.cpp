@@ -51,8 +51,8 @@ void Anime4KCPP::AC::loadVideo(const std::string& srcFile)
     orgW = videoIO->get(cv::CAP_PROP_FRAME_WIDTH);
     fps = videoIO->get(cv::CAP_PROP_FPS);
     totalFrameCount = videoIO->get(cv::CAP_PROP_FRAME_COUNT);
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 8;
 }
@@ -91,8 +91,8 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     
     orgH = orgImg.rows;
     orgW = orgImg.cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     switch (orgImg.depth())
     {
@@ -226,8 +226,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
     }
     orgH = orgImg.rows;
     orgW = orgImg.cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     inputYUV = false;
 }
@@ -280,8 +280,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     dstImg = orgImg;
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 8;
     checkAlphaChannel = false;
@@ -335,8 +335,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
     dstImg = orgImg;
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 16;
     checkAlphaChannel = false;
@@ -390,8 +390,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, b
     dstImg = orgImg;
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 32;
     checkAlphaChannel = false;
@@ -418,8 +418,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     }
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 8;
     inputGrayscale = false;
@@ -448,8 +448,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
     }
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 16;
     inputGrayscale = false;
@@ -478,8 +478,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, floa
     }
     orgH = rows;
     orgW = cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 32;
     inputGrayscale = false;
@@ -497,8 +497,8 @@ void Anime4KCPP::AC::loadImage(
     dstV = orgV = cv::Mat(rowsV, colsV, CV_8UC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 8;
     inputGrayscale = false;
@@ -517,8 +517,8 @@ void Anime4KCPP::AC::loadImage(
     dstV = orgV = cv::Mat(rowsV, colsV, CV_16UC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 16;
     inputGrayscale = false;
@@ -537,8 +537,8 @@ void Anime4KCPP::AC::loadImage(
     dstV = orgV = cv::Mat(rowsV, colsV, CV_32FC1, v, strideV);
     orgH = rowsY;
     orgW = colsY;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     bitDepth = 32;
     inputGrayscale = false;
@@ -554,8 +554,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     dstV = orgV = v;
     orgH = y.rows;
     orgW = y.cols;
-    H = param.zoomFactor * orgH;
-    W = param.zoomFactor * orgW;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     inputGrayscale = false;
     inputYUV = true;
@@ -792,27 +792,6 @@ std::string Anime4KCPP::AC::getFiltersInfo()
         << "----------------------------------------------" << std::endl;
 
     return oss.str();
-}
-
-size_t Anime4KCPP::AC::getResultDataLength() noexcept
-{
-    if (inputYUV)
-        return dstY.size().area() + dstU.size().area() + dstV.size().area();
-    else if (checkAlphaChannel || inputRGB32)
-        return 4 * static_cast<size_t>(H) * static_cast<size_t>(W);
-    else
-        return 3 * static_cast<size_t>(H) * static_cast<size_t>(W);
-}
-
-size_t Anime4KCPP::AC::getResultDataPerChannelLength() noexcept
-{
-    return static_cast<size_t>(W) * static_cast<size_t>(H);
-}
-
-std::array<int, 3> Anime4KCPP::AC::getResultShape()
-{
-    std::array<int, 3> shape = { H, W, 3 };
-    return shape;
 }
 
 void Anime4KCPP::AC::showImage(bool R2B)

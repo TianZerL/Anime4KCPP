@@ -532,8 +532,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     if (tmpData.zoomFactor != 1.0)
     {
-        tmpData.vi.width *= tmpData.zoomFactor;
-        tmpData.vi.height *= tmpData.zoomFactor;
+        tmpData.vi.width = std::round(tmpData.vi.width * tmpData.zoomFactor);
+        tmpData.vi.height = std::round(tmpData.vi.height * tmpData.zoomFactor);
     }
 
     Anime4KCPPData* data = new Anime4KCPPData;

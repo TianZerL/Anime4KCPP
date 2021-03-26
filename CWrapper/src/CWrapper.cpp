@@ -741,49 +741,6 @@ extern "C"
         return AC_OK;
     }
 
-    size_t acGetResultDataLength(ac_instance instance, ac_error* error)
-    {
-        if (error != nullptr)
-            *error = AC_OK;
-
-        if (instance == nullptr)
-        {
-            if (error != nullptr)
-                *error = AC_ERROR_NULL_INSTANCE;
-            return 0;
-        }
-
-        return reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultDataLength();
-    }
-
-    size_t acGetResultDataPerChannelLength(ac_instance instance, ac_error* error)
-    {
-        if (error != nullptr)
-            *error = AC_OK;
-
-        if (instance == nullptr)
-        {
-            if (error != nullptr)
-                *error = AC_ERROR_NULL_INSTANCE;
-            return 0;
-        }
-
-        return reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultDataPerChannelLength();
-    }
-
-    ac_error acGetResultShape(ac_instance instance, int shape[3])
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        std::array<int, 3> ret = reinterpret_cast<Anime4KCPP::AC*>(instance)->getResultShape();
-
-        for (int i = 0; i < 3; i++)
-            shape[i] = ret[i];
-
-        return AC_OK;
-    }
-
     ac_error acGetInfo(ac_instance instance, char* info, size_t* length)
     {
         if (instance == nullptr)

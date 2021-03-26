@@ -421,8 +421,8 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 
         srcH = std::abs(pVi->bmiHeader.biHeight);
         srcW = std::abs(pVi->bmiHeader.biWidth);
-        dstH = srcH * zf;
-        dstW = srcW * zf;
+        dstH = std::round(srcH * zf);
+        dstW = std::round(srcW * zf);
         dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;
@@ -439,8 +439,8 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 
         srcH = std::abs(pVi->bmiHeader.biHeight);
         srcW = std::abs(pVi->bmiHeader.biWidth);
-        dstH = srcH * zf;
-        dstW = srcW * zf;
+        dstH = std::round(srcH * zf);
+        dstW = std::round(srcW * zf);
         dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * zf * zf);
         pVi->bmiHeader.biHeight = dstH;
         pVi->bmiHeader.biWidth = dstW;

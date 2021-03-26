@@ -239,10 +239,6 @@ extern "C"
     AC_DLL ac_error AC_API acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, size_t stride, float* data);
     AC_DLL ac_error AC_API acSaveImageRGBPlanar(ac_instance instance, unsigned char* r, size_t strideR, unsigned char* g, size_t strideG, unsigned char* b, size_t strideB);
     AC_DLL ac_error AC_API acSaveImageRGBPacked(ac_instance instance, unsigned char* data, size_t stride);
-    AC_DLL size_t AC_API acGetResultDataLength(ac_instance instance, ac_error* error);
-    AC_DLL size_t AC_API acGetResultDataPerChannelLength(ac_instance instance, ac_error* error);
-    //shape should be int[3]
-    AC_DLL ac_error AC_API acGetResultShape(ac_instance instance, int shape[3]);
     //acGetInfo may need to run two times for getting length of info string first
     AC_DLL ac_error AC_API acGetInfo(ac_instance instance, char* info, size_t* length);
     //acGetFiltersInfo may need to run two times for getting length of info string first

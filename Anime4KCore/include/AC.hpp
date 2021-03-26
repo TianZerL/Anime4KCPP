@@ -74,6 +74,18 @@ namespace Anime4KCPP
     typedef double* LineD;
     typedef unsigned char* LineB;
     typedef unsigned short int* LineW;
+
+    namespace Utils
+    {
+        int ceilLog2(double v);
+    }
+}
+
+// compute log2(v) then do ceil(v)
+inline int Anime4KCPP::Utils::ceilLog2(double v)
+{
+    long long int data = *reinterpret_cast<long long int*>(&v);
+    return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) || 0));
 }
 
 struct Anime4KCPP::Parameters
@@ -93,6 +105,12 @@ struct Anime4KCPP::Parameters
     bool HDN;
     bool alpha;
     int HDNLevel;
+
+    // return true if zoomFactor is not a power of 2
+    inline bool isNonIntegerScale() noexcept
+    {
+        return ((*reinterpret_cast<long long int*>(&zoomFactor)) << 12) || (zoomFactor < 2.0);
+    }
 
     void reset() noexcept;
 
@@ -160,9 +178,7 @@ public:
 
     virtual std::string getInfo();
     virtual std::string getFiltersInfo();
-    size_t getResultDataLength() noexcept;
-    size_t getResultDataPerChannelLength() noexcept;
-    std::array<int, 3> getResultShape();
+
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
 

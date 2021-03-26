@@ -80,20 +80,19 @@ void Anime4KCPP::CPU::ACNet::processYUVImageB()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpY = orgY;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processB(tmpY, dstY);
             tmpY = dstY;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstY, dstY, cv::Size(W, H), 0.0, 0.0, cv::INTER_AREA);
+            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -117,22 +116,21 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processB(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -161,20 +159,19 @@ void Anime4KCPP::CPU::ACNet::processGrayscaleB()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processB(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
     }
     else
@@ -192,13 +189,12 @@ void Anime4KCPP::CPU::ACNet::processRGBVideoB()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         videoIO->init(
-            [this, tmpZfUp, tmpZf]()
+            [this, scaleTimes]()
             {
                 Utils::Frame frame = videoIO->read();
                 cv::Mat orgFrame = frame.first;
@@ -207,14 +203,14 @@ void Anime4KCPP::CPU::ACNet::processRGBVideoB()
                 cv::Mat tmpFrame = orgFrame;
                 cv::cvtColor(tmpFrame, tmpFrame, cv::COLOR_BGR2YUV);
 
-                for (int i = 0; i < tmpZfUp; i++)
+                for (int i = 0; i < scaleTimes; i++)
                 {
                     processor->processB(tmpFrame, dstFrame);
                     tmpFrame = dstFrame;
                 }
-                if (tmpZfUp - tmpZf > 1e-4)
+                if (param.isNonIntegerScale())
                 {
-                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
                 }
 
                 cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -262,20 +258,19 @@ void Anime4KCPP::CPU::ACNet::processYUVImageW()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpY = orgY;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processW(tmpY, dstY);
             tmpY = dstY;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstY, dstY, cv::Size(W, H), 0.0, 0.0, cv::INTER_AREA);
+            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -299,22 +294,21 @@ void Anime4KCPP::CPU::ACNet::processRGBImageW()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processW(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -343,20 +337,19 @@ void Anime4KCPP::CPU::ACNet::processGrayscaleW()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processW(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
     }
     else
@@ -374,20 +367,19 @@ void Anime4KCPP::CPU::ACNet::processYUVImageF()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpY = orgY;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processF(tmpY, dstY);
             tmpY = dstY;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstY, dstY, cv::Size(W, H), 0.0, 0.0, cv::INTER_AREA);
+            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -411,22 +403,21 @@ void Anime4KCPP::CPU::ACNet::processRGBImageF()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processF(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
 
         cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -455,20 +446,19 @@ void Anime4KCPP::CPU::ACNet::processGrayscaleF()
 {
     if (!param.fastMode)
     {
-        double tmpZf = std::log2(param.zoomFactor);
-        if (tmpZf < 1e-4)
-            tmpZf = 0.5;
-        int tmpZfUp = std::ceil(tmpZf);
+        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        if (!scaleTimes)
+            scaleTimes++;
 
         cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < tmpZfUp; i++)
+        for (int i = 0; i < scaleTimes; i++)
         {
             processor->processF(tmpImg, dstImg);
             tmpImg = dstImg;
         }
-        if (tmpZfUp - tmpZf > 1e-4)
+        if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), 0, 0, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
         }
     }
     else

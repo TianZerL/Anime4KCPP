@@ -96,8 +96,8 @@ Anime4KCPPF::Anime4KCPPF(
         env->ThrowError("Anime4KCPP: RGB24 or YUV444 or Grayscale is needed for Anime4K09");
     }
 
-    vi.height *= inputs.zoomFactor;
-    vi.width *= inputs.zoomFactor;
+    vi.height = std::round(vi.height * inputs.zoomFactor);
+    vi.width = std::round(vi.width * inputs.zoomFactor);
 
     if (GPUMode)
     {
