@@ -77,12 +77,12 @@ namespace Anime4KCPP
 
     namespace Utils
     {
-        int ceilLog2(double v);
+        int fastCeilLog2(double v) noexcept;
     }
 }
 
 // compute log2(v) then do ceil(v)
-inline int Anime4KCPP::Utils::ceilLog2(double v)
+inline int Anime4KCPP::Utils::fastCeilLog2(double v) noexcept
 {
     long long int data = *reinterpret_cast<long long int*>(&v);
     return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) || 0));
@@ -106,7 +106,7 @@ struct Anime4KCPP::Parameters
     bool alpha;
     int HDNLevel;
 
-    // return true if zoomFactor is not a power of 2
+    // return true if zoomFactor is not a power of 2 or zoomFactor < 2.0
     inline bool isNonIntegerScale() noexcept
     {
         return ((*reinterpret_cast<long long int*>(&zoomFactor)) << 12) || (zoomFactor < 2.0);

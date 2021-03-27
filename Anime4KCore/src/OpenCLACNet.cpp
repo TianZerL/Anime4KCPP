@@ -139,7 +139,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageB()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -183,7 +183,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageB()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -245,7 +245,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleB()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -283,7 +283,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBVideoB()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -371,7 +371,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageW()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -415,7 +415,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageW()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -477,7 +477,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleW()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -515,7 +515,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageF()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -559,7 +559,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
@@ -621,7 +621,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleF()
 {
     if (!param.fastMode)
     {
-        int scaleTimes = Utils::ceilLog2(param.zoomFactor);
+        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
         if (!scaleTimes)
             scaleTimes++;
 
