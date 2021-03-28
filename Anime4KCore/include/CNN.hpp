@@ -34,6 +34,9 @@ public:
         case Anime4KCPP::CNNType::ACNetHDNL3:
             return "ACNetHDNL3";
             break;
+        default:
+            return "ACNetHDNL0";
+            break;
         }
     }
 

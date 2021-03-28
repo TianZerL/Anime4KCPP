@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
 #endif
             case GPGPU::NCNN:
 #ifndef ENABLE_NCNN
-                std::cerr << "NCNN is not supported" << std::endl;
+                std::cerr << "ncnn is not supported" << std::endl;
                 return 0;
 #else
                 {
@@ -417,7 +417,7 @@ int main(int argc, char* argv[])
 
                         if (!filesystem::exists(modelPath))
                         {
-                            std::cerr << "NCNN model or param file does not exist." << std::endl;
+                            std::cerr << "ncnn model or param file does not exist." << std::endl;
                             return 0;
                         }
                         creator.pushManager<Anime4KCPP::NCNN::Manager>(
@@ -479,12 +479,15 @@ int main(int argc, char* argv[])
             {
 #ifdef ENABLE_NCNN
                 if (dID < 0)
-                    std::cerr << "NCNN uses CPU" << std::endl;
+                    std::cerr << "ncnn uses CPU" << std::endl;
 
                 if (CNN)
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
                 else
-                    std::cerr << "NCNN only for ACNet" << std::endl;
+                {
+                    std::cerr << "ncnn only for ACNet" << std::endl;
+                    return 0;
+                }
 #endif
             }
             break;
