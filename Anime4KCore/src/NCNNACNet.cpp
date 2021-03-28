@@ -7,7 +7,7 @@
 #include "NCNNACNetModel.hpp"
 
 Anime4KCPP::NCNN::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters) 
+    AC(parameters)
 {
     if (param.HDN)
     {
@@ -92,7 +92,7 @@ void Anime4KCPP::NCNN::ACNet::init(
 
     if (vkdev == nullptr)
         vkdev = deviceID < 0 ? nullptr : ncnn::get_gpu_device((deviceID >= ncnn::get_gpu_count()) ? 0 : deviceID);
-    
+
     if (type >= ACNetType::TotalTypeCount || type < ACNetType::HDNL0)
         type = ACNetType::HDNL0;
 
@@ -106,7 +106,7 @@ void Anime4KCPP::NCNN::ACNet::init(
     net[type].opt.use_int8_packed = true;
     net[type].opt.use_int8_storage = true;
     net[type].opt.use_int8_inference = true;
-    
+
     net[type].opt.num_threads = threads;
 
     if (net[type].load_param(paramPath.c_str()) || net[type].load_model(modelPath.c_str()))
@@ -114,7 +114,7 @@ void Anime4KCPP::NCNN::ACNet::init(
         release();
         throw ACException<ExceptionType::IO, true>(
             "Failed to load ncnn model or param",
-            std::string("model path: ") + modelPath.c_str() + "\nparam path: " + paramPath.c_str(), 
+            std::string("model path: ") + modelPath.c_str() + "\nparam path: " + paramPath.c_str(),
             __LINE__);
     }
 
@@ -195,7 +195,7 @@ void Anime4KCPP::NCNN::ACNet::release()
     for (int i = ACNetType::HDNL0; i < ACNetType::TotalTypeCount; i++)
         net[i].clear();
 
-    if(vkdev)
+    if (vkdev)
         ncnn::destroy_gpu_instance();
 
     vkdev = nullptr;
