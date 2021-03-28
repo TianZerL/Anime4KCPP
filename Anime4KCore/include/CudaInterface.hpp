@@ -37,9 +37,9 @@ namespace Anime4KCPP
         void cuReleaseCuda() noexcept;
 
         int cuGetDeviceCount() noexcept;
-        std::string cuGetDeviceInfo(const unsigned int id);
+        std::string cuGetDeviceInfo(const int id);
         std::string cuGetCudaInfo();
-        bool cuCheckDeviceSupport(const unsigned int id) noexcept;
+        bool cuCheckDeviceSupport(const int id) noexcept;
     }
 }
 

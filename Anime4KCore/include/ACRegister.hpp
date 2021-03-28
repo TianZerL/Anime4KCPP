@@ -14,6 +14,12 @@
 #else
 #define CUDA_FLAG 0
 #endif
+
+#ifdef ENABLE_NCNN
+#define NCNN_FLAG 1
+#else
+#define NCNN_FLAG 0
+#endif
 //---------------------------------------
 
 //Register processor here
@@ -24,7 +30,8 @@ REGISTER_PROCESSOR(CPU, ACNet) \
 REGISTER_PROCESSOR(OpenCL, Anime4K09) \
 REGISTER_PROCESSOR(OpenCL, ACNet) \
 REGISTER_PROCESSOR_IF(CUDA_FLAG, Cuda, Anime4K09) \
-REGISTER_PROCESSOR_IF(CUDA_FLAG, Cuda, ACNet)
+REGISTER_PROCESSOR_IF(CUDA_FLAG, Cuda, ACNet) \
+REGISTER_PROCESSOR_IF(NCNN_FLAG, NCNN, ACNet)
 //---------------------------------------
 #endif
 

@@ -7,9 +7,13 @@
 #include"ACCuda.hpp"
 #endif
 
+#ifdef ENABLE_NCNN
+#include"ACNCNN.hpp"
+#endif
+
 #include"ACManager.hpp"
 
-#define ANIME4KCPP_CORE_VERSION "2.5.0"
+#define ANIME4KCPP_CORE_VERSION "2.6.0"
 
 namespace Anime4KCPP
 {

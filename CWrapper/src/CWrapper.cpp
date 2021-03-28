@@ -153,7 +153,7 @@ extern "C"
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
                 (managerData->OpenCLACNetData->pID, 
                     managerData->OpenCLACNetData->dID,
-                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType),
+                    static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
                     managerData->OpenCLACNetData->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
         }
@@ -516,7 +516,7 @@ extern "C"
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
                 (managerData->OpenCLACNetData->pID,
                     managerData->OpenCLACNetData->dID,
-                    static_cast<Anime4KCPP::CNNType>(managerData->OpenCLACNetData->CNNType),
+                    static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
                     managerData->OpenCLACNetData->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
         }

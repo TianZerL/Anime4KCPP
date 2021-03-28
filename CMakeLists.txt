@@ -29,6 +29,7 @@ option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
+option(Enable_NCNN "Enable ncnn module" OFF)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 
@@ -120,6 +121,10 @@ elseif(NOT OpenCL_Provider MATCHES "Auto")
     )
 endif()
 
+if(Enable_NCNN)
+    set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
+endif()
+
 message(STATUS  
 "C++ compiler flags:\n"
     ${CMAKE_CXX_FLAGS}
@@ -137,6 +142,7 @@ message(STATUS
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
+"   Enable NCNN ${Enable_NCNN}\n"
 )
 if(WIN32)
     message(STATUS
@@ -163,6 +169,10 @@ if (Enable_CUDA)
             set(CMAKE_CUDA_ARCHITECTURES 35-real 50-real 52-real 60-real 61-real 70-real 75-real 80-real)
         endif()  
     endif()
+endif()
+
+if(Enable_NCNN)
+    add_definitions(-DENABLE_NCNN)
 endif()
 
 macro(SUBDIRLIST result curdir)

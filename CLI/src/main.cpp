@@ -18,7 +18,7 @@ namespace filesystem = std::filesystem;
 
 enum class GPGPU
 {
-    OpenCL, CUDA
+    OpenCL, CUDA, NCNN
 };
 
 static bool checkFFmpeg()
@@ -87,7 +87,7 @@ static void showGPUList()
     std::cout << "OpenCL:" << std::endl;
     Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
     if (OpenCLGPUList.platforms == 0)
-        std::cerr << "Error: No OpenCL GPU found" << std::endl;
+        std::cerr << "Error: No OpenCL GPU found" << std::endl << std::endl;
     else
         std::cout << OpenCLGPUList() << std::endl;
 
@@ -95,20 +95,35 @@ static void showGPUList()
     std::cout << "Cuda:" << std::endl;
     Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
     if (CUDAGPUList.devices == 0)
-        std::cerr << "Error: No CUDA GPU found" << std::endl;
+        std::cerr << "Error: No CUDA GPU found" << std::endl << std::endl;
     else
         std::cout << CUDAGPUList() << std::endl;
 #endif
+
+#ifdef ENABLE_NCNN
+    std::cout << "NCNN:" << std::endl;
+    Anime4KCPP::NCNN::GPUList NCNNGPUList = Anime4KCPP::NCNN::listGPUs();
+    if (NCNNGPUList.devices == 0)
+        std::cerr << "Error: No NCNN Vulkan GPU found" << std::endl << std::endl;
+    else
+        std::cout << NCNNGPUList() << std::endl;
+#endif
 }
 
-static void benchmark(unsigned int pID, unsigned int dID)
+static void benchmark(const int pID, const int dID)
 {
-    std::cout << "Benchmarking..." << std::endl;
+    std::cout << "Benchmarking..." << std::endl << std::endl;
 
     double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
     double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+
 #ifdef ENABLE_CUDA
     double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+#endif 
+
+#ifdef ENABLE_NCNN
+    double NCNNCPUScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(Anime4KCPP::CNNType::ACNetHDNL0, -1, 4);
+    double NCNNVKScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(Anime4KCPP::CNNType::ACNetHDNL0, dID, 4);
 #endif 
 
     std::cout
@@ -129,6 +144,19 @@ static void benchmark(unsigned int pID, unsigned int dID)
         << " (dID = " << dID << ")"
         << std::endl;
 #endif 
+
+#ifdef ENABLE_NCNN
+    std::cout
+        << "NCNN CPU score: "
+        << NCNNCPUScore
+        << " (dID = " << dID << ")"
+        << std::endl
+        << "NCNN Vulkan score: "
+        << NCNNVKScore
+        << " (dID = " << dID << ")"
+        << std::endl;
+#endif 
+
 }
 
 static bool genConfigTemplate(const std::string& path, Config& config)
@@ -152,7 +180,8 @@ int main(int argc, char* argv[])
     opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
     opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
-    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1, int(32 * std::thread::hardware_concurrency())));
+    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1u, 32 * std::thread::hardware_concurrency()));
+    opt.add<unsigned int>("ncnnThreads", 'T', "Threads count for ncnn module", false, 4, cmdline::range(1u, std::thread::hardware_concurrency()));
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
@@ -176,8 +205,8 @@ int main(int argc, char* argv[])
     opt.add("HDN", 'H', "Enable HDN mode for ACNet");
     opt.add<int>("HDNLevel", 'L', "Set HDN level", false, 1, cmdline::range(1, 3));
     opt.add("listGPUs", 'l', "list GPUs");
-    opt.add<unsigned int>("platformID", 'h', "Specify the platform ID", false, 0);
-    opt.add<unsigned int>("deviceID", 'd', "Specify the device ID", false, 0);
+    opt.add<int>("platformID", 'h', "Specify the platform ID", false, 0);
+    opt.add<int>("deviceID", 'd', "Specify the device ID", false, 0);
     opt.add<int>("OpenCLQueueNumber", 'Q', "Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL", false, 1);
     opt.add("OpenCLParallelIO", 'P', "Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL");
     opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
@@ -189,9 +218,12 @@ int main(int argc, char* argv[])
     opt.add("webVideo", 'W', "process the video from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
     opt.add("benchmark", 'B', "do benchmarking");
+    opt.add("ncnn", 'N', "Open ncnn and ACNet");
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
+    opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
     opt.set_program_name("Anime4KCPP_CLI");
     opt.add<std::string>("configTemplate", '\000', "Generate config template", false, "./config");
+    opt.add("testMode", '\000', "function test for development only");
 
     opt.parse_check(argc, argv);
 
@@ -209,7 +241,9 @@ int main(int argc, char* argv[])
     bool version = opt.exist("version");
     bool webVideo = opt.exist("webVideo");
     bool doBenchmark = opt.exist("benchmark");
+    bool ncnn = opt.exist("ncnn");
     unsigned int frameStart = opt.get<unsigned int>("start");
+    bool testMode = opt.exist("testMode");
 
     int passes = config.get<int>("passes");
     int pushColorCount = config.get<int>("pushColorCount");
@@ -228,13 +262,15 @@ int main(int argc, char* argv[])
     bool alpha = config.get<bool>("alpha");
     uint8_t preFilters = config.get<unsigned int>("preFilters");
     uint8_t postFilters = config.get<unsigned int>("postFilters");
-    unsigned int pID = config.get<unsigned int>("platformID");
-    unsigned int dID = config.get<unsigned int>("deviceID");
+    int pID = config.get<int>("platformID");
+    int dID = config.get<int>("deviceID");
     int OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
     bool OpenCLParallelIO = config.get<bool>("OpenCLParallelIO");
     unsigned int threads = config.get<unsigned int>("threads");
+    unsigned int ncnnThreads = config.get<unsigned int>("ncnnThreads");
     std::string codec = config.get<std::string>("codec");
     std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
+    std::string ncnnModelPath = config.get<std::string>("ncnnModelPath");
 
     if (opt.exist("configTemplate"))
     {
@@ -252,9 +288,11 @@ int main(int argc, char* argv[])
         GPGPUModel = GPGPU::OpenCL;
     else if (GPGPUModelString == "cuda")
         GPGPUModel = GPGPU::CUDA;
+    else if (GPGPUModelString == "ncnn")
+        GPGPUModel = GPGPU::NCNN;
     else
     {
-        std::cerr << "Unknown GPGPU model, it must be \"cuda\" or \"opencl\"" << std::endl;
+        std::cerr << "Unknown GPGPU model, it must be \"ncnn\", \"cuda\" or \"opencl\"" << std::endl;
         return 0;
     }
 
@@ -275,6 +313,14 @@ int main(int argc, char* argv[])
     {
         benchmark(pID, dID);
         return 0;
+    }
+
+    if (ncnn)
+    {
+        GPGPUModel = GPGPU::NCNN;
+        if (!GPU)
+            dID = -1;
+        GPU = true;
     }
 
     filesystem::path inputPath(input), outputPath(output);
@@ -356,7 +402,34 @@ int main(int argc, char* argv[])
                 std::cerr << "CUDA is not supported" << std::endl;
                 return 0;
 #else
-                creator.pushManager<Anime4KCPP::Cuda::Manager>();
+                creator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+                break;
+#endif
+            case GPGPU::NCNN:
+#ifndef ENABLE_NCNN
+                std::cerr << "NCNN is not supported" << std::endl;
+                return 0;
+#else
+                {
+                    if (testMode)
+                    {
+                        filesystem::path modelPath = filesystem::weakly_canonical(ncnnModelPath);
+
+                        if (!filesystem::exists(modelPath))
+                        {
+                            std::cerr << "NCNN model or param file does not exist." << std::endl;
+                            return 0;
+                        }
+                        creator.pushManager<Anime4KCPP::NCNN::Manager>(
+                            (modelPath / (type.toString() + std::string(".bin"))).generic_string(),
+                            (modelPath / "ACNet.param").generic_string(),
+                            type, dID, ncnnThreads);
+                    }
+                    else
+                    {
+                        creator.pushManager<Anime4KCPP::NCNN::Manager>(type, dID, ncnnThreads);
+                    }
+                }
                 break;
 #endif
             }
@@ -399,6 +472,19 @@ int main(int argc, char* argv[])
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+            }
+            break;
+            case GPGPU::NCNN:
+            {
+#ifdef ENABLE_NCNN
+                if (dID < 0)
+                    std::cerr << "NCNN uses CPU" << std::endl;
+
+                if (CNN)
+                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
+                else
+                    std::cerr << "NCNN only for ACNet" << std::endl;
 #endif
             }
             break;

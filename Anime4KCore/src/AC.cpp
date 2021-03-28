@@ -764,7 +764,6 @@ void Anime4KCPP::AC::saveVideo()
 std::string Anime4KCPP::AC::getInfo()
 {
     std::ostringstream oss;
-    Processor::Type type = getProcessorType();
     oss << "----------------------------------------------" << std::endl
         << "Parameter information" << std::endl
         << "----------------------------------------------" << std::endl;
@@ -779,7 +778,8 @@ std::string Anime4KCPP::AC::getInfo()
         oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl
             << "----------------------------------------------" << std::endl;
     }
-    oss << "Processor type: " << type << std::endl;
+    oss << "Processor info: "  << std::endl 
+        << getProcessorInfo()  << std::endl;
     
     return oss.str();
 }

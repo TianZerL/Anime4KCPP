@@ -19,11 +19,6 @@ namespace Anime4KCPP
     {
         constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
-        enum ACNetType
-        {
-            HDNL0 = 0, HDNL1, HDNL2, HDNL3, TotalTypeCount
-        };
-
         class DLL ACNet;
     }
 }
@@ -38,8 +33,9 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 
-    static void initGPU(unsigned int platformID = 0, 
-        unsigned int deviceID = 0, 
+    static void initGPU(
+        const int platformID = 0,
+        const int deviceID = 0,
         const CNNType type = CNNType::Default, 
         const int OpenCLQueueNum = 4,
         const bool OpenCLParallelIO = false);
@@ -91,10 +87,6 @@ private:
 
     static size_t workGroupSizeLog;
 
-    static unsigned int pID;
-    static unsigned int dID;
-
-#ifdef BUILT_IN_KERNEL
-    static const std::string ACNetKernelSourceString[TotalTypeCount];
-#endif // BUILT_IN_KERNEL
+    static int pID;
+    static int dID;
 };

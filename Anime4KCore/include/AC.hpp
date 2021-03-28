@@ -60,6 +60,11 @@ namespace Anime4KCPP
         BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
     };
 
+    enum ACNetType
+    {
+        HDNL0 = 0, HDNL1, HDNL2, HDNL3, TotalTypeCount
+    };
+
     typedef float* ChanF;
     typedef double* ChanD;
     typedef unsigned char* ChanB;

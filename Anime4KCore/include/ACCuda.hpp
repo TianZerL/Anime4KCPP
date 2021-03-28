@@ -18,7 +18,7 @@ namespace Anime4KCPP
         //return platforms, devices of each platform, all devices information
         GPUList listGPUs();
         //return result and information
-        GPUInfo checkGPUSupport(const unsigned int dID);
+        GPUInfo checkGPUSupport(const int dID);
     }
 
     namespace Processor
@@ -108,7 +108,7 @@ inline bool Anime4KCPP::Cuda::Manager::isInitialized()
 
 inline bool Anime4KCPP::Cuda::Manager::isSupport()
 {
-    return Anime4KCPP::Cuda::checkGPUSupport(dID);
+    return cuCheckDeviceSupport(dID);
 }
 
 inline Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs()
@@ -116,7 +116,7 @@ inline Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs()
     return GPUList(cuGetDeviceCount(), cuGetCudaInfo());
 }
 
-inline Anime4KCPP::Cuda::GPUInfo Anime4KCPP::Cuda::checkGPUSupport(const unsigned int dID)
+inline Anime4KCPP::Cuda::GPUInfo Anime4KCPP::Cuda::checkGPUSupport(const int dID)
 {
     return GPUInfo(cuCheckDeviceSupport(dID), cuGetDeviceInfo(dID));
 }

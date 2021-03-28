@@ -2,35 +2,6 @@
 
 #include "ACOpenCL.hpp"
 
-Anime4KCPP::OpenCL::GPUList::GPUList(
-    const int platforms,
-    std::vector<int> devices,
-    std::string message
-) :platforms(platforms), devices(std::move(devices)), message(std::move(message)) {}
-
-int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
-{
-    return devices[pID];
-}
-
-std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
-{
-    return message;
-}
-
-Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
-    supported(supported), message(std::move(message)) {};
-
-std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
-{
-    return message;
-}
-
-Anime4KCPP::OpenCL::GPUInfo::operator bool() const noexcept
-{
-    return supported;
-}
-
 Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
 {
     cl_int err = 0;
@@ -137,7 +108,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
     return GPUList(platforms, devicesVector, msg.str());
 }
 
-Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID, unsigned int dID)
+Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, const int dID)
 {
     cl_int err = 0;
     cl_uint platforms = 0;
@@ -163,7 +134,7 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID
     }
 
 
-    if (pID >= 0 && pID < platforms)
+    if (pID >= 0 && pID < (int)platforms)
         firstPlatform = tmpPlatform[pID];
     else
         firstPlatform = tmpPlatform[0];
@@ -199,7 +170,7 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(unsigned int pID
         return GPUInfo(false, "No supported GPU");
     }
 
-    if (dID >= 0 && dID < devices)
+    if (dID >= 0 && dID < (int)devices)
         device = tmpDevice[dID];
     else
         device = tmpDevice[0];

@@ -11,6 +11,11 @@ if(Enable_CUDA)
     target_link_libraries (${PROJECT_NAME} CUDA_Module)
 endif()
 
+if(Enable_NCNN)
+    find_package(ncnn REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ncnn)
+endif()
+
 if(Use_OpenCV_with_MSVC_for_Clang)
     set(TMP_FALG ${MSVC})
     set(MSVC True)

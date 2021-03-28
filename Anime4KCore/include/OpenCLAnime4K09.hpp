@@ -28,7 +28,7 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 
-    static void initGPU(unsigned int platformID = 0, unsigned int deviceID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    static void initGPU(const int platformID = 0, const int deviceID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     static void releaseGPU() noexcept;
     static bool isInitializedGPU();
 private:
@@ -76,12 +76,8 @@ private:
     static cl_program program;
     static cl_device_id device;
 
-    static unsigned int pID;
-    static unsigned int dID;
+    static int pID;
+    static int dID;
 
     static size_t workGroupSizeLog;
-
-#ifdef BUILT_IN_KERNEL
-    static const std::string Anime4KCPPKernelSourceString;
-#endif // BUILT_IN_KERNEL
 };

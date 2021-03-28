@@ -31,10 +31,13 @@ int Anime4KCPP::Cuda::cuGetDeviceCount() noexcept
     return deviceCount;
 }
 
-std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const unsigned int id)
+std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const int id)
 {
     cudaDeviceProp deviceProp;
-    cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);
+    cudaError_t err = 
+        id < 0 || id >= cuGetDeviceCount() ? 
+        cudaGetDeviceProperties(&deviceProp, 0):
+        cudaGetDeviceProperties(&deviceProp, id);
     CheckCudaErr(err);
 
     return
@@ -56,10 +59,13 @@ std::string Anime4KCPP::Cuda::cuGetCudaInfo()
     return info;
 }
 
-bool Anime4KCPP::Cuda::cuCheckDeviceSupport(const unsigned int id) noexcept
+bool Anime4KCPP::Cuda::cuCheckDeviceSupport(const int id) noexcept
 {
     cudaDeviceProp deviceProp;
-    cudaError_t err = cudaGetDeviceProperties(&deviceProp, id);
+    cudaError_t err =
+        id < 0 || id >= cuGetDeviceCount() ?
+        cudaGetDeviceProperties(&deviceProp, 0) :
+        cudaGetDeviceProperties(&deviceProp, id);
     if (err != cudaSuccess || deviceProp.major < 2)
         return false;
     return true;

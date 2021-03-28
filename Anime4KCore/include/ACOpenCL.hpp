@@ -26,7 +26,7 @@ namespace Anime4KCPP
         //return platforms, devices of each platform, all devices information
         DLL GPUList listGPUs();
         //return result and information
-        DLL GPUInfo checkGPUSupport(unsigned int pID, unsigned int dID);
+        DLL GPUInfo checkGPUSupport(const int pID, const int dID);
     }
 
     namespace Processor
@@ -53,6 +53,22 @@ struct Anime4KCPP::OpenCL::GPUList
     std::string& operator()() noexcept;
 };
 
+inline Anime4KCPP::OpenCL::GPUList::GPUList(
+    const int platforms,
+    std::vector<int> devices,
+    std::string message
+) :platforms(platforms), devices(std::move(devices)), message(std::move(message)) {}
+
+inline int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
+{
+    return devices[pID];
+}
+
+inline std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
+{
+    return message;
+}
+
 struct Anime4KCPP::OpenCL::GPUInfo
 {
     bool supported;
@@ -63,23 +79,36 @@ struct Anime4KCPP::OpenCL::GPUInfo
     operator bool() const noexcept;
 };
 
+inline Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
+    supported(supported), message(std::move(message)) {};
+
+inline std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
+{
+    return message;
+}
+
+inline Anime4KCPP::OpenCL::GPUInfo::operator bool() const noexcept
+{
+    return supported;
+}
+
 template<typename T>
 class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const unsigned int pID = 0, const unsigned int dID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    Manager(const int pID = 0, const int dID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
     virtual bool isSupport() override;
 private:
-    unsigned int pID, dID;
+    int pID, dID;
     int OpenCLQueueNum;
     bool OpenCLParallelIO;
 };
 
 template<typename T>
-inline Anime4KCPP::OpenCL::Manager<T>::Manager(const unsigned int pID, const unsigned int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
     : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO) {}
 
 template<typename T>
@@ -112,19 +141,19 @@ template<>
 class Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet> : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const unsigned int pID = 0, const unsigned int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    Manager(const int pID = 0, const int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
     virtual bool isSupport() override;
 private:
-    unsigned int pID, dID;
+    int pID, dID;
     int OpenCLQueueNum;
     bool OpenCLParallelIO;
     CNNType type;
 };
 
-inline Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::Manager(const unsigned int pID, const unsigned int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+inline Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
     : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
 
 inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::init()

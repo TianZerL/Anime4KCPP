@@ -12,7 +12,7 @@ std::string Anime4KCPP::Cuda::ACNet::getInfo()
     std::ostringstream oss;
     oss << AC::getInfo()
         << "----------------------------------------------" << std::endl
-        << "CUDA Device ID:" << cuGetDeviceID() << std::endl
+        << "CUDA Device ID: " << cuGetDeviceID() << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
         << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
         << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
