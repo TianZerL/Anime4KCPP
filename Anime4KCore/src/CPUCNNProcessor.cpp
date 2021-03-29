@@ -777,6 +777,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
        
         const FP luma = _mm_cvtss_f32(_r3);
 
+        _mm256_zeroupper();
+
         *outMat = UNNORMB(luma);
 #else
         const FP luma = (
@@ -812,6 +814,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* k
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
         const FP luma = _mm_cvtss_f32(_r3);
+
+        _mm256_zeroupper();
 
         *outMat = UNNORMW(luma);
 #else
@@ -849,6 +853,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
         const FP luma = _mm_cvtss_f32(_r3);
+
+        _mm256_zeroupper();
 
         *outMat = CLAMP(luma, 0.0f, 1.0f);
 #else

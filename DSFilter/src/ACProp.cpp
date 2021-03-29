@@ -71,6 +71,7 @@ HRESULT ACProp::OnActivate()
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), CNN);
     Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_OpenCLParallelIO), OpenCLParallelIO);
 
+    ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CPU");
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"OpenCL");
 #ifdef ENABLE_CUDA
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CUDA");

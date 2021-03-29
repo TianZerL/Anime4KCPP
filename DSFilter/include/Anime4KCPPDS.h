@@ -14,7 +14,7 @@ enum class ColorFormat
 
 enum GPGPU
 {
-    OpenCL, CUDA
+    CPU, OpenCL, CUDA
 };
 
 class Anime4KCPPDS :

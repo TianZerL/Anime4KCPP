@@ -122,6 +122,8 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
         GPGPUModel = GPGPU::OpenCL;
     else if (!wcsicmp(_GPGPUModelString, L"CUDA"))
         GPGPUModel = GPGPU::CUDA;
+    else if (!wcsicmp(_GPGPUModelString, L"CPU"))
+        GPGPUModel = GPGPU::CPU;
     else
         GPGPUModel = GPGPU::OpenCL;
 
@@ -184,6 +186,9 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
                 OpenCLQueueNum,
                 OpenCLParallelIO);
 #endif
+        break;
+    case GPGPU::CPU:
+        acCreator.pushManager<Anime4KCPP::CPU::Manager>();
         break;
     }
 }
@@ -488,6 +493,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
         break;
+    case GPGPU::CPU:
+        if (CNN)
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+        else
+            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+        break;
     }
 
     switch (colorFormat)
@@ -708,6 +719,9 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
     case GPGPU::CUDA:
         _GPGPUModel = L"CUDA";
         break;
+    case GPGPU::CPU:
+        _GPGPUModel = L"CPU";
+        break;
     default:
         _GPGPUModel = L"OpenCL";
     }
@@ -733,6 +747,9 @@ STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
     std::string tmpStr;
     switch (GPGPUModel)
     {
+    case GPGPU::CPU:
+        tmpStr = "Anime4KCPP for DirectShow will ues CPU\n";
+        break;
     case GPGPU::OpenCL:
     {
         Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
