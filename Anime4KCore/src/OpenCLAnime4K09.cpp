@@ -1619,8 +1619,10 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
 #ifndef BUILT_IN_KERNEL
     //read kernel files
     std::string Anime4KCPPKernelSourceString = readKernel("Anime4KCPPKernel.cl");
-#endif // BUILT_IN_KERNEL
+    const char* Anime4KCPPKernelSource = Anime4KCPPKernelSourceString.c_str();
+#else
     const char* Anime4KCPPKernelSource = Anime4KCPPKernelSourceString;
+#endif // BUILT_IN_KERNEL
 
     //create program
     program = clCreateProgramWithSource(context, 1, &Anime4KCPPKernelSource, nullptr, &err);
