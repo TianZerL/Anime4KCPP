@@ -124,6 +124,11 @@ endif()
 
 if(Enable_NCNN)
     set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
+    add_definitions(-DENABLE_NCNN)
+endif()
+
+if(Enable_AVX)
+    add_definitions(-DENABLE_AVX)
 endif()
 
 message(STATUS  
@@ -170,10 +175,6 @@ if (Enable_CUDA)
             set(CMAKE_CUDA_ARCHITECTURES 35-real 50-real 52-real 60-real 61-real 70-real 75-real 80-real)
         endif()  
     endif()
-endif()
-
-if(Enable_NCNN)
-    add_definitions(-DENABLE_NCNN)
 endif()
 
 macro(SUBDIRLIST result curdir)

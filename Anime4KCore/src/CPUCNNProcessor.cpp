@@ -41,44 +41,45 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kern
 
 #ifdef ENABLE_AVX
         const float* kptr = kernels;
+        const float* bptr = biases;
 
-        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
+        __m256 _out2 = _mm256_setzero_ps();
 
-        __m256 _r0 = _mm256_set1_ps(tln);
-        __m256 _r1 = _mm256_set1_ps(tcn);
-        __m256 _r2 = _mm256_set1_ps(trn);
-        __m256 _r3 = _mm256_set1_ps(mln);
-        __m256 _r4 = _mm256_set1_ps(mcn);
-        __m256 _r5 = _mm256_set1_ps(mrn);
-        __m256 _r6 = _mm256_set1_ps(bln);
-        __m256 _r7 = _mm256_set1_ps(bcn);
-        __m256 _r8 = _mm256_set1_ps(brn);
+        const __m256 _r0 = _mm256_set1_ps(tln);
+        const __m256 _r1 = _mm256_set1_ps(tcn);
+        const __m256 _r2 = _mm256_set1_ps(trn);
+        const __m256 _r3 = _mm256_set1_ps(mln);
+        const __m256 _r4 = _mm256_set1_ps(mcn);
+        const __m256 _r5 = _mm256_set1_ps(mrn);
+        const __m256 _r6 = _mm256_set1_ps(bln);
+        const __m256 _r7 = _mm256_set1_ps(bcn);
+        const __m256 _r8 = _mm256_set1_ps(brn);
 
-        __m256 _k0 = _mm256_loadu_ps(kptr);
-        __m256 _k1 = _mm256_loadu_ps(kptr+8);
-        __m256 _k2 = _mm256_loadu_ps(kptr+16);
-        __m256 _k3 = _mm256_loadu_ps(kptr+24);
-        __m256 _k4 = _mm256_loadu_ps(kptr+32);
-        __m256 _k5 = _mm256_loadu_ps(kptr+40);
-        __m256 _k6 = _mm256_loadu_ps(kptr+48);
-        __m256 _k7 = _mm256_loadu_ps(kptr+56);
-        __m256 _k8 = _mm256_loadu_ps(kptr+64);
+        const __m256 _k0 = _mm256_loadu_ps(kptr);
+        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
 
         _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
         _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
-        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
-        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
-        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
+        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
+        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
+        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
         _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
         _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
 
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
-
 #else
         outMat[0] =
             RELU(
@@ -155,41 +156,43 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kern
 
 #ifdef ENABLE_AVX
         const float* kptr = kernels;
+        const float* bptr = biases;
 
-        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
+        __m256 _out2 = _mm256_setzero_ps();
 
-        __m256 _r0 = _mm256_set1_ps(tln);
-        __m256 _r1 = _mm256_set1_ps(tcn);
-        __m256 _r2 = _mm256_set1_ps(trn);
-        __m256 _r3 = _mm256_set1_ps(mln);
-        __m256 _r4 = _mm256_set1_ps(mcn);
-        __m256 _r5 = _mm256_set1_ps(mrn);
-        __m256 _r6 = _mm256_set1_ps(bln);
-        __m256 _r7 = _mm256_set1_ps(bcn);
-        __m256 _r8 = _mm256_set1_ps(brn);
+        const __m256 _r0 = _mm256_set1_ps(tln);
+        const __m256 _r1 = _mm256_set1_ps(tcn);
+        const __m256 _r2 = _mm256_set1_ps(trn);
+        const __m256 _r3 = _mm256_set1_ps(mln);
+        const __m256 _r4 = _mm256_set1_ps(mcn);
+        const __m256 _r5 = _mm256_set1_ps(mrn);
+        const __m256 _r6 = _mm256_set1_ps(bln);
+        const __m256 _r7 = _mm256_set1_ps(bcn);
+        const __m256 _r8 = _mm256_set1_ps(brn);
 
-        __m256 _k0 = _mm256_loadu_ps(kptr);
-        __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-        __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-        __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-        __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-        __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-        __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-        __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-        __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+        const __m256 _k0 = _mm256_loadu_ps(kptr);
+        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
 
         _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
         _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
-        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
-        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
-        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
+        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
+        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
+        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
         _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
         _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
 
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
@@ -257,6 +260,48 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
         const PixelF ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelF bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
+#ifdef ENABLE_AVX
+        const float* kptr = kernels;
+        const float* bptr = biases;
+
+        __m256 _out0 = _mm256_loadu_ps(bptr);
+        __m256 _out1 = _mm256_setzero_ps();
+        __m256 _out2 = _mm256_setzero_ps();
+
+        const __m256 _r0 = _mm256_broadcast_ss(tl);
+        const __m256 _r1 = _mm256_broadcast_ss(tc);
+        const __m256 _r2 = _mm256_broadcast_ss(tr);
+        const __m256 _r3 = _mm256_broadcast_ss(ml);
+        const __m256 _r4 = _mm256_broadcast_ss(mc);
+        const __m256 _r5 = _mm256_broadcast_ss(mr);
+        const __m256 _r6 = _mm256_broadcast_ss(bl);
+        const __m256 _r7 = _mm256_broadcast_ss(bc);
+        const __m256 _r8 = _mm256_broadcast_ss(br);
+
+        const __m256 _k0 = _mm256_loadu_ps(kptr);
+        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+
+        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
+        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
+        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
+        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
+        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
+
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
+
+        _mm256_storeu_ps(outMat, _out0);
+#else
         const FP tln = tl[Y];
         const FP tcn = tc[Y];
         const FP trn = tr[Y];
@@ -267,46 +312,6 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
         const FP bcn = bc[Y];
         const FP brn = br[Y];
 
-#ifdef ENABLE_AVX
-        const float* kptr = kernels;
-
-        __m256 _out0 = _mm256_loadu_ps(biases);
-        __m256 _out1 = _mm256_setzero_ps();
-
-        __m256 _r0 = _mm256_set1_ps(tln);
-        __m256 _r1 = _mm256_set1_ps(tcn);
-        __m256 _r2 = _mm256_set1_ps(trn);
-        __m256 _r3 = _mm256_set1_ps(mln);
-        __m256 _r4 = _mm256_set1_ps(mcn);
-        __m256 _r5 = _mm256_set1_ps(mrn);
-        __m256 _r6 = _mm256_set1_ps(bln);
-        __m256 _r7 = _mm256_set1_ps(bcn);
-        __m256 _r8 = _mm256_set1_ps(brn);
-
-        __m256 _k0 = _mm256_loadu_ps(kptr);
-        __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-        __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-        __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-        __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-        __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-        __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-        __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-        __m256 _k8 = _mm256_loadu_ps(kptr + 64);
-
-        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
-        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
-        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
-        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
-        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
-
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
-
-        _mm256_storeu_ps(outMat, _out0);
-#else
         outMat[0] =
             RELU(
                 tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
@@ -370,45 +375,45 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
 
 #ifdef ENABLE_AVX
         const float* kptr = kernels;
+        const float* bptr = biases;
 
-        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
+        __m256 _out2 = _mm256_setzero_ps();
 
         for (int i = 0; i < 8; i++)
         {
-            __m256 _r0 = _mm256_broadcast_ss(tl + i);
-            __m256 _r1 = _mm256_broadcast_ss(tc + i);
-            __m256 _r2 = _mm256_broadcast_ss(tr + i);
-            __m256 _r3 = _mm256_broadcast_ss(ml + i);
-            __m256 _r4 = _mm256_broadcast_ss(mc + i);
-            __m256 _r5 = _mm256_broadcast_ss(mr + i);
-            __m256 _r6 = _mm256_broadcast_ss(bl + i);
-            __m256 _r7 = _mm256_broadcast_ss(bc + i);
-            __m256 _r8 = _mm256_broadcast_ss(br + i);
+            const __m256 _r0 = _mm256_broadcast_ss(tl + i);
+            const __m256 _r1 = _mm256_broadcast_ss(tc + i);
+            const __m256 _r2 = _mm256_broadcast_ss(tr + i);
+            const __m256 _r3 = _mm256_broadcast_ss(ml + i);
+            const __m256 _r4 = _mm256_broadcast_ss(mc + i);
+            const __m256 _r5 = _mm256_broadcast_ss(mr + i);
+            const __m256 _r6 = _mm256_broadcast_ss(bl + i);
+            const __m256 _r7 = _mm256_broadcast_ss(bc + i);
+            const __m256 _r8 = _mm256_broadcast_ss(br + i);
 
-            __m256 _k0 = _mm256_loadu_ps(kptr);
-            __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-            __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-            __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-            __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-            __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-            __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-            __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-            __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+            const __m256 _k0 = _mm256_loadu_ps(kptr + i * 72);
+            const __m256 _k1 = _mm256_loadu_ps(kptr + i * 72 + 8);
+            const __m256 _k2 = _mm256_loadu_ps(kptr + i * 72 + 16);
+            const __m256 _k3 = _mm256_loadu_ps(kptr + i * 72 + 24);
+            const __m256 _k4 = _mm256_loadu_ps(kptr + i * 72 + 32);
+            const __m256 _k5 = _mm256_loadu_ps(kptr + i * 72 + 40);
+            const __m256 _k6 = _mm256_loadu_ps(kptr + i * 72 + 48);
+            const __m256 _k7 = _mm256_loadu_ps(kptr + i * 72 + 56);
+            const __m256 _k8 = _mm256_loadu_ps(kptr + i * 72 + 64);
 
             _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
             _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-            _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
-            _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
-            _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
-            _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+            _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
+            _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
+            _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
+            _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
             _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
             _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-            _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
-
-            kptr += 72;
+            _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
         }
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
@@ -763,15 +768,14 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
         //2 3      1 0
 
 #ifdef ENABLE_AVX
-        const FP luma = (
-            inMat[0] * kernels[index * 8] +
-            inMat[1] * kernels[index * 8 + 1] +
-            inMat[2] * kernels[index * 8 + 2] +
-            inMat[3] * kernels[index * 8 + 3] +
-            inMat[4] * kernels[index * 8 + 4] +
-            inMat[5] * kernels[index * 8 + 5] +
-            inMat[6] * kernels[index * 8 + 6] +
-            inMat[7] * kernels[index * 8 + 7]);
+        const __m256 _in = _mm256_loadu_ps(inMat);
+        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
+        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r2 = _mm256_castps256_ps128(_r0);
+        const __m128 _r3 = _mm_add_ps(_r1, _r2);
+       
+        const FP luma = _mm_cvtss_f32(_r3);
 
         *outMat = UNNORMB(luma);
 #else
@@ -800,15 +804,14 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* k
         //2 3      1 0
 
 #ifdef ENABLE_AVX
-        const FP luma = (
-            inMat[0] * kernels[index * 8] +
-            inMat[1] * kernels[index * 8 + 1] +
-            inMat[2] * kernels[index * 8 + 2] +
-            inMat[3] * kernels[index * 8 + 3] +
-            inMat[4] * kernels[index * 8 + 4] +
-            inMat[5] * kernels[index * 8 + 5] +
-            inMat[6] * kernels[index * 8 + 6] +
-            inMat[7] * kernels[index * 8 + 7]);
+        const __m256 _in = _mm256_loadu_ps(inMat);
+        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
+        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r2 = _mm256_castps256_ps128(_r0);
+        const __m128 _r3 = _mm_add_ps(_r1, _r2);
+
+        const FP luma = _mm_cvtss_f32(_r3);
 
         *outMat = UNNORMW(luma);
 #else
@@ -838,17 +841,16 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
         //0 1  to  3 2
         //2 3      1 0
 #ifdef ENABLE_AVX
-        const FP luma = (
-            inMat[0] * kernels[index * 8] +
-            inMat[1] * kernels[index * 8 + 1] +
-            inMat[2] * kernels[index * 8 + 2] +
-            inMat[3] * kernels[index * 8 + 3] +
-            inMat[4] * kernels[index * 8 + 4] +
-            inMat[5] * kernels[index * 8 + 5] +
-            inMat[6] * kernels[index * 8 + 6] +
-            inMat[7] * kernels[index * 8 + 7]);
+        const __m256 _in = _mm256_loadu_ps(inMat);
+        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
+        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r2 = _mm256_castps256_ps128(_r0);
+        const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
-        *outMat = static_cast<float>(CLAMP(luma, 0.0, 1.0));
+        const FP luma = _mm_cvtss_f32(_r3);
+
+        *outMat = CLAMP(luma, 0.0, 1.0);
 #else
         const FP luma = (
             inMat[0] * kernels[0 + index] +

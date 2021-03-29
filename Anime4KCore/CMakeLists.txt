@@ -21,10 +21,6 @@ if(Enable_Fast_Math)
     add_definitions(-DENABLE_FAST_MATH)
 endif()
 
-if(Enable_AVX)
-    add_definitions(-DENABLE_AVX)
-endif()
-
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
