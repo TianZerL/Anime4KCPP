@@ -1,18 +1,22 @@
+#ifdef ENABLE_AVX
+#include <immintrin.h>
+#endif
+
 #include "CPUCNNProcessor.hpp"
 
-#define RULE(x) std::max(x, 0.0)
-#define NORMB(X) (static_cast<double>(X) / 255.0)
-#define NORMW(X) (static_cast<double>(X) / 65535.0)
-#define UNNORMB(n) ((n) >= 1.0? (uint8_t)(255) : ((n) <= 0.0 ? (uint8_t)(0) : static_cast<uint8_t>(n * 255.0 + 0.5)))
-#define UNNORMW(n) ((n) >= 1.0? (uint16_t)(65535) : ((n) <= 0.0 ? (uint16_t)(0) : static_cast<uint16_t>(n * 65535.0 + 0.5)))
+#define RELU(x) std::max(x, static_cast<FP>(0.0))
+#define NORMB(X) (static_cast<FP>(X) / static_cast<FP>(255.0))
+#define NORMW(X) (static_cast<FP>(X) / static_cast<FP>(65535.0))
+#define UNNORMB(n) ((n) >= static_cast<FP>(1.0)? static_cast<uint8_t>(255) : ((n) <= static_cast<FP>(0.0) ? static_cast<uint8_t>(0) : static_cast<uint8_t>(n * static_cast<FP>(255.0) + static_cast<FP>(0.5))))
+#define UNNORMW(n) ((n) >= static_cast<FP>(1.0)? static_cast<uint16_t>(65535) : ((n) <= static_cast<FP>(0.0) ? static_cast<uint16_t>(0) : static_cast<uint16_t>(n * static_cast<FP>(65535.0) + static_cast<FP>(0.5))))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
     const size_t lineStep = img.step;
-    changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineB curLine) {
+    changEachPixel1ToN(img, [&](const int i, const int j, ChanFP outMat, LineB curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
@@ -25,66 +29,107 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const double* 
         const PixelB ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelB bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-        const double tln = NORMB(tl[Y]);
-        const double tcn = NORMB(tc[Y]);
-        const double trn = NORMB(tr[Y]);
-        const double mln = NORMB(ml[Y]);
-        const double mcn = NORMB(mc[Y]);
-        const double mrn = NORMB(mr[Y]);
-        const double bln = NORMB(bl[Y]);
-        const double bcn = NORMB(bc[Y]);
-        const double brn = NORMB(br[Y]);
+        const FP tln = NORMB(tl[Y]);
+        const FP tcn = NORMB(tc[Y]);
+        const FP trn = NORMB(tr[Y]);
+        const FP mln = NORMB(ml[Y]);
+        const FP mcn = NORMB(mc[Y]);
+        const FP mrn = NORMB(mr[Y]);
+        const FP bln = NORMB(bl[Y]);
+        const FP bcn = NORMB(bc[Y]);
+        const FP brn = NORMB(br[Y]);
 
+#ifdef ENABLE_AVX
+        const float* kptr = kernels;
+
+        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out1 = _mm256_setzero_ps();
+
+        __m256 _r0 = _mm256_set1_ps(tln);
+        __m256 _r1 = _mm256_set1_ps(tcn);
+        __m256 _r2 = _mm256_set1_ps(trn);
+        __m256 _r3 = _mm256_set1_ps(mln);
+        __m256 _r4 = _mm256_set1_ps(mcn);
+        __m256 _r5 = _mm256_set1_ps(mrn);
+        __m256 _r6 = _mm256_set1_ps(bln);
+        __m256 _r7 = _mm256_set1_ps(bcn);
+        __m256 _r8 = _mm256_set1_ps(brn);
+
+        __m256 _k0 = _mm256_loadu_ps(kptr);
+        __m256 _k1 = _mm256_loadu_ps(kptr+8);
+        __m256 _k2 = _mm256_loadu_ps(kptr+16);
+        __m256 _k3 = _mm256_loadu_ps(kptr+24);
+        __m256 _k4 = _mm256_loadu_ps(kptr+32);
+        __m256 _k5 = _mm256_loadu_ps(kptr+40);
+        __m256 _k6 = _mm256_loadu_ps(kptr+48);
+        __m256 _k7 = _mm256_loadu_ps(kptr+56);
+        __m256 _k8 = _mm256_loadu_ps(kptr+64);
+
+        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
+        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
+        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
+        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+
+        _mm256_storeu_ps(outMat, _out0);
+
+#else
         outMat[0] =
-            RULE(
+            RELU(
                 tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
                 mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
                 bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
         outMat[1] =
-            RULE(
+            RELU(
                 tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
                 mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
                 bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
         outMat[2] =
-            RULE(
+            RELU(
                 tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
                 mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
                 bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
         outMat[3] =
-            RULE(
+            RELU(
                 tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
                 mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
                 bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
         outMat[4] =
-            RULE(
+            RELU(
                 tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
                 mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
                 bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
         outMat[5] =
-            RULE(
+            RELU(
                 tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
                 mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
                 bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
         outMat[6] =
-            RULE(
+            RELU(
                 tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
                 mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
                 bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
         outMat[7] =
-            RULE(
+            RELU(
                 tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
                 mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
                 bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
-
+#endif // ENABLE_AVX
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
     const size_t lineStep = img.step;
-    changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineW curLine) {
+    changEachPixel1ToN(img, [&](const int i, const int j, ChanFP outMat, LineW curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
@@ -98,66 +143,107 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const double* 
         const PixelW ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelW bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-        const double tln = NORMW(tl[Y]);
-        const double tcn = NORMW(tc[Y]);
-        const double trn = NORMW(tr[Y]);
-        const double mln = NORMW(ml[Y]);
-        const double mcn = NORMW(mc[Y]);
-        const double mrn = NORMW(mr[Y]);
-        const double bln = NORMW(bl[Y]);
-        const double bcn = NORMW(bc[Y]);
-        const double brn = NORMW(br[Y]);
+        const FP tln = NORMW(tl[Y]);
+        const FP tcn = NORMW(tc[Y]);
+        const FP trn = NORMW(tr[Y]);
+        const FP mln = NORMW(ml[Y]);
+        const FP mcn = NORMW(mc[Y]);
+        const FP mrn = NORMW(mr[Y]);
+        const FP bln = NORMW(bl[Y]);
+        const FP bcn = NORMW(bc[Y]);
+        const FP brn = NORMW(br[Y]);
 
+#ifdef ENABLE_AVX
+        const float* kptr = kernels;
+
+        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out1 = _mm256_setzero_ps();
+
+        __m256 _r0 = _mm256_set1_ps(tln);
+        __m256 _r1 = _mm256_set1_ps(tcn);
+        __m256 _r2 = _mm256_set1_ps(trn);
+        __m256 _r3 = _mm256_set1_ps(mln);
+        __m256 _r4 = _mm256_set1_ps(mcn);
+        __m256 _r5 = _mm256_set1_ps(mrn);
+        __m256 _r6 = _mm256_set1_ps(bln);
+        __m256 _r7 = _mm256_set1_ps(bcn);
+        __m256 _r8 = _mm256_set1_ps(brn);
+
+        __m256 _k0 = _mm256_loadu_ps(kptr);
+        __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+        __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+        __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+        __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+        __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+        __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+        __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+        __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+
+        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
+        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
+        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
+        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+
+        _mm256_storeu_ps(outMat, _out0);
+#else
         outMat[0] =
-            RULE(
+            RELU(
                 tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
                 mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
                 bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
         outMat[1] =
-            RULE(
+            RELU(
                 tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
                 mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
                 bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
         outMat[2] =
-            RULE(
+            RELU(
                 tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
                 mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
                 bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
         outMat[3] =
-            RULE(
+            RELU(
                 tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
                 mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
                 bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
         outMat[4] =
-            RULE(
+            RELU(
                 tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
                 mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
                 bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
         outMat[5] =
-            RULE(
+            RELU(
                 tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
                 mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
                 bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
         outMat[6] =
-            RULE(
+            RELU(
                 tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
                 mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
                 bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
         outMat[7] =
-            RULE(
+            RELU(
                 tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
                 mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
                 bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
+#endif // ENABLE_AVX
 
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
     const size_t lineStep = img.step;
-    changEachPixel1ToN(img, [&](const int i, const int j, ChanD outMat, LineF curLine) {
+    changEachPixel1ToN(img, [&](const int i, const int j, ChanFP outMat, LineF curLine) {
         const int orgJ = j / channels * srcChannels;
         const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
         const int jn = orgJ > srcChannels ? -srcChannels : 0;
@@ -171,117 +257,202 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const double* 
         const PixelF ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelF bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-        const double tln = tl[Y];
-        const double tcn = tc[Y];
-        const double trn = tr[Y];
-        const double mln = ml[Y];
-        const double mcn = mc[Y];
-        const double mrn = mr[Y];
-        const double bln = bl[Y];
-        const double bcn = bc[Y];
-        const double brn = br[Y];
+        const FP tln = tl[Y];
+        const FP tcn = tc[Y];
+        const FP trn = tr[Y];
+        const FP mln = ml[Y];
+        const FP mcn = mc[Y];
+        const FP mrn = mr[Y];
+        const FP bln = bl[Y];
+        const FP bcn = bc[Y];
+        const FP brn = br[Y];
 
+#ifdef ENABLE_AVX
+        const float* kptr = kernels;
+
+        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out1 = _mm256_setzero_ps();
+
+        __m256 _r0 = _mm256_set1_ps(tln);
+        __m256 _r1 = _mm256_set1_ps(tcn);
+        __m256 _r2 = _mm256_set1_ps(trn);
+        __m256 _r3 = _mm256_set1_ps(mln);
+        __m256 _r4 = _mm256_set1_ps(mcn);
+        __m256 _r5 = _mm256_set1_ps(mrn);
+        __m256 _r6 = _mm256_set1_ps(bln);
+        __m256 _r7 = _mm256_set1_ps(bcn);
+        __m256 _r8 = _mm256_set1_ps(brn);
+
+        __m256 _k0 = _mm256_loadu_ps(kptr);
+        __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+        __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+        __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+        __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+        __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+        __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+        __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+        __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+
+        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+        _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
+        _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
+        _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
+        _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+        _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+
+        _mm256_storeu_ps(outMat, _out0);
+#else
         outMat[0] =
-            RULE(
+            RELU(
                 tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
                 mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
                 bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
         outMat[1] =
-            RULE(
+            RELU(
                 tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
                 mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
                 bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
         outMat[2] =
-            RULE(
+            RELU(
                 tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
                 mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
                 bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
         outMat[3] =
-            RULE(
+            RELU(
                 tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
                 mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
                 bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
         outMat[4] =
-            RULE(
+            RELU(
                 tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
                 mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
                 bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
         outMat[5] =
-            RULE(
+            RELU(
                 tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
                 mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
                 bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
         outMat[6] =
-            RULE(
+            RELU(
                 tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
                 mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
                 bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
         outMat[7] =
-            RULE(
+            RELU(
                 tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
                 mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
                 bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
+#endif // ENABLE_AVX
 
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const size_t lineStep = tmpMat.step1();
-    changEachPixelNToN([&](const int i, const int j, ChanD outMat, LineD curLine) {
+    changEachPixelNToN([&](const int i, const int j, ChanFP outMat, LineFP curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
 
-        const LineD pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
-        const LineD cLineData = curLine;
-        const LineD nLineData = i > 0 ? curLine - lineStep : curLine;
+        const LineFP pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
+        const LineFP cLineData = curLine;
+        const LineFP nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        const PixelD tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
-        const PixelD ml = cLineData + j + jn, mc = cLineData + j, mr = cLineData + j + jp;
-        const PixelD bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+        const PixelFP tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
+        const PixelFP ml = cLineData + j + jn, mc = cLineData + j, mr = cLineData + j + jp;
+        const PixelFP bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
 
-        double c1 =
+#ifdef ENABLE_AVX
+        const float* kptr = kernels;
+
+        __m256 _out0 = _mm256_loadu_ps(biases);
+        __m256 _out1 = _mm256_setzero_ps();
+
+        for (int i = 0; i < 8; i++)
+        {
+            __m256 _r0 = _mm256_broadcast_ss(tl + i);
+            __m256 _r1 = _mm256_broadcast_ss(tc + i);
+            __m256 _r2 = _mm256_broadcast_ss(tr + i);
+            __m256 _r3 = _mm256_broadcast_ss(ml + i);
+            __m256 _r4 = _mm256_broadcast_ss(mc + i);
+            __m256 _r5 = _mm256_broadcast_ss(mr + i);
+            __m256 _r6 = _mm256_broadcast_ss(bl + i);
+            __m256 _r7 = _mm256_broadcast_ss(bc + i);
+            __m256 _r8 = _mm256_broadcast_ss(br + i);
+
+            __m256 _k0 = _mm256_loadu_ps(kptr);
+            __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+            __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+            __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+            __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+            __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+            __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+            __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+            __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+
+            _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+            _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+            _out0 = _mm256_fmadd_ps(_r2, _k2, _out0);
+            _out1 = _mm256_fmadd_ps(_r3, _k3, _out1);
+            _out0 = _mm256_fmadd_ps(_r4, _k4, _out0);
+            _out1 = _mm256_fmadd_ps(_r5, _k5, _out1);
+            _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+            _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+            _out0 = _mm256_fmadd_ps(_r8, _k8, _out0);
+
+            kptr += 72;
+        }
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _out1), _mm256_setzero_ps());
+
+        _mm256_storeu_ps(outMat, _out0);
+#else
+        FP c1 =
             tl[0] * kernels[0 * 72 + 0 * 9 + 0] + tc[0] * kernels[0 * 72 + 0 * 9 + 1] + tr[0] * kernels[0 * 72 + 0 * 9 + 2] +
             ml[0] * kernels[0 * 72 + 0 * 9 + 3] + mc[0] * kernels[0 * 72 + 0 * 9 + 4] + mr[0] * kernels[0 * 72 + 0 * 9 + 5] +
             bl[0] * kernels[0 * 72 + 0 * 9 + 6] + bc[0] * kernels[0 * 72 + 0 * 9 + 7] + br[0] * kernels[0 * 72 + 0 * 9 + 8];
 
-        double c2 =
+        FP c2 =
             tl[1] * kernels[0 * 72 + 1 * 9 + 0] + tc[1] * kernels[0 * 72 + 1 * 9 + 1] + tr[1] * kernels[0 * 72 + 1 * 9 + 2] +
             ml[1] * kernels[0 * 72 + 1 * 9 + 3] + mc[1] * kernels[0 * 72 + 1 * 9 + 4] + mr[1] * kernels[0 * 72 + 1 * 9 + 5] +
             bl[1] * kernels[0 * 72 + 1 * 9 + 6] + bc[1] * kernels[0 * 72 + 1 * 9 + 7] + br[1] * kernels[0 * 72 + 1 * 9 + 8];
 
-        double c3 =
+        FP c3 =
             tl[2] * kernels[0 * 72 + 2 * 9 + 0] + tc[2] * kernels[0 * 72 + 2 * 9 + 1] + tr[2] * kernels[0 * 72 + 2 * 9 + 2] +
             ml[2] * kernels[0 * 72 + 2 * 9 + 3] + mc[2] * kernels[0 * 72 + 2 * 9 + 4] + mr[2] * kernels[0 * 72 + 2 * 9 + 5] +
             bl[2] * kernels[0 * 72 + 2 * 9 + 6] + bc[2] * kernels[0 * 72 + 2 * 9 + 7] + br[2] * kernels[0 * 72 + 2 * 9 + 8];
 
-        double c4 =
+        FP c4 =
             tl[3] * kernels[0 * 72 + 3 * 9 + 0] + tc[3] * kernels[0 * 72 + 3 * 9 + 1] + tr[3] * kernels[0 * 72 + 3 * 9 + 2] +
             ml[3] * kernels[0 * 72 + 3 * 9 + 3] + mc[3] * kernels[0 * 72 + 3 * 9 + 4] + mr[3] * kernels[0 * 72 + 3 * 9 + 5] +
             bl[3] * kernels[0 * 72 + 3 * 9 + 6] + bc[3] * kernels[0 * 72 + 3 * 9 + 7] + br[3] * kernels[0 * 72 + 3 * 9 + 8];
 
-        double c5 =
+        FP c5 =
             tl[4] * kernels[0 * 72 + 4 * 9 + 0] + tc[4] * kernels[0 * 72 + 4 * 9 + 1] + tr[4] * kernels[0 * 72 + 4 * 9 + 2] +
             ml[4] * kernels[0 * 72 + 4 * 9 + 3] + mc[4] * kernels[0 * 72 + 4 * 9 + 4] + mr[4] * kernels[0 * 72 + 4 * 9 + 5] +
             bl[4] * kernels[0 * 72 + 4 * 9 + 6] + bc[4] * kernels[0 * 72 + 4 * 9 + 7] + br[4] * kernels[0 * 72 + 4 * 9 + 8];
 
-        double c6 =
+        FP c6 =
             tl[5] * kernels[0 * 72 + 5 * 9 + 0] + tc[5] * kernels[0 * 72 + 5 * 9 + 1] + tr[5] * kernels[0 * 72 + 5 * 9 + 2] +
             ml[5] * kernels[0 * 72 + 5 * 9 + 3] + mc[5] * kernels[0 * 72 + 5 * 9 + 4] + mr[5] * kernels[0 * 72 + 5 * 9 + 5] +
             bl[5] * kernels[0 * 72 + 5 * 9 + 6] + bc[5] * kernels[0 * 72 + 5 * 9 + 7] + br[5] * kernels[0 * 72 + 5 * 9 + 8];
 
-        double c7 =
+        FP c7 =
             tl[6] * kernels[0 * 72 + 6 * 9 + 0] + tc[6] * kernels[0 * 72 + 6 * 9 + 1] + tr[6] * kernels[0 * 72 + 6 * 9 + 2] +
             ml[6] * kernels[0 * 72 + 6 * 9 + 3] + mc[6] * kernels[0 * 72 + 6 * 9 + 4] + mr[6] * kernels[0 * 72 + 6 * 9 + 5] +
             bl[6] * kernels[0 * 72 + 6 * 9 + 6] + bc[6] * kernels[0 * 72 + 6 * 9 + 7] + br[6] * kernels[0 * 72 + 6 * 9 + 8];
 
-        double c8 =
+        FP c8 =
             tl[7] * kernels[0 * 72 + 7 * 9 + 0] + tc[7] * kernels[0 * 72 + 7 * 9 + 1] + tr[7] * kernels[0 * 72 + 7 * 9 + 2] +
             ml[7] * kernels[0 * 72 + 7 * 9 + 3] + mc[7] * kernels[0 * 72 + 7 * 9 + 4] + mr[7] * kernels[0 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[0 * 72 + 7 * 9 + 6] + bc[7] * kernels[0 * 72 + 7 * 9 + 7] + br[7] * kernels[0 * 72 + 7 * 9 + 8];
 
-        outMat[0] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[0]);
+        outMat[0] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[0]);
 
         c1 =
             tl[0] * kernels[1 * 72 + 0 * 9 + 0] + tc[0] * kernels[1 * 72 + 0 * 9 + 1] + tr[0] * kernels[1 * 72 + 0 * 9 + 2] +
@@ -323,7 +494,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[1 * 72 + 7 * 9 + 3] + mc[7] * kernels[1 * 72 + 7 * 9 + 4] + mr[7] * kernels[1 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[1 * 72 + 7 * 9 + 6] + bc[7] * kernels[1 * 72 + 7 * 9 + 7] + br[7] * kernels[1 * 72 + 7 * 9 + 8];
 
-        outMat[1] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[1]);
+        outMat[1] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[1]);
 
         c1 =
             tl[0] * kernels[2 * 72 + 0 * 9 + 0] + tc[0] * kernels[2 * 72 + 0 * 9 + 1] + tr[0] * kernels[2 * 72 + 0 * 9 + 2] +
@@ -365,7 +536,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[2 * 72 + 7 * 9 + 3] + mc[7] * kernels[2 * 72 + 7 * 9 + 4] + mr[7] * kernels[2 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[2 * 72 + 7 * 9 + 6] + bc[7] * kernels[2 * 72 + 7 * 9 + 7] + br[7] * kernels[2 * 72 + 7 * 9 + 8];
 
-        outMat[2] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[2]);
+        outMat[2] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[2]);
 
         c1 =
             tl[0] * kernels[3 * 72 + 0 * 9 + 0] + tc[0] * kernels[3 * 72 + 0 * 9 + 1] + tr[0] * kernels[3 * 72 + 0 * 9 + 2] +
@@ -407,7 +578,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[3 * 72 + 7 * 9 + 3] + mc[7] * kernels[3 * 72 + 7 * 9 + 4] + mr[7] * kernels[3 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[3 * 72 + 7 * 9 + 6] + bc[7] * kernels[3 * 72 + 7 * 9 + 7] + br[7] * kernels[3 * 72 + 7 * 9 + 8];
 
-        outMat[3] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[3]);
+        outMat[3] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[3]);
 
         c1 =
             tl[0] * kernels[4 * 72 + 0 * 9 + 0] + tc[0] * kernels[4 * 72 + 0 * 9 + 1] + tr[0] * kernels[4 * 72 + 0 * 9 + 2] +
@@ -449,7 +620,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[4 * 72 + 7 * 9 + 3] + mc[7] * kernels[4 * 72 + 7 * 9 + 4] + mr[7] * kernels[4 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[4 * 72 + 7 * 9 + 6] + bc[7] * kernels[4 * 72 + 7 * 9 + 7] + br[7] * kernels[4 * 72 + 7 * 9 + 8];
 
-        outMat[4] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[4]);
+        outMat[4] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[4]);
 
         c1 =
             tl[0] * kernels[5 * 72 + 0 * 9 + 0] + tc[0] * kernels[5 * 72 + 0 * 9 + 1] + tr[0] * kernels[5 * 72 + 0 * 9 + 2] +
@@ -491,7 +662,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[5 * 72 + 7 * 9 + 3] + mc[7] * kernels[5 * 72 + 7 * 9 + 4] + mr[7] * kernels[5 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[5 * 72 + 7 * 9 + 6] + bc[7] * kernels[5 * 72 + 7 * 9 + 7] + br[7] * kernels[5 * 72 + 7 * 9 + 8];
 
-        outMat[5] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[5]);
+        outMat[5] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[5]);
 
         c1 =
             tl[0] * kernels[6 * 72 + 0 * 9 + 0] + tc[0] * kernels[6 * 72 + 0 * 9 + 1] + tr[0] * kernels[6 * 72 + 0 * 9 + 2] +
@@ -533,7 +704,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[6 * 72 + 7 * 9 + 3] + mc[7] * kernels[6 * 72 + 7 * 9 + 4] + mr[7] * kernels[6 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[6 * 72 + 7 * 9 + 6] + bc[7] * kernels[6 * 72 + 7 * 9 + 7] + br[7] * kernels[6 * 72 + 7 * 9 + 8];
 
-        outMat[6] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[6]);
+        outMat[6] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[6]);
 
         c1 =
             tl[0] * kernels[7 * 72 + 0 * 9 + 0] + tc[0] * kernels[7 * 72 + 0 * 9 + 1] + tr[0] * kernels[7 * 72 + 0 * 9 + 2] +
@@ -575,21 +746,36 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const double* kernels, const double
             ml[7] * kernels[7 * 72 + 7 * 9 + 3] + mc[7] * kernels[7 * 72 + 7 * 9 + 4] + mr[7] * kernels[7 * 72 + 7 * 9 + 5] +
             bl[7] * kernels[7 * 72 + 7 * 9 + 6] + bc[7] * kernels[7 * 72 + 7 * 9 + 7] + br[7] * kernels[7 * 72 + 7 * 9 + 8];
 
-        outMat[7] = RULE(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[7]);
+        outMat[7] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[7]);
+
+#endif // ENABLE_AVX
 
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
 {
-    changEachPixelNTo1(img, [&](const int i, const int j, ChanB outMat, LineD inMat) {
+    changEachPixelNTo1(img, [&](const int i, const int j, ChanB outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
 
         //180 degree rotation for kernel
         //0 1  to  3 2
         //2 3      1 0
 
-        const double luma = (
+#ifdef ENABLE_AVX
+        const FP luma = (
+            inMat[0] * kernels[index * 8] +
+            inMat[1] * kernels[index * 8 + 1] +
+            inMat[2] * kernels[index * 8 + 2] +
+            inMat[3] * kernels[index * 8 + 3] +
+            inMat[4] * kernels[index * 8 + 4] +
+            inMat[5] * kernels[index * 8 + 5] +
+            inMat[6] * kernels[index * 8 + 6] +
+            inMat[7] * kernels[index * 8 + 7]);
+
+        *outMat = UNNORMB(luma);
+#else
+        const FP luma = (
             inMat[0] * kernels[0 + index] +
             inMat[1] * kernels[4 + index] +
             inMat[2] * kernels[8 + index] +
@@ -600,20 +786,33 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const doubl
             inMat[7] * kernels[28 + index]);
 
         *outMat = UNNORMB(luma);
-
+#endif
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
 {
-    changEachPixelNTo1(img, [&](const int i, const int j, ChanW outMat, LineD inMat) {
+    changEachPixelNTo1(img, [&](const int i, const int j, ChanW outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
 
         //180 degree rotation for kernel
         //0 1  to  3 2
         //2 3      1 0
 
-        const double luma = (
+#ifdef ENABLE_AVX
+        const FP luma = (
+            inMat[0] * kernels[index * 8] +
+            inMat[1] * kernels[index * 8 + 1] +
+            inMat[2] * kernels[index * 8 + 2] +
+            inMat[3] * kernels[index * 8 + 3] +
+            inMat[4] * kernels[index * 8 + 4] +
+            inMat[5] * kernels[index * 8 + 5] +
+            inMat[6] * kernels[index * 8 + 6] +
+            inMat[7] * kernels[index * 8 + 7]);
+
+        *outMat = UNNORMW(luma);
+#else
+        const FP luma = (
             inMat[0] * kernels[0 + index] +
             inMat[1] * kernels[4 + index] +
             inMat[2] * kernels[8 + index] +
@@ -624,20 +823,34 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const doubl
             inMat[7] * kernels[28 + index]);
 
         *outMat = UNNORMW(luma);
+#endif // ENABLE_AVX
+
 
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const double* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
 {
-    changEachPixelNTo1(img, [&](const int i, const int j, ChanF outMat, LineD inMat) {
+    changEachPixelNTo1(img, [&](const int i, const int j, ChanF outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
 
         //180 degree rotation for kernel
         //0 1  to  3 2
         //2 3      1 0
+#ifdef ENABLE_AVX
+        const FP luma = (
+            inMat[0] * kernels[index * 8] +
+            inMat[1] * kernels[index * 8 + 1] +
+            inMat[2] * kernels[index * 8 + 2] +
+            inMat[3] * kernels[index * 8 + 3] +
+            inMat[4] * kernels[index * 8 + 4] +
+            inMat[5] * kernels[index * 8 + 5] +
+            inMat[6] * kernels[index * 8 + 6] +
+            inMat[7] * kernels[index * 8 + 7]);
 
-        const double luma = (
+        *outMat = static_cast<float>(CLAMP(luma, 0.0, 1.0));
+#else
+        const FP luma = (
             inMat[0] * kernels[0 + index] +
             inMat[1] * kernels[4 + index] +
             inMat[2] * kernels[8 + index] +
@@ -648,18 +861,20 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const doubl
             inMat[7] * kernels[28 + index]);
 
         *outMat = static_cast<float>(CLAMP(luma, 0.0, 1.0));
+#endif
+
 
         }, tmpMat);
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
-    const std::function<void(int, int, ChanD, LineB)>&& callBack,
+    const std::function<void(int, int, ChanFP, LineB)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
     const int h = src.rows, w = src.cols;
     const int jMAX = w * outChannels;
 
-    tmpMat.create(h, w, CV_64FC(outChannels));
+    tmpMat.create(h, w, AC_CV_FPC(outChannels));
 
     const size_t srcStep = src.step;
     const size_t step = tmpMat.step;
@@ -667,7 +882,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineB lineData = src.data + static_cast<size_t>(i) * srcStep;
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -676,7 +891,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     for (int i = 0; i < h; i++)
     {
         LineB lineData = src.data + static_cast<size_t>(i) * srcStep;
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -684,13 +899,13 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
-    const std::function<void(int, int, ChanD, LineW)>&& callBack,
+    const std::function<void(int, int, ChanFP, LineW)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
     const int h = src.rows, w = src.cols;
     const int jMAX = w * outChannels;
 
-    tmpMat.create(h, w, CV_64FC(outChannels));
+    tmpMat.create(h, w, AC_CV_FPC(outChannels));
 
     const size_t srcStep = src.step;
     const size_t step = tmpMat.step;
@@ -698,7 +913,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * srcStep);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -707,7 +922,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     for (int i = 0; i < h; i++)
     {
         LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * srcStep);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -715,13 +930,13 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
-    const std::function<void(int, int, ChanD, LineF)>&& callBack,
+    const std::function<void(int, int, ChanFP, LineF)>&& callBack,
     cv::Mat& tmpMat, int outChannels)
 {
     const int h = src.rows, w = src.cols;
     const int jMAX = w * outChannels;
 
-    tmpMat.create(h, w, CV_64FC(outChannels));
+    tmpMat.create(h, w, AC_CV_FPC(outChannels));
 
     const size_t srcStep = src.step;
     const size_t step = tmpMat.step;
@@ -729,7 +944,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
         LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * srcStep);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -738,7 +953,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     for (int i = 0; i < h; i++)
     {
         LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * srcStep);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmpMat.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += outChannels)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -746,7 +961,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
-    const std::function<void(int, int, ChanD, LineD)>&& callBack,
+    const std::function<void(int, int, ChanFP, LineFP)>&& callBack,
     cv::Mat& tmpMat)
 {
     const int h = tmpMat.rows, w = tmpMat.cols;
@@ -759,8 +974,8 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i) * step);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmp.data + static_cast<size_t>(i) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += channels)
             callBack(i, j, tmpLineData + j, lineData);
         });
@@ -768,8 +983,8 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i) * step);
-        ChanD tmpLineData = reinterpret_cast<ChanD>(tmp.data + static_cast<size_t>(i) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i) * step);
+        ChanFP tmpLineData = reinterpret_cast<ChanFP>(tmp.data + static_cast<size_t>(i) * step);
         for (int j = 0; j < jMAX; j += channels)
             callBack(i, j, tmpLineData + j, lineData);
     }
@@ -779,7 +994,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNToN(
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
-    const std::function<void(int, int, ChanB, LineD)>&& callBack,
+    const std::function<void(int, int, ChanB, LineFP)>&& callBack,
     const cv::Mat& tmpMat)
 {
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
@@ -792,7 +1007,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanB tmpLineData = img.data + static_cast<size_t>(i) * dstStep;
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
@@ -801,7 +1016,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanB tmpLineData = img.data + static_cast<size_t>(i) * dstStep;
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
@@ -810,7 +1025,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
-    const std::function<void(int, int, ChanW, LineD)>&& callBack,
+    const std::function<void(int, int, ChanW, LineFP)>&& callBack,
     const cv::Mat& tmpMat)
 {
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
@@ -823,7 +1038,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanW tmpLineData = reinterpret_cast<ChanW>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
@@ -832,7 +1047,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanW tmpLineData = reinterpret_cast<ChanW>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
@@ -841,7 +1056,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
-    const std::function<void(int, int, ChanF, LineD)>&& callBack,
+    const std::function<void(int, int, ChanF, LineFP)>&& callBack,
     const cv::Mat& tmpMat)
 {
     const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
@@ -854,7 +1069,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(0, h, [&](int i) {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanF tmpLineData = reinterpret_cast<ChanF>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
@@ -863,7 +1078,7 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
 #pragma omp parallel for
     for (int i = 0; i < h; i++)
     {
-        LineD lineData = reinterpret_cast<LineD>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+        LineFP lineData = reinterpret_cast<LineFP>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
         ChanF tmpLineData = reinterpret_cast<ChanF>(img.data + static_cast<size_t>(i) * dstStep);
         for (int j = 0; j < jMAX; j++)
             callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);

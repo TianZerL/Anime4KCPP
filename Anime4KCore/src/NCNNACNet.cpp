@@ -189,7 +189,7 @@ void Anime4KCPP::NCNN::ACNet::init(const int deviceID, const int threads)
 
 void Anime4KCPP::NCNN::ACNet::release()
 {
-    if (!isInitialized)
+    if (!isInitializedFlag)
         return;
 
     for (int i = ACNetType::HDNL0; i < ACNetType::TotalTypeCount; i++)

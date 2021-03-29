@@ -30,6 +30,7 @@ option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
 option(Enable_NCNN "Enable ncnn module" OFF)
+option(Enable_AVX "Enable on AVX acceleration" OFF)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 

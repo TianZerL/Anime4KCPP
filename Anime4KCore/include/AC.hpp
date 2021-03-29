@@ -66,17 +66,14 @@ namespace Anime4KCPP
     };
 
     typedef float* ChanF;
-    typedef double* ChanD;
     typedef unsigned char* ChanB;
     typedef unsigned short int* ChanW;
 
     typedef float* PixelF;
-    typedef double* PixelD;
     typedef unsigned char* PixelB;
     typedef unsigned short int* PixelW;
 
     typedef float* LineF;
-    typedef double* LineD;
     typedef unsigned char* LineB;
     typedef unsigned short int* LineW;
 

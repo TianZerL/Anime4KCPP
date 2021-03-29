@@ -40,11 +40,11 @@ public:
     virtual void processW(const cv::Mat & src, cv::Mat & dst) override;
     virtual void processF(const cv::Mat & src, cv::Mat & dst) override;
 private:
-    const static double kernelsL1[9 * 8];
-    const static double kernels[8][9 * 8 * 8];
-    const static double kernelsL10[4 * 8];
-    const static double biasL1[8];
-    const static double biases[8][8];
+    const static FP kernelsL1[9 * 8];
+    const static FP kernels[8][9 * 8 * 8];
+    const static FP kernelsL10[4 * 8];
+    const static FP biasL1[8];
+    const static FP biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor
@@ -56,11 +56,11 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
-    const static double kernelsL1[9 * 8];
-    const static double kernels[8][9 * 8 * 8];
-    const static double kernelsL10[4 * 8];
-    const static double biasL1[8];
-    const static double biases[8][8];
+    const static FP kernelsL1[9 * 8];
+    const static FP kernels[8][9 * 8 * 8];
+    const static FP kernelsL10[4 * 8];
+    const static FP biasL1[8];
+    const static FP biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor
@@ -72,11 +72,11 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
-    const static double kernelsL1[9 * 8];
-    const static double kernels[8][9 * 8 * 8];
-    const static double kernelsL10[4 * 8];
-    const static double biasL1[8];
-    const static double biases[8][8];
+    const static FP kernelsL1[9 * 8];
+    const static FP kernels[8][9 * 8 * 8];
+    const static FP kernelsL10[4 * 8];
+    const static FP biasL1[8];
+    const static FP biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor
@@ -88,9 +88,9 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst) override;
 private:
-    const static double kernelsL1[9 * 8];
-    const static double kernels[8][9 * 8 * 8];
-    const static double kernelsL10[4 * 8];
-    const static double biasL1[8];
-    const static double biases[8][8];
+    const static FP kernelsL1[9 * 8];
+    const static FP kernels[8][9 * 8 * 8];
+    const static FP kernelsL10[4 * 8];
+    const static FP biasL1[8];
+    const static FP biases[8][8];
 };
