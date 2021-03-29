@@ -13,6 +13,10 @@ if(Build_VapourSynth_plugin)
         add_definitions(-DLEGACY_OPENCL_API)
     endif()
 
+    if(Enable_NCNN)
+        add_definitions(-DENABLE_NCNN)
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${SOURCE} ${Anime4KCPPCoreSource})
 
     include(${TOP_DIR}/cmake/ThirdPartyForVS.cmake)

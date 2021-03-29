@@ -771,7 +771,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
        
@@ -807,7 +807,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* k
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
@@ -844,13 +844,13 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 1);
+        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
         const FP luma = _mm_cvtss_f32(_r3);
 
-        *outMat = CLAMP(luma, 0.0, 1.0);
+        *outMat = CLAMP(luma, 0.0f, 1.0f);
 #else
         const FP luma = (
             inMat[0] * kernels[0 + index] +

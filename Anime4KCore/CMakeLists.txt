@@ -21,6 +21,10 @@ if(Enable_Fast_Math)
     add_definitions(-DENABLE_FAST_MATH)
 endif()
 
+if(Enable_NCNN)
+    add_definitions(-DENABLE_NCNN)
+endif()
+
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
