@@ -43,6 +43,8 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kern
         const float* kptr = kernels;
         const float* bptr = biases;
 
+        _mm256_zeroall();
+
         __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
         __m256 _out2 = _mm256_setzero_ps();
@@ -158,6 +160,8 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kern
         const float* kptr = kernels;
         const float* bptr = biases;
 
+        _mm256_zeroall();
+
         __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
         __m256 _out2 = _mm256_setzero_ps();
@@ -263,6 +267,8 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
 #ifdef ENABLE_AVX
         const float* kptr = kernels;
         const float* bptr = biases;
+
+        _mm256_zeroall();
 
         __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
