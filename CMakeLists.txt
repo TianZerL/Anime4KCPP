@@ -30,7 +30,7 @@ option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
 option(Enable_NCNN "Enable ncnn module" OFF)
-option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required" ON)
+option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required, it can accelerate or slow down, AMD Ryzen recommended" OFF)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 
@@ -133,7 +133,7 @@ if(Enable_NCNN)
     set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
 endif()
 
-if(Enable_AVX2 OR Enable_AVX)
+if(Enable_AVX2)
     add_definitions(-DENABLE_AVX)
 endif()
 
@@ -155,6 +155,7 @@ message(STATUS
 "   Use TBB ${Use_TBB}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
+"   Enable AVX2 ${Enable_AVX2}\n"
 )
 if(WIN32)
     message(STATUS

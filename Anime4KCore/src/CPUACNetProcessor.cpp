@@ -46,6 +46,11 @@ void Anime4KCPP::CPU::ACNetHDNL0::processF(const cv::Mat& src, cv::Mat& dst)
     convTranspose8To1F(dst, kernelsL10, tmpMat);
 }
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernelsL1[9 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -67,6 +72,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernelsL1[9 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernels[8][9 * 8 * 8] =
 {
 {
@@ -1158,6 +1168,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernels[8][9 * 8 * 8] =
 }
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernelsL10[4 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -1174,11 +1189,21 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::kernelsL10[4 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::biasL1[8] =
 {
 -0.7576970, -0.0209786,  0.0291682, -0.0188724,  0.0222594,  0.0339571,  0.0150339, -0.0044279
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL0::biases[8][8] =
 {
 {
@@ -1259,6 +1284,11 @@ void Anime4KCPP::CPU::ACNetHDNL1::processF(const cv::Mat& src, cv::Mat& dst)
     convTranspose8To1F(dst, kernelsL10, tmpMat);
 }
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernelsL1[9 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -1284,6 +1314,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernelsL1[9 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernels[8][9 * 8 * 8] =
 {
 {
@@ -2375,6 +2410,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernels[8][9 * 8 * 8] =
 }
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernelsL10[4 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -2390,11 +2430,21 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::kernelsL10[4 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::biasL1[8] =
 {
 -0.0264190, -0.0229482, -0.3021187, -0.2578625, -0.0326917, -0.0053376, -0.7776655,  0.0232260
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL1::biases[8][8] =
 {
 {
@@ -2476,6 +2526,11 @@ void Anime4KCPP::CPU::ACNetHDNL2::processF(const cv::Mat& src, cv::Mat& dst)
     convTranspose8To1F(dst, kernelsL10, tmpMat);
 }
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernelsL1[9 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -2501,6 +2556,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernelsL1[9 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernels[8][9 * 8 * 8] =
 {
 {
@@ -3592,6 +3652,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernels[8][9 * 8 * 8] =
 }
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernelsL10[4 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -3607,11 +3672,21 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::kernelsL10[4 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::biasL1[8] =
 {
 -9.0963967e-02,  2.1135861e-01, -1.2011060e-02, -4.5656759e-38, -1.4442891e-01,  1.8967623e-01, -2.9027192e-02,  1.6198690e-01
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL2::biases[8][8] =
 {
 {
@@ -3693,6 +3768,11 @@ void Anime4KCPP::CPU::ACNetHDNL3::processF(const cv::Mat& src, cv::Mat& dst)
     convTranspose8To1F(dst, kernelsL10, tmpMat);
 }
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernelsL1[9 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -3714,6 +3794,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernelsL1[9 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernels[8][9 * 8 * 8] =
 {
 {
@@ -4773,6 +4858,11 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernels[8][9 * 8 * 8] =
 }
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernelsL10[4 * 8] =
 {
 #ifdef ENABLE_AVX
@@ -4788,11 +4878,21 @@ const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::kernelsL10[4 * 8] =
 #endif
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::biasL1[8] =
 {
 -0.1329426, -0.0431460, -0.0031026, -0.0129482,  0.2293561, -0.2594860, -0.2370029, -0.0498955
 };
 
+#ifdef _MSC_VER
+__declspec(align(32))
+#else
+__attribute__((aligned(32)))
+#endif
 const Anime4KCPP::CPU::FP Anime4KCPP::CPU::ACNetHDNL3::biases[8][8] =
 {
 {

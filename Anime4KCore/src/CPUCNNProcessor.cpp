@@ -381,37 +381,67 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
         __m256 _out1 = _mm256_setzero_ps();
         __m256 _out2 = _mm256_setzero_ps();
 
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 8; i += 2)
         {
-            const __m256 _r0 = _mm256_broadcast_ss(tl + i);
-            const __m256 _r1 = _mm256_broadcast_ss(tc + i);
-            const __m256 _r2 = _mm256_broadcast_ss(tr + i);
-            const __m256 _r3 = _mm256_broadcast_ss(ml + i);
-            const __m256 _r4 = _mm256_broadcast_ss(mc + i);
-            const __m256 _r5 = _mm256_broadcast_ss(mr + i);
-            const __m256 _r6 = _mm256_broadcast_ss(bl + i);
-            const __m256 _r7 = _mm256_broadcast_ss(bc + i);
-            const __m256 _r8 = _mm256_broadcast_ss(br + i);
+            const __m256 _r00 = _mm256_broadcast_ss(tl + i);
+            const __m256 _r01 = _mm256_broadcast_ss(tc + i);
+            const __m256 _r02 = _mm256_broadcast_ss(tr + i);
+            const __m256 _r03 = _mm256_broadcast_ss(ml + i);
+            const __m256 _r04 = _mm256_broadcast_ss(mc + i);
+            const __m256 _r05 = _mm256_broadcast_ss(mr + i);
+            const __m256 _r06 = _mm256_broadcast_ss(bl + i);
+            const __m256 _r07 = _mm256_broadcast_ss(bc + i);
+            const __m256 _r08 = _mm256_broadcast_ss(br + i);
 
-            const __m256 _k0 = _mm256_loadu_ps(kptr + i * 72);
-            const __m256 _k1 = _mm256_loadu_ps(kptr + i * 72 + 8);
-            const __m256 _k2 = _mm256_loadu_ps(kptr + i * 72 + 16);
-            const __m256 _k3 = _mm256_loadu_ps(kptr + i * 72 + 24);
-            const __m256 _k4 = _mm256_loadu_ps(kptr + i * 72 + 32);
-            const __m256 _k5 = _mm256_loadu_ps(kptr + i * 72 + 40);
-            const __m256 _k6 = _mm256_loadu_ps(kptr + i * 72 + 48);
-            const __m256 _k7 = _mm256_loadu_ps(kptr + i * 72 + 56);
-            const __m256 _k8 = _mm256_loadu_ps(kptr + i * 72 + 64);
+            const __m256 _k00 = _mm256_loadu_ps(kptr + i * 72);
+            const __m256 _k01 = _mm256_loadu_ps(kptr + i * 72 + 8);
+            const __m256 _k02 = _mm256_loadu_ps(kptr + i * 72 + 16);
+            const __m256 _k03 = _mm256_loadu_ps(kptr + i * 72 + 24);
+            const __m256 _k04 = _mm256_loadu_ps(kptr + i * 72 + 32);
+            const __m256 _k05 = _mm256_loadu_ps(kptr + i * 72 + 40);
+            const __m256 _k06 = _mm256_loadu_ps(kptr + i * 72 + 48);
+            const __m256 _k07 = _mm256_loadu_ps(kptr + i * 72 + 56);
+            const __m256 _k08 = _mm256_loadu_ps(kptr + i * 72 + 64);
 
-            _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-            _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-            _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
-            _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
-            _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
-            _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
-            _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-            _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-            _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
+            _out0 = _mm256_fmadd_ps(_r00, _k00, _out0);
+            _out1 = _mm256_fmadd_ps(_r01, _k01, _out1);
+            _out2 = _mm256_fmadd_ps(_r02, _k02, _out2);
+            _out0 = _mm256_fmadd_ps(_r03, _k03, _out0);
+            _out1 = _mm256_fmadd_ps(_r04, _k04, _out1);
+            _out2 = _mm256_fmadd_ps(_r05, _k05, _out2);
+            _out0 = _mm256_fmadd_ps(_r06, _k06, _out0);
+            _out1 = _mm256_fmadd_ps(_r07, _k07, _out1);
+            _out2 = _mm256_fmadd_ps(_r08, _k08, _out2);
+
+            const __m256 _r10 = _mm256_broadcast_ss(tl + i + 1);
+            const __m256 _r11 = _mm256_broadcast_ss(tc + i + 1);
+            const __m256 _r12 = _mm256_broadcast_ss(tr + i + 1);
+            const __m256 _r13 = _mm256_broadcast_ss(ml + i + 1);
+            const __m256 _r14 = _mm256_broadcast_ss(mc + i + 1);
+            const __m256 _r15 = _mm256_broadcast_ss(mr + i + 1);
+            const __m256 _r16 = _mm256_broadcast_ss(bl + i + 1);
+            const __m256 _r17 = _mm256_broadcast_ss(bc + i + 1);
+            const __m256 _r18 = _mm256_broadcast_ss(br + i + 1);
+
+            const __m256 _k10 = _mm256_loadu_ps(kptr + (i + 1) * 72);
+            const __m256 _k11 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 8);
+            const __m256 _k12 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 16);
+            const __m256 _k13 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 24);
+            const __m256 _k14 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 32);
+            const __m256 _k15 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 40);
+            const __m256 _k16 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 48);
+            const __m256 _k17 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 56);
+            const __m256 _k18 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 64);
+
+            _out0 = _mm256_fmadd_ps(_r10, _k10, _out0);
+            _out1 = _mm256_fmadd_ps(_r11, _k11, _out1);
+            _out2 = _mm256_fmadd_ps(_r12, _k12, _out2);
+            _out0 = _mm256_fmadd_ps(_r13, _k13, _out0);
+            _out1 = _mm256_fmadd_ps(_r14, _k14, _out1);
+            _out2 = _mm256_fmadd_ps(_r15, _k15, _out2);
+            _out0 = _mm256_fmadd_ps(_r16, _k16, _out0);
+            _out1 = _mm256_fmadd_ps(_r17, _k17, _out1);
+            _out2 = _mm256_fmadd_ps(_r18, _k18, _out2);
         }
         _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
 
@@ -774,7 +804,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
         const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
-       
+
         const FP luma = _mm_cvtss_f32(_r3);
 
         _mm256_zeroupper();
@@ -873,7 +903,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
 
 
         }, tmpMat);
-}
+        }
 
 void Anime4KCPP::CPU::CNNProcessor::changEachPixel1ToN(const cv::Mat& src,
     const std::function<void(int, int, ChanFP, LineB)>&& callBack,
