@@ -13,10 +13,6 @@ if(Use_Legacy_OpenCL_API)
     add_definitions(-DLEGACY_OPENCL_API)
 endif()
 
-if(Use_TBB)
-    add_definitions(-DUSE_TBB)
-endif()
-
 if(Enable_Fast_Math)
     add_definitions(-DENABLE_FAST_MATH)
 endif()

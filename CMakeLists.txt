@@ -96,6 +96,7 @@ set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK path" CACHE PATH "Where to look for 
 if(Use_TBB)
     set(TBB_INCLUDE_PATH "TBB include path" CACHE PATH "Where to look for TBB include")
     set(TBB_LIB_PATH "TBB lib path" CACHE PATH "Where to look for TBB lib")
+    add_definitions(-DUSE_TBB)
 endif()
 
 if (OpenCL_Provider MATCHES "Intel")

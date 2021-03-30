@@ -25,6 +25,15 @@ else()
     )
 endif()
 
+if(Use_TBB)
+    include_directories(${TBB_INCLUDE_PATH})
+    find_library(TBB_LIBS 
+    NAMES tbb 
+    PATHS ${TBB_LIB_PATH} 
+    REQUIRED)
+    target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
+endif()
+
 find_package(OpenCL REQUIRED)
 
 include_directories(${TOP_DIR}/ThirdParty/include ${OpenCL_INCLUDE_DIRS})
