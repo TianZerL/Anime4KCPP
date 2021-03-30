@@ -77,7 +77,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kern
         _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
         _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
 
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
@@ -192,7 +192,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kern
         _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
         _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
 
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
@@ -298,7 +298,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
         _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
         _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
 
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
@@ -443,7 +443,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
             _out1 = _mm256_fmadd_ps(_r17, _k17, _out1);
             _out2 = _mm256_fmadd_ps(_r18, _k18, _out2);
         }
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out0, _mm256_add_ps(_out1, _out2)), _mm256_setzero_ps());
+        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
 #else
