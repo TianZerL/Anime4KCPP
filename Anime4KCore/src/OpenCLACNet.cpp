@@ -686,7 +686,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstIm
     format.image_channel_data_type = CL_UNORM_INT8;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -956,7 +956,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& dstIm
     format.image_channel_data_type = CL_UNORM_INT16;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -1226,7 +1226,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstIm
     format.image_channel_data_type = CL_FLOAT;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -1500,7 +1500,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelPB(const cv::Mat& orgImg, cv::Mat& dstI
     format.image_channel_data_type = CL_UNORM_INT8;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -1780,7 +1780,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelPW(const cv::Mat& orgImg, cv::Mat& dstI
     format.image_channel_data_type = CL_UNORM_INT16;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
@@ -2060,7 +2060,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelPF(const cv::Mat& orgImg, cv::Mat& dstI
     format.image_channel_data_type = CL_FLOAT;
     format.image_channel_order = CL_R;
 
-    tmpFormat.image_channel_data_type = CL_FLOAT;
+    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
     tmpFormat.image_channel_order = CL_RGBA;
 
     orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
