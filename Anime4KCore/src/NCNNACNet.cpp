@@ -105,7 +105,7 @@ void Anime4KCPP::NCNN::ACNet::init(
 
     net[type].opt.use_int8_packed = true;
     net[type].opt.use_int8_storage = true;
-    net[type].opt.use_int8_inference = true;
+    net[type].opt.use_int8_inference = false;
 
     net[type].opt.num_threads = threads;
 
@@ -141,7 +141,7 @@ void Anime4KCPP::NCNN::ACNet::init(int type, const int deviceID, const int threa
 
     net[type].opt.use_int8_packed = true;
     net[type].opt.use_int8_storage = true;
-    net[type].opt.use_int8_inference = true;
+    net[type].opt.use_int8_inference = false;
 
     net[type].opt.num_threads = threads;
 
@@ -173,7 +173,7 @@ void Anime4KCPP::NCNN::ACNet::init(const int deviceID, const int threads)
 
         net[type].opt.use_int8_packed = true;
         net[type].opt.use_int8_storage = true;
-        net[type].opt.use_int8_inference = true;
+        net[type].opt.use_int8_inference = false;
 
         net[type].opt.num_threads = threads;
 
