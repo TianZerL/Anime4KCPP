@@ -2,9 +2,14 @@
 
 #define DLL
 
-#include "NCNNACNet.hpp"
-#include "NCNNACNetID.hpp"
-#include "NCNNACNetModel.hpp"
+#include"ACNetType.hpp"
+#include"NCNNACNet.hpp"
+#include"NCNNACNetID.hpp"
+#include"NCNNACNetModel.hpp"
+
+static bool isInitializedFlag = false;
+static ncnn::VulkanDevice* vkdev = nullptr;
+static ncnn::Net net[Anime4KCPP::ACNetType::TotalTypeCount];
 
 Anime4KCPP::NCNN::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters)
@@ -886,9 +891,5 @@ std::string Anime4KCPP::NCNN::ACNet::getProcessorInfo()
         << (vkdev ? (std::string{ " Type: " } + vkdev->info.device_name()) : " Type: CPU");
     return oss.str();
 }
-
-bool Anime4KCPP::NCNN::ACNet::isInitializedFlag = false;
-ncnn::VulkanDevice* Anime4KCPP::NCNN::ACNet::vkdev = nullptr;
-ncnn::Net Anime4KCPP::NCNN::ACNet::net[ACNetType::TotalTypeCount];
 
 #endif

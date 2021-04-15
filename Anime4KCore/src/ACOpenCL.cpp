@@ -1,5 +1,11 @@
 #define DLL
 
+#ifdef __APPLE__
+#include<OpenCL/opencl.h>
+#else
+#include<CL/cl.h>
+#endif // SPECIAL OS
+
 #include "ACOpenCL.hpp"
 
 Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
@@ -201,4 +207,33 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, c
     delete[] platformName;
 
     return ret;
+}
+
+Anime4KCPP::OpenCL::GPUList::GPUList(
+    const int platforms,
+    std::vector<int> devices,
+    std::string message
+) :platforms(platforms), devices(std::move(devices)), message(std::move(message)) {}
+
+int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
+{
+    return devices[pID];
+}
+
+std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
+{
+    return message;
+}
+
+Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
+    supported(supported), message(std::move(message)) {};
+
+std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
+{
+    return message;
+}
+
+Anime4KCPP::OpenCL::GPUInfo::operator bool() const noexcept
+{
+    return supported;
 }

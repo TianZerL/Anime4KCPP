@@ -2,6 +2,16 @@
 #include <immintrin.h>
 #endif
 
+#if defined(_MSC_VER) && !defined(USE_TBB)
+#include<ppl.h>
+namespace Parallel = Concurrency;
+#elif defined(USE_TBB)
+#include<tbb/parallel_for.h>
+namespace Parallel = tbb;
+#else
+#include<omp.h>
+#endif
+
 #include "CPUCNNProcessor.hpp"
 
 #define RELU(x) std::max(x, static_cast<FP>(0.0))

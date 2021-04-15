@@ -8,6 +8,16 @@ namespace filesystem = boost::filesystem;
 namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
 
+#if defined(_MSC_VER) && !defined(USE_TBB)
+#include<ppl.h>
+namespace Parallel = Concurrency;
+#elif defined(USE_TBB)
+#include<tbb/parallel_for.h>
+namespace Parallel = tbb;
+#else
+#include<omp.h>
+#endif
+
 #include "Anime4KCPP.hpp"
 
 #include "Config.hpp"
@@ -122,8 +132,8 @@ static void benchmark(const int pID, const int dID)
 #endif 
 
 #ifdef ENABLE_NCNN
-    double NCNNCPUScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(Anime4KCPP::CNNType::ACNetHDNL0, -1, 4);
-    double NCNNVKScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(Anime4KCPP::CNNType::ACNetHDNL0, dID, 4);
+    double NCNNCPUScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNVKScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(dID, Anime4KCPP::CNNType::ACNetHDNL0, 4);
 #endif 
 
     std::cout
@@ -387,7 +397,7 @@ int main(int argc, char* argv[])
             case GPGPU::OpenCL:
                 if (CNN)
                     creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                        pID, dID, 
+                        pID, dID,
                         type,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
@@ -423,11 +433,11 @@ int main(int argc, char* argv[])
                         creator.pushManager<Anime4KCPP::NCNN::Manager>(
                             (modelPath / (type.toString() + std::string(".bin"))).generic_string(),
                             (modelPath / "ACNet.param").generic_string(),
-                            type, dID, ncnnThreads);
+                            dID, type, ncnnThreads);
                     }
                     else
                     {
-                        creator.pushManager<Anime4KCPP::NCNN::Manager>(type, dID, ncnnThreads);
+                        creator.pushManager<Anime4KCPP::NCNN::Manager>(dID, type, ncnnThreads);
                     }
                 }
                 break;
@@ -518,7 +528,7 @@ int main(int argc, char* argv[])
                 for (auto& file : currDir)
                 {
                     if (filesystem::is_directory(file.path()))
-                        continue;             
+                        continue;
                     auto tmpOutputPath = outputPath / filesystem::relative(file.path(), inputPath);
                     filesystem::create_directories(tmpOutputPath.parent_path());
                     std::string currInputPath = file.path().string();
@@ -631,7 +641,7 @@ int main(int argc, char* argv[])
                     << "Previewing..." << std::endl
                     << "  Start frame: " << frameStart << std::endl
                     << "  Total frame: " << totalFrameCount << std::endl;
-            
+
                 while (videoCapture.read(frame))
                 {
                     ac->loadImage(frame);

@@ -1,5 +1,15 @@
 #define DLL
 
+#include<fstream>
+
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#ifdef __APPLE__
+#include<OpenCL/opencl.h>
+#else
+#include<CL/cl.h>
+#endif // SPECIAL OS
+
+#include"FilterProcessor.hpp"
 #include "OpenCLAnime4K09.hpp"
 #include "OpenCLAnime4K09Kernel.hpp"
 
@@ -15,6 +25,20 @@ clReleaseKernel(kernelGetGradient); \
 clReleaseKernel(kernelPushGradient); \
 throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
+
+//init OpenCL arguments
+static bool isInitialized = false;
+static cl_context context = nullptr;
+static int commandQueueNum = 4;
+static int commandQueueCount = 0;
+static std::vector<cl_command_queue> commandQueueList(commandQueueNum, nullptr);
+static bool parallelIO = false;
+static cl_command_queue commandQueueIO = nullptr;
+static cl_program program = nullptr;
+static cl_device_id device = nullptr;
+static int pID = 0;
+static int dID = 0;
+static size_t workGroupSizeLog = 5;
 
 Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters), nWidth(0.0), nHeight(0.0) {};
@@ -46,7 +70,7 @@ void Anime4KCPP::OpenCL::Anime4K09::releaseGPU() noexcept
     }
 }
 
-bool Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU()
+bool Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU() noexcept
 {
     return isInitialized;
 }
@@ -1748,17 +1772,3 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getProcessorInfo()
         << "  Device " + std::to_string(dID) + ": " + deviceName.get();
     return oss.str();
 }
-
-//init OpenCL arguments
-bool Anime4KCPP::OpenCL::Anime4K09::isInitialized = false;
-cl_context Anime4KCPP::OpenCL::Anime4K09::context = nullptr;
-int Anime4KCPP::OpenCL::Anime4K09::commandQueueNum = 4;
-int Anime4KCPP::OpenCL::Anime4K09::commandQueueCount = 0;
-std::vector<cl_command_queue> Anime4KCPP::OpenCL::Anime4K09::commandQueueList(commandQueueNum, nullptr);
-bool Anime4KCPP::OpenCL::Anime4K09::parallelIO = false;
-cl_command_queue Anime4KCPP::OpenCL::Anime4K09::commandQueueIO = nullptr;
-cl_program Anime4KCPP::OpenCL::Anime4K09::program = nullptr;
-cl_device_id Anime4KCPP::OpenCL::Anime4K09::device = nullptr;
-int Anime4KCPP::OpenCL::Anime4K09::pID = 0;
-int Anime4KCPP::OpenCL::Anime4K09::dID = 0;
-size_t Anime4KCPP::OpenCL::Anime4K09::workGroupSizeLog = 5;

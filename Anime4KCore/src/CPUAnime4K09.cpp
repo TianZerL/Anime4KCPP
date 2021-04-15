@@ -1,6 +1,17 @@
 #define DLL
 
-#include "CPUAnime4K09.hpp"
+#if defined(_MSC_VER) && !defined(USE_TBB)
+#include<ppl.h>
+namespace Parallel = Concurrency;
+#elif defined(USE_TBB)
+#include<tbb/parallel_for.h>
+namespace Parallel = tbb;
+#else
+#include<omp.h>
+#endif
+
+#include"FilterProcessor.hpp"
+#include"CPUAnime4K09.hpp"
 
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})

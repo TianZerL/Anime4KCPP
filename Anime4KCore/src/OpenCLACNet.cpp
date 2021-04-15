@@ -1,7 +1,17 @@
 #define DLL
 
-#include "OpenCLACNet.hpp"
-#include "OpenCLACNetKernel.hpp"
+#include<fstream>
+
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#ifdef __APPLE__
+#include<OpenCL/opencl.h>
+#else
+#include<CL/cl.h>
+#endif // SPECIAL OS
+
+#include"ACNetType.hpp"
+#include"OpenCLACNet.hpp"
+#include"OpenCLACNetKernel.hpp"
 
 #define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\
@@ -22,6 +32,21 @@ clReleaseKernel(kernelConvTranspose8To1L10); \
 throw ACException<ExceptionType::GPU, true>(err, errCode); \
 }
 
+constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
+
+//init OpenCL arguments
+static bool isInitialized = false;
+static cl_context context = nullptr;
+static int commandQueueNum = 4;
+static int commandQueueCount = 0;
+static std::vector<cl_command_queue> commandQueueList(commandQueueNum, nullptr);
+static bool parallelIO = false;
+static cl_command_queue commandQueueIO = nullptr;
+static cl_program program[Anime4KCPP::ACNetType::TotalTypeCount] = { nullptr };
+static cl_device_id device = nullptr;
+static int pID = 0;
+static int dID = 0;
+static size_t workGroupSizeLog = 5;
 
 Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters) 
@@ -105,7 +130,7 @@ void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
     }
 }
 
-bool Anime4KCPP::OpenCL::ACNet::isInitializedGPU()
+bool Anime4KCPP::OpenCL::ACNet::isInitializedGPU() noexcept
 {
     return isInitialized;
 }
@@ -2744,17 +2769,3 @@ std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
         << "  Device " + std::to_string(dID) + ": " + deviceName.get();
     return oss.str();
 }
-
-//init OpenCL arguments
-bool Anime4KCPP::OpenCL::ACNet::isInitialized = false;
-cl_context Anime4KCPP::OpenCL::ACNet::context = nullptr;
-int Anime4KCPP::OpenCL::ACNet::commandQueueNum = 4;
-int Anime4KCPP::OpenCL::ACNet::commandQueueCount = 0;
-std::vector<cl_command_queue> Anime4KCPP::OpenCL::ACNet::commandQueueList(commandQueueNum, nullptr);
-bool Anime4KCPP::OpenCL::ACNet::parallelIO = false;
-cl_command_queue Anime4KCPP::OpenCL::ACNet::commandQueueIO = nullptr;
-cl_program Anime4KCPP::OpenCL::ACNet::program[TotalTypeCount] = { nullptr };
-cl_device_id Anime4KCPP::OpenCL::ACNet::device = nullptr;
-int Anime4KCPP::OpenCL::ACNet::pID = 0;
-int Anime4KCPP::OpenCL::ACNet::dID = 0;
-size_t Anime4KCPP::OpenCL::ACNet::workGroupSizeLog = 5;

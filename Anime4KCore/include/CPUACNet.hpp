@@ -1,6 +1,6 @@
 #pragma once
 
-#include"CPUACNetProcessor.hpp"
+#include "CPUACNetProcessor.hpp"
 
 namespace Anime4KCPP
 {

@@ -34,9 +34,7 @@ if(Use_TBB)
     target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
 endif()
 
-find_package(OpenCL REQUIRED)
-
-include_directories(${TOP_DIR}/ThirdParty/include ${OpenCL_INCLUDE_DIRS})
+include_directories(${TOP_DIR}/ThirdParty/include)
 
 target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
 

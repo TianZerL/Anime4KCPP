@@ -7,8 +7,6 @@ namespace Anime4KCPP
 {
     namespace CPU
     {
-        constexpr int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
-
         class ACNetProcessor;
         class ACNetHDNL0;
         class ACNetHDNL1;

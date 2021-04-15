@@ -1,4 +1,5 @@
 #pragma once
+
 namespace Anime4KCPP
 {
     class CNNType;

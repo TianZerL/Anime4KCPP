@@ -1,4 +1,15 @@
-#include "FilterProcessor.hpp"
+#if defined(_MSC_VER) && !defined(USE_TBB)
+#include<ppl.h>
+namespace Parallel = Concurrency;
+#elif defined(USE_TBB)
+#include<tbb/parallel_for.h>
+namespace Parallel = tbb;
+#else
+#include<omp.h>
+#endif
+
+#include"AC.hpp"
+#include"FilterProcessor.hpp"
 
 #define MAX5(a, b, c, d, e) std::max({a, b, c, d, e})
 #define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})

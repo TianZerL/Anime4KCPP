@@ -1,14 +1,5 @@
 #pragma once
 
-#include<vector>
-#include<sstream>
-
-#ifdef __APPLE__
-#include<OpenCL/opencl.h>
-#else
-#include<CL/cl.h>
-#endif // SPECIAL OS
-
 #include"OpenCLAnime4K09.hpp"
 #include"OpenCLACNet.hpp"
 #include"ACManager.hpp"
@@ -53,22 +44,6 @@ struct Anime4KCPP::OpenCL::GPUList
     std::string& operator()() noexcept;
 };
 
-inline Anime4KCPP::OpenCL::GPUList::GPUList(
-    const int platforms,
-    std::vector<int> devices,
-    std::string message
-) :platforms(platforms), devices(std::move(devices)), message(std::move(message)) {}
-
-inline int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
-{
-    return devices[pID];
-}
-
-inline std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
-{
-    return message;
-}
-
 struct Anime4KCPP::OpenCL::GPUInfo
 {
     bool supported;
@@ -78,19 +53,6 @@ struct Anime4KCPP::OpenCL::GPUInfo
     std::string& operator()() noexcept;
     operator bool() const noexcept;
 };
-
-inline Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
-    supported(supported), message(std::move(message)) {};
-
-inline std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
-{
-    return message;
-}
-
-inline Anime4KCPP::OpenCL::GPUInfo::operator bool() const noexcept
-{
-    return supported;
-}
 
 template<typename T>
 class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager

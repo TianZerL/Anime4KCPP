@@ -1,6 +1,16 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#if defined(_MSC_VER) && !defined(USE_TBB)
+#include<ppl.h>
+namespace Parallel = Concurrency;
+#elif defined(USE_TBB)
+#include<tbb/parallel_for.h>
+namespace Parallel = tbb;
+#else
+#include<omp.h>
+#endif
+
 #ifdef _WIN32
 #include <clocale>
 #endif

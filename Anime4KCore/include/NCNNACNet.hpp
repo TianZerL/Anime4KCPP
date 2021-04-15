@@ -57,11 +57,6 @@ private:
 private:
     int currACNetypeIndex;
 
-    static bool isInitializedFlag;
-
-    static ncnn::Net net[ACNetType::TotalTypeCount];
-    static ncnn::VulkanDevice* vkdev;
-
     ncnn::Mat defaultDataHolder;
 };
 

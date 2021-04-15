@@ -1,15 +1,6 @@
 #pragma once
 
-#include<fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#ifdef __APPLE__
-#include<OpenCL/opencl.h>
-#else
-#include<CL/cl.h>
-#endif // SPECIAL OS
-
-#include"FilterProcessor.hpp"
+#include "AC.hpp"
 
 namespace Anime4KCPP
 {
@@ -30,7 +21,7 @@ public:
 
     static void initGPU(const int platformID = 0, const int deviceID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
     static void releaseGPU() noexcept;
-    static bool isInitializedGPU();
+    static bool isInitializedGPU() noexcept;
 private:
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
@@ -62,22 +53,4 @@ private:
 private:
     double nWidth;
     double nHeight;
-
-    static bool isInitialized;
-
-    static cl_context context;
-
-    static int commandQueueNum;
-    static int commandQueueCount;
-    static std::vector<cl_command_queue> commandQueueList;
-    static bool parallelIO;
-    static cl_command_queue commandQueueIO;
-
-    static cl_program program;
-    static cl_device_id device;
-
-    static int pID;
-    static int dID;
-
-    static size_t workGroupSizeLog;
 };

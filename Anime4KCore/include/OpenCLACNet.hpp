@@ -1,24 +1,12 @@
 #pragma once
 
-#include<fstream>
-
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#ifdef __APPLE__
-#include<OpenCL/opencl.h>
-#else
-#include<CL/cl.h>
-#endif // SPECIAL OS
-
-#include"AC.hpp"
-#include"CNN.hpp"
-
+#include "AC.hpp"
+#include "CNN.hpp"
 
 namespace Anime4KCPP
 {
     namespace OpenCL
     {
-        constexpr cl_int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
-
         class DLL ACNet;
     }
 }
@@ -40,7 +28,7 @@ public:
         const int OpenCLQueueNum = 4,
         const bool OpenCLParallelIO = false);
     static void releaseGPU() noexcept;
-    static bool isInitializedGPU();
+    static bool isInitializedGPU() noexcept;
 private:
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
@@ -71,22 +59,4 @@ private:
     static std::string readKernel(const std::string& fileName);
 private:
     int currACNetypeIndex;
-
-    static bool isInitialized;
-
-    static cl_context context;
-
-    static int commandQueueNum;
-    static int commandQueueCount;
-    static std::vector<cl_command_queue> commandQueueList;
-    static bool parallelIO;
-    static cl_command_queue commandQueueIO;
-
-    static cl_program program[TotalTypeCount];
-    static cl_device_id device;
-
-    static size_t workGroupSizeLog;
-
-    static int pID;
-    static int dID;
 };

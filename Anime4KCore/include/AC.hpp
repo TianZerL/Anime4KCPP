@@ -13,15 +13,10 @@
 #include"ACProcessor.hpp"
 
 #if defined(_MSC_VER) && !defined(USE_TBB)
-#include<ppl.h>
-namespace Parallel = Concurrency;
 #define PARALLEL_LIBRARY "PPL"
 #elif defined(USE_TBB)
-#include<tbb/parallel_for.h>
-namespace Parallel = tbb;
 #define PARALLEL_LIBRARY "TBB"
 #else
-#include<omp.h>
 #define PARALLEL_LIBRARY "OpenMP"
 #endif
 
@@ -58,11 +53,6 @@ namespace Anime4KCPP
         MEDIAN_BLUR = 1, MEAN_BLUR = 2, CAS_SHARPENING = 4,
         GAUSSIAN_BLUR_WEAK = 8, GAUSSIAN_BLUR = 16,
         BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
-    };
-
-    enum ACNetType
-    {
-        HDNL0 = 0, HDNL1, HDNL2, HDNL3, TotalTypeCount
     };
 
     typedef float* ChanF;

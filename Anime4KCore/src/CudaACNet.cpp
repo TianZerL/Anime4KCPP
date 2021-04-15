@@ -2,6 +2,7 @@
 
 #define DLL
 
+#include "CudaInterface.hpp"
 #include "CudaACNet.hpp"
 
 Anime4KCPP::Cuda::ACNet::ACNet(const Parameters& parameters) :
