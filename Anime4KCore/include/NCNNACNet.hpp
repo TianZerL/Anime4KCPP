@@ -2,10 +2,10 @@
 
 #ifdef ENABLE_NCNN
 
-#include <net.h>
+#include<net.h>
 
-#include "AC.hpp"
-#include "CNN.hpp"
+#include"AC.hpp"
+#include"CNN.hpp"
 
 namespace Anime4KCPP
 {

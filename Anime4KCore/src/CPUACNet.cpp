@@ -1,6 +1,6 @@
 #define DLL
 
-#include "CPUACNet.hpp"
+#include"CPUACNet.hpp"
 
 Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters) 

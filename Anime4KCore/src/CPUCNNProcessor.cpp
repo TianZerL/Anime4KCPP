@@ -1,5 +1,5 @@
 #ifdef ENABLE_AVX
-#include <immintrin.h>
+#include<immintrin.h>
 #endif
 
 #if defined(_MSC_VER) && !defined(USE_TBB)
@@ -12,7 +12,7 @@ namespace Parallel = tbb;
 #include<omp.h>
 #endif
 
-#include "CPUCNNProcessor.hpp"
+#include"CPUCNNProcessor.hpp"
 
 #define RELU(x) std::max(x, static_cast<FP>(0.0))
 #define NORMB(X) (static_cast<FP>(X) / static_cast<FP>(255.0))

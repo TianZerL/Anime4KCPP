@@ -1,10 +1,10 @@
-#include <iostream>
+#include<iostream>
 
 #ifdef USE_BOOST_FILESYSTEM
-#include <boost/filesystem.hpp>
+#include<boost/filesystem.hpp>
 namespace filesystem = boost::filesystem;
 #else
-#include <filesystem>
+#include<filesystem>
 namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
 
@@ -18,9 +18,9 @@ namespace Parallel = tbb;
 #include<omp.h>
 #endif
 
-#include "Anime4KCPP.hpp"
+#include"Anime4KCPP.hpp"
 
-#include "Config.hpp"
+#include"Config.hpp"
 
 #ifndef COMPILER
 #define COMPILER "Unknown"

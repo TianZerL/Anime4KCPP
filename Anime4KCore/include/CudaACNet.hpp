@@ -2,8 +2,8 @@
 
 #ifdef ENABLE_CUDA
 
-#include "AC.hpp"
-#include "CNN.hpp"
+#include"AC.hpp"
+#include"CNN.hpp"
 
 namespace Anime4KCPP
 {

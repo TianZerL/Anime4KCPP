@@ -6,7 +6,7 @@
 #include<CL/cl.h>
 #endif // SPECIAL OS
 
-#include "ACOpenCL.hpp"
+#include"ACOpenCL.hpp"
 
 Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
 {

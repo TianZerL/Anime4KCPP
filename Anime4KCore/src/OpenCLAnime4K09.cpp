@@ -10,8 +10,8 @@
 #endif // SPECIAL OS
 
 #include"FilterProcessor.hpp"
-#include "OpenCLAnime4K09.hpp"
-#include "OpenCLAnime4K09Kernel.hpp"
+#include"OpenCLAnime4K09.hpp"
+#include"OpenCLAnime4K09Kernel.hpp"
 
 #define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
 {\

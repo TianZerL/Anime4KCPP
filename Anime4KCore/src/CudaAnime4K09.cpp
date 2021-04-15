@@ -2,9 +2,9 @@
 
 #define DLL
 
-#include "CudaInterface.hpp"
-#include "FilterProcessor.hpp"
-#include "CudaAnime4K09.hpp"
+#include"CudaInterface.hpp"
+#include"FilterProcessor.hpp"
+#include"CudaAnime4K09.hpp"
 
 Anime4KCPP::Cuda::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters) {}

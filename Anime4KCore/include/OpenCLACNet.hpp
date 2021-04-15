@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AC.hpp"
-#include "CNN.hpp"
+#include"AC.hpp"
+#include"CNN.hpp"
 
 namespace Anime4KCPP
 {
