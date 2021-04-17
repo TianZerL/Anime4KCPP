@@ -1,3 +1,5 @@
+#ifndef ENABLE_OPENCV_DNN
+
 #ifdef ENABLE_AVX
 #include<immintrin.h>
 #endif
@@ -1139,3 +1141,5 @@ void Anime4KCPP::CPU::CNNProcessor::changEachPixelNTo1(cv::Mat& img,
     }
 #endif
 }
+
+#endif

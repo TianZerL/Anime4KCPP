@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef ENABLE_OPENCV_DNN
+
 #include"AC.hpp"
 
 namespace Anime4KCPP
@@ -43,3 +45,5 @@ protected:
     void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanW, LineFP)>&& callBack, const cv::Mat& tmpMat);
     void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanF, LineFP)>&& callBack, const cv::Mat& tmpMat);
 };
+
+#endif // !ENABLE_OPENCV_DNN
