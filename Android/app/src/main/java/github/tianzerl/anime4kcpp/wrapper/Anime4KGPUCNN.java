@@ -1,10 +1,6 @@
 package github.tianzerl.anime4kcpp.wrapper;
 
 public class Anime4KGPUCNN extends Anime4K {
-    public Anime4KGPUCNN() {
-        anime4k = createAnime4KGPUCNN();
-    }
-
     public Anime4KGPUCNN(Parameters parameters) {
         anime4k = createAnime4KGPUCNNByArgs(
                 parameters.passes,
@@ -35,8 +31,6 @@ public class Anime4KGPUCNN extends Anime4K {
     public static boolean isInitializedGPU() {
         return isInitializedGPUAnime4KGPUCNN();
     }
-
-    private native long createAnime4KGPUCNN();
 
     private native long createAnime4KGPUCNNByArgs(int passes,
                                                   int pushColorCount,

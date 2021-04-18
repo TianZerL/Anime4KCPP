@@ -364,6 +364,10 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         inputs.strengthGradient = 1.0;
     if (!args[AC_zoomFactor].Defined())
         inputs.zoomFactor = 2.0;
+    if (!args[AC_HDN].Defined())
+        inputs.HDN = false;
+    if (!args[AC_HDNLevel].Defined())
+        inputs.HDNLevel = 1;
     if (!args[AC_ACNet].Defined())
         CNN = false;
     if (!args[AC_GPUMode].Defined())
@@ -376,7 +380,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         OpenCLQueueNum = 4;
     if (!args[AC_OpenCLParallelIO].Defined())
         OpenCLParallelIO = false;
-    if(!args[AC_GPGPUModel].Defined())
+    if (!args[AC_GPGPUModel].Defined())
         GPGPUModelTmp = "opencl";
 
     std::string GPGPUModelString = GPGPUModelTmp;

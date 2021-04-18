@@ -16,10 +16,10 @@ android {
 
     defaultConfig {
         applicationId "github.tianzerl.anime4kcpp"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 30
-        versionCode 250
-        versionName "2.5.0"
+        versionCode 260
+        versionName "2.6.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -41,7 +41,6 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.10.2"
         }
 
     }

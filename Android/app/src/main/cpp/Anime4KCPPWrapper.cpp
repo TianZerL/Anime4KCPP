@@ -12,13 +12,6 @@ extern "C"
 {
 
 JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPU(
-        JNIEnv *env,
-        jobject /* this */) {
-    return (jlong)(new Anime4KCPP::CPU::Anime4K09());
-}
-
-JNIEXPORT jlong JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
         JNIEnv *env,
         jobject /* this */,
@@ -43,7 +36,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
             strengthGradient,
             zoomFactor,
             fastMode,
-            videoMode,
             preprocessing,
             postprocessing,
             preFilters,
@@ -54,13 +46,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPU_createAnime4KCPUByArgs(
             alpha
             ))
     );
-}
-
-JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPU(
-        JNIEnv *env,
-        jobject /* this */) {
-    return (jlong)(new Anime4KCPP::OpenCL::Anime4K09());
 }
 
 JNIEXPORT jlong JNICALL
@@ -88,7 +73,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPUByArgs(
             strengthGradient,
             zoomFactor,
             fastMode,
-            videoMode,
             preprocessing,
             postprocessing,
             preFilters,
@@ -99,13 +83,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_createAnime4KGPUByArgs(
             alpha
         ))
     );
-}
-
-JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNN(
-        JNIEnv *env,
-        jobject /* this */) {
-    return (jlong)(new Anime4KCPP::CPU::ACNet());
 }
 
 JNIEXPORT jlong JNICALL
@@ -135,7 +112,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
                     strengthGradient,
                     zoomFactor,
                     fastMode,
-                    videoMode,
                     preprocessing,
                     postprocessing,
                     preFilters,
@@ -146,13 +122,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KCPUCNN_createAnime4KCPUCNNByArgs(
                     alpha
             ))
     );
-}
-
-JNIEXPORT jlong JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNN(
-        JNIEnv *env,
-        jobject /* this */) {
-    return (jlong)(new Anime4KCPP::OpenCL::ACNet());
 }
 
 JNIEXPORT jlong JNICALL
@@ -182,7 +151,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
                     strengthGradient,
                     zoomFactor,
                     fastMode,
-                    videoMode,
                     preprocessing,
                     postprocessing,
                     preFilters,
@@ -192,39 +160,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPUCNN_createAnime4KGPUCNNByArgs(
                     HDNLevel,
                     alpha
             ))
-    );
-}
-
-JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setArgumentsAnime4K(
-        JNIEnv *env,
-        jobject /* this */,
-        jlong ptrAnime4K,
-        jint passes,
-        jint pushColorCount,
-        jdouble strengthColor,
-        jdouble strengthGradient,
-        jdouble zoomFactor,
-        jboolean fastMode,
-        jboolean videoMode,
-        jboolean preprocessing,
-        jboolean postprocessing,
-        jbyte preFilters,
-        jbyte postFilters) {
-    ((Anime4KCPP::AC *)(ptrAnime4K))->setArguments(
-        Anime4KCPP::Parameters(
-            passes,
-            pushColorCount,
-            strengthColor,
-            strengthGradient,
-            zoomFactor,
-            fastMode,
-            videoMode,
-            preprocessing,
-            postprocessing,
-            preFilters,
-            postFilters
-        )
     );
 }
 
@@ -259,25 +194,6 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processAnime4K(
 }
 
 JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_processWithProgressAnime4K(
-        JNIEnv *env,
-        jobject thiz /* this */,
-        jlong ptrAnime4K) {
-
-    jclass classID = env->GetObjectClass(thiz);
-    jmethodID callback = env->GetMethodID(classID,"progressCallback", "(DD)V");
-
-    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-
-    ((Anime4KCPP::AC*)(ptrAnime4K))->processWithProgress(
-            [&env, &thiz, &callback, &s](double v)
-            {
-                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                env->CallVoidMethod(thiz, callback, v, std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0);
-            });
-}
-
-JNIEXPORT void JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveImageAnime4K(
         JNIEnv *env,
         jobject /* this */,
@@ -286,50 +202,77 @@ Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveImageAnime4K(
     ((Anime4KCPP::AC*)(ptrAnime4K))->saveImage(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
 }
 
-JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoModeAnime4K(
-        JNIEnv *env,
-        jobject /* this */,
-        jlong ptrAnime4K,
-        jboolean flag) {
-    ((Anime4KCPP::AC*)(ptrAnime4K))->setVideoMode(flag);
-}
-
-JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_loadVideoAnime4K(
-        JNIEnv *env,
-        jobject /* this */,
-        jlong ptrAnime4K,
-        jstring src) {
-    try {
-        ((Anime4KCPP::AC*)(ptrAnime4K))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
-    }
-    catch (const std::exception& err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
-    }
-}
-
-JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_setVideoSaveInfoAnime4K(
-        JNIEnv *env,
-        jobject /* this */,
-        jlong ptrAnime4K,
-        jstring dst) {
-    try {
-        ((Anime4KCPP::AC*)(ptrAnime4K))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
-    }
-    catch (const std::exception& err) {
-        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
-    }
-}
-
-JNIEXPORT void JNICALL
-Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_saveVideoAnime4K(
+JNIEXPORT jlong JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_createVideoProcessor(
         JNIEnv *env,
         jobject /* this */,
         jlong ptrAnime4K) {
-    ((Anime4KCPP::AC*)(ptrAnime4K))->saveVideo();
+        return (jlong)(new Anime4KCPP::VideoProcessor(*((Anime4KCPP::AC*)ptrAnime4K)));
 }
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_releaseVideoProcessor(
+        JNIEnv *env,
+        jobject /* this */,
+        jlong ptr) {
+    delete ((Anime4KCPP::VideoProcessor*)(ptr));
+}
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_loadVideoVideoProcessor(
+        JNIEnv *env,
+        jobject /* this */,
+        jlong ptr,
+        jstring src) {
+    try {
+        ((Anime4KCPP::VideoProcessor*)(ptr))->loadVideo(std::string(env->GetStringUTFChars(src, JNI_FALSE)));
+    }
+    catch (const std::exception& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_setVideoSaveInfoVideoProcessor(
+        JNIEnv *env,
+        jobject /* this */,
+        jlong ptr,
+        jstring dst) {
+    try {
+        ((Anime4KCPP::VideoProcessor*)(ptr))->setVideoSaveInfo(std::string(env->GetStringUTFChars(dst, JNI_FALSE)));
+    }
+    catch (const std::exception& err) {
+        env->ThrowNew(env->FindClass("java/lang/Exception"), err.what());
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_saveVideoVideoProcessor(
+        JNIEnv *env,
+        jobject /* this */,
+        jlong ptr) {
+    ((Anime4KCPP::VideoProcessor*)(ptr))->saveVideo();
+}
+
+JNIEXPORT void JNICALL
+Java_github_tianzerl_anime4kcpp_wrapper_VideoProcessor_processWithProgressVideoProcessor(
+        JNIEnv *env,
+        jobject thiz /* this */,
+        jlong ptr) {
+
+    jclass classID = env->GetObjectClass(thiz);
+    jmethodID callback = env->GetMethodID(classID,"progressCallback", "(DD)V");
+
+    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
+
+    ((Anime4KCPP::VideoProcessor*)(ptr))->processWithProgress(
+            [&env, &thiz, &callback, &s](double v)
+            {
+                std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
+                env->CallVoidMethod(thiz, callback, v, std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0);
+            });
+}
+
 
 JNIEXPORT jboolean JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4KGPU_checkGPUSupportAnime4KGPU(

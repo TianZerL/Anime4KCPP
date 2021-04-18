@@ -2,10 +2,6 @@ package github.tianzerl.anime4kcpp.wrapper;
 
 public class Anime4KGPU extends Anime4K {
 
-    public Anime4KGPU() {
-        anime4k = createAnime4KGPU();
-    }
-
     public Anime4KGPU(Parameters parameters) {
         anime4k = createAnime4KGPUByArgs(
                 parameters.passes,
@@ -38,8 +34,6 @@ public class Anime4KGPU extends Anime4K {
     public static boolean isInitializedGPU() {
         return isInitializedGPUAnime4KGPU();
     }
-
-    private native long createAnime4KGPU();
 
     private native long createAnime4KGPUByArgs(int passes,
                                                int pushColorCount,

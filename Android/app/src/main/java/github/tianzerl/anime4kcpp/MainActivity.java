@@ -43,6 +43,7 @@ import github.tianzerl.anime4kcpp.wrapper.Anime4KGPU;
 import github.tianzerl.anime4kcpp.wrapper.Anime4KGPUCNN;
 import github.tianzerl.anime4kcpp.wrapper.Parameters;
 import github.tianzerl.anime4kcpp.wrapper.ProcessorType;
+import github.tianzerl.anime4kcpp.wrapper.VideoProcessor;
 import me.rosuh.filepicker.bean.FileItemBeanImpl;
 import me.rosuh.filepicker.config.AbstractFileFilter;
 import me.rosuh.filepicker.config.FilePickerManager;
@@ -566,14 +567,11 @@ public class MainActivity extends AppCompatActivity {
             }
 
             Anime4K ac = activity.initAnime4KCPP();
-            CallbackProxy callbackProxy = new CallbackProxy(this);
-            ac.setCallbackProxy(callbackProxy);
 
             int imageCount = 0, videoCount = 0;
 
             try {
                 //processing images
-                ac.setVideoMode(false);
                 for (Pair<String, Integer> image : images) {
                     File srcFile = new File(image.first);
                     ac.loadImage(srcFile.getPath());
@@ -589,31 +587,36 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 //processing videos
-                ac.setVideoMode(true);
-                for (Pair<String, Integer> video : videos) {
-                    File srcFile = new File(video.first);
-                    String tmpOutputPath = dst + "/" + "tmpOutput" + videoCount + ".mp4";
-                    String OutputPath = dst + "/" + prefix + srcFile.getName() + ".mp4";
+                if (!videos.isEmpty()) {
+                    CallbackProxy callbackProxy = new CallbackProxy(this);
+                    VideoProcessor videoProcessor = new VideoProcessor(ac);
+                    videoProcessor.setCallbackProxy(callbackProxy);
+                    for (Pair<String, Integer> video : videos) {
+                        File srcFile = new File(video.first);
+                        String tmpOutputPath = dst + "/" + "tmpOutput" + videoCount + ".mp4";
+                        String OutputPath = dst + "/" + prefix + srcFile.getName() + ".mp4";
 
-                    ac.loadVideo(srcFile.getPath());
-                    ac.setVideoSaveInfo(tmpOutputPath);
+                        videoProcessor.loadVideo(srcFile.getPath());
+                        videoProcessor.setVideoSaveInfo(tmpOutputPath);
 
-                    long start = System.currentTimeMillis();
-                    ac.processWithProgress();
-                    long end = System.currentTimeMillis();
+                        long start = System.currentTimeMillis();
+                        videoProcessor.processWithProgress();
+                        long end = System.currentTimeMillis();
 
-                    ac.saveVideo();
+                        videoProcessor.saveVideo();
 
-                    new VideoAudioProcessor(srcFile.getPath(), tmpOutputPath, OutputPath).merge();
+                        new VideoAudioProcessor(srcFile.getPath(), tmpOutputPath, OutputPath).merge();
 
-                    if (!(new File(tmpOutputPath).delete())) {
-                        Message message = new Message();
-                        message.obj = Error.FailedToDeleteTmpFile;
-                        activity.otherErrorHandler.sendMessage(message);
+                        if (!(new File(tmpOutputPath).delete())) {
+                            Message message = new Message();
+                            message.obj = Error.FailedToDeleteTmpFile;
+                            activity.otherErrorHandler.sendMessage(message);
+                        }
+                        totalTime += end - start;
+                        publishProgress((++videoCount + imageCount) * 100 / taskCount, 0, video.second);
                     }
-                    totalTime += end - start;
-                    publishProgress((++videoCount + imageCount) * 100 / taskCount, 0, video.second);
                 }
+
             } catch (Exception exp) {
                 Message message = new Message();
                 message.obj = exp.getMessage();

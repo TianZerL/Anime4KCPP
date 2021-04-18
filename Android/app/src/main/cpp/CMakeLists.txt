@@ -13,15 +13,12 @@ include_directories(${CMAKE_SOURCE_DIR}/Anime4KCore/include ${OpenCL_INCLUDE_DIR
 aux_source_directory(${CMAKE_SOURCE_DIR}/Anime4KCore/src SOURCE)
 
 add_definitions(-DBUILT_IN_KERNEL)
+add_definitions(-DENABLE_VIDEO)
 
-add_library(Anime4KCPPCore
-
-        SHARED
-
+add_library(Anime4KCPPCore SHARED
         Anime4KCPPWrapper.cpp
         ${SOURCE})
 
 target_link_libraries(Anime4KCPPCore
-
         ${OpenCV_LIBS}
         ${OpenCL_LIBRARIES})

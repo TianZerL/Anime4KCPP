@@ -1,9 +1,6 @@
 package github.tianzerl.anime4kcpp.wrapper;
 
 public class Anime4KCPUCNN extends Anime4K {
-    public Anime4KCPUCNN() {
-        anime4k = createAnime4KCPUCNN();
-    }
 
     public Anime4KCPUCNN(Parameters parameters) {
         anime4k = createAnime4KCPUCNNByArgs(
@@ -23,8 +20,6 @@ public class Anime4KCPUCNN extends Anime4K {
                 parameters.alpha
         );
     }
-
-    private native long createAnime4KCPUCNN();
 
     private native long createAnime4KCPUCNNByArgs(int passes,
                                                   int pushColorCount,
