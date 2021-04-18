@@ -33,6 +33,7 @@ option(Enable_NCNN "Enable ncnn module" OFF)
 option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required, it can accelerate or slow down, AMD Ryzen recommended" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
 option(Enable_Video "Enable video processor module" OFF)
+option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 

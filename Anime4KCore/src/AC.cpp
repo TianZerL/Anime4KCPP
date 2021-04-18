@@ -757,6 +757,7 @@ std::string Anime4KCPP::AC::getFiltersInfo()
 
 void Anime4KCPP::AC::showImage(bool R2B)
 {
+#ifdef ENABLE_PREVIEW_GUI
     cv::Mat tmpImg = dstImg;
 
     if (R2B)
@@ -784,6 +785,9 @@ void Anime4KCPP::AC::showImage(bool R2B)
     cv::imshow("preview", tmpImg);
     cv::waitKey();
     cv::destroyWindow("preview");
+#else
+    throw ACException<ExceptionType::RunTimeError>("Preview image is not currently supported.");
+#endif // ENABLE_PREVIEW_GUI
 }
 
 void Anime4KCPP::AC::process()
