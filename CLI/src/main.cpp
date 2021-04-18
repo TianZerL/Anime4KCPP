@@ -604,6 +604,7 @@ int main(int argc, char* argv[])
         {
             if (preview)
             {
+#ifdef ENABLE_PREVIEW_GUI
                 std::string currInputPath = inputPath.string();
 
                 std::cout << ac->getInfo() << std::endl;
@@ -688,6 +689,9 @@ int main(int argc, char* argv[])
                 videoCapture.release();
                 cv::destroyWindow(windowName);
                 std::cout << "Exit" << std::endl;
+#else
+                throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
+#endif // ENABLE_PREVIEW_GUI
             }
             else
             {

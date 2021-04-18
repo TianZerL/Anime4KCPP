@@ -135,6 +135,8 @@ std::string Anime4KCPP::VideoProcessor::getInfo()
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << std::endl
+        << "Video information" << std::endl
+        << "----------------------------------------------" << std::endl
         << "FPS: " << fps << std::endl
         << "Threads: " << param.maxThreads << std::endl
         << "Total frames: " << totalFrameCount << std::endl

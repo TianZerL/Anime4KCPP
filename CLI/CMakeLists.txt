@@ -17,6 +17,10 @@ if(Build_CLI)
 
     add_definitions(-DENABLE_VIDEO)
 
+    if(Enable_Preview_GUI)
+        add_definitions(-DENABLE_PREVIEW_GUI)
+    endif()
+
     add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
 
     add_executable(${PROJECT_NAME} ${INCLUDE} ${SOURCE})
