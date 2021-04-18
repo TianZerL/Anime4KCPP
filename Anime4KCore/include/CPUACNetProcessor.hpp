@@ -43,7 +43,7 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    std::string modelPath;
+    cv::dnn::Net net;
 };
 
 #else

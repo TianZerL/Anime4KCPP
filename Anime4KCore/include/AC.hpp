@@ -9,7 +9,6 @@
 #include<opencv2/opencv.hpp>
 
 #include"ACException.hpp"
-#include"VideoIO.hpp"
 #include"ACProcessor.hpp"
 
 #if defined(_MSC_VER) && !defined(USE_TBB)
@@ -88,7 +87,6 @@ struct Anime4KCPP::Parameters
     double strengthGradient;
     double zoomFactor;
     bool fastMode;
-    bool videoMode;
     bool preprocessing;
     bool postprocessing;
     uint8_t preFilters;
@@ -113,7 +111,6 @@ struct Anime4KCPP::Parameters
         double strengthGradient = 1.0,
         double zoomFactor = 2.0,
         bool fastMode = false,
-        bool videoMode = false,
         bool preprocessing = false,
         bool postprocessing = false,
         uint8_t preFilters = 4,
@@ -132,10 +129,9 @@ public:
     AC(const Parameters& parameters);
     virtual ~AC();
 
-    virtual void setArguments(const Parameters& parameters);
-    void setVideoMode(const bool value);
+    virtual void setParameters(const Parameters& parameters);
+    Parameters getParameters();
 
-    void loadVideo(const std::string& srcFile);
     void loadImage(const std::string& srcFile);
     void loadImage(const cv::Mat& srcImage);
     void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
@@ -157,7 +153,6 @@ public:
         int rowsU, int colsU, size_t strideU, float* u,
         int rowsV, int colsV, size_t strideV, float* v);
     void loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v);
-    void setVideoSaveInfo(const std::string& dstFile, const CODEC codec = CODEC::MP4V, const double fps = 0.0);
     void saveImage(const std::string& dstFile);
     void saveImage(cv::Mat& dstImage);
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
@@ -166,31 +161,20 @@ public:
         unsigned char* r, size_t dstStrideR, 
         unsigned char* g, size_t dstStrideG, 
         unsigned char* b, size_t dstStrideB);
-    void saveVideo();
-
-    virtual std::string getInfo();
-    virtual std::string getFiltersInfo();
 
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
 
     void process();
-    // for video processing
-    void processWithPrintProgress();
-    void processWithProgress(const std::function<void(double)>&& callBack);
-    void stopVideoProcess() noexcept;
-    void pauseVideoProcess();
-    void continueVideoProcess() noexcept;
+
+    virtual std::string getInfo();
+    virtual std::string getFiltersInfo();
     virtual Processor::Type getProcessorType() noexcept = 0;
     virtual std::string getProcessorInfo() = 0;
-private:
-    void initVideoIO();
-    void releaseVideoIO() noexcept;
 protected:
     virtual void processYUVImageB() = 0;
     virtual void processRGBImageB() = 0;
     virtual void processGrayscaleB() = 0;
-    virtual void processRGBVideoB() = 0;
 
     virtual void processYUVImageW() = 0;
     virtual void processRGBImageW() = 0;
@@ -200,8 +184,6 @@ protected:
     virtual void processRGBImageF() = 0;
     virtual void processGrayscaleF() = 0;
 private:
-    double fps;
-    double totalFrameCount;
     cv::Mat alphaChannel;
     bool inputRGB32 = false;
     bool checkAlphaChannel = false;
@@ -213,7 +195,6 @@ protected:
     cv::Mat orgImg, dstImg;
     cv::Mat orgY, orgU, orgV;
     cv::Mat dstY, dstU, dstV;
-    Utils::VideoIO* videoIO = nullptr;
 
     Parameters param;
 };

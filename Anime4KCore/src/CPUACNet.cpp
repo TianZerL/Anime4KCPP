@@ -30,9 +30,9 @@ Anime4KCPP::CPU::ACNet::~ACNet()
     releaseACNetProcessor(processor);
 }
 
-void Anime4KCPP::CPU::ACNet::setArguments(const Parameters& parameters)
+void Anime4KCPP::CPU::ACNet::setParameters(const Parameters& parameters)
 {
-    AC::setArguments(parameters);
+    AC::setParameters(parameters);
     releaseACNetProcessor(processor);
     if (param.HDN)
         switch (param.HDNLevel)
@@ -171,72 +171,6 @@ void Anime4KCPP::CPU::ACNet::processGrayscaleB()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
         processor->processB(orgImg, dstImg, 1);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processRGBVideoB()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        videoIO->init(
-            [this, scaleTimes]()
-            {
-                Utils::Frame frame = videoIO->read();
-                cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame;
-
-                cv::Mat tmpFrame ;
-                cv::cvtColor(orgFrame, tmpFrame, cv::COLOR_BGR2YUV);
-
-                processor->processB(tmpFrame, dstFrame, scaleTimes);
-
-                if (param.isNonIntegerScale())
-                {
-                    cv::resize(dstFrame, dstFrame, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-                }
-
-                cv::resize(tmpFrame, tmpFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-                cv::mixChannels(dstFrame, tmpFrame, std::vector<int>{0, 0});
-
-                cv::cvtColor(tmpFrame, dstFrame, cv::COLOR_YUV2BGR);
-
-                frame.first = dstFrame;
-                videoIO->write(frame);
-            }
-            , param.maxThreads
-                ).process();
-    }
-    else
-    {
-        videoIO->init(
-            [this]()
-            {
-                Utils::Frame frame = videoIO->read();
-                cv::Mat orgFrame = frame.first;
-                cv::Mat dstFrame;
-
-                if (param.zoomFactor > 2.0)
-                    cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-                else if (param.zoomFactor < 2.0)
-                    cv::resize(orgFrame, orgFrame, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-                cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2YUV);
-
-                processor->processB(orgFrame, dstFrame, 1);
-
-                cv::resize(orgFrame, orgFrame, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-                cv::mixChannels(dstFrame, orgFrame, std::vector<int>{0, 0});
-
-                cv::cvtColor(orgFrame, dstFrame, cv::COLOR_YUV2BGR);
-
-                frame.first = dstFrame;
-                videoIO->write(frame);
-            }
-            , param.maxThreads
-                ).process();
     }
 }
 

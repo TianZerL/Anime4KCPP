@@ -2,7 +2,11 @@
 
 #ifdef ENABLE_OPENCV_DNN
 Anime4KCPP::CPU::ACNetHDN::ACNetHDN(std::string modelPath)
-    :modelPath(std::move(modelPath)) {}
+    :net{ cv::dnn::readNet(modelPath) } 
+{
+    net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+}
 
 void Anime4KCPP::CPU::ACNetHDN::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
@@ -10,9 +14,6 @@ void Anime4KCPP::CPU::ACNetHDN::processB(const cv::Mat& src, cv::Mat& dst, int s
     cv::Mat tmp;
     cv::extractChannel(src, tmp, 0);
     cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 255.0);
-    cv::dnn::Net net = cv::dnn::readNet(modelPath);
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
     for (int i = 0; i < scaleTimes; i++)
     {
         net.setInput(blob);
@@ -28,9 +29,6 @@ void Anime4KCPP::CPU::ACNetHDN::processW(const cv::Mat& src, cv::Mat& dst, int s
     cv::Mat tmp;
     cv::extractChannel(src, tmp, 0);
     cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 65535.0);
-    cv::dnn::Net net = cv::dnn::readNet(modelPath);
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
     for (int i = 0; i < scaleTimes; i++)
     {
         net.setInput(blob);
@@ -46,9 +44,6 @@ void Anime4KCPP::CPU::ACNetHDN::processF(const cv::Mat& src, cv::Mat& dst, int s
     cv::Mat tmp;
     cv::extractChannel(src, tmp, 0);
     cv::Mat blob = cv::dnn::blobFromImage(tmp);
-    cv::dnn::Net net = cv::dnn::readNet(modelPath);
-    net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-    net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
     for (int i = 0; i < scaleTimes; i++)
     {
         net.setInput(blob);

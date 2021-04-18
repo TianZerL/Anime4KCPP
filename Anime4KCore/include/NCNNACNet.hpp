@@ -20,7 +20,7 @@ class Anime4KCPP::NCNN::ACNet :public AC
 public:
     ACNet(const Parameters& parameters = Parameters());
     virtual ~ACNet() = default;
-    virtual void setArguments(const Parameters& parameters) override;
+    virtual void setParameters(const Parameters& parameters) override;
 
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
@@ -42,7 +42,6 @@ private:
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
     virtual void processGrayscaleB() override;
-    virtual void processRGBVideoB() override;
 
     virtual void processYUVImageW() override;
     virtual void processRGBImageW() override;

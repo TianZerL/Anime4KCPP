@@ -593,7 +593,6 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         pushGradientStrength,
         zoomFactor,
         fastMode,
-        videoMode,
         preprocessing,
         postprocessing,
         prefilters,
@@ -1059,7 +1058,6 @@ void MainWindow::on_pushButtonPreview_clicked()
     case FileType::IMAGE:
         try
         {
-            ac->setVideoMode(false);
             ac->loadImage(previewFile.filePath().toUtf8().toStdString());
             ac->process();
             ac->showImage();
@@ -1093,7 +1091,6 @@ void MainWindow::on_pushButtonPreview_clicked()
             cv::resizeWindow(windowName,
                 videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
                 videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
-            ac->setVideoMode(false);
 
             while (videoCapture.read(frame))
             {
@@ -1254,7 +1251,6 @@ void MainWindow::on_pushButtonStart_clicked()
             Parallel::parallel_for(0, images.size(), [this, total, &images, &cm](int i) {
                 std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                 std::chrono::steady_clock::time_point startTime, endTime;
-                ac->setVideoMode(false);
                 auto& image = images.at(i);
                 try
                 {
@@ -1308,37 +1304,37 @@ void MainWindow::on_pushButtonStart_clicked()
         {
             std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
             std::chrono::steady_clock::time_point startTime, endTime;
-            ac->setVideoMode(true);
+            Anime4KCPP::VideoProcessor videoProcessor(*ac);
             for (QPair<QPair<QString, QString>, int> const& video : videos)
             {
                 try
                 {
-                    ac->loadVideo(video.first.first.toUtf8().toStdString());
-                    ac->setVideoSaveInfo(
+                    videoProcessor.loadVideo(video.first.first.toUtf8().toStdString());
+                    videoProcessor.setVideoSaveInfo(
                         video.first.second.toUtf8().toStdString() + 
                         std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), 
                         ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    ac->processWithProgress([this, &ac, &startTime, &cm](double v) {
+                    videoProcessor.processWithProgress([this, &videoProcessor, &startTime, &cm](double v) {
                         if (stop)
                         {
                             if (pause == ProcessingState::PAUSED)
                             {
-                                ac->continueVideoProcess();
+                                videoProcessor.continueVideoProcess();
                                 pause = ProcessingState::NORMAL;
                             }
-                            ac->stopVideoProcess();
+                            videoProcessor.stopVideoProcess();
                             return;
                         }
                         if (pause == ProcessingState::PAUSE)
                         {
-                            ac->pauseVideoProcess();
+                            videoProcessor.pauseVideoProcess();
                             pause = ProcessingState::PAUSED;
                         }
                         else if (pause == ProcessingState::CONTINUE)
                         {
-                            ac->continueVideoProcess();
+                            videoProcessor.continueVideoProcess();
                             pause = ProcessingState::NORMAL;
                         }
                         else if (pause == ProcessingState::NORMAL)
@@ -1349,7 +1345,7 @@ void MainWindow::on_pushButtonStart_clicked()
                         }
                         });
                     endTime = std::chrono::steady_clock::now();
-                    ac->saveVideo();
+                    videoProcessor.saveVideo();
                 }
                 catch (const std::exception& err)
                 {

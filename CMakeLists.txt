@@ -32,6 +32,7 @@ option(Enable_Fast_Math "Enable fast math" OFF)
 option(Enable_NCNN "Enable ncnn module" OFF)
 option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required, it can accelerate or slow down, AMD Ryzen recommended" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
+option(Enable_Video "Enable video processor module" OFF)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 

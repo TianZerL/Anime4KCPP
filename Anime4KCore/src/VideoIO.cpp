@@ -1,3 +1,5 @@
+#ifdef ENABLE_VIDEO
+
 #include"VideoIO.hpp"
 
 Anime4KCPP::Utils::VideoIO::~VideoIO()
@@ -225,3 +227,5 @@ inline void Anime4KCPP::Utils::VideoIO::setProgress(double p) noexcept
 {
     progress = p;
 }
+
+#endif

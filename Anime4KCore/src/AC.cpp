@@ -5,10 +5,6 @@
 Anime4KCPP::AC::AC(const Parameters& parameters) :param(parameters)
 {
     orgH = orgW = H = W = 0;
-    totalFrameCount = fps = 0.0;
-
-    if (param.videoMode)
-        initVideoIO();
 }
 
 Anime4KCPP::AC::~AC()
@@ -22,39 +18,18 @@ Anime4KCPP::AC::~AC()
     dstU.release();
     dstV.release();
     alphaChannel.release();
-    releaseVideoIO();
 }
 
-void Anime4KCPP::AC::setArguments(const Parameters& parameters)
+void Anime4KCPP::AC::setParameters(const Parameters& parameters)
 {
     param = parameters;
 
     orgH = orgW = H = W = 0;
-    totalFrameCount = fps = 0.0;
-
-    if (param.videoMode)
-        initVideoIO();
 }
 
-void Anime4KCPP::AC::setVideoMode(const bool value)
+Anime4KCPP::Parameters Anime4KCPP::AC::getParameters()
 {
-    param.videoMode = value;
-    if (param.videoMode)
-        initVideoIO();
-}
-
-void Anime4KCPP::AC::loadVideo(const std::string& srcFile)
-{
-    if (!videoIO->openReader(srcFile))
-        throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
-    orgH = videoIO->get(cv::CAP_PROP_FRAME_HEIGHT);
-    orgW = videoIO->get(cv::CAP_PROP_FRAME_WIDTH);
-    fps = videoIO->get(cv::CAP_PROP_FPS);
-    totalFrameCount = videoIO->get(cv::CAP_PROP_FRAME_COUNT);
-    H = std::round(param.zoomFactor * orgH);
-    W = std::round(param.zoomFactor * orgW);
-
-    bitDepth = 8;
+    return param;
 }
 
 void Anime4KCPP::AC::loadImage(const std::string& srcFile)
@@ -142,6 +117,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
             inputRGB32 = true;
             checkAlphaChannel = false;
             cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
+            dstImg = orgImg;
         }
         else
         {
@@ -175,6 +151,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
             inputRGB32 = true;
             checkAlphaChannel = false;
             cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
+            dstImg = orgImg;
         }
         else
         {
@@ -208,6 +185,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
             inputRGB32 = true;
             checkAlphaChannel = false;
             cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
+            dstImg = orgImg;
         }
         else
         {
@@ -580,12 +558,6 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     }
 }
 
-void Anime4KCPP::AC::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
-{
-    if (!videoIO->openWriter(dstFile, codec, cv::Size(W, H), fps))
-        throw ACException<ExceptionType::IO>("Failed to initialize video writer.");
-}
-
 void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 {
     if (inputYUV)
@@ -756,30 +728,19 @@ void Anime4KCPP::AC::saveImage(
     }
 }
 
-void Anime4KCPP::AC::saveVideo()
-{
-    videoIO->release();
-}
-
 std::string Anime4KCPP::AC::getInfo()
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << std::endl
         << "Parameter information" << std::endl
         << "----------------------------------------------" << std::endl;
-    if (param.videoMode)
-    {
-        oss << "FPS: " << fps << std::endl
-            << "Threads: " << param.maxThreads << std::endl
-            << "Total frames: " << totalFrameCount << std::endl;
-    }
     if (orgW && orgH)
     {
         oss << orgW << "x" << orgH << " to " << W << "x" << H << std::endl
             << "----------------------------------------------" << std::endl;
     }
-    oss << "Processor info: "  << std::endl 
-        << getProcessorInfo()  << std::endl;
+    oss << "Processor info: " << std::endl
+        << " " << getProcessorInfo() << std::endl;
     
     return oss.str();
 }
@@ -830,19 +791,12 @@ void Anime4KCPP::AC::process()
     switch (bitDepth)
     {
     case 8:
-        if (!param.videoMode)
-        {
-            if (inputYUV)
-                processYUVImageB();
-            else if (inputGrayscale)
-                processGrayscaleB();
-            else
-                processRGBImageB();
-        }
+        if (inputYUV)
+            processYUVImageB();
+        else if (inputGrayscale)
+            processGrayscaleB();
         else
-        {
-            processRGBVideoB();
-        }
+            processRGBImageB();
         break;
     case 16:
         if (inputYUV)
@@ -863,102 +817,6 @@ void Anime4KCPP::AC::process()
     }
 }
 
-void Anime4KCPP::AC::processWithPrintProgress()
-{
-    if (!param.videoMode)
-    {
-        process();
-        return;
-    }
-    std::future<void> p = std::async(&AC::process, this);
-    std::chrono::milliseconds timeout(1000);
-    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-    for (;;)
-    {
-        std::future_status status = p.wait_for(timeout);
-        if (status == std::future_status::ready)
-        {
-            std::cout
-                << std::fixed << std::setprecision(2)
-                << std::setw(7) << 100.0 << '%'
-                << "    elpsed: " << std::setw(10) << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - s).count() / 1000.0 << 's'
-                << "    remaining: " << std::setw(10) << 0.0 << 's'
-                << std::endl;
-            // get any possible exception
-            p.get();
-            break;
-        }
-        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-        double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
-        double progress = videoIO->getProgress();
-        std::cout
-            << std::fixed << std::setprecision(2)
-            << std::setw(7) << progress * 100 << '%'
-            << "    elpsed: " << std::setw(10) << currTime << 's'
-            << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
-            << '\r';
-    }
-}
-
-void Anime4KCPP::AC::processWithProgress(const std::function<void(double)>&& callBack)
-{
-    if (!param.videoMode)
-    {
-        process();
-        return;
-    }
-    std::future<void> p = std::async(&AC::process, this);
-    std::chrono::milliseconds timeout(1000);
-    for (;;)
-    {
-        std::future_status status = p.wait_for(timeout);
-        if (status == std::future_status::ready)
-        {
-            callBack(1.0);
-            p.get();
-            break;
-        }
-        double progress = videoIO->getProgress();
-        callBack(progress);
-    }
-}
-
-void Anime4KCPP::AC::stopVideoProcess() noexcept
-{
-    if (param.videoMode)
-        videoIO->stopProcess();
-}
-
-void Anime4KCPP::AC::pauseVideoProcess()
-{
-    if (param.videoMode && !videoIO->isPaused())
-    {
-        std::thread t(&Utils::VideoIO::pauseProcess, videoIO);
-        t.detach();
-    }
-}
-
-void Anime4KCPP::AC::continueVideoProcess() noexcept
-{
-    if (param.videoMode)
-        videoIO->continueProcess();
-}
-
-inline void Anime4KCPP::AC::initVideoIO()
-{
-    if (videoIO == nullptr)
-        videoIO = new Utils::VideoIO;
-}
-
-inline void Anime4KCPP::AC::releaseVideoIO() noexcept
-{
-    if (videoIO != nullptr)
-    {
-        delete videoIO;
-        videoIO = nullptr;
-    }
-}
-
 void Anime4KCPP::Parameters::reset() noexcept
 {
     passes = 2;
@@ -967,7 +825,6 @@ void Anime4KCPP::Parameters::reset() noexcept
     strengthGradient = 1.0;
     zoomFactor = 2.0;
     fastMode = false;
-    videoMode = false;
     preprocessing = false;
     postprocessing = false;
     preFilters = 4;
@@ -985,7 +842,6 @@ Anime4KCPP::Parameters::Parameters(
     double strengthGradient,
     double zoomFactor,
     bool fastMode,
-    bool videoMode,
     bool preprocessing,
     bool postprocessing,
     uint8_t preFilters,
@@ -997,7 +853,6 @@ Anime4KCPP::Parameters::Parameters(
 ) noexcept :
     passes(passes), pushColorCount(pushColorCount),
     strengthColor(strengthColor), strengthGradient(strengthGradient),
-    zoomFactor(zoomFactor), fastMode(fastMode), videoMode(videoMode),
-    preprocessing(preprocessing), postprocessing(postprocessing),
-    preFilters(preFilters), postFilters(postFilters), maxThreads(maxThreads),
-    HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}
+    zoomFactor(zoomFactor), fastMode(fastMode), preprocessing(preprocessing), 
+    postprocessing(postprocessing),preFilters(preFilters), postFilters(postFilters),
+    maxThreads(maxThreads),HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}

@@ -30,7 +30,6 @@ std::string Anime4KCPP::CPU::Anime4K09::getInfo()
         << "Passes: " << param.passes << std::endl
         << "pushColorCount: " << param.pushColorCount << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "Video Mode: " << std::boolalpha << param.videoMode << std::endl
         << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
         << "Strength Color: " << param.strengthColor << std::endl
         << "Strength Gradient: " << param.strengthGradient << std::endl
@@ -156,40 +155,6 @@ void Anime4KCPP::CPU::Anime4K09::processGrayscaleB()
         FilterProcessor(dstImg, param.postFilters).process();
 
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
-}
-
-void Anime4KCPP::CPU::Anime4K09::processRGBVideoB()
-{
-    videoIO->init(
-        [this]()
-        {
-            Utils::Frame frame = videoIO->read();
-            cv::Mat orgFrame = frame.first;
-            cv::Mat dstFrame(H, W, CV_8UC4);
-            int tmpPcc = param.pushColorCount;
-            if (param.preprocessing)
-                FilterProcessor(orgFrame, param.preFilters).process();
-            cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            if (param.zoomFactor == 2.0)
-                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
-            else
-                cv::resize(orgFrame, dstFrame, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-            for (int i = 0; i < param.passes; i++)
-            {
-                getGrayB(dstFrame);
-                if (param.strengthColor && (tmpPcc-- > 0))
-                    pushColorB(dstFrame);
-                getGradientB(dstFrame);
-                pushGradientB(dstFrame);
-            }
-            cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-            if (param.postprocessing)//PostProcessing
-                FilterProcessor(dstFrame, param.postFilters).process();
-            frame.first = dstFrame;
-            videoIO->write(frame);
-        }
-        , param.maxThreads
-            ).process();
 }
 
 void Anime4KCPP::CPU::Anime4K09::processYUVImageW()

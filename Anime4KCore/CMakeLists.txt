@@ -25,6 +25,10 @@ if(Enable_OpenCV_DNN)
     add_definitions(-DENABLE_OPENCV_DNN)
 endif()
 
+if(Enable_Video)
+    add_definitions(-DENABLE_VIDEO)
+endif()
+
 add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)

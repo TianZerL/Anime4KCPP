@@ -15,6 +15,8 @@ if(Build_CLI)
         add_definitions(-DENABLE_NCNN)
     endif()
 
+    add_definitions(-DENABLE_VIDEO)
+
     add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
 
     add_executable(${PROJECT_NAME} ${INCLUDE} ${SOURCE})

@@ -22,7 +22,6 @@ private:
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;
     virtual void processGrayscaleB() override;
-    virtual void processRGBVideoB() override;
 
     virtual void processYUVImageW() override;
     virtual void processRGBImageW() override;

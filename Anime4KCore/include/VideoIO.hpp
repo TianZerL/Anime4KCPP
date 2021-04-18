@@ -1,11 +1,14 @@
 #pragma once
 
+#ifdef ENABLE_VIDEO
+
 #include<opencv2/opencv.hpp>
 #include<atomic>
 #include<queue>
 #include<unordered_map>
 
 #include"ThreadPool.hpp"
+#include"VideoCodec.hpp"
 
 #if (CV_VERSION_MAJOR < 3)
 #error OpenCV3 is needed at least!
@@ -21,14 +24,7 @@ namespace Anime4KCPP
         class VideoIO;
         typedef std::pair<cv::Mat, size_t> Frame;
     }
-
-    enum class CODEC;
 }
-
-enum class Anime4KCPP::CODEC 
-{
-    OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
-};
 
 class Anime4KCPP::Utils::VideoIO
 {
@@ -73,3 +69,5 @@ private:
     std::atomic<size_t> stop;
     std::atomic<bool> pause{ false };
 };
+
+#endif

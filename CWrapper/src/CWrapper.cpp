@@ -4,9 +4,9 @@
 #include "Anime4KCPP.hpp"
 #include "AC.h"
 
-std::string lastCoreError("No error");
+static std::string lastCoreError("No error");
 
-std::unique_ptr<Anime4KCPP::ACCreator> acCreator;
+static std::unique_ptr<Anime4KCPP::ACCreator> acCreator;
 
 Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
 {
@@ -20,7 +20,6 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
         c_parameters->strengthGradient,
         c_parameters->zoomFactor,
         c_parameters->fastMode,
-        c_parameters->videoMode,
         c_parameters->preprocessing,
         c_parameters->postprocessing,
         c_parameters->preFilters,
@@ -223,7 +222,6 @@ extern "C"
         parameters->strengthGradient = 1.0F;
         parameters->zoomFactor = 2.0F;
         parameters->fastMode = AC_FALSE;
-        parameters->videoMode = AC_FALSE;
         parameters->preprocessing = AC_FALSE;
         parameters->postprocessing = AC_FALSE;
         parameters->preFilters = 4;
@@ -252,24 +250,6 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadVideo(ac_instance instance, const char* srcFile)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadVideo(srcFile);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_LOAD_VIDEO;
-        }
-
-        return AC_OK;
-    }
-
     ac_error acProcess(ac_instance instance)
     {
         if (instance == nullptr)
@@ -288,93 +268,6 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acProcessWithPrintProgress(ac_instance instance)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithPrintProgress();
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_GPU_PROCESS;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acProcessWithProgress(ac_instance instance, void (*callBack)(double))
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithProgress(callBack);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_GPU_PROCESS;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acProcessWithProgressTime(ac_instance instance, void (*callBack)(double, double))
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        try
-        {
-            time_t start = time(nullptr);
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->processWithProgress([&callBack, &start](double v)
-                {
-                    callBack(v, time(nullptr) - start);
-                });
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_GPU_PROCESS;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acStopVideoProcess(ac_instance instance)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->stopVideoProcess();
-
-        return AC_OK;
-    }
-
-    ac_error acPauseVideoProcess(ac_instance instance)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->pauseVideoProcess();
-
-        return AC_OK;
-    }
-
-    ac_error acContinueVideoProcess(ac_instance instance)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->continueVideoProcess();
-
-        return AC_OK;
-    }
 
     ac_error acShowImage(ac_instance instance, ac_bool R2B)
     {
@@ -403,50 +296,12 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acSetSaveVideoInfo(ac_instance instance, const char* dstFile, ac_codec codec, double fps)
+    ac_error acSetParameters(ac_instance instance, ac_parameters* parameters)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
-        try
-        {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_INIT_VIDEO_WRITER;
-        }
-
-        return AC_OK;
-    }
-
-    ac_error acSaveVideo(ac_instance instance)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->saveVideo();
-
-        return AC_OK;
-    }
-
-    ac_error acSetArguments(ac_instance instance, ac_parameters* parameters)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->setArguments(getParameters(parameters));
-
-        return AC_OK;
-    }
-
-    ac_error acSetVideoMode(ac_instance instance, ac_bool flag)
-    {
-        if (instance == nullptr)
-            return AC_ERROR_NULL_INSTANCE;
-
-        reinterpret_cast<Anime4KCPP::AC*>(instance)->setVideoMode(flag);
+        reinterpret_cast<Anime4KCPP::AC*>(instance)->setParameters(getParameters(parameters));
 
         return AC_OK;
     }
@@ -953,4 +808,176 @@ extern "C"
 
         return AC_OK;
     }
+
+#ifdef ENABLE_VIDEO
+
+    ac_videoProcessor acGetVideoProcessor(ac_parameters* parameters, ac_processType type, ac_error* error)
+    {
+        if (error != nullptr)
+            *error = AC_OK;
+        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(getParameters(parameters), getProcessorType(type, error)));
+    }
+
+    void  acFreeVideoProcessor(ac_videoProcessor instance)
+    {
+        if (instance != nullptr)
+        {
+            delete reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance);
+            instance = nullptr;
+        }
+    }
+
+    ac_error acLoadVideo(ac_videoProcessor instance, const char* srcFile)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->loadVideo(srcFile);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_LOAD_VIDEO;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessVideo(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->process();
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessWithPrintProgress(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithPrintProgress();
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessWithProgress(ac_videoProcessor instance, void (*callBack)(double))
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress(callBack);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acProcessWithProgressTime(ac_videoProcessor instance, void (*callBack)(double, double))
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            time_t start = time(nullptr);
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress([&callBack, &start](double v)
+                {
+                    callBack(v, time(nullptr) - start);
+                });
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_GPU_PROCESS;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acStopVideoProcess(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->stopVideoProcess();
+
+        return AC_OK;
+    }
+
+    ac_error acPauseVideoProcess(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->pauseVideoProcess();
+
+        return AC_OK;
+    }
+
+    ac_error acContinueVideoProcess(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->continueVideoProcess();
+
+        return AC_OK;
+    }
+
+    ac_error acSetSaveVideoInfo(ac_videoProcessor instance, const char* dstFile, ac_codec codec, double fps)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_INIT_VIDEO_WRITER;
+        }
+
+        return AC_OK;
+    }
+
+    ac_error acSaveVideo(ac_videoProcessor instance)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->saveVideo();
+
+        return AC_OK;
+    }
+
+#endif
 }

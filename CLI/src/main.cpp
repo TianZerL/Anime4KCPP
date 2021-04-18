@@ -371,7 +371,6 @@ int main(int argc, char* argv[])
         strengthGradient,
         zoomFactor,
         fastMode,
-        videoMode,
         preprocessing,
         postprocessing,
         preFilters,
@@ -606,7 +605,6 @@ int main(int argc, char* argv[])
             if (preview)
             {
                 std::string currInputPath = inputPath.string();
-                ac->loadVideo(currInputPath);
 
                 std::cout << ac->getInfo() << std::endl;
                 std::cout << ac->getFiltersInfo() << std::endl;
@@ -635,7 +633,6 @@ int main(int argc, char* argv[])
                 cv::resizeWindow(windowName,
                     videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
                     videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
-                ac->setVideoMode(false);
 
                 std::cout
                     << "Previewing..." << std::endl
@@ -713,6 +710,7 @@ int main(int argc, char* argv[])
                 else
                     outputTmpName = "tmp_out.mp4";
 
+                Anime4KCPP::VideoProcessor videoProcessor(*ac);
                 if (filesystem::is_directory(inputPath))
                 {
                     if (!filesystem::is_directory(outputPath))
@@ -733,22 +731,23 @@ int main(int argc, char* argv[])
                         std::string currInputPath = file.path().string();
                         std::string currOutputPath = tmpOutputPath.replace_extension(gif ? ".gif" : ".mkv").string();
 
-                        ac->loadVideo(currInputPath);
-                        ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                        videoProcessor.loadVideo(currInputPath);
+                        videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
                         std::cout << ac->getInfo() << std::endl;
+                        std::cout << videoProcessor.getInfo() << std::endl;
                         std::cout << ac->getFiltersInfo() << std::endl;
 
                         std::cout << "Processing..." << std::endl;
                         std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
                         if (disableProgress)
-                            ac->process();
+                            videoProcessor.process();
                         else
-                            ac->processWithPrintProgress();
+                            videoProcessor.processWithPrintProgress();
                         std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                         std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
-                        ac->saveVideo();
+                        videoProcessor.saveVideo();
 
                         if (ffmpeg)
                         {
@@ -770,22 +769,23 @@ int main(int argc, char* argv[])
                     std::string currInputPath = inputPath.string();
                     std::string currOutputPath = outputPath.string();
 
-                    ac->loadVideo(currInputPath);
-                    ac->setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                    videoProcessor.loadVideo(currInputPath);
+                    videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
                     std::cout << ac->getInfo() << std::endl;
+                    std::cout << videoProcessor.getInfo() << std::endl;
                     std::cout << ac->getFiltersInfo() << std::endl;
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
                     if (disableProgress)
-                        ac->process();
+                        videoProcessor.process();
                     else
-                        ac->processWithPrintProgress();
+                        videoProcessor.processWithPrintProgress();
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                     std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
-                    ac->saveVideo();
+                    videoProcessor.saveVideo();
 
                     if (ffmpeg)
                     {

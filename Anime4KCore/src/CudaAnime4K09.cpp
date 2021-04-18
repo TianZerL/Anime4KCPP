@@ -18,7 +18,6 @@ std::string Anime4KCPP::Cuda::Anime4K09::getInfo()
         << "Passes: " << param.passes << std::endl
         << "pushColorCount: " << param.pushColorCount << std::endl
         << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "Video Mode: " << std::boolalpha << param.videoMode << std::endl
         << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
         << "Strength Color: " << param.strengthColor << std::endl
         << "Strength Gradient: " << param.strengthGradient << std::endl
@@ -148,28 +147,6 @@ void Anime4KCPP::Cuda::Anime4K09::processGrayscaleB()
         FilterProcessor(dstImg, param.postFilters).process();
 
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processRGBVideoB()
-{
-    videoIO->init(
-        [this]()
-        {
-            Utils::Frame frame = videoIO->read();
-            cv::Mat orgFrame = frame.first;
-            cv::Mat dstFrame(H, W, CV_8UC4);
-            if (param.preprocessing)
-                FilterProcessor(orgFrame, param.preFilters).process();
-            cv::cvtColor(orgFrame, orgFrame, cv::COLOR_BGR2BGRA);
-            runKernelB(orgFrame, dstFrame);
-            cv::cvtColor(dstFrame, dstFrame, cv::COLOR_BGRA2BGR);
-            if (param.postprocessing)//PostProcessing
-                FilterProcessor(dstFrame, param.postFilters).process();
-            frame.first = dstFrame;
-            videoIO->write(frame);
-        }
-        , param.maxThreads
-            ).process();
 }
 
 void Anime4KCPP::Cuda::Anime4K09::processYUVImageW()

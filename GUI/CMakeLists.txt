@@ -31,6 +31,8 @@ if(Build_GUI)
 
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 
+    add_definitions(-DENABLE_VIDEO)
+
     add_executable(Anime4KCPP_GUI
         WIN32
         ${INCLUDE}

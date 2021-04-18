@@ -17,6 +17,10 @@ if(Build_C_wrapper)
 
     file(GLOB INCLUDE include/*.h)
 
+    if(Enable_Video)
+        add_definitions(-DENABLE_VIDEO)
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
