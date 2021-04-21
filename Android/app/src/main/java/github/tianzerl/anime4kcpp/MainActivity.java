@@ -25,6 +25,10 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 
+import com.hjq.permissions.OnPermissionCallback;
+import com.hjq.permissions.Permission;
+import com.hjq.permissions.XXPermissions;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -139,6 +143,30 @@ public class MainActivity extends AppCompatActivity {
         config.read();
         //Keep screen on
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        XXPermissions.with(this)
+            .permission(Permission.MANAGE_EXTERNAL_STORAGE)
+            .request(new OnPermissionCallback() {
+
+                @Override
+                public void onGranted(List<String> permissions, boolean all) {
+                    if (all) {
+                        Toast.makeText(MainActivity.this,
+                                "Access to storage allowed\ndo not set the output path to Android/data",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onDenied(List<String> permissions, boolean never) {
+                    if (never) {
+                        Toast.makeText(MainActivity.this,"Access to storage not allowed, please set it manually", Toast.LENGTH_LONG).show();
+                        XXPermissions.startPermissionActivity(MainActivity.this, permissions);
+                    } else {
+                        Toast.makeText(MainActivity.this,"Access to storage not allowed", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
     }
 
     @Override
@@ -484,7 +512,7 @@ public class MainActivity extends AppCompatActivity {
 
         protected void read() {
             ((EditText) findViewById(R.id.editTextOutputPath))
-                    .setText(properties.getProperty("ouputPath", "Android/data/github.tianzerl.anime4kcpp/files/output"));
+                    .setText(properties.getProperty("ouputPath", "Anime4KCPP/output"));
             ((EditText) findViewById(R.id.editTextOutputPrefix))
                     .setText(properties.getProperty("ouputPrefix", "anime4kcpp_output_"));
             ((EditText) findViewById(R.id.editTextSuffixImage))

@@ -13,7 +13,7 @@
     <string name="quality">Quality</string>
     <string name="balance">Balance</string>
     <string name="output_path">Output path</string>
-    <string name="anime4kcpp_output_path">Android/data/github.tianzerl.anime4kcpp/files/output</string>
+    <string name="anime4kcpp_output_path">Anime4KCPP/output</string>
     <string name="output_prefix">Output prefix</string>
     <string name="anime4kcpp_output_prefix">anime4kcpp_output_</string>
     <string name="advanced_settings">Advanced settings (only work when Custom was selected)</string>
@@ -48,7 +48,7 @@
     <string name="hdn">HDN</string>
     <string name="remaining_time_0_s">Remaining time: 0 s</string>
     <string name="alpha_channel">Alpha Channel</string>
-    <string name="hdn_level_1_3">HDN level (1-3)</string>
+    <string name="hdn_level_1_3">HDN level (1–3)</string>
     <string name="default_HDN_level">1</string>
     <string name="benchmark">Benchmark</string>
 </resources>

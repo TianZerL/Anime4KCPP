@@ -55,7 +55,8 @@ dependencies {
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.5'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'me.rosuh:AndroidFilePicker:0.6.6-x'
+    implementation 'com.hjq:xxpermissions:10.6'
+    implementation 'me.rosuh:AndroidFilePicker:0.7.1-x'
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     testImplementation 'junit:junit:4.13.1'
