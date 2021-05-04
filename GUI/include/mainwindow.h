@@ -51,7 +51,7 @@ enum class GPUMode
     INITIALZED, UNINITIALZED, UNSUPPORT
 };
 
-enum class ProcessingState
+enum class VideoProcessingState
 {
     NORMAL, PAUSE, PAUSED, CONTINUE
 };
@@ -103,7 +103,7 @@ private:
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
     void solt_error_renewState(int row, QString err);
-    void solt_allDone_remindUser();
+    void solt_allDone_remindUser(quint64 totalTime);
     void solt_showInfo_renewTextBrowser(std::string info);
     void solt_updateProgress_updateCurrentTaskProgress(double v, double elpsed, double remaining);
 
@@ -195,9 +195,6 @@ private:
     QStandardItemModel* tableModel;
     QSettings* config;
 
-    quint64 totalProcessingTime;
-    std::atomic_int imageCount;
-    int videoCount;
     bool foundFFmpegFlag;
     QString ffmpegPath;
     unsigned int totalTaskCount;
@@ -210,7 +207,7 @@ private:
     QHash<QString, Language> languageSelector;
     QHash<QString, Anime4KCPP::CODEC> codecSelector;
 
-    std::atomic<bool> stop;
-    std::atomic<ProcessingState> pause;
+    std::atomic<bool> stopVideoProcessing;
+    std::atomic<VideoProcessingState> videoProcessingState;
 };
 #endif // MAINWINDOW_H

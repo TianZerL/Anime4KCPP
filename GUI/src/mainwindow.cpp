@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->doubleSpinBoxZoomFactor->setRange(1.0, 10.0);
     ui->spinBoxOpenCLQueueNum->setMinimum(1);
     //initialize time and count
-    totalTaskCount = totalProcessingTime = imageCount = videoCount = 0;
+    totalTaskCount = 0;
     //initialize config
     config = new QSettings("settings.ini", QSettings::IniFormat, this);
     readConfig(config);
@@ -92,8 +92,8 @@ MainWindow::MainWindow(QWidget* parent)
         ui->spinBoxHDNLevel->setEnabled(false);
     }
     //stop flag
-    stop = false;
-    pause = ProcessingState::NORMAL;
+    stopVideoProcessing = false;
+    videoProcessingState = VideoProcessingState::NORMAL;
     //Register
     qRegisterMetaType<std::string>("std::string");
 }
@@ -190,7 +190,7 @@ void MainWindow::readConfig(const QSettings* conf)
     QString language = conf->value("/GUI/language", "en").toString();
     bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom", true).toBool();
     bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
-    ffmpegPath = conf->value("/GUI/ffmpegPath", "ffmpeg").toString();
+    ffmpegPath = conf->value("/GUI/ffmpegPath", R"("ffmpeg")").toString();
 
     QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov:gif").toString();
@@ -508,7 +508,11 @@ void MainWindow::initTextBrowser()
 
 bool MainWindow::checkFFmpeg()
 {
-    if (!QProcess::execute(ffmpegPath, QStringList() << "-version"))
+    QProcess p(this);
+    p.start(ffmpegPath, QStringList() << "-version");
+    bool ret = p.waitForFinished();
+    ret &= (p.exitStatus() == QProcess::ExitStatus::NormalExit);
+    if (ret)
     {
         ui->textBrowserInfoOut->insertPlainText(
             "----------------------------------------------\n"
@@ -524,6 +528,7 @@ bool MainWindow::checkFFmpeg()
         "----------------------------------------------\n"
         "             FFmpeg check failed              \n"
         "----------------------------------------------\n"
+        "FFmpeg path: " + ffmpegPath + "\n"
     );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
     return  false;
@@ -531,7 +536,7 @@ bool MainWindow::checkFFmpeg()
 
 QString MainWindow::formatSuffixList(const QString&& type, QString str)
 {
-    return type + "( *." + str.replace(QRegExp(":"), " *.") + ");;";
+    return type + "( *." + str.replace(QRegularExpression(":"), " *.") + ");;";
 }
 
 std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
@@ -713,6 +718,7 @@ bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile
     logToTextBrowser("Merging audio with ffmpeg...");
     p.start(QIODevice::OpenMode::enum_type::ReadOnly);
     bool ret = p.waitForFinished(-1);
+    ret &= (p.exitStatus() == QProcess::ExitStatus::NormalExit);
     if (ret)
     {
         logToTextBrowser("Merge complete, ffmpeg information:");
@@ -728,20 +734,34 @@ bool MainWindow::mergeAudio2Video(const QString& dstFile, const QString& srcFile
 
 bool MainWindow::video2GIF(const QString& srcFile, const QString& dstFile)
 {
-    bool flag =
-        !QProcess::execute(ffmpegPath, QStringList()
-            << "-i" << srcFile << "-vf"
-            << "palettegen" << "-y "
-            << dstFile << "_palette.png")
-        && 
-        !QProcess::execute(ffmpegPath, QStringList()
-            <<"-i" << srcFile << "-i" << dstFile 
-            << "_palette.png" << "-y" << "-lavfi" 
-            << "paletteuse" << dstFile);
+    QProcess p1(this), p2(this);
+
+    logToTextBrowser("Start converting result to GIF with ffmpeg...");
+    p1.start(ffmpegPath, QStringList()
+        << "-i" << srcFile << "-vf"
+        << "palettegen" << "-y"
+        << dstFile + "_palette.png");
+
+    bool ret = p1.waitForFinished(-1);
+    ret &= (p1.exitStatus() == QProcess::ExitStatus::NormalExit);
+
+    p2.start(ffmpegPath, QStringList()
+        << "-i" << srcFile << "-i"
+        << dstFile + "_palette.png"
+        << "-y" << "-lavfi"
+        << "paletteuse" << dstFile);
+
+    ret &= p2.waitForFinished(-1);
+    ret &= (p2.exitStatus() == QProcess::ExitStatus::NormalExit);
     
     QFile::remove(dstFile + "_palette.png");
 
-    return flag;
+    if (ret)
+        logToTextBrowser("Convert result to GIF complete.");
+    else
+        logToTextBrowser("Failed to convert result to GIF.");
+
+    return ret;
 }
 
 void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
@@ -760,15 +780,17 @@ void MainWindow::solt_error_renewState(int row, QString err)
     errorHandler(err);
 }
 
-void MainWindow::solt_allDone_remindUser()
+void MainWindow::solt_allDone_remindUser(quint64 totalTime)
 {
     ui->labelElpsed->setText(QString("Elpsed: 0.0 s"));
     ui->labelRemaining->setText(QString("Remaining: 0.0 s"));
-    QMessageBox::information(this,
-        tr("Notice"),
-        QString("All tasks done\nTotal time: %1 s").arg(totalProcessingTime / 1000.0),
-        QMessageBox::Ok);
-    totalProcessingTime = 0;
+    if (totalTaskCount >= 0)
+    {
+        QMessageBox::information(this,
+            tr("Notice"),
+            QString("All tasks done\nTotal time: %1 s").arg(totalTime / 1000.0),
+            QMessageBox::Ok);
+    }
     ui->tableViewProcessingList->setEnabled(true);
     ui->progressBarProcessingList->setEnabled(false);
     ui->progressBarProcessingList->reset();
@@ -878,7 +900,7 @@ void MainWindow::on_pushButtonWebVideo_clicked()
         return;
 
     QUrl url(urlStr);
-    if (!QRegExp("^https?|ftp|file$").exactMatch(url.scheme()) || !url.isValid())
+    if (!QRegularExpression("^(https?|ftp|file)$").match(url.scheme()).hasMatch() || !url.isValid())
     {
         errorHandler(ErrorType::URL_INVALID);
         return;
@@ -944,6 +966,7 @@ void MainWindow::on_radioButtonFast_clicked()
     ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
+    ui->checkBoxAlphaChannel->setChecked(true);
     //preprocessing
     ui->checkBoxEnablePreprocessing->setChecked(true);
     ui->checkBoxPreMedian->setChecked(false);
@@ -967,11 +990,13 @@ void MainWindow::on_radioButtonFast_clicked()
 void MainWindow::on_radioButtonBalance_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
+    ui->checkBoxHDN->setChecked(false);
     ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
     ui->checkBoxEnablePostprocessing->setChecked(false);
+    ui->checkBoxAlphaChannel->setChecked(true);
 }
 
 void MainWindow::on_radioButtonQuality_clicked()
@@ -983,6 +1008,7 @@ void MainWindow::on_radioButtonQuality_clicked()
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
     ui->checkBoxEnablePostprocessing->setChecked(false);
+    ui->checkBoxAlphaChannel->setChecked(true);
 }
 
 void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
@@ -1195,11 +1221,14 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonForceStop->setEnabled(true);
     ui->pushButtonPause->setEnabled(true);
 
-    QtConcurrent::run([this, rows]() {
+    auto _ = QtConcurrent::run([this, rows]() {
 
         //QList<<input_path,outpt_path>,row>
         QList<QPair<QPair<QString, QString>, int>> images;
         QList<QPair<QPair<QString, QString>, int>> videos;
+
+        int videoCount = 0, imageCount = 0;
+
         //read info
         {
             QDir outputPathMaker;
@@ -1214,7 +1243,7 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 outputPathMaker.mkpath(outputPath);
 
-                if (fileType(filePath) == FileType::IMAGE)
+                if (fileType(QFileInfo(filePath)) == FileType::IMAGE)
                 {
                     images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
                         outputPath + "/" +
@@ -1231,7 +1260,8 @@ void MainWindow::on_pushButtonStart_clicked()
             }
         }
 
-        double total = imageCount + videoCount;
+        double total = static_cast<double>(imageCount) + static_cast<double>(videoCount);
+        std::atomic_int totalCount = imageCount + videoCount;
 
         Communicator cm;
         connect(&cm, SIGNAL(done(int, double, quint64)),
@@ -1240,40 +1270,42 @@ void MainWindow::on_pushButtonStart_clicked()
             this, SLOT(solt_error_renewState(int, QString)), Qt::QueuedConnection);
         connect(&cm, SIGNAL(showInfo(std::string)),
             this, SLOT(solt_showInfo_renewTextBrowser(std::string)), Qt::QueuedConnection);
-        connect(&cm, SIGNAL(allDone()),
-            this, SLOT(solt_allDone_remindUser()), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(allDone(quint64)),
+            this, SLOT(solt_allDone_remindUser(quint64)), Qt::QueuedConnection);
         connect(&cm, SIGNAL(updateProgress(double, double, double)),
             this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)), Qt::QueuedConnection);
         std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
-        if (imageCount)
+        if (imageCount > 0)
         {
 #if defined(_MSC_VER) || defined(USE_TBB)
-            Parallel::parallel_for(0, images.size(), [this, total, &images, &cm](int i) {
-                std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
-                std::chrono::steady_clock::time_point startTime, endTime;
-                auto& image = images.at(i);
-                try
-                {
-                    ac->loadImage(image.first.first.toUtf8().toStdString());
-                    emit cm.showInfo(("Image: " + image.first.first).toStdString() + ", start processing...\n");
-                    startTime = std::chrono::steady_clock::now();
-                    ac->process();
-                    endTime = std::chrono::steady_clock::now();
-                    ac->saveImage(image.first.second.toUtf8().toStdString());
-                }
-                catch (const std::exception& err)
-                {
-                    emit cm.error(image.second, QString::fromStdString(err.what()));
-                }
+            int imageItemCount = images.size();
+            Parallel::parallel_for(0, imageItemCount, 
+                [this, total, &images, &cm, &totalCount](int i) {
+                    std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
+                    std::chrono::steady_clock::time_point startTime, endTime;
+                    auto& image = images.at(i);
+                    try
+                    {
+                        ac->loadImage(image.first.first.toUtf8().toStdString());
+                        emit cm.showInfo(("Image: " + image.first.first).toStdString() + ", start processing...\n");
+                        startTime = std::chrono::steady_clock::now();
+                        ac->process();
+                        endTime = std::chrono::steady_clock::now();
+                        ac->saveImage(image.first.second.toUtf8().toStdString());
+                    }
+                    catch (const std::exception& err)
+                    {
+                        emit cm.error(image.second, QString::fromStdString(err.what()));
+                    }
 
-                imageCount--;
+                    totalCount--;
                 
-                emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
-                    std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+                    emit cm.done(image.second, 1.0 - (totalCount / total),
+                        std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
                 });
 #else
 #pragma omp parallel for
-            for (int i = 0; i < images.size(); i++)
+            for (int i = 0; i < imageItemCount; i++)
             {
                 std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                 std::chrono::steady_clock::time_point startTime, endTime;
@@ -1293,14 +1325,14 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.error(image.second, QString::fromStdString(err.what()));
                 }
 
-                imageCount--;
+                totalCount--;
 
-                emit cm.done(image.second, 1.0 - ((imageCount + videoCount) / total),
+                emit cm.done(image.second, 1.0 - (totalCount / total),
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             }
 #endif
         }
-        if (videoCount)
+        if (videoCount > 0)
         {
             std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
             std::chrono::steady_clock::time_point startTime, endTime;
@@ -1317,27 +1349,27 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     videoProcessor.processWithProgress([this, &videoProcessor, &startTime, &cm](double v) {
-                        if (stop)
+                        if (stopVideoProcessing)
                         {
-                            if (pause == ProcessingState::PAUSED)
+                            if (videoProcessingState == VideoProcessingState::PAUSED)
                             {
                                 videoProcessor.continueVideoProcess();
-                                pause = ProcessingState::NORMAL;
+                                videoProcessingState = VideoProcessingState::NORMAL;
                             }
                             videoProcessor.stopVideoProcess();
                             return;
                         }
-                        if (pause == ProcessingState::PAUSE)
+                        if (videoProcessingState == VideoProcessingState::PAUSE)
                         {
                             videoProcessor.pauseVideoProcess();
-                            pause = ProcessingState::PAUSED;
+                            videoProcessingState = VideoProcessingState::PAUSED;
                         }
-                        else if (pause == ProcessingState::CONTINUE)
+                        else if (videoProcessingState == VideoProcessingState::CONTINUE)
                         {
                             videoProcessor.continueVideoProcess();
-                            pause = ProcessingState::NORMAL;
+                            videoProcessingState = VideoProcessingState::NORMAL;
                         }
-                        else if (pause == ProcessingState::NORMAL)
+                        else if (videoProcessingState == VideoProcessingState::NORMAL)
                         {
                             double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
                             double remaining = elpsed / v - elpsed;
@@ -1352,10 +1384,11 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.error(video.second, QString::fromStdString(err.what()));
                 }
 
-                if (stop)
+                if (stopVideoProcessing)
                 {
-                    stop = false;
-                    break;
+                    stopVideoProcessing = false;
+                    emit cm.allDone(-1);
+                    return;
                 }
 
                 if (foundFFmpegFlag)
@@ -1373,17 +1406,16 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
                 }
 
-                videoCount--;
+                totalCount--;
 
-                emit cm.done(video.second, 1.0 - (videoCount / total),
+                emit cm.done(video.second, 1.0 - (totalCount / total),
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             }
         }
         
         std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
-        totalProcessingTime = std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll).count();
         
-        emit cm.allDone();
+        emit cm.allDone(std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll).count());
         });
 }
 
@@ -1415,44 +1447,52 @@ void MainWindow::on_actionSimplifiedChinese_triggered()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_zh_CN.qm";
     if (!QFileInfo(filePath).exists())
-        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_zh_CN.qm");
-    translator->load(filePath);
-    qApp->installTranslator(translator);
-    ui->retranslateUi(this);
-    currLanguage = Language::zh_CN;
+        filePath = QFileDialog::getOpenFileName(this, tr("Translation file"), "./", "Anime4KCPP_GUI_zh_CN.qm");
+    if (translator->load(filePath))
+    {
+        qApp->installTranslator(translator);
+        ui->retranslateUi(this);
+        currLanguage = Language::zh_CN;
+    }
 }
 
 void MainWindow::on_actionTraditionalChinese_triggered()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_zh_TW.qm";
     if (!QFileInfo(filePath).exists())
-        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_zh_TW.qm");
-    translator->load(filePath);
-    qApp->installTranslator(translator);
-    ui->retranslateUi(this);
-    currLanguage = Language::zh_TW;
+        filePath = QFileDialog::getOpenFileName(this, tr("Translation file"), "./", "Anime4KCPP_GUI_zh_TW.qm");
+    if (translator->load(filePath))
+    {
+        qApp->installTranslator(translator);
+        ui->retranslateUi(this);
+        currLanguage = Language::zh_TW;
+    }
 }
 
 void MainWindow::on_actionJapanese_triggered()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_ja_JP.qm";
     if (!QFileInfo(filePath).exists())
-        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_ja_JP.qm");
-    translator->load(filePath);
-    qApp->installTranslator(translator);
-    ui->retranslateUi(this);
-    currLanguage = Language::ja_JP;
+        filePath = QFileDialog::getOpenFileName(this, tr("Translation file"), "./", "Anime4KCPP_GUI_ja_JP.qm");
+    if (translator->load(filePath))
+    {
+        qApp->installTranslator(translator);
+        ui->retranslateUi(this);
+        currLanguage = Language::ja_JP;
+    }
 }
 
 void MainWindow::on_actionFrench_triggered()
 {
     QString filePath = QCoreApplication::applicationDirPath() + "/language/Anime4KCPP_GUI_fr_FR.qm";
     if (!QFileInfo(filePath).exists())
-        filePath = QFileDialog::getOpenFileName(this, tr("Chinese translation file"), "./", "Anime4KCPP_GUI_fr_FR.qm");
-    translator->load(filePath);
-    qApp->installTranslator(translator);
-    ui->retranslateUi(this);
-    currLanguage = Language::fr_FR;
+        filePath = QFileDialog::getOpenFileName(this, tr("Translation file"), "./", "Anime4KCPP_GUI_fr_FR.qm");
+    if (translator->load(filePath))
+    {
+        qApp->installTranslator(translator);
+        ui->retranslateUi(this);
+        currLanguage = Language::fr_FR;
+    }
 }
 
 void MainWindow::on_actionEnglish_triggered()
@@ -1480,11 +1520,10 @@ void MainWindow::on_actionSet_FFmpeg_path_triggered()
         ffmpegPath = '"' + tmpFFmpegPath + '"';
         if (!ffmpegPath.contains("ffmpeg", Qt::CaseInsensitive) || !checkFFmpeg())
         {
-            errorHandler("The path is not correct");
+            errorHandler("The path is not correct or failed to check ffmpeg");
             ffmpegPath = oldPath;
         }
     }
-
 }
 
 void MainWindow::on_actionSet_FFmpeg_path_hovered()
@@ -1827,21 +1866,21 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             break;
         case CUDA:
 #ifdef ENABLE_CUDA
-        {
-            Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
-            supported = ret;
-            info = ret();
-            if (supported)
             {
-                acCreator.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
+                Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
+                supported = ret;
+                info = ret();
+                if (supported)
+                {
+                    acCreator.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
+                }
             }
-        }
+            break;
 #else
             errorHandler(ErrorType::CUDA_NOT_SUPPORT);
-            ui->comboBoxGPGPU->setCurrentIndex(GPGPU::OpenCL);
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+            return;
 #endif 
-            break;
         }
 
         if (!supported)
@@ -2036,20 +2075,20 @@ void MainWindow::on_pushButtonForceStop_clicked()
         tr("Do you really want to stop all tasks?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
     {
-        stop = true;
+        stopVideoProcessing = true;
     }
 }
 
 void MainWindow::on_pushButtonPause_clicked()
 {
-    pause = ProcessingState::PAUSE;
+    videoProcessingState = VideoProcessingState::PAUSE;
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(true);
 }
 
 void MainWindow::on_pushButtonContinue_clicked()
 {
-    pause = ProcessingState::CONTINUE;
+    videoProcessingState = VideoProcessingState::CONTINUE;
     ui->pushButtonPause->setEnabled(true);
     ui->pushButtonContinue->setEnabled(false);
 }

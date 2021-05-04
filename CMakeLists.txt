@@ -18,6 +18,8 @@ if(WIN32)
     set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 endif(WIN32)
 
+set(Qt_Version "5" CACHE STRING "5 or 6")
+
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
 option(Build_VapourSynth_plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)

@@ -1,7 +1,7 @@
 project(Anime4KCPP_GUI LANGUAGES CXX)
 
 if(Build_GUI)
-    find_package(Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
+    find_package(Qt${Qt_Version} COMPONENTS Widgets LinguistTools REQUIRED)
     
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -29,7 +29,11 @@ if(Build_GUI)
         list(APPEND SOURCE src/logo.rc)
     endif()
 
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    if(Qt_Version MATCHES "5")
+        qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    else()
+        qt6_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+    endif()
 
     add_definitions(-DENABLE_VIDEO)
 
