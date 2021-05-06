@@ -21,7 +21,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#define ANIME4KCPP_GUI_VERSION "1.12.0"
+#define ANIME4KCPP_GUI_VERSION "1.13.0"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -56,7 +56,7 @@ enum class VideoProcessingState
     NORMAL, PAUSE, PAUSED, CONTINUE
 };
 
-enum GPGPU
+enum class GPGPU
 {
     OpenCL = 0, CUDA = 1
 };

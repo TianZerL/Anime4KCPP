@@ -161,6 +161,9 @@ message(STATUS
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
 "   Enable AVX2 ${Enable_AVX2}\n"
+"   Enable OpenCV DNN ${Enable_OpenCV_DNN}\n"
+"   Enable video ${Enable_Video}\n"
+"   Enable Preview GUI ${Enable_Preview_GUI}\n"
 )
 if(WIN32)
     message(STATUS

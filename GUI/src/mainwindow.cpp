@@ -55,6 +55,10 @@ MainWindow::MainWindow(QWidget* parent)
                                            "Output path",
                                            "State" });
     ui->tableViewProcessingList->setModel(tableModel);
+    //initialize GPGPU model
+#ifdef ENABLE_CUDA
+    ui->comboBoxGPGPU->addItem("CUDA");
+#endif
     //initialize processBar
     ui->progressBarProcessingList->reset();
     ui->progressBarProcessingList->setRange(0, 100);
@@ -608,19 +612,19 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         alpha
     );
 
-    GPGPU GPGPUModel = (GPGPU)ui->comboBoxGPGPU->currentIndex();
+    GPGPU GPGPUModel = static_cast<GPGPU>(ui->comboBoxGPGPU->currentIndex());
     bool GPUMode = ui->checkBoxGPUMode->isChecked();
     bool ACNetMode = ui->checkBoxACNet->isChecked();
 
     if(GPUMode)
         switch (GPGPUModel)
         {
-        case OpenCL:
+        case GPGPU::OpenCL:
             if (ACNetMode)
                 return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
                 return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
-        case CUDA:
+        case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (ACNetMode)
                 return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
@@ -1415,7 +1419,9 @@ void MainWindow::on_pushButtonStart_clicked()
         
         std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
         
-        emit cm.allDone(std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll).count());
+        emit cm.allDone(
+            std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll)
+            .count());
         });
 }
 
@@ -1427,13 +1433,15 @@ void MainWindow::on_actionAbout_triggered()
             "Anime4KCPP GUI\n\n"
             "Anime4KCPP GUI v%1\n"
             "Anime4KCPP core v%2\n\n"
-            "Parallel library: %3\n\n"
-            "Build on %4 %5\n\n"
+            "Qt version: %3\n\n"
+            "Parallel library: %4\n\n"
+            "Build on %5 %6\n\n"
             "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
             "Copyright (c) 2020 TianZerL\n\n"
             "Thanks for:\n"
             "semmyenator (Traditional Chinese,Japanese and French translation)")
-        .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION, PARALLEL_LIBRARY, __DATE__, __TIME__),
+        .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION,
+            QT_VERSION_STR, PARALLEL_LIBRARY, __DATE__, __TIME__),
         QMessageBox::Ok);
 }
 
@@ -1834,14 +1842,14 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
     if ((state == Qt::Checked) && (GPUState == GPUMode::UNINITIALZED))
     {
         unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
-        GPGPU GPGPUModel = (GPGPU)ui->comboBoxGPGPU->currentIndex();
+        GPGPU GPGPUModel = static_cast<GPGPU>(ui->comboBoxGPGPU->currentIndex());
         bool ACNetMode = ui->checkBoxACNet->isChecked();
         bool supported = false;
         std::string info;
 
         switch (GPGPUModel)
         {
-        case OpenCL:
+        case GPGPU::OpenCL:
             {
                 int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
                 bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
@@ -1864,7 +1872,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 }
             }
             break;
-        case CUDA:
+        case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             {
                 Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
@@ -2025,12 +2033,12 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
     ui->spinBoxDeviceID->setEnabled(true);
     ui->pushButtonReleaseGPU->setEnabled(false);
 
-    if (ui->comboBoxGPGPU->currentIndex() == GPGPU::OpenCL)
+    if (static_cast<GPGPU>(ui->comboBoxGPGPU->currentIndex()) == GPGPU::OpenCL)
     {
         ui->spinBoxOpenCLQueueNum->setEnabled(true);
         ui->checkBoxOpenCLParallelIO->setEnabled(true);
     }
-    else if (ui->comboBoxGPGPU->currentIndex() == GPGPU::CUDA)
+    else
     {
         ui->spinBoxOpenCLQueueNum->setEnabled(false);
         ui->checkBoxOpenCLParallelIO->setEnabled(false);
@@ -2100,12 +2108,12 @@ void MainWindow::on_comboBoxGPGPU_currentIndexChanged(int idx)
     ui->spinBoxPlatformID->setEnabled(true);
     ui->spinBoxDeviceID->setEnabled(true);
     ui->pushButtonReleaseGPU->setEnabled(false);
-    if (idx == GPGPU::OpenCL)
+    if (static_cast<GPGPU>(idx) == GPGPU::OpenCL)
     {
         ui->spinBoxOpenCLQueueNum->setEnabled(true);
         ui->checkBoxOpenCLParallelIO->setEnabled(true);
     }
-    else if (idx == GPGPU::CUDA)
+    else
     {
         ui->spinBoxOpenCLQueueNum->setEnabled(false);
         ui->checkBoxOpenCLParallelIO->setEnabled(false);
