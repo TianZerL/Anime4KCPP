@@ -15,25 +15,6 @@
 #include"OpenCLACNet.hpp"
 #include"OpenCLACNetKernel.hpp"
 
-#define CLEAN_KERNEL_AND_THROW_ERROR(err, errCode) \
-{\
-clReleaseMemObject(imageBufferOrg); \
-clReleaseMemObject(imageBufferTmp1); \
-clReleaseMemObject(imageBufferTmp2); \
-clReleaseMemObject(imageBufferDst); \
-clReleaseKernel(kernelConv1To8L1); \
-clReleaseKernel(kernelConv8To8L2); \
-clReleaseKernel(kernelConv8To8L3); \
-clReleaseKernel(kernelConv8To8L4); \
-clReleaseKernel(kernelConv8To8L5); \
-clReleaseKernel(kernelConv8To8L6); \
-clReleaseKernel(kernelConv8To8L7); \
-clReleaseKernel(kernelConv8To8L8); \
-clReleaseKernel(kernelConv8To8L9); \
-clReleaseKernel(kernelConvTranspose8To1L10); \
-throw ACException<ExceptionType::GPU, true>(err, errCode); \
-}
-
 constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
 //init OpenCL arguments
