@@ -1074,6 +1074,13 @@
         <translation>フォルダを選択してください</translation>
     </message>
     <message>
+        <location filename="mainwindow.cpp" line="1898"/>
+        <source>Failed to initialize GPU: </source>
+        <oldsource>Failed to initialize GPU:
+</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="mainwindow.cpp" line="1963"/>
         <source>Benchmark result:</source>
         <translation>性能試験結果:</translation>

@@ -38,7 +38,8 @@ std::string Anime4KCPP::Cuda::cuGetDeviceInfo(const int id)
         id < 0 || id >= cuGetDeviceCount() ? 
         cudaGetDeviceProperties(&deviceProp, 0):
         cudaGetDeviceProperties(&deviceProp, id);
-    CheckCudaErr(err);
+    if (err != cudaSuccess)
+        return "Failed to find CUDA device: " + std::to_string(id);
 
     return
         "Device id: " + std::to_string(id) +

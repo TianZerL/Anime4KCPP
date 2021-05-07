@@ -1074,6 +1074,13 @@
         <translation>请选择一个文件夹</translation>
     </message>
     <message>
+        <location filename="mainwindow.cpp" line="1898"/>
+        <source>Failed to initialize GPU: </source>
+        <oldsource>Failed to initialize GPU:
+</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="mainwindow.cpp" line="1963"/>
         <source>Benchmark result:</source>
         <translation>性能测试结果:</translation>

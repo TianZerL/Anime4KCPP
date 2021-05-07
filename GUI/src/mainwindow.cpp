@@ -1895,7 +1895,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
             QMessageBox::warning(this,
                 tr("Warning"),
-                QString::fromStdString(info),
+                tr("Failed to initialize GPU: ") + QString::fromStdString(info),
                 QMessageBox::Ok);
             GPUState = GPUMode::UNSUPPORT;
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);

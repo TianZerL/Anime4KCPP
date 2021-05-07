@@ -1078,6 +1078,13 @@
         <translation>Veuillez sélectionner un dossier</translation>
     </message>
     <message>
+        <location filename="mainwindow.cpp" line="1898"/>
+        <source>Failed to initialize GPU: </source>
+        <oldsource>Failed to initialize GPU:
+</oldsource>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="mainwindow.cpp" line="1963"/>
         <source>Benchmark result:</source>
         <translation>Résultats des tests de performance:</translation>
