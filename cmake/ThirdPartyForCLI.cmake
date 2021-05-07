@@ -1,8 +1,8 @@
-set(URL https://github.com/TianZerL/cmdline/raw/master/cmdline.h)
+set(CMDLINE_H_URL https://github.com/TianZerL/cmdline/raw/master/cmdline.h)
 set(SHA1_CMDLINE "383044e4fbc6066249d4102a39431d67ed3657c7")
 
-if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline.h)
-    file(SHA1 ${TOP_DIR}/ThirdParty/include/cmdline.h LOCAL_SHA1_CMDLINE)
+if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h)
+    file(SHA1 ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h LOCAL_SHA1_CMDLINE)
 
     if(NOT ${LOCAL_SHA1_CMDLINE} STREQUAL ${SHA1_CMDLINE})
         message("Warning:")
@@ -11,7 +11,7 @@ if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline.h)
         message("   Mismatch SHA1 for cmdline.h, trying to download it...")
 
         file(
-            DOWNLOAD ${URL} ${TOP_DIR}/ThirdParty/include/cmdline.h 
+            DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h 
             SHOW_PROGRESS 
             EXPECTED_HASH SHA1=${SHA1_CMDLINE}
         )
@@ -19,7 +19,7 @@ if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline.h)
     endif()
 else()
     file(
-        DOWNLOAD ${URL} ${TOP_DIR}/ThirdParty/include/cmdline.h 
+        DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h 
         SHOW_PROGRESS 
         EXPECTED_HASH SHA1=${SHA1_CMDLINE}
     )
@@ -34,7 +34,7 @@ if(Use_TBB)
     target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
 endif()
 
-include_directories(${TOP_DIR}/ThirdParty/include)
+include_directories(${TOP_DIR}/ThirdParty/include/cmdline)
 
 target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
 

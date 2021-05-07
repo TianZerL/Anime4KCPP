@@ -1,212 +1,97 @@
 #define DLL
 
-#ifdef __APPLE__
-#include<OpenCL/opencl.h>
+#define CL_HPP_ENABLE_EXCEPTIONS
+#ifdef LEGACY_OPENCL_API
+#define CL_HPP_TARGET_OPENCL_VERSION 120
 #else
-#include<CL/cl.h>
-#endif // SPECIAL OS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+#define CL_HPP_MINIMUM_OPENCL_VERSION 110
+#endif // LEGACY_OPENCL_API
+#include<opencl.hpp>
 
 #include"ACOpenCL.hpp"
 
 Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
 {
-    cl_int err = 0;
-    cl_uint platforms = 0;
-    cl_uint devices = 0;
-    cl_platform_id* platform = nullptr;
-    cl_device_id* device = nullptr;
-
-    size_t platformNameLength = 0;
-    size_t deviceNameLength = 0;
-    char* platformName = nullptr;
-    char* deviceName = nullptr;
-
+    std::vector<cl::Platform> platforms;
+    std::vector<cl::Device> devices;
+    std::vector<int> devicesVector;
     std::ostringstream msg;
 
-    std::vector<int> devicesVector;
-
-    err = clGetPlatformIDs(0, nullptr, &platforms);
-    if (err != CL_SUCCESS || !platforms)
-        return GPUList(0, { 0 }, "No suppoted platform");
-
-    platform = new cl_platform_id[platforms];
-    err = clGetPlatformIDs(platforms, platform, nullptr);
-    if (err != CL_SUCCESS)
+    try
     {
-        delete[] platform;
-        return GPUList(0, { 0 }, "inital platform error");
-    }
+        cl::Platform::get(&platforms);
 
-    for (cl_uint i = 0; i < platforms; i++)
+        const size_t platformsNumber = platforms.size();
+
+        if (platformsNumber == 0)
+        {
+            return GPUList(0, { 0 }, "Failed to list opencl gpu infomation: No supported OpenCL GPU");
+        }
+
+        for (size_t i = 0; i < platformsNumber; i++)
+        {
+            std::string platformName;
+            platforms[i].getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
+            msg << "Platform " << i << ": " << platformName << std::endl;
+            platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+
+            const size_t devicesNumber = devices.size();
+            if (devicesNumber == 0)
+            {
+                msg << " No supported GPU in this platform" << std::endl;
+            }  
+
+            devicesVector.emplace_back(devicesNumber);
+            for (size_t j = 0; j < devicesNumber; j++)
+            {
+                std::string deviceName;
+                devices[j].getInfo<std::string>(CL_DEVICE_NAME, &deviceName);
+                msg << " Device " << j << ": " << deviceName << std::endl;
+            }
+            devices.clear();
+        }
+        return GPUList{ static_cast<const int>(platformsNumber), devicesVector, msg.str() };
+    }
+    catch (const std::exception& e)
     {
-        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
-        if (err != CL_SUCCESS)
-        {
-            delete[] platform;
-            return GPUList(0, { 0 }, "Failed to get platform name length information");
-        }
-
-
-        platformName = new char[platformNameLength];
-        err = clGetPlatformInfo(platform[i], CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            delete[] platformName;
-            delete[] platform;
-            return GPUList(0, { 0 }, "Failed to get platform name information");
-        }
-        msg << "Platform " << i << ": " << platformName << std::endl;
-
-        delete[] platformName;
-
-        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
-        if (err != CL_SUCCESS || !devices)
-        {
-            if (platforms == 1)
-            {
-                delete[] platform;
-                return GPUList(0, { 0 }, "No supported GPU");
-            }
-            devicesVector.push_back(0);
-            msg << " No supported GPU in this platform" << std::endl;
-            continue;
-        }
-
-        devicesVector.push_back(devices);
-
-        device = new cl_device_id[devices];
-        err = clGetDeviceIDs(platform[i], CL_DEVICE_TYPE_GPU, devices, device, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            delete[] device;
-            delete[] platform;
-            return GPUList(0, { 0 }, "inital GPU error");
-        }
-
-        for (cl_uint j = 0; j < devices; j++)
-        {
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
-            if (err != CL_SUCCESS)
-            {
-                delete[] device;
-                delete[] platform;
-                return GPUList(0, { 0 }, "Failed to get device name length information");
-            }
-
-
-            deviceName = new char[deviceNameLength];
-            err = clGetDeviceInfo(device[j], CL_DEVICE_NAME, deviceNameLength, deviceName, nullptr);
-            if (err != CL_SUCCESS)
-            {
-                delete[] deviceName;
-                delete[] device;
-                delete[] platform;
-                return GPUList(0, { 0 }, "Failed to get device name information");
-            }
-            msg << " Device " << j << ": " << deviceName << std::endl;
-
-            delete[] deviceName;
-        }
-        delete[] device;
+        return GPUList{ 0, { 0 }, std::string{ "Failed to list opencl gpu infomation: " } + e.what() };
     }
-    delete[] platform;
-
-    return GPUList(platforms, devicesVector, msg.str());
 }
 
 Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, const int dID)
 {
-    cl_int err = 0;
-    cl_uint platforms = 0;
-    cl_uint devices = 0;
-    cl_platform_id firstPlatform = nullptr;
-    cl_device_id device = nullptr;
+    std::vector<cl::Platform> platforms;
+    std::vector<cl::Device> devices;
+    cl::Platform platform;
+    cl::Device device;
 
-    size_t platformNameLength = 0;
-    size_t deviceNameLength = 0;
-    char* platformName = nullptr;
-    char* deviceName = nullptr;
+    std::string platformName;
+    std::string deviceName;
 
-    err = clGetPlatformIDs(0, nullptr, &platforms);
-    if (err != CL_SUCCESS || !platforms)
-        return GPUInfo(false, "No suppoted platform");
-
-    cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
-    err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
-    if (err != CL_SUCCESS)
+    try
     {
-        delete[] tmpPlatform;
-        return GPUInfo(false, "inital platform error");
+        cl::Platform::get(&platforms);
+        if (pID >= 0 && pID < platforms.size())
+            platform = platforms[pID];
+        else
+            platform = platforms[0];
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        if (dID >= 0 && dID < devices.size())
+            device = devices[dID];
+        else
+            device = devices[0];
+
+        platform.getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
+        device.getInfo<std::string>(CL_DEVICE_NAME, &deviceName);
+
+        return GPUInfo{ true,
+            std::string("Platform: ") + platformName + "\n" + " Device: " + deviceName };
     }
-
-
-    if (pID >= 0 && pID < (int)platforms)
-        firstPlatform = tmpPlatform[pID];
-    else
-        firstPlatform = tmpPlatform[0];
-
-    delete[] tmpPlatform;
-
-    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
-    if (err != CL_SUCCESS)
-        return GPUInfo(false, "Failed to get platform name length information");
-
-    platformName = new char[platformNameLength];
-    err = clGetPlatformInfo(firstPlatform, CL_PLATFORM_NAME, platformNameLength, platformName, nullptr);
-    if (err != CL_SUCCESS)
+    catch (const std::exception& e)
     {
-        delete[] platformName;
-        return GPUInfo(false, "Failed to get platform name information");
+        return GPUInfo{ false, std::string{ "Failed to check OpenCL GPU support: " } + e.what() };
     }
-
-
-    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
-    if (err != CL_SUCCESS || !devices)
-    {
-        delete[] platformName;
-        return GPUInfo(false, "No supported GPU");
-    }
-
-    cl_device_id* tmpDevice = new cl_device_id[devices];
-    err = clGetDeviceIDs(firstPlatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platformName;
-        delete[] tmpDevice;
-        return GPUInfo(false, "No supported GPU");
-    }
-
-    if (dID >= 0 && dID < (int)devices)
-        device = tmpDevice[dID];
-    else
-        device = tmpDevice[0];
-
-    delete[] tmpDevice;
-
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
-    if (err != CL_SUCCESS)
-    {
-        delete[] platformName;
-        return GPUInfo(false, "Failed to get device name length information");
-    }
-
-
-    deviceName = new char[deviceNameLength];
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, deviceNameLength, deviceName, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] deviceName;
-        delete[] platformName;
-        return GPUInfo(false, "Failed to get device name information");
-    }
-
-    GPUInfo ret(true,
-        std::string("Platform: ") + platformName + "\n" + " Device: " + deviceName);
-
-    delete[] deviceName;
-    delete[] platformName;
-
-    return ret;
 }
 
 Anime4KCPP::OpenCL::GPUList::GPUList(

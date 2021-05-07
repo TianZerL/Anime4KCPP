@@ -2,12 +2,14 @@
 
 #include<fstream>
 
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#ifdef __APPLE__
-#include<OpenCL/opencl.h>
+#define CL_HPP_ENABLE_EXCEPTIONS
+#ifdef LEGACY_OPENCL_API
+#define CL_HPP_TARGET_OPENCL_VERSION 120
 #else
-#include<CL/cl.h>
-#endif // SPECIAL OS
+#define CL_HPP_TARGET_OPENCL_VERSION 200
+#define CL_HPP_MINIMUM_OPENCL_VERSION 110
+#endif // LEGACY_OPENCL_API
+#include<opencl.hpp>
 
 #include"ACNetType.hpp"
 #include"OpenCLACNet.hpp"
@@ -36,14 +38,14 @@ constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 
 
 //init OpenCL arguments
 static bool isInitialized = false;
-static cl_context context = nullptr;
+static cl::Program program[Anime4KCPP::ACNetType::TotalTypeCount];
+static cl::Device device;
+static cl::Context context;
+static cl::CommandQueue commandQueueIO;
 static int commandQueueNum = 4;
 static int commandQueueCount = 0;
-static std::vector<cl_command_queue> commandQueueList(commandQueueNum, nullptr);
+static std::vector<cl::CommandQueue> commandQueueList(commandQueueNum);
 static bool parallelIO = false;
-static cl_command_queue commandQueueIO = nullptr;
-static cl_program program[Anime4KCPP::ACNetType::TotalTypeCount] = { nullptr };
-static cl_device_id device = nullptr;
 static int pID = 0;
 static int dID = 0;
 static size_t workGroupSizeLog = 5;
@@ -119,7 +121,6 @@ void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
 {
     if (isInitialized)
     {
-        releaseOpenCL();
         context = nullptr;
         std::fill(commandQueueList.begin(), commandQueueList.end(), nullptr);
         commandQueueIO = nullptr;
@@ -593,2027 +594,398 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleF()
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
+void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
+    constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+    const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+    const std::array<size_t, 2> orgSize =
     {
         (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
         (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
-    const size_t dstSize[2] =
+    const std::array<size_t, 2> dstSize =
     {
         (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
         (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
     };
 
-    //init frame
-    format.image_channel_data_type = CL_UNORM_INT8;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
+    try
     {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
+        cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++];
+        if (commandQueueCount >= commandQueueNum)
+            commandQueueCount = 0;
+
+        //kernel for each thread
+        cl::Kernel kernelConv1To8L1(program[currACNetypeIndex], "conv1To8");
+        cl::Kernel kernelConv8To8L2(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L3(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L4(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L5(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L6(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L7(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L8(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L9(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConvTranspose8To1L10(program[currACNetypeIndex], "convTranspose8To1");
+
+        cl::ImageFormat imageFormat(CL_R, channelType);
+        cl::ImageFormat tmpFormat(CL_RGBA, CL_HALF_FLOAT);
+
+        cl::Image2D imageBufferOrg(context, CL_MEM_READ_ONLY, imageFormat, orgImg.cols, orgImg.rows);
+        cl::Image2DArray imageBufferTmp1(context, CL_MEM_READ_WRITE, tmpFormat, 2, orgImg.cols, orgImg.rows, 0, 0);
+        cl::Image2DArray imageBufferTmp2(context, CL_MEM_READ_WRITE, tmpFormat, 2, orgImg.cols, orgImg.rows, 0, 0);
+        cl::Image2D imageBufferDst(context, CL_MEM_WRITE_ONLY, imageFormat, dstImg.cols, dstImg.rows);
+
+        kernelConv1To8L1.setArg(0, sizeof(cl_mem), &imageBufferOrg);
+        kernelConv1To8L1.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+
+        kernelConv8To8L2.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L2.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L2.setArg(2, sizeof(cl_int), &L2);
+
+        kernelConv8To8L3.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L3.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L3.setArg(2, sizeof(cl_int), &L3);
+
+        kernelConv8To8L4.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L4.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L4.setArg(2, sizeof(cl_int), &L4);
+
+        kernelConv8To8L5.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L5.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L5.setArg(2, sizeof(cl_int), &L5);
+
+        kernelConv8To8L6.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L6.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L6.setArg(2, sizeof(cl_int), &L6);
+
+        kernelConv8To8L7.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L7.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L7.setArg(2, sizeof(cl_int), &L7);
+
+        kernelConv8To8L8.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L8.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L8.setArg(2, sizeof(cl_int), &L8);
+
+        kernelConv8To8L9.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L9.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L9.setArg(2, sizeof(cl_int), &L9);
+
+        kernelConvTranspose8To1L10.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConvTranspose8To1L10.setArg(1, sizeof(cl_mem), &imageBufferDst);
+
+        commandQueue.enqueueWriteImage(imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data);
+        commandQueue.enqueueNDRangeKernel(kernelConv1To8L1, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L2, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L3, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L4, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L5, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L6, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L7, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L8, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L9, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConvTranspose8To1L10, cl::NullRange, cl::NDRange(dstSize[0], dstSize[1]));
+        commandQueue.enqueueReadImage(imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data);
     }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
+    catch (const cl::Error& e)
     {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
+        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL ACNet kernel", e.what(), e.err());
     }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
+}
+
+void Anime4KCPP::OpenCL::ACNet::runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType)
+{
+    constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+    const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
+    const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
+    const std::array<size_t, 2> orgSize =
     {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
+        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+    const std::array<size_t, 2> dstSize =
     {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
+        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
+        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+    };
+
+    try
     {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
+        cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++];
+        if (commandQueueCount >= commandQueueNum)
+            commandQueueCount = 0;
+
+        //kernel for each thread
+        cl::Kernel kernelConv1To8L1(program[currACNetypeIndex], "conv1To8");
+        cl::Kernel kernelConv8To8L2(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L3(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L4(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L5(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L6(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L7(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L8(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConv8To8L9(program[currACNetypeIndex], "conv8To8");
+        cl::Kernel kernelConvTranspose8To1L10(program[currACNetypeIndex], "convTranspose8To1");
+
+        cl::ImageFormat imageFormat(CL_R, channelType);
+        cl::ImageFormat tmpFormat(CL_RGBA, CL_HALF_FLOAT);
+
+        cl::Image2D imageBufferOrg(context, CL_MEM_READ_ONLY, imageFormat, orgImg.cols, orgImg.rows);
+        cl::Image2DArray imageBufferTmp1(context, CL_MEM_READ_WRITE, tmpFormat, 2, orgImg.cols, orgImg.rows, 0, 0);
+        cl::Image2DArray imageBufferTmp2(context, CL_MEM_READ_WRITE, tmpFormat, 2, orgImg.cols, orgImg.rows, 0, 0);
+        cl::Image2D imageBufferDst(context, CL_MEM_WRITE_ONLY, imageFormat, dstImg.cols, dstImg.rows);
+
+        kernelConv1To8L1.setArg(0, sizeof(cl_mem), &imageBufferOrg);
+        kernelConv1To8L1.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+
+        kernelConv8To8L2.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L2.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L2.setArg(2, sizeof(cl_int), &L2);
+
+        kernelConv8To8L3.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L3.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L3.setArg(2, sizeof(cl_int), &L3);
+
+        kernelConv8To8L4.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L4.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L4.setArg(2, sizeof(cl_int), &L4);
+
+        kernelConv8To8L5.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L5.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L5.setArg(2, sizeof(cl_int), &L5);
+
+        kernelConv8To8L6.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L6.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L6.setArg(2, sizeof(cl_int), &L6);
+
+        kernelConv8To8L7.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L7.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L7.setArg(2, sizeof(cl_int), &L7);
+
+        kernelConv8To8L8.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L8.setArg(1, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L8.setArg(2, sizeof(cl_int), &L8);
+
+        kernelConv8To8L9.setArg(0, sizeof(cl_mem), &imageBufferTmp2);
+        kernelConv8To8L9.setArg(1, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConv8To8L9.setArg(2, sizeof(cl_int), &L9);
+
+        kernelConvTranspose8To1L10.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
+        kernelConvTranspose8To1L10.setArg(1, sizeof(cl_mem), &imageBufferDst);
 
 
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
+        std::vector<cl::Event> waitForWriteFinishedEvent(1);
+        std::vector<cl::Event> waitForReadReadyEvent(1);
+        cl::Event& writeFinishedEvent = waitForWriteFinishedEvent.front();
+        cl::Event& readReadyEvent = waitForReadReadyEvent.front();
+        cl::Event  readFinishedEvent;
+
+        commandQueueIO.enqueueWriteImage(imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
+        commandQueue.enqueueNDRangeKernel(kernelConv1To8L1, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]), cl::NullRange, &waitForWriteFinishedEvent);
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L2, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L3, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L4, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L5, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L6, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L7, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L8, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConv8To8L9, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
+        commandQueue.enqueueNDRangeKernel(kernelConvTranspose8To1L10, cl::NullRange, cl::NDRange(dstSize[0], dstSize[1]), cl::NullRange, nullptr, &readReadyEvent);
+        commandQueueIO.enqueueReadImage(imageBufferDst, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
+        readFinishedEvent.wait();
     }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
+    catch (const cl::Error& e)
     {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
+        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL ACNet kernel", e.what(), e.err());
     }
+}
 
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-    //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-    //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-    //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-    //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-    //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-    //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-    //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-    //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-    //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
+void Anime4KCPP::OpenCL::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
+{
+    runKernel(orgImg, dstImg, CL_UNORM_INT8);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
-    {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-    const size_t dstSize[2] =
-    {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-
-    //init frame
-    format.image_channel_data_type = CL_UNORM_INT16;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-    //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-    //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-    //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-    //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-    //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-    //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-    //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-    //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-    //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
+    runKernel(orgImg, dstImg, CL_UNORM_INT16);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
-    {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-    const size_t dstSize[2] =
-    {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-
-    //init frame
-    format.image_channel_data_type = CL_FLOAT;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-    //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-    //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-    //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-    //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-    //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-    //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-    //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-    //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-    //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueue, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueReadImage(commandQueue, imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 0, nullptr, nullptr);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
+    runKernel(orgImg, dstImg, CL_FLOAT);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelPB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_event writeFinishedEvent = nullptr;
-    cl_event readReadyEvent = nullptr;
-    cl_event readFinishedEvent = nullptr;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
-    {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-    const size_t dstSize[2] =
-    {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-
-    //init frame
-    format.image_channel_data_type = CL_UNORM_INT8;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-        //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-        //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-        //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-        //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-        //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-        //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-        //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-        //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-        //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueueIO, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, &writeFinishedEvent);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 1, &writeFinishedEvent, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, &readReadyEvent);
-    clEnqueueReadImage(commandQueueIO, imageBufferDst, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
-
-    clWaitForEvents(1, &readFinishedEvent);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
-
-    clReleaseEvent(writeFinishedEvent);
-    clReleaseEvent(readReadyEvent);
-    clReleaseEvent(readFinishedEvent);
+    runKernelP(orgImg, dstImg, CL_UNORM_INT8);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelPW(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_event writeFinishedEvent = nullptr;
-    cl_event readReadyEvent = nullptr;
-    cl_event readFinishedEvent = nullptr;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
-    {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-    const size_t dstSize[2] =
-    {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-
-    //init frame
-    format.image_channel_data_type = CL_UNORM_INT16;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-    //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-    //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-    //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-    //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-    //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-    //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-    //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-    //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-    //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueueIO, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, &writeFinishedEvent);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 1, &writeFinishedEvent, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, &readReadyEvent);
-    clEnqueueReadImage(commandQueueIO, imageBufferDst, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
-
-    clWaitForEvents(1, &readFinishedEvent);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
-
-    clReleaseEvent(writeFinishedEvent);
-    clReleaseEvent(readReadyEvent);
-    clReleaseEvent(readFinishedEvent);
+    runKernelP(orgImg, dstImg, CL_UNORM_INT16);
 }
 
 void Anime4KCPP::OpenCL::ACNet::runKernelPF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    cl_int err = CL_SUCCESS;
-
-    cl_event writeFinishedEvent = nullptr;
-    cl_event readReadyEvent = nullptr;
-    cl_event readFinishedEvent = nullptr;
-
-    cl_image_format format{};
-    cl_image_format tmpFormat{};
-
-    cl_image_desc dstDesc{};
-    cl_image_desc tmpDesc{};
-    cl_image_desc orgDesc{};
-
-    constexpr size_t orgin[3] = { 0,0,0 };
-    const size_t orgRegion[3] = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-    const size_t dstRegion[3] = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-
-    const size_t orgSize[2] =
-    {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-    const size_t dstSize[2] =
-    {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
-    };
-
-    //init frame
-    format.image_channel_data_type = CL_FLOAT;
-    format.image_channel_order = CL_R;
-
-    tmpFormat.image_channel_data_type = CL_HALF_FLOAT;
-    tmpFormat.image_channel_order = CL_RGBA;
-
-    orgDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    orgDesc.image_height = orgImg.rows;
-    orgDesc.image_width = orgImg.cols;
-    orgDesc.buffer = nullptr;
-
-    tmpDesc.image_type = CL_MEM_OBJECT_IMAGE2D_ARRAY;
-    tmpDesc.image_height = orgImg.rows;
-    tmpDesc.image_width = orgImg.cols;
-    tmpDesc.image_array_size = 2;
-    tmpDesc.buffer = nullptr;
-
-    dstDesc.image_type = CL_MEM_OBJECT_IMAGE2D;
-    dstDesc.image_height = dstImg.rows;
-    dstDesc.image_width = dstImg.cols;
-    dstDesc.buffer = nullptr;
-
-    cl_command_queue commandQueue = commandQueueList[commandQueueCount++];
-    if (commandQueueCount >= commandQueueNum)
-        commandQueueCount = 0;
-
-    cl_kernel kernelConv1To8L1 = clCreateKernel(program[currACNetypeIndex], "conv1To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L1", err);
-    }
-    cl_kernel kernelConv8To8L2 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L2", err);
-    }
-    cl_kernel kernelConv8To8L3 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L3", err);
-    }
-    cl_kernel kernelConv8To8L4 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L4", err);
-    }
-    cl_kernel kernelConv8To8L5 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L5", err);
-    }
-    cl_kernel kernelConv8To8L6 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L6", err);
-    }
-    cl_kernel kernelConv8To8L7 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L7", err);
-    }
-    cl_kernel kernelConv8To8L8 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L8", err);
-    }
-    cl_kernel kernelConv8To8L9 = clCreateKernel(program[currACNetypeIndex], "conv8To8", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L9", err);
-    }
-    cl_kernel kernelConvTranspose8To1L10 = clCreateKernel(program[currACNetypeIndex], "convTranspose8To1", &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseKernel(kernelConv1To8L1);
-        clReleaseKernel(kernelConv8To8L2);
-        clReleaseKernel(kernelConv8To8L3);
-        clReleaseKernel(kernelConv8To8L4);
-        clReleaseKernel(kernelConv8To8L5);
-        clReleaseKernel(kernelConv8To8L6);
-        clReleaseKernel(kernelConv8To8L7);
-        clReleaseKernel(kernelConv8To8L8);
-        clReleaseKernel(kernelConv8To8L9);
-        throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel L10", err);
-    }
-
-
-    cl_mem imageBufferOrg = clCreateImage(context, CL_MEM_READ_ONLY, &format, &orgDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferOrg error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp1 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp1 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferTmp2 = clCreateImage(context, CL_MEM_READ_WRITE, &tmpFormat, &tmpDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferTmp2 error, video memory may be insufficient.", err);
-    }
-
-    cl_mem imageBufferDst = clCreateImage(context, CL_MEM_WRITE_ONLY, &format, &dstDesc, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        clReleaseMemObject(imageBufferOrg);
-        clReleaseMemObject(imageBufferTmp1);
-        clReleaseMemObject(imageBufferTmp2);
-        throw ACException<ExceptionType::GPU, true>("Request imageBufferDst error, video memory may be insufficient.", err);
-    }
-
-    //L1
-    err = clSetKernelArg(kernelConv1To8L1, 0, sizeof(cl_mem), &imageBufferOrg);
-    err |= clSetKernelArg(kernelConv1To8L1, 1, sizeof(cl_mem), &imageBufferTmp1);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L1 clSetKernelArg error", err)
-        //L2
-    err = clSetKernelArg(kernelConv8To8L2, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L2, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L2, 2, sizeof(cl_int), &L2);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L2 clSetKernelArg error", err)
-        //L3
-    err = clSetKernelArg(kernelConv8To8L3, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L3, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L3, 2, sizeof(cl_int), &L3);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L3 clSetKernelArg error", err)
-        //L4
-    err = clSetKernelArg(kernelConv8To8L4, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L4, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L4, 2, sizeof(cl_int), &L4);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L4 clSetKernelArg error", err)
-        //L5
-    err = clSetKernelArg(kernelConv8To8L5, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L5, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L5, 2, sizeof(cl_int), &L5);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L5 clSetKernelArg error", err)
-        //L6
-    err = clSetKernelArg(kernelConv8To8L6, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L6, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L6, 2, sizeof(cl_int), &L6);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L6 clSetKernelArg error", err)
-        //L7
-    err = clSetKernelArg(kernelConv8To8L7, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L7, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L7, 2, sizeof(cl_int), &L7);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L7 clSetKernelArg error", err)
-        //L8
-    err = clSetKernelArg(kernelConv8To8L8, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L8, 1, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L8, 2, sizeof(cl_int), &L8);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L8 clSetKernelArg error", err)
-        //L9
-    err = clSetKernelArg(kernelConv8To8L9, 0, sizeof(cl_mem), &imageBufferTmp2);
-    err |= clSetKernelArg(kernelConv8To8L9, 1, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConv8To8L9, 2, sizeof(cl_int), &L9);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L9 clSetKernelArg error", err)
-        //L10
-    err = clSetKernelArg(kernelConvTranspose8To1L10, 0, sizeof(cl_mem), &imageBufferTmp1);
-    err |= clSetKernelArg(kernelConvTranspose8To1L10, 1, sizeof(cl_mem), &imageBufferDst);
-    if (err != CL_SUCCESS)
-        CLEAN_KERNEL_AND_THROW_ERROR("L10 clSetKernelArg error", err)
-
-    clEnqueueWriteImage(commandQueueIO, imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, 0, nullptr, &writeFinishedEvent);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv1To8L1, 2, nullptr, orgSize, nullptr, 1, &writeFinishedEvent, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L2, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L3, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L4, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L5, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L6, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L7, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L8, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConv8To8L9, 2, nullptr, orgSize, nullptr, 0, nullptr, nullptr);
-    clEnqueueNDRangeKernel(commandQueue, kernelConvTranspose8To1L10, 2, nullptr, dstSize, nullptr, 0, nullptr, &readReadyEvent);
-    clEnqueueReadImage(commandQueueIO, imageBufferDst, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, 1, &readReadyEvent, &readFinishedEvent);
-
-    clWaitForEvents(1, &readFinishedEvent);
-
-    //clean
-    clReleaseMemObject(imageBufferOrg);
-    clReleaseMemObject(imageBufferTmp1);
-    clReleaseMemObject(imageBufferTmp2);
-    clReleaseMemObject(imageBufferDst);
-
-    clReleaseKernel(kernelConv1To8L1);
-    clReleaseKernel(kernelConv8To8L2);
-    clReleaseKernel(kernelConv8To8L3);
-    clReleaseKernel(kernelConv8To8L4);
-    clReleaseKernel(kernelConv8To8L5);
-    clReleaseKernel(kernelConv8To8L6);
-    clReleaseKernel(kernelConv8To8L7);
-    clReleaseKernel(kernelConv8To8L8);
-    clReleaseKernel(kernelConv8To8L9);
-    clReleaseKernel(kernelConvTranspose8To1L10);
-
-    clReleaseEvent(writeFinishedEvent);
-    clReleaseEvent(readReadyEvent);
-    clReleaseEvent(readFinishedEvent);
+    runKernelP(orgImg, dstImg, CL_FLOAT);
 }
 
 void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
 {
-    cl_int err = CL_SUCCESS;
-    cl_uint platforms = 0;
-    cl_uint devices = 0;
-    cl_platform_id currentplatform = nullptr;
+    std::vector<cl::Platform> platforms;
+    std::vector<cl::Device> devices;
 
-    //init platform
-    err = clGetPlatformIDs(0, nullptr, &platforms);
-    if (err != CL_SUCCESS || !platforms)
+    try
     {
-        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL platform", err);
-    }
+        cl::Platform::get(&platforms);
+        ((pID >= 0 && pID < platforms.size()) ? platforms[pID] : platforms[0])
+            .getDevices(CL_DEVICE_TYPE_GPU, &devices);
 
-    cl_platform_id* tmpPlatform = new cl_platform_id[platforms];
-    err = clGetPlatformIDs(platforms, tmpPlatform, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] tmpPlatform;
-        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform", err);
-    }
+        device = (dID >= 0 && dID < devices.size()) ? devices[dID] : devices[0];
 
+        context = cl::Context(device);
 
-    if (pID >= 0 && pID < (int)platforms)
-        currentplatform = tmpPlatform[pID];
-    else
-        currentplatform = tmpPlatform[pID = 0];
-
-    delete[] tmpPlatform;
-
-    //init device
-    err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, 0, nullptr, &devices);
-    if (err != CL_SUCCESS || !devices)
-    {
-        throw ACException<ExceptionType::GPU, true>("Failed to find supported GPU", err);
-    }
-
-    cl_device_id* tmpDevice = new cl_device_id[devices];
-    err = clGetDeviceIDs(currentplatform, CL_DEVICE_TYPE_GPU, devices, tmpDevice, nullptr);
-    if (err != CL_SUCCESS)
-    {
-        delete[] tmpDevice;
-        throw ACException<ExceptionType::GPU, true>("GPU initialization error", err);
-    }
-
-    if (dID >= 0 && dID < (int)devices)
-        device = tmpDevice[dID];
-    else
-        device = tmpDevice[dID = 0];
-
-    delete[] tmpDevice;
-
-    //init context
-    context = clCreateContext(nullptr, 1, &device, nullptr, nullptr, &err);
-    if (err != CL_SUCCESS)
-    {
-        releaseOpenCL();
-        throw ACException<ExceptionType::GPU, true>("Failed to create context", err);
-    }
-
-    //init command queue
-    commandQueueList.resize(commandQueueNum, nullptr);
-#ifndef CL_VERSION_2_0 //for OpenCL SDK older than v2.0 to build
-    for (int i = 0; i < commandQueueNum; i++)
-    {
-        commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
-        if (err != CL_SUCCESS)
+        commandQueueList.resize(commandQueueNum);
+        for (int i = 0; i < commandQueueNum; i++)
         {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+            commandQueueList[i] = cl::CommandQueue(context, device);
         }
-    }
-    if (parallelIO)
-    {
-        commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
-        if (err != CL_SUCCESS)
+        if (parallelIO)
         {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
+            commandQueueIO = cl::CommandQueue(context, device);
         }
-    }
-
-#else
-    for (int i = 0; i < commandQueueNum; i++)
-    {
-#ifdef LEGACY_OPENCL_API
-        commandQueueList[i] = clCreateCommandQueue(context, device, 0, &err);
-#else
-        commandQueueList[i] = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-#endif
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-    }
-    if (parallelIO)
-    {
-#ifdef LEGACY_OPENCL_API
-        commandQueueIO = clCreateCommandQueue(context, device, 0, &err);
-#else
-        commandQueueIO = clCreateCommandQueueWithProperties(context, device, nullptr, &err);
-#endif
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create command queue", err);
-        }
-    }
-#endif
 
 #ifndef BUILT_IN_KERNEL
-    //read kernel files
-    std::string ACNetKernelSourceString[TotalTypeCount];
-    std::string kernelFiles[TotalTypeCount] =
-    { "ACNetKernel.cl", "ACNetHDNL1Kernel.cl" ,"ACNetHDNL2Kernel.cl" ,"ACNetHDNL3Kernel.cl" };
+        //read kernel files
+        std::string ACNetKernelSourceString[TotalTypeCount];
+        std::string kernelFiles[TotalTypeCount] =
+        { "ACNetKernel.cl", "ACNetHDNL1Kernel.cl" ,"ACNetHDNL2Kernel.cl" ,"ACNetHDNL3Kernel.cl" };
 #endif // BUILT_IN_KERNEL
-    const char* ACNetKernelSource[TotalTypeCount];
 
-    cl_kernel tmpKernel = nullptr;
 #ifdef ENABLE_FAST_MATH
-    const char* buildFlags = "-cl-fast-relaxed-math";
+        const char* buildFlags = "-cl-fast-relaxed-math";
 #else
-    const char* buildFlags = nullptr;
+        const char* buildFlags = nullptr;
 #endif // ENABLE_FAST_MATH
-    switch (type)
-    {
-    case CNNType::ACNetHDNL0:
+
+        switch (type)
+        {
+        case CNNType::ACNetHDNL0:
+        {
 #ifndef BUILT_IN_KERNEL
-        //read kernel files
-        ACNetKernelSourceString[HDNL0] = readKernel(kernelFiles[HDNL0]);
+            //read kernel files
+            ACNetKernelSourceString[HDNL0] = readKernel(kernelFiles[HDNL0]);
 #endif // BUILT_IN_KERNEL
-        ACNetKernelSource[HDNL0] = ACNetKernelSourceString[HDNL0].c_str();
-
-        //create program
-        program[HDNL0] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL0], nullptr, &err);
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
-        }
-
-        //build program
-        err = clBuildProgram(program[HDNL0], 1, &device, buildFlags, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(program[HDNL0], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(program[HDNL0], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
-            delete[] buildError;
-            throw exception;
-        }
-
-        tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
-        }
-        err = clGetKernelWorkGroupInfo(tmpKernel, device,
-            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
-        }
-        workGroupSizeLog = std::log2(workGroupSizeLog);
-        break;
-    case CNNType::ACNetHDNL1:
-#ifndef BUILT_IN_KERNEL
-        //read kernel files
-        ACNetKernelSourceString[HDNL1] = readKernel(kernelFiles[HDNL1]);
-#endif // BUILT_IN_KERNEL
-        ACNetKernelSource[HDNL1] = ACNetKernelSourceString[HDNL1].c_str();
-
-        //create program
-        program[HDNL1] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL1], nullptr, &err);
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
-        }
-
-        //build program
-        err = clBuildProgram(program[HDNL1], 1, &device, buildFlags, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(program[HDNL1], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(program[HDNL1], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
-            delete[] buildError;
-            throw exception;
-        }
-
-        tmpKernel = clCreateKernel(program[HDNL1], "conv8To8", &err);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
-        }
-        err = clGetKernelWorkGroupInfo(tmpKernel, device,
-            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
-        }
-        workGroupSizeLog = std::log2(workGroupSizeLog);
-        break;
-    case CNNType::ACNetHDNL2:
-#ifndef BUILT_IN_KERNEL
-        //read kernel files
-        ACNetKernelSourceString[HDNL2] = readKernel(kernelFiles[HDNL2]);
-#endif // BUILT_IN_KERNEL
-        ACNetKernelSource[HDNL2] = ACNetKernelSourceString[HDNL2].c_str();
-
-        //create program
-        program[HDNL2] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL2], nullptr, &err);
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
-        }
-
-        //build program
-        err = clBuildProgram(program[HDNL2], 1, &device, buildFlags, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(program[HDNL2], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(program[HDNL2], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
-            delete[] buildError;
-            throw exception;
-        }
-
-        tmpKernel = clCreateKernel(program[HDNL2], "conv8To8", &err);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
-        }
-        err = clGetKernelWorkGroupInfo(tmpKernel, device,
-            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
-        }
-        workGroupSizeLog = std::log2(workGroupSizeLog);
-        break;
-    case CNNType::ACNetHDNL3:
-#ifndef BUILT_IN_KERNEL
-        //read kernel files
-        ACNetKernelSourceString[HDNL3] = readKernel(kernelFiles[HDNL3]);
-#endif // BUILT_IN_KERNEL
-        ACNetKernelSource[HDNL3] = ACNetKernelSourceString[HDNL3].c_str();
-
-        //create program
-        program[HDNL3] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[HDNL3], nullptr, &err);
-        if (err != CL_SUCCESS)
-        {
-            releaseOpenCL();
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
-        }
-
-        //build program
-        err = clBuildProgram(program[HDNL3], 1, &device, buildFlags, nullptr, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            size_t buildErrorSize = 0;
-            clGetProgramBuildInfo(program[HDNL3], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-            char* buildError = new char[buildErrorSize];
-            clGetProgramBuildInfo(program[HDNL3], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-            releaseOpenCL();
-            ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
-            delete[] buildError;
-            throw exception;
-        }
-
-        tmpKernel = clCreateKernel(program[HDNL3], "conv8To8", &err);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
-        }
-        err = clGetKernelWorkGroupInfo(tmpKernel, device,
-            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
-        }
-        workGroupSizeLog = std::log2(workGroupSizeLog);
-        break;
-    case CNNType::Default:
-#ifndef BUILT_IN_KERNEL
-        //read kernel files
-        for (int i = HDNL0; i < TotalTypeCount; i++)
-            ACNetKernelSourceString[i] = readKernel(kernelFiles[i]);
-#endif // BUILT_IN_KERNEL
-        for (int i = HDNL0; i < TotalTypeCount; i++)
-        {
-            ACNetKernelSource[i] = ACNetKernelSourceString[i].c_str();
-
-            //create programACNet
-            program[i] = clCreateProgramWithSource(context, 1, &ACNetKernelSource[i], nullptr, &err);
-            if (err != CL_SUCCESS)
+            program[HDNL0] = cl::Program(context, ACNetKernelSourceString[HDNL0]);
+            try
             {
-                releaseOpenCL();
-                throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL program", err);
+                program[HDNL0].build(device, buildFlags);
+            }
+            catch (const cl::BuildError& e)
+            {
+                throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
             }
 
-            //build programACNet
-            err = clBuildProgram(program[i], 1, &device, buildFlags, nullptr, nullptr);
-            if (err != CL_SUCCESS)
-            {
-                size_t buildErrorSize = 0;
-                clGetProgramBuildInfo(program[i], device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &buildErrorSize);
-                char* buildError = new char[buildErrorSize];
-                clGetProgramBuildInfo(program[i], device, CL_PROGRAM_BUILD_LOG, buildErrorSize, buildError, nullptr);
-                releaseOpenCL();
-                ACException<ExceptionType::GPU, true> exception("Kernel build error", buildError, err);
-                delete[] buildError;
-                throw exception;
-            }
+            cl::Kernel tmpKernel{ program[HDNL0], "conv8To8" };
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
+            workGroupSizeLog = std::log2(workGroupSizeLog);
         }
-
-        tmpKernel = clCreateKernel(program[HDNL0], "conv8To8", &err);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to create OpenCL kernel for getting workGroupSizeLog", err);
-        }
-        err = clGetKernelWorkGroupInfo(tmpKernel, device,
-            CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(size_t), (void*)&workGroupSizeLog, nullptr);
-        if (err != CL_SUCCESS)
-        {
-            clReleaseKernel(tmpKernel);
-            throw ACException<ExceptionType::GPU, true>("Failed to get workGroupSize", err);
-        }
-        workGroupSizeLog = std::log2(workGroupSizeLog);
         break;
-    }
-    clReleaseKernel(tmpKernel);
-}
+        case CNNType::ACNetHDNL1:
+        {
+#ifndef BUILT_IN_KERNEL
+            //read kernel files
+            ACNetKernelSourceString[HDNL1] = readKernel(kernelFiles[HDNL1]);
+#endif // BUILT_IN_KERNEL
+            program[HDNL1] = cl::Program(context, ACNetKernelSourceString[HDNL1]);
+            try
+            {
+                program[HDNL1].build(device, buildFlags);
+            }
+            catch (const cl::BuildError& e)
+            {
+                throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
+            }
 
-void Anime4KCPP::OpenCL::ACNet::releaseOpenCL() noexcept
-{
-    for (auto& commandQueue : commandQueueList)
-    {
-        if (commandQueue != nullptr)
-            clReleaseCommandQueue(commandQueue);
+            cl::Kernel tmpKernel{ program[HDNL1], "conv8To8" };
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
+            workGroupSizeLog = std::log2(workGroupSizeLog);
+        }
+            break;
+        case CNNType::ACNetHDNL2:
+        {
+#ifndef BUILT_IN_KERNEL
+            //read kernel files
+            ACNetKernelSourceString[HDNL2] = readKernel(kernelFiles[HDNL2]);
+#endif // BUILT_IN_KERNEL
+            program[HDNL2] = cl::Program(context, ACNetKernelSourceString[HDNL2]);
+            try
+            {
+                program[HDNL2].build(device, buildFlags);
+            }
+            catch (const cl::BuildError& e)
+            {
+                throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
+            }
+
+            cl::Kernel tmpKernel{ program[HDNL2], "conv8To8" };
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
+            workGroupSizeLog = std::log2(workGroupSizeLog);
+        }
+            break;
+        case CNNType::ACNetHDNL3:
+        {
+#ifndef BUILT_IN_KERNEL
+            //read kernel files
+            ACNetKernelSourceString[HDNL3] = readKernel(kernelFiles[HDNL3]);
+#endif // BUILT_IN_KERNEL
+            program[HDNL3] = cl::Program(context, ACNetKernelSourceString[HDNL3]);
+            try
+            {
+                program[HDNL3].build(device, buildFlags);
+            }
+            catch (const cl::BuildError& e)
+            {
+                throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
+            }
+
+            cl::Kernel tmpKernel{ program[HDNL3], "conv8To8" };
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
+            workGroupSizeLog = std::log2(workGroupSizeLog);
+        }
+            break;
+        case CNNType::Default:
+        default:
+        {
+#ifndef BUILT_IN_KERNEL
+            //read kernel files
+            for (int i = HDNL0; i < TotalTypeCount; i++)
+                ACNetKernelSourceString[i] = readKernel(kernelFiles[i]);
+#endif // BUILT_IN_KERNEL
+            for (int i = HDNL0; i < TotalTypeCount; i++)
+            {
+                program[i] = cl::Program(context, ACNetKernelSourceString[i]);
+                try
+                {
+                    program[i].build(device, buildFlags);
+                }
+                catch (const cl::BuildError& e)
+                {
+                    throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
+                }
+            }
+
+            cl::Kernel tmpKernel{ program[HDNL0], "conv8To8" };
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
+            workGroupSizeLog = std::log2(workGroupSizeLog);
+        }
+            break;
+        }
     }
-    if (commandQueueIO != nullptr)
-        clReleaseCommandQueue(commandQueueIO);
-    for (int i = HDNL0; i < TotalTypeCount; i++)
+    catch (const cl::Error& e)
     {
-        if (program[i] != nullptr)
-            clReleaseProgram(program[i]);
+        throw ACException<ExceptionType::GPU, true>("Failed to initialize OpenCL", e.what(), e.err());
     }
-    if (context != nullptr)
-        clReleaseContext(context);
 }
 
 std::string Anime4KCPP::OpenCL::ACNet::readKernel(const std::string& fileName)
@@ -2635,49 +1007,9 @@ Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() noexce
 
 std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
 {
-    cl_int err = 0;
-    cl_platform_id platform = nullptr;
-    cl_device_id device = nullptr;
-
-    size_t platformNameLength = 0;
-    size_t deviceNameLength = 0;
-
-    auto tmpPlatform = std::make_unique<cl_platform_id[]>(static_cast<size_t>(pID) + 1);
-    err = clGetPlatformIDs(pID+1, tmpPlatform.get(), nullptr);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL platforms.", err);
-
-    platform = tmpPlatform[pID];
-
-    err = clGetPlatformInfo(platform, CL_PLATFORM_NAME, 0, nullptr, &platformNameLength);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform information.", err);
-
-    auto platformName = std::make_unique<char[]>(platformNameLength);
-    err = clGetPlatformInfo(platform, CL_PLATFORM_NAME, platformNameLength, platformName.get(), nullptr);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL platform information.", err);
-
-    auto tmpDevice = std::make_unique<cl_device_id[]>(static_cast<size_t>(dID) + 1);
-    err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, dID + 1, tmpDevice.get(), nullptr);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to find OpenCL devices.", err);
-
-    device = tmpDevice[dID];
-
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, 0, nullptr, &deviceNameLength);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL devices information.", err);
-
-    auto deviceName = std::make_unique<char[]>(deviceNameLength);
-    err = clGetDeviceInfo(device, CL_DEVICE_NAME, deviceNameLength, deviceName.get(), nullptr);
-    if (err != CL_SUCCESS)
-        throw ACException<ExceptionType::GPU, true>("Failed to get OpenCL devices information.", err);
-
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << std::endl
         << "Current OpenCL devices:" << std::endl
-        << " Platform " + std::to_string(pID) + ": " + platformName.get() << std::endl
-        << "  Device " + std::to_string(dID) + ": " + deviceName.get();
+        << " " + device.getInfo<CL_DEVICE_NAME>();
     return oss.str();
 }

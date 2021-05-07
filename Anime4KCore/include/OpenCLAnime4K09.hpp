@@ -38,6 +38,9 @@ private:
     virtual Processor::Type getProcessorType() noexcept override;
     virtual std::string getProcessorInfo() override;
 
+    void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType);
+    void runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType);
+
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
@@ -47,7 +50,6 @@ private:
     void runKernelPF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
     static void initOpenCL();
-    static void releaseOpenCL() noexcept;
     static std::string readKernel(const std::string &fileName);
 private:
     double nWidth;
