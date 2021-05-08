@@ -180,16 +180,8 @@ endif()
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-if (Enable_CUDA)
+if(Enable_CUDA)
     add_definitions(-DENABLE_CUDA)
-    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
-        enable_language(CUDA)
-        if(${CMAKE_CUDA_COMPILER_VERSION} LESS 11.0)
-            set(CMAKE_CUDA_ARCHITECTURES 35-real 50-real 52-real 60-real 61-real 70-real 75-real)
-        else()
-            set(CMAKE_CUDA_ARCHITECTURES 35-real 50-real 52-real 60-real 61-real 70-real 75-real 80-real)
-        endif()  
-    endif()
 endif()
 
 macro(SUBDIRLIST result curdir)

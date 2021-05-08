@@ -9,7 +9,7 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 200
 #endif // LEGACY_OPENCL_API
 #define CL_HPP_MINIMUM_OPENCL_VERSION 110
-#include<opencl.hpp>
+#include<CL/opencl.hpp>
 
 #include"ACNetType.hpp"
 #include"OpenCLACNet.hpp"

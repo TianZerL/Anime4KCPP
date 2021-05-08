@@ -1,8 +1,8 @@
 set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/master/include/CL/opencl.hpp)
 set(SHA1_OPENCL_HPP "852d7cad4d5f479104c6426e6a837bf547ad033f")
 
-if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp)
-    file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp LOCAL_OPENCL_HPP)
+if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)
+    file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_OPENCL_HPP)
 
     if(NOT ${LOCAL_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
         message("Warning:")
@@ -11,7 +11,7 @@ if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp)
         message("   Mismatch SHA1 for opencl.hpp, trying to download it...")
 
         file(
-            DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp 
+            DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
             SHOW_PROGRESS 
             EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
         )
@@ -19,7 +19,7 @@ if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp)
     endif()
 else()
     file(
-        DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/opencl.hpp 
+        DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
         SHOW_PROGRESS 
         EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
     )
@@ -35,7 +35,10 @@ if(Use_TBB)
 endif()
 
 if(Enable_CUDA)
-    target_link_libraries (${PROJECT_NAME} CUDA_Module)
+    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
+        enable_language(CUDA)
+    endif()
+    target_link_libraries(${PROJECT_NAME} CUDA_Module)
 endif()
 
 if(Enable_NCNN)
