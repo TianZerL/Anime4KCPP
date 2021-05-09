@@ -9,6 +9,7 @@
 #endif
 
 #include <cuda_runtime.h>
+#include <cuda_fp16.h>
 #include <surface_functions.h>
 #include <texture_fetch_functions.h>
 

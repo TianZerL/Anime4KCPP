@@ -70,23 +70,26 @@ __global__ static void conv1To8(
     const float bc = tex2D<float>(srcImg, x, y + 1);
     const float br = tex2D<float>(srcImg, x + 1, y + 1);
 
-    float4 c1234 = make_float4(
+    const float4 fc1234 = make_float4(
         RELU(CHANNEL1TO8(0)),
         RELU(CHANNEL1TO8(1)),
         RELU(CHANNEL1TO8(2)),
         RELU(CHANNEL1TO8(3)));
-    float4 c5678 = make_float4(
+    const float4 fc5678 = make_float4(
         RELU(CHANNEL1TO8(4)),
         RELU(CHANNEL1TO8(5)),
         RELU(CHANNEL1TO8(6)),
         RELU(CHANNEL1TO8(7)));
 
-    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+    half c1234[4] = {__float2half(fc1234.x), __float2half(fc1234.y), __float2half(fc1234.z), __float2half(fc1234.w)};
+    half c5678[4] = {__float2half(fc5678.x), __float2half(fc5678.y), __float2half(fc5678.z), __float2half(fc5678.w)};
+
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
 }
 
 __global__ static void conv8To8(
-    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H, int L)
 {
     const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
@@ -95,47 +98,47 @@ __global__ static void conv8To8(
     if (x >= W || y >= H)
         return;
 
-    float4 tl1, tc1, tr1, ml1, mc1, mr1, bl1, bc1, br1;
-    float4 tl2, tc2, tr2, ml2, mc2, mr2, bl2, bc2, br2;
+    const float4 tl1 = tex2DLayered<float4>(srcImg, x - 1, y - 1, 0);
+    const float4 tc1 = tex2DLayered<float4>(srcImg, x, y - 1, 0);
+    const float4 tr1 = tex2DLayered<float4>(srcImg, x + 1, y - 1, 0);
+    const float4 ml1 = tex2DLayered<float4>(srcImg, x - 1, y, 0);
+    const float4 mc1 = tex2DLayered<float4>(srcImg, x, y, 0);
+    const float4 mr1 = tex2DLayered<float4>(srcImg, x + 1, y, 0);
+    const float4 bl1 = tex2DLayered<float4>(srcImg, x - 1, y + 1, 0);
+    const float4 bc1 = tex2DLayered<float4>(srcImg, x, y + 1, 0);
+    const float4 br1 = tex2DLayered<float4>(srcImg, x + 1, y + 1, 0);
 
-    surf2DLayeredread(&tl1, srcImg, __umul24(sizeof(mc1), x - 1), y - 1, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&tc1, srcImg, __umul24(sizeof(mc1), x), y - 1, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&tr1, srcImg, __umul24(sizeof(mc1), x + 1), y - 1, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&ml1, srcImg, __umul24(sizeof(mc1), x - 1), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), x), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&mr1, srcImg, __umul24(sizeof(mc1), x + 1), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&bl1, srcImg, __umul24(sizeof(mc1), x - 1), y + 1, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&bc1, srcImg, __umul24(sizeof(mc1), x), y + 1, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&br1, srcImg, __umul24(sizeof(mc1), x + 1), y + 1, 0, cudaBoundaryModeZero);
+    const float4 tl2 = tex2DLayered<float4>(srcImg, x - 1, y - 1, 1);
+    const float4 tc2 = tex2DLayered<float4>(srcImg, x, y - 1, 1);
+    const float4 tr2 = tex2DLayered<float4>(srcImg, x + 1, y - 1, 1);
+    const float4 ml2 = tex2DLayered<float4>(srcImg, x - 1, y, 1);
+    const float4 mc2 = tex2DLayered<float4>(srcImg, x, y, 1);
+    const float4 mr2 = tex2DLayered<float4>(srcImg, x + 1, y, 1);
+    const float4 bl2 = tex2DLayered<float4>(srcImg, x - 1, y + 1, 1);
+    const float4 bc2 = tex2DLayered<float4>(srcImg, x, y + 1, 1);
+    const float4 br2 = tex2DLayered<float4>(srcImg, x + 1, y + 1, 1);
 
-    surf2DLayeredread(&tl2, srcImg, __umul24(sizeof(mc2), x - 1), y - 1, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&tc2, srcImg, __umul24(sizeof(mc2), x), y - 1, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&tr2, srcImg, __umul24(sizeof(mc2), x + 1), y - 1, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&ml2, srcImg, __umul24(sizeof(mc2), x - 1), y, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), x), y, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&mr2, srcImg, __umul24(sizeof(mc2), x + 1), y, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&bl2, srcImg, __umul24(sizeof(mc2), x - 1), y + 1, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&bc2, srcImg, __umul24(sizeof(mc2), x), y + 1, 1, cudaBoundaryModeZero);
-    surf2DLayeredread(&br2, srcImg, __umul24(sizeof(mc2), x + 1), y + 1, 1, cudaBoundaryModeZero);
-
-    float4 c1234 = make_float4(
+    const float4 fc1234 = make_float4(
         RELU(CHANNEL8TO8(0)),
         RELU(CHANNEL8TO8(1)),
         RELU(CHANNEL8TO8(2)),
         RELU(CHANNEL8TO8(3)));
-    float4 c5678 = make_float4(
+    const float4 fc5678 = make_float4(
         RELU(CHANNEL8TO8(4)),
         RELU(CHANNEL8TO8(5)),
         RELU(CHANNEL8TO8(6)),
         RELU(CHANNEL8TO8(7)));
 
-    surf2DLayeredwrite(c1234, dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredwrite(c5678, dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+    half c1234[4] = {__float2half(fc1234.x), __float2half(fc1234.y), __float2half(fc1234.z), __float2half(fc1234.w)};
+    half c5678[4] = {__float2half(fc5678.x), __float2half(fc5678.y), __float2half(fc5678.z), __float2half(fc5678.w)};
+
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
 }
 
 template <typename T>
 __global__ static void convTranspose8To1(
-    cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
+    cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H)
 {
     const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
@@ -144,28 +147,25 @@ __global__ static void convTranspose8To1(
     if (x >= W || y >= H)
         return;
 
-    int index = (y & 1) * 2 + (x & 1);
+    const int index = (y & 1) * 2 + (x & 1);
 
-    float4 mc1, mc2;
     const unsigned int srcX = x / 2, srcY = y / 2;
-    surf2DLayeredread(&mc1, srcImg, __umul24(sizeof(mc1), srcX), srcY, 0, cudaBoundaryModeZero);
-    surf2DLayeredread(&mc2, srcImg, __umul24(sizeof(mc2), srcX), srcY, 1, cudaBoundaryModeZero);
+
+    const float4 mc1 = tex2DLayered<float4>(srcImg, srcX, srcY, 0);
+    const float4 mc2 = tex2DLayered<float4>(srcImg, srcX, srcY, 1);
 
     constexpr float scale = PixelValue<T>::max();
     constexpr float offset = std::is_floating_point<T>::value ? 0.0f : 0.5f;
 
     const T c = clamp(
                     mc1.x * kernelsL10[0 + index] +
-                        mc1.y * kernelsL10[4 + index] +
-                        mc1.z * kernelsL10[8 + index] +
-                        mc1.w * kernelsL10[12 + index] +
-                        mc2.x * kernelsL10[16 + index] +
-                        mc2.y * kernelsL10[20 + index] +
-                        mc2.z * kernelsL10[24 + index] +
-                        mc2.w * kernelsL10[28 + index],
-                    0.0f, 1.0f) *
-                    scale +
-                offset;
+                    mc1.y * kernelsL10[4 + index] +
+                    mc1.z * kernelsL10[8 + index] +
+                    mc1.w * kernelsL10[12 + index] +
+                    mc2.x * kernelsL10[16 + index] +
+                    mc2.y * kernelsL10[20 + index] +
+                    mc2.z * kernelsL10[24 + index] +
+                    mc2.w * kernelsL10[28 + index], 0.0f, 1.0f) * scale + offset;
 
     surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
 }
@@ -184,7 +184,7 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     cudaStreamCreate(&stream);
 
     cudaChannelFormatDesc inoutChannelDesc = cudaCreateChannelDesc<T>();
-    cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
+    cudaChannelFormatDesc tmpChannelDesc = cudaCreateChannelDescHalf4();
     cudaExtent extent = make_cudaExtent(param->orgW, param->orgH, 2);
 
     const int W = 2 * param->orgW, H = 2 * param->orgH;
@@ -216,6 +216,7 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
 
     texDesc.addressMode[0] = cudaAddressModeBorder;
     texDesc.addressMode[1] = cudaAddressModeBorder;
+    texDesc.addressMode[2] = cudaAddressModeBorder;
     texDesc.readMode = std::is_floating_point<T>::value ? cudaReadModeElementType : cudaReadModeNormalizedFloat;
     texDesc.normalizedCoords = 0;
 
@@ -226,14 +227,25 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     err = cudaCreateTextureObject(&inTex, &resDesc, &texDesc, NULL);
     CheckCudaErr(err);
 
+    if(!std::is_floating_point<T>::value)
+        texDesc.readMode = cudaReadModeElementType;
+
     resDesc.res.array.array = cuArray1;
     cudaSurfaceObject_t surf1 = 0;
     err = cudaCreateSurfaceObject(&surf1, &resDesc);
     CheckCudaErr(err);
 
+    cudaTextureObject_t tex1 = 0;
+    err = cudaCreateTextureObject(&tex1, &resDesc, &texDesc, NULL);
+    CheckCudaErr(err);
+
     resDesc.res.array.array = cuArray2;
     cudaSurfaceObject_t surf2 = 0;
     err = cudaCreateSurfaceObject(&surf2, &resDesc);
+    CheckCudaErr(err);
+
+    cudaTextureObject_t tex2 = 0;
+    err = cudaCreateTextureObject(&tex2, &resDesc, &texDesc, NULL);
     CheckCudaErr(err);
 
     resDesc.res.array.array = cuOutputArray;
@@ -255,15 +267,15 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
         (param->orgH * 2 + dimBlock.y - 1) / dimBlock.y);
 
     conv1To8<<<dimGrid, dimBlock, 0, stream>>>(inTex, surf1, param->orgW, param->orgH);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf1, surf2, param->orgW, param->orgH, L2);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf2, surf1, param->orgW, param->orgH, L3);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf1, surf2, param->orgW, param->orgH, L4);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf2, surf1, param->orgW, param->orgH, L5);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf1, surf2, param->orgW, param->orgH, L6);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf2, surf1, param->orgW, param->orgH, L7);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf1, surf2, param->orgW, param->orgH, L8);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(surf2, surf1, param->orgW, param->orgH, L9);
-    convTranspose8To1<T><<<dimGridout, dimBlock, 0, stream>>>(surf1, outSurf, W, H);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L2);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L3);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L4);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L5);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L6);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L7);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L8);
+    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L9);
+    convTranspose8To1<T><<<dimGridout, dimBlock, 0, stream>>>(tex1, outSurf, W, H);
 
     err = cudaHostRegister(outputData, sizeof(T) * W * H, cudaHostRegisterDefault);
     CheckCudaErr(err);
@@ -284,7 +296,9 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
 
     cudaDestroyTextureObject(inTex);
     cudaDestroySurfaceObject(surf1);
+    cudaDestroyTextureObject(tex1);
     cudaDestroySurfaceObject(surf2);
+    cudaDestroyTextureObject(tex2);
     cudaDestroySurfaceObject(outSurf);
 
     cudaFreeArray(cuInputArray);
