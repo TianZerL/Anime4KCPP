@@ -33,20 +33,103 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
-    cuRunKernelACNetB(orgImg.data, dstImg.data, &cuParam);
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step};
+    if (param.HDN)
+    {
+        switch (param.HDNLevel)
+        {
+        case 1:
+            cuRunKernelACNetHDN1B(orgImg.data, dstImg.data, &cuParam);
+            break;
+        case 2:
+            cuRunKernelACNetHDN2B(orgImg.data, dstImg.data, &cuParam);
+            break;
+        case 3:
+            cuRunKernelACNetHDN3B(orgImg.data, dstImg.data, &cuParam);
+            break;
+        default:
+            cuRunKernelACNetHDN1B(orgImg.data, dstImg.data, &cuParam);
+            break;
+        }
+    }
+    else
+    {
+        cuRunKernelACNetHDN0B(orgImg.data, dstImg.data, &cuParam);
+    }
 }
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
-    cuRunKernelACNetW(reinterpret_cast<const unsigned short int*>(orgImg.data), reinterpret_cast<unsigned short int*>(dstImg.data), &cuParam);
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step };
+    if (param.HDN)
+    {
+        switch (param.HDNLevel)
+        {
+        case 1:
+            cuRunKernelACNetHDN1W(
+                reinterpret_cast<const unsigned short*>(orgImg.data), 
+                reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
+            break;
+        case 2:
+            cuRunKernelACNetHDN2W(
+                reinterpret_cast<const unsigned short*>(orgImg.data), 
+                reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
+            break;
+        case 3:
+            cuRunKernelACNetHDN3W(
+                reinterpret_cast<const unsigned short*>(orgImg.data),
+                reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
+            break;
+        default:
+            cuRunKernelACNetHDN1W(
+                reinterpret_cast<const unsigned short*>(orgImg.data),
+                reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
+            break;
+        }
+    }
+    else
+    {
+        cuRunKernelACNetHDN0W(
+            reinterpret_cast<const unsigned short*>(orgImg.data),
+            reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
+    }
 }
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step,(param.HDN ? param.HDNLevel : 0) };
-    cuRunKernelACNetF(reinterpret_cast<const float *>(orgImg.data), reinterpret_cast<float*>(dstImg.data), &cuParam);
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step };
+    if (param.HDN)
+    {
+        switch (param.HDNLevel)
+        {
+        case 1:
+            cuRunKernelACNetHDN1F(
+                reinterpret_cast<const float*>(orgImg.data),
+                reinterpret_cast<float*>(dstImg.data), &cuParam);
+            break;
+        case 2:
+            cuRunKernelACNetHDN2F(
+                reinterpret_cast<const float*>(orgImg.data),
+                reinterpret_cast<float*>(dstImg.data), &cuParam);
+            break;
+        case 3:
+            cuRunKernelACNetHDN3F(
+                reinterpret_cast<const float*>(orgImg.data),
+                reinterpret_cast<float*>(dstImg.data), &cuParam);
+            break;
+        default:
+            cuRunKernelACNetHDN1F(
+                reinterpret_cast<const float*>(orgImg.data),
+                reinterpret_cast<float*>(dstImg.data), &cuParam);
+            break;
+        }
+    }
+    else
+    {
+        cuRunKernelACNetHDN0F(
+            reinterpret_cast<const float*>(orgImg.data),
+            reinterpret_cast<float*>(dstImg.data), &cuParam);
+    }
 }
 
 void Anime4KCPP::Cuda::ACNet::processYUVImageB()

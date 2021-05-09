@@ -210,13 +210,13 @@ extern "C"
         int rowsV, int colsV, size_t strideV, unsigned char* v);
     AC_DLL ac_error AC_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
     AC_DLL ac_error AC_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data);
-    AC_DLL ac_error AC_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, ac_bool inputAsYUV444);
+    AC_DLL ac_error AC_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, ac_bool inputAsYUV444);
     AC_DLL ac_error AC_API acLoadImageYUVPlanarW(ac_instance instance, 
-        int rowsY, int colsY, size_t strideY, unsigned short int* y,
-        int rowsU, int colsU, size_t strideU, unsigned short int* u,
-        int rowsV, int colsV, size_t strideV, unsigned short int* v);
-    AC_DLL ac_error AC_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_DLL ac_error AC_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short int* data);
+        int rowsY, int colsY, size_t strideY, unsigned short* y,
+        int rowsU, int colsU, size_t strideU, unsigned short* u,
+        int rowsV, int colsV, size_t strideV, unsigned short* v);
+    AC_DLL ac_error AC_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_DLL ac_error AC_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data);
     AC_DLL ac_error AC_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, size_t stride, float* r, float* g, float* b, ac_bool inputAsYUV444);
     AC_DLL ac_error AC_API acLoadImageYUVPlanarF(ac_instance instance, 
         int rowsY, int colsY, size_t strideY, float* y,

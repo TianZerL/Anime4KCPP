@@ -547,7 +547,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             if (tmpData.vi.format->bitsPerSample == 8)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned short>, Anime4KCPPFree, fmParallel, 0, data, core);
     }
     else if (tmpData.vi.format->colorFamily == cmGray)
     {
@@ -557,7 +557,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             if (tmpData.vi.format->bitsPerSample == 8)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned short>, Anime4KCPPFree, fmParallel, 0, data, core);
     }
     else
     {
@@ -567,7 +567,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             if (tmpData.vi.format->bitsPerSample == 8)
                 vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned char>, Anime4KCPPFree, fmParallel, 0, data, core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned short int>, Anime4KCPPFree, fmParallel, 0, data, core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned short>, Anime4KCPPFree, fmParallel, 0, data, core);
     }
 }
 

@@ -265,7 +265,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short int* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)
     {
@@ -405,7 +405,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     checkAlphaChannel = false;
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, bool inputAsYUV444)
 {
     if (inputAsYUV444)
     {
@@ -486,9 +486,9 @@ void Anime4KCPP::AC::loadImage(
 }
 
 void Anime4KCPP::AC::loadImage(
-    int rowsY, int colsY, size_t strideY, unsigned short int* y,
-    int rowsU, int colsU, size_t strideU, unsigned short int* u,
-    int rowsV, int colsV, size_t strideV, unsigned short int* v) 
+    int rowsY, int colsY, size_t strideY, unsigned short* y,
+    int rowsU, int colsU, size_t strideU, unsigned short* u,
+    int rowsV, int colsV, size_t strideV, unsigned short* v) 
 {
     dstY = orgY = cv::Mat(rowsY, colsY, CV_16UC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u, strideU);

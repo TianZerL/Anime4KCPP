@@ -84,7 +84,7 @@ inline void Anime4KCPP::Cuda::Anime4K09::runKernelW(const cv::Mat& orgImg, cv::M
         param.passes, param.pushColorCount,
         static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
     };
-    cuRunKernelAnime4K09W(reinterpret_cast<const unsigned short int*>(orgImg.data), reinterpret_cast<unsigned short int*>(dstImg.data), &cuParam);
+    cuRunKernelAnime4K09W(reinterpret_cast<const unsigned short*>(orgImg.data), reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
 }
 
 inline void Anime4KCPP::Cuda::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)

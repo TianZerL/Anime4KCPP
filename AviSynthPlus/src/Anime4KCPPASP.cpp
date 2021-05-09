@@ -139,7 +139,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         case 8:
             return FilterGrayscale<unsigned char>(src, dst);
         case 16:
-            return FilterGrayscale<unsigned short int>(src, dst);
+            return FilterGrayscale<unsigned short>(src, dst);
         case 32:
             return FilterGrayscale<float>(src, dst);
         }
@@ -151,7 +151,7 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         case 8:
             return FilterYUV<unsigned char>(src, dst);
         case 16:
-            return FilterYUV<unsigned short int>(src, dst);
+            return FilterYUV<unsigned short>(src, dst);
         case 32:
             return FilterYUV<float>(src, dst);
         }

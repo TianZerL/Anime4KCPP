@@ -56,15 +56,15 @@ namespace Anime4KCPP
 
     typedef float* ChanF;
     typedef unsigned char* ChanB;
-    typedef unsigned short int* ChanW;
+    typedef unsigned short* ChanW;
 
     typedef float* PixelF;
     typedef unsigned char* PixelB;
-    typedef unsigned short int* PixelW;
+    typedef unsigned short* PixelW;
 
     typedef float* LineF;
     typedef unsigned char* LineB;
-    typedef unsigned short int* LineW;
+    typedef unsigned short* LineW;
 
     namespace Utils
     {
@@ -135,19 +135,19 @@ public:
     void loadImage(const std::string& srcFile);
     void loadImage(const cv::Mat& srcImage);
     void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, size_t stride, unsigned short int* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444 = false);
-    void loadImage(int rows, int cols, size_t stride, unsigned short int* r, unsigned short int* g, unsigned short int* b, bool inputAsYUV444 = false);
+    void loadImage(int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, bool inputAsYUV444 = false);
     void loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444 = false);
     void loadImage(
         int rowsY, int colsY, size_t strideY, unsigned char* y,
         int rowsU, int colsU, size_t strideU, unsigned char* u,
         int rowsV, int colsV, size_t strideV, unsigned char* v);
     void loadImage(
-        int rowsY, int colsY, size_t strideY, unsigned short int* y,
-        int rowsU, int colsU, size_t strideU, unsigned short int* u,
-        int rowsV, int colsV, size_t strideV, unsigned short int* v);
+        int rowsY, int colsY, size_t strideY, unsigned short* y,
+        int rowsU, int colsU, size_t strideU, unsigned short* u,
+        int rowsV, int colsV, size_t strideV, unsigned short* v);
     void loadImage(
         int rowsY, int colsY, size_t strideY, float* y,
         int rowsU, int colsU, size_t strideU, float* u,

@@ -21,16 +21,26 @@ namespace Anime4KCPP
         {
             int orgW, orgH;
             size_t stride;
-            int HDNLevel;
         }ACCudaParamACNet;
 
         void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param);
-        void cuRunKernelAnime4K09W(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamAnime4K09* param);
+        void cuRunKernelAnime4K09W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamAnime4K09* param);
         void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaParamAnime4K09* param);
 
-        void cuRunKernelACNetB(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-        void cuRunKernelACNetW(const unsigned short int* inputData, unsigned short int* outputData, ACCudaParamACNet* param);
-        void cuRunKernelACNetF(const float* inputData, float* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN0B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN1B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN2B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN3B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
+        
+        void cuRunKernelACNetHDN0W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN1W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN2W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN3W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
+
+        void cuRunKernelACNetHDN0F(const float* inputData, float* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN1F(const float* inputData, float* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN2F(const float* inputData, float* outputData, ACCudaParamACNet* param);
+        void cuRunKernelACNetHDN3F(const float* inputData, float* outputData, ACCudaParamACNet* param);
 
         void cuSetDeviceID(const int id);
         int cuGetDeviceID() noexcept;
