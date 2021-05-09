@@ -44,8 +44,8 @@ public:
         bool CNN,
         bool GPUMode,
         GPGPU GPGPUModel,
-        unsigned int pID,
-        unsigned int dID,
+        int pID,
+        int dID,
         int OpenCLQueueNum,
         bool OpenCLParallelIO,
         IScriptEnvironment* env
@@ -72,8 +72,8 @@ Anime4KCPPF::Anime4KCPPF(
     bool CNN,
     bool GPUMode,
     GPGPU GPGPUModel,
-    unsigned int pID,
-    unsigned int dID,
+    int pID,
+    int dID,
     int OpenCLQueueNum,
     bool OpenCLParallelIO,
     IScriptEnvironment* env
@@ -348,8 +348,8 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
     bool CNN = args[AC_ACNet].AsBool();
     bool GPUMode = args[AC_GPUMode].AsBool();
-    unsigned int pID = args[AC_platformID].AsInt();
-    unsigned int dID = args[AC_deviceID].AsInt();
+    int pID = args[AC_platformID].AsInt();
+    int dID = args[AC_deviceID].AsInt();
     int OpenCLQueueNum = args[AC_OpenCLQueueNum].AsInt();
     bool OpenCLParallelIO = args[AC_OpenCLParallelIO].AsBool();
     const char* GPGPUModelTmp = args[AC_GPGPUModel].AsString();
@@ -504,26 +504,52 @@ AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* e
 
 AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
-    unsigned int pID = args[AC_platformID].AsInt();
-    unsigned int dID = args[AC_deviceID].AsInt();
+    int pID = 0;
+    int dID = 0;
 
+    if (args[0].Defined())
+        pID = args[0].AsInt();
+    if (args[1].Defined())
+        dID = args[1].AsInt();
 
-    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+    double CPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
+    double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
+    double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+
+    double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
+    double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
+    double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+
 #ifdef ENABLE_CUDA
-    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+    double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
+    double CudaScoreHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1280, 720>(dID);
+    double CudaScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
 #endif 
 
     std::ostringstream oss;
-    oss << "Benchmark result:" << std::endl
-        << "CPU score: " << CPUScore << std::endl
-        << "OpenCL score: " << OpenCLScore << std::endl
-        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+
+    oss << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
+
+    oss
+        << "CPU score:" << std::endl
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
+
+    oss
+        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+
 #ifdef ENABLE_CUDA
-        << "CUDA score: " << OpenCLScore << std::endl
-        << " (dID = " << dID << ")" << std::endl
+    oss
+        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
 #endif 
-    ;
+
     env->ThrowError(oss.str().c_str());
     return AVSValue();
 }

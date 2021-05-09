@@ -726,8 +726,8 @@ extern "C"
 
     void acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore)
     {
-        double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-        double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+        double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+        double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
 
         *CPUScore = _CPUScore;
         *GPUScore = _OpenCLScore;
@@ -738,18 +738,18 @@ extern "C"
         switch (processType)
         {
         case AC_CPU_Anime4K09:
-            return Anime4KCPP::benchmark<Anime4KCPP::CPU::Anime4K09>();
+            return Anime4KCPP::benchmark<Anime4KCPP::CPU::Anime4K09, 1920, 1080>();
         case AC_CPU_ACNet:
-            return Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
+            return Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
         case AC_OpenCL_Anime4K09:
-            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09>(pID, dID);
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09, 1920, 1080>(pID, dID);
         case AC_OpenCL_ACNet:
-            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
+            return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
 #ifdef ENABLE_CUDA
         case AC_Cuda_Anime4K09:
-            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09>(dID);
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09, 1920, 1080>(dID);
         case AC_Cuda_ACNet:
-            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+            return Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
 #endif // ENABLE_CUDA
         default:
             return 0.0;

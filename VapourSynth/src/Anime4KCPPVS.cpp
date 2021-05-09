@@ -20,7 +20,7 @@ typedef struct Anime4KCPPData {
     bool CNN = false;
     bool HDN = false;
     int HDNLevel = 1;
-    unsigned int pID = 0, dID = 0;
+    int pID = 0, dID = 0;
     int OpenCLQueueNum = 4;
     bool OpenCLParallelIO = false;
     Anime4KCPP::ACCreator acCreator;
@@ -449,8 +449,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             case GPGPU::OpenCL:
             {
                 Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
-                if (tmpData.pID >= static_cast<unsigned int>(list.platforms) ||
-                    tmpData.dID >= static_cast<unsigned int>(list[tmpData.pID]))
+                if (tmpData.pID >= list.platforms ||
+                    tmpData.dID >= list[tmpData.pID])
                 {
                     std::ostringstream err;
                     err << "Platform ID or device ID index out of range" << std::endl
@@ -604,22 +604,44 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
     if (err || !dID)
         dID = 0;
 
-    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+    double CPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
+    double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
+    double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+
+    double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
+    double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
+    double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+
 #ifdef ENABLE_CUDA
-    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+    double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
+    double CudaScoreHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1280, 720>(dID);
+    double CudaScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
 #endif 
-    
+
     std::ostringstream oss;
-    oss << "Benchmark result:" << std::endl
-        << "CPU score: " << CPUScore << std::endl
-        << "OpenCL score: " << OpenCLScore << std::endl
-        << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+
+    oss << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
+
+    oss
+        << "CPU score:" << std::endl
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
+
+    oss
+        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+
 #ifdef ENABLE_CUDA
-        << "CUDA score: " << OpenCLScore << std::endl
-        << " (dID = " << dID << ")" << std::endl
+    oss
+        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
 #endif 
-        ;
+
     vsapi->logMessage(mtDebug, oss.str().c_str());
 }
 

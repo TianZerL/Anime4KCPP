@@ -1951,28 +1951,45 @@ void MainWindow::on_actionBenchmark_triggered()
 {
     int pID = ui->spinBoxPlatformID->value(), dID = ui->spinBoxDeviceID->value();
 
-    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+    double CPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
+    double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
+    double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+
+    double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
+    double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
+    double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+
 #ifdef ENABLE_CUDA
-    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+    double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
+    double CudaScoreHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1280, 720>(dID);
+    double CudaScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
+#endif 
+
+    QString resultText;
+    QTextStream outStream(&resultText);
+
+    outStream
+        << "CPU score:" << Qt::endl
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << Qt::endl
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << Qt::endl
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << Qt::endl << Qt::endl;
+
+    outStream
+        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << Qt::endl
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << Qt::endl
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << Qt::endl
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << Qt::endl << Qt::endl;
+
+#ifdef ENABLE_CUDA
+    outStream
+        << "CUDA score:" << " (dID = " << dID << ")" << Qt::endl
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << Qt::endl
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << Qt::endl
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << Qt::endl << Qt::endl;
 #endif 
 
     QMessageBox::information(this,
-        tr("Benchmark"),
-        QString(
-            tr("Benchmark result:") +
-            "\n\nCPU score: %1\n"
-            "OpenCL score: %2\n"
-            "(pID = %3, dID = %4)\n"
-#ifdef ENABLE_CUDA
-            "CUDA score: %5\n"
-            "(dID = %6)\n"
-#endif
-        ).arg(CPUScore).arg(OpenCLScore).arg(pID).arg(dID)
-#ifdef ENABLE_CUDA
-        .arg(CudaScore).arg(dID)
-#endif
-        ,QMessageBox::Ok);
+        tr("Benchmark"), tr("Benchmark test under 8-bit integer input and serial processing\n\n") + resultText, QMessageBox::Ok);
 }
 
 void MainWindow::on_pushButtonListGPUs_clicked()

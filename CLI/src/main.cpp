@@ -122,51 +122,65 @@ static void showGPUList()
 
 static void benchmark(const int pID, const int dID)
 {
-    std::cout << "Benchmarking..." << std::endl << std::endl;
+    std::cout << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
 
-    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-    double OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(pID, dID);
+    double CPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
+    double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
+    double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+
+    double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
+    double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
+    double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
 
 #ifdef ENABLE_CUDA
-    double CudaScore = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet>(dID);
+    double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
+    double CudaScoreHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1280, 720>(dID);
+    double CudaScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
 #endif 
 
 #ifdef ENABLE_NCNN
-    double NCNNCPUScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
-    double NCNNVKScore = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet>(dID, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNCPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 720, 480>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNCPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 1280, 720>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNCPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 1920, 1080>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+
+    double NCNNVKScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 720, 480>(dID, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNVKScoreHD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 1280, 720>(dID, Anime4KCPP::CNNType::ACNetHDNL0, 4);
+    double NCNNVKScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 1920, 1080>(dID, Anime4KCPP::CNNType::ACNetHDNL0, 4);
 #endif 
 
     std::cout
-        << "CPU score: "
-        << CPUScore
-        << std::endl;
+        << "CPU score:" << std::endl
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
 
     std::cout
-        << "OpenCL score: "
-        << OpenCLScore
-        << " (pID = " << pID << ", dID = " << dID << ")"
-        << std::endl;
+        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
 
 #ifdef ENABLE_CUDA
     std::cout
-        << "CUDA score: "
-        << CudaScore
-        << " (dID = " << dID << ")"
-        << std::endl;
+        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
 #endif 
 
 #ifdef ENABLE_NCNN
     std::cout
-        << "NCNN CPU score: "
-        << NCNNCPUScore
-        << " (dID = " << dID << ")"
-        << std::endl
-        << "NCNN Vulkan score: "
-        << NCNNVKScore
-        << " (dID = " << dID << ")"
-        << std::endl;
-#endif 
+        << "NCNN CPU score:"<< std::endl
+        << " DVD(480P->960P):" << NCNNCPUScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P):" << NCNNCPUScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P):" << NCNNCPUScoreFHD << " FPS" << std::endl << std::endl;
 
+    std::cout
+        << "NCNN Vulkan score:" << " (dID = " << dID << ")" << std::endl
+        << " DVD(480P->960P):" << NCNNVKScoreDVD << " FPS" << std::endl
+        << " HD(720P->1440P):" << NCNNVKScoreHD << " FPS" << std::endl
+        << " FHD(1080P->2160P):" << NCNNVKScoreFHD << " FPS" << std::endl << std::endl;
+#endif 
 }
 
 static bool genConfigTemplate(const std::string& path, Config& config)

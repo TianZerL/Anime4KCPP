@@ -586,7 +586,7 @@
     <message>
         <location filename="mainwindow.ui" line="1253"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1059"/>
-        <location filename="mainwindow.cpp" line="1961"/>
+        <location filename="mainwindow.cpp" line="1992"/>
         <source>Benchmark</source>
         <translation>Performance Test</translation>
     </message>
@@ -934,7 +934,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="119"/>
-        <location filename="mainwindow.cpp" line="2082"/>
+        <location filename="mainwindow.cpp" line="2099"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
@@ -998,7 +998,7 @@
         <location filename="mainwindow.cpp" line="1897"/>
         <location filename="mainwindow.cpp" line="1912"/>
         <location filename="mainwindow.cpp" line="1938"/>
-        <location filename="mainwindow.cpp" line="1995"/>
+        <location filename="mainwindow.cpp" line="2012"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -1026,8 +1026,8 @@
         <location filename="mainwindow.cpp" line="1198"/>
         <location filename="mainwindow.cpp" line="1562"/>
         <location filename="mainwindow.cpp" line="1922"/>
-        <location filename="mainwindow.cpp" line="2002"/>
-        <location filename="mainwindow.cpp" line="2027"/>
+        <location filename="mainwindow.cpp" line="2019"/>
+        <location filename="mainwindow.cpp" line="2044"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
@@ -1085,9 +1085,15 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1963"/>
+        <location filename="mainwindow.cpp" line="1992"/>
+        <source>Benchmark test under 8-bit integer input and serial processing
+
+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Benchmark result:</source>
-        <translation>Résultats des tests de performance:</translation>
+        <translation type="vanished">Résultats des tests de performance:</translation>
     </message>
     <message>
         <source>Successfully release GPU for ACNet</source>
@@ -1098,7 +1104,7 @@
         <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2083"/>
+        <location filename="mainwindow.cpp" line="2100"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
@@ -1109,12 +1115,12 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1939"/>
-        <location filename="mainwindow.cpp" line="1996"/>
+        <location filename="mainwindow.cpp" line="2013"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2028"/>
+        <location filename="mainwindow.cpp" line="2045"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>
