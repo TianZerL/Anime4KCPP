@@ -426,12 +426,13 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& ds
         cl::Kernel kernelPushGradient(program, "pushGradient");
 
         cl::ImageFormat imageFormat(CL_RGBA, channelType);
+        cl::ImageFormat tmpFormat(CL_RGBA, channelType == CL_FLOAT ? CL_HALF_FLOAT : channelType);
 
         //imageBuffer
         cl::Image2D imageBuffer0(context, CL_MEM_READ_ONLY, imageFormat, orgImg.cols, orgImg.rows);
         cl::Image2D imageBuffer1(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
-        cl::Image2D imageBuffer2(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
-        cl::Image2D imageBuffer3(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
+        cl::Image2D imageBuffer2(context, CL_MEM_READ_WRITE, tmpFormat, dstImg.cols, dstImg.rows);
+        cl::Image2D imageBuffer3(context, CL_MEM_READ_WRITE, tmpFormat, dstImg.cols, dstImg.rows);
 
         //set arguments
         //getGray
@@ -448,6 +449,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& ds
         //getGradient
         kernelGetGradient.setArg(0, sizeof(cl_mem), &imageBuffer2);
         kernelGetGradient.setArg(1, sizeof(cl_mem), &imageBuffer3);
+
         //pushGradient
         kernelPushGradient.setArg(0, sizeof(cl_mem), &imageBuffer3);
         kernelPushGradient.setArg(1, sizeof(cl_mem), &imageBuffer1);
@@ -518,12 +520,13 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelP(const cv::Mat& orgImg, cv::Mat& d
         cl::Kernel kernelPushGradient(program, "pushGradient");
 
         cl::ImageFormat imageFormat(CL_RGBA, channelType);
+        cl::ImageFormat tmpFormat(CL_RGBA, channelType == CL_FLOAT ? CL_HALF_FLOAT : channelType);
 
         //imageBuffer
         cl::Image2D imageBuffer0(context, CL_MEM_READ_ONLY, imageFormat, orgImg.cols, orgImg.rows);
         cl::Image2D imageBuffer1(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
-        cl::Image2D imageBuffer2(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
-        cl::Image2D imageBuffer3(context, CL_MEM_READ_WRITE, imageFormat, dstImg.cols, dstImg.rows);
+        cl::Image2D imageBuffer2(context, CL_MEM_READ_WRITE, tmpFormat, dstImg.cols, dstImg.rows);
+        cl::Image2D imageBuffer3(context, CL_MEM_READ_WRITE, tmpFormat, dstImg.cols, dstImg.rows);
 
         //set arguments
         //getGray
@@ -540,6 +543,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelP(const cv::Mat& orgImg, cv::Mat& d
         //getGradient
         kernelGetGradient.setArg(0, sizeof(cl_mem), &imageBuffer2);
         kernelGetGradient.setArg(1, sizeof(cl_mem), &imageBuffer3);
+
         //pushGradient
         kernelPushGradient.setArg(0, sizeof(cl_mem), &imageBuffer3);
         kernelPushGradient.setArg(1, sizeof(cl_mem), &imageBuffer1);
