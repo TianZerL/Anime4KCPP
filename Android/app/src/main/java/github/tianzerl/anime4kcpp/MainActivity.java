@@ -714,11 +714,11 @@ public class MainActivity extends AppCompatActivity {
             if (activity == null || activity.isFinishing())
                 return;
 
+            String outputMsg = String.format(Locale.ENGLISH, "CPU score: %.2f FPS\nCPU score: %.2f FPS", s[0], s[1]);
+
             new AlertDialog.Builder(activity)
                     .setTitle("Benchmark done")
-                    .setMessage("Benchmark result:\n"
-                            + "\nCPU score: " + s[0]
-                            + "\nGPU score: " + s[1])
+                    .setMessage(outputMsg)
                     .setPositiveButton("OK", null)
                     .show();
         }

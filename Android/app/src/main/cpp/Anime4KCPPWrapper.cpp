@@ -335,8 +335,8 @@ JNIEXPORT jdoubleArray JNICALL
 Java_github_tianzerl_anime4kcpp_wrapper_Anime4K_benchmarkAnime4K(
         JNIEnv *env,
         jclass clazz) {
-    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet>();
-    double GPUScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet>(0, 0);
+    double CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
+    double GPUScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(0, 0);
     double retCppArray[] = {CPUScore, GPUScore};
     jdoubleArray retJavaArray = env->NewDoubleArray(2);
     env->SetDoubleArrayRegion(retJavaArray, 0, 2, retCppArray);
