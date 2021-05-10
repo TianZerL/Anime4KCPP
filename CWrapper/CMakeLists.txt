@@ -1,12 +1,12 @@
 project(ac LANGUAGES CXX)
 
-if(Build_C_wrapper)
+if(Build_C_Wrapper)
 
     aux_source_directory(src SOURCE)
 
     include_directories(include ${TOP_DIR}/Anime4KCore/include)
 
-    if(Build_C_wrapper_with_core)
+    if(Build_C_Wrapper_With_Core)
         aux_source_directory(${TOP_DIR}/Anime4KCore/src Anime4KCPPCoreSource)
         list(APPEND SOURCE ${Anime4KCPPCoreSource})
         add_definitions(-DBUILT_IN_KERNEL)

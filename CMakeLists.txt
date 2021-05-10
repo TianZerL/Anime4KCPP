@@ -19,14 +19,16 @@ if(WIN32)
 endif(WIN32)
 
 set(Qt_Version "5" CACHE STRING "5 or 6")
+set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability, older than 30")
+set(CUDA_CC "75" CACHE PATH "Set the cuda compute capability, older than 30")
 
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
-option(Build_VapourSynth_plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)
-option(Build_AviSynthPlus_plugin "Build Anime4KCPP for AviSynthPlus plugin or not" OFF)
-option(Build_C_wrapper "Build C wrapper of Anime4KCPP or not" OFF)
-option(Build_C_wrapper_with_core "Build C wrapper and core in one file" OFF)
-option(Built_in_kernel "Built-in kernel or not" ON)
+option(Build_VapourSynth_Plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)
+option(Build_AviSynthPlus_Plugin "Build Anime4KCPP for AviSynthPlus plugin or not" OFF)
+option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
+option(Build_C_Wrapper_With_Core "Build C wrapper and core in one file" ON)
+option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
@@ -151,11 +153,11 @@ message(STATUS
 "Building information:\n"
 "   Build CLI ${Build_CLI}\n"
 "   Build GUI ${Build_GUI}\n"
-"   Build VapourSynth plugin ${Build_VapourSynth_plugin}\n"
-"   Build AviSynthPlus plugin ${Build_AviSynthPlus_plugin}\n"
-"   Build C wrapper ${Build_C_wrapper}\n\n"
-"   Build C wrapper with core ${Build_C_wrapper_with_core}\n"
-"   Built-in kernel ${Built_in_kernel}\n\n"
+"   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
+"   Build AviSynthPlus plugin ${Build_AviSynthPlus_Plugin}\n"
+"   Build C wrapper ${Build_C_Wrapper}\n\n"
+"   Build C wrapper with core ${Build_C_Wrapper_With_Core}\n"
+"   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
 "   Enable CUDA ${Enable_CUDA}\n"

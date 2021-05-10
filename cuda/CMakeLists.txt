@@ -1,5 +1,5 @@
 if(Enable_CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES 35-virtual 75-real)
+    set(CMAKE_CUDA_ARCHITECTURES ${CUDA_Minimum_CC}-virtual ${CUDA_CC}-real)
 
     if(${CMAKE_MINOR_VERSION} LESS 18)
         project(CUDA_Module LANGUAGES CXX)
@@ -8,8 +8,8 @@ if(Enable_CUDA)
 
         set(CUDA_NVCC_FLAGS 
         "${CUDA_NVCC_FLAGS}
-        -arch=sm_75
-        -gencode=arch=compute_35,code=\"compute_35,compute_35\""
+        -arch=sm_${CUDA_CC}
+        -gencode=arch=compute_${CUDA_Minimum_CC},code=\"compute_${CUDA_Minimum_CC},compute_${CUDA_Minimum_CC}\""
         )
 
         if(MSVC)

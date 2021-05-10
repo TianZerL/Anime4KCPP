@@ -1,6 +1,6 @@
 project(Anime4KCPP_AviSynthPlus LANGUAGES CXX)
 
-if(Build_AviSynthPlus_plugin)
+if(Build_AviSynthPlus_Plugin)
 
     aux_source_directory(src SOURCE)
     aux_source_directory(${TOP_DIR}/Anime4KCore/src Anime4KCPPCoreSource)

@@ -5,7 +5,7 @@ aux_source_directory(src SOURCE)
 include_directories(include)
 file(GLOB INCLUDE include/*.hpp)
 
-if(Built_in_kernel)
+if(Built_In_Kernel)
     add_definitions(-DBUILT_IN_KERNEL)
 endif()
 
