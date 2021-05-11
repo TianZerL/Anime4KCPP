@@ -183,7 +183,7 @@ static void benchmark(const int pID, const int dID)
 #endif 
 }
 
-static bool genConfigTemplate(const std::string& path, Config& config)
+static bool createConfigTemplate(const std::string& path, Config& config)
 {
     ConfigWriter configWriter;
     if (!configWriter.initFile(path))
@@ -197,8 +197,8 @@ int main(int argc, char* argv[])
     Config config;
     auto& opt = config.getParser();
     //Options
-    opt.add<std::string>("input", 'i', "File for loading", false, "./pic/p1.png");
-    opt.add<std::string>("output", 'o', "File for outputting", false, "output.png");
+    opt.add<std::string>("input", 'i', "File for loading", false, "p1.png");
+    opt.add<std::string>("output", 'o', "File for outputting", false);
     opt.add<int>("passes", 'p', "Passes for processing", false, 2);
     opt.add<int>("pushColorCount", 'n', "Limit the number of color pushes", false, 2);
     opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
@@ -259,6 +259,7 @@ int main(int argc, char* argv[])
 
     std::string input = opt.get<std::string>("input");
     std::string output = opt.get<std::string>("output");
+    bool defaultOutputName = !opt.exist("output");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
     bool listGPUs = opt.exist("listGPUs");
@@ -268,6 +269,7 @@ int main(int argc, char* argv[])
     bool ncnn = opt.exist("ncnn");
     unsigned int frameStart = opt.get<unsigned int>("start");
     bool testMode = opt.exist("testMode");
+    bool configTemplate = opt.exist("configTemplate");
 
     int passes = config.get<int>("passes");
     int pushColorCount = config.get<int>("pushColorCount");
@@ -296,27 +298,13 @@ int main(int argc, char* argv[])
     std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
     std::string ncnnModelPath = config.get<std::string>("ncnnModelPath");
 
-    if (opt.exist("configTemplate"))
+    if (configTemplate)
     {
         const std::string& path = opt.get<std::string>("configTemplate");
-        if (genConfigTemplate(path, config))
+        if (createConfigTemplate(path, config))
             std::cout << "Generated config template to: " << path << std::endl;
         else
             std::cerr << "Failed to generate config template." << path << std::endl;
-        return 0;
-    }
-
-    GPGPU GPGPUModel;
-    std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
-    if (GPGPUModelString == "opencl")
-        GPGPUModel = GPGPU::OpenCL;
-    else if (GPGPUModelString == "cuda")
-        GPGPUModel = GPGPU::CUDA;
-    else if (GPGPUModelString == "ncnn")
-        GPGPUModel = GPGPU::NCNN;
-    else
-    {
-        std::cerr << "Unknown GPGPU model, it must be \"ncnn\", \"cuda\" or \"opencl\"" << std::endl;
         return 0;
     }
 
@@ -339,6 +327,20 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    GPGPU GPGPUModel;
+    std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
+    if (GPGPUModelString == "opencl")
+        GPGPUModel = GPGPU::OpenCL;
+    else if (GPGPUModelString == "cuda")
+        GPGPUModel = GPGPU::CUDA;
+    else if (GPGPUModelString == "ncnn")
+        GPGPUModel = GPGPU::NCNN;
+    else
+    {
+        std::cerr << "Unknown GPGPU model, it must be \"ncnn\", \"cuda\" or \"opencl\"" << std::endl;
+        return 0;
+    }
+
     if (ncnn)
     {
         GPGPUModel = GPGPU::NCNN;
@@ -348,6 +350,19 @@ int main(int argc, char* argv[])
     }
 
     filesystem::path inputPath(input), outputPath(output);
+    if (defaultOutputName)
+    {
+        std::ostringstream oss;
+        if (CNN)
+            oss << "_ACNet_HDNL" << (HDN ? HDNLevel : 0);
+        else
+            oss << "_Anime4K09";
+        oss << "_x" << std::fixed << std::setprecision(2) << zoomFactor
+            << inputPath.extension().string();
+
+        outputPath = inputPath.parent_path() / (inputPath.stem().string() + oss.str());
+    }
+
     if ((!videoMode || !webVideo) && !filesystem::exists(inputPath))
     {
         std::cerr << "input file or directory does not exist." << std::endl;
@@ -529,7 +544,7 @@ int main(int argc, char* argv[])
             if (filesystem::is_directory(inputPath))
             {
                 if (!filesystem::is_directory(outputPath))
-                    outputPath = outputPath.parent_path().append(outputPath.stem().native());
+                    outputPath = outputPath.parent_path() / outputPath.stem();
                 filesystem::recursive_directory_iterator currDir(inputPath);
                 std::vector<std::pair<std::string, std::string>> filePaths;
 
@@ -732,7 +747,7 @@ int main(int argc, char* argv[])
                 if (filesystem::is_directory(inputPath))
                 {
                     if (!filesystem::is_directory(outputPath))
-                        outputPath = outputPath.parent_path().append(outputPath.stem().native());
+                        outputPath = outputPath.parent_path() / outputPath.stem();
 
                     filesystem::recursive_directory_iterator currDir(inputPath);
                     for (auto& file : currDir)
