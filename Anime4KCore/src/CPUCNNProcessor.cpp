@@ -27,24 +27,6 @@ namespace Anime4KCPP
 {
     namespace detail
     {
-        template<typename T, int n>
-        struct OpenCVDataType {};
-
-        template<int n>
-        struct OpenCVDataType<unsigned char, n> {
-            constexpr static int value = CV_8UC(n);
-        };
-
-        template<int n>
-        struct OpenCVDataType<unsigned short, n> {
-            constexpr static int value = CV_16UC(n);
-        };
-
-        template<int n>
-        struct OpenCVDataType<float, n> {
-            constexpr static int value = CV_32FC(n);
-        };
-
         template<typename T, typename F>
         void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
         {
@@ -111,7 +93,7 @@ namespace Anime4KCPP
         void changEachPixelNTo1(cv::Mat& img, F&& callBack, const cv::Mat& tmpMat)
         {
             const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
-            img.create(h, w, OpenCVDataType<T, 1>::value);
+            img.create(h, w, cv::DataType<T>::type);
 
             const int jMAX = w;
             const size_t channels = tmpMat.channels();
