@@ -218,4 +218,3 @@ inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& srcImgRef)
     }
 
 }
-
