@@ -36,14 +36,6 @@ protected:
     void convTranspose8To1B(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat);
     void convTranspose8To1W(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat);
     void convTranspose8To1F(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat);
-
-    void changEachPixel1ToN(const cv::Mat& src, const std::function<void(int, int, ChanFP, LineB)>&& callBack, cv::Mat& tmpMat, int outChannels);
-    void changEachPixel1ToN(const cv::Mat& src, const std::function<void(int, int, ChanFP, LineW)>&& callBack, cv::Mat& tmpMat, int outChannels);
-    void changEachPixel1ToN(const cv::Mat& src, const std::function<void(int, int, ChanFP, LineF)>&& callBack, cv::Mat& tmpMat, int outChannels);
-    void changEachPixelNToN(const std::function<void(int, int, ChanFP, LineFP)>&& callBack, cv::Mat& tmpMat);
-    void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanB, LineFP)>&& callBack, const cv::Mat& tmpMat);
-    void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanW, LineFP)>&& callBack, const cv::Mat& tmpMat);
-    void changEachPixelNTo1(cv::Mat& img, const std::function<void(int, int, ChanF, LineFP)>&& callBack, const cv::Mat& tmpMat);
 };
 
 #endif // !ENABLE_OPENCV_DNN

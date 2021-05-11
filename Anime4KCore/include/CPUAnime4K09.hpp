@@ -46,9 +46,6 @@ private:
     void getGradientF(cv::Mat& img);
     void pushGradientF(cv::Mat& img);
 
-    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelB, LineB)>&& callBack);
-    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelW, LineW)>&& callBack);
-    void changEachPixelBGRA(cv::Mat& src, const std::function<void(int, int, PixelF, LineF)>&& callBack);
     void getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept;
     void getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept;
     void getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;

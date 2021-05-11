@@ -1,7 +1,6 @@
 #pragma once
 
 #include<iostream>
-#include<functional>
 #include<atomic>
 #include<future>
 #include<cmath>

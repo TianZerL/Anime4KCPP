@@ -19,6 +19,43 @@ namespace Parallel = tbb;
 #define UNFLOATW(n) ((n) >= 65535 ? 65535 : ((n) <= 0 ? 0 : int((n) + 0.5)))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
+namespace Anime4KCPP
+{
+    namespace detail
+    {
+        template<typename T, typename F>
+        void changEachPixel(cv::Mat& src, F&& callBack)
+        {
+            cv::Mat tmp;
+            src.copyTo(tmp);
+
+            const int h = src.rows, w = src.cols;
+            const int channels = src.channels();
+            const int jMAX = w * channels;
+            const size_t step = src.step;
+
+#if defined(_MSC_VER) || defined(USE_TBB)
+            Parallel::parallel_for(0, h, [&](int i) {
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
+                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
+                for (int j = 0; j < jMAX; j += channels)
+                    callBack(i, j, tmpLineData + j, lineData);
+                });
+#else
+#pragma omp parallel for
+            for (int i = 0; i < h; i++)
+            {
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
+                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
+                for (int j = 0; j < jMAX; j += channels)
+                    callBack(i, j, tmpLineData + j, lineData);
+            }
+#endif
+            src = tmp;
+        }
+    }
+}
+
 Anime4KCPP::CPU::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters) {}
 
@@ -323,17 +360,17 @@ void Anime4KCPP::CPU::Anime4K09::processGrayscaleF()
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGrayB(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGrayB(cv::Mat& img)
 {
-    changEachPixelBGRA(img, [](const int i, const int j, PixelB pixel, LineB curLine) {
+    detail::changEachPixel<unsigned char>(img, [](const int i, const int j, PixelB pixel, LineB curLine) {
         pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushColorB(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushColorB(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
+    detail::changEachPixel<unsigned char>(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
         const LineB pLineData = i < H - 1 ? curLine + lineStep : curLine;
@@ -400,12 +437,12 @@ inline void Anime4KCPP::CPU::Anime4K09::pushColorB(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGradientB(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGradientB(cv::Mat& img)
 {
     if (!param.fastMode)
     {
         const int lineStep = W * 4;
-        changEachPixelBGRA(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
+        detail::changEachPixel<unsigned char>(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
             if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
                 return;
             const LineB pLineData = curLine + lineStep;
@@ -443,10 +480,10 @@ inline void Anime4KCPP::CPU::Anime4K09::getGradientB(cv::Mat& img)
     }
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushGradientB(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushGradientB(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
+    detail::changEachPixel<unsigned char>(img, [&](const int i, const int j, PixelB pixel, LineB curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
 
@@ -508,17 +545,17 @@ inline void Anime4KCPP::CPU::Anime4K09::pushGradientB(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGrayW(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGrayW(cv::Mat& img)
 {
-    changEachPixelBGRA(img, [](const int i, const int j, PixelW pixel, LineW curLine) {
+    detail::changEachPixel<unsigned short>(img, [](const int i, const int j, PixelW pixel, LineW curLine) {
         pixel[A] = (pixel[R] >> 2) + (pixel[R] >> 4) + (pixel[G] >> 1) + (pixel[G] >> 4) + (pixel[B] >> 3);
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushColorW(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushColorW(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+    detail::changEachPixel<unsigned short>(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
         const LineW pLineData = i < H - 1 ? curLine + lineStep : curLine;
@@ -585,10 +622,10 @@ inline void Anime4KCPP::CPU::Anime4K09::pushColorW(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGradientW(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGradientW(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+    detail::changEachPixel<unsigned short>(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
         if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
             return;
         const LineW pLineData = curLine + lineStep;
@@ -608,10 +645,10 @@ inline void Anime4KCPP::CPU::Anime4K09::getGradientW(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushGradientW(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushGradientW(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
+    detail::changEachPixel<unsigned short>(img, [&](const int i, const int j, PixelW pixel, LineW curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
 
@@ -673,17 +710,17 @@ inline void Anime4KCPP::CPU::Anime4K09::pushGradientW(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGrayF(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGrayF(cv::Mat& img)
 {
-    changEachPixelBGRA(img, [](const int i, const int j, PixelF pixel, LineF curLine) {
+    detail::changEachPixel<float>(img, [](const int i, const int j, PixelF pixel, LineF curLine) {
         pixel[A] = pixel[R] * 0.299f + pixel[G] * 0.587f + pixel[B] * 0.114f;
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushColorF(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushColorF(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
+    detail::changEachPixel<float>(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
         const LineF pLineData = i < H - 1 ? curLine + lineStep : curLine;
@@ -750,10 +787,10 @@ inline void Anime4KCPP::CPU::Anime4K09::pushColorF(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getGradientF(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::getGradientF(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
+    detail::changEachPixel<float>(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
         if (i == 0 || j == 0 || i == H - 1 || j == (W - 1) * 4)
             return;
         const LineF pLineData = curLine + lineStep;
@@ -774,10 +811,10 @@ inline void Anime4KCPP::CPU::Anime4K09::getGradientF(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::pushGradientF(cv::Mat& img)
+void Anime4KCPP::CPU::Anime4K09::pushGradientF(cv::Mat& img)
 {
     const int lineStep = W * 4;
-    changEachPixelBGRA(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
+    detail::changEachPixel<float>(img, [&](const int i, const int j, PixelF pixel, LineF curLine) {
         const int jp = j < (W - 1) * 4 ? 4 : 0;
         const int jn = j > 4 ? -4 : 0;
 
@@ -839,118 +876,28 @@ inline void Anime4KCPP::CPU::Anime4K09::pushGradientF(cv::Mat& img)
         });
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
-    const std::function<void(const int, const int, PixelB, LineB)>&& callBack)
-{
-    cv::Mat tmp;
-    src.copyTo(tmp);
-
-    const int jMAX = W * 4;
-    const size_t step = src.step;
-
-#if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
-    Parallel::parallel_for(0, H, [&](int i) {
-        LineB lineData = src.data + static_cast<size_t>(i) * step;
-        PixelB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-        });
-#else //for gcc and others
-#pragma omp parallel for
-    for (int i = 0; i < H; i++)
-    {
-        LineB lineData = src.data + static_cast<size_t>(i) * step;
-        PixelB tmpLineData = tmp.data + static_cast<size_t>(i) * step;
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-    }
-#endif //something crazy
-
-    src = tmp;
-}
-
-inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
-    const std::function<void(const int, const int, PixelW, LineW)>&& callBack)
-{
-    cv::Mat tmp;
-    src.copyTo(tmp);
-
-    const int jMAX = W * 4;
-    const size_t step = src.step;
-
-#if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
-    Parallel::parallel_for(0, H, [&](int i) {
-        LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * step);
-        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data + static_cast<size_t>(i) * step);
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-        });
-#else //for gcc and others
-#pragma omp parallel for
-    for (int i = 0; i < H; i++)
-    {
-        LineW lineData = reinterpret_cast<LineW>(src.data + static_cast<size_t>(i) * step);
-        PixelW tmpLineData = reinterpret_cast<PixelW>(tmp.data + static_cast<size_t>(i) * step);
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-    }
-#endif //something crazy
-
-    src = tmp;
-}
-
-inline void Anime4KCPP::CPU::Anime4K09::changEachPixelBGRA(cv::Mat& src,
-    const std::function<void(const int, const int, PixelF, LineF)>&& callBack)
-{
-    cv::Mat tmp;
-    src.copyTo(tmp);
-
-    const int jMAX = W * 4;
-    const size_t step = src.step;
-
-#if defined(_MSC_VER) || defined(USE_TBB) //let's do something crazy
-    Parallel::parallel_for(0, H, [&](int i) {
-        LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * step);
-        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data + static_cast<size_t>(i) * step);
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-        });
-#else //for gcc and others
-#pragma omp parallel for
-    for (int i = 0; i < H; i++)
-    {
-        LineF lineData = reinterpret_cast<LineF>(src.data + static_cast<size_t>(i) * step);
-        PixelF tmpLineData = reinterpret_cast<LineF>(tmp.data + static_cast<size_t>(i) * step);
-        for (int j = 0; j < jMAX; j += 4)
-            callBack(i, j, tmpLineData + j, lineData);
-    }
-#endif //something crazy
-
-    src = tmp;
-}
-
-inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
         mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
         mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor + 0.5;
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept
 {
     //RGBA
     for (int i = 0; i <= 3; i++)
         mc[i] = mc[i] * (1.0 - param.strengthColor) + ((a[i] + b[i] + c[i]) / 3.0) * param.strengthColor;
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
@@ -959,7 +906,7 @@ inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelB mc, const PixelB a, co
     mc[A] = 255;
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getAverage(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
@@ -968,7 +915,7 @@ inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelW mc, const PixelW a, co
     mc[A] = 65535;
 }
 
-inline void Anime4KCPP::CPU::Anime4K09::getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept
+void Anime4KCPP::CPU::Anime4K09::getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept
 {
     //RGB
     for (int i = 0; i <= 2; i++)
