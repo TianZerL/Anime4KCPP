@@ -8,17 +8,8 @@ namespace filesystem = boost::filesystem;
 namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
 
-#if defined(_MSC_VER) && !defined(USE_TBB)
-#include<ppl.h>
-namespace Parallel = Concurrency;
-#elif defined(USE_TBB)
-#include<tbb/parallel_for.h>
-namespace Parallel = tbb;
-#else
-#include<omp.h>
-#endif
-
 #include"Anime4KCPP.hpp"
+#include"Parallel.hpp"
 
 #include"Config.hpp"
 
@@ -360,7 +351,8 @@ int main(int argc, char* argv[])
         oss << "_x" << std::fixed << std::setprecision(2) << zoomFactor
             << inputPath.extension().string();
 
-        outputPath = inputPath.parent_path() / (inputPath.stem().string() + oss.str());
+        outputPath = inputPath.parent_path() /
+            ((filesystem::is_directory(inputPath) ? "output" : inputPath.stem().string()) + oss.str());
     }
 
     if ((!videoMode || !webVideo) && !filesystem::exists(inputPath))
@@ -571,35 +563,20 @@ int main(int argc, char* argv[])
                 std::atomic_uint64_t progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-#if defined(_MSC_VER) || defined(USE_TBB)
-                Parallel::parallel_for(static_cast<size_t>(0), filePaths.size(), [&](size_t i) {
-                    Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
-                    currac->loadImage(filePaths[i].first);
-                    currac->process();
-                    currac->saveImage(filePaths[i].second);
-                    creator.release(currac);
-                    if (!disableProgress)
-                    {
-                        progress++;
-                        std::cout << '\r' << progress << '/' << filePaths.size();
-                    }
+                Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()), 
+                    [&](const int i) {
+                        Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
+                        currac->loadImage(filePaths[i].first);
+                        currac->process();
+                        currac->saveImage(filePaths[i].second);
+                        creator.release(currac);
+                        if (!disableProgress)
+                        {
+                            progress++;
+                            std::cout << '\r' << progress << '/' << filePaths.size();
+                        }
                     });
-#else
-#pragma omp parallel for
-                for (size_t i = 0; i < filePaths.size(); i++)
-                {
-                    Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
-                    currac->loadImage(filePaths[i].first);
-                    currac->process();
-                    currac->saveImage(filePaths[i].second);
-                    creator.release(currac);
-                    if (!disableProgress)
-                    {
-                        progress++;
-                        std::cout << '\r' << progress << '/' << filePaths.size();
-                    }
-                }
-#endif
+
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout

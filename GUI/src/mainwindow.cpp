@@ -1,15 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#if defined(_MSC_VER) && !defined(USE_TBB)
-#include<ppl.h>
-namespace Parallel = Concurrency;
-#elif defined(USE_TBB)
-#include<tbb/parallel_for.h>
-namespace Parallel = tbb;
-#else
-#include<omp.h>
-#endif
+#include "Parallel.hpp"
 
 #ifdef _WIN32
 #include <clocale>
@@ -1281,10 +1273,8 @@ void MainWindow::on_pushButtonStart_clicked()
         std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
         if (imageCount > 0)
         {
-#if defined(_MSC_VER) || defined(USE_TBB)
-            int imageItemCount = images.size();
-            Parallel::parallel_for(0, imageItemCount, 
-                [this, total, &images, &cm, &totalCount](int i) {
+            Anime4KCPP::Utils::ParallelFor(0, images.size(),
+                [this, total, &images, &cm, &totalCount](const int i) {
                     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                     std::chrono::steady_clock::time_point startTime, endTime;
                     auto& image = images.at(i);
@@ -1307,34 +1297,6 @@ void MainWindow::on_pushButtonStart_clicked()
                     emit cm.done(image.second, 1.0 - (totalCount / total),
                         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
                 });
-#else
-#pragma omp parallel for
-            for (int i = 0; i < imageItemCount; i++)
-            {
-                std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
-                std::chrono::steady_clock::time_point startTime, endTime;
-                ac->setVideoMode(false);
-                auto& image = images.at(i);
-                try
-                {
-                    ac->loadImage(image.first.first.toUtf8().toStdString());
-                    emit cm.showInfo(ac->getInfo() + "processing...\n");
-                    startTime = std::chrono::steady_clock::now();
-                    ac->process();
-                    endTime = std::chrono::steady_clock::now();
-                    ac->saveImage(image.first.second.toUtf8().toStdString());
-                }
-                catch (const std::exception& err)
-                {
-                    emit cm.error(image.second, QString::fromStdString(err.what()));
-                }
-
-                totalCount--;
-
-                emit cm.done(image.second, 1.0 - (totalCount / total),
-                    std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
-            }
-#endif
         }
         if (videoCount > 0)
         {

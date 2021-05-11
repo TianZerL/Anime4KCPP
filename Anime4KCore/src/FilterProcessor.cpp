@@ -1,13 +1,4 @@
-#if defined(_MSC_VER) && !defined(USE_TBB)
-#include<ppl.h>
-namespace Parallel = Concurrency;
-#elif defined(USE_TBB)
-#include<tbb/parallel_for.h>
-namespace Parallel = tbb;
-#else
-#include<omp.h>
-#endif
-
+#include"Parallel.hpp"
 #include"AC.hpp"
 #include"FilterProcessor.hpp"
 
@@ -34,23 +25,14 @@ namespace Anime4KCPP
             const int jMAX = w * channels;
             const size_t step = src.step;
 
-#if defined(_MSC_VER) || defined(USE_TBB)
-            Parallel::parallel_for(0, h, [&](int i) {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
-                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += channels)
-                    callBack(i, j, tmpLineData + j, lineData);
+            Anime4KCPP::Utils::ParallelFor(0, h,
+                [&](const int i) {
+                    T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
+                    T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
+                    for (int j = 0; j < jMAX; j += channels)
+                        callBack(i, j, tmpLineData + j, lineData);
                 });
-#else
-#pragma omp parallel for
-            for (int i = 0; i < h; i++)
-            {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
-                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += channels)
-                    callBack(i, j, tmpLineData + j, lineData);
-            }
-#endif
+
             src = tmp;
         }
     }

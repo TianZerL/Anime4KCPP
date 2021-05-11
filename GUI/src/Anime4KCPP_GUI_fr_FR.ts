@@ -267,8 +267,8 @@
     <message>
         <location filename="mainwindow.ui" line="368"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1134"/>
-        <location filename="mainwindow.cpp" line="836"/>
-        <location filename="mainwindow.cpp" line="1186"/>
+        <location filename="mainwindow.cpp" line="828"/>
+        <location filename="mainwindow.cpp" line="1178"/>
         <source>image</source>
         <translation>image</translation>
     </message>
@@ -294,8 +294,8 @@
     <message>
         <location filename="mainwindow.ui" line="410"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1142"/>
-        <location filename="mainwindow.cpp" line="837"/>
-        <location filename="mainwindow.cpp" line="1187"/>
+        <location filename="mainwindow.cpp" line="829"/>
+        <location filename="mainwindow.cpp" line="1179"/>
         <source>video</source>
         <translation>Vidéo</translation>
     </message>
@@ -586,7 +586,7 @@
     <message>
         <location filename="mainwindow.ui" line="1253"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1059"/>
-        <location filename="mainwindow.cpp" line="1992"/>
+        <location filename="mainwindow.cpp" line="1954"/>
         <source>Benchmark</source>
         <translation>Performance Test</translation>
     </message>
@@ -873,7 +873,7 @@
     <message>
         <location filename="mainwindow.ui" line="1204"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1051"/>
-        <location filename="mainwindow.cpp" line="1431"/>
+        <location filename="mainwindow.cpp" line="1393"/>
         <source>About</source>
         <translation>À propos de</translation>
     </message>
@@ -933,34 +933,34 @@
         <translation type="vanished">État</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="119"/>
-        <location filename="mainwindow.cpp" line="2099"/>
+        <location filename="mainwindow.cpp" line="111"/>
+        <location filename="mainwindow.cpp" line="2061"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="120"/>
+        <location filename="mainwindow.cpp" line="112"/>
         <source>Do you really want to exit?</source>
         <translation>Voulez-vous vraiment sortir?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="179"/>
-        <location filename="mainwindow.cpp" line="871"/>
-        <location filename="mainwindow.cpp" line="938"/>
-        <location filename="mainwindow.cpp" line="1826"/>
+        <location filename="mainwindow.cpp" line="171"/>
+        <location filename="mainwindow.cpp" line="863"/>
+        <location filename="mainwindow.cpp" line="930"/>
+        <location filename="mainwindow.cpp" line="1788"/>
         <source>ready</source>
         <translation>Prêt</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="442"/>
-        <location filename="mainwindow.cpp" line="448"/>
-        <location filename="mainwindow.cpp" line="454"/>
-        <location filename="mainwindow.cpp" line="460"/>
-        <location filename="mainwindow.cpp" line="466"/>
-        <location filename="mainwindow.cpp" line="472"/>
-        <location filename="mainwindow.cpp" line="478"/>
-        <location filename="mainwindow.cpp" line="484"/>
-        <location filename="mainwindow.cpp" line="494"/>
+        <location filename="mainwindow.cpp" line="434"/>
+        <location filename="mainwindow.cpp" line="440"/>
+        <location filename="mainwindow.cpp" line="446"/>
+        <location filename="mainwindow.cpp" line="452"/>
+        <location filename="mainwindow.cpp" line="458"/>
+        <location filename="mainwindow.cpp" line="464"/>
+        <location filename="mainwindow.cpp" line="470"/>
+        <location filename="mainwindow.cpp" line="476"/>
+        <location filename="mainwindow.cpp" line="486"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
@@ -969,36 +969,36 @@
         <translation type="vanished">Seuls les noms de fichiers anglais sont pris en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="455"/>
+        <location filename="mainwindow.cpp" line="447"/>
         <source>Dir does not exists</source>
         <translation>Le dossier n’existe pas.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="461"/>
+        <location filename="mainwindow.cpp" line="453"/>
         <source>File type error, only image support</source>
         <translation>Erreur de type de fichier, prise en charge de l’image uniquement</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="473"/>
+        <location filename="mainwindow.cpp" line="465"/>
         <source>Invalid url, please check your input</source>
         <translation>Pour les URL non prises en charge, veuillez vérifier votre saisie.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="479"/>
+        <location filename="mainwindow.cpp" line="471"/>
         <source>Error image format, please check your input</source>
         <translation>Mauvais format d&apos;image, veuillez vérifier votre saisie!</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="485"/>
+        <location filename="mainwindow.cpp" line="477"/>
         <source>CUDA is not supported</source>
         <translation>Cuda n&apos;est pas pris en charge</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="530"/>
-        <location filename="mainwindow.cpp" line="1897"/>
-        <location filename="mainwindow.cpp" line="1912"/>
-        <location filename="mainwindow.cpp" line="1938"/>
-        <location filename="mainwindow.cpp" line="2012"/>
+        <location filename="mainwindow.cpp" line="522"/>
+        <location filename="mainwindow.cpp" line="1859"/>
+        <location filename="mainwindow.cpp" line="1874"/>
+        <location filename="mainwindow.cpp" line="1900"/>
+        <location filename="mainwindow.cpp" line="1974"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -1007,85 +1007,85 @@
         <translation type="vanished">Aucun FFmpeg trouvé.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="530"/>
+        <location filename="mainwindow.cpp" line="522"/>
         <source>FFmpeg not found</source>
         <translation>Aucun FFmpeg trouvé.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="773"/>
+        <location filename="mainwindow.cpp" line="765"/>
         <source>done</source>
         <translation>Fait</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="783"/>
+        <location filename="mainwindow.cpp" line="775"/>
         <source>error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="794"/>
-        <location filename="mainwindow.cpp" line="1198"/>
-        <location filename="mainwindow.cpp" line="1562"/>
-        <location filename="mainwindow.cpp" line="1922"/>
-        <location filename="mainwindow.cpp" line="2019"/>
-        <location filename="mainwindow.cpp" line="2044"/>
+        <location filename="mainwindow.cpp" line="786"/>
+        <location filename="mainwindow.cpp" line="1190"/>
+        <location filename="mainwindow.cpp" line="1524"/>
+        <location filename="mainwindow.cpp" line="1884"/>
+        <location filename="mainwindow.cpp" line="1981"/>
+        <location filename="mainwindow.cpp" line="2006"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="896"/>
+        <location filename="mainwindow.cpp" line="888"/>
         <source>Web Video</source>
         <translation>Entrée vidéo Web</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="897"/>
+        <location filename="mainwindow.cpp" line="889"/>
         <source>Please input the url of web video</source>
         <translation>Veuillez entrer l&apos;URL de la vidéo web.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1199"/>
+        <location filename="mainwindow.cpp" line="1191"/>
         <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
         <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
         <translation>Vous utilisez le mode d’accélération GPU, mais avez toujours le prétraitement ou le postprocessage activé, ce qui peut ralentir le traitement GPU (généralement encore plus rapide que le processeur), les désactiver?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1458"/>
-        <location filename="mainwindow.cpp" line="1471"/>
-        <location filename="mainwindow.cpp" line="1484"/>
-        <location filename="mainwindow.cpp" line="1497"/>
+        <location filename="mainwindow.cpp" line="1420"/>
+        <location filename="mainwindow.cpp" line="1433"/>
+        <location filename="mainwindow.cpp" line="1446"/>
+        <location filename="mainwindow.cpp" line="1459"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation type="unfinished">Fichiers de traduction en chinois</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1515"/>
-        <location filename="mainwindow.cpp" line="1518"/>
+        <location filename="mainwindow.cpp" line="1477"/>
+        <location filename="mainwindow.cpp" line="1480"/>
         <source>FFmpeg path</source>
         <translation>Chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1519"/>
+        <location filename="mainwindow.cpp" line="1481"/>
         <source>Please input the FFmpeg path</source>
         <translation>Veuillez saisir le chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1563"/>
+        <location filename="mainwindow.cpp" line="1525"/>
         <source>Log has been copied to the clipboard</source>
         <translation>Journal copié dans le presse-papiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1796"/>
+        <location filename="mainwindow.cpp" line="1758"/>
         <source>please select a folder</source>
         <translation>Veuillez sélectionner un dossier</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1898"/>
+        <location filename="mainwindow.cpp" line="1860"/>
         <source>Failed to initialize GPU: </source>
         <oldsource>Failed to initialize GPU:
 </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1992"/>
+        <location filename="mainwindow.cpp" line="1954"/>
         <source>Benchmark test under 8-bit integer input and serial processing
 
 </source>
@@ -1104,7 +1104,7 @@
         <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2100"/>
+        <location filename="mainwindow.cpp" line="2062"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
@@ -1114,18 +1114,18 @@
         <translation type="vanished">Essayez-vous d’activer l’accélération GPU, est-ce encore une fonctionnalité expérimentale, vérifier la compatibilité et initialiser?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1939"/>
-        <location filename="mainwindow.cpp" line="2013"/>
+        <location filename="mainwindow.cpp" line="1901"/>
+        <location filename="mainwindow.cpp" line="1975"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2045"/>
+        <location filename="mainwindow.cpp" line="2007"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="449"/>
+        <location filename="mainwindow.cpp" line="441"/>
         <source>File does not exists</source>
         <translation>Le fichier n’existe pas.</translation>
     </message>
@@ -1134,25 +1134,25 @@
         <translation type="vanished">Erreur de type de fichier, seules les images sont prises en charge</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="467"/>
+        <location filename="mainwindow.cpp" line="459"/>
         <source>File type error, you can add it manually</source>
         <translation>Erreur de type de fichier, vous pouvez l&apos;ajouter manuellement</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="443"/>
+        <location filename="mainwindow.cpp" line="435"/>
         <source>Processing list empty</source>
         <translation>La liste de traitement est vide.</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="49"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1070"/>
-        <location filename="mainwindow.cpp" line="835"/>
-        <location filename="mainwindow.cpp" line="1185"/>
+        <location filename="mainwindow.cpp" line="827"/>
+        <location filename="mainwindow.cpp" line="1177"/>
         <source>pick files</source>
         <translation>sélectionner des fichiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="886"/>
+        <location filename="mainwindow.cpp" line="878"/>
         <source>output directory</source>
         <translation>Dossiers de sortie</translation>
     </message>

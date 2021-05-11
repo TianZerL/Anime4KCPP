@@ -4,16 +4,7 @@
 #include<immintrin.h>
 #endif
 
-#if defined(_MSC_VER) && !defined(USE_TBB)
-#include<ppl.h>
-namespace Parallel = Concurrency;
-#elif defined(USE_TBB)
-#include<tbb/parallel_for.h>
-namespace Parallel = tbb;
-#else
-#include<omp.h>
-#endif
-
+#include"Parallel.hpp"
 #include"CPUCNNProcessor.hpp"
 
 #define RELU(x) std::max(x, static_cast<FP>(0.0))
@@ -38,23 +29,13 @@ namespace Anime4KCPP
             const size_t srcStep = src.step;
             const size_t step = tmpMat.step;
 
-#if defined(_MSC_VER) || defined(USE_TBB)
-            Parallel::parallel_for(0, h, [&](int i) {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
-                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += outChannels)
-                    callBack(i, j, tmpLineData + j, lineData);
+            Anime4KCPP::Utils::ParallelFor(0, h, 
+                [&](const int i) {
+                    T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
+                    float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
+                    for (int j = 0; j < jMAX; j += outChannels)
+                        callBack(i, j, tmpLineData + j, lineData);
                 });
-#else
-#pragma omp parallel for
-            for (int i = 0; i < h; i++)
-            {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
-                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += outChannels)
-                    callBack(i, j, tmpLineData + j, lineData);
-            }
-#endif
         }
 
         template<typename F>
@@ -68,23 +49,13 @@ namespace Anime4KCPP
             cv::Mat tmp;
             tmp.create(h, w, tmpMat.type());
 
-#if defined(_MSC_VER) || defined(USE_TBB)
-            Parallel::parallel_for(0, h, [&](int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += channels)
-                    callBack(i, j, tmpLineData + j, lineData);
+            Anime4KCPP::Utils::ParallelFor(0, h, 
+                [&](const int i) {
+                    float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
+                    float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
+                    for (int j = 0; j < jMAX; j += channels)
+                        callBack(i, j, tmpLineData + j, lineData);
                 });
-#else
-#pragma omp parallel for
-            for (int i = 0; i < h; i++)
-            {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
-                for (int j = 0; j < jMAX; j += channels)
-                    callBack(i, j, tmpLineData + j, lineData);
-            }
-#endif
 
             tmpMat = tmp;
         }
@@ -100,23 +71,13 @@ namespace Anime4KCPP
             const size_t step = tmpMat.step;
             const size_t dstStep = img.step;
 
-#if defined(_MSC_VER) || defined(USE_TBB)
-            Parallel::parallel_for(0, h, [&](int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-                T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
-                for (int j = 0; j < jMAX; j++)
-                    callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
+            Anime4KCPP::Utils::ParallelFor(0, h, 
+                [&](const int i) {
+                    float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+                    T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
+                    for (int j = 0; j < jMAX; j++)
+                        callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
                 });
-#else
-#pragma omp parallel for
-            for (int i = 0; i < h; i++)
-            {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-                T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
-                for (int j = 0; j < jMAX; j++)
-                    callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
-            }
-#endif
         }
     }
 }
