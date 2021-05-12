@@ -199,8 +199,8 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageB()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
@@ -233,17 +233,17 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageB()
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
-        cv::split(orgImg, yuv);
-        orgImg = yuv[Y];
+        cv::split(tmpImg, yuv);
 
-        dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_8UC1);
+        dstImg.create(yuv[Y].rows * 2, yuv[Y].cols * 2, CV_8UC1);
         if (parallelIO)
-            runKernelPB(orgImg, dstImg);
+            runKernelPB(yuv[Y], dstImg);
         else
-            runKernelB(orgImg, dstImg);
+            runKernelB(yuv[Y], dstImg);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
@@ -343,8 +343,8 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageW()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
@@ -377,17 +377,17 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageW()
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
-        cv::split(orgImg, yuv);
-        orgImg = yuv[Y];
+        cv::split(tmpImg, yuv);
 
-        dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_16UC1);
+        dstImg.create(yuv[Y].rows * 2, yuv[Y].cols * 2, CV_16UC1);
         if (parallelIO)
-            runKernelPW(orgImg, dstImg);
+            runKernelPW(yuv[Y], dstImg);
         else
-            runKernelW(orgImg, dstImg);
+            runKernelW(yuv[Y], dstImg);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
@@ -487,8 +487,8 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
@@ -521,17 +521,17 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImageF()
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
         std::vector<cv::Mat> yuv(3);
-        cv::split(orgImg, yuv);
-        orgImg = yuv[Y];
+        cv::split(tmpImg, yuv);
 
-        dstImg.create(orgImg.rows * 2, orgImg.cols * 2, CV_32FC1);
+        dstImg.create(yuv[Y].rows * 2, yuv[Y].cols * 2, CV_32FC1);
         if (parallelIO)
-            runKernelPF(orgImg, dstImg);
+            runKernelPF(yuv[Y], dstImg);
         else
-            runKernelF(orgImg, dstImg);
+            runKernelF(yuv[Y], dstImg);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);

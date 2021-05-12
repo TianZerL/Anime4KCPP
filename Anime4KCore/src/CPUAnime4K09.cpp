@@ -151,13 +151,14 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageB()
 
 void Anime4KCPP::CPU::Anime4K09::processGrayscaleB()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     int tmpPcc = param.pushColorCount;
     if (param.zoomFactor == 2.0)
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
     if (param.preprocessing)// preprocessing
         FilterProcessor(dstImg, param.preFilters).process();
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
@@ -234,13 +235,14 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageW()
 
 void Anime4KCPP::CPU::Anime4K09::processGrayscaleW()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     int tmpPcc = param.pushColorCount;
     if (param.zoomFactor == 2.0)
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
     if (param.preprocessing)// preprocessing
         FilterProcessor(dstImg, param.preFilters).process();
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);
@@ -317,13 +319,14 @@ void Anime4KCPP::CPU::Anime4K09::processRGBImageF()
 
 void Anime4KCPP::CPU::Anime4K09::processGrayscaleF()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     int tmpPcc = param.pushColorCount;
     if (param.zoomFactor == 2.0)
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_LINEAR);
     else
-        cv::resize(orgImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        cv::resize(tmpImg, dstImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
     if (param.preprocessing)// preprocessing
         FilterProcessor(dstImg, param.preFilters).process();
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2BGRA);

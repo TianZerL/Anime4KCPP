@@ -29,7 +29,8 @@
 #define acLoadImageYUV acLoadImageYUVPlanarB
 #define acLoadImageRGBBytes acLoadImageRGBPackedB
 #define acSaveImageRGB acSaveImageRGBPlanarB
-#define acSaveImageRGBBytes acSaveImageRGBPackedB
+#define acSaveImageRGBBytes acSaveImageRGBPacked
+#define acSaveImagBufferSizeYUV acSaveImageBufferSizeRGB
 
 #define acSaveImageYUV acSaveImageRGB
 #define acSaveImageYUV444Bytes acSaveImageRGBBytes
@@ -239,12 +240,20 @@ extern "C"
     AC_DLL ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
     //acGetProcessorInfo may need to run two times for getting length of info string first
     AC_DLL ac_error AC_API acGetProcessorInfo(ac_instance instance, char* info, size_t* length);
+    AC_DLL ac_error AC_API acSaveImageBufferSize(ac_instance instance, size_t* dataSize, size_t dstStride);
+    AC_DLL ac_error AC_API acSaveImageBufferSizeRGB(
+        ac_instance instance,
+        size_t* rSize, size_t dstStrideR,
+        size_t* gSize, size_t dstStrideG,
+        size_t* bSize, size_t dstStrideB);
+    AC_DLL ac_error AC_API saveImageShape(ac_instance instance, int* cols, int* rows, int* channels);
 
 #ifdef ENABLE_VIDEO
 
     AC_DLL ac_videoProcessor AC_API acGetVideoProcessor(
         ac_parameters* parameters, ac_processType type, ac_error* error
     );
+    AC_DLL ac_videoProcessor AC_API acGetVideoProcessorFromInstance(ac_instance instance);
     AC_DLL void AC_API acFreeVideoProcessor(ac_videoProcessor instance);
     AC_DLL ac_error AC_API acLoadVideo(ac_videoProcessor instance, const char* srcFile);
     AC_DLL ac_error AC_API acProcessVideo(ac_videoProcessor instance);

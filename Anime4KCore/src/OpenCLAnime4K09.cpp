@@ -199,16 +199,17 @@ void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleB()
         nHeight = static_cast<double>(orgH) / static_cast<double>(H);
     }
 
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_8UC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
     if (parallelIO)
-        runKernelPB(orgImg, dstImg);
+        runKernelPB(tmpImg, dstImg);
     else
-        runKernelB(orgImg, dstImg);
+        runKernelB(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -291,16 +292,17 @@ void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleW()
         nHeight = static_cast<double>(orgH) / static_cast<double>(H);
     }
 
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_16UC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
     if (parallelIO)
-        runKernelPW(orgImg, dstImg);
+        runKernelPW(tmpImg, dstImg);
     else
-        runKernelW(orgImg, dstImg);
+        runKernelW(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -383,16 +385,17 @@ void Anime4KCPP::OpenCL::Anime4K09::processGrayscaleF()
         nHeight = static_cast<double>(orgH) / static_cast<double>(H);
     }
 
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_32FC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
     if (parallelIO)
-        runKernelPF(orgImg, dstImg);
+        runKernelPF(tmpImg, dstImg);
     else
-        runKernelF(orgImg, dstImg);
+        runKernelF(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();

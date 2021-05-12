@@ -888,6 +888,51 @@ extern "C"
         return AC_OK;
     }
 
+    AC_DLL ac_error AC_API acSaveImageBufferSize(ac_instance instance, size_t* dataSize, size_t dstStride)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (dataSize != nullptr)
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImageBufferSize(*dataSize, dstStride);
+        else
+            return AC_ERROR_NULL_Data;
+
+        return AC_OK;
+    }
+
+    AC_DLL ac_error AC_API acSaveImageBufferSizeRGB(ac_instance instance,
+        size_t* rSize, size_t dstStrideR,
+        size_t* gSize, size_t dstStrideG,
+        size_t* bSize, size_t dstStrideB)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (rSize != nullptr && gSize != nullptr && bSize != nullptr)
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImageBufferSize(
+                *rSize, dstStrideR,
+                *gSize, dstStrideG,
+                *bSize, dstStrideB);
+        else
+            return AC_ERROR_NULL_Data;
+
+        return AC_OK;
+    }
+
+    AC_DLL ac_error AC_API saveImageShape(ac_instance instance, int* cols, int* rows, int* channels)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        if (cols != nullptr && rows != nullptr && channels != nullptr)
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImageShape(*cols, *rows, *channels);
+        else
+            return AC_ERROR_NULL_Data;
+
+        return AC_OK;
+    }
+
 #ifdef ENABLE_VIDEO
 
     ac_videoProcessor acGetVideoProcessor(ac_parameters* parameters, ac_processType type, ac_error* error)
@@ -895,6 +940,11 @@ extern "C"
         if (error != nullptr)
             *error = AC_OK;
         return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(getParameters(parameters), getProcessorType(type, error)));
+    }
+
+    ac_videoProcessor acGetVideoProcessorFromInstance(ac_instance instance)
+    {
+        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(*reinterpret_cast<Anime4KCPP::AC*>(instance)));
     }
 
     void  acFreeVideoProcessor(ac_videoProcessor instance)

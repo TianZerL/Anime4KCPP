@@ -137,14 +137,16 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processB(orgImg, dstImg, 1);
+        processor->processB(tmpImg, dstImg, 1);
 
-        cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
+        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
 
-        cv::cvtColor(orgImg, dstImg, cv::COLOR_YUV2BGR);
+        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
     }
 }
 
@@ -235,14 +237,16 @@ void Anime4KCPP::CPU::ACNet::processRGBImageW()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processW(orgImg, dstImg, 1);
+        processor->processW(tmpImg, dstImg, 1);
 
-        cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
+        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
 
-        cv::cvtColor(orgImg, dstImg, cv::COLOR_YUV2BGR);
+        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
     }
 }
 
@@ -333,14 +337,16 @@ void Anime4KCPP::CPU::ACNet::processRGBImageF()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2YUV);
+        
+        cv::Mat tmpImg;
+        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processF(orgImg, dstImg, 1);
+        processor->processF(tmpImg, dstImg, 1);
 
-        cv::resize(orgImg, orgImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, orgImg, std::vector<int>{0, 0});
+        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
+        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
 
-        cv::cvtColor(orgImg, dstImg, cv::COLOR_YUV2BGR);
+        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
     }
 }
 

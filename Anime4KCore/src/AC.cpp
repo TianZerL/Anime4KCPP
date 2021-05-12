@@ -560,18 +560,21 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
 
 void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 {
+    cv::Mat tmpImg = dstImg;
     if (inputYUV)
     {
         if (dstY.size() != dstU.size())
             cv::resize(dstU, dstU, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
         if (dstY.size() != dstV.size())
             cv::resize(dstV, dstV, dstY.size(), 0.0, 0.0, cv::INTER_CUBIC);
-        cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_YUV2BGR);
+        cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, tmpImg);
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
     }
     if (bitDepth == 32)
     {
-        dstImg.convertTo(dstImg, CV_8UC(dstImg.channels()), 255.0);
+        cv::Mat tmp;
+        tmpImg.convertTo(tmp, CV_8UC(tmpImg.channels()), 255.0);
+        tmpImg = tmp;
     }
     if (checkAlphaChannel)
     {
@@ -581,30 +584,44 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
             cv::Mat tmp;
             cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
             tmp.convertTo(tmp, CV_32FC3, 1.0 / 255.0);
-            cv::multiply(dstImg, tmp, dstImg, 1.0, CV_8UC3);
+            cv::multiply(tmpImg, tmp, tmp, 1.0, CV_8UC3);
+            tmpImg = tmp;
         }
         else
-            cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
+        {
+            cv::Mat tmp;
+            cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
+            tmpImg = tmp;
+        }
     }
 
-    cv::imwrite(dstFile, dstImg);
+    cv::imwrite(dstFile, tmpImg);
 }
 
 void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
 {
+    cv::Mat tmpImg = dstImg;
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, tmpImg);
         else
             throw ACException<ExceptionType::IO>("Only YUV444 can be saved to opencv Mat");
     }
     else if (inputRGB32)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+    {
+        cv::Mat tmp;
+        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
+        tmpImg = tmp;
+    }
     else if (checkAlphaChannel)
-        cv::merge(std::vector<cv::Mat>{ dstImg, alphaChannel }, dstImg);
+    {
+        cv::Mat tmp;
+        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
+        tmpImg = tmp;
+    }
 
-    dstImage = dstImg;
+    dstImage = tmpImg;
 }
 
 void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
@@ -627,29 +644,40 @@ void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
 
 void Anime4KCPP::AC::saveImage(unsigned char* data, size_t dstStride)
 {
+    cv::Mat tmpImg = dstImg;
     if (data == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointer can not be nullptr");
     if (inputYUV)
     {
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, dstImg);
+            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, tmpImg);
         else
             throw ACException<ExceptionType::IO>("Only YUV444 can be saved to data pointer");
     }
     else if (inputRGB32)
-        cv::cvtColor(dstImg, dstImg, cv::COLOR_RGB2RGBA);
+    {
+        cv::Mat tmp;
+        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
+        tmpImg = tmp;
+    }
+    else if (checkAlphaChannel)
+    {
+        cv::Mat tmp;
+        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
+        tmpImg = tmp;
+    }
 
-    size_t stride = dstImg.step;
+    size_t stride = tmpImg.step;
     size_t step = dstStride > stride ? dstStride : stride;
     if (stride == step)
     {
-        memcpy(data, dstImg.data, stride * H);
+        memcpy(data, tmpImg.data, stride * H);
     }
     else
     {
         for (size_t i = 0; i < H; i++)
         {
-            memcpy(data, dstImg.data + i * stride, stride);
+            memcpy(data, tmpImg.data + i * stride, stride);
             data += step;
         }
     }
@@ -726,6 +754,58 @@ void Anime4KCPP::AC::saveImage(
             }
         }
     }
+}
+
+void Anime4KCPP::AC::saveImageBufferSize(size_t& dataSize, size_t dstStride)
+{
+    size_t stride = dstImg.step;
+
+    if (inputYUV)
+    {
+        stride = dstY.step + dstU.step + dstV.step;
+    }
+    else if (inputRGB32)
+        stride += stride / 3;
+ 
+    size_t step = dstStride > stride ? dstStride : stride;
+    dataSize = step * H;
+}
+
+void Anime4KCPP::AC::saveImageBufferSize(size_t& rSize, size_t dstStrideR, size_t& gSize, size_t dstStrideG, size_t& bSize, size_t dstStrideB)
+{
+    if (inputYUV)
+    {
+        size_t strideY = dstY.step;
+        size_t strideU = dstU.step;
+        size_t strideV = dstV.step;
+
+        size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
+        size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
+        size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
+
+        size_t HY = dstY.rows;
+        size_t HUV = dstU.rows;
+
+        rSize = stepY * HY;
+        gSize = stepU * HUV;
+        bSize = stepV * HUV;
+    }
+    else
+    {
+        size_t stride = dstImg.step / 3;
+        size_t step = dstStrideR > stride ? dstStrideR : stride;
+
+        rSize = step * H;
+        gSize = step * H;
+        bSize = step * H;
+    }
+}
+
+void Anime4KCPP::AC::saveImageShape(int& cols, int& rows, int& channels)
+{
+    cols = W;
+    rows = H;
+    channels = (inputRGB32 || checkAlphaChannel) ? 4 : 3;
 }
 
 std::string Anime4KCPP::AC::getInfo()

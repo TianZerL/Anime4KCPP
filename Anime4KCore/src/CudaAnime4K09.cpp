@@ -135,13 +135,14 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageB()
 
 void Anime4KCPP::Cuda::Anime4K09::processGrayscaleB()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_8UC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelB(orgImg, dstImg);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
+    runKernelB(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -185,13 +186,14 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageW()
 
 void Anime4KCPP::Cuda::Anime4K09::processGrayscaleW()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_16UC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelW(orgImg, dstImg);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
+    runKernelW(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -235,13 +237,14 @@ void Anime4KCPP::Cuda::Anime4K09::processRGBImageF()
 
 void Anime4KCPP::Cuda::Anime4K09::processGrayscaleF()
 {
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_GRAY2BGR);
+    cv::Mat tmpImg;
+    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
     dstImg.create(H, W, CV_32FC4);
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
+    runKernelF(tmpImg, dstImg);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();

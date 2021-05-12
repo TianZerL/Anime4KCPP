@@ -160,7 +160,12 @@ public:
         unsigned char* r, size_t dstStrideR, 
         unsigned char* g, size_t dstStrideG, 
         unsigned char* b, size_t dstStrideB);
-
+    void saveImageBufferSize(size_t& dataSize, size_t dstStride = 0);
+    void saveImageBufferSize(
+        size_t& rSize, size_t dstStrideR, 
+        size_t& gSize, size_t dstStrideG, 
+        size_t& bSize, size_t dstStrideB);
+    void saveImageShape(int& cols, int& rows, int& channels);
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);
 

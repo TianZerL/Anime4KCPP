@@ -48,15 +48,31 @@ Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, uint8_t filters)
 void Anime4KCPP::FilterProcessor::process()
 {
     if (filters & MEDIAN_BLUR)
-        cv::medianBlur(srcImgRef, srcImgRef, 3);
+    {
+        cv::Mat tmpImg;
+        cv::medianBlur(srcImgRef, tmpImg, 3);
+        srcImgRef = tmpImg;
+    }
     if (filters & MEAN_BLUR)
-        cv::blur(srcImgRef, srcImgRef, cv::Size(3, 3));
+    {
+        cv::Mat tmpImg;
+        cv::blur(srcImgRef, tmpImg, cv::Size(3, 3));
+        srcImgRef = tmpImg;
+    }
     if (filters & CAS_SHARPENING)
         CASSharpening(srcImgRef);
     if (filters & GAUSSIAN_BLUR_WEAK)
-        cv::GaussianBlur(srcImgRef, srcImgRef, cv::Size(3, 3), 0.5);
+    {
+        cv::Mat tmpImg;
+        cv::GaussianBlur(srcImgRef, tmpImg, cv::Size(3, 3), 0.5);
+        srcImgRef = tmpImg;
+    }
     else if (filters & GAUSSIAN_BLUR)
-        cv::GaussianBlur(srcImgRef, srcImgRef, cv::Size(3, 3), 1);
+    {
+        cv::Mat tmpImg;
+        cv::GaussianBlur(srcImgRef, tmpImg, cv::Size(3, 3), 1);
+        srcImgRef = tmpImg;
+    }
     if (filters & BILATERAL_FILTER)
     {
         cv::Mat tmpImg;

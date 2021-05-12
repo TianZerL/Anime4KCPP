@@ -21,6 +21,10 @@ if(Build_C_Wrapper)
         add_definitions(-DENABLE_VIDEO)
     endif()
 
+    if(Enable_Preview_GUI)
+        add_definitions(-DENABLE_PREVIEW_GUI)
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
