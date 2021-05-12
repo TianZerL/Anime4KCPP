@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_OPENCL
+
 #ifdef BUILT_IN_KERNEL
 
 namespace Anime4KCPP
@@ -290,5 +292,7 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
 
     }
 }
+
+#endif
 
 #endif

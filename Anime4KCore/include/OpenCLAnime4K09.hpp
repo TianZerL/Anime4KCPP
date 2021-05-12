@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_OPENCL
+
 #include"AC.hpp"
 
 namespace Anime4KCPP
@@ -55,3 +57,5 @@ private:
     double nWidth;
     double nHeight;
 };
+
+#endif

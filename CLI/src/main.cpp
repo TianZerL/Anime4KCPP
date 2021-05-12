@@ -85,12 +85,18 @@ static void showVersionInfo()
 
 static void showGPUList()
 {
+#if !defined(ENABLE_OPENCL) && !defined(ENABLE_OCUDA) && !defined(ENABLE_NCNN)
+    std::cerr << "Error: No GPU found" << std::endl << std::endl;
+#endif
+
+#ifdef ENABLE_OPENCL
     std::cout << "OpenCL:" << std::endl;
     Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
     if (OpenCLGPUList.platforms == 0)
         std::cerr << "Error: No OpenCL GPU found" << std::endl << std::endl;
     else
         std::cout << OpenCLGPUList() << std::endl;
+#endif
 
 #ifdef ENABLE_CUDA
     std::cout << "Cuda:" << std::endl;
@@ -119,9 +125,11 @@ static void benchmark(const int pID, const int dID)
     double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
     double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 
+#ifdef ENABLE_OPENCL
     double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
     double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
     double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+#endif 
 
 #ifdef ENABLE_CUDA
     double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
@@ -145,11 +153,13 @@ static void benchmark(const int pID, const int dID)
         << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
 
+#ifdef ENABLE_OPENCL
     std::cout
         << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
         << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
         << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+#endif 
 
 #ifdef ENABLE_CUDA
     std::cout
@@ -321,7 +331,21 @@ int main(int argc, char* argv[])
     GPGPU GPGPUModel;
     std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
     if (GPGPUModelString == "opencl")
+    {
+#ifdef ENABLE_OPENCL
         GPGPUModel = GPGPU::OpenCL;
+#elif defined(ENABLE_CUDA)
+        GPGPUModel = GPGPU::CUDA;
+#elif defined(ENABLE_NCNN)
+        GPGPUModel = GPGPU::NCNN;
+#else
+        if (GPU)
+        {
+            std::cerr << "No GPU processor available" << std::endl;
+            return 0;
+        }
+#endif
+    }
     else if (GPGPUModelString == "cuda")
         GPGPUModel = GPGPU::CUDA;
     else if (GPGPUModelString == "ncnn")
@@ -415,6 +439,10 @@ int main(int argc, char* argv[])
             switch (GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifndef ENABLE_OPENCL
+                std::cerr << "OpenCL is not supported" << std::endl;
+                return 0;
+#else
                 if (CNN)
                     creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                         pID, dID,
@@ -426,6 +454,7 @@ int main(int argc, char* argv[])
                         pID, dID,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
+#endif
                 break;
             case GPGPU::CUDA:
 #ifndef ENABLE_CUDA
@@ -473,6 +502,7 @@ int main(int argc, char* argv[])
             {
             case GPGPU::OpenCL:
             {
+#ifdef ENABLE_OPENCL
                 Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
                 if (!ret)
                 {
@@ -485,6 +515,7 @@ int main(int argc, char* argv[])
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
             }
             break;
             case GPGPU::CUDA:

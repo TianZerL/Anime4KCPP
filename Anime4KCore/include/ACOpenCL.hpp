@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_OPENCL
+
 #include"OpenCLAnime4K09.hpp"
 #include"OpenCLACNet.hpp"
 #include"ACManager.hpp"
@@ -139,3 +141,5 @@ inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isSupport()
 {
     return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
 }
+
+#endif

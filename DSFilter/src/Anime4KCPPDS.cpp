@@ -113,7 +113,13 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     if (OpenCLQueueNum < 1)
         OpenCLQueueNum = 1;
 
+#ifdef ENABLE_OPENCL
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"OpenCL", _GPGPUModelString, 10, lpPath);
+#elif defined(ENABLE_CUDA)
+    GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"CUDA", _GPGPUModelString, 10, lpPath);
+#else
+    GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"CPU", _GPGPUModelString, 10, lpPath);
+#endif
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
@@ -158,6 +164,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     switch (GPGPUModel)
     {
     case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
         if (CNN)
             acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                 pID, dID,
@@ -169,22 +176,11 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
                 pID, dID,
                 OpenCLQueueNum,
                 OpenCLParallelIO);
+#endif
         break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
         acCreator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
-#else
-        if (CNN)
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                pID, dID,
-                Anime4KCPP::CNNType::Default,
-                OpenCLQueueNum,
-                OpenCLParallelIO);
-        else
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
-                pID, dID,
-                OpenCLQueueNum,
-                OpenCLParallelIO);
 #endif
         break;
     case GPGPU::CPU:
@@ -475,10 +471,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     switch (GPGPUModel)
     {
     case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
         if (CNN)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
         else
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
         break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -486,11 +484,6 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
         else
             ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
-#else
-        if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
         break;
     case GPGPU::CPU:
@@ -646,6 +639,7 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
     switch (GPGPUModel)
     {
     case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
     {
         Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
         if (!ret)
@@ -654,6 +648,10 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
             return FALSE;
         }
     }
+#else
+        MessageBoxExA(nullptr, "OpenCL is not supported", "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+        return FALSE;
+#endif
     break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -751,20 +749,17 @@ STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
         tmpStr = "Anime4KCPP for DirectShow will ues CPU\n";
         break;
     case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
     {
         Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
         tmpStr = GPUInfo();
     }
+#endif
     break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
     {
         Anime4KCPP::Cuda::GPUList GPUInfo = Anime4KCPP::Cuda::listGPUs();
-        tmpStr = GPUInfo();
-    }
-#else
-    {
-        Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
         tmpStr = GPUInfo();
     }
 #endif

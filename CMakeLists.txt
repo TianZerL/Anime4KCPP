@@ -32,8 +32,9 @@ option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
-option(Enable_Fast_Math "Enable fast math" OFF)
+option(Enable_OpenCL "Enable OpenCL module" ON)
 option(Enable_NCNN "Enable ncnn module" OFF)
+option(Enable_Fast_Math "Enable fast math" OFF)
 option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required, it can accelerate or slow down, AMD Ryzen recommended" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
 option(Enable_Video "Enable video processor module" ON)
@@ -136,19 +137,6 @@ elseif(NOT OpenCL_Provider MATCHES "Auto")
     )
 endif()
 
-if(Enable_NCNN)
-    set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
-endif()
-
-if(Enable_AVX2)
-    add_definitions(-DENABLE_AVX)
-endif()
-
-message(STATUS  
-"C++ compiler flags:\n"
-    ${CMAKE_CXX_FLAGS}
-)
-
 message(STATUS  
 "Building information:\n"
 "   Build CLI ${Build_CLI}\n"
@@ -160,6 +148,7 @@ message(STATUS
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
+"   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
 "   Enable AVX2 ${Enable_AVX2}\n"
@@ -174,6 +163,27 @@ if(WIN32)
     )
 endif()
 
+if(Enable_CUDA)
+    add_definitions(-DENABLE_CUDA)
+endif()
+
+if(Enable_OpenCL)
+    add_definitions(-DENABLE_OPENCL)
+endif()
+
+if(Enable_NCNN)
+    set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
+endif()
+
+if(Enable_AVX2)
+    add_definitions(-DENABLE_AVX)
+endif()
+
+message(STATUS  
+"C++ compiler flags:\n"
+    ${CMAKE_CXX_FLAGS}
+)
+
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(OS_64_Bit ON)
 else()
@@ -181,10 +191,6 @@ else()
 endif()
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-
-if(Enable_CUDA)
-    add_definitions(-DENABLE_CUDA)
-endif()
 
 macro(SUBDIRLIST result curdir)
     file(GLOB children RELATIVE ${curdir} ${curdir}/*)

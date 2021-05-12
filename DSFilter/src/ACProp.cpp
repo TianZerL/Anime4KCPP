@@ -73,9 +73,7 @@ HRESULT ACProp::OnActivate()
 
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CPU");
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"OpenCL");
-#ifdef ENABLE_CUDA
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CUDA");
-#endif
     ComboBox_SetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), GPGPUModelIdx);
 
     TCHAR sz[STR_MAX_LENGTH];

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_OPENCL
+
 #ifdef BUILT_IN_KERNEL
 
 #include<string>
@@ -7065,3 +7067,5 @@ __constant float kernelsL10[4 * 8] =
 }
 
 #endif // BUILT_IN_KERNEL
+
+#endif // ENABLE_OPENCL

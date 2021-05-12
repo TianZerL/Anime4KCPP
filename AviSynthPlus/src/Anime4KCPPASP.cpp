@@ -104,6 +104,7 @@ Anime4KCPPF::Anime4KCPPF(
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (CNN)
                 acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                     pID, dID, 
@@ -115,6 +116,7 @@ Anime4KCPPF::Anime4KCPPF(
                     pID, dID, 
                     OpenCLQueueNum,
                     OpenCLParallelIO);
+#endif // ENABLE_OPENCL
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -191,10 +193,12 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (CNN)
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -246,10 +250,12 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (CNN)
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -296,10 +302,12 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (CNN)
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
                 ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -381,20 +389,38 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     if (!args[AC_OpenCLParallelIO].Defined())
         OpenCLParallelIO = false;
     if (!args[AC_GPGPUModel].Defined())
+#ifdef ENABLE_OPENCL
         GPGPUModelTmp = "opencl";
+#elif defined(ENABLE_CUDA)
+        GPGPUModelTmp = "cuda";
+#else
+        GPGPUModelTmp = "cpu";
+#endif 
 
     std::string GPGPUModelString = GPGPUModelTmp;
     std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
 
     GPGPU GPGPUModel;
     if (GPGPUModelString == "opencl")
+    {
+#ifndef ENABLE_OPENCL
+        env->ThrowError("Anime4KCPP: OpenCL is unsupported");
+#endif // ENABLE_OPENCL
         GPGPUModel = GPGPU::OpenCL;
+    }
     else if (GPGPUModelString == "cuda")
     {
 #ifndef ENABLE_CUDA
         env->ThrowError("Anime4KCPP: CUDA is unsupported");
 #endif // ENABLE_CUDA
         GPGPUModel = GPGPU::CUDA;
+    }
+    else if (GPGPUModelString == "cpu")
+    {
+        if (GPUMode)
+        {
+            env->ThrowError("Anime4KCPP: OpenCL or CUDA is unsupported");
+        }
     }
     else
         env->ThrowError("Anime4KCPP: GPGPUModel must be \"cuda\" or \"opencl\"");
@@ -422,6 +448,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
             switch (GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             {
                 Anime4KCPP::OpenCL::GPUInfo ret =
                     Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
@@ -437,6 +464,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                     env->ThrowError(err.str().c_str());
                 }
             }
+#endif
             break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -455,7 +483,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                     env->ThrowError(err.str().c_str());
                 }
             }
-#endif // ENABLE_CUDA
+#endif
             break;
             }
         }
@@ -489,9 +517,11 @@ AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* e
         GPGPUModel = tmpStr;
     std::transform(GPGPUModel.begin(), GPGPUModel.end(), GPGPUModel.begin(), ::tolower);
 
+#ifdef ENABLE_OPENCL
     if (GPGPUModel == "opencl")
         env->ThrowError(Anime4KCPP::OpenCL::listGPUs()().c_str());
     else
+#endif
 #ifdef ENABLE_CUDA
         if (GPGPUModel == "cuda")
             env->ThrowError(Anime4KCPP::Cuda::listGPUs()().c_str());
@@ -516,9 +546,11 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
     double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
     double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 
+#ifdef ENABLE_OPENCL
     double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
     double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
     double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+#endif
 
 #ifdef ENABLE_CUDA
     double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
@@ -536,11 +568,13 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
         << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
 
+#ifdef ENABLE_OPENCL
     oss
         << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
         << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
         << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+#endif
 
 #ifdef ENABLE_CUDA
     oss

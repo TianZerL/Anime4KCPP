@@ -980,11 +980,6 @@
                <property name="statusTip">
                 <string>GPGPU model</string>
                </property>
-               <item>
-                <property name="text">
-                 <string notr="true">OpenCL</string>
-                </property>
-               </item>
               </widget>
              </item>
             </layout>

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_OPENCL
+
 #include"AC.hpp"
 #include"CNN.hpp"
 
@@ -61,3 +63,5 @@ private:
 private:
     int currACNetypeIndex;
 };
+
+#endif

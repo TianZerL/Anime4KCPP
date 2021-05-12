@@ -1,7 +1,10 @@
 #pragma once
 
 #include"ACCPU.hpp"
+
+#ifdef ENABLE_OPENCL
 #include"ACOpenCL.hpp"
+#endif
 
 #ifdef ENABLE_CUDA
 #include"ACCuda.hpp"

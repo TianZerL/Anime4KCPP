@@ -37,6 +37,7 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
         switch (data->GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (data->CNN)
                 data->acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                     data->pID, data->dID, 
@@ -48,6 +49,7 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
                     data->pID, data->dID, 
                     data->OpenCLQueueNum,
                     data->OpenCLParallelIO);
+#endif // ENABLE_OPENCL
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -104,10 +106,12 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
             switch (data->GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -183,10 +187,12 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
             switch (data->GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -253,10 +259,12 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
             switch (data->GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
                 if (data->CNN)
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
                     ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -393,13 +401,27 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     std::string GPGPUModel;
     const char* tmpStr = vsapi->propGetData(in, "GPGPUModel", 0, &err);
     if (err)
+#ifdef ENABLE_OPENCL
         GPGPUModel = "opencl";
+#elif defined(ENABLE_CUDA)
+        GPGPUModel = "cuda";
+#else
+        GPGPUModel = "cpu";
+#endif
+
     else
         GPGPUModel = tmpStr;
     std::transform(GPGPUModel.begin(), GPGPUModel.end(), GPGPUModel.begin(), ::tolower);
 
     if (GPGPUModel == "opencl")
+    {
+#ifndef ENABLE_OPENCL
+        vsapi->setError(out, "Anime4KCPP: OpenCL is unsupported");
+        vsapi->freeNode(tmpData.node);
+        return;
+#endif // !ENABLE_OPENCL
         tmpData.GPGPUModel = GPGPU::OpenCL;
+    }
     else if(GPGPUModel == "cuda")
     {
         
@@ -409,6 +431,15 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         return;
 #endif // !ENABLE_CUDA
         tmpData.GPGPUModel = GPGPU::CUDA;
+    }
+    else if (GPGPUModel == "cpu")
+    {
+        if (tmpData.GPU)
+        {
+            vsapi->setError(out, "Anime4KCPP: OpenCL or CUDA is unsupported");
+            vsapi->freeNode(tmpData.node);
+            return;
+        }
     }
     else
     {
@@ -447,6 +478,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             switch (tmpData.GPGPUModel)
             {
             case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             {
                 Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
                 if (tmpData.pID >= list.platforms ||
@@ -479,6 +511,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 }
                 info = ret();
             }
+#endif
             break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
@@ -517,7 +550,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 }
                 info = ret();
             }
-#endif // ENABLE_CUDA
+#endif
             break;
             }
         }
@@ -582,9 +615,11 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
         GPGPUModel = tmpStr;
     std::transform(GPGPUModel.begin(), GPGPUModel.end(), GPGPUModel.begin(), ::tolower);
 
+#ifdef ENABLE_OPENCL
     if(GPGPUModel=="opencl")
         vsapi->logMessage(mtDebug, Anime4KCPP::OpenCL::listGPUs()().c_str());
     else
+#endif // ENABLE_OPENCL
 #ifdef ENABLE_CUDA
         if (GPGPUModel == "cuda")
             vsapi->logMessage(mtDebug, Anime4KCPP::Cuda::listGPUs()().c_str());
@@ -608,9 +643,11 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
     double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
     double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 
+#ifdef ENABLE_OPENCL
     double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
     double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
     double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+#endif 
 
 #ifdef ENABLE_CUDA
     double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
@@ -628,11 +665,13 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
         << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
 
+#ifdef ENABLE_OPENCL
     oss
         << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
         << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
         << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+#endif
 
 #ifdef ENABLE_CUDA
     oss

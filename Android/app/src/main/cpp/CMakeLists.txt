@@ -14,6 +14,7 @@ aux_source_directory(${CMAKE_SOURCE_DIR}/Anime4KCore/src SOURCE)
 
 add_definitions(-DBUILT_IN_KERNEL)
 add_definitions(-DENABLE_VIDEO)
+add_definitions(-DENABLE_OPENCL)
 
 add_library(Anime4KCPPCore SHARED
         Anime4KCPPWrapper.cpp

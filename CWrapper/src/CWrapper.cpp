@@ -40,10 +40,12 @@ Anime4KCPP::Processor::Type getProcessorType(ac_processType type, ac_error* erro
         return Anime4KCPP::Processor::Type::CPU_Anime4K09;
     case AC_CPU_ACNet:
         return Anime4KCPP::Processor::Type::CPU_ACNet;
+#ifdef ENABLE_OPENCL
     case AC_OpenCL_Anime4K09:
         return Anime4KCPP::Processor::Type::OpenCL_Anime4K09;
     case AC_OpenCL_ACNet:
         return Anime4KCPP::Processor::Type::OpenCL_ACNet;
+#endif
 #ifdef ENABLE_CUDA
     case AC_Cuda_Anime4K09:
         return Anime4KCPP::Processor::Type::Cuda_Anime4K09;
@@ -69,8 +71,13 @@ extern "C"
         if (error != nullptr)
             *error = AC_OK;
 
+#ifdef ENABLE_OPENCL
         if (initGPU == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
         {
+
+            if (error != nullptr)
+                *error = AC_ERROR_OPENCL_NOT_SUPPORTED;
+            return nullptr;
             try
             {
                 Anime4KCPP::OpenCL::Anime4K09::initGPU(platformID, deviceID);
@@ -83,7 +90,9 @@ extern "C"
                 return nullptr;
             }
         }
+#endif
 
+#ifdef ENABLE_OPENCL
         if (initGPUCNN == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
         {
             try
@@ -98,6 +107,7 @@ extern "C"
                 return nullptr;
             }
         }
+#endif
 
         switch (type)
         {
@@ -107,12 +117,14 @@ extern "C"
         case AC_CPU_ACNet:
             return reinterpret_cast<ac_instance>(new Anime4KCPP::CPU::ACNet(getParameters(parameters)));
             break;
+#ifdef ENABLE_OPENCL
         case AC_OpenCL_Anime4K09:
             return reinterpret_cast<ac_instance>(new Anime4KCPP::OpenCL::Anime4K09(getParameters(parameters)));
             break;
         case AC_OpenCL_ACNet:
             return reinterpret_cast<ac_instance>(new Anime4KCPP::OpenCL::ACNet(getParameters(parameters)));
             break;
+#endif
         default:
             if (error != nullptr)
                 *error = AC_ERROR_PORCESSOR_TYPE;
@@ -129,6 +141,11 @@ extern "C"
 
         if (managers & AC_Manager_OpenCL_Anime4K09)
         {
+#ifndef ENABLE_OPENCL
+            if (error != nullptr)
+                *error = AC_ERROR_OPENCL_NOT_SUPPORTED;
+            return nullptr;
+#else
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
             {
                 if (error != nullptr)
@@ -140,9 +157,15 @@ extern "C"
                     managerData->OpenCLAnime4K09Data->dID, 
                     managerData->OpenCLAnime4K09Data->OpenCLQueueNum, 
                     static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
+#endif // !ENABLE_OPENCL
         }
         if (managers & AC_Manager_OpenCL_ACNet)
         {
+#ifndef ENABLE_OPENCL
+            if (error != nullptr)
+                *error = AC_ERROR_OPENCL_NOT_SUPPORTED;
+            return nullptr;
+#else
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
             {
                 if (error != nullptr)
@@ -155,6 +178,7 @@ extern "C"
                     static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
                     managerData->OpenCLACNetData->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
+#endif // !ENABLE_OPENCL
         }
         if (managers & AC_Manager_Cuda)
         {
@@ -193,11 +217,13 @@ extern "C"
         if (instance != nullptr)
             delete reinterpret_cast<Anime4KCPP::AC*>(instance);
 
+#ifdef ENABLE_OPENCL
         if (releaseGPU == AC_TRUE && Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
             Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
 
         if (releaseGPUCNN == AC_TRUE && Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
             Anime4KCPP::OpenCL::ACNet::releaseGPU();
+#endif
 
         if (acCreator != nullptr)
             acCreator->deinit(true);
@@ -308,6 +334,7 @@ extern "C"
 
     ac_error acInitGPU(void)
     {
+#ifdef ENABLE_OPENCL
         try
         {
             if (!Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
@@ -318,18 +345,21 @@ extern "C"
             lastCoreError = err.what();
             return AC_ERROR_INIT_GPU;
         }
-
+#endif
         return AC_OK;
     }
 
     void acReleaseGPU(void)
     {
+#ifdef ENABLE_OPENCL
         if (Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
             Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
+#endif
     }
 
     ac_error acInitGPUCNN(void)
     {
+#ifdef ENABLE_OPENCL
         try
         {
             if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
@@ -340,14 +370,16 @@ extern "C"
             lastCoreError = err.what();
             return AC_ERROR_INIT_GPU;
         }
-
+#endif
         return AC_OK;
     }
 
     void acReleaseGPUCNN(void)
     {
+#ifdef ENABLE_OPENCL
         if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
             Anime4KCPP::OpenCL::ACNet::releaseGPU();
+#endif
     }
 
     ac_error acInitGPU2(unsigned int managers, ac_managerData* managerData)
@@ -356,6 +388,9 @@ extern "C"
 
         if (managers & AC_Manager_OpenCL_Anime4K09)
         {
+#ifndef ENABLE_OPENCL
+            return AC_ERROR_OPENCL_NOT_SUPPORTED;
+#else
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
@@ -363,9 +398,13 @@ extern "C"
                     managerData->OpenCLAnime4K09Data->dID,
                     managerData->OpenCLAnime4K09Data->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
+#endif
         }
         if (managers & AC_Manager_OpenCL_ACNet)
         {
+#ifndef ENABLE_OPENCL
+            return AC_ERROR_OPENCL_NOT_SUPPORTED;
+#else
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
                 return AC_ERROR_NULL_Data;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
@@ -374,6 +413,7 @@ extern "C"
                     static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
                     managerData->OpenCLACNetData->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
+#endif
         }
         if (managers & AC_Manager_Cuda)
         {
@@ -636,6 +676,9 @@ extern "C"
 
     ac_bool acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length)
     {
+#ifndef ENABLE_OPENCL
+        return AC_FALSE;
+#else
         Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
         ac_bool rst = ac_bool(ret.supported);
 
@@ -646,6 +689,7 @@ extern "C"
             memcpy(info, ret().c_str(), ret().size() + 1);
 
         return rst;
+#endif
     }
 
     ac_bool acCheckGPUSupport2(ac_GPGPU GPGPUModel, unsigned int pID, unsigned int dID, char* info, size_t* length)
@@ -670,11 +714,18 @@ extern "C"
 #endif
         break;
         case AC_OpenCL:
+#ifdef ENABLE_OPENCL
         {
             Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
             rst = (ac_bool)ret.supported;
             infoString = ret();
         }
+#else
+        {
+            rst = (ac_bool)false;
+            infoString = "OpenCL is not supported";
+        }
+#endif
         break;
         }
 
@@ -689,6 +740,7 @@ extern "C"
 
     void acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices)
     {
+#ifdef ENABLE_OPENCL
         Anime4KCPP::OpenCL::GPUList ret = Anime4KCPP::OpenCL::listGPUs();
 
         if (length != nullptr)
@@ -703,16 +755,35 @@ extern "C"
         if (devices != nullptr)
             for (int i : ret.devices)
                 *(devices++) = i;
+#else
+    std::string ret = "OpenCL is not supported";
+    if (length != nullptr)
+        *length = ret.size() + 1;
+
+    if (info != nullptr)
+        memcpy(info, ret.c_str(), ret.size() + 1);
+
+    if (platforms != nullptr)
+        *platforms = 0;
+#endif
     }
 
     ac_bool acIsInitializedGPU(void)
     {
+#ifdef ENABLE_OPENCL
         return ac_bool(Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU());
+#else
+        return AC_FALSE;
+#endif
     }
 
     ac_bool acIsInitializedGPUCNN(void)
     {
+#ifdef ENABLE_OPENCL
         return ac_bool(Anime4KCPP::OpenCL::ACNet::isInitializedGPU());
+#else
+        return AC_FALSE;
+#endif
     }
 
     void acGetLastCoreErrorString(char* err, size_t* length)
@@ -727,7 +798,11 @@ extern "C"
     void acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore)
     {
         double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+#ifdef ENABLE_OPENCL
         double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+#else
+        double _OpenCLScore = 0.0;
+#endif
 
         *CPUScore = _CPUScore;
         *GPUScore = _OpenCLScore;
@@ -741,10 +816,12 @@ extern "C"
             return Anime4KCPP::benchmark<Anime4KCPP::CPU::Anime4K09, 1920, 1080>();
         case AC_CPU_ACNet:
             return Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
+#ifdef ENABLE_OPENCL
         case AC_OpenCL_Anime4K09:
             return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::Anime4K09, 1920, 1080>(pID, dID);
         case AC_OpenCL_ACNet:
             return Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
+#endif // ENABLE_OPENCL
 #ifdef ENABLE_CUDA
         case AC_Cuda_Anime4K09:
             return Anime4KCPP::benchmark<Anime4KCPP::Cuda::Anime4K09, 1920, 1080>(dID);
@@ -775,10 +852,12 @@ extern "C"
             return AC_CPU_Anime4K09;
         case Anime4KCPP::Processor::Type::CPU_ACNet:
             return AC_CPU_ACNet;
+#ifdef ENABLE_OPENCL
         case Anime4KCPP::Processor::Type::OpenCL_Anime4K09:
             return AC_OpenCL_Anime4K09;
         case Anime4KCPP::Processor::Type::OpenCL_ACNet:
             return AC_OpenCL_ACNet;
+#endif
 #ifdef ENABLE_CUDA
         case Anime4KCPP::Processor::Type::Cuda_Anime4K09:
             return AC_Cuda_Anime4K09;

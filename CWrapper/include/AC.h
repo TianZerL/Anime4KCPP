@@ -100,7 +100,8 @@ extern "C"
         AC_ERROR_SAVE_TO_NULL_POINTER,
         AC_ERROR_NOT_YUV444,
         AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME,
-        AC_ERROR_CUDA_NOT_SUPPORTED
+        AC_ERROR_OPENCL_NOT_SUPPORTED,
+        AC_ERROR_CUDA_NOT_SUPPORTED,
     } ac_error;
 
     typedef enum ac_codec

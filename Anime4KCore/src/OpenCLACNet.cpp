@@ -1,3 +1,5 @@
+#ifdef ENABLE_OPENCL
+
 #define DLL
 
 #include<fstream>
@@ -991,3 +993,5 @@ std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
         << " " + device.getInfo<CL_DEVICE_NAME>();
     return oss.str();
 }
+
+#endif

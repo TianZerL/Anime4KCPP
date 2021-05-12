@@ -1,3 +1,5 @@
+#ifdef ENABLE_OPENCL
+
 #define DLL
 
 #define CL_HPP_ENABLE_EXCEPTIONS
@@ -122,3 +124,5 @@ Anime4KCPP::OpenCL::GPUInfo::operator bool() const noexcept
 {
     return supported;
 }
+
+#endif

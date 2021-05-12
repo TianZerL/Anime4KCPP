@@ -48,9 +48,8 @@ MainWindow::MainWindow(QWidget* parent)
                                            "State" });
     ui->tableViewProcessingList->setModel(tableModel);
     //initialize GPGPU model
-#ifdef ENABLE_CUDA
+    ui->comboBoxGPGPU->addItem("OpenCL");
     ui->comboBoxGPGPU->addItem("CUDA");
-#endif
     //initialize processBar
     ui->progressBarProcessingList->reset();
     ui->progressBarProcessingList->setRange(0, 100);
@@ -471,6 +470,12 @@ void MainWindow::errorHandler(const ErrorType err)
             tr("Error image format, please check your input"),
             QMessageBox::Ok);
         break;
+    case ErrorType::OPENCL_NOT_SUPPORT:
+        QMessageBox::warning(this,
+            tr("Error"),
+            tr("OpenCL is not supported"),
+            QMessageBox::Ok);
+        break;
     case ErrorType::CUDA_NOT_SUPPORT:
         QMessageBox::warning(this,
             tr("Error"),
@@ -612,10 +617,15 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
             if (ACNetMode)
                 return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
                 return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+#else
+            errorHandler(ErrorType::OPENCL_NOT_SUPPORT);
+            return nullptr;
+#endif
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (ACNetMode)
@@ -1813,25 +1823,31 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
         case GPGPU::OpenCL:
             {
-                int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
-                bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
-                Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
-                supported = ret;
-                info = ret();
-                if (supported)
-                {
-                    if (ACNetMode)
-                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                            currPlatFormID, currDeviceID,
-                            Anime4KCPP::CNNType::Default,
-                            OpenCLQueueNum,
-                            OpenCLParallelIO);
-                    else
-                        acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
-                            currPlatFormID, currDeviceID,
-                            OpenCLQueueNum,
-                            OpenCLParallelIO);
-                }
+#ifdef ENABLE_OPENCL
+            int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
+            bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
+            Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
+            supported = ret;
+            info = ret();
+            if (supported)
+            {
+                if (ACNetMode)
+                    acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                        currPlatFormID, currDeviceID,
+                        Anime4KCPP::CNNType::Default,
+                        OpenCLQueueNum,
+                        OpenCLParallelIO);
+                else
+                    acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                        currPlatFormID, currDeviceID,
+                        OpenCLQueueNum,
+                        OpenCLParallelIO);
+            }
+#else
+            errorHandler(ErrorType::OPENCL_NOT_SUPPORT);
+            ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
+            return;
+#endif
             }
             break;
         case GPGPU::CUDA:
@@ -1917,9 +1933,11 @@ void MainWindow::on_actionBenchmark_triggered()
     double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
     double CPUScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 
+#ifdef ENABLE_OPENCL
     double OpenCLScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 720, 480>(pID, dID);
     double OpenCLScoreHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1280, 720>(pID, dID);
     double OpenCLScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+#endif
 
 #ifdef ENABLE_CUDA
     double CudaScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 720, 480>(dID);
@@ -1936,11 +1954,13 @@ void MainWindow::on_actionBenchmark_triggered()
         << " HD(720P->1440P): " << CPUScoreHD << " FPS" << Qt::endl
         << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << Qt::endl << Qt::endl;
 
+#ifdef ENABLE_OPENCL
     outStream
         << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << Qt::endl
         << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << Qt::endl
         << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << Qt::endl
         << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << Qt::endl << Qt::endl;
+#endif 
 
 #ifdef ENABLE_CUDA
     outStream
@@ -1956,11 +1976,14 @@ void MainWindow::on_actionBenchmark_triggered()
 
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
+    std::string displayInfo;
+    bool flag = false;
+
+#ifdef ENABLE_OPENCL
     Anime4KCPP::OpenCL::GPUList openclGPUList = Anime4KCPP::OpenCL::listGPUs();
-
-    bool flag = openclGPUList.platforms == 0;
-
-    std::string displayInfo ="OpenCL:\n" + openclGPUList();
+    flag = flag && (openclGPUList.platforms == 0);
+    displayInfo += "OpenCL:\n" + openclGPUList();
+#endif
 
 #ifdef ENABLE_CUDA
     Anime4KCPP::Cuda::GPUList cudaGPUList = Anime4KCPP::Cuda::listGPUs();
