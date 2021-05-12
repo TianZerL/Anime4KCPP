@@ -23,7 +23,7 @@ typedef unsigned short ushort;
 extern int currCudaDeviceID;
 
 template <typename T>
-struct PixelValue {};
+struct PixelValue;
 
 template <>
 struct PixelValue<uchar>
@@ -68,7 +68,7 @@ struct PixelValue<float>
 };
 
 template <typename T, int dim>
-struct Vec {};
+struct Vec;
 
 template <>
 struct Vec<uchar, 2>

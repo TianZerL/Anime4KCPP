@@ -15,6 +15,8 @@
 #include"OpenCLAnime4K09.hpp"
 #include"OpenCLAnime4K09Kernel.hpp"
 
+#define ALIGN_UP(x, size) (((x) + (size) - 1) & (~((size) - 1)))
+
 //init OpenCL arguments
 static bool isInitialized = false;
 static cl::Program program;
@@ -27,7 +29,7 @@ static std::vector<cl::CommandQueue> commandQueueList(commandQueueNum);
 static bool parallelIO = false;
 static int pID = 0;
 static int dID = 0;
-static size_t workGroupSizeLog = 5;
+static size_t workGroupSizeBase = 32;
 
 Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters), nWidth(0.0), nHeight(0.0) {};
@@ -403,8 +405,8 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& ds
     const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
     const std::array<size_t, 2> size =
     {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(dstImg.cols, workGroupSizeBase),
+        ALIGN_UP(dstImg.rows, workGroupSizeBase)
     };
 
     const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
@@ -497,8 +499,8 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelP(const cv::Mat& orgImg, cv::Mat& d
     const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
     const std::array<size_t, 2> size =
     {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(dstImg.cols, workGroupSizeBase),
+        ALIGN_UP(dstImg.rows, workGroupSizeBase)
     };
 
     const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
@@ -670,8 +672,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         }
 
         cl::Kernel tmpKernel{ program, "pushColor"};
-        tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-        workGroupSizeLog = std::log2(workGroupSizeLog);
+        tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
     }
     catch (const cl::Error& e)
     {

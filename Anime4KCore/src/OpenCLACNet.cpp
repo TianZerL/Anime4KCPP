@@ -15,6 +15,8 @@
 #include"OpenCLACNet.hpp"
 #include"OpenCLACNetKernel.hpp"
 
+#define ALIGN_UP(x, size) (((x) + (size) - 1) & (~((size) - 1)))
+
 constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
 //init OpenCL arguments
@@ -29,7 +31,7 @@ static std::vector<cl::CommandQueue> commandQueueList(commandQueueNum);
 static bool parallelIO = false;
 static int pID = 0;
 static int dID = 0;
-static size_t workGroupSizeLog = 5;
+static size_t workGroupSizeBase = 32;
 
 Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters) 
@@ -582,13 +584,13 @@ void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg
     const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
     const std::array<size_t, 2> orgSize =
     {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(orgImg.cols, workGroupSizeBase),
+        ALIGN_UP(orgImg.rows, workGroupSizeBase)
     };
     const std::array<size_t, 2> dstSize =
     {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(dstImg.cols, workGroupSizeBase),
+        ALIGN_UP(dstImg.rows, workGroupSizeBase)
     };
 
     try
@@ -681,13 +683,13 @@ void Anime4KCPP::OpenCL::ACNet::runKernelP(const cv::Mat& orgImg, cv::Mat& dstIm
     const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
     const std::array<size_t, 2> orgSize =
     {
-        (((static_cast<const size_t>(orgImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(orgImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(orgImg.cols, workGroupSizeBase),
+        ALIGN_UP(orgImg.rows, workGroupSizeBase)
     };
     const std::array<size_t, 2> dstSize =
     {
-        (((static_cast<const size_t>(dstImg.cols) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog,
-        (((static_cast<const size_t>(dstImg.rows) - 1) >> workGroupSizeLog) + 1) << workGroupSizeLog
+        ALIGN_UP(dstImg.cols, workGroupSizeBase),
+        ALIGN_UP(dstImg.rows, workGroupSizeBase)
     };
 
     try
@@ -868,8 +870,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             cl::Kernel tmpKernel{ program[HDNL0], "conv8To8" };
-            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-            workGroupSizeLog = std::log2(workGroupSizeLog);
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
         break;
         case CNNType::ACNetHDNL1:
@@ -889,8 +890,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             cl::Kernel tmpKernel{ program[HDNL1], "conv8To8" };
-            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-            workGroupSizeLog = std::log2(workGroupSizeLog);
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
             break;
         case CNNType::ACNetHDNL2:
@@ -910,8 +910,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             cl::Kernel tmpKernel{ program[HDNL2], "conv8To8" };
-            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-            workGroupSizeLog = std::log2(workGroupSizeLog);
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
             break;
         case CNNType::ACNetHDNL3:
@@ -931,8 +930,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             cl::Kernel tmpKernel{ program[HDNL3], "conv8To8" };
-            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-            workGroupSizeLog = std::log2(workGroupSizeLog);
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
             break;
         case CNNType::Default:
@@ -957,8 +955,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             }
 
             cl::Kernel tmpKernel{ program[HDNL0], "conv8To8" };
-            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeLog);
-            workGroupSizeLog = std::log2(workGroupSizeLog);
+            tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
             break;
         }
