@@ -145,8 +145,8 @@ public class MainActivity extends AppCompatActivity {
         this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         XXPermissions.with(this)
-            .permission(Permission.MANAGE_EXTERNAL_STORAGE)
-            .request(new OnPermissionCallback() {
+                .permission(Permission.MANAGE_EXTERNAL_STORAGE)
+                .request(new OnPermissionCallback() {
 
                 @Override
                 public void onGranted(List<String> permissions, boolean all) {
