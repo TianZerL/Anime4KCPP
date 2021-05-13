@@ -57,11 +57,11 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    const static FP kernelsL1[9 * 8];
-    const static FP kernels[8][9 * 8 * 8];
-    const static FP kernelsL10[4 * 8];
-    const static FP biasL1[8];
-    const static FP biases[8][8];
+    alignas(32) const static float kernelsL1[9 * 8];
+    alignas(32) const static float kernels[8][9 * 8 * 8];
+    alignas(32) const static float kernelsL10[4 * 8];
+    alignas(32) const static float biasL1[8];
+    alignas(32) const static float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor, public CNNProcessor
@@ -73,11 +73,11 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    const static FP kernelsL1[9 * 8];
-    const static FP kernels[8][9 * 8 * 8];
-    const static FP kernelsL10[4 * 8];
-    const static FP biasL1[8];
-    const static FP biases[8][8];
+    alignas(32) const static float kernelsL1[9 * 8];
+    alignas(32) const static float kernels[8][9 * 8 * 8];
+    alignas(32) const static float kernelsL10[4 * 8];
+    alignas(32) const static float biasL1[8];
+    alignas(32) const static float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor, public CNNProcessor
@@ -89,11 +89,11 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    const static FP kernelsL1[9 * 8];
-    const static FP kernels[8][9 * 8 * 8];
-    const static FP kernelsL10[4 * 8];
-    const static FP biasL1[8];
-    const static FP biases[8][8];
+    alignas(32) const static float kernelsL1[9 * 8];
+    alignas(32) const static float kernels[8][9 * 8 * 8];
+    alignas(32) const static float kernelsL10[4 * 8];
+    alignas(32) const static float biasL1[8];
+    alignas(32) const static float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor, public CNNProcessor
@@ -105,10 +105,10 @@ public:
     virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
     virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    const static FP kernelsL1[9 * 8];
-    const static FP kernels[8][9 * 8 * 8];
-    const static FP kernelsL10[4 * 8];
-    const static FP biasL1[8];
-    const static FP biases[8][8];
+    alignas(32) const static float kernelsL1[9 * 8];
+    alignas(32) const static float kernels[8][9 * 8 * 8];
+    alignas(32) const static float kernelsL10[4 * 8];
+    alignas(32) const static float biasL1[8];
+    alignas(32) const static float biases[8][8];
 };
 #endif // ENABLE_OPENCV_DNN

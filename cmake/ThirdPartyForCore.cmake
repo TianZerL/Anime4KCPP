@@ -25,6 +25,10 @@ else()
     )
 endif()
 
+if(Use_Eigen3)
+    include_directories(${EIGEN3_INCLUDE_DIR})
+endif()
+
 if(Use_TBB)
     include_directories(${TBB_INCLUDE_PATH})
     find_library(TBB_LIBS 

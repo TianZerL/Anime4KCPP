@@ -714,10 +714,10 @@ public class MainActivity extends AppCompatActivity {
             if (activity == null || activity.isFinishing())
                 return;
 
-            String outputMsg = String.format(Locale.ENGLISH, "CPU score: %.2f FPS\nCPU score: %.2f FPS", s[0], s[1]);
+            String outputMsg = String.format(Locale.ENGLISH, "CPU score: %.2f FPS\nGPU score: %.2f FPS", s[0], s[1]);
 
             new AlertDialog.Builder(activity)
-                    .setTitle("Benchmark done")
+                    .setTitle("Benchmark done (480P->960P)")
                     .setMessage(outputMsg)
                     .setPositiveButton("OK", null)
                     .show();

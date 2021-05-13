@@ -26,7 +26,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++17 -frtti -fexceptions -O3 -fopenmp -static-openmp"
-                arguments "-DANDROID_STL=c++_shared", "-DANDROID_ARM_NEON=TRUE"
+                arguments "-DANDROID_STL=c++_shared", "-DANDROID_ARM_NEON=ON"
             }
         }
     }

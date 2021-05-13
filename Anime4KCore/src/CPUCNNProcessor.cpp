@@ -1,17 +1,18 @@
 #ifndef ENABLE_OPENCV_DNN
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
 #include<immintrin.h>
+#elif defined(USE_EIGEN3)
+#include<Eigen/Core>
 #endif
 
 #include"Parallel.hpp"
 #include"CPUCNNProcessor.hpp"
 
-#define RELU(x) std::max(x, static_cast<FP>(0.0))
-#define NORMB(X) (static_cast<FP>(X) / static_cast<FP>(255.0))
-#define NORMW(X) (static_cast<FP>(X) / static_cast<FP>(65535.0))
-#define UNNORMB(n) ((n) >= static_cast<FP>(1.0)? static_cast<uint8_t>(255) : ((n) <= static_cast<FP>(0.0) ? static_cast<uint8_t>(0) : static_cast<uint8_t>(n * static_cast<FP>(255.0) + static_cast<FP>(0.5))))
-#define UNNORMW(n) ((n) >= static_cast<FP>(1.0)? static_cast<uint16_t>(65535) : ((n) <= static_cast<FP>(0.0) ? static_cast<uint16_t>(0) : static_cast<uint16_t>(n * static_cast<FP>(65535.0) + static_cast<FP>(0.5))))
+#define NORMB(X) (static_cast<float>(X) / static_cast<float>(255.0))
+#define NORMW(X) (static_cast<float>(X) / static_cast<float>(65535.0))
+#define UNNORMB(n) ((n) >= static_cast<float>(1.0)? static_cast<uint8_t>(255) : ((n) <= static_cast<float>(0.0) ? static_cast<uint8_t>(0) : static_cast<uint8_t>(n * static_cast<float>(255.0) + static_cast<float>(0.5))))
+#define UNNORMW(n) ((n) >= static_cast<float>(1.0)? static_cast<uint16_t>(65535) : ((n) <= static_cast<float>(0.0) ? static_cast<uint16_t>(0) : static_cast<uint16_t>(n * static_cast<float>(65535.0) + static_cast<float>(0.5))))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
 namespace Anime4KCPP
@@ -24,7 +25,7 @@ namespace Anime4KCPP
             const int h = src.rows, w = src.cols;
             const int jMAX = w * outChannels;
 
-            tmpMat.create(h, w, AC_CV_FPC(outChannels));
+            tmpMat.create(h, w, CV_32FC(outChannels));
 
             const size_t srcStep = src.step;
             const size_t step = tmpMat.step;
@@ -82,7 +83,7 @@ namespace Anime4KCPP
     }
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
@@ -100,17 +101,17 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kern
         const PixelB ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelB bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-        const FP tln = NORMB(tl[Y]);
-        const FP tcn = NORMB(tc[Y]);
-        const FP trn = NORMB(tr[Y]);
-        const FP mln = NORMB(ml[Y]);
-        const FP mcn = NORMB(mc[Y]);
-        const FP mrn = NORMB(mr[Y]);
-        const FP bln = NORMB(bl[Y]);
-        const FP bcn = NORMB(bc[Y]);
-        const FP brn = NORMB(br[Y]);
+        const float tln = NORMB(tl[Y]);
+        const float tcn = NORMB(tc[Y]);
+        const float trn = NORMB(tr[Y]);
+        const float mln = NORMB(ml[Y]);
+        const float mcn = NORMB(mc[Y]);
+        const float mrn = NORMB(mr[Y]);
+        const float bln = NORMB(bl[Y]);
+        const float bcn = NORMB(bc[Y]);
+        const float brn = NORMB(br[Y]);
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const float* kptr = kernels;
         const float* bptr = biases;
 
@@ -153,52 +154,78 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const FP* kern
         _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
+
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels);
+        float* bptr = const_cast<float*>(biases);
+
+        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
+
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
+
+        out += tln * k0;
+        out += tcn * k1;
+        out += trn * k2;
+        out += mln * k3;
+        out += mcn * k4;
+        out += mrn * k5;
+        out += bln * k6;
+        out += bcn * k7;
+        out += brn * k8;
+
+        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
-        outMat[0] =
-            RELU(
-                tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
-                mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
-                bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
-        outMat[1] =
-            RELU(
-                tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
-                mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
-                bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
-        outMat[2] =
-            RELU(
-                tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
-                mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
-                bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
-        outMat[3] =
-            RELU(
-                tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
-                mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
-                bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
-        outMat[4] =
-            RELU(
-                tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
-                mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
-                bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
-        outMat[5] =
-            RELU(
-                tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
-                mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
-                bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
-        outMat[6] =
-            RELU(
-                tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
-                mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
-                bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
-        outMat[7] =
-            RELU(
-                tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
-                mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
-                bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
-#endif // ENABLE_AVX
+        const float* kptr = kernels;
+
+        const float* k0 = kptr;
+        const float* k1 = kptr + 8;
+        const float* k2 = kptr + 16;
+        const float* k3 = kptr + 24;
+        const float* k4 = kptr + 32;
+        const float* k5 = kptr + 40;
+        const float* k6 = kptr + 48;
+        const float* k7 = kptr + 56;
+        const float* k8 = kptr + 64;
+
+        float out[8];
+        std::copy_n(biases, 8, out);
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] += tln * k0[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += tcn * k1[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += trn * k2[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mln * k3[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mcn * k4[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mrn * k5[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += bln * k6[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += bcn * k7[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += brn * k8[i];
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] = std::max<float>(out[i], 0);
+
+        std::copy_n(out, 8, outMat);
+#endif // USE_RYZEN
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
@@ -217,17 +244,17 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kern
         const PixelW ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelW bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-        const FP tln = NORMW(tl[Y]);
-        const FP tcn = NORMW(tc[Y]);
-        const FP trn = NORMW(tr[Y]);
-        const FP mln = NORMW(ml[Y]);
-        const FP mcn = NORMW(mc[Y]);
-        const FP mrn = NORMW(mr[Y]);
-        const FP bln = NORMW(bl[Y]);
-        const FP bcn = NORMW(bc[Y]);
-        const FP brn = NORMW(br[Y]);
+        const float tln = NORMW(tl[Y]);
+        const float tcn = NORMW(tc[Y]);
+        const float trn = NORMW(tr[Y]);
+        const float mln = NORMW(ml[Y]);
+        const float mcn = NORMW(mc[Y]);
+        const float mrn = NORMW(mr[Y]);
+        const float bln = NORMW(bl[Y]);
+        const float bcn = NORMW(bc[Y]);
+        const float brn = NORMW(br[Y]);
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const float* kptr = kernels;
         const float* bptr = biases;
 
@@ -270,53 +297,78 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const FP* kern
         _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels);
+        float* bptr = const_cast<float*>(biases);
+
+        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
+
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
+
+        out += tln * k0;
+        out += tcn * k1;
+        out += trn * k2;
+        out += mln * k3;
+        out += mcn * k4;
+        out += mrn * k5;
+        out += bln * k6;
+        out += bcn * k7;
+        out += brn * k8;
+
+        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
-        outMat[0] =
-            RELU(
-                tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
-                mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
-                bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
-        outMat[1] =
-            RELU(
-                tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
-                mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
-                bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
-        outMat[2] =
-            RELU(
-                tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
-                mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
-                bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
-        outMat[3] =
-            RELU(
-                tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
-                mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
-                bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
-        outMat[4] =
-            RELU(
-                tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
-                mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
-                bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
-        outMat[5] =
-            RELU(
-                tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
-                mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
-                bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
-        outMat[6] =
-            RELU(
-                tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
-                mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
-                bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
-        outMat[7] =
-            RELU(
-                tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
-                mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
-                bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
-#endif // ENABLE_AVX
+        const float* kptr = kernels;
+
+        const float* k0 = kptr;
+        const float* k1 = kptr + 8;
+        const float* k2 = kptr + 16;
+        const float* k3 = kptr + 24;
+        const float* k4 = kptr + 32;
+        const float* k5 = kptr + 40;
+        const float* k6 = kptr + 48;
+        const float* k7 = kptr + 56;
+        const float* k8 = kptr + 64;
+
+        float out[8];
+        std::copy_n(biases, 8, out);
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] += tln * k0[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += tcn * k1[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += trn * k2[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mln * k3[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mcn * k4[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += mrn * k5[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += bln * k6[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += bcn * k7[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += brn * k8[i];
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] = std::max<float>(out[i], 0);
+
+        std::copy_n(out, 8, outMat);
+#endif // USE_RYZEN
 
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kernels, const FP* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const int srcChannels = img.channels();
@@ -335,7 +387,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
         const PixelF ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
         const PixelF bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const float* kptr = kernels;
         const float* bptr = biases;
 
@@ -378,63 +430,78 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const FP* kern
         _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
-#else
-        const FP tln = tl[Y];
-        const FP tcn = tc[Y];
-        const FP trn = tr[Y];
-        const FP mln = ml[Y];
-        const FP mcn = mc[Y];
-        const FP mrn = mr[Y];
-        const FP bln = bl[Y];
-        const FP bcn = bc[Y];
-        const FP brn = br[Y];
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels);
+        float* bptr = const_cast<float*>(biases);
 
-        outMat[0] =
-            RELU(
-                tln * kernels[0 * 9 + 0] + tcn * kernels[0 * 9 + 1] + trn * kernels[0 * 9 + 2] +
-                mln * kernels[0 * 9 + 3] + mcn * kernels[0 * 9 + 4] + mrn * kernels[0 * 9 + 5] +
-                bln * kernels[0 * 9 + 6] + bcn * kernels[0 * 9 + 7] + brn * kernels[0 * 9 + 8] + biases[0]);
-        outMat[1] =
-            RELU(
-                tln * kernels[1 * 9 + 0] + tcn * kernels[1 * 9 + 1] + trn * kernels[1 * 9 + 2] +
-                mln * kernels[1 * 9 + 3] + mcn * kernels[1 * 9 + 4] + mrn * kernels[1 * 9 + 5] +
-                bln * kernels[1 * 9 + 6] + bcn * kernels[1 * 9 + 7] + brn * kernels[1 * 9 + 8] + biases[1]);
-        outMat[2] =
-            RELU(
-                tln * kernels[2 * 9 + 0] + tcn * kernels[2 * 9 + 1] + trn * kernels[2 * 9 + 2] +
-                mln * kernels[2 * 9 + 3] + mcn * kernels[2 * 9 + 4] + mrn * kernels[2 * 9 + 5] +
-                bln * kernels[2 * 9 + 6] + bcn * kernels[2 * 9 + 7] + brn * kernels[2 * 9 + 8] + biases[2]);
-        outMat[3] =
-            RELU(
-                tln * kernels[3 * 9 + 0] + tcn * kernels[3 * 9 + 1] + trn * kernels[3 * 9 + 2] +
-                mln * kernels[3 * 9 + 3] + mcn * kernels[3 * 9 + 4] + mrn * kernels[3 * 9 + 5] +
-                bln * kernels[3 * 9 + 6] + bcn * kernels[3 * 9 + 7] + brn * kernels[3 * 9 + 8] + biases[3]);
-        outMat[4] =
-            RELU(
-                tln * kernels[4 * 9 + 0] + tcn * kernels[4 * 9 + 1] + trn * kernels[4 * 9 + 2] +
-                mln * kernels[4 * 9 + 3] + mcn * kernels[4 * 9 + 4] + mrn * kernels[4 * 9 + 5] +
-                bln * kernels[4 * 9 + 6] + bcn * kernels[4 * 9 + 7] + brn * kernels[4 * 9 + 8] + biases[4]);
-        outMat[5] =
-            RELU(
-                tln * kernels[5 * 9 + 0] + tcn * kernels[5 * 9 + 1] + trn * kernels[5 * 9 + 2] +
-                mln * kernels[5 * 9 + 3] + mcn * kernels[5 * 9 + 4] + mrn * kernels[5 * 9 + 5] +
-                bln * kernels[5 * 9 + 6] + bcn * kernels[5 * 9 + 7] + brn * kernels[5 * 9 + 8] + biases[5]);
-        outMat[6] =
-            RELU(
-                tln * kernels[6 * 9 + 0] + tcn * kernels[6 * 9 + 1] + trn * kernels[6 * 9 + 2] +
-                mln * kernels[6 * 9 + 3] + mcn * kernels[6 * 9 + 4] + mrn * kernels[6 * 9 + 5] +
-                bln * kernels[6 * 9 + 6] + bcn * kernels[6 * 9 + 7] + brn * kernels[6 * 9 + 8] + biases[6]);
-        outMat[7] =
-            RELU(
-                tln * kernels[7 * 9 + 0] + tcn * kernels[7 * 9 + 1] + trn * kernels[7 * 9 + 2] +
-                mln * kernels[7 * 9 + 3] + mcn * kernels[7 * 9 + 4] + mrn * kernels[7 * 9 + 5] +
-                bln * kernels[7 * 9 + 6] + bcn * kernels[7 * 9 + 7] + brn * kernels[7 * 9 + 8] + biases[7]);
-#endif // ENABLE_AVX
+        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
+
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
+        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
+
+        out += *tl * k0;
+        out += *tc * k1;
+        out += *tr * k2;
+        out += *ml * k3;
+        out += *mc * k4;
+        out += *mr * k5;
+        out += *bl * k6;
+        out += *bc * k7;
+        out += *br * k8;
+
+        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
+#else
+        const float* kptr = kernels;
+
+        const float* k0 = kptr;
+        const float* k1 = kptr + 8;
+        const float* k2 = kptr + 16;
+        const float* k3 = kptr + 24;
+        const float* k4 = kptr + 32;
+        const float* k5 = kptr + 40;
+        const float* k6 = kptr + 48;
+        const float* k7 = kptr + 56;
+        const float* k8 = kptr + 64;
+
+        float out[8];
+        std::copy_n(biases, 8, out);
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *tl * k0[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *tc * k1[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *tr * k2[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *ml * k3[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *mc * k4[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *mr * k5[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *bl * k6[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *bc * k7[i];
+        for (size_t i = 0; i < 8; i++)
+            out[i] += *br * k8[i];
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] = std::max<float>(out[i], 0);
+
+        std::copy_n(out, 8, outMat);
+#endif // USE_RYZEN
 
         }, tmpMat, 8);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
     const size_t lineStep = tmpMat.step1();
@@ -450,7 +517,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
         const PixelFP ml = cLineData + j + jn, mc = cLineData + j, mr = cLineData + j + jp;
         const PixelFP bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const float* kptr = kernels;
         const float* bptr = biases;
 
@@ -458,7 +525,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
         __m256 _out1 = _mm256_setzero_ps();
         __m256 _out2 = _mm256_setzero_ps();
 
-        for (int i = 0; i < 8; i += 2)
+        for (size_t i = 0; i < 8; i += 2)
         {
             const __m256 _r00 = _mm256_broadcast_ss(tl + i);
             const __m256 _r01 = _mm256_broadcast_ss(tc + i);
@@ -523,349 +590,83 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const FP* kernels, const FP* biases
         _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
 
         _mm256_storeu_ps(outMat, _out0);
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels);
+        float* bptr = const_cast<float*>(biases);
+
+        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
+
+        for (size_t i = 0; i < 8; i++)
+        {
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr + i * 72);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + i * 72 + 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + i * 72 + 16);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + i * 72 + 24);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + i * 72 + 32);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + i * 72 + 40);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + i * 72 + 48);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + i * 72 + 56);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + i * 72 + 64);
+
+            out += tl[i] * k0;
+            out += tc[i] * k1;
+            out += tr[i] * k2;
+            out += ml[i] * k3;
+            out += mc[i] * k4;
+            out += mr[i] * k5;
+            out += bl[i] * k6;
+            out += bc[i] * k7;
+            out += br[i] * k8;
+        }
+
+        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
-        FP c1 =
-            tl[0] * kernels[0 * 72 + 0 * 9 + 0] + tc[0] * kernels[0 * 72 + 0 * 9 + 1] + tr[0] * kernels[0 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[0 * 72 + 0 * 9 + 3] + mc[0] * kernels[0 * 72 + 0 * 9 + 4] + mr[0] * kernels[0 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[0 * 72 + 0 * 9 + 6] + bc[0] * kernels[0 * 72 + 0 * 9 + 7] + br[0] * kernels[0 * 72 + 0 * 9 + 8];
-
-        FP c2 =
-            tl[1] * kernels[0 * 72 + 1 * 9 + 0] + tc[1] * kernels[0 * 72 + 1 * 9 + 1] + tr[1] * kernels[0 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[0 * 72 + 1 * 9 + 3] + mc[1] * kernels[0 * 72 + 1 * 9 + 4] + mr[1] * kernels[0 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[0 * 72 + 1 * 9 + 6] + bc[1] * kernels[0 * 72 + 1 * 9 + 7] + br[1] * kernels[0 * 72 + 1 * 9 + 8];
-
-        FP c3 =
-            tl[2] * kernels[0 * 72 + 2 * 9 + 0] + tc[2] * kernels[0 * 72 + 2 * 9 + 1] + tr[2] * kernels[0 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[0 * 72 + 2 * 9 + 3] + mc[2] * kernels[0 * 72 + 2 * 9 + 4] + mr[2] * kernels[0 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[0 * 72 + 2 * 9 + 6] + bc[2] * kernels[0 * 72 + 2 * 9 + 7] + br[2] * kernels[0 * 72 + 2 * 9 + 8];
-
-        FP c4 =
-            tl[3] * kernels[0 * 72 + 3 * 9 + 0] + tc[3] * kernels[0 * 72 + 3 * 9 + 1] + tr[3] * kernels[0 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[0 * 72 + 3 * 9 + 3] + mc[3] * kernels[0 * 72 + 3 * 9 + 4] + mr[3] * kernels[0 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[0 * 72 + 3 * 9 + 6] + bc[3] * kernels[0 * 72 + 3 * 9 + 7] + br[3] * kernels[0 * 72 + 3 * 9 + 8];
-
-        FP c5 =
-            tl[4] * kernels[0 * 72 + 4 * 9 + 0] + tc[4] * kernels[0 * 72 + 4 * 9 + 1] + tr[4] * kernels[0 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[0 * 72 + 4 * 9 + 3] + mc[4] * kernels[0 * 72 + 4 * 9 + 4] + mr[4] * kernels[0 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[0 * 72 + 4 * 9 + 6] + bc[4] * kernels[0 * 72 + 4 * 9 + 7] + br[4] * kernels[0 * 72 + 4 * 9 + 8];
-
-        FP c6 =
-            tl[5] * kernels[0 * 72 + 5 * 9 + 0] + tc[5] * kernels[0 * 72 + 5 * 9 + 1] + tr[5] * kernels[0 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[0 * 72 + 5 * 9 + 3] + mc[5] * kernels[0 * 72 + 5 * 9 + 4] + mr[5] * kernels[0 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[0 * 72 + 5 * 9 + 6] + bc[5] * kernels[0 * 72 + 5 * 9 + 7] + br[5] * kernels[0 * 72 + 5 * 9 + 8];
-
-        FP c7 =
-            tl[6] * kernels[0 * 72 + 6 * 9 + 0] + tc[6] * kernels[0 * 72 + 6 * 9 + 1] + tr[6] * kernels[0 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[0 * 72 + 6 * 9 + 3] + mc[6] * kernels[0 * 72 + 6 * 9 + 4] + mr[6] * kernels[0 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[0 * 72 + 6 * 9 + 6] + bc[6] * kernels[0 * 72 + 6 * 9 + 7] + br[6] * kernels[0 * 72 + 6 * 9 + 8];
-
-        FP c8 =
-            tl[7] * kernels[0 * 72 + 7 * 9 + 0] + tc[7] * kernels[0 * 72 + 7 * 9 + 1] + tr[7] * kernels[0 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[0 * 72 + 7 * 9 + 3] + mc[7] * kernels[0 * 72 + 7 * 9 + 4] + mr[7] * kernels[0 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[0 * 72 + 7 * 9 + 6] + bc[7] * kernels[0 * 72 + 7 * 9 + 7] + br[7] * kernels[0 * 72 + 7 * 9 + 8];
-
-        outMat[0] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[0]);
-
-        c1 =
-            tl[0] * kernels[1 * 72 + 0 * 9 + 0] + tc[0] * kernels[1 * 72 + 0 * 9 + 1] + tr[0] * kernels[1 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[1 * 72 + 0 * 9 + 3] + mc[0] * kernels[1 * 72 + 0 * 9 + 4] + mr[0] * kernels[1 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[1 * 72 + 0 * 9 + 6] + bc[0] * kernels[1 * 72 + 0 * 9 + 7] + br[0] * kernels[1 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[1 * 72 + 1 * 9 + 0] + tc[1] * kernels[1 * 72 + 1 * 9 + 1] + tr[1] * kernels[1 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[1 * 72 + 1 * 9 + 3] + mc[1] * kernels[1 * 72 + 1 * 9 + 4] + mr[1] * kernels[1 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[1 * 72 + 1 * 9 + 6] + bc[1] * kernels[1 * 72 + 1 * 9 + 7] + br[1] * kernels[1 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[1 * 72 + 2 * 9 + 0] + tc[2] * kernels[1 * 72 + 2 * 9 + 1] + tr[2] * kernels[1 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[1 * 72 + 2 * 9 + 3] + mc[2] * kernels[1 * 72 + 2 * 9 + 4] + mr[2] * kernels[1 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[1 * 72 + 2 * 9 + 6] + bc[2] * kernels[1 * 72 + 2 * 9 + 7] + br[2] * kernels[1 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[1 * 72 + 3 * 9 + 0] + tc[3] * kernels[1 * 72 + 3 * 9 + 1] + tr[3] * kernels[1 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[1 * 72 + 3 * 9 + 3] + mc[3] * kernels[1 * 72 + 3 * 9 + 4] + mr[3] * kernels[1 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[1 * 72 + 3 * 9 + 6] + bc[3] * kernels[1 * 72 + 3 * 9 + 7] + br[3] * kernels[1 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[1 * 72 + 4 * 9 + 0] + tc[4] * kernels[1 * 72 + 4 * 9 + 1] + tr[4] * kernels[1 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[1 * 72 + 4 * 9 + 3] + mc[4] * kernels[1 * 72 + 4 * 9 + 4] + mr[4] * kernels[1 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[1 * 72 + 4 * 9 + 6] + bc[4] * kernels[1 * 72 + 4 * 9 + 7] + br[4] * kernels[1 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[1 * 72 + 5 * 9 + 0] + tc[5] * kernels[1 * 72 + 5 * 9 + 1] + tr[5] * kernels[1 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[1 * 72 + 5 * 9 + 3] + mc[5] * kernels[1 * 72 + 5 * 9 + 4] + mr[5] * kernels[1 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[1 * 72 + 5 * 9 + 6] + bc[5] * kernels[1 * 72 + 5 * 9 + 7] + br[5] * kernels[1 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[1 * 72 + 6 * 9 + 0] + tc[6] * kernels[1 * 72 + 6 * 9 + 1] + tr[6] * kernels[1 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[1 * 72 + 6 * 9 + 3] + mc[6] * kernels[1 * 72 + 6 * 9 + 4] + mr[6] * kernels[1 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[1 * 72 + 6 * 9 + 6] + bc[6] * kernels[1 * 72 + 6 * 9 + 7] + br[6] * kernels[1 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[1 * 72 + 7 * 9 + 0] + tc[7] * kernels[1 * 72 + 7 * 9 + 1] + tr[7] * kernels[1 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[1 * 72 + 7 * 9 + 3] + mc[7] * kernels[1 * 72 + 7 * 9 + 4] + mr[7] * kernels[1 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[1 * 72 + 7 * 9 + 6] + bc[7] * kernels[1 * 72 + 7 * 9 + 7] + br[7] * kernels[1 * 72 + 7 * 9 + 8];
-
-        outMat[1] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[1]);
-
-        c1 =
-            tl[0] * kernels[2 * 72 + 0 * 9 + 0] + tc[0] * kernels[2 * 72 + 0 * 9 + 1] + tr[0] * kernels[2 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[2 * 72 + 0 * 9 + 3] + mc[0] * kernels[2 * 72 + 0 * 9 + 4] + mr[0] * kernels[2 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[2 * 72 + 0 * 9 + 6] + bc[0] * kernels[2 * 72 + 0 * 9 + 7] + br[0] * kernels[2 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[2 * 72 + 1 * 9 + 0] + tc[1] * kernels[2 * 72 + 1 * 9 + 1] + tr[1] * kernels[2 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[2 * 72 + 1 * 9 + 3] + mc[1] * kernels[2 * 72 + 1 * 9 + 4] + mr[1] * kernels[2 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[2 * 72 + 1 * 9 + 6] + bc[1] * kernels[2 * 72 + 1 * 9 + 7] + br[1] * kernels[2 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[2 * 72 + 2 * 9 + 0] + tc[2] * kernels[2 * 72 + 2 * 9 + 1] + tr[2] * kernels[2 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[2 * 72 + 2 * 9 + 3] + mc[2] * kernels[2 * 72 + 2 * 9 + 4] + mr[2] * kernels[2 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[2 * 72 + 2 * 9 + 6] + bc[2] * kernels[2 * 72 + 2 * 9 + 7] + br[2] * kernels[2 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[2 * 72 + 3 * 9 + 0] + tc[3] * kernels[2 * 72 + 3 * 9 + 1] + tr[3] * kernels[2 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[2 * 72 + 3 * 9 + 3] + mc[3] * kernels[2 * 72 + 3 * 9 + 4] + mr[3] * kernels[2 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[2 * 72 + 3 * 9 + 6] + bc[3] * kernels[2 * 72 + 3 * 9 + 7] + br[3] * kernels[2 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[2 * 72 + 4 * 9 + 0] + tc[4] * kernels[2 * 72 + 4 * 9 + 1] + tr[4] * kernels[2 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[2 * 72 + 4 * 9 + 3] + mc[4] * kernels[2 * 72 + 4 * 9 + 4] + mr[4] * kernels[2 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[2 * 72 + 4 * 9 + 6] + bc[4] * kernels[2 * 72 + 4 * 9 + 7] + br[4] * kernels[2 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[2 * 72 + 5 * 9 + 0] + tc[5] * kernels[2 * 72 + 5 * 9 + 1] + tr[5] * kernels[2 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[2 * 72 + 5 * 9 + 3] + mc[5] * kernels[2 * 72 + 5 * 9 + 4] + mr[5] * kernels[2 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[2 * 72 + 5 * 9 + 6] + bc[5] * kernels[2 * 72 + 5 * 9 + 7] + br[5] * kernels[2 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[2 * 72 + 6 * 9 + 0] + tc[6] * kernels[2 * 72 + 6 * 9 + 1] + tr[6] * kernels[2 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[2 * 72 + 6 * 9 + 3] + mc[6] * kernels[2 * 72 + 6 * 9 + 4] + mr[6] * kernels[2 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[2 * 72 + 6 * 9 + 6] + bc[6] * kernels[2 * 72 + 6 * 9 + 7] + br[6] * kernels[2 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[2 * 72 + 7 * 9 + 0] + tc[7] * kernels[2 * 72 + 7 * 9 + 1] + tr[7] * kernels[2 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[2 * 72 + 7 * 9 + 3] + mc[7] * kernels[2 * 72 + 7 * 9 + 4] + mr[7] * kernels[2 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[2 * 72 + 7 * 9 + 6] + bc[7] * kernels[2 * 72 + 7 * 9 + 7] + br[7] * kernels[2 * 72 + 7 * 9 + 8];
-
-        outMat[2] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[2]);
-
-        c1 =
-            tl[0] * kernels[3 * 72 + 0 * 9 + 0] + tc[0] * kernels[3 * 72 + 0 * 9 + 1] + tr[0] * kernels[3 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[3 * 72 + 0 * 9 + 3] + mc[0] * kernels[3 * 72 + 0 * 9 + 4] + mr[0] * kernels[3 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[3 * 72 + 0 * 9 + 6] + bc[0] * kernels[3 * 72 + 0 * 9 + 7] + br[0] * kernels[3 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[3 * 72 + 1 * 9 + 0] + tc[1] * kernels[3 * 72 + 1 * 9 + 1] + tr[1] * kernels[3 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[3 * 72 + 1 * 9 + 3] + mc[1] * kernels[3 * 72 + 1 * 9 + 4] + mr[1] * kernels[3 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[3 * 72 + 1 * 9 + 6] + bc[1] * kernels[3 * 72 + 1 * 9 + 7] + br[1] * kernels[3 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[3 * 72 + 2 * 9 + 0] + tc[2] * kernels[3 * 72 + 2 * 9 + 1] + tr[2] * kernels[3 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[3 * 72 + 2 * 9 + 3] + mc[2] * kernels[3 * 72 + 2 * 9 + 4] + mr[2] * kernels[3 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[3 * 72 + 2 * 9 + 6] + bc[2] * kernels[3 * 72 + 2 * 9 + 7] + br[2] * kernels[3 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[3 * 72 + 3 * 9 + 0] + tc[3] * kernels[3 * 72 + 3 * 9 + 1] + tr[3] * kernels[3 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[3 * 72 + 3 * 9 + 3] + mc[3] * kernels[3 * 72 + 3 * 9 + 4] + mr[3] * kernels[3 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[3 * 72 + 3 * 9 + 6] + bc[3] * kernels[3 * 72 + 3 * 9 + 7] + br[3] * kernels[3 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[3 * 72 + 4 * 9 + 0] + tc[4] * kernels[3 * 72 + 4 * 9 + 1] + tr[4] * kernels[3 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[3 * 72 + 4 * 9 + 3] + mc[4] * kernels[3 * 72 + 4 * 9 + 4] + mr[4] * kernels[3 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[3 * 72 + 4 * 9 + 6] + bc[4] * kernels[3 * 72 + 4 * 9 + 7] + br[4] * kernels[3 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[3 * 72 + 5 * 9 + 0] + tc[5] * kernels[3 * 72 + 5 * 9 + 1] + tr[5] * kernels[3 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[3 * 72 + 5 * 9 + 3] + mc[5] * kernels[3 * 72 + 5 * 9 + 4] + mr[5] * kernels[3 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[3 * 72 + 5 * 9 + 6] + bc[5] * kernels[3 * 72 + 5 * 9 + 7] + br[5] * kernels[3 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[3 * 72 + 6 * 9 + 0] + tc[6] * kernels[3 * 72 + 6 * 9 + 1] + tr[6] * kernels[3 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[3 * 72 + 6 * 9 + 3] + mc[6] * kernels[3 * 72 + 6 * 9 + 4] + mr[6] * kernels[3 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[3 * 72 + 6 * 9 + 6] + bc[6] * kernels[3 * 72 + 6 * 9 + 7] + br[6] * kernels[3 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[3 * 72 + 7 * 9 + 0] + tc[7] * kernels[3 * 72 + 7 * 9 + 1] + tr[7] * kernels[3 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[3 * 72 + 7 * 9 + 3] + mc[7] * kernels[3 * 72 + 7 * 9 + 4] + mr[7] * kernels[3 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[3 * 72 + 7 * 9 + 6] + bc[7] * kernels[3 * 72 + 7 * 9 + 7] + br[7] * kernels[3 * 72 + 7 * 9 + 8];
-
-        outMat[3] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[3]);
-
-        c1 =
-            tl[0] * kernels[4 * 72 + 0 * 9 + 0] + tc[0] * kernels[4 * 72 + 0 * 9 + 1] + tr[0] * kernels[4 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[4 * 72 + 0 * 9 + 3] + mc[0] * kernels[4 * 72 + 0 * 9 + 4] + mr[0] * kernels[4 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[4 * 72 + 0 * 9 + 6] + bc[0] * kernels[4 * 72 + 0 * 9 + 7] + br[0] * kernels[4 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[4 * 72 + 1 * 9 + 0] + tc[1] * kernels[4 * 72 + 1 * 9 + 1] + tr[1] * kernels[4 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[4 * 72 + 1 * 9 + 3] + mc[1] * kernels[4 * 72 + 1 * 9 + 4] + mr[1] * kernels[4 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[4 * 72 + 1 * 9 + 6] + bc[1] * kernels[4 * 72 + 1 * 9 + 7] + br[1] * kernels[4 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[4 * 72 + 2 * 9 + 0] + tc[2] * kernels[4 * 72 + 2 * 9 + 1] + tr[2] * kernels[4 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[4 * 72 + 2 * 9 + 3] + mc[2] * kernels[4 * 72 + 2 * 9 + 4] + mr[2] * kernels[4 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[4 * 72 + 2 * 9 + 6] + bc[2] * kernels[4 * 72 + 2 * 9 + 7] + br[2] * kernels[4 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[4 * 72 + 3 * 9 + 0] + tc[3] * kernels[4 * 72 + 3 * 9 + 1] + tr[3] * kernels[4 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[4 * 72 + 3 * 9 + 3] + mc[3] * kernels[4 * 72 + 3 * 9 + 4] + mr[3] * kernels[4 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[4 * 72 + 3 * 9 + 6] + bc[3] * kernels[4 * 72 + 3 * 9 + 7] + br[3] * kernels[4 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[4 * 72 + 4 * 9 + 0] + tc[4] * kernels[4 * 72 + 4 * 9 + 1] + tr[4] * kernels[4 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[4 * 72 + 4 * 9 + 3] + mc[4] * kernels[4 * 72 + 4 * 9 + 4] + mr[4] * kernels[4 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[4 * 72 + 4 * 9 + 6] + bc[4] * kernels[4 * 72 + 4 * 9 + 7] + br[4] * kernels[4 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[4 * 72 + 5 * 9 + 0] + tc[5] * kernels[4 * 72 + 5 * 9 + 1] + tr[5] * kernels[4 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[4 * 72 + 5 * 9 + 3] + mc[5] * kernels[4 * 72 + 5 * 9 + 4] + mr[5] * kernels[4 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[4 * 72 + 5 * 9 + 6] + bc[5] * kernels[4 * 72 + 5 * 9 + 7] + br[5] * kernels[4 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[4 * 72 + 6 * 9 + 0] + tc[6] * kernels[4 * 72 + 6 * 9 + 1] + tr[6] * kernels[4 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[4 * 72 + 6 * 9 + 3] + mc[6] * kernels[4 * 72 + 6 * 9 + 4] + mr[6] * kernels[4 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[4 * 72 + 6 * 9 + 6] + bc[6] * kernels[4 * 72 + 6 * 9 + 7] + br[6] * kernels[4 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[4 * 72 + 7 * 9 + 0] + tc[7] * kernels[4 * 72 + 7 * 9 + 1] + tr[7] * kernels[4 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[4 * 72 + 7 * 9 + 3] + mc[7] * kernels[4 * 72 + 7 * 9 + 4] + mr[7] * kernels[4 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[4 * 72 + 7 * 9 + 6] + bc[7] * kernels[4 * 72 + 7 * 9 + 7] + br[7] * kernels[4 * 72 + 7 * 9 + 8];
-
-        outMat[4] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[4]);
-
-        c1 =
-            tl[0] * kernels[5 * 72 + 0 * 9 + 0] + tc[0] * kernels[5 * 72 + 0 * 9 + 1] + tr[0] * kernels[5 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[5 * 72 + 0 * 9 + 3] + mc[0] * kernels[5 * 72 + 0 * 9 + 4] + mr[0] * kernels[5 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[5 * 72 + 0 * 9 + 6] + bc[0] * kernels[5 * 72 + 0 * 9 + 7] + br[0] * kernels[5 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[5 * 72 + 1 * 9 + 0] + tc[1] * kernels[5 * 72 + 1 * 9 + 1] + tr[1] * kernels[5 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[5 * 72 + 1 * 9 + 3] + mc[1] * kernels[5 * 72 + 1 * 9 + 4] + mr[1] * kernels[5 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[5 * 72 + 1 * 9 + 6] + bc[1] * kernels[5 * 72 + 1 * 9 + 7] + br[1] * kernels[5 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[5 * 72 + 2 * 9 + 0] + tc[2] * kernels[5 * 72 + 2 * 9 + 1] + tr[2] * kernels[5 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[5 * 72 + 2 * 9 + 3] + mc[2] * kernels[5 * 72 + 2 * 9 + 4] + mr[2] * kernels[5 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[5 * 72 + 2 * 9 + 6] + bc[2] * kernels[5 * 72 + 2 * 9 + 7] + br[2] * kernels[5 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[5 * 72 + 3 * 9 + 0] + tc[3] * kernels[5 * 72 + 3 * 9 + 1] + tr[3] * kernels[5 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[5 * 72 + 3 * 9 + 3] + mc[3] * kernels[5 * 72 + 3 * 9 + 4] + mr[3] * kernels[5 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[5 * 72 + 3 * 9 + 6] + bc[3] * kernels[5 * 72 + 3 * 9 + 7] + br[3] * kernels[5 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[5 * 72 + 4 * 9 + 0] + tc[4] * kernels[5 * 72 + 4 * 9 + 1] + tr[4] * kernels[5 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[5 * 72 + 4 * 9 + 3] + mc[4] * kernels[5 * 72 + 4 * 9 + 4] + mr[4] * kernels[5 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[5 * 72 + 4 * 9 + 6] + bc[4] * kernels[5 * 72 + 4 * 9 + 7] + br[4] * kernels[5 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[5 * 72 + 5 * 9 + 0] + tc[5] * kernels[5 * 72 + 5 * 9 + 1] + tr[5] * kernels[5 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[5 * 72 + 5 * 9 + 3] + mc[5] * kernels[5 * 72 + 5 * 9 + 4] + mr[5] * kernels[5 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[5 * 72 + 5 * 9 + 6] + bc[5] * kernels[5 * 72 + 5 * 9 + 7] + br[5] * kernels[5 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[5 * 72 + 6 * 9 + 0] + tc[6] * kernels[5 * 72 + 6 * 9 + 1] + tr[6] * kernels[5 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[5 * 72 + 6 * 9 + 3] + mc[6] * kernels[5 * 72 + 6 * 9 + 4] + mr[6] * kernels[5 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[5 * 72 + 6 * 9 + 6] + bc[6] * kernels[5 * 72 + 6 * 9 + 7] + br[6] * kernels[5 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[5 * 72 + 7 * 9 + 0] + tc[7] * kernels[5 * 72 + 7 * 9 + 1] + tr[7] * kernels[5 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[5 * 72 + 7 * 9 + 3] + mc[7] * kernels[5 * 72 + 7 * 9 + 4] + mr[7] * kernels[5 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[5 * 72 + 7 * 9 + 6] + bc[7] * kernels[5 * 72 + 7 * 9 + 7] + br[7] * kernels[5 * 72 + 7 * 9 + 8];
-
-        outMat[5] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[5]);
-
-        c1 =
-            tl[0] * kernels[6 * 72 + 0 * 9 + 0] + tc[0] * kernels[6 * 72 + 0 * 9 + 1] + tr[0] * kernels[6 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[6 * 72 + 0 * 9 + 3] + mc[0] * kernels[6 * 72 + 0 * 9 + 4] + mr[0] * kernels[6 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[6 * 72 + 0 * 9 + 6] + bc[0] * kernels[6 * 72 + 0 * 9 + 7] + br[0] * kernels[6 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[6 * 72 + 1 * 9 + 0] + tc[1] * kernels[6 * 72 + 1 * 9 + 1] + tr[1] * kernels[6 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[6 * 72 + 1 * 9 + 3] + mc[1] * kernels[6 * 72 + 1 * 9 + 4] + mr[1] * kernels[6 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[6 * 72 + 1 * 9 + 6] + bc[1] * kernels[6 * 72 + 1 * 9 + 7] + br[1] * kernels[6 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[6 * 72 + 2 * 9 + 0] + tc[2] * kernels[6 * 72 + 2 * 9 + 1] + tr[2] * kernels[6 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[6 * 72 + 2 * 9 + 3] + mc[2] * kernels[6 * 72 + 2 * 9 + 4] + mr[2] * kernels[6 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[6 * 72 + 2 * 9 + 6] + bc[2] * kernels[6 * 72 + 2 * 9 + 7] + br[2] * kernels[6 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[6 * 72 + 3 * 9 + 0] + tc[3] * kernels[6 * 72 + 3 * 9 + 1] + tr[3] * kernels[6 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[6 * 72 + 3 * 9 + 3] + mc[3] * kernels[6 * 72 + 3 * 9 + 4] + mr[3] * kernels[6 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[6 * 72 + 3 * 9 + 6] + bc[3] * kernels[6 * 72 + 3 * 9 + 7] + br[3] * kernels[6 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[6 * 72 + 4 * 9 + 0] + tc[4] * kernels[6 * 72 + 4 * 9 + 1] + tr[4] * kernels[6 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[6 * 72 + 4 * 9 + 3] + mc[4] * kernels[6 * 72 + 4 * 9 + 4] + mr[4] * kernels[6 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[6 * 72 + 4 * 9 + 6] + bc[4] * kernels[6 * 72 + 4 * 9 + 7] + br[4] * kernels[6 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[6 * 72 + 5 * 9 + 0] + tc[5] * kernels[6 * 72 + 5 * 9 + 1] + tr[5] * kernels[6 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[6 * 72 + 5 * 9 + 3] + mc[5] * kernels[6 * 72 + 5 * 9 + 4] + mr[5] * kernels[6 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[6 * 72 + 5 * 9 + 6] + bc[5] * kernels[6 * 72 + 5 * 9 + 7] + br[5] * kernels[6 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[6 * 72 + 6 * 9 + 0] + tc[6] * kernels[6 * 72 + 6 * 9 + 1] + tr[6] * kernels[6 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[6 * 72 + 6 * 9 + 3] + mc[6] * kernels[6 * 72 + 6 * 9 + 4] + mr[6] * kernels[6 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[6 * 72 + 6 * 9 + 6] + bc[6] * kernels[6 * 72 + 6 * 9 + 7] + br[6] * kernels[6 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[6 * 72 + 7 * 9 + 0] + tc[7] * kernels[6 * 72 + 7 * 9 + 1] + tr[7] * kernels[6 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[6 * 72 + 7 * 9 + 3] + mc[7] * kernels[6 * 72 + 7 * 9 + 4] + mr[7] * kernels[6 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[6 * 72 + 7 * 9 + 6] + bc[7] * kernels[6 * 72 + 7 * 9 + 7] + br[7] * kernels[6 * 72 + 7 * 9 + 8];
-
-        outMat[6] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[6]);
-
-        c1 =
-            tl[0] * kernels[7 * 72 + 0 * 9 + 0] + tc[0] * kernels[7 * 72 + 0 * 9 + 1] + tr[0] * kernels[7 * 72 + 0 * 9 + 2] +
-            ml[0] * kernels[7 * 72 + 0 * 9 + 3] + mc[0] * kernels[7 * 72 + 0 * 9 + 4] + mr[0] * kernels[7 * 72 + 0 * 9 + 5] +
-            bl[0] * kernels[7 * 72 + 0 * 9 + 6] + bc[0] * kernels[7 * 72 + 0 * 9 + 7] + br[0] * kernels[7 * 72 + 0 * 9 + 8];
-
-        c2 =
-            tl[1] * kernels[7 * 72 + 1 * 9 + 0] + tc[1] * kernels[7 * 72 + 1 * 9 + 1] + tr[1] * kernels[7 * 72 + 1 * 9 + 2] +
-            ml[1] * kernels[7 * 72 + 1 * 9 + 3] + mc[1] * kernels[7 * 72 + 1 * 9 + 4] + mr[1] * kernels[7 * 72 + 1 * 9 + 5] +
-            bl[1] * kernels[7 * 72 + 1 * 9 + 6] + bc[1] * kernels[7 * 72 + 1 * 9 + 7] + br[1] * kernels[7 * 72 + 1 * 9 + 8];
-
-        c3 =
-            tl[2] * kernels[7 * 72 + 2 * 9 + 0] + tc[2] * kernels[7 * 72 + 2 * 9 + 1] + tr[2] * kernels[7 * 72 + 2 * 9 + 2] +
-            ml[2] * kernels[7 * 72 + 2 * 9 + 3] + mc[2] * kernels[7 * 72 + 2 * 9 + 4] + mr[2] * kernels[7 * 72 + 2 * 9 + 5] +
-            bl[2] * kernels[7 * 72 + 2 * 9 + 6] + bc[2] * kernels[7 * 72 + 2 * 9 + 7] + br[2] * kernels[7 * 72 + 2 * 9 + 8];
-
-        c4 =
-            tl[3] * kernels[7 * 72 + 3 * 9 + 0] + tc[3] * kernels[7 * 72 + 3 * 9 + 1] + tr[3] * kernels[7 * 72 + 3 * 9 + 2] +
-            ml[3] * kernels[7 * 72 + 3 * 9 + 3] + mc[3] * kernels[7 * 72 + 3 * 9 + 4] + mr[3] * kernels[7 * 72 + 3 * 9 + 5] +
-            bl[3] * kernels[7 * 72 + 3 * 9 + 6] + bc[3] * kernels[7 * 72 + 3 * 9 + 7] + br[3] * kernels[7 * 72 + 3 * 9 + 8];
-
-        c5 =
-            tl[4] * kernels[7 * 72 + 4 * 9 + 0] + tc[4] * kernels[7 * 72 + 4 * 9 + 1] + tr[4] * kernels[7 * 72 + 4 * 9 + 2] +
-            ml[4] * kernels[7 * 72 + 4 * 9 + 3] + mc[4] * kernels[7 * 72 + 4 * 9 + 4] + mr[4] * kernels[7 * 72 + 4 * 9 + 5] +
-            bl[4] * kernels[7 * 72 + 4 * 9 + 6] + bc[4] * kernels[7 * 72 + 4 * 9 + 7] + br[4] * kernels[7 * 72 + 4 * 9 + 8];
-
-        c6 =
-            tl[5] * kernels[7 * 72 + 5 * 9 + 0] + tc[5] * kernels[7 * 72 + 5 * 9 + 1] + tr[5] * kernels[7 * 72 + 5 * 9 + 2] +
-            ml[5] * kernels[7 * 72 + 5 * 9 + 3] + mc[5] * kernels[7 * 72 + 5 * 9 + 4] + mr[5] * kernels[7 * 72 + 5 * 9 + 5] +
-            bl[5] * kernels[7 * 72 + 5 * 9 + 6] + bc[5] * kernels[7 * 72 + 5 * 9 + 7] + br[5] * kernels[7 * 72 + 5 * 9 + 8];
-
-        c7 =
-            tl[6] * kernels[7 * 72 + 6 * 9 + 0] + tc[6] * kernels[7 * 72 + 6 * 9 + 1] + tr[6] * kernels[7 * 72 + 6 * 9 + 2] +
-            ml[6] * kernels[7 * 72 + 6 * 9 + 3] + mc[6] * kernels[7 * 72 + 6 * 9 + 4] + mr[6] * kernels[7 * 72 + 6 * 9 + 5] +
-            bl[6] * kernels[7 * 72 + 6 * 9 + 6] + bc[6] * kernels[7 * 72 + 6 * 9 + 7] + br[6] * kernels[7 * 72 + 6 * 9 + 8];
-
-        c8 =
-            tl[7] * kernels[7 * 72 + 7 * 9 + 0] + tc[7] * kernels[7 * 72 + 7 * 9 + 1] + tr[7] * kernels[7 * 72 + 7 * 9 + 2] +
-            ml[7] * kernels[7 * 72 + 7 * 9 + 3] + mc[7] * kernels[7 * 72 + 7 * 9 + 4] + mr[7] * kernels[7 * 72 + 7 * 9 + 5] +
-            bl[7] * kernels[7 * 72 + 7 * 9 + 6] + bc[7] * kernels[7 * 72 + 7 * 9 + 7] + br[7] * kernels[7 * 72 + 7 * 9 + 8];
-
-        outMat[7] = RELU(c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8 + biases[7]);
-
-#endif // ENABLE_AVX
+        float out[8];
+        std::copy_n(biases, 8, out);
+
+        const float* kptr = kernels;
+        for (size_t c = 0; c < 8; c++)
+        {
+            const float* k0 = kptr + c * 72;
+            const float* k1 = kptr + c * 72 + 8;
+            const float* k2 = kptr + c * 72 + 16;
+            const float* k3 = kptr + c * 72 + 24;
+            const float* k4 = kptr + c * 72 + 32;
+            const float* k5 = kptr + c * 72 + 40;
+            const float* k6 = kptr + c * 72 + 48;
+            const float* k7 = kptr + c * 72 + 56;
+            const float* k8 = kptr + c * 72 + 64;
+
+            for (size_t i = 0; i < 8; i++)
+                out[i] += tl[c] * k0[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += tc[c] * k1[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += tr[c] * k2[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += ml[c] * k3[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += mc[c] * k4[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += mr[c] * k5[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += bl[c] * k6[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += bc[c] * k7[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += br[c] * k8[i];
+        }
+
+        for (size_t i = 0; i < 8; i++)
+            out[i] = std::max<float>(out[i], 0);
+
+        std::copy_n(out, 8, outMat);
+#endif // USE_RYZEN
 
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
 {
     detail::changEachPixelNTo1<unsigned char>(img, [&](const int i, const int j, ChanB outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
@@ -874,7 +675,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
         //0 1  to  3 2
         //2 3      1 0
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
@@ -882,28 +683,32 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const FP* k
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
-        const FP luma = _mm_cvtss_f32(_r3);
+        const float luma = _mm_cvtss_f32(_r3);
 
         _mm256_zeroupper();
 
         *outMat = UNNORMB(luma);
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels + index * 8);
+
+        const float luma =
+            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
+            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
+
+        *outMat = UNNORMB(luma);
 #else
-        const FP luma = (
-            inMat[0] * kernels[0 + index] +
-            inMat[1] * kernels[4 + index] +
-            inMat[2] * kernels[8 + index] +
-            inMat[3] * kernels[12 + index] +
-            inMat[4] * kernels[16 + index] +
-            inMat[5] * kernels[20 + index] +
-            inMat[6] * kernels[24 + index] +
-            inMat[7] * kernels[28 + index]);
+        const float* kptr = kernels + index * 8;
+
+        float luma = 0;
+        for (size_t i = 0; i < 8; i++)
+            luma += kptr[i] * inMat[i];
 
         *outMat = UNNORMB(luma);
 #endif
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
 {
     detail::changEachPixelNTo1<unsigned short>(img, [&](const int i, const int j, ChanW outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
@@ -912,7 +717,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* k
         //0 1  to  3 2
         //2 3      1 0
 
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
@@ -920,30 +725,32 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const FP* k
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
-        const FP luma = _mm_cvtss_f32(_r3);
+        const float luma = _mm_cvtss_f32(_r3);
 
         _mm256_zeroupper();
 
         *outMat = UNNORMW(luma);
-#else
-        const FP luma = (
-            inMat[0] * kernels[0 + index] +
-            inMat[1] * kernels[4 + index] +
-            inMat[2] * kernels[8 + index] +
-            inMat[3] * kernels[12 + index] +
-            inMat[4] * kernels[16 + index] +
-            inMat[5] * kernels[20 + index] +
-            inMat[6] * kernels[24 + index] +
-            inMat[7] * kernels[28 + index]);
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels + index * 8);
+
+        const float luma =
+            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
+            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
 
         *outMat = UNNORMW(luma);
-#endif // ENABLE_AVX
+#else
+        const float* kptr = kernels + index * 8;
 
+        float luma = 0;
+        for (size_t i = 0; i < 8; i++)
+            luma += kptr[i] * inMat[i];
 
+        *outMat = UNNORMW(luma);
+#endif
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
 {
     detail::changEachPixelNTo1<float>(img, [&](const int i, const int j, ChanF outMat, LineFP inMat) {
         const int index = ((i & 1) << 1) + (j & 1);
@@ -951,7 +758,7 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
         //180 degree rotation for kernel
         //0 1  to  3 2
         //2 3      1 0
-#ifdef ENABLE_AVX
+#ifdef USE_RYZEN
         const __m256 _in = _mm256_loadu_ps(inMat);
         const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
         const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
@@ -959,26 +766,28 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const FP* k
         const __m128 _r2 = _mm256_castps256_ps128(_r0);
         const __m128 _r3 = _mm_add_ps(_r1, _r2);
 
-        const FP luma = _mm_cvtss_f32(_r3);
+        const float luma = _mm_cvtss_f32(_r3);
 
         _mm256_zeroupper();
 
         *outMat = CLAMP(luma, 0.0f, 1.0f);
+#elif defined(USE_EIGEN3)
+        float* kptr = const_cast<float*>(kernels + index * 8);
+
+        const float luma =
+            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
+            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
+
+        *outMat = CLAMP(luma, 0.0f, 1.0f);
 #else
-        const FP luma = (
-            inMat[0] * kernels[0 + index] +
-            inMat[1] * kernels[4 + index] +
-            inMat[2] * kernels[8 + index] +
-            inMat[3] * kernels[12 + index] +
-            inMat[4] * kernels[16 + index] +
-            inMat[5] * kernels[20 + index] +
-            inMat[6] * kernels[24 + index] +
-            inMat[7] * kernels[28 + index]);
+        const float* kptr = kernels + index * 8;
 
-        *outMat = static_cast<float>(CLAMP(luma, 0.0, 1.0));
+        float luma = 0;
+        for (size_t i = 0; i < 8; i++)
+            luma += kptr[i] * inMat[i];
+
+        *outMat = static_cast<float>(CLAMP(luma, 0.0f, 1.0f));
 #endif
-
-
         }, tmpMat);
         }
 

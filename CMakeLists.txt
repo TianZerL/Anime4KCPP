@@ -31,11 +31,13 @@ option(Build_C_Wrapper_With_Core "Build C wrapper and core in one file" ON)
 option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
+option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
+option(Ryzen_Optimization "Accelerate the AMD Ryzen CPU" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_OpenCL "Enable OpenCL module" ON)
 option(Enable_NCNN "Enable ncnn module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
-option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required, it can accelerate or slow down, AMD Ryzen recommended" OFF)
+option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
 option(Enable_Video "Enable video processor module" ON)
 option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
@@ -54,7 +56,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(Enable_Fast_Math)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
     endif()
-    if(Enable_AVX2)
+    if(Enable_AVX2 OR Ryzen_Optimization)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
     endif()
 else()
@@ -70,7 +72,7 @@ else()
     if(Enable_Fast_Math)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
     endif()
-    if(Enable_AVX2)
+    if(Enable_AVX2 OR Ryzen_Optimization)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
     endif()
     set (CMAKE_BUILD_TYPE "Release")
@@ -148,6 +150,8 @@ message(STATUS
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
+"   Use Eigen3 ${Use_Eigen3}\n"
+"   Ryzen Optimization ${Ryzen_Optimization}\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
@@ -175,8 +179,18 @@ if(Enable_NCNN)
     set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
 endif()
 
-if(Enable_AVX2)
-    add_definitions(-DENABLE_AVX)
+if(Ryzen_Optimization)
+    add_definitions(-DUSE_RYZEN)
+endif()
+
+if(Use_Eigen3)
+    if(NOT EIGEN3_INCLUDE_DIR)
+        set(EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}")
+        if(NOT EIGEN3_INCLUDE_DIR)
+            set(EIGEN3_INCLUDE_DIR "Eigen3 header path" CACHE PATH "Directory that contains Eigen3 headers")
+        endif()
+    endif()
+    add_definitions(-DUSE_EIGEN3)
 endif()
 
 message(STATUS  
