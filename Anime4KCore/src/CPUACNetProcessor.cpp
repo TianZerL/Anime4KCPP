@@ -2,8 +2,17 @@
 
 #ifdef ENABLE_OPENCV_DNN
 Anime4KCPP::CPU::ACNetHDN::ACNetHDN(std::string modelPath)
-    :net{ cv::dnn::readNet(modelPath) } 
 {
+    try
+    {
+        net = cv::dnn::readNet(modelPath);
+    }
+    catch (const std::exception&)
+    {
+        throw ACException<ExceptionType::IO>(
+            R"(Failed to load models file in "./models/" for OpenCV DNN module, )"
+            R"(make sure you copy it correctly from Anime4KCPP source code)");
+    }
     net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 }
