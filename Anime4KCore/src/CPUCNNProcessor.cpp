@@ -701,8 +701,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const float
         float* kptr = const_cast<float*>(kernels + index * 8);
 
         const float luma =
-            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
-            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
+            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
+            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
 
         *outMat = UNNORMB(luma);
 #else
@@ -743,8 +743,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const float
         float* kptr = const_cast<float*>(kernels + index * 8);
 
         const float luma =
-            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
-            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
+            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
+            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
 
         *outMat = UNNORMW(luma);
 #else
@@ -784,8 +784,8 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const float
         float* kptr = const_cast<float*>(kernels + index * 8);
 
         const float luma =
-            Eigen::Map<Eigen::Vector<float, 8>>(inMat, 8)
-            .dot(Eigen::Map<Eigen::Vector<float, 8>>(kptr, 8));
+            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
+            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
 
         *outMat = CLAMP(luma, 0.0f, 1.0f);
 #else
