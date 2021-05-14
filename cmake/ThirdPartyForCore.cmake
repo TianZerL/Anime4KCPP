@@ -58,14 +58,19 @@ elseif(Use_OpenCV_with_MINGW_for_Clang)
     set(MINGW True)
 endif()
 
+if(Enable_OpenCL)
+    find_package(OpenCL REQUIRED)
+    include_directories(${OpenCL_INCLUDE_DIRS} ${TOP_DIR}/ThirdParty/include/opencl)
+    target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
+endif()
+
 find_package(OpenCV REQUIRED)
+
+include_directories(${OpenCV_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 if(Use_OpenCV_with_MSVC_for_Clang)
     set(MSVC ${TMP_FALG})
 elseif(Use_OpenCV_with_MINGW_for_Clang)
     set(MINGW ${TMP_FALG})
 endif()
-
-find_package(OpenCL REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS} ${OpenCL_INCLUDE_DIRS} ${TOP_DIR}/ThirdParty/include/opencl)
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${OpenCL_LIBRARIES})
