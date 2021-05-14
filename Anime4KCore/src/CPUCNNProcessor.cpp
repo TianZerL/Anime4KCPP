@@ -3,6 +3,7 @@
 #ifdef USE_RYZEN
 #include<immintrin.h>
 #elif defined(USE_EIGEN3)
+#define EIGEN_DONT_PARALLELIZE
 #include<Eigen/Core>
 #endif
 
@@ -171,15 +172,17 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const float* k
         const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
 
-        out += tln * k0;
-        out += tcn * k1;
-        out += trn * k2;
-        out += mln * k3;
-        out += mcn * k4;
-        out += mrn * k5;
-        out += bln * k6;
-        out += bcn * k7;
-        out += brn * k8;
+        auto t0 = tln * k0;
+        auto t1 = tcn * k1;
+        auto t2 = trn * k2;
+        auto t3 = mln * k3;
+        auto t4 = mcn * k4;
+        auto t5 = mrn * k5;
+        auto t6 = bln * k6;
+        auto t7 = bcn * k7;
+        auto t8 = brn * k8;
+
+        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
 
         Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
@@ -313,15 +316,17 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const float* k
         const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
 
-        out += tln * k0;
-        out += tcn * k1;
-        out += trn * k2;
-        out += mln * k3;
-        out += mcn * k4;
-        out += mrn * k5;
-        out += bln * k6;
-        out += bcn * k7;
-        out += brn * k8;
+        auto t0 = tln * k0;
+        auto t1 = tcn * k1;
+        auto t2 = trn * k2;
+        auto t3 = mln * k3;
+        auto t4 = mcn * k4;
+        auto t5 = mrn * k5;
+        auto t6 = bln * k6;
+        auto t7 = bcn * k7;
+        auto t8 = brn * k8;
+
+        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
 
         Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
@@ -445,16 +450,18 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const float* k
         const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
+        
+        auto t0 = *tl * k0;
+        auto t1 = *tc * k1;
+        auto t2 = *tr * k2;
+        auto t3 = *ml * k3;
+        auto t4 = *mc * k4;
+        auto t5 = *mr * k5;
+        auto t6 = *bl * k6;
+        auto t7 = *bc * k7;
+        auto t8 = *br * k8;
 
-        out += *tl * k0;
-        out += *tc * k1;
-        out += *tr * k2;
-        out += *ml * k3;
-        out += *mc * k4;
-        out += *mr * k5;
-        out += *bl * k6;
-        out += *bc * k7;
-        out += *br * k8;
+        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
 
         Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
@@ -608,15 +615,17 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
             const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + i * 72 + 56);
             const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + i * 72 + 64);
 
-            out += tl[i] * k0;
-            out += tc[i] * k1;
-            out += tr[i] * k2;
-            out += ml[i] * k3;
-            out += mc[i] * k4;
-            out += mr[i] * k5;
-            out += bl[i] * k6;
-            out += bc[i] * k7;
-            out += br[i] * k8;
+            auto t0 = tl[i] * k0;
+            auto t1 = tc[i] * k1;
+            auto t2 = tr[i] * k2;
+            auto t3 = ml[i] * k3;
+            auto t4 = mc[i] * k4;
+            auto t5 = mr[i] * k5;
+            auto t6 = bl[i] * k6;
+            auto t7 = bc[i] * k7;
+            auto t8 = br[i] * k8;
+
+            out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
         }
 
         Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
