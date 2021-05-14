@@ -38,18 +38,20 @@ inline Anime4KCPP::Utils::ThreadPool::ThreadPool(size_t maxThreadCount)
             {
                 for (;;)
                 {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock(mtx);
-                        cnd.wait(lock, [this]
-                            {
-                                return stop || !tasks.empty();
-                            });
-                        if (stop && tasks.empty())
-                            return;
-                        task = std::move(tasks.front());
-                        tasks.pop();
-                    }
+                    std::unique_lock<std::mutex> lock(mtx);
+                    cnd.wait(lock, [this]
+                        {
+                            return stop || !tasks.empty();
+                        });
+
+                    if (stop && tasks.empty())
+                        return;
+
+                    auto task = std::move(tasks.front());
+                    tasks.pop();
+
+                    lock.unlock();
+
                     task();
                 }
             });
@@ -66,7 +68,7 @@ inline Anime4KCPP::Utils::ThreadPool::~ThreadPool()
 }
 
 template<typename F>
-void Anime4KCPP::Utils::ThreadPool::exec(F&& f)
+inline void Anime4KCPP::Utils::ThreadPool::exec(F&& f)
 {
     {
         std::lock_guard<std::mutex> lock(mtx);
