@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#ifndef DISABLE_PARALLEL
 #if defined(_MSC_VER) && !defined(USE_TBB)
 #include <ppl.h>
 namespace Parallel = Concurrency;
@@ -13,6 +14,7 @@ namespace Parallel = tbb;
 #else
 #include "ThreadPool.hpp"
 #endif
+#endif // !DISABLE_PARALLEL
 
 namespace Anime4KCPP
 {
@@ -26,6 +28,7 @@ namespace Anime4KCPP
 template <typename F>
 inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& func)
 {
+#ifndef DISABLE_PARALLEL
 #if defined(_MSC_VER) || defined(USE_TBB)
     Parallel::parallel_for(first, last, std::forward<F>(func));
 #elif defined(USE_OPENMP)
@@ -64,4 +67,10 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
         }
     }
 #endif
+#else
+    for (int i = first; i < last; i++)
+    {
+        func(i);
+    }
+#endif // !DISABLE_PARALLEL
 }

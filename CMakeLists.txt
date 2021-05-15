@@ -39,6 +39,7 @@ option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFi
 option(Enable_Video "Enable video processor module" ON)
 option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
 option(Enable_Image_IO "Enable image IO for core" ON)
+option(Disable_Parallel "Disable parallel processing" OFF)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 
@@ -161,6 +162,7 @@ message(STATUS
 "   Enable video ${Enable_Video}\n"
 "   Enable Preview GUI ${Enable_Preview_GUI}\n"
 "   Enable image IO ${Enable_Image_IO}\n"
+"   Disable Parallel ${Disable_Parallel}\n"
 )
 if(WIN32)
     message(STATUS
@@ -199,6 +201,10 @@ if(Use_Eigen3)
         endif()
     endif()
     add_definitions(-DUSE_EIGEN3)
+endif()
+
+if(Disable_Parallel)
+    add_definitions(-DDISABLE_PARALLEL)
 endif()
 
 message(STATUS  
