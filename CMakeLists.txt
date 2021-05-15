@@ -197,7 +197,7 @@ if(Use_Eigen3)
                 message (
                     WARNING "Unable to find eigen3 automatically, please set the header file location (EIGEN3_INCLUDE_DIR) manually\n"
                 )
-                set(EIGEN3_INCLUDE_DIR "Eigen3 header path" CACHE PATH "Directory that contains Eigen3 headers")
+                set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Directory that contains Eigen3 headers")
             endif()
         endif()
     endif()
