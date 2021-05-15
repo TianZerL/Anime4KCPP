@@ -25,6 +25,10 @@ if(Build_C_Wrapper)
         add_definitions(-DENABLE_PREVIEW_GUI)
     endif()
 
+    if(Enable_Image_IO)
+        add_definitions(-DENABLE_IMAGE_IO)
+    endif()
+
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  

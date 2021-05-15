@@ -103,6 +103,8 @@ extern "C"
         AC_ERROR_YUV444_AND_RGB32_AT_SAME_TIME,
         AC_ERROR_OPENCL_NOT_SUPPORTED,
         AC_ERROR_CUDA_NOT_SUPPORTED,
+        AC_ERROR_PREVIEW_GUI_DISABLE,
+        AC_ERROR_IMAGE_IO_DISABLE
     } ac_error;
 
     typedef enum ac_codec

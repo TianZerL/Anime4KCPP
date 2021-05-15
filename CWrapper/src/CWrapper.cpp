@@ -260,6 +260,7 @@ extern "C"
 
     ac_error acLoadImage(ac_instance instance, const char* srcFile)
     {
+#if ENABLE_IMAGE_IO
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
@@ -274,6 +275,9 @@ extern "C"
         }
 
         return AC_OK;
+#else
+        return AC_ERROR_IMAGE_IO_DISABLE;
+#endif // ENABLE_IMAGE_IO
     }
 
     ac_error acProcess(ac_instance instance)
@@ -297,16 +301,21 @@ extern "C"
 
     ac_error acShowImage(ac_instance instance, ac_bool R2B)
     {
+#if ENABLE_PREVIEW_GUI
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
         reinterpret_cast<Anime4KCPP::AC*>(instance)->showImage(R2B);
 
         return AC_OK;
+#else
+        return AC_ERROR_PREVIEW_GUI_DISABLE;
+#endif // ENABLE_PREVIEW_GUI
     }
 
     ac_error acSaveImage(ac_instance instance, const char* dstFile)
     {
+#if ENABLE_IMAGE_IO
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
         try
@@ -320,6 +329,9 @@ extern "C"
         }
 
         return AC_OK;
+#else
+        return AC_ERROR_IMAGE_IO_DISABLE;
+#endif // ENABLE_IMAGE_IO
     }
 
     ac_error acSetParameters(ac_instance instance, ac_parameters* parameters)
