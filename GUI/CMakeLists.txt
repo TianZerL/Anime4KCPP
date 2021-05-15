@@ -36,6 +36,11 @@ if(Build_GUI)
     endif()
 
     add_definitions(-DENABLE_VIDEO)
+    add_definitions(-DENABLE_IMAGE_IO)
+
+    if(Enable_Preview_GUI)
+        add_definitions(-DENABLE_PREVIEW_GUI)
+    endif()
 
     add_executable(Anime4KCPP_GUI
         WIN32

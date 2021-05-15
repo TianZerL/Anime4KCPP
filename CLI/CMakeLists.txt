@@ -16,7 +16,8 @@ if(Build_CLI)
     endif()
 
     add_definitions(-DENABLE_VIDEO)
-
+    add_definitions(-DENABLE_IMAGE_IO)
+    
     if(Enable_Preview_GUI)
         add_definitions(-DENABLE_PREVIEW_GUI)
     endif()

@@ -32,6 +32,7 @@ Anime4KCPP::Parameters Anime4KCPP::AC::getParameters()
     return param;
 }
 
+#ifdef ENABLE_IMAGE_IO
 void Anime4KCPP::AC::loadImage(const std::string& srcFile)
 {
     if (!param.alpha)
@@ -63,7 +64,7 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     }
     if (orgImg.empty())
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't exist or incorrect file format.");
-    
+
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = std::round(param.zoomFactor * orgH);
@@ -89,6 +90,7 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     inputRGB32 = false;
     inputYUV = false;
 }
+#endif // ENABLE_IMAGE_IO
 
 void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
 {
@@ -558,6 +560,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     }
 }
 
+#ifdef ENABLE_IMAGE_IO
 void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 {
     cv::Mat tmpImg = dstImg;
@@ -597,6 +600,7 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 
     cv::imwrite(dstFile, tmpImg);
 }
+#endif // ENABLE_IMAGE_IO
 
 void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
 {

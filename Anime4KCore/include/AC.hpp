@@ -131,7 +131,9 @@ public:
     virtual void setParameters(const Parameters& parameters);
     Parameters getParameters();
 
+#ifdef ENABLE_IMAGE_IO
     void loadImage(const std::string& srcFile);
+#endif // ENABLE_IMAGE_IO
     void loadImage(const cv::Mat& srcImage);
     void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
@@ -152,7 +154,9 @@ public:
         int rowsU, int colsU, size_t strideU, float* u,
         int rowsV, int colsV, size_t strideV, float* v);
     void loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v);
+#ifdef ENABLE_IMAGE_IO
     void saveImage(const std::string& dstFile);
+#endif // ENABLE_IMAGE_IO
     void saveImage(cv::Mat& dstImage);
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
     void saveImage(unsigned char* data, size_t dstStride = 0);

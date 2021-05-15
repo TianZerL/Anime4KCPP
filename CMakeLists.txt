@@ -41,6 +41,7 @@ option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
 option(Enable_Video "Enable video processor module" ON)
 option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
+option(Enable_Image_IO "Enable image IO for core" ON)
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 
@@ -162,6 +163,7 @@ message(STATUS
 "   Enable OpenCV DNN ${Enable_OpenCV_DNN}\n"
 "   Enable video ${Enable_Video}\n"
 "   Enable Preview GUI ${Enable_Preview_GUI}\n"
+"   Enable image IO ${Enable_Image_IO}\n"
 )
 if(WIN32)
     message(STATUS

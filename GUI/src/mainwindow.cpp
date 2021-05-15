@@ -1104,6 +1104,7 @@ void MainWindow::on_pushButtonPreview_clicked()
     {
         try
         {
+#ifdef ENABLE_PREVIEW_GUI
             std::string currInputPath = previewFile.absoluteFilePath().toUtf8().toStdString();
 
             cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
@@ -1171,6 +1172,9 @@ void MainWindow::on_pushButtonPreview_clicked()
             }
             videoCapture.release();
             cv::destroyWindow(windowName);
+#else
+            throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
+#endif // ENABLE_PREVIEW_GUI
         }
         catch (const std::exception& err)
         {
