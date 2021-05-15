@@ -35,19 +35,19 @@ if(Use_TBB)
     NAMES tbb 
     PATHS ${TBB_LIB_PATH} 
     REQUIRED)
-    target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${TBB_LIBS})
 endif()
 
 if(Enable_CUDA)
     if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
         enable_language(CUDA)
     endif()
-    target_link_libraries(${PROJECT_NAME} CUDA_Module)
+    target_link_libraries(${PROJECT_NAME} PRIVATE CUDA_Module)
 endif()
 
 if(Enable_NCNN)
     find_package(ncnn REQUIRED)
-    target_link_libraries(${PROJECT_NAME} ncnn)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ncnn)
 endif()
 
 if(Use_OpenCV_with_MSVC_for_Clang)
@@ -61,13 +61,13 @@ endif()
 if(Enable_OpenCL)
     find_package(OpenCL REQUIRED)
     include_directories(${OpenCL_INCLUDE_DIRS} ${TOP_DIR}/ThirdParty/include/opencl)
-    target_link_libraries(${PROJECT_NAME} ${OpenCL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCL_LIBRARIES})
 endif()
 
 find_package(OpenCV REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 if(Use_OpenCV_with_MSVC_for_Clang)
     set(MSVC ${TMP_FALG})

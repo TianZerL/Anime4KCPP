@@ -12,6 +12,6 @@ else()
     REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${VapourSynth_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${VapourSynth_LIBS})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)

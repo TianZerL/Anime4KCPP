@@ -13,10 +13,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-
-if(WIN32)
-    set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
-endif(WIN32)
+set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 
 set(Qt_Version "5" CACHE STRING "5 or 6")
 set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability, older than 30")

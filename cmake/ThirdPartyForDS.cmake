@@ -12,6 +12,6 @@ else()
     NO_DEFAULT_PATH REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${DirectShow_LIBS} winmm)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${DirectShow_LIBS} winmm)
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)

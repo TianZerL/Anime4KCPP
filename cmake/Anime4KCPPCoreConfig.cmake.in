@@ -1,0 +1,11 @@
+find_package(OpenCV REQUIRED)
+
+get_filename_component(Anime4KCPPCore_INSTALL_PATH "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+
+set(Anime4KCPPCore_INCLUDE_DIR "${Anime4KCPPCore_INSTALL_PATH}/include")
+
+if(NOT EXISTS "${Anime4KCPPCore_INCLUDE_DIR}")
+    message(WARNING "Anime4KCPPCore: Include directory doesn't exist: '${Anime4KCPPCore_INCLUDE_DIR}'")
+endif()
+
+include(${CMAKE_CURRENT_LIST_DIR}/Anime4KCPPCore.cmake)

@@ -12,6 +12,6 @@ else()
     NO_DEFAULT_PATH REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} ${AviSynthPlus_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${AviSynthPlus_LIBS})
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)

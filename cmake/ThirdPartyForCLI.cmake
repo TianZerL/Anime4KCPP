@@ -36,7 +36,7 @@ endif()
 
 include_directories(${TOP_DIR}/ThirdParty/include/cmdline)
 
-target_link_libraries(${PROJECT_NAME} Anime4KCPPCore)
+target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore)
 
 if(Use_Boost_filesystem)
     find_package(Boost COMPONENTS filesystem REQUIRED)
