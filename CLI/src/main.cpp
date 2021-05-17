@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
     opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
     opt.set_program_name("Anime4KCPP_CLI");
     opt.add<std::string>("configTemplate", '\000', "Generate config template", false, "./config");
-    opt.add("testMode", '\000', "function test for development only");
+    opt.add<std::string>("testMode", '\000', "function test for development only", false);
 
     opt.parse_check(argc, argv);
 
@@ -269,8 +269,8 @@ int main(int argc, char* argv[])
     bool doBenchmark = opt.exist("benchmark");
     bool ncnn = opt.exist("ncnn");
     unsigned int frameStart = opt.get<unsigned int>("start");
-    bool testMode = opt.exist("testMode");
     bool configTemplate = opt.exist("configTemplate");
+    std::string testMode = opt.get<std::string>("testMode");
 
     int passes = config.get<int>("passes");
     int pushColorCount = config.get<int>("pushColorCount");
@@ -470,7 +470,7 @@ int main(int argc, char* argv[])
                 return 0;
 #else
                 {
-                    if (testMode)
+                    if (testMode == "ncnn_load_model")
                     {
                         filesystem::path modelPath = filesystem::weakly_canonical(ncnnModelPath);
 
