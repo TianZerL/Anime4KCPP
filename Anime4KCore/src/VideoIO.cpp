@@ -180,7 +180,7 @@ Anime4KCPP::Utils::Frame Anime4KCPP::Utils::VideoIO::read()
         ret = std::move(rawFrames.front());
         rawFrames.pop();
     }
-    cndRead.notify_all();
+    cndRead.notify_one();
     return ret;
 }
 
@@ -190,7 +190,7 @@ void Anime4KCPP::Utils::VideoIO::write(const Frame& frame)
         std::lock_guard<std::mutex> lock(mtxWrite);
         frameMap.emplace(frame.second, frame.first);
     }
-    cndWrite.notify_all();
+    cndWrite.notify_one();
 }
 
 double Anime4KCPP::Utils::VideoIO::getProgress() noexcept

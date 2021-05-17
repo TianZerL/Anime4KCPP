@@ -42,22 +42,24 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
     if (threadNum > 1)
     {
         static Anime4KCPP::Utils::ThreadPool pool(threadNum);
-
-        std::atomic_int count = 0;
+        std::mutex mtx;
+        std::condition_variable cnd;
+        int count = last - first;
 
         for (int i = first; i < last; i++)
         {
-            pool.exec([&count, &func, i]()
+            pool.exec([&mtx, &cnd, &count, &func, i]()
                 {
                     func(i);
-                    count++;
+                    std::unique_lock<std::mutex> lock(mtx);
+                    if (--count == 0)
+                        cnd.notify_one();
                 });
         }
 
-        while (count != last)
-        {
-            std::this_thread::yield();
-        }
+        std::unique_lock<std::mutex> lock(mtx);
+        while (count != 0)
+            cnd.wait(lock);
     }
     else
     {
