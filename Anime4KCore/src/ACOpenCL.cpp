@@ -36,7 +36,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
             std::string platformName;
             platforms[i].getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
             msg << "Platform " << i << ": " << platformName << std::endl;
-            platforms[i].getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
             const size_t devicesNumber = devices.size();
             if (devicesNumber == 0)
@@ -78,7 +78,7 @@ Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, c
             platform = platforms[pID];
         else
             platform = platforms[0];
-        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
         if (dID >= 0 && dID < devices.size())
             device = devices[dID];
         else

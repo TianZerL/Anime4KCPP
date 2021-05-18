@@ -638,7 +638,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
     {
         cl::Platform::get(&platforms);
         ((pID >= 0 && pID < platforms.size()) ? platforms[pID] : platforms[0])
-            .getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            .getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
         device = (dID >= 0 && dID < devices.size()) ? devices[dID] : devices[0];
 

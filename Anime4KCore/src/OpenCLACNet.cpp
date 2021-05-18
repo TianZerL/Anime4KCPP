@@ -824,7 +824,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
     {
         cl::Platform::get(&platforms);
         ((pID >= 0 && pID < platforms.size()) ? platforms[pID] : platforms[0])
-            .getDevices(CL_DEVICE_TYPE_GPU, &devices);
+            .getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
         device = (dID >= 0 && dID < devices.size()) ? devices[dID] : devices[0];
 
