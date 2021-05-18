@@ -22,7 +22,7 @@
 constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
 //init OpenCL arguments
-static bool isInitialized = false;
+static bool isInitializedFlag = false;
 static cl::Program program[Anime4KCPP::ACNetType::TotalTypeCount];
 static cl::Device device;
 static cl::Context context;
@@ -89,22 +89,22 @@ void Anime4KCPP::OpenCL::ACNet::setParameters(const Parameters& parameters)
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::initGPU(const int platformID, const int deviceID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+void Anime4KCPP::OpenCL::ACNet::init(const int platformID, const int deviceID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
 {
-    if (!isInitialized)
+    if (!isInitializedFlag)
     {
         pID = platformID;
         dID = deviceID;
         commandQueueNum = OpenCLQueueNum >= 1 ? OpenCLQueueNum : 1;
         parallelIO = OpenCLParallelIO;
         initOpenCL(type);
-        isInitialized = true;
+        isInitializedFlag = true;
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
+void Anime4KCPP::OpenCL::ACNet::release() noexcept
 {
-    if (isInitialized)
+    if (isInitializedFlag)
     {
         context = nullptr;
         std::fill(commandQueueList.begin(), commandQueueList.end(), nullptr);
@@ -112,13 +112,13 @@ void Anime4KCPP::OpenCL::ACNet::releaseGPU() noexcept
         for (int i = HDNL0; i < TotalTypeCount; i++)
             program[i] = nullptr;
         device = nullptr;
-        isInitialized = false;
+        isInitializedFlag = false;
     }
 }
 
-bool Anime4KCPP::OpenCL::ACNet::isInitializedGPU() noexcept
+bool Anime4KCPP::OpenCL::ACNet::isInitialized() noexcept
 {
-    return isInitialized;
+    return isInitializedFlag;
 }
 
 std::string Anime4KCPP::OpenCL::ACNet::getInfo()

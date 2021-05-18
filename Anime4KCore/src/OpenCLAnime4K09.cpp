@@ -20,7 +20,7 @@
 #define ALIGN_UP(x, size) (((x) + (size) - 1) & (~((size) - 1)))
 
 //init OpenCL arguments
-static bool isInitialized = false;
+static bool isInitializedFlag = false;
 static cl::Program program;
 static cl::Device device;
 static cl::Context context;
@@ -36,35 +36,35 @@ static size_t workGroupSizeBase = 32;
 Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters), nWidth(0.0), nHeight(0.0) {};
 
-void Anime4KCPP::OpenCL::Anime4K09::initGPU(const int platformID, const int deviceID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+void Anime4KCPP::OpenCL::Anime4K09::init(const int platformID, const int deviceID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
 {
-    if (!isInitialized)
+    if (!isInitializedFlag)
     {
         pID = platformID;
         dID = deviceID;
         commandQueueNum = OpenCLQueueNum >= 1 ? OpenCLQueueNum : 1;
         parallelIO = OpenCLParallelIO;
         initOpenCL();
-        isInitialized = true;
+        isInitializedFlag = true;
     }
 }
 
-void Anime4KCPP::OpenCL::Anime4K09::releaseGPU() noexcept
+void Anime4KCPP::OpenCL::Anime4K09::release() noexcept
 {
-    if (isInitialized)
+    if (isInitializedFlag)
     {
         context = nullptr;
         std::fill(commandQueueList.begin(), commandQueueList.end(), nullptr);
         commandQueueIO = nullptr;
         program = nullptr;
         device = nullptr;
-        isInitialized = false;
+        isInitializedFlag = false;
     }
 }
 
-bool Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU() noexcept
+bool Anime4KCPP::OpenCL::Anime4K09::isInitialized() noexcept
 {
-    return isInitialized;
+    return isInitializedFlag;
 }
 
 std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()

@@ -60,39 +60,56 @@ template<typename T>
 class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
+    template<typename P = T, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::Anime4K09>::value, bool>::type = true>
     Manager(const int pID = 0, const int dID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    template<typename P = T, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::ACNet>::value, bool>::type = true>
+    Manager(const int pID = 0, const int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    
     virtual void init() override;
     virtual void release() override;
     virtual bool isInitialized() override;
     virtual bool isSupport() override;
+
+private:
+    template<typename P>
+    typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::Anime4K09>::value>::type initImpl();
+    template<typename P>
+    typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::ACNet>::value>::type initImpl();
+
 private:
     int pID, dID;
     int OpenCLQueueNum;
     bool OpenCLParallelIO;
+    CNNType type;
 };
 
 template<typename T>
+template<typename P, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::Anime4K09>::value, bool>::type>
 inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
-    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO) {}
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(Anime4KCPP::CNNType::Default) {}
+
+template<typename T>
+template<typename P, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::ACNet>::value, bool>::type>
+inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
 
 template<typename T>
 inline void Anime4KCPP::OpenCL::Manager<T>::init()
 {
-    if (!T::isInitializedGPU())
-        T::initGPU(pID, dID, OpenCLQueueNum, OpenCLParallelIO);
+    initImpl<T>();
 }
 
 template<typename T>
 inline void Anime4KCPP::OpenCL::Manager<T>::release()
 {
-    if (T::isInitializedGPU())
-        T::releaseGPU();
+    if (T::isInitialized())
+        T::release();
 }
 
 template<typename T>
 inline bool Anime4KCPP::OpenCL::Manager<T>::isInitialized()
 {
-    return T::isInitializedGPU();
+    return T::isInitialized();
 }
 
 template<typename T>
@@ -101,45 +118,20 @@ inline bool Anime4KCPP::OpenCL::Manager<T>::isSupport()
     return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
 }
 
-template<>
-class Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet> : public Anime4KCPP::Processor::Manager
+template<typename T>
+template<typename P>
+inline typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::Anime4K09>::value>::type Anime4KCPP::OpenCL::Manager<T>::initImpl()
 {
-public:
-    Manager(const int pID = 0, const int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-    virtual bool isSupport() override;
-private:
-    int pID, dID;
-    int OpenCLQueueNum;
-    bool OpenCLParallelIO;
-    CNNType type;
-};
-
-inline Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
-    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
-
-inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::init()
-{
-    if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-        Anime4KCPP::OpenCL::ACNet::initGPU(pID, dID, type, OpenCLQueueNum, OpenCLParallelIO);
+    if (!T::isInitialized())
+        T::init(pID, dID, OpenCLQueueNum, OpenCLParallelIO);
 }
 
-inline void Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::release()
+template<typename T>
+template<typename P>
+inline typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::ACNet>::value>::type Anime4KCPP::OpenCL::Manager<T>::initImpl()
 {
-    if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-        Anime4KCPP::OpenCL::ACNet::releaseGPU();
-}
-
-inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isInitialized()
-{
-    return Anime4KCPP::OpenCL::ACNet::isInitializedGPU();
-}
-
-inline bool Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>::isSupport()
-{
-    return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+    if (!T::isInitialized())
+        T::init(pID, dID, type, OpenCLQueueNum, OpenCLParallelIO);
 }
 
 #endif

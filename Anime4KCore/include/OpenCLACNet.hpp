@@ -23,14 +23,14 @@ public:
     virtual std::string getInfo() override;
     virtual std::string getFiltersInfo() override;
 
-    static void initGPU(
+    static void init(
         const int platformID = 0,
         const int deviceID = 0,
         const CNNType type = CNNType::Default, 
         const int OpenCLQueueNum = 4,
         const bool OpenCLParallelIO = false);
-    static void releaseGPU() noexcept;
-    static bool isInitializedGPU() noexcept;
+    static void release() noexcept;
+    static bool isInitialized() noexcept;
 private:
     virtual void processYUVImageB() override;
     virtual void processRGBImageB() override;

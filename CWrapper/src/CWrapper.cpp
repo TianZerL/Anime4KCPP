@@ -72,7 +72,7 @@ extern "C"
             *error = AC_OK;
 
 #ifdef ENABLE_OPENCL
-        if (initGPU == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
+        if (initGPU == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitialized())
         {
 
             if (error != nullptr)
@@ -80,7 +80,7 @@ extern "C"
             return nullptr;
             try
             {
-                Anime4KCPP::OpenCL::Anime4K09::initGPU(platformID, deviceID);
+                Anime4KCPP::OpenCL::Anime4K09::init(platformID, deviceID);
             }
             catch (const std::exception& err)
             {
@@ -93,11 +93,11 @@ extern "C"
 #endif
 
 #ifdef ENABLE_OPENCL
-        if (initGPUCNN == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
+        if (initGPUCNN == AC_TRUE && !Anime4KCPP::OpenCL::Anime4K09::isInitialized())
         {
             try
             {
-                Anime4KCPP::OpenCL::ACNet::initGPU(platformID, deviceID);
+                Anime4KCPP::OpenCL::ACNet::init(platformID, deviceID);
             }
             catch (const std::exception& err)
             {
@@ -218,11 +218,11 @@ extern "C"
             delete reinterpret_cast<Anime4KCPP::AC*>(instance);
 
 #ifdef ENABLE_OPENCL
-        if (releaseGPU == AC_TRUE && Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
-            Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
+        if (releaseGPU == AC_TRUE && Anime4KCPP::OpenCL::Anime4K09::isInitialized())
+            Anime4KCPP::OpenCL::Anime4K09::release();
 
-        if (releaseGPUCNN == AC_TRUE && Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-            Anime4KCPP::OpenCL::ACNet::releaseGPU();
+        if (releaseGPUCNN == AC_TRUE && Anime4KCPP::OpenCL::ACNet::isInitialized())
+            Anime4KCPP::OpenCL::ACNet::release();
 #endif
 
         if (acCreator != nullptr)
@@ -349,8 +349,8 @@ extern "C"
 #ifdef ENABLE_OPENCL
         try
         {
-            if (!Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
-                Anime4KCPP::OpenCL::Anime4K09::initGPU();
+            if (!Anime4KCPP::OpenCL::Anime4K09::isInitialized())
+                Anime4KCPP::OpenCL::Anime4K09::init();
         }
         catch (const std::exception& err)
         {
@@ -364,8 +364,8 @@ extern "C"
     void acReleaseGPU(void)
     {
 #ifdef ENABLE_OPENCL
-        if (Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU())
-            Anime4KCPP::OpenCL::Anime4K09::releaseGPU();
+        if (Anime4KCPP::OpenCL::Anime4K09::isInitialized())
+            Anime4KCPP::OpenCL::Anime4K09::release();
 #endif
     }
 
@@ -374,8 +374,8 @@ extern "C"
 #ifdef ENABLE_OPENCL
         try
         {
-            if (!Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-                Anime4KCPP::OpenCL::ACNet::initGPU();
+            if (!Anime4KCPP::OpenCL::ACNet::isInitialized())
+                Anime4KCPP::OpenCL::ACNet::init();
         }
         catch (const std::exception& err)
         {
@@ -389,8 +389,8 @@ extern "C"
     void acReleaseGPUCNN(void)
     {
 #ifdef ENABLE_OPENCL
-        if (Anime4KCPP::OpenCL::ACNet::isInitializedGPU())
-            Anime4KCPP::OpenCL::ACNet::releaseGPU();
+        if (Anime4KCPP::OpenCL::ACNet::isInitialized())
+            Anime4KCPP::OpenCL::ACNet::release();
 #endif
     }
 
@@ -783,7 +783,7 @@ extern "C"
     ac_bool acIsInitializedGPU(void)
     {
 #ifdef ENABLE_OPENCL
-        return ac_bool(Anime4KCPP::OpenCL::Anime4K09::isInitializedGPU());
+        return ac_bool(Anime4KCPP::OpenCL::Anime4K09::isInitialized());
 #else
         return AC_FALSE;
 #endif
@@ -792,7 +792,7 @@ extern "C"
     ac_bool acIsInitializedGPUCNN(void)
     {
 #ifdef ENABLE_OPENCL
-        return ac_bool(Anime4KCPP::OpenCL::ACNet::isInitializedGPU());
+        return ac_bool(Anime4KCPP::OpenCL::ACNet::isInitialized());
 #else
         return AC_FALSE;
 #endif
