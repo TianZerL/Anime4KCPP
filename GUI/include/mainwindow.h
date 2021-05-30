@@ -18,6 +18,7 @@
 #include <QSettings>
 #include <QDesktopServices>
 #include <QInputDialog>
+#include <QStyleFactory>
 
 #include <opencv2/opencv.hpp>
 
@@ -30,6 +31,11 @@ QT_END_NAMESPACE
 enum class Language
 {
     en, zh_CN, zh_TW, ja_JP, fr_FR
+};
+
+enum class Style
+{
+    DEFAULT, FUSION, FUSION_DARK
 };
 
 enum class ErrorType
@@ -81,6 +87,8 @@ private:
 
     Language getLanguageValue(const QString& lang);
     QString getLanguageString(const Language lang);
+
+    QString getStyleString(const Style style);
 
     void errorHandler(const ErrorType err);
     void errorHandler(const QString& err);
@@ -155,6 +163,12 @@ private slots:
 
     void on_actionSet_FFmpeg_path_hovered();
 
+    void on_actionDefault_triggered();
+
+    void on_actionFusion_triggered();
+
+    void on_actionFusion_dark_triggered();
+
     void on_pushButtonClearText_clicked();
 
     void on_spinBoxFontSize_valueChanged(int arg1);
@@ -200,6 +214,7 @@ private:
     QString ffmpegPath;
     unsigned int totalTaskCount;
     Language currLanguage;
+    Style currStyle;
 
     GPUMode GPUState;
 

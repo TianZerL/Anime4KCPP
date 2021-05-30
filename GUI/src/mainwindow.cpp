@@ -183,6 +183,7 @@ void MainWindow::dropEvent(QDropEvent* event)
 void MainWindow::readConfig(const QSettings* conf)
 {
     QString language = conf->value("/GUI/language", "en").toString();
+    QString style = conf->value("/GUI/style", "Fusion").toString();
     bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom", true).toBool();
     bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
     ffmpegPath = conf->value("/GUI/ffmpegPath", "ffmpeg").toString();
@@ -251,6 +252,14 @@ void MainWindow::readConfig(const QSettings* conf)
         on_actionFrench_triggered();
         break;
     }
+
+    if (!style.compare("Fusion", Qt::CaseInsensitive))
+        on_actionFusion_triggered();
+    else if (!style.compare("FusionDark", Qt::CaseInsensitive))
+        on_actionFusion_dark_triggered();
+    else
+        on_actionDefault_triggered();
+
     ui->actionQuit_confirmation->setChecked(quitConfirmatiom);
     ui->actionCheck_FFmpeg->setChecked(checkFFmpegOnStart);
     //suffix
@@ -303,6 +312,7 @@ void MainWindow::readConfig(const QSettings* conf)
 void MainWindow::writeConfig(QSettings* conf)
 {
     QString language = getLanguageString(currLanguage);
+    QString style = getStyleString(currStyle);
     bool quitConfirmatiom = ui->actionQuit_confirmation->isChecked();
     bool checkFFmpegOnStart = ui->actionCheck_FFmpeg->isChecked();
 
@@ -351,6 +361,7 @@ void MainWindow::writeConfig(QSettings* conf)
     bool postBilateralFaster = ui->checkBoxPostBilateralFaster->isChecked();
 
     conf->setValue("/GUI/language", language);
+    conf->setValue("/GUI/style", style);
     conf->setValue("/GUI/quitConfirmatiom", quitConfirmatiom);
     conf->setValue("/GUI/checkFFmpeg", checkFFmpegOnStart);
     conf->setValue("/GUI/ffmpegPath", ffmpegPath);
@@ -400,12 +411,12 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Postprocessing/BilateralFilterFaster", postBilateralFaster);
 }
 
-inline Language MainWindow::getLanguageValue(const QString& lang)
+Language MainWindow::getLanguageValue(const QString& lang)
 {
     return languageSelector[lang];
 }
 
-inline QString MainWindow::getLanguageString(const Language lang)
+QString MainWindow::getLanguageString(const Language lang)
 {
     switch (lang)
     {
@@ -421,6 +432,21 @@ inline QString MainWindow::getLanguageString(const Language lang)
         return "fr_FR";
     default:
         return "en";
+    }
+}
+
+QString MainWindow::getStyleString(const Style style)
+{
+    switch (style)
+    {
+    case Style::DEFAULT:
+        return "Default";
+    case Style::FUSION:
+        return "Fusion";
+    case Style::FUSION_DARK:
+        return "FusionDark";
+    default:
+        return "Default";
     }
 }
 
@@ -1515,6 +1541,51 @@ void MainWindow::on_actionSet_FFmpeg_path_triggered()
 void MainWindow::on_actionSet_FFmpeg_path_hovered()
 {
     ui->actionSet_FFmpeg_path->setStatusTip("FFmpeg: " + ffmpegPath);
+}
+
+void MainWindow::on_actionDefault_triggered()
+{
+    qApp->setStyle(QStyleFactory::keys().first());
+    qApp->setPalette(qApp->style()->standardPalette());
+    currStyle = Style::DEFAULT;
+}
+
+void MainWindow::on_actionFusion_triggered()
+{
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+    qApp->setPalette(qApp->style()->standardPalette());
+    currStyle = Style::FUSION;
+}
+
+void MainWindow::on_actionFusion_dark_triggered()
+{
+    qApp->setStyle(QStyleFactory::create("Fusion"));
+
+    // modify palette to dark, thanks for Jorgen from https://stackoverflow.com/a/45634644
+    QPalette darkPalette;
+    darkPalette.setColor(QPalette::Window, QColor(53, 53, 53));
+    darkPalette.setColor(QPalette::WindowText, Qt::white);
+    darkPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor(127, 127, 127));
+    darkPalette.setColor(QPalette::Base, QColor(42, 42, 42));
+    darkPalette.setColor(QPalette::AlternateBase, QColor(66, 66, 66));
+    darkPalette.setColor(QPalette::ToolTipBase, Qt::white);
+    darkPalette.setColor(QPalette::ToolTipText, Qt::white);
+    darkPalette.setColor(QPalette::Text, Qt::white);
+    darkPalette.setColor(QPalette::Disabled, QPalette::Text, QColor(127, 127, 127));
+    darkPalette.setColor(QPalette::Dark, QColor(35, 35, 35));
+    darkPalette.setColor(QPalette::Shadow, QColor(20, 20, 20));
+    darkPalette.setColor(QPalette::Button, QColor(53, 53, 53));
+    darkPalette.setColor(QPalette::ButtonText, Qt::white);
+    darkPalette.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(127, 127, 127));
+    darkPalette.setColor(QPalette::BrightText, Qt::red);
+    darkPalette.setColor(QPalette::Link, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::Highlight, QColor(42, 130, 218));
+    darkPalette.setColor(QPalette::Disabled, QPalette::Highlight, QColor(80, 80, 80));
+    darkPalette.setColor(QPalette::HighlightedText, Qt::white);
+    darkPalette.setColor(QPalette::Disabled, QPalette::HighlightedText, QColor(127, 127, 127));
+    qApp->setPalette(darkPalette);
+
+    currStyle = Style::FUSION_DARK;
 }
 
 void MainWindow::on_pushButtonClearText_clicked()

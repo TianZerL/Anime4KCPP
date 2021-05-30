@@ -1175,7 +1175,16 @@
      <property name="title">
       <string>GUI</string>
      </property>
+     <widget class="QMenu" name="menuStyle">
+      <property name="title">
+       <string>Style</string>
+      </property>
+      <addaction name="actionDefault"/>
+      <addaction name="actionFusion"/>
+      <addaction name="actionFusion_dark"/>
+     </widget>
      <addaction name="actionQuit_confirmation"/>
+     <addaction name="menuStyle"/>
     </widget>
     <widget class="QMenu" name="menuGPU">
      <property name="title">
@@ -1270,6 +1279,21 @@
   <action name="actionSet_FFmpeg_path">
    <property name="text">
     <string>Set FFmpeg path</string>
+   </property>
+  </action>
+  <action name="actionDefault">
+   <property name="text">
+    <string>Default</string>
+   </property>
+  </action>
+  <action name="actionFusion">
+   <property name="text">
+    <string>Fusion</string>
+   </property>
+  </action>
+  <action name="actionFusion_dark">
+   <property name="text">
+    <string>Fusion dark</string>
    </property>
   </action>
  </widget>
