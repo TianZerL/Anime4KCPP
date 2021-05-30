@@ -1983,17 +1983,17 @@ void MainWindow::on_actionBenchmark_triggered()
 void MainWindow::on_pushButtonListGPUs_clicked()
 {
     std::string displayInfo;
-    bool flag = false;
+    bool flag = true;
 
 #ifdef ENABLE_OPENCL
     Anime4KCPP::OpenCL::GPUList openclGPUList = Anime4KCPP::OpenCL::listGPUs();
-    flag = flag && (openclGPUList.platforms == 0);
-    displayInfo += "OpenCL:\n" + openclGPUList();
+    flag &= (openclGPUList.platforms == 0);
+    displayInfo += "\nOpenCL:\n" + openclGPUList();
 #endif
 
 #ifdef ENABLE_CUDA
     Anime4KCPP::Cuda::GPUList cudaGPUList = Anime4KCPP::Cuda::listGPUs();
-    flag = flag && (cudaGPUList.devices == 0);
+    flag &= (cudaGPUList.devices == 0);
     displayInfo += "\nCUDA:\n" + cudaGPUList();
 #endif
 
