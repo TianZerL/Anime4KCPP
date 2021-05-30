@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget* parent)
                                            "Output path",
                                            "State" });
     ui->tableViewProcessingList->setModel(tableModel);
+    ui->tableViewProcessingList->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     //initialize GPGPU model
     ui->comboBoxGPGPU->addItem("OpenCL");
     ui->comboBoxGPGPU->addItem("CUDA");
