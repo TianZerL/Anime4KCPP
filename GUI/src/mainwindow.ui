@@ -1176,8 +1176,6 @@
       <string>GUI</string>
      </property>
      <addaction name="actionQuit_confirmation"/>
-     <addaction name="actionCheck_FFmpeg"/>
-     <addaction name="actionSet_FFmpeg_path"/>
     </widget>
     <widget class="QMenu" name="menuGPU">
      <property name="title">
@@ -1185,8 +1183,16 @@
      </property>
      <addaction name="actionList_GPUs"/>
     </widget>
+    <widget class="QMenu" name="menuFFmpeg">
+     <property name="title">
+      <string>FFmpeg</string>
+     </property>
+     <addaction name="actionCheck_FFmpeg"/>
+     <addaction name="actionSet_FFmpeg_path"/>
+    </widget>
     <addaction name="menuGUI"/>
     <addaction name="menuGPU"/>
+    <addaction name="menuFFmpeg"/>
     <addaction name="actionBenchmark"/>
    </widget>
    <addaction name="menuMenu"/>
@@ -1230,19 +1236,6 @@
     <string>List GPUs</string>
    </property>
   </action>
-  <action name="actionCheck_FFmpeg">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Check FFmpeg</string>
-   </property>
-  </action>
-  <action name="actionSet_FFmpeg_path">
-   <property name="text">
-    <string>Set FFmpeg path</string>
-   </property>
-  </action>
   <action name="actionBenchmark">
    <property name="text">
     <string>Benchmark</string>
@@ -1261,6 +1254,22 @@
   <action name="actionFrench">
    <property name="text">
     <string>French</string>
+   </property>
+  </action>
+  <action name="actionCheck_FFmpeg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Check FFmpeg</string>
+   </property>
+  </action>
+  <action name="actionSet_FFmpeg_path">
+   <property name="text">
+    <string>Set FFmpeg path</string>
    </property>
   </action>
  </widget>
