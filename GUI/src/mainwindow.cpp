@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget* parent)
     readConfig(config);
     //initialize ffmpeg
     if (ui->actionCheck_FFmpeg->isChecked())
-        foundFFmpegFlag = checkFFmpeg();
+        foundFFmpegFlag = checkFFmpegPath(ffmpegPath);
     //initialize GPU
     GPUState = GPUMode::UNINITIALZED;
     ui->spinBoxPlatformID->setMinimum(0);
@@ -185,7 +185,7 @@ void MainWindow::readConfig(const QSettings* conf)
     QString language = conf->value("/GUI/language", "en").toString();
     bool quitConfirmatiom = conf->value("/GUI/quitConfirmatiom", true).toBool();
     bool checkFFmpegOnStart = conf->value("/GUI/checkFFmpeg", true).toBool();
-    ffmpegPath = conf->value("/GUI/ffmpegPath", R"("ffmpeg")").toString();
+    ffmpegPath = conf->value("/GUI/ffmpegPath", "ffmpeg").toString();
 
     QString imageSuffix = conf->value("/Suffix/image", "png:jpg:jpeg:bmp").toString();
     QString videoSuffix = conf->value("/Suffix/video", "mp4:mkv:avi:m4v:flv:3gp:wmv:mov:gif").toString();
@@ -507,19 +507,24 @@ void MainWindow::initTextBrowser()
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
-bool MainWindow::checkFFmpeg()
+bool MainWindow::checkFFmpegPath(const QString& path)
 {
     QProcess p(this);
-    p.start(ffmpegPath, QStringList() << "-version");
-    bool ret = p.waitForFinished();
+    bool ret = true;
+
+    p.start(path, QStringList() << "-version");
+    if (p.state() != QProcess::NotRunning)
+        ret &= p.waitForFinished();
+
     ret &= (p.exitStatus() == QProcess::ExitStatus::NormalExit);
+
     if (ret)
     {
         ui->textBrowserInfoOut->insertPlainText(
             "----------------------------------------------\n"
             "               FFmpeg check OK                \n"
             "----------------------------------------------\n"
-            "FFmpeg path: " + ffmpegPath + "\n"
+            "FFmpeg path: " + path + "\n"
         );
         ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
         return true;
@@ -529,7 +534,7 @@ bool MainWindow::checkFFmpeg()
         "----------------------------------------------\n"
         "             FFmpeg check failed              \n"
         "----------------------------------------------\n"
-        "FFmpeg path: " + ffmpegPath + "\n"
+        "FFmpeg path: " + path + "\n"
     );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
     return  false;
@@ -1499,14 +1504,11 @@ void MainWindow::on_actionSet_FFmpeg_path_triggered()
     ).simplified();
 
     if (ok)
-    {
-        QString oldPath = ffmpegPath;
-        ffmpegPath = '"' + tmpFFmpegPath + '"';
-        if (!ffmpegPath.contains("ffmpeg", Qt::CaseInsensitive) || !checkFFmpeg())
-        {
+    {       
+        if (!tmpFFmpegPath.contains("ffmpeg", Qt::CaseInsensitive) || !checkFFmpegPath(tmpFFmpegPath))
             errorHandler("The path is not correct or failed to check ffmpeg");
-            ffmpegPath = oldPath;
-        }
+        else
+            ffmpegPath = tmpFFmpegPath;
     }
 }
 

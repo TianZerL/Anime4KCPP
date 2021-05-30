@@ -86,7 +86,7 @@ private:
     void errorHandler(const QString& err);
 
     void initTextBrowser();
-    bool checkFFmpeg();
+    bool checkFFmpegPath(const QString& path);
     QString formatSuffixList(const QString&& type, QString str);
     FileType fileType(const QFileInfo& file);
     QString getOutputPrefix();
