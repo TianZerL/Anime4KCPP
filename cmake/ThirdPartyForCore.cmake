@@ -1,4 +1,4 @@
-set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/master/include/CL/opencl.hpp)
+set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.14/include/CL/opencl.hpp)
 set(SHA1_OPENCL_HPP "852d7cad4d5f479104c6426e6a837bf547ad033f")
 
 if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)

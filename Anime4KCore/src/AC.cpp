@@ -868,7 +868,6 @@ void Anime4KCPP::AC::showImage(bool R2B)
 
     cv::imshow("preview", tmpImg);
     cv::waitKey();
-    cv::destroyWindow("preview");
 #else
     throw ACException<ExceptionType::RunTimeError>("Preview image is not currently supported.");
 #endif // ENABLE_PREVIEW_GUI
