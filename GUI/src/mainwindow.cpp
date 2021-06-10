@@ -1203,7 +1203,7 @@ void MainWindow::on_pushButtonPreview_clicked()
                 }
             }
             videoCapture.release();
-            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) >= 0)
                 cv::destroyWindow(windowName);
 #else
             throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
@@ -1722,7 +1722,7 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
             }
 
             videoCapture.release();
-            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) >= 0)
                 cv::destroyWindow(windowName);
 #else
             throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
@@ -1848,7 +1848,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
             }
 
             videoCapture.release();
-            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) >= 0)
                 cv::destroyWindow(windowName);
 #else
             throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
