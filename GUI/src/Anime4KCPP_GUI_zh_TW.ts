@@ -268,7 +268,7 @@
         <location filename="mainwindow.ui" line="368"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1157"/>
         <location filename="mainwindow.cpp" line="870"/>
-        <location filename="mainwindow.cpp" line="1224"/>
+        <location filename="mainwindow.cpp" line="1225"/>
         <source>image</source>
         <translation>圖像</translation>
     </message>
@@ -295,7 +295,7 @@
         <location filename="mainwindow.ui" line="410"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1165"/>
         <location filename="mainwindow.cpp" line="871"/>
-        <location filename="mainwindow.cpp" line="1225"/>
+        <location filename="mainwindow.cpp" line="1226"/>
         <source>video</source>
         <translation>視頻</translation>
     </message>
@@ -616,7 +616,7 @@
     <message>
         <location filename="mainwindow.ui" line="1250"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1077"/>
-        <location filename="mainwindow.cpp" line="2052"/>
+        <location filename="mainwindow.cpp" line="2075"/>
         <source>Benchmark</source>
         <translation>性能測試</translation>
     </message>
@@ -897,7 +897,7 @@
     <message>
         <location filename="mainwindow.ui" line="1214"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1071"/>
-        <location filename="mainwindow.cpp" line="1439"/>
+        <location filename="mainwindow.cpp" line="1440"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
@@ -960,7 +960,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="111"/>
-        <location filename="mainwindow.cpp" line="2162"/>
+        <location filename="mainwindow.cpp" line="2185"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
@@ -973,7 +973,7 @@
         <location filename="mainwindow.cpp" line="171"/>
         <location filename="mainwindow.cpp" line="905"/>
         <location filename="mainwindow.cpp" line="972"/>
-        <location filename="mainwindow.cpp" line="1876"/>
+        <location filename="mainwindow.cpp" line="1899"/>
         <source>ready</source>
         <translation>就緒</translation>
     </message>
@@ -1027,10 +1027,10 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="559"/>
-        <location filename="mainwindow.cpp" line="1953"/>
-        <location filename="mainwindow.cpp" line="1968"/>
-        <location filename="mainwindow.cpp" line="1994"/>
-        <location filename="mainwindow.cpp" line="2075"/>
+        <location filename="mainwindow.cpp" line="1976"/>
+        <location filename="mainwindow.cpp" line="1991"/>
+        <location filename="mainwindow.cpp" line="2017"/>
+        <location filename="mainwindow.cpp" line="2098"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -1055,11 +1055,11 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="828"/>
-        <location filename="mainwindow.cpp" line="1236"/>
-        <location filename="mainwindow.cpp" line="1612"/>
-        <location filename="mainwindow.cpp" line="1978"/>
-        <location filename="mainwindow.cpp" line="2082"/>
-        <location filename="mainwindow.cpp" line="2107"/>
+        <location filename="mainwindow.cpp" line="1237"/>
+        <location filename="mainwindow.cpp" line="1613"/>
+        <location filename="mainwindow.cpp" line="2001"/>
+        <location filename="mainwindow.cpp" line="2105"/>
+        <location filename="mainwindow.cpp" line="2130"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -1074,50 +1074,50 @@
         <translation>請輸入網路視頻的URL</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1237"/>
+        <location filename="mainwindow.cpp" line="1238"/>
         <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
         <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
         <translation>您正在使用GPU加速模式，但依然啟用了預處理或者後處理，這可能會拖慢GPU的處理速度(通常依然快於CPU)，關閉他們嗎？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1466"/>
-        <location filename="mainwindow.cpp" line="1479"/>
-        <location filename="mainwindow.cpp" line="1492"/>
-        <location filename="mainwindow.cpp" line="1505"/>
+        <location filename="mainwindow.cpp" line="1467"/>
+        <location filename="mainwindow.cpp" line="1480"/>
+        <location filename="mainwindow.cpp" line="1493"/>
+        <location filename="mainwindow.cpp" line="1506"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation type="unfinished">中文翻譯檔</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1523"/>
-        <location filename="mainwindow.cpp" line="1526"/>
+        <location filename="mainwindow.cpp" line="1524"/>
+        <location filename="mainwindow.cpp" line="1527"/>
         <source>FFmpeg path</source>
         <translation>FFmpeg路徑</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1527"/>
+        <location filename="mainwindow.cpp" line="1528"/>
         <source>Please input the FFmpeg path</source>
         <translation>請輸入FFmpeg路徑</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1613"/>
+        <location filename="mainwindow.cpp" line="1614"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日誌已拷貝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1846"/>
+        <location filename="mainwindow.cpp" line="1869"/>
         <source>please select a folder</source>
         <translation>請選擇一個資料夾</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1954"/>
+        <location filename="mainwindow.cpp" line="1977"/>
         <source>Failed to initialize GPU: </source>
         <oldsource>Failed to initialize GPU:
 </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2052"/>
+        <location filename="mainwindow.cpp" line="2075"/>
         <source>Benchmark test under 8-bit integer input and serial processing
 
 </source>
@@ -1136,7 +1136,7 @@
         <translation type="vanished">不支援將GPU加速用於ACNet</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2163"/>
+        <location filename="mainwindow.cpp" line="2186"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>確認停止所有任務？</translation>
     </message>
@@ -1146,13 +1146,13 @@
         <translation type="vanished">您正在嘗試啟用GPU加速，這還是一個實驗性功能，檢查相容性並初始化嗎？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1995"/>
-        <location filename="mainwindow.cpp" line="2076"/>
+        <location filename="mainwindow.cpp" line="2018"/>
+        <location filename="mainwindow.cpp" line="2099"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平臺不支援GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2108"/>
+        <location filename="mainwindow.cpp" line="2131"/>
         <source>Successfully release GPU</source>
         <translation>成功釋放GPU</translation>
     </message>
@@ -1179,7 +1179,7 @@
         <location filename="mainwindow.ui" line="49"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1093"/>
         <location filename="mainwindow.cpp" line="869"/>
-        <location filename="mainwindow.cpp" line="1223"/>
+        <location filename="mainwindow.cpp" line="1224"/>
         <source>pick files</source>
         <translation>打開文件</translation>
     </message>

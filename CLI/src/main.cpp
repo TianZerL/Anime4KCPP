@@ -724,7 +724,7 @@ int main(int argc, char* argv[])
                 }
 
                 videoCapture.release();
-                cv::destroyWindow(windowName);
+                cv::destroyAllWindows();
                 std::cout << "Exit" << std::endl;
 #else
                 throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");

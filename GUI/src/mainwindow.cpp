@@ -1149,7 +1149,7 @@ void MainWindow::on_pushButtonPreview_clicked()
             char keyCode = 'q';
             cv::Mat frame;
             std::string windowName =
-                "Previewing, press 'q','ESC' or 'Enter' to exit, "
+                "preview, press 'q','ESC' or 'Enter' to exit, "
                 "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
                 "'w' to forward, 's' to backward";
             cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
@@ -1203,7 +1203,8 @@ void MainWindow::on_pushButtonPreview_clicked()
                 }
             }
             videoCapture.release();
-            cv::destroyWindow(windowName);
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+                cv::destroyWindow(windowName);
 #else
             throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
 #endif // ENABLE_PREVIEW_GUI
@@ -1641,85 +1642,96 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
         cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_COLOR);
         cv::imshow("original image", orgImg);
         cv::waitKey();
-        cv::destroyWindow("original image");
         break;
     }
     case FileType::GIF:
     case FileType::VIDEO:
     {
-        std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
-
-        cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
         try
         {
-            if (!videoCapture.isOpened())
-                throw std::runtime_error("Error: Unable to open the video file");
+#ifdef ENABLE_PREVIEW_GUI
+            std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+
+            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+            try
+            {
+                if (!videoCapture.isOpened())
+                    throw std::runtime_error("Error: Unable to open the video file");
+            }
+            catch (const std::exception& err)
+            {
+                errorHandler(err.what());
+                break;
+            }
+
+            double fps = ui->doubleSpinBoxFPS->value();
+            int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
+            char keyCode = 'q';
+            std::string windowName =
+                "original, press 'q','ESC' or 'Enter' to exit, "
+                "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+                "'w' to forward, 's' to backward";
+
+            cv::Mat frame;
+            cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+            cv::resizeWindow(windowName,
+                videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) + 0.5,
+                videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) + 0.5);
+
+            while (videoCapture.read(frame))
+            {
+                cv::imshow(windowName, frame);
+
+                keyCode = cv::waitKey(delay) & 0xff;
+
+                if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                    keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    break;
+                else if (keyCode == 0x20)
+                {
+                    keyCode = cv::waitKey(0);
+                    if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                        break;
+                }
+                else
+                {
+                    switch (keyCode)
+                    {
+                    case 'a':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 'd':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 's':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    case 'w':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    }
+                }
+            }
+
+            videoCapture.release();
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+                cv::destroyWindow(windowName);
+#else
+            throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
+#endif // ENABLE_PREVIEW_GUI
         }
         catch (const std::exception& err)
         {
             errorHandler(err.what());
-            break;
         }
-
-        double fps = ui->doubleSpinBoxFPS->value();
-        int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
-        char keyCode = 'q';
-        std::string windowName =
-            "Previewing original image, press 'q','ESC' or 'Enter' to exit, "
-            "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
-            "'w' to forward, 's' to backward";
-
-        cv::Mat frame;
-        cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
-        cv::resizeWindow(windowName,
-            videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) + 0.5,
-            videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) + 0.5);
-
-        while (videoCapture.read(frame))
-        {
-            cv::imshow(windowName, frame);
-
-            keyCode = cv::waitKey(delay) & 0xff;
-
-            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
-                keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
-                break;
-            else if (keyCode == 0x20)
-            {
-                keyCode = cv::waitKey(0);
-                if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
-                    break;
-            }
-            else
-            {
-                switch (keyCode)
-                {
-                case 'a':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
-                    break;
-                case 'd':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
-                    break;
-                case 's':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
-                    break;
-                case 'w':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
-                    break;
-                }
-            }
-        }
-
-        videoCapture.release();
-        cv::destroyWindow(windowName);
     }
     }
 
@@ -1755,86 +1767,97 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         cv::resize(orgImg, orgImg, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
         cv::imshow("resized image", orgImg);
         cv::waitKey();
-        cv::destroyWindow("resized image");
         break;
     }
     case FileType::GIF:
     case FileType::VIDEO:
     {
-        std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
-        cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
-
         try
         {
-            if (!videoCapture.isOpened())
-                throw std::runtime_error("Error: Unable to open the video file");
+#ifdef ENABLE_PREVIEW_GUI
+            std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+
+            try
+            {
+                if (!videoCapture.isOpened())
+                    throw std::runtime_error("Error: Unable to open the video file");
+            }
+            catch (const std::exception& err)
+            {
+                errorHandler(err.what());
+                break;
+            }
+
+            double fps = ui->doubleSpinBoxFPS->value();
+            int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
+            char keyCode = 'q';
+            std::string windowName =
+                "resized, press 'q','ESC' or 'Enter' to exit, "
+                "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
+                "'w' to forward, 's' to backward";
+
+            cv::Mat frame;
+            cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
+            cv::resizeWindow(windowName,
+                videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
+                videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
+
+            while (videoCapture.read(frame))
+            {
+                cv::resize(frame, frame, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
+                cv::imshow(windowName, frame);
+
+                keyCode = cv::waitKey(delay) & 0xff;
+
+                if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
+                    keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                    break;
+                else if (keyCode == 0x20)
+                {
+                    keyCode = cv::waitKey(0);
+                    if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
+                        break;
+                }
+                else
+                {
+                    switch (keyCode)
+                    {
+                    case 'a':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 'd':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
+                        break;
+                    case 's':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    case 'w':
+                        videoCapture.set(
+                            cv::CAP_PROP_POS_FRAMES,
+                            videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
+                        break;
+                    }
+                }
+            }
+
+            videoCapture.release();
+            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_VISIBLE) >= 0)
+                cv::destroyWindow(windowName);
+#else
+            throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::RunTimeError>("Preview video is not currently supported.");
+#endif // ENABLE_PREVIEW_GUI
         }
         catch (const std::exception& err)
         {
             errorHandler(err.what());
-            break;
         }
-
-        double fps = ui->doubleSpinBoxFPS->value();
-        int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
-        char keyCode = 'q';
-        std::string windowName =
-            "Previewing resize only image, press 'q','ESC' or 'Enter' to exit, "
-            "'space' to pause, 'd' to fast forward, 'a' to fast backward, "
-            "'w' to forward, 's' to backward";
-
-        cv::Mat frame;
-        cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
-        cv::resizeWindow(windowName,
-            videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
-            videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
-
-        while (videoCapture.read(frame))
-        {
-            cv::resize(frame, frame, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
-            cv::imshow(windowName, frame);
-
-            keyCode = cv::waitKey(delay) & 0xff;
-
-            if (cv::getWindowProperty(windowName, cv::WindowPropertyFlags::WND_PROP_AUTOSIZE) != cv::WindowFlags::WINDOW_NORMAL ||
-                keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
-                break;
-            else if (keyCode == 0x20)
-            {
-                keyCode = cv::waitKey(0);
-                if (keyCode == 'q' || keyCode == 0x1b || keyCode == 0x0d)
-                    break;
-            }
-            else
-            {
-                switch (keyCode)
-                {
-                case 'a':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
-                    break;
-                case 'd':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 10.0);
-                    break;
-                case 's':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) - videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
-                    break;
-                case 'w':
-                    videoCapture.set(
-                        cv::CAP_PROP_POS_FRAMES,
-                        videoCapture.get(cv::CAP_PROP_POS_FRAMES) + videoCapture.get(cv::CAP_PROP_FPS) * 2.0);
-                    break;
-                }
-            }
-        }
-
-        videoCapture.release();
-        cv::destroyWindow(windowName);
     }
     }
 

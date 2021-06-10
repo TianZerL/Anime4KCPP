@@ -268,7 +268,7 @@
         <location filename="mainwindow.ui" line="368"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1157"/>
         <location filename="mainwindow.cpp" line="870"/>
-        <location filename="mainwindow.cpp" line="1224"/>
+        <location filename="mainwindow.cpp" line="1225"/>
         <source>image</source>
         <translation>image</translation>
     </message>
@@ -295,7 +295,7 @@
         <location filename="mainwindow.ui" line="410"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1165"/>
         <location filename="mainwindow.cpp" line="871"/>
-        <location filename="mainwindow.cpp" line="1225"/>
+        <location filename="mainwindow.cpp" line="1226"/>
         <source>video</source>
         <translation>Vidéo</translation>
     </message>
@@ -616,7 +616,7 @@
     <message>
         <location filename="mainwindow.ui" line="1250"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1077"/>
-        <location filename="mainwindow.cpp" line="2052"/>
+        <location filename="mainwindow.cpp" line="2075"/>
         <source>Benchmark</source>
         <translation>Performance Test</translation>
     </message>
@@ -903,7 +903,7 @@
     <message>
         <location filename="mainwindow.ui" line="1214"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1071"/>
-        <location filename="mainwindow.cpp" line="1439"/>
+        <location filename="mainwindow.cpp" line="1440"/>
         <source>About</source>
         <translation>À propos de</translation>
     </message>
@@ -964,7 +964,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="111"/>
-        <location filename="mainwindow.cpp" line="2162"/>
+        <location filename="mainwindow.cpp" line="2185"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
@@ -977,7 +977,7 @@
         <location filename="mainwindow.cpp" line="171"/>
         <location filename="mainwindow.cpp" line="905"/>
         <location filename="mainwindow.cpp" line="972"/>
-        <location filename="mainwindow.cpp" line="1876"/>
+        <location filename="mainwindow.cpp" line="1899"/>
         <source>ready</source>
         <translation>Prêt</translation>
     </message>
@@ -1031,10 +1031,10 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="559"/>
-        <location filename="mainwindow.cpp" line="1953"/>
-        <location filename="mainwindow.cpp" line="1968"/>
-        <location filename="mainwindow.cpp" line="1994"/>
-        <location filename="mainwindow.cpp" line="2075"/>
+        <location filename="mainwindow.cpp" line="1976"/>
+        <location filename="mainwindow.cpp" line="1991"/>
+        <location filename="mainwindow.cpp" line="2017"/>
+        <location filename="mainwindow.cpp" line="2098"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
@@ -1059,11 +1059,11 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="828"/>
-        <location filename="mainwindow.cpp" line="1236"/>
-        <location filename="mainwindow.cpp" line="1612"/>
-        <location filename="mainwindow.cpp" line="1978"/>
-        <location filename="mainwindow.cpp" line="2082"/>
-        <location filename="mainwindow.cpp" line="2107"/>
+        <location filename="mainwindow.cpp" line="1237"/>
+        <location filename="mainwindow.cpp" line="1613"/>
+        <location filename="mainwindow.cpp" line="2001"/>
+        <location filename="mainwindow.cpp" line="2105"/>
+        <location filename="mainwindow.cpp" line="2130"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
@@ -1078,50 +1078,50 @@
         <translation>Veuillez entrer l&apos;URL de la vidéo web.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1237"/>
+        <location filename="mainwindow.cpp" line="1238"/>
         <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
         <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
         <translation>Vous utilisez le mode d’accélération GPU, mais avez toujours le prétraitement ou le postprocessage activé, ce qui peut ralentir le traitement GPU (généralement encore plus rapide que le processeur), les désactiver?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1466"/>
-        <location filename="mainwindow.cpp" line="1479"/>
-        <location filename="mainwindow.cpp" line="1492"/>
-        <location filename="mainwindow.cpp" line="1505"/>
+        <location filename="mainwindow.cpp" line="1467"/>
+        <location filename="mainwindow.cpp" line="1480"/>
+        <location filename="mainwindow.cpp" line="1493"/>
+        <location filename="mainwindow.cpp" line="1506"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation type="unfinished">Fichiers de traduction en chinois</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1523"/>
-        <location filename="mainwindow.cpp" line="1526"/>
+        <location filename="mainwindow.cpp" line="1524"/>
+        <location filename="mainwindow.cpp" line="1527"/>
         <source>FFmpeg path</source>
         <translation>Chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1527"/>
+        <location filename="mainwindow.cpp" line="1528"/>
         <source>Please input the FFmpeg path</source>
         <translation>Veuillez saisir le chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1613"/>
+        <location filename="mainwindow.cpp" line="1614"/>
         <source>Log has been copied to the clipboard</source>
         <translation>Journal copié dans le presse-papiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1846"/>
+        <location filename="mainwindow.cpp" line="1869"/>
         <source>please select a folder</source>
         <translation>Veuillez sélectionner un dossier</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1954"/>
+        <location filename="mainwindow.cpp" line="1977"/>
         <source>Failed to initialize GPU: </source>
         <oldsource>Failed to initialize GPU:
 </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2052"/>
+        <location filename="mainwindow.cpp" line="2075"/>
         <source>Benchmark test under 8-bit integer input and serial processing
 
 </source>
@@ -1140,7 +1140,7 @@
         <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2163"/>
+        <location filename="mainwindow.cpp" line="2186"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
@@ -1150,13 +1150,13 @@
         <translation type="vanished">Essayez-vous d’activer l’accélération GPU, est-ce encore une fonctionnalité expérimentale, vérifier la compatibilité et initialiser?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1995"/>
-        <location filename="mainwindow.cpp" line="2076"/>
+        <location filename="mainwindow.cpp" line="2018"/>
+        <location filename="mainwindow.cpp" line="2099"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2108"/>
+        <location filename="mainwindow.cpp" line="2131"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>
@@ -1183,7 +1183,7 @@
         <location filename="mainwindow.ui" line="49"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1093"/>
         <location filename="mainwindow.cpp" line="869"/>
-        <location filename="mainwindow.cpp" line="1223"/>
+        <location filename="mainwindow.cpp" line="1224"/>
         <source>pick files</source>
         <translation>sélectionner des fichiers</translation>
     </message>
