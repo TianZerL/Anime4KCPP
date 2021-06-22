@@ -580,7 +580,7 @@ int main(int argc, char* argv[])
                 {
                     if (filesystem::is_directory(file.path()))
                         continue;
-                    auto tmpOutputPath = outputPath / filesystem::relative(file.path(), inputPath);
+                    auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
                     filesystem::create_directories(tmpOutputPath.parent_path());
                     std::string currInputPath = file.path().string();
                     std::string currOutputPath = tmpOutputPath.string();
@@ -767,7 +767,7 @@ int main(int argc, char* argv[])
                         std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
                         gif = inputSuffix == std::string(".gif");
 
-                        auto tmpOutputPath = outputPath / filesystem::relative(file.path(), inputPath);
+                        auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
                         filesystem::create_directories(tmpOutputPath.parent_path());
                         std::string currInputPath = file.path().string();
                         std::string currOutputPath = tmpOutputPath.replace_extension(gif ? ".gif" : ".mkv").string();

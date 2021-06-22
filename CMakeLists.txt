@@ -26,7 +26,6 @@ option(Build_AviSynthPlus_Plugin "Build Anime4KCPP for AviSynthPlus plugin or no
 option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_Wrapper_With_Core "Build C wrapper and core in one file" ON)
 option(Built_In_Kernel "Built-in kernel or not" ON)
-option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
 option(Ryzen_Optimization "Accelerate the AMD Ryzen CPU" OFF)
@@ -40,6 +39,12 @@ option(Enable_Video "Enable video processor module" ON)
 option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
 option(Enable_Image_IO "Enable image IO for core" ON)
 option(Disable_Parallel "Disable parallel processing" OFF)
+
+if(APPLE)
+    option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" ON)
+else()
+    option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
+endif()
 
 include(${TOP_DIR}/cmake/Detection.cmake)
 
@@ -153,6 +158,7 @@ message(STATUS
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
 "   Use Eigen3 ${Use_Eigen3}\n"
+"   Use Legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
 "   Ryzen Optimization ${Ryzen_Optimization}\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
