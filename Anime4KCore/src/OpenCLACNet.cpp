@@ -674,7 +674,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg
     }
     catch (const cl::Error& e)
     {
-        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL ACNet kernel", e.what(), e.err());
+        throw ACException<ExceptionType::GPU, true>("Failed to run OpenCL ACNet kernel", e.what(), e.err());
     }
 }
 
@@ -781,7 +781,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernelP(const cv::Mat& orgImg, cv::Mat& dstIm
     }
     catch (const cl::Error& e)
     {
-        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL ACNet kernel", e.what(), e.err());
+        throw ACException<ExceptionType::GPU, true>("Failed to run OpenCL ACNet kernel", e.what(), e.err());
     }
 }
 

@@ -493,7 +493,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernel(const cv::Mat& orgImg, cv::Mat& ds
     }
     catch (const cl::Error& e)
     {
-        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL Anime4K09 kernel", e.what(), e.err());
+        throw ACException<ExceptionType::GPU, true>("Failed to run OpenCL Anime4K09 kernel", e.what(), e.err());
     }
 }
 
@@ -595,7 +595,7 @@ void Anime4KCPP::OpenCL::Anime4K09::runKernelP(const cv::Mat& orgImg, cv::Mat& d
     }
     catch (const cl::Error& e)
     {
-        throw ACException<ExceptionType::GPU, true>("Faile to run OpenCL Anime4K09 kernel", e.what(), e.err());
+        throw ACException<ExceptionType::GPU, true>("Failed to run OpenCL Anime4K09 kernel", e.what(), e.err());
     }
 }
 
