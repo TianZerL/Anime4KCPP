@@ -334,7 +334,15 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
         !IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo))
         return VFW_E_TYPE_NOT_ACCEPTED;
 
-    acCreator.init();
+    try
+    {
+        acCreator.init();
+    }
+    catch (const std::exception& e)
+    {
+        MessageBoxExA(nullptr, e.what(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
 
     if (CNN && IsYV12(mtIn) && IsYV12(mtOut))
     {
@@ -467,169 +475,177 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
     if (FAILED(hr))
         return hr;
 
-    Anime4KCPP::AC* ac = nullptr;
-    switch (GPGPUModel)
+    try
     {
-    case GPGPU::OpenCL:
+        Anime4KCPP::AC* ac = nullptr;
+        switch (GPGPUModel)
+        {
+        case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
-        if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
-        break;
-    case GPGPU::CUDA:
+            break;
+        case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-        if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
-        break;
-    case GPGPU::CPU:
-        if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
-        else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
-        break;
-    }
-
-    switch (colorFormat)
-    {
-    case ColorFormat::IYUV:
-    case ColorFormat::YV12:
-    {
-        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        size_t strideY = dstSize / dstH;
-        size_t strideUV = strideY >> 1;
-
-        BYTE* pYIn = pBufferIn,
-            * pUIn = pYIn + srcSize,
-            * pVIn = pUIn + (srcSize >> 2);
-        BYTE* pYOut = pBufferOut,
-            * pUOut = pYOut + dstSize,
-            * pVOut = pUOut + (dstSize >> 2);
-
-        ac->loadImage(
-            srcH, srcW, 0, pYIn,
-            srcH >> 1, srcW >> 1, 0, pUIn,
-            srcH >> 1, srcW >> 1, 0, pVIn);
-        ac->process();
-        ac->saveImage(pYOut, strideY, pUOut, strideUV, pVOut, strideUV);
-    }
-    break;
-    case ColorFormat::NV12:
-    {
-        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        size_t stride = dstSize / dstH;
-        size_t dstHUV = dstH >> 1;
-
-        BYTE* pYIn = pBufferIn,
-            * pUVIn = pYIn + srcSize;
-        BYTE* pYOut = pBufferOut,
-            * pUVOut = pYOut + dstSize;
-
-        cv::Mat dstY;
-        cv::Mat dstUV;
-
-        cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
-        cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_8UC2, pUVIn);
-        
-        ac->loadImage(srcY);
-        ac->process();
-        ac->saveImage(dstY);
-
-        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
-
-        if (stride == dstW)
-        {
-            memcpy(pYOut, dstY.data, dstSize);
-            memcpy(pUVOut, dstUV.data, dstSize >> 1);
+            break;
+        case GPGPU::CPU:
+            if (CNN)
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            else
+                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            break;
         }
-        else
+
+        switch (colorFormat)
         {
-            for (size_t y = 0; y < dstH; y++)
+        case ColorFormat::IYUV:
+        case ColorFormat::YV12:
+        {
+            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t strideY = dstSize / dstH;
+            size_t strideUV = strideY >> 1;
+
+            BYTE* pYIn = pBufferIn,
+                * pUIn = pYIn + srcSize,
+                * pVIn = pUIn + (srcSize >> 2);
+            BYTE* pYOut = pBufferOut,
+                * pUOut = pYOut + dstSize,
+                * pVOut = pUOut + (dstSize >> 2);
+
+            ac->loadImage(
+                srcH, srcW, 0, pYIn,
+                srcH >> 1, srcW >> 1, 0, pUIn,
+                srcH >> 1, srcW >> 1, 0, pVIn);
+            ac->process();
+            ac->saveImage(pYOut, strideY, pUOut, strideUV, pVOut, strideUV);
+        }
+        break;
+        case ColorFormat::NV12:
+        {
+            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t stride = dstSize / dstH;
+            size_t dstHUV = dstH >> 1;
+
+            BYTE* pYIn = pBufferIn,
+                * pUVIn = pYIn + srcSize;
+            BYTE* pYOut = pBufferOut,
+                * pUVOut = pYOut + dstSize;
+
+            cv::Mat dstY;
+            cv::Mat dstUV;
+
+            cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
+            cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_8UC2, pUVIn);
+
+            ac->loadImage(srcY);
+            ac->process();
+            ac->saveImage(dstY);
+
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+
+            if (stride == dstW)
             {
-                memcpy(pYOut, dstY.data + y * dstW, dstW);
-                pYOut += stride;
-                if (y < dstHUV)
+                memcpy(pYOut, dstY.data, dstSize);
+                memcpy(pUVOut, dstUV.data, dstSize >> 1);
+            }
+            else
+            {
+                for (size_t y = 0; y < dstH; y++)
                 {
-                    memcpy(pUVOut, dstUV.data + y * dstW, dstW);
-                    pUVOut += stride;
+                    memcpy(pYOut, dstY.data + y * dstW, dstW);
+                    pYOut += stride;
+                    if (y < dstHUV)
+                    {
+                        memcpy(pUVOut, dstUV.data + y * dstW, dstW);
+                        pUVOut += stride;
+                    }
                 }
             }
         }
-    }
-    break;
-    case ColorFormat::P016:
-    {
-        size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-        size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
-        size_t stride = dstSize / dstH;
-        size_t dstHUV = dstH >> 1;
-
-        BYTE* pYIn = pBufferIn,
-            * pUVIn = pYIn + srcSize;
-        BYTE* pYOut = pBufferOut,
-            * pUVOut = pYOut + dstSize;
-
-        cv::Mat dstY;
-        cv::Mat dstUV;
-
-        cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
-        cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
-
-        ac->loadImage(srcY);
-        ac->process();
-        ac->saveImage(dstY);
-
-        cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
-
-        if (stride == dstW)
+        break;
+        case ColorFormat::P016:
         {
-            memcpy(pYOut, dstY.data, dstSize);
-            memcpy(pUVOut, dstUV.data, dstSize >> 1);
-        }
-        else
-        {
-            for (size_t y = 0; y < dstH; y++)
+            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t stride = dstSize / dstH;
+            size_t dstHUV = dstH >> 1;
+
+            BYTE* pYIn = pBufferIn,
+                * pUVIn = pYIn + srcSize;
+            BYTE* pYOut = pBufferOut,
+                * pUVOut = pYOut + dstSize;
+
+            cv::Mat dstY;
+            cv::Mat dstUV;
+
+            cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
+            cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
+
+            ac->loadImage(srcY);
+            ac->process();
+            ac->saveImage(dstY);
+
+            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+
+            if (stride == dstW)
             {
-                memcpy(pYOut, (WORD*)dstY.data + y * dstW, dstW * sizeof(WORD));
-                pYOut += stride;
-                if (y < dstHUV)
+                memcpy(pYOut, dstY.data, dstSize);
+                memcpy(pUVOut, dstUV.data, dstSize >> 1);
+            }
+            else
+            {
+                for (size_t y = 0; y < dstH; y++)
                 {
-                    memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
-                    pUVOut += stride;
+                    memcpy(pYOut, (WORD*)dstY.data + y * dstW, dstW * sizeof(WORD));
+                    pYOut += stride;
+                    if (y < dstHUV)
+                    {
+                        memcpy(pUVOut, (WORD*)dstUV.data + y * dstW, dstW * sizeof(WORD));
+                        pUVOut += stride;
+                    }
                 }
             }
         }
-    }
-    break;
-    case ColorFormat::RGB24:
-    {
-        size_t stride = pOut->GetActualDataLength() / dstH;
-        cv::Mat srcTmp(srcH, srcW, CV_8UC3, pBufferIn);
-        cv::flip(srcTmp, srcTmp, 0);
-        ac->loadImage(srcH, srcW, 0, srcTmp.data);
-        ac->process();
-        ac->saveImage(pBufferOut, stride);
-    }
-    break;
-    case ColorFormat::RGB32:
-    {
-        size_t stride = pOut->GetActualDataLength() / dstH;
-        cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
-        cv::flip(srcTmp, srcTmp, 0);
-        ac->loadImage(srcH, srcW, 0, srcTmp.data, false, true);
-        ac->process();
-        ac->saveImage(pBufferOut, stride);
-    }
-    break;
-    }
+        break;
+        case ColorFormat::RGB24:
+        {
+            size_t stride = pOut->GetActualDataLength() / dstH;
+            cv::Mat srcTmp(srcH, srcW, CV_8UC3, pBufferIn);
+            cv::flip(srcTmp, srcTmp, 0);
+            ac->loadImage(srcH, srcW, 0, srcTmp.data);
+            ac->process();
+            ac->saveImage(pBufferOut, stride);
+        }
+        break;
+        case ColorFormat::RGB32:
+        {
+            size_t stride = pOut->GetActualDataLength() / dstH;
+            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
+            cv::flip(srcTmp, srcTmp, 0);
+            ac->loadImage(srcH, srcW, 0, srcTmp.data, false, true);
+            ac->process();
+            ac->saveImage(pBufferOut, stride);
+        }
+        break;
+        }
 
-    acCreator.release(ac);
+        acCreator.release(ac);
+    }
+    catch (const std::exception& e)
+    {
+        MessageBoxExA(nullptr, e.what(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+        return E_UNEXPECTED;
+    }
 
     return hr;
 }
