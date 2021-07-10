@@ -477,30 +477,30 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
 
     try
     {
-        Anime4KCPP::AC* ac = nullptr;
+        std::unique_ptr<Anime4KCPP::AC> ac;
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         case GPGPU::CPU:
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
             break;
         }
 
@@ -638,8 +638,6 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         }
         break;
         }
-
-        acCreator.release(ac);
     }
     catch (const std::exception& e)
     {
