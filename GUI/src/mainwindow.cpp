@@ -101,14 +101,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (!ui->actionQuit_confirmation->isChecked())
-    {
-        writeConfig(config);
-        event->accept();
-        return;
-    }
-
-    if (QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
+    if (!ui->actionQuit_confirmation->isChecked() || 
+        QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
         tr("Do you really want to exit?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
     {
