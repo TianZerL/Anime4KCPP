@@ -1,8 +1,8 @@
-set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.14/include/CL/opencl.hpp)
-set(SHA1_OPENCL_HPP "852d7cad4d5f479104c6426e6a837bf547ad033f")
+set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.15/include/CL/opencl.hpp)
+set(SHA1_OPENCL_HPP "de739352c21ea9bf9b082bb903caec7de9212f97")
 
 if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)
-    file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_OPENCL_HPP)
+    file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_SHA1_OPENCL_HPP)
 
     if(NOT ${LOCAL_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
         message("Warning:")
