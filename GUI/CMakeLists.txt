@@ -1,8 +1,14 @@
 project(Anime4KCPP_GUI LANGUAGES CXX)
 
 if(Build_GUI)
+
+    include_directories(include ${TOP_DIR}/Anime4KCore/include)
+    file(GLOB INCLUDE include/*.h)
+
+    aux_source_directory(src SOURCE)
+
     find_package(Qt${Qt_Version} COMPONENTS Widgets LinguistTools REQUIRED)
-    
+
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
     set(CMAKE_AUTOUIC ON)
@@ -16,11 +22,6 @@ if(Build_GUI)
     ./src/Anime4KCPP_GUI_fr_FR.ts)
     set(UI_FILE ./src/mainwindow.ui)
     set(QRC_FILE ./src/logo.qrc)
-
-    include_directories(include ${TOP_DIR}/Anime4KCore/include)
-    file(GLOB INCLUDE include/*.h)
-
-    aux_source_directory(src SOURCE)
 
     if (WIN32)
         if(NOT EXISTS src/logo.rc)
