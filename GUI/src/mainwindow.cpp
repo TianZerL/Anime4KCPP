@@ -645,9 +645,9 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (ACNetMode)
-                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #else
             errorHandler(ErrorType::OPENCL_NOT_SUPPORT);
             return nullptr;
@@ -655,9 +655,9 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (ACNetMode)
-                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #else
             errorHandler(ErrorType::CUDA_NOT_SUPPORT);
             return nullptr;
@@ -665,9 +665,9 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         }
     else
         if (ACNetMode)
-            return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            return acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            return Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
 
     return nullptr;
 }

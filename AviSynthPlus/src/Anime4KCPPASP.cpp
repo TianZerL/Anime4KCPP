@@ -195,17 +195,17 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -213,9 +213,9 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
     ac->loadImage(
@@ -225,7 +225,7 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     ac->process();
     ac->saveImage(dstpY, dstPitchY, dstpU, dstPitchU, dstpV, dstPitchV);
 
-    acCreator.release(ac);
+    Anime4KCPP::ACCreator::release(ac);
 
     return dst;
 }
@@ -252,17 +252,17 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -270,16 +270,16 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
     ac->loadImage(srcHY, srcLY, srcPitchY, srcpY, false, false, true);
     ac->process();
     ac->saveImage(dstpY, dstPitchY);
 
-    acCreator.release(ac);
+    Anime4KCPP::ACCreator::release(ac);
 
     return dst;
 }
@@ -304,17 +304,17 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -322,16 +322,16 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = acCreator.create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
     ac->loadImage(srcH, srcL / 3, srcPitch, srcp);
     ac->process();
     ac->saveImage(dstp, dstPitch);
 
-    acCreator.release(ac);
+    Anime4KCPP::ACCreator::release(ac);
 
     return dst;
 }

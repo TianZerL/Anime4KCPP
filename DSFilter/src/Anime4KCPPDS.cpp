@@ -483,24 +483,24 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         case GPGPU::CPU:
             if (CNN)
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = acCreator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
             break;
         }
 

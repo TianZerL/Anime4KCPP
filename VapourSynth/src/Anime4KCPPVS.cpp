@@ -108,17 +108,17 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
             case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
                 break;
             }
@@ -126,16 +126,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
         else
         {
             if (data->CNN)
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
 
         ac->loadImage(srcH, srcW, srcSrtide, srcR, srcG, srcB);
         ac->process();
         ac->saveImage(dstR, dstSrtide, dstG, dstSrtide, dstB, dstSrtide);
 
-        data->acCreator.release(ac);
+        Anime4KCPP::ACCreator::release(ac);
 
         vsapi->freeFrame(src);
 
@@ -189,17 +189,17 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
             case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
                 break;
             }
@@ -207,9 +207,9 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
         else
         {
             if (data->CNN)
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
 
         ac->loadImage(
@@ -219,7 +219,7 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
         ac->process();
         ac->saveImage(dstY, dstSrtideY, dstU, dstSrtideU, dstV, dstSrtideV);
 
-        data->acCreator.release(ac);
+        Anime4KCPP::ACCreator::release(ac);
 
         vsapi->freeFrame(src);
 
@@ -261,17 +261,17 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
             case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
                 break;
             case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
                 if (data->CNN)
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
-                    ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
                 break;
             }
@@ -279,16 +279,16 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
         else
         {
             if (data->CNN)
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = data->acCreator.create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = Anime4KCPP::ACCreator::create(data->parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
 
         ac->loadImage(srcH, srcW, srcSrtide, srcY, false, false, true);
         ac->process();
         ac->saveImage(dstY, dstSrtide);
 
-        data->acCreator.release(ac);
+        Anime4KCPP::ACCreator::release(ac);
 
         vsapi->freeFrame(src);
 
