@@ -579,7 +579,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscaleF()
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType)
+void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType) const
 {
     constexpr std::array<size_t, 3> orgin = { 0,0,0 };
     const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
@@ -678,7 +678,7 @@ void Anime4KCPP::OpenCL::ACNet::runKernel(const cv::Mat& orgImg, cv::Mat& dstImg
     }
 }
 
-void Anime4KCPP::OpenCL::ACNet::runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType)
+void Anime4KCPP::OpenCL::ACNet::runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType) const
 {
     constexpr std::array<size_t, 3> orgin = { 0,0,0 };
     const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };

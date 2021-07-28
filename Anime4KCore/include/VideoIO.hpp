@@ -17,13 +17,10 @@
 #define OLD_OPENCV_API
 #endif
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Utils
 {
-    namespace Utils
-    {
-        class VideoIO;
-        typedef std::pair<cv::Mat, size_t> Frame;
-    }
+    class VideoIO;
+    typedef std::pair<cv::Mat, size_t> Frame;
 }
 
 class Anime4KCPP::Utils::VideoIO
@@ -34,12 +31,12 @@ public:
     VideoIO(const VideoIO&) = delete;
     VideoIO& operator=(const VideoIO&) = delete;
     //initialize frame process callback function `p` and thread count `t`, it's ready to call process after this
-    VideoIO& init(std::function<void()> &&p, size_t t) noexcept;
+    VideoIO& init(std::function<void()>&& p, size_t t) noexcept;
     void process();
     //initialize VideoCapture
     bool openReader(const std::string& srcFile);
     //initialize VideoWriter
-    bool openWriter(const std::string& dstFile, const CODEC codec, const cv::Size& size,const double forceFps = 0.0);
+    bool openWriter(const std::string& dstFile, CODEC codec, const cv::Size& size, double forceFps = 0.0);
     //get the specifying video property from VideoCapture
     double get(int p);
     void release();

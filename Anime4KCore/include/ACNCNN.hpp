@@ -29,12 +29,12 @@ namespace Anime4KCPP
 class Anime4KCPP::NCNN::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(std::string modelPath, std::string paramPath, const int dID = -1, const CNNType type = CNNType::Default, const int threads = std::thread::hardware_concurrency());
-    Manager(const int dID = -1, const CNNType type = CNNType::Default, const int threads = std::thread::hardware_concurrency());
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-    virtual bool isSupport() override;
+    Manager(std::string modelPath, std::string paramPath, int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency());
+    Manager(int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency());
+    void init() override;
+    void release() override;
+    bool isInitialized() override;
+    bool isSupport() override;
 private:
     bool testFlag;
     int dID, threads;
@@ -47,7 +47,7 @@ struct Anime4KCPP::NCNN::GPUList
     int devices;
     std::string message;
 
-    GPUList(const int devices, std::string message);
+    GPUList(int devices, std::string message);
     std::string& operator()() noexcept;
 };
 

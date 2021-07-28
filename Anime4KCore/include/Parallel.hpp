@@ -16,13 +16,10 @@ namespace Parallel = tbb;
 #endif
 #endif // !DISABLE_PARALLEL
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Utils
 {
-    namespace Utils
-    {
-        template <typename F>
-        void ParallelFor(const int first, const int last, F&& func);
-    }
+    template <typename F>
+    void ParallelFor(const int first, const int last, F&& func);
 }
 
 template <typename F>

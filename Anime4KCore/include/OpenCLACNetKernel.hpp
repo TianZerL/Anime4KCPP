@@ -6,12 +6,10 @@
 
 #include<string>
 
-namespace Anime4KCPP
+namespace Anime4KCPP::OpenCL
 {
-    namespace OpenCL
-    {
-        static constexpr const char* kernelFunction =
-            R"(__kernel void conv1To8(
+    static constexpr const char* kernelFunction =
+        R"(__kernel void conv1To8(
     __read_only image2d_t srcImg, 
     __write_only image2d_array_t tmpImgOut)
 {
@@ -402,10 +400,10 @@ __kernel void convTranspose8To1(
     write_imagef(dstImg, coord, (float4)(c, 0.0f, 0.0f, 1.0f));
 })";
 
-        static const std::string ACNetKernelSourceString[] =
-        {
-        std::string{
-        R"(#define RELU(x) fmax(x, 0.0f)
+    static const std::string ACNetKernelSourceString[] =
+    {
+    std::string{
+    R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
@@ -7062,8 +7060,7 @@ __constant float kernelsL10[4 * 8] =
  0.1052, -0.4180,
  0.0799, -0.3587
 };)"} + kernelFunction
-        };
-    }
+    };
 }
 
 #endif // BUILT_IN_KERNEL

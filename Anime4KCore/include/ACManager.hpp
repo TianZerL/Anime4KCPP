@@ -1,14 +1,11 @@
 #pragma once
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Processor
 {
-    namespace Processor
-    {
-        class Manager;
+    class Manager;
 
-        template<typename T>
-        struct GetManager {};
-    }
+    template<typename T>
+    struct GetManager {};
 }
 
 class Anime4KCPP::Processor::Manager

@@ -38,10 +38,10 @@ class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
     Manager(const int dID = 0);
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-    virtual bool isSupport() override;
+    void init() override;
+    void release() override;
+    bool isInitialized() override;
+    bool isSupport() override;
 private:
     int dID;
 };
@@ -51,7 +51,7 @@ struct Anime4KCPP::Cuda::GPUList
     int devices;
     std::string message;
 
-    GPUList(const int devices, std::string message);
+    GPUList(int devices, std::string message);
     std::string& operator()() noexcept;
 };
 
@@ -60,7 +60,7 @@ struct Anime4KCPP::Cuda::GPUInfo
     bool supported;
     std::string message;
 
-    GPUInfo(const bool supported, std::string message);
+    GPUInfo(bool supported, std::string message);
     std::string& operator()() noexcept;
     operator bool() const noexcept;
 };

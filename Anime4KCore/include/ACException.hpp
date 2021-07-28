@@ -26,8 +26,8 @@ template<typename errType>
 class Anime4KCPP::ACException<errType, true> :public std::runtime_error
 {
 public:
-    ACException(const std::string& errMsg, const int addltErrCode);
-    ACException(const std::string& errMsg, const std::string& addtlInfo, const int addltErrCode);
+    ACException(const std::string& errMsg, int addltErrCode);
+    ACException(const std::string& errMsg, const std::string& addtlInfo, int addltErrCode);
 };
 
 template<typename errType>

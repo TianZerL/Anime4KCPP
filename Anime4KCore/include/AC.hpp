@@ -75,7 +75,7 @@ namespace Anime4KCPP
 inline int Anime4KCPP::Utils::fastCeilLog2(double v) noexcept
 {
     long long int data = *reinterpret_cast<long long int*>(&v);
-    return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) || 0));
+    return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) != 0));
 }
 
 struct Anime4KCPP::Parameters
@@ -103,7 +103,7 @@ struct Anime4KCPP::Parameters
 
     void reset() noexcept;
 
-    Parameters(
+    explicit Parameters(
         int passes = 2,
         int pushColorCount = 2,
         double strengthColor = 0.3,
@@ -125,7 +125,7 @@ struct Anime4KCPP::Parameters
 class Anime4KCPP::AC
 {
 public:
-    AC(const Parameters& parameters);
+    explicit AC(const Parameters& parameters);
     virtual ~AC();
 
     virtual void setParameters(const Parameters& parameters);

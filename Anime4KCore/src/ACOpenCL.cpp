@@ -113,7 +113,7 @@ std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
 }
 
 Anime4KCPP::OpenCL::GPUInfo::GPUInfo(const bool supported, std::string message) :
-    supported(supported), message(std::move(message)) {};
+    supported(supported), message(std::move(message)) {}
 
 std::string& Anime4KCPP::OpenCL::GPUInfo::operator()() noexcept
 {

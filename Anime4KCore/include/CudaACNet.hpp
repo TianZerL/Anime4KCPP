@@ -5,41 +5,38 @@
 #include"AC.hpp"
 #include"CNN.hpp"
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Cuda
 {
-    namespace Cuda
-    {
-        class DLL ACNet;
-    }
+    class DLL ACNet;
 }
 
 class Anime4KCPP::Cuda::ACNet :public AC
 {
 public:
-    ACNet(const Parameters& parameters = Parameters());
-    virtual ~ACNet() = default;
+    explicit ACNet(const Parameters& parameters = Parameters());
+    ~ACNet() override = default;
 
-    virtual std::string getInfo() override;
-    virtual std::string getFiltersInfo() override;
+    std::string getInfo() override;
+    std::string getFiltersInfo() override;
 private:
     void runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg);
     void runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg);
 
-    virtual void processYUVImageB() override;
-    virtual void processRGBImageB() override;
-    virtual void processGrayscaleB() override;
+    void processYUVImageB() override;
+    void processRGBImageB() override;
+    void processGrayscaleB() override;
 
-    virtual void processYUVImageW() override;
-    virtual void processRGBImageW() override;
-    virtual void processGrayscaleW() override;
+    void processYUVImageW() override;
+    void processRGBImageW() override;
+    void processGrayscaleW() override;
 
-    virtual void processYUVImageF() override;
-    virtual void processRGBImageF() override;
-    virtual void processGrayscaleF() override;
+    void processYUVImageF() override;
+    void processRGBImageF() override;
+    void processGrayscaleF() override;
 
-    virtual Processor::Type getProcessorType() noexcept override;
-    virtual std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() noexcept override;
+    std::string getProcessorInfo() override;
 };
 
 #endif

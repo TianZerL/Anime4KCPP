@@ -30,12 +30,12 @@ public:
     using ManagerSPVector = std::vector<std::shared_ptr<Processor::Manager>>;
 
     ACCreator() = default;
-    ACCreator(const ManagerSP& manager, const bool initNow = true);
-    ACCreator(ManagerSPList&& managerList, const bool initNow = true);
-    ACCreator(ManagerSPVector managerList, const bool initNow = true);
+    explicit ACCreator(const ManagerSP& manager, bool initNow = true);
+    ACCreator(ManagerSPList&& managerList, bool initNow = true);
+    explicit ACCreator(ManagerSPVector managerList, bool initNow = true);
     ~ACCreator();
-    static std::unique_ptr<AC> createUP(const Parameters& parameters, const Processor::Type type);
-    static AC* create(const Parameters& parameters, const Processor::Type type);
+    static std::unique_ptr<AC> createUP(const Parameters& parameters, Processor::Type type);
+    static AC* create(const Parameters& parameters, Processor::Type type);
     static void release(AC* ac) noexcept;
 
     template<typename Manager, typename... Types>

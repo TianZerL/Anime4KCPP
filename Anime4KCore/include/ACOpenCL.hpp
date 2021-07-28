@@ -19,7 +19,7 @@ namespace Anime4KCPP
         //return platforms, devices of each platform, all devices information
         DLL GPUList listGPUs();
         //return result and information
-        DLL GPUInfo checkGPUSupport(const int pID, const int dID);
+        DLL GPUInfo checkGPUSupport(int pID, int dID);
     }
 
     namespace Processor
@@ -41,7 +41,7 @@ struct Anime4KCPP::OpenCL::GPUList
     std::vector<int> devices;
     std::string message;
 
-    GPUList(const int platforms, std::vector<int> devices, std::string message);
+    GPUList(int platforms, std::vector<int> devices, std::string message);
     int operator[](int pID) const;
     std::string& operator()() noexcept;
 };
@@ -51,7 +51,7 @@ struct Anime4KCPP::OpenCL::GPUInfo
     bool supported;
     std::string message;
 
-    GPUInfo(const bool supported, std::string message);
+    GPUInfo(bool supported, std::string message);
     std::string& operator()() noexcept;
     operator bool() const noexcept;
 };
@@ -61,14 +61,14 @@ class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
     template<typename P = T, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::Anime4K09>::value, bool>::type = true>
-    Manager(const int pID = 0, const int dID = 0, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    Manager(int pID = 0, int dID = 0, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false);
     template<typename P = T, typename std::enable_if<std::is_same<P, typename Anime4KCPP::OpenCL::ACNet>::value, bool>::type = true>
-    Manager(const int pID = 0, const int dID = 0, const CNNType type = CNNType::Default, const int OpenCLQueueNum = 4, const bool OpenCLParallelIO = false);
+    Manager(int pID = 0, int dID = 0, CNNType type = CNNType::Default, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false);
     
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-    virtual bool isSupport() override;
+    void init() override;
+    void release() override;
+    bool isInitialized() override;
+    bool isSupport() override;
 
 private:
     template<typename P>

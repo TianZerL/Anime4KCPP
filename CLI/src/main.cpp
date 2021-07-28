@@ -56,20 +56,19 @@ static Anime4KCPP::CODEC string2Codec(const std::string& codec)
 {
     if (codec == "mp4v")
         return Anime4KCPP::CODEC::MP4V;
-    else if (codec == "dxva")
+    if (codec == "dxva")
         return Anime4KCPP::CODEC::DXVA;
-    else if (codec == "avc1")
+    if (codec == "avc1")
         return Anime4KCPP::CODEC::AVC1;
-    else if (codec == "vp09")
+    if (codec == "vp09")
         return Anime4KCPP::CODEC::VP09;
-    else if (codec == "hevc")
+    if (codec == "hevc")
         return Anime4KCPP::CODEC::HEVC;
-    else if (codec == "av01")
+    if (codec == "av01")
         return Anime4KCPP::CODEC::AV01;
-    else if (codec == "other")
+    if (codec == "other")
         return Anime4KCPP::CODEC::OTHER;
-    else
-        return Anime4KCPP::CODEC::MP4V;
+    return Anime4KCPP::CODEC::MP4V;
 }
 
 static void showVersionInfo()
@@ -352,7 +351,7 @@ int main(int argc, char* argv[])
         GPGPUModel = GPGPU::NCNN;
     else
     {
-        std::cerr << "Unknown GPGPU model, it must be \"ncnn\", \"cuda\" or \"opencl\"" << std::endl;
+        std::cerr << R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")" << std::endl;
         return 0;
     }
 
@@ -385,7 +384,7 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    Anime4KCPP::CNNType type;
+    Anime4KCPP::CNNType type{};
     if (HDN)
     {
         switch (HDNLevel)
@@ -512,9 +511,9 @@ int main(int argc, char* argv[])
                 else
                     std::cerr << ret() << std::endl;
                 if (CNN)
-                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
-                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             }
             break;
@@ -530,9 +529,9 @@ int main(int argc, char* argv[])
                 else
                     std::cerr << ret() << std::endl;
                 if (CNN)
-                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
-                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             }
             break;
@@ -543,7 +542,7 @@ int main(int argc, char* argv[])
                     std::cerr << "ncnn uses CPU" << std::endl;
 
                 if (CNN)
-                    ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
                 else
                 {
                     std::cerr << "ncnn only for ACNet" << std::endl;
@@ -557,9 +556,9 @@ int main(int argc, char* argv[])
         else
         {
             if (CNN)
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
             else
-                ac = creator.createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
         }
         //processing
         if (!videoMode)//Image
@@ -596,11 +595,11 @@ int main(int argc, char* argv[])
 
                 Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()), 
                     [&](const int i) {
-                        Anime4KCPP::AC* currac = creator.create(parameters, ac->getProcessorType());
-                        currac->loadImage(filePaths[i].first);
-                        currac->process();
-                        currac->saveImage(filePaths[i].second);
-                        creator.release(currac);
+                        Anime4KCPP::AC* pAc = Anime4KCPP::ACCreator::create(parameters, ac->getProcessorType());
+                        pAc->loadImage(filePaths[i].first);
+                        pAc->process();
+                        pAc->saveImage(filePaths[i].second);
+                        Anime4KCPP::ACCreator::release(pAc);
                         if (!disableProgress)
                         {
                             progress++;

@@ -22,22 +22,16 @@ public:
         {
         case Anime4KCPP::CNNType::Default:
             return "ACNetHDNL0";
-            break;
         case Anime4KCPP::CNNType::ACNetHDNL0:
             return "ACNetHDNL0";
-            break;
         case Anime4KCPP::CNNType::ACNetHDNL1:
             return "ACNetHDNL1";
-            break;
         case Anime4KCPP::CNNType::ACNetHDNL2:
             return "ACNetHDNL2";
-            break;
         case Anime4KCPP::CNNType::ACNetHDNL3:
             return "ACNetHDNL3";
-            break;
         default:
             return "ACNetHDNL0";
-            break;
         }
     }
 

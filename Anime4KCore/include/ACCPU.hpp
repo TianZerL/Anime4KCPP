@@ -27,14 +27,12 @@ namespace Anime4KCPP
 class Anime4KCPP::CPU::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager();
-    virtual void init() override;
-    virtual void release() override;
-    virtual bool isInitialized() override;
-    virtual bool isSupport() override;
+    Manager() = default;
+    void init() override;
+    void release() override;
+    bool isInitialized() override;
+    bool isSupport() override;
 };
-
-inline Anime4KCPP::CPU::Manager::Manager() {}
 
 inline void Anime4KCPP::CPU::Manager::init() {}
 

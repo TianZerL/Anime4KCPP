@@ -7,21 +7,18 @@
 #include<queue>
 #include<vector>
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Utils
 {
-    namespace Utils
-    {
-        class ThreadPool;
-    }
+    class ThreadPool;
 }
 
 class Anime4KCPP::Utils::ThreadPool
 {
 public:
-    ThreadPool(size_t maxThreadCount);
+    explicit ThreadPool(size_t maxThreadCount);
     ~ThreadPool();
     template<typename F>
-    void exec(F&& task);
+    void exec(F&& f);
 private:
     std::vector<std::thread> threads;
     std::queue<std::function<void()>> tasks;

@@ -4,12 +4,10 @@
 
 #ifdef BUILT_IN_KERNEL
 
-namespace Anime4KCPP
+namespace Anime4KCPP::OpenCL
 {
-    namespace OpenCL
-    {
-        static constexpr const char* Anime4KCPPKernelSourceString =
-            R"(#define MAX3(a, b, c) fmax(fmax(a,b),c)
+    static constexpr const char* Anime4KCPPKernelSourceString =
+        R"(#define MAX3(a, b, c) fmax(fmax(a,b),c)
 #define MIN3(a, b, c) fmin(fmin(a,b),c)
 
 #define RANGE 12.56637061436f
@@ -289,8 +287,6 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
     mc.w = 0.299f * mc.z + 0.587f * mc.y + 0.114f * mc.x;
     write_imagef(dstImg, coord, mc);
 })";
-
-    }
 }
 
 #endif

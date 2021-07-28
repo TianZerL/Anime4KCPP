@@ -2,34 +2,31 @@
 
 #include"AC.hpp"
 
-namespace Anime4KCPP
+namespace Anime4KCPP::CPU
 {
-    namespace CPU
-    {
-        class DLL Anime4K09;
-    }
+    class DLL Anime4K09;
 }
 
 class Anime4KCPP::CPU::Anime4K09 :public AC
 {
 public:
-    Anime4K09(const Parameters& parameters = Parameters());
-    virtual ~Anime4K09() = default;
+    explicit Anime4K09(const Parameters& parameters = Parameters());
+    ~Anime4K09() override = default;
 
-    virtual std::string getInfo() override;
-    virtual std::string getFiltersInfo() override;
+    std::string getInfo() override;
+    std::string getFiltersInfo() override;
 private:
-    virtual void processYUVImageB() override;
-    virtual void processRGBImageB() override;
-    virtual void processGrayscaleB() override;
+    void processYUVImageB() override;
+    void processRGBImageB() override;
+    void processGrayscaleB() override;
 
-    virtual void processYUVImageW() override;
-    virtual void processRGBImageW() override;
-    virtual void processGrayscaleW() override;
+    void processYUVImageW() override;
+    void processRGBImageW() override;
+    void processGrayscaleW() override;
 
-    virtual void processYUVImageF() override;
-    virtual void processRGBImageF() override;
-    virtual void processGrayscaleF() override;
+    void processYUVImageF() override;
+    void processRGBImageF() override;
+    void processGrayscaleF() override;
 
     void getGrayB(cv::Mat& img);
     void pushColorB(cv::Mat& img);
@@ -46,13 +43,13 @@ private:
     void getGradientF(cv::Mat& img);
     void pushGradientF(cv::Mat& img);
 
-    void getLightest(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept;
-    void getLightest(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept;
-    void getLightest(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;
-    void getAverage(PixelB mc, const PixelB a, const PixelB b, const PixelB c) noexcept;
-    void getAverage(PixelW mc, const PixelW a, const PixelW b, const PixelW c) noexcept;
-    void getAverage(PixelF mc, const PixelF a, const PixelF b, const PixelF c) noexcept;
+    void getLightest(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
+    void getLightest(PixelW mc, PixelW a, PixelW b, PixelW c) noexcept;
+    void getLightest(PixelF mc, PixelF a, PixelF b, PixelF c) noexcept;
+    void getAverage(PixelB mc, PixelB a, PixelB b, PixelB c) noexcept;
+    void getAverage(PixelW mc, PixelW a, PixelW b, PixelW c) noexcept;
+    void getAverage(PixelF mc, PixelF a, PixelF b, PixelF c) noexcept;
 
-    virtual Processor::Type getProcessorType() noexcept override;
-    virtual std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() noexcept override;
+    std::string getProcessorInfo() override;
 };

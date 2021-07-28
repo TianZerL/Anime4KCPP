@@ -4,22 +4,19 @@
 #include"CPUCNNProcessor.hpp"
 #include"CNN.hpp"
 
-namespace Anime4KCPP
+namespace Anime4KCPP::CPU
 {
-    namespace CPU
-    {
-        class ACNetProcessor;
+    class ACNetProcessor;
 #ifdef ENABLE_OPENCV_DNN
-        class ACNetHDN;
+    class ACNetHDN;
 #else
-        class ACNetHDNL0;
-        class ACNetHDNL1;
-        class ACNetHDNL2;
-        class ACNetHDNL3;
+    class ACNetHDNL0;
+    class ACNetHDNL1;
+    class ACNetHDNL2;
+    class ACNetHDNL3;
 #endif
-        ACNetProcessor* createACNetProcessor(const CNNType type);
-        void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
-    }
+    ACNetProcessor* createACNetProcessor(const CNNType type);
+    void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
 }
 
 class Anime4KCPP::CPU::ACNetProcessor 
@@ -38,10 +35,10 @@ class Anime4KCPP::CPU::ACNetHDN : public ACNetProcessor
 {
 public:
     ACNetHDN(std::string modelPath);
-    virtual ~ACNetHDN() = default;
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    ~ACNetHDN() override = default;
+    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     cv::dnn::Net net;
 };
@@ -52,10 +49,10 @@ class Anime4KCPP::CPU::ACNetHDNL0 : public ACNetProcessor, public CNNProcessor
 {
 public:
     ACNetHDNL0() = default;
-    virtual ~ACNetHDNL0() = default;
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    ~ACNetHDNL0() override = default;
+    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -68,10 +65,10 @@ class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor, public CNNProcessor
 {
 public:
     ACNetHDNL1() = default;
-    virtual ~ACNetHDNL1() = default;
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    ~ACNetHDNL1() override = default;
+    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -84,10 +81,10 @@ class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor, public CNNProcessor
 {
 public:
     ACNetHDNL2() = default;
-    virtual ~ACNetHDNL2() = default;
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    ~ACNetHDNL2() override = default;
+    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -100,10 +97,10 @@ class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor, public CNNProcessor
 {
 public:
     ACNetHDNL3() = default;
-    virtual ~ACNetHDNL3() = default;
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    ~ACNetHDNL3() override = default;
+    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];

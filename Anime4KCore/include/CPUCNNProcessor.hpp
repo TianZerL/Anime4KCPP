@@ -4,16 +4,13 @@
 
 #include"AC.hpp"
 
-namespace Anime4KCPP
+namespace Anime4KCPP::CPU
 {
-    namespace CPU
-    {
-        typedef float* ChanFP;
-        typedef float* LineFP;
-        typedef float* PixelFP;
-
-        class CNNProcessor;
-    }
+    typedef float* ChanFP;
+    typedef float* LineFP;
+    typedef float* PixelFP;
+    
+    class CNNProcessor;
 }
 
 class Anime4KCPP::CPU::CNNProcessor
