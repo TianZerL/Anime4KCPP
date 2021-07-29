@@ -25,6 +25,13 @@ else()
     )
 endif()
 
+find_package(CURL)
+if(${CURL_FOUND})
+    message(STATUS "CLI: libcurl found, enable web image download support.")
+    target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+    add_definitions(-DENABLE_LIBCURL)
+endif()
+
 if(Use_TBB)
     include_directories(${TBB_INCLUDE_PATH})
     find_library(TBB_LIBS 

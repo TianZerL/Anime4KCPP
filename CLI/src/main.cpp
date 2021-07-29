@@ -13,6 +13,10 @@ namespace filesystem = std::filesystem;
 
 #include"Config.hpp"
 
+#ifdef ENABLE_LIBCURL
+#include"Downloader.hpp"
+#endif // ENABLE_LIBCURL
+
 #ifndef COMPILER
 #define COMPILER "Unknown"
 #endif // !COMPILER
@@ -239,7 +243,7 @@ int main(int argc, char* argv[])
     opt.add("version", 'V', "print version information");
     opt.add<double>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0);
     opt.add("disableProgress", 'D', "disable progress display");
-    opt.add("webVideo", 'W', "process the video from URL");
+    opt.add("web", 'W', "process the file from URL");
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
     opt.add("benchmark", 'B', "do benchmarking");
     opt.add("ncnn", 'N', "Open ncnn and ACNet");
@@ -264,7 +268,7 @@ int main(int argc, char* argv[])
     bool preview = opt.exist("preview");
     bool listGPUs = opt.exist("listGPUs");
     bool version = opt.exist("version");
-    bool webVideo = opt.exist("webVideo");
+    bool web = opt.exist("web");
     bool doBenchmark = opt.exist("benchmark");
     bool ncnn = opt.exist("ncnn");
     unsigned int frameStart = opt.get<unsigned int>("start");
@@ -378,7 +382,7 @@ int main(int argc, char* argv[])
             ((filesystem::is_directory(inputPath) ? "output" : inputPath.stem().string()) + oss.str());
     }
 
-    if ((!videoMode || !webVideo) && !filesystem::exists(inputPath))
+    if (!web && !filesystem::exists(inputPath))
     {
         std::cerr << "input file or directory does not exist." << std::endl;
         return 0;
@@ -619,7 +623,21 @@ int main(int argc, char* argv[])
                 std::string currInputPath = inputPath.string();
                 std::string currOutputPath = outputPath.string();
 
-                ac->loadImage(currInputPath);
+#ifdef ENABLE_LIBCURL
+                if (web)
+                {
+                    std::vector<unsigned char> buf;
+
+                    Downloader downloader;
+                    downloader.init();
+
+                    downloader.download(currInputPath, buf);
+
+                    ac->loadImage(buf);
+                }
+                else
+#endif // ENABLE_LIBCURL
+                    ac->loadImage(currInputPath);
 
                 std::cout << ac->getInfo() << std::endl;
                 std::cout << ac->getFiltersInfo() << std::endl;
