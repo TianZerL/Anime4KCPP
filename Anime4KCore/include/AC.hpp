@@ -135,6 +135,7 @@ public:
     void loadImage(const std::string& srcFile);
 #endif // ENABLE_IMAGE_IO
     void loadImage(const cv::Mat& srcImage);
+    void loadImage(const std::vector<unsigned char>& buf);
     void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
@@ -157,6 +158,7 @@ public:
 #ifdef ENABLE_IMAGE_IO
     void saveImage(const std::string& dstFile);
 #endif // ENABLE_IMAGE_IO
+    void saveImage(const std::string suffix, std::vector<unsigned char>& buf);
     void saveImage(cv::Mat& dstImage);
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
     void saveImage(unsigned char* data, size_t dstStride = 0);

@@ -149,7 +149,7 @@ extern "C"
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
             {
                 if (error != nullptr)
-                    *error = AC_ERROR_NULL_Data;
+                    *error = AC_ERROR_NULL_DATA;
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
@@ -169,7 +169,7 @@ extern "C"
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
             {
                 if (error != nullptr)
-                    *error = AC_ERROR_NULL_Data;
+                    *error = AC_ERROR_NULL_DATA;
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
@@ -190,7 +190,7 @@ extern "C"
             if (managerData == nullptr || managerData->CUDAData == nullptr)
             {
                 if (error != nullptr)
-                    *error = AC_ERROR_NULL_Data;
+                    *error = AC_ERROR_NULL_DATA;
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
@@ -280,6 +280,25 @@ extern "C"
 #endif // ENABLE_IMAGE_IO
     }
 
+    ac_error acLoadImageFromBuffer(ac_instance instance, const unsigned char* buf, size_t size)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
+                std::vector<unsigned char>(buf, buf + size));
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_LOAD_IMAGE;
+        }
+
+        return AC_OK;
+    }
+
     ac_error acProcess(ac_instance instance)
     {
         if (instance == nullptr)
@@ -332,6 +351,30 @@ extern "C"
 #else
         return AC_ERROR_IMAGE_IO_DISABLE;
 #endif // ENABLE_IMAGE_IO
+    }
+
+    ac_error acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size)
+    {
+        if (instance == nullptr)
+            return AC_ERROR_NULL_INSTANCE;
+
+        try
+        {
+            std::vector<unsigned char> data;
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(suffix, data);
+
+            if(data.size() > size)
+                return AC_ERROR_INSUFFICIENT_BUFFER_SIZE;
+
+            std::copy(data.begin(), data.end(), buf);
+        }
+        catch (const std::exception& err)
+        {
+            lastCoreError = err.what();
+            return AC_ERROR_FAILED_TO_ENCODE;
+        }
+
+        return AC_OK;
     }
 
     ac_error acSetParameters(ac_instance instance, ac_parameters* parameters)
@@ -404,7 +447,7 @@ extern "C"
             return AC_ERROR_OPENCL_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
-                return AC_ERROR_NULL_Data;
+                return AC_ERROR_NULL_DATA;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
                 (managerData->OpenCLAnime4K09Data->pID,
                     managerData->OpenCLAnime4K09Data->dID,
@@ -418,7 +461,7 @@ extern "C"
             return AC_ERROR_OPENCL_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
-                return AC_ERROR_NULL_Data;
+                return AC_ERROR_NULL_DATA;
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
                 (managerData->OpenCLACNetData->pID,
                     managerData->OpenCLACNetData->dID,
@@ -433,7 +476,7 @@ extern "C"
             return AC_ERROR_CUDA_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->CUDAData == nullptr)
-                return AC_ERROR_NULL_Data;
+                return AC_ERROR_NULL_DATA;
             acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
 #endif // !CUDA_ENABLE
         }
@@ -908,7 +951,7 @@ extern "C"
         if (dataSize != nullptr)
             reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImageBufferSize(*dataSize, dstStride);
         else
-            return AC_ERROR_NULL_Data;
+            return AC_ERROR_NULL_DATA;
 
         return AC_OK;
     }
@@ -927,7 +970,7 @@ extern "C"
                 *gSize, dstStrideG,
                 *bSize, dstStrideB);
         else
-            return AC_ERROR_NULL_Data;
+            return AC_ERROR_NULL_DATA;
 
         return AC_OK;
     }
@@ -940,7 +983,7 @@ extern "C"
         if (cols != nullptr && rows != nullptr && channels != nullptr)
             reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImageShape(*cols, *rows, *channels);
         else
-            return AC_ERROR_NULL_Data;
+            return AC_ERROR_NULL_DATA;
 
         return AC_OK;
     }

@@ -91,7 +91,7 @@ extern "C"
         AC_OK = 0,
         AC_ERROR_NULL_INSTANCE,
         AC_ERROR_NULL_PARAMETERS,
-        AC_ERROR_NULL_Data,
+        AC_ERROR_NULL_DATA,
         AC_ERROR_INIT_GPU,
         AC_ERROR_PORCESSOR_TYPE,
         AC_ERROR_LOAD_IMAGE,
@@ -104,7 +104,9 @@ extern "C"
         AC_ERROR_OPENCL_NOT_SUPPORTED,
         AC_ERROR_CUDA_NOT_SUPPORTED,
         AC_ERROR_PREVIEW_GUI_DISABLE,
-        AC_ERROR_IMAGE_IO_DISABLE
+        AC_ERROR_IMAGE_IO_DISABLE,
+        AC_ERROR_INSUFFICIENT_BUFFER_SIZE,
+        AC_ERROR_FAILED_TO_ENCODE
     } ac_error;
 
     typedef enum ac_codec
@@ -201,9 +203,11 @@ extern "C"
     AC_DLL void AC_API acFreeInstance2(ac_instance instance);
     AC_DLL ac_error AC_API acInitParameters(ac_parameters* parameters);
     AC_DLL ac_error AC_API acLoadImage(ac_instance instance, const char* srcFile);
+    AC_DLL ac_error AC_API acLoadImageFromBuffer(ac_instance instance, const unsigned char* buf, size_t size);
     AC_DLL ac_error AC_API acProcess(ac_instance instance);
     AC_DLL ac_error AC_API acShowImage(ac_instance instance, ac_bool R2B);
     AC_DLL ac_error AC_API acSaveImage(ac_instance instance, const char* dstFile);
+    AC_DLL ac_error AC_API acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size);
     AC_DLL ac_error AC_API acSetParameters(ac_instance instance, ac_parameters* parameters);
     AC_DLL ac_error AC_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
     AC_DLL void AC_API acReleaseGPU2(void);

@@ -36,45 +36,42 @@ Anime4KCPP::Parameters Anime4KCPP::AC::getParameters()
 void Anime4KCPP::AC::loadImage(const std::string& srcFile)
 {
     if (!param.alpha)
-        dstImg = orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
+        orgImg = cv::imread(srcFile, cv::IMREAD_COLOR);
     else
-    {
         orgImg = cv::imread(srcFile, cv::IMREAD_UNCHANGED);
-        switch (orgImg.channels())
-        {
-        case 4:
-            cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-            dstImg = orgImg;
-            checkAlphaChannel = true;
-            break;
-        case 3:
-            dstImg = orgImg;
-            checkAlphaChannel = false;
-            break;
-        case 1:
-            dstImg = orgImg;
-            inputGrayscale = true;
-            checkAlphaChannel = false;
-            break;
-        default:
-            throw ACException<ExceptionType::IO>("Failed to load file: incorrect file format.");
-        }
-    }
+
     if (orgImg.empty())
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't exist or incorrect file format.");
 
-    orgH = orgImg.rows;
-    orgW = orgImg.cols;
-    H = std::round(param.zoomFactor * orgH);
-    W = std::round(param.zoomFactor * orgW);
+    switch (orgImg.channels())
+    {
+    case 4:
+        cv::extractChannel(orgImg, alphaChannel, A);
+        cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
+        dstImg = orgImg;
+        inputGrayscale =false;
+        checkAlphaChannel = true;
+        break;
+    case 3:
+        dstImg = orgImg;
+        inputGrayscale = false;
+        checkAlphaChannel = false;
+        break;
+    case 1:
+        dstImg = orgImg;
+        inputGrayscale = true;
+        checkAlphaChannel = false;
+        break;
+    default:
+        throw ACException<ExceptionType::IO>("Failed to load file: incorrect file format.");
+    }
 
     switch (orgImg.depth())
     {
     case CV_8U:
-        break;
         bitDepth = 8;
+        break;
     case CV_16U:
         bitDepth = 16;
         break;
@@ -84,8 +81,12 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     default:
         throw ACException<ExceptionType::RunTimeError>(
             "Unsupported data type");
-        break;
     }
+
+    orgH = orgImg.rows;
+    orgW = orgImg.cols;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
 
     inputRGB32 = false;
     inputYUV = false;
@@ -95,120 +96,120 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
 void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
 {
     orgImg = srcImage;
+
     if (orgImg.empty())
-        throw ACException<ExceptionType::RunTimeError>("Empty image.");
-    switch (orgImg.type())
+        throw ACException<ExceptionType::IO>("Failed to load data: empty data");
+
+    switch (orgImg.channels())
     {
-    case CV_8UC1:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = true;
-        bitDepth = 8;
-        break;
-    case CV_8UC3:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = false;
-        bitDepth = 8;
-        break;
-    case CV_8UC4:
-        if (!param.alpha)
+    case 4:
+        if (param.alpha)
         {
-            inputRGB32 = true;
-            checkAlphaChannel = false;
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
-            dstImg = orgImg;
-        }
-        else
-        {
-            inputRGB32 = false;
-            checkAlphaChannel = true;
             cv::extractChannel(orgImg, alphaChannel, A);
             cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-            dstImg = orgImg;
         }
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
+        dstImg = orgImg;
+        inputRGB32 = !param.alpha;
         inputGrayscale = false;
+        checkAlphaChannel = param.alpha;
+        break;
+    case 3:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        inputGrayscale = false;
+        checkAlphaChannel = false;
+        break;
+    case 1:
+        dstImg = orgImg;
+        inputRGB32 = false;
+        inputGrayscale = true;
+        checkAlphaChannel = false;
+        break;
+    default:
+        throw ACException<ExceptionType::IO>("Failed to load data: incorrect file format.");
+    }
+
+    switch (orgImg.depth())
+    {
+    case CV_8U:
         bitDepth = 8;
         break;
-    case CV_16UC1:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = true;
+    case CV_16U:
         bitDepth = 16;
         break;
-    case CV_16UC3:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = false;
-        bitDepth = 16;
-        break;
-    case CV_16UC4:
-        if (!param.alpha)
-        {
-            inputRGB32 = true;
-            checkAlphaChannel = false;
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
-            dstImg = orgImg;
-        }
-        else
-        {
-            inputRGB32 = false;
-            checkAlphaChannel = true;
-            cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-            dstImg = orgImg;
-        }
-        inputGrayscale = false;
-        bitDepth = 16;
-        break;
-    case CV_32FC1:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = true;
-        bitDepth = 32;
-        break;
-    case CV_32FC3:
-        dstImg = orgImg;
-        inputRGB32 = false;
-        checkAlphaChannel = false;
-        inputGrayscale = false;
-        bitDepth = 32;
-        break;
-    case CV_32FC4:
-        if (!param.alpha)
-        {
-            inputRGB32 = true;
-            checkAlphaChannel = false;
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
-            dstImg = orgImg;
-        }
-        else
-        {
-            inputRGB32 = false;
-            checkAlphaChannel = true;
-            cv::extractChannel(orgImg, alphaChannel, A);
-            cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-            cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-            dstImg = orgImg;
-        }
-        inputGrayscale = false;
+    case CV_32F:
         bitDepth = 32;
         break;
     default:
-        throw ACException<ExceptionType::RunTimeError>("Error data type.");
+        throw ACException<ExceptionType::RunTimeError>(
+            "Unsupported data type");
     }
+
     orgH = orgImg.rows;
     orgW = orgImg.cols;
     H = std::round(param.zoomFactor * orgH);
     W = std::round(param.zoomFactor * orgW);
 
+    inputYUV = false;
+}
+
+void Anime4KCPP::AC::loadImage(const std::vector<unsigned char>& buf)
+{
+    if (!param.alpha)
+        orgImg = cv::imdecode(buf, cv::IMREAD_COLOR);
+    else
+        orgImg = cv::imdecode(buf, cv::IMREAD_UNCHANGED);
+
+    if (orgImg.empty())
+        throw ACException<ExceptionType::IO>("Failed to load data: empty data");
+
+    switch (orgImg.channels())
+    {
+    case 4:
+        cv::extractChannel(orgImg, alphaChannel, A);
+        cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
+        cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
+        dstImg = orgImg;
+        inputGrayscale = false;
+        checkAlphaChannel = true;
+        break;
+    case 3:
+        dstImg = orgImg;
+        inputGrayscale = false;
+        checkAlphaChannel = false;
+        break;
+    case 1:
+        dstImg = orgImg;
+        inputGrayscale = true;
+        checkAlphaChannel = false;
+        break;
+    default:
+        throw ACException<ExceptionType::IO>("Failed to load data: incorrect file format.");
+    }
+
+    switch (orgImg.depth())
+    {
+    case CV_8U:
+        bitDepth = 8;
+        break;
+    case CV_16U:
+        bitDepth = 16;
+        break;
+    case CV_32F:
+        bitDepth = 32;
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>(
+            "Unsupported data type");
+    }
+
+    orgH = orgImg.rows;
+    orgW = orgImg.cols;
+    H = std::round(param.zoomFactor * orgH);
+    W = std::round(param.zoomFactor * orgW);
+
+    inputRGB32 = false;
     inputYUV = false;
 }
 
@@ -545,8 +546,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     switch (y.depth())
     {
     case CV_8U:
-        break;
         bitDepth = 8;
+        break;
     case CV_16U:
         bitDepth = 16;
         break;
@@ -556,7 +557,6 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     default:
         throw ACException<ExceptionType::RunTimeError>(
             "Unsupported data type");
-        break;
     }
 }
 
@@ -602,6 +602,33 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 }
 #endif // ENABLE_IMAGE_IO
 
+void Anime4KCPP::AC::saveImage(const std::string suffix, std::vector<unsigned char>& buf)
+{
+    cv::Mat tmpImg = dstImg;
+    if (inputYUV)
+    {
+        if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
+            cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, tmpImg);
+        else
+            throw ACException<ExceptionType::IO>("Only YUV444 or RGB(BGR) can be encoded");
+    }
+    else if (inputRGB32)
+    {
+        cv::Mat tmp;
+        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
+        tmpImg = tmp;
+    }
+    else if (checkAlphaChannel)
+    {
+        cv::Mat tmp;
+        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
+        tmpImg = tmp;
+    }
+
+    if(!cv::imencode(suffix, tmpImg, buf))
+        throw ACException<ExceptionType::RunTimeError>("Failed to encode image data");
+}
+
 void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
 {
     cv::Mat tmpImg = dstImg;
@@ -610,7 +637,7 @@ void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
         if (dstY.size() == dstU.size() && dstU.size() == dstV.size())
             cv::merge(std::vector<cv::Mat>{ dstY, dstU, dstV }, tmpImg);
         else
-            throw ACException<ExceptionType::IO>("Only YUV444 can be saved to opencv Mat");
+            throw ACException<ExceptionType::IO>("Only YUV444 or RGB(BGR) can be saved to opencv Mat");
     }
     else if (inputRGB32)
     {
