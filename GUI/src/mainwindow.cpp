@@ -1225,21 +1225,6 @@ void MainWindow::on_pushButtonPreviewPick_clicked()
 
 void MainWindow::on_pushButtonStart_clicked()
 {
-    if (ui->checkBoxGPUMode->isChecked() && (ui->checkBoxEnablePreprocessing->isChecked() || ui->checkBoxEnablePostprocessing->isChecked()))
-    {
-        if (QMessageBox::Yes == QMessageBox::information(this,
-            tr("Notice"),
-            tr("You are using GPU acceleration but still enabled"
-                "preprocessing or postprocessing, which is not GPU acceletation yet, "
-                "and may slow down processing for GPU (usually still faster than CPU), close them?"),
-            QMessageBox::Yes | QMessageBox::No,
-            QMessageBox::Yes))
-        {
-            ui->checkBoxEnablePreprocessing->setChecked(false);
-            ui->checkBoxEnablePostprocessing->setChecked(false);
-        }
-    }
-
     int rows = tableModel->rowCount();
     if (!rows)
     {
