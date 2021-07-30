@@ -8,7 +8,7 @@
 
 #define CURL_ERROR_CHECK(code) if (code != CURLcode::CURLE_OK) throw std::runtime_error(curl_easy_strerror(code))
 
-static size_t dataHandler(unsigned char* data, size_t size, size_t nmemb, std::vector<unsigned char>*buf)
+static size_t dataHandler(unsigned char* data, size_t size, size_t nmemb, std::vector<unsigned char>* buf)
 {
     size_t length = size * nmemb;
 

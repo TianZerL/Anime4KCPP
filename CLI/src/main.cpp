@@ -174,7 +174,7 @@ static void benchmark(const int pID, const int dID)
 
 #ifdef ENABLE_NCNN
     std::cout
-        << "NCNN CPU score:"<< std::endl
+        << "NCNN CPU score:" << std::endl
         << " DVD(480P->960P):" << NCNNCPUScoreDVD << " FPS" << std::endl
         << " HD(720P->1440P):" << NCNNCPUScoreHD << " FPS" << std::endl
         << " FHD(1080P->2160P):" << NCNNCPUScoreFHD << " FPS" << std::endl << std::endl;
@@ -205,11 +205,17 @@ int main(int argc, char* argv[])
     opt.add<std::string>("output", 'o', "File for outputting", false);
     opt.add<int>("passes", 'p', "Passes for processing", false, 2);
     opt.add<int>("pushColorCount", 'n', "Limit the number of color pushes", false, 2);
-    opt.add<double>("strengthColor", 'c', "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
-    opt.add<double>("strengthGradient", 'g', "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
+    opt.add<double>("strengthColor", 'c',
+        "Strength for pushing color,range 0 to 1,higher for thinner", false, 0.3, cmdline::range(0.0, 1.0));
+    opt.add<double>("strengthGradient", 'g',
+        "Strength for pushing gradient,range 0 to 1,higher for sharper", false, 1.0, cmdline::range(0.0, 1.0));
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
-    opt.add<unsigned int>("threads", 't', "Threads count for video processing", false, std::thread::hardware_concurrency(), cmdline::range(1u, 32 * std::thread::hardware_concurrency()));
-    opt.add<unsigned int>("ncnnThreads", 'T', "Threads count for ncnn module", false, 4, cmdline::range(1u, std::thread::hardware_concurrency()));
+    opt.add<unsigned int>("threads", 't',
+        "Threads count for video processing", false,
+        std::thread::hardware_concurrency(), cmdline::range(1u, 32 * std::thread::hardware_concurrency()));
+    opt.add<unsigned int>("ncnnThreads", 'T',
+        "Threads count for ncnn module", false, 4,
+        cmdline::range(1u, std::thread::hardware_concurrency()));
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
@@ -218,15 +224,18 @@ int main(int argc, char* argv[])
     opt.add("postprocessing", 'a', "Enable postprocessing");
     opt.add<unsigned int>("preFilters", 'r',
         "Enhancement filter, only working when preprocessing is true,there are 5 options by binary:"
-        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
-        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D)",
-        false, 4, cmdline::range(1, 127));
+        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
+        "Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
+        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | "
+        "0100000 = 0101000 = 40(D)", false, 4, cmdline::range(1, 127));
     opt.add<unsigned int>("postFilters", 'e',
         "Enhancement filter, only working when postprocessing is true,there are 5 options by binary:"
-        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
-        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = 0101000 = 40(D), "
-        "so you can put 40 to enable Gaussian blur weak and Bilateral filter, which also is what I recommend for image that < 1080P, "
-        "48 for image that >= 1080P, and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
+        "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
+        "Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
+        "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | 0100000 = "
+        "0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, "
+        "which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, "
+        "and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
         false, 40, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
     opt.add("CNNMode", 'w', "Enable ACNet");
@@ -235,10 +244,15 @@ int main(int argc, char* argv[])
     opt.add("listGPUs", 'l', "list GPUs");
     opt.add<int>("platformID", 'h', "Specify the platform ID", false, 0);
     opt.add<int>("deviceID", 'd', "Specify the device ID", false, 0);
-    opt.add<int>("OpenCLQueueNumber", 'Q', "Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL", false, 1);
-    opt.add("OpenCLParallelIO", 'P', "Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL");
-    opt.add<std::string>("codec", 'C', "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), avc1(H264, recommended in Linux), vp09(very slow), "
-        "hevc(not support in Windows), av01(not support in Windows)", false, "mp4v",
+    opt.add<int>("OpenCLQueueNumber", 'Q',
+        "Specify the number of command queues for OpenCL, this may affect performance of "
+        "video processing for OpenCL", false, 1);
+    opt.add("OpenCLParallelIO", 'P',
+        "Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL");
+    opt.add<std::string>("codec", 'C',
+        "Specify the codec for encoding from mp4v(recommended in Windows), dxva(for Windows), "
+        "avc1(H264, recommended in Linux), vp09(very slow), hevc(not support in Windows), "
+        "av01(not support in Windows)", false, "mp4v",
         cmdline::oneof<std::string>("mp4v", "dxva", "avc1", "vp09", "hevc", "av01", "other"));
     opt.add("version", 'V', "print version information");
     opt.add<double>("forceFps", 'F', "Set output video fps to the specifying number, 0 to disable", false, 0.0);
@@ -597,7 +611,7 @@ int main(int argc, char* argv[])
                 std::atomic_uint64_t progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-                Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()), 
+                Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()),
                     [&](const int i) {
                         Anime4KCPP::AC* pAc = Anime4KCPP::ACCreator::create(parameters, ac->getProcessorType());
                         pAc->loadImage(filePaths[i].first);
@@ -615,7 +629,10 @@ int main(int argc, char* argv[])
 
                 std::cout
                     << std::endl
-                    << "Total time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl
+                    << "Total time: "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
+                    << " s"
+                    << std::endl
                     << "All finished." << std::endl;
             }
             else
@@ -646,7 +663,11 @@ int main(int argc, char* argv[])
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
                 ac->process();
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 << " s" << std::endl;
+                std::cout
+                    << "Total process time: "
+                    << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
+                    << " s"
+                    << std::endl;
 
                 if (preview)
                     ac->showImage();
