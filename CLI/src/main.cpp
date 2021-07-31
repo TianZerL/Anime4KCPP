@@ -29,30 +29,42 @@ enum class GPGPU
 static bool checkFFmpeg()
 {
     std::cout << "Checking ffmpeg..." << std::endl;
-    if (!system("ffmpeg -version"))
-        return true;
-    return false;
+
+    return !std::system("ffmpeg -version");
 }
 
 static bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
     std::cout << "Merging audio..." << std::endl;
-    std::string command("ffmpeg -loglevel 40 -i \"" + tmpFile + "\" -i \"" + srcFile + "\" -c copy -map 0:v -map 1 -map -1:v  -y \"" + dstFile + "\"");
+
+    std::string command(
+        "ffmpeg -loglevel 40 -i \"" + 
+        tmpFile + "\" -i \"" + srcFile + 
+        "\" -c copy -map 0:v -map 1 -map -1:v -y \"" + 
+        dstFile + "\"");
+
     std::cout << command << std::endl;
 
-    return !system(command.data());
+    return !std::system(command.data());
 }
 
 static bool video2GIF(const std::string& srcFile, const std::string& dstFile)
 {
-    std::string commandGeneratePalette("ffmpeg -i \"" + srcFile + "\" -vf palettegen -y palette.png");
-    std::cout << commandGeneratePalette << std::endl;
+    std::string commandGeneratePalette(
+        "ffmpeg -i \"" + srcFile + 
+        "\" -vf palettegen -y palette.png");
+    std::string command2Gif(
+        "ffmpeg -i \"" + srcFile + 
+        "\" -i palette.png -y -lavfi paletteuse \"" + 
+        dstFile + "\"");
 
-    std::string command2Gif("ffmpeg -i \"" + srcFile + "\" -i palette.png -y -lavfi paletteuse \"" + dstFile + "\"");
+    std::cout << commandGeneratePalette << std::endl;
     std::cout << command2Gif << std::endl;
 
-    bool flag = !system(commandGeneratePalette.data()) && !system(command2Gif.data());
-    filesystem::remove("palette.png");
+    bool flag = !std::system(commandGeneratePalette.data()) && !std::system(command2Gif.data());
+
+    flag &= filesystem::remove("palette.png");
+
     return flag;
 }
 
@@ -264,7 +276,7 @@ int main(int argc, char* argv[])
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
     opt.set_program_name("Anime4KCPP_CLI");
-    opt.add<std::string>("configTemplate", '\000', "Generate config template", false, "./config");
+    opt.add<std::string>("configTemplate", '\000', "Generate config template", false);
     opt.add<std::string>("testMode", '\000', "function test for development only", false);
 
     opt.parse_check(argc, argv);
@@ -276,8 +288,8 @@ int main(int argc, char* argv[])
     }
 
     std::string input = opt.get<std::string>("input");
-    std::string output = opt.get<std::string>("output");
     bool defaultOutputName = !opt.exist("output");
+    std::string output = defaultOutputName ? std::string{} : opt.get<std::string>("output");
     bool videoMode = opt.exist("videoMode");
     bool preview = opt.exist("preview");
     bool listGPUs = opt.exist("listGPUs");
@@ -289,6 +301,7 @@ int main(int argc, char* argv[])
     bool configTemplate = opt.exist("configTemplate");
     std::string testMode = opt.get<std::string>("testMode");
 
+    //args which can be saved to config
     int passes = config.get<int>("passes");
     int pushColorCount = config.get<int>("pushColorCount");
     int HDNLevel = config.get<int>("HDNLevel");
@@ -316,6 +329,7 @@ int main(int argc, char* argv[])
     std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
     std::string ncnnModelPath = config.get<std::string>("ncnnModelPath");
 
+    //Generate config template
     if (configTemplate)
     {
         const std::string& path = opt.get<std::string>("configTemplate");
