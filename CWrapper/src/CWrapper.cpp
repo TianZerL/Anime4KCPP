@@ -1,5 +1,4 @@
-#define AC_DLL
-#define C_WRAPPER_VERSION "1.5.0"
+#define C_WRAPPER_VERSION "1.6.0"
 
 #include "Anime4KCPP.hpp"
 #include "AC.h"
@@ -153,9 +152,9 @@ extern "C"
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (managerData->OpenCLAnime4K09Data->pID, 
-                    managerData->OpenCLAnime4K09Data->dID, 
-                    managerData->OpenCLAnime4K09Data->OpenCLQueueNum, 
+                (managerData->OpenCLAnime4K09Data->pID,
+                    managerData->OpenCLAnime4K09Data->dID,
+                    managerData->OpenCLAnime4K09Data->OpenCLQueueNum,
                     static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
 #endif // !ENABLE_OPENCL
         }
@@ -173,7 +172,7 @@ extern "C"
                 return nullptr;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (managerData->OpenCLACNetData->pID, 
+                (managerData->OpenCLACNetData->pID,
                     managerData->OpenCLACNetData->dID,
                     static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
                     managerData->OpenCLACNetData->OpenCLQueueNum,
@@ -363,7 +362,7 @@ extern "C"
             std::vector<unsigned char> data;
             reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(suffix, data);
 
-            if(data.size() > size)
+            if (data.size() > size)
                 return AC_ERROR_INSUFFICIENT_BUFFER_SIZE;
 
             std::copy(data.begin(), data.end(), buf);
@@ -510,7 +509,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageYUVPlanarB(ac_instance instance, 
+    ac_error acLoadImageYUVPlanarB(ac_instance instance,
         int rowsY, int colsY, size_t strideY, unsigned char* y,
         int rowsU, int colsU, size_t strideU, unsigned char* u,
         int rowsV, int colsV, size_t strideV, unsigned char* v)
@@ -519,7 +518,7 @@ extern "C"
             return AC_ERROR_NULL_INSTANCE;
 
         reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
-            rowsY, colsY, strideY, y, 
+            rowsY, colsY, strideY, y,
             rowsU, colsU, strideU, u,
             rowsV, colsV, strideV, v);
 
@@ -559,7 +558,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageYUVPlanarW(ac_instance instance, 
+    ac_error acLoadImageYUVPlanarW(ac_instance instance,
         int rowsY, int colsY, size_t strideY, unsigned short* y,
         int rowsU, int colsU, size_t strideU, unsigned short* u,
         int rowsV, int colsV, size_t strideV, unsigned short* v)
@@ -608,7 +607,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageYUVPlanarF(ac_instance instance, 
+    ac_error acLoadImageYUVPlanarF(ac_instance instance,
         int rowsY, int colsY, size_t strideY, float* y,
         int rowsU, int colsU, size_t strideU, float* u,
         int rowsV, int colsV, size_t strideV, float* v)
@@ -811,15 +810,15 @@ extern "C"
             for (int i : ret.devices)
                 *(devices++) = i;
 #else
-    std::string ret = "OpenCL is not supported";
-    if (length != nullptr)
-        *length = ret.size() + 1;
+        std::string ret = "OpenCL is not supported";
+        if (length != nullptr)
+            *length = ret.size() + 1;
 
-    if (info != nullptr)
-        memcpy(info, ret.c_str(), ret.size() + 1);
+        if (info != nullptr)
+            memcpy(info, ret.c_str(), ret.size() + 1);
 
-    if (platforms != nullptr)
-        *platforms = 0;
+        if (platforms != nullptr)
+            *platforms = 0;
 #endif
     }
 
@@ -943,7 +942,7 @@ extern "C"
         return AC_OK;
     }
 
-    AC_DLL ac_error AC_API acSaveImageBufferSize(ac_instance instance, size_t* dataSize, size_t dstStride)
+    ac_error acSaveImageBufferSize(ac_instance instance, size_t* dataSize, size_t dstStride)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -956,7 +955,7 @@ extern "C"
         return AC_OK;
     }
 
-    AC_DLL ac_error AC_API acSaveImageBufferSizeRGB(ac_instance instance,
+    ac_error acSaveImageBufferSizeRGB(ac_instance instance,
         size_t* rSize, size_t dstStrideR,
         size_t* gSize, size_t dstStrideG,
         size_t* bSize, size_t dstStrideB)
@@ -975,7 +974,7 @@ extern "C"
         return AC_OK;
     }
 
-    AC_DLL ac_error AC_API saveImageShape(ac_instance instance, int* cols, int* rows, int* channels)
+    ac_error saveImageShape(ac_instance instance, int* cols, int* rows, int* channels)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -1091,7 +1090,8 @@ extern "C"
         try
         {
             time_t start = time(nullptr);
-            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress([&callBack, &start](double v)
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress(
+                [&callBack, &start](double v)
                 {
                     callBack(v, time(nullptr) - start);
                 });

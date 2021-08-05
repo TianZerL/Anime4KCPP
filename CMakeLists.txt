@@ -24,7 +24,7 @@ option(Build_CLI "Build CLI or not" ON)
 option(Build_VapourSynth_Plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)
 option(Build_AviSynthPlus_Plugin "Build Anime4KCPP for AviSynthPlus plugin or not" OFF)
 option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
-option(Build_C_Wrapper_With_Core "Build C wrapper and core in one file" ON)
+option(Build_Static_C_Wrapper "Build Anime4KCPP core c wrapper as static library" OFF)
 option(Build_Static_Core "Build Anime4KCPP core as static library" OFF)
 option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_TBB "Use TBB for parallel processing" OFF)
@@ -154,8 +154,8 @@ message(STATUS
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
 "   Build AviSynthPlus plugin ${Build_AviSynthPlus_Plugin}\n"
 "   Build C Wrapper ${Build_C_Wrapper}\n\n"
-"   Build C Wrapper with core ${Build_C_Wrapper_With_Core}\n"
-"   Build Static Core ${Build_Static_Core}"
+"   Build Static C Wrapper${Build_Static_C_Wrapper}\n"
+"   Build Static Core ${Build_Static_Core}\n"
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"

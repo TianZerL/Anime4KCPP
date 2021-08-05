@@ -5,11 +5,11 @@
 #ifdef _MSC_VER
 #define AC_STDCALL __stdcall
 #define AC_CDECL __cdecl
-#define AC_DLL __declspec(dllexport)
+#define AC_EXPORT __declspec(dllexport)
 #else
 #define AC_STDCALL __attribute__((__stdcall__))
 #define AC_CDECL __attribute__((__cdecl__))
-#define AC_DLL
+#define AC_EXPORT
 #endif
 
 enum AC_Parameters
@@ -590,7 +590,7 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
 
 const AVS_Linkage* AVS_linkage = 0;
 
-extern "C" AC_DLL const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
+extern "C" AC_EXPORT const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
 {
     AVS_linkage = vectors;
 
