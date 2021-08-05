@@ -10,15 +10,15 @@ namespace Anime4KCPP
 {
     namespace Cuda
     {
-        class DLL Manager;
+        class AC_EXPORT Manager;
 
-        struct DLL GPUList;
-        struct DLL GPUInfo;
+        struct AC_EXPORT GPUList;
+        struct AC_EXPORT GPUInfo;
 
         //return platforms, devices of each platform, all devices information
-        DLL GPUList listGPUs();
+        AC_EXPORT GPUList listGPUs();
         //return result and information
-        DLL GPUInfo checkGPUSupport(const int dID);
+        AC_EXPORT GPUInfo checkGPUSupport(const int dID);
     }
 
     namespace Processor

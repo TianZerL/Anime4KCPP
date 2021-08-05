@@ -1,7 +1,5 @@
 #ifdef ENABLE_OPENCL
 
-#define DLL
-
 #include<fstream>
 
 #define CL_HPP_ENABLE_EXCEPTIONS

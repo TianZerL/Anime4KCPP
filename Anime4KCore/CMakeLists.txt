@@ -37,7 +37,12 @@ if(Enable_Image_IO)
     add_definitions(-DENABLE_IMAGE_IO)
 endif()
 
-add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
+if(Build_Static_Core)
+    add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
+    set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)
+else()
+    add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
+endif()
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 
@@ -49,7 +54,7 @@ install(
 )
 
 install(
-    FILES ${INCLUDE}
+    FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_export.h
     DESTINATION core/include
 )
 

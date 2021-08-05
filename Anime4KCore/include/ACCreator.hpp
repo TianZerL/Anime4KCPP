@@ -18,7 +18,7 @@
 
 namespace Anime4KCPP
 {
-    class DLL ACCreator;
+    class AC_EXPORT ACCreator;
 }
 
 //Anime4KCPP Processor Factory

@@ -6,7 +6,7 @@
 
 namespace Anime4KCPP::OpenCL
 {
-    class DLL Anime4K09;
+    class AC_EXPORT Anime4K09;
 }
 
 class Anime4KCPP::OpenCL::Anime4K09 :public AC

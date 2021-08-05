@@ -13,13 +13,13 @@ namespace Anime4KCPP
         template<typename T>
         class Manager;
 
-        struct DLL GPUList;
-        struct DLL GPUInfo;
+        struct AC_EXPORT GPUList;
+        struct AC_EXPORT GPUInfo;
 
         //return platforms, devices of each platform, all devices information
-        DLL GPUList listGPUs();
+        AC_EXPORT GPUList listGPUs();
         //return result and information
-        DLL GPUInfo checkGPUSupport(int pID, int dID);
+        AC_EXPORT GPUInfo checkGPUSupport(int pID, int dID);
     }
 
     namespace Processor

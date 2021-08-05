@@ -1,7 +1,5 @@
 #ifdef ENABLE_CUDA
 
-#define DLL
-
 #include"CudaInterface.hpp"
 #include"FilterProcessor.hpp"
 #include"CudaAnime4K09.hpp"

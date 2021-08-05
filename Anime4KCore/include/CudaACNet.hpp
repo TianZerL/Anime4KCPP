@@ -7,7 +7,7 @@
 
 namespace Anime4KCPP::Cuda
 {
-    class DLL ACNet;
+    class AC_EXPORT ACNet;
 }
 
 class Anime4KCPP::Cuda::ACNet :public AC

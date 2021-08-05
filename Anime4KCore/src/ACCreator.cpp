@@ -1,5 +1,3 @@
-#define DLL
-
 #include"ACCreator.hpp"
 
 Anime4KCPP::ACCreator::ACCreator(const ManagerSP& manager, const bool initNow)

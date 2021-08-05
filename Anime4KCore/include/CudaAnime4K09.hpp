@@ -6,7 +6,7 @@
 
 namespace Anime4KCPP::Cuda
 {
-    class DLL Anime4K09;
+    class AC_EXPORT Anime4K09;
 }
 
 class Anime4KCPP::Cuda::Anime4K09 :public AC

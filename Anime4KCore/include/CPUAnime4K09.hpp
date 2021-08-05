@@ -4,7 +4,7 @@
 
 namespace Anime4KCPP::CPU
 {
-    class DLL Anime4K09;
+    class AC_EXPORT Anime4K09;
 }
 
 class Anime4KCPP::CPU::Anime4K09 :public AC

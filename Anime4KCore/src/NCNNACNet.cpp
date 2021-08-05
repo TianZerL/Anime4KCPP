@@ -1,7 +1,5 @@
 #ifdef ENABLE_NCNN
 
-#define DLL
-
 #include"ACNetType.hpp"
 #include"NCNNACNet.hpp"
 #include"NCNNACNetID.hpp"

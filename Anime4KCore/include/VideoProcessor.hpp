@@ -7,7 +7,7 @@
 
 namespace Anime4KCPP
 {
-    class DLL VideoProcessor;
+    class AC_EXPORT VideoProcessor;
 }
 
 class Anime4KCPP::VideoProcessor

@@ -1,7 +1,5 @@
 #ifdef ENABLE_VIDEO
 
-#define DLL
-
 #include"ACCreator.hpp"
 #include"VideoProcessor.hpp"
 

@@ -124,11 +124,11 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     zf =  _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
 
-    if (!wcsicmp(_GPGPUModelString, L"OpenCL"))
+    if (!_wcsicmp(_GPGPUModelString, L"OpenCL"))
         GPGPUModel = GPGPU::OpenCL;
-    else if (!wcsicmp(_GPGPUModelString, L"CUDA"))
+    else if (!_wcsicmp(_GPGPUModelString, L"CUDA"))
         GPGPUModel = GPGPU::CUDA;
-    else if (!wcsicmp(_GPGPUModelString, L"CPU"))
+    else if (!_wcsicmp(_GPGPUModelString, L"CPU"))
         GPGPUModel = GPGPU::CPU;
     else
         GPGPUModel = GPGPU::OpenCL;

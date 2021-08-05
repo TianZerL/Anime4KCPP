@@ -1,7 +1,5 @@
 #ifdef ENABLE_CUDA
 
-#define DLL
-
 #include"CudaInterface.hpp"
 #include"ACCuda.hpp"
 

@@ -7,7 +7,7 @@
 
 namespace Anime4KCPP::OpenCL
 {
-    class DLL ACNet;
+    class AC_EXPORT ACNet;
 }
 
 class Anime4KCPP::OpenCL::ACNet :public AC

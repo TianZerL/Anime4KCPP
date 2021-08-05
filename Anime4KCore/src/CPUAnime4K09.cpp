@@ -1,5 +1,3 @@
-#define DLL
-
 #include"Parallel.hpp"
 #include"FilterProcessor.hpp"
 #include"CPUAnime4K09.hpp"

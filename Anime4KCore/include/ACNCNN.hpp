@@ -9,12 +9,12 @@ namespace Anime4KCPP
 {
     namespace NCNN
     {
-        class DLL Manager;
+        class AC_EXPORT Manager;
 
-        struct DLL GPUList;
+        struct AC_EXPORT GPUList;
 
         //return platforms, devices of each platform, all devices information
-        DLL GPUList listGPUs();
+        AC_EXPORT GPUList listGPUs();
     }
 
     namespace Processor

@@ -7,6 +7,8 @@
 
 #include<opencv2/opencv.hpp>
 
+#include<ac_export.h>
+
 #include"ACException.hpp"
 #include"ACProcessor.hpp"
 
@@ -18,23 +20,10 @@
 #define PARALLEL_LIBRARY "OpenMP"
 #endif
 
-#ifdef _MSC_VER
-#ifndef DLL
-#define DLL __declspec(dllimport)
-#else
-#undef DLL
-#define DLL __declspec(dllexport)
-#endif
-#else
-#ifndef DLL
-#define DLL
-#endif
-#endif
-
 namespace Anime4KCPP
 {
-    struct DLL Parameters;
-    class DLL AC;
+    struct AC_EXPORT Parameters;
+    class AC_EXPORT AC;
 
     enum BGRA
     {

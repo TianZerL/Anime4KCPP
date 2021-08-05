@@ -9,7 +9,7 @@
 
 namespace Anime4KCPP::NCNN
 {
-    class DLL ACNet;
+    class AC_EXPORT ACNet;
 }
 
 class Anime4KCPP::NCNN::ACNet :public AC

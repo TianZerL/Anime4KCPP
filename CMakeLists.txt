@@ -25,6 +25,7 @@ option(Build_VapourSynth_Plugin "Build Anime4KCPP for VapourSynth plugin or not"
 option(Build_AviSynthPlus_Plugin "Build Anime4KCPP for AviSynthPlus plugin or not" OFF)
 option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_C_Wrapper_With_Core "Build C wrapper and core in one file" ON)
+option(Build_Static_Core "Build Anime4KCPP core as static library" OFF)
 option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
@@ -49,10 +50,10 @@ endif()
 include(${TOP_DIR}/cmake/Detection.cmake)
 
 if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
-    option(Use_OpenCV_with_MSVC_for_Clang "Use OpenCV build by MSVC for Clang" ON)
-    option(Use_OpenCV_with_MINGW_for_Clang "Use OpenCV build by MinGW for Clang" OFF)
-    if(Use_OpenCV_with_MSVC_for_Clang AND Use_OpenCV_with_MINGW_for_Clang)
-        message(FATAL_ERROR "Use_OpenCV_with_MSVC_for_Clang and Use_OpenCV_with_MINGW_for_Clang cannot be true at same time")
+    option(Use_OpenCV_With_MSVC_For_Clang "Use OpenCV build by MSVC for Clang" ON)
+    option(Use_OpenCV_With_MINGW_For_Clang "Use OpenCV build by MinGW for Clang" OFF)
+    if(Use_OpenCV_With_MSVC_For_Clang AND Use_OpenCV_With_MINGW_For_Clang)
+        message(FATAL_ERROR "Use_OpenCV_With_MSVC_For_Clang and Use_OpenCV_With_MINGW_For_Clang cannot be true at same time")
     endif()
 endif()
 
@@ -152,8 +153,9 @@ message(STATUS
 "   Build GUI ${Build_GUI}\n"
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
 "   Build AviSynthPlus plugin ${Build_AviSynthPlus_Plugin}\n"
-"   Build C wrapper ${Build_C_Wrapper}\n\n"
-"   Build C wrapper with core ${Build_C_Wrapper_With_Core}\n"
+"   Build C Wrapper ${Build_C_Wrapper}\n\n"
+"   Build C Wrapper with core ${Build_C_Wrapper_With_Core}\n"
+"   Build Static Core ${Build_Static_Core}"
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use TBB ${Use_TBB}\n"
