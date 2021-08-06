@@ -44,9 +44,6 @@ if(Use_TBB)
 endif()
 
 if(Enable_CUDA)
-    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
-        enable_language(CUDA)
-    endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE CUDA_Module)
 endif()
 

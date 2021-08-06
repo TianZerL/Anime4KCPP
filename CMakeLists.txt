@@ -181,6 +181,9 @@ endif()
 
 if(Enable_CUDA)
     add_definitions(-DENABLE_CUDA)
+    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
+        enable_language(CUDA)
+    endif()
 endif()
 
 if(Enable_OpenCL)
