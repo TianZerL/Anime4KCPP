@@ -1,9 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "communicator.h"
-#include "Anime4KCPP.hpp"
-
 #include <QMainWindow>
 #include <QTranslator>
 #include <QCloseEvent>
@@ -20,7 +17,7 @@
 #include <QInputDialog>
 #include <QStyleFactory>
 
-#include <opencv2/opencv.hpp>
+#include "Anime4KCPP.hpp"
 
 #define ANIME4KCPP_GUI_VERSION "1.13.0"
 

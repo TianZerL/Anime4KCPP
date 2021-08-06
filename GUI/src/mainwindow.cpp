@@ -1,11 +1,14 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
-
-#include "Parallel.hpp"
-
 #ifdef _WIN32
 #include <clocale>
 #endif
+
+#include <opencv2/opencv.hpp>
+
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
+#include "communicator.h"
+
+#include "Parallel.hpp"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)

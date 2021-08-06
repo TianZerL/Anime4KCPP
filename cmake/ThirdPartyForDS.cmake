@@ -1,4 +1,4 @@
-include_directories(${DirectShow_SDK_PATH})
+target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${DirectShow_SDK_PATH}>)
 
 if(OS_64_Bit)
     find_library(DirectShow_LIBS 

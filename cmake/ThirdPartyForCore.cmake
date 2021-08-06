@@ -31,11 +31,11 @@ generate_export_header(${PROJECT_NAME} BASE_NAME "AC")
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 if(Use_Eigen3)
-    include_directories(${EIGEN3_INCLUDE_DIR})
+    target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>)
 endif()
 
 if(Use_TBB)
-    include_directories(${TBB_INCLUDE_PATH})
+    target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${TBB_INCLUDE_PATH}>)
     find_library(TBB_LIBS 
     NAMES tbb 
     PATHS ${TBB_LIB_PATH} 
@@ -57,8 +57,8 @@ endif()
 
 if(Enable_OpenCL)
     find_package(OpenCL REQUIRED)
-    include_directories(${OpenCL_INCLUDE_DIRS} ${TOP_DIR}/ThirdParty/include/opencl)
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${OpenCL_LIBRARIES})
+    target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${TOP_DIR}/ThirdParty/include/opencl>)
+    target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 endif()
 
 if(Use_OpenCV_With_MSVC_For_Clang)
@@ -71,7 +71,7 @@ endif()
 
 find_package(OpenCV REQUIRED)
 
-include_directories(${OpenCV_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${OpenCV_INCLUDE_DIRS}>)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 if(Use_OpenCV_With_MSVC_For_Clang)

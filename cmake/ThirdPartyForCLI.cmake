@@ -32,23 +32,13 @@ if(${CURL_FOUND})
     add_definitions(-DENABLE_LIBCURL)
 endif()
 
-if(Use_TBB)
-    include_directories(${TBB_INCLUDE_PATH})
-    find_library(TBB_LIBS 
-    NAMES tbb 
-    PATHS ${TBB_LIB_PATH} 
-    REQUIRED)
-    target_link_libraries(${PROJECT_NAME} ${TBB_LIBS})
-endif()
-
-include_directories(${TOP_DIR}/ThirdParty/include/cmdline)
+target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${TOP_DIR}/ThirdParty/include/cmdline>)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore)
 
 if(Use_Boost_filesystem)
     find_package(Boost COMPONENTS filesystem REQUIRED)
-    include_directories(${Boost_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PRIVATE Boost::filesystem)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0) # Just for G++-8 to enable filesystem
-    target_link_libraries(${PROJECT_NAME} stdc++fs)
+    target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
 endif()
