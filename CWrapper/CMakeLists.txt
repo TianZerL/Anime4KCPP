@@ -43,7 +43,7 @@ if(Build_C_Wrapper)
     )
     
     install(
-        FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_export.h
+        FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_c_export.h
         DESTINATION c_api/include
     )
 
