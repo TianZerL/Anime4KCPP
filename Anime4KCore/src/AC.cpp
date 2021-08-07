@@ -211,6 +211,14 @@ void Anime4KCPP::AC::loadImage(const std::vector<unsigned char>& buf)
     inputYUV = false;
 }
 
+void Anime4KCPP::AC::loadImage(const unsigned char* buf, size_t size)
+{
+    if (!param.alpha)
+        loadImage(cv::imdecode(cv::Mat{ 1, static_cast<int>(size), CV_8UC1, (void*)buf }, cv::IMREAD_COLOR));
+    else
+        loadImage(cv::imdecode(cv::Mat{ 1, static_cast<int>(size), CV_8UC1, (void*)buf }, cv::IMREAD_UNCHANGED));
+}
+
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     switch (inputAsRGB32 + inputAsYUV444)

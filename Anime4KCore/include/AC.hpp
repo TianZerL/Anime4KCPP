@@ -125,6 +125,7 @@ public:
 #endif // ENABLE_IMAGE_IO
     void loadImage(const cv::Mat& srcImage);
     void loadImage(const std::vector<unsigned char>& buf);
+    void loadImage(const unsigned char* buf, size_t size);
     void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
     void loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);

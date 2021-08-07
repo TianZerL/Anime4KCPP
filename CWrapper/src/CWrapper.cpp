@@ -286,8 +286,7 @@ extern "C"
 
         try
         {
-            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(
-                std::vector<unsigned char>(buf, buf + size));
+            reinterpret_cast<Anime4KCPP::AC*>(instance)->loadImage(buf, size);
         }
         catch (const std::exception& err)
         {
