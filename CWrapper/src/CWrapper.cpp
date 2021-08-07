@@ -1095,7 +1095,7 @@ extern "C"
             reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress(
                 [&callBack, &start](double v)
                 {
-                    callBack(v, time(nullptr) - start);
+                    callBack(v, static_cast<double>(time(nullptr) - start));
                 });
         }
         catch (const std::exception& err)

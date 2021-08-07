@@ -4,8 +4,6 @@ if(Build_C_Wrapper)
 
     aux_source_directory(src SOURCE)
 
-    include_directories(include)
-
     file(GLOB INCLUDE include/*.h)
 
     if(Enable_Video)

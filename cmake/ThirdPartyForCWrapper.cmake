@@ -5,6 +5,7 @@ target_include_directories(
     ${PROJECT_NAME} 
     PUBLIC 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+        $<BUILD_INTERFACE:${TOP_DIR}/CWrapper/include>
         $<INSTALL_INTERFACE:c_api/include>
 )
 
