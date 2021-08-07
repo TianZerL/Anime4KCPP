@@ -131,16 +131,16 @@ extern "C"
 
     typedef struct ac_OpenCLAnime4K09Data
     {
-        unsigned int pID;
-        unsigned int dID;
+        int pID;
+        int dID;
         int OpenCLQueueNum;
         ac_bool OpenCLParallelIO;
     } ac_OpenCLAnime4K09Data;
 
     typedef struct ac_OpenCLACNetData
     {
-        unsigned int pID;
-        unsigned int dID;
+        int pID;
+        int dID;
         int OpenCLQueueNum;
         ac_bool OpenCLParallelIO;
         ac_CNNType CNNType;
@@ -148,7 +148,7 @@ extern "C"
 
     typedef struct ac_CUDAData
     {
-        unsigned int dID;
+        int dID;
     } ac_CUDAData;
 
     typedef struct ac_managerData
@@ -160,6 +160,7 @@ extern "C"
 
     typedef void* ac_instance;
     typedef void* ac_videoProcessor;
+    typedef unsigned int ac_manager_t;
 
     AC_DEPRECATED AC_EXPORT ac_instance AC_API acGetInstance(
         ac_bool initGPU, ac_bool initGPUCNN,
@@ -172,15 +173,21 @@ extern "C"
     AC_DEPRECATED AC_EXPORT ac_error AC_API acInitGPUCNN(void);
     AC_DEPRECATED AC_EXPORT void AC_API acReleaseGPUCNN(void);
     AC_DEPRECATED AC_EXPORT void AC_API acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN);
-    AC_DEPRECATED AC_EXPORT void AC_API acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore);
+    AC_DEPRECATED AC_EXPORT void AC_API acBenchmark(int pID, int dID, double* CPUScore, double* GPUScore);
     //acCheckGPUSupport may need to run two times for getting length of info string first
     AC_DEPRECATED AC_EXPORT ac_bool AC_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
     AC_DEPRECATED AC_EXPORT ac_bool AC_API acIsInitializedGPU(void);
     AC_DEPRECATED AC_EXPORT ac_bool AC_API acIsInitializedGPUCNN(void);
 
     AC_EXPORT ac_version AC_API acGetVersion(void);
+    AC_EXPORT ac_error AC_API acInitProcessor(ac_manager_t managers, ac_managerData* managerData);
+
     AC_EXPORT ac_instance AC_API acGetInstance2(
-        unsigned int managers, ac_managerData* managerData,
+        ac_manager_t managers, ac_managerData* managerData,
+        ac_parameters* parameters, ac_processType type,
+        ac_error* error
+    );
+    AC_EXPORT ac_instance AC_API acGetInstance3(
         ac_parameters* parameters, ac_processType type,
         ac_error* error
     );
@@ -227,7 +234,7 @@ extern "C"
     //acListGPUs may need to run two times for getting length of info string and length (platforms) of devices first
     AC_EXPORT void AC_API acListGPUs(char* info, size_t* length, size_t* platforms, size_t* devices);
     AC_EXPORT void AC_API acGetLastCoreErrorString(char* err, size_t* length);
-    AC_EXPORT double AC_API acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID);
+    AC_EXPORT double AC_API acBenchmark2(ac_processType processType, int pID, int dID);
     AC_EXPORT ac_processType AC_API acGetProcessType(ac_instance instance, ac_error* error);
     //acGetProcessorInfo may need to run two times for getting length of info string first
     AC_EXPORT ac_error AC_API acGetProcessorInfo(ac_instance instance, char* info, size_t* length);

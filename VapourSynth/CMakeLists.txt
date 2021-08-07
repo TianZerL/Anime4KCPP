@@ -19,8 +19,8 @@ if(Build_VapourSynth_Plugin)
 
     install(
         TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION VapourSynthPlugin
-        LIBRARY DESTINATION VapourSynthPlugin
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION bin
     )
 
 endif()

@@ -3,17 +3,16 @@ project(ac LANGUAGES CXX)
 if(Build_C_Wrapper)
 
     aux_source_directory(src SOURCE)
-    aux_source_directory(${TOP_DIR}/Anime4KCore/src Anime4KCPPCoreSource)
 
-    include_directories(include ${TOP_DIR}/Anime4KCore/include)
+    include_directories(${TOP_DIR}/Anime4KCore/include include)
+
+    file(GLOB INCLUDE include/*.h)
 
     add_definitions(-DBUILT_IN_KERNEL)
 
     if(Use_Legacy_OpenCL_API)
         add_definitions(-DLEGACY_OPENCL_API)
     endif()
-
-    file(GLOB INCLUDE include/*.h)
 
     if(Enable_Video)
         add_definitions(-DENABLE_VIDEO)
@@ -28,22 +27,29 @@ if(Build_C_Wrapper)
     endif()
 
     if(Build_Static_C_Wrapper)
-        add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE} ${Anime4KCPPCoreSource})
+        add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
         set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)
     else()
-        add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE} ${Anime4KCPPCoreSource})
+        add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
     endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
     install(
-        TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION CWrapper/lib
-        LIBRARY DESTINATION CWrapper/lib
-        ARCHIVE DESTINATION CWrapper/lib
-    )
-    install(
-        FILES include/AC.h ${CMAKE_CURRENT_BINARY_DIR}/ac_export.h  DESTINATION CWrapper/include
+        TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+        ARCHIVE DESTINATION c_api/lib
+        LIBRARY DESTINATION c_api/lib
+        RUNTIME DESTINATION c_api/bin
     )
     
+    install(
+        FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_export.h
+        DESTINATION c_api/include
+    )
+
+    install(EXPORT ${PROJECT_NAME} DESTINATION c_api/cmake)
+    
+    configure_file(${TOP_DIR}/cmake/CWrapperConfig.cmake.in acConfig.cmake @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/acConfig.cmake DESTINATION c_api/cmake)
+
 endif()

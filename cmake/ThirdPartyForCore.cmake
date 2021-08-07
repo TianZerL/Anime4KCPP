@@ -35,12 +35,8 @@ if(Use_Eigen3)
 endif()
 
 if(Use_TBB)
-    target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${TBB_INCLUDE_PATH}>)
-    find_library(TBB_LIBS 
-    NAMES tbb 
-    PATHS ${TBB_LIB_PATH} 
-    REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${TBB_LIBS})
+    find_package(TBB REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
 endif()
 
 if(Enable_CUDA)
@@ -76,3 +72,5 @@ if(Use_OpenCV_With_MSVC_For_Clang)
 elseif(Use_OpenCV_With_MINGW_For_Clang)
     set(MINGW ${TMP_FALG})
 endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:core/include>)

@@ -62,12 +62,12 @@ if(Enable_CUDA)
     set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
 
     install(
-        TARGETS ${PROJECT_NAME} EXPORT CUDA_Module
+        TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
         ARCHIVE DESTINATION cuda_module/lib
         LIBRARY DESTINATION cuda_module/lib
         RUNTIME DESTINATION cuda_module/lib
     )
     
-    install(EXPORT CUDA_Module DESTINATION cuda_module/cmake)
+    install(EXPORT ${PROJECT_NAME} DESTINATION cuda_module/cmake)
 
 endif()

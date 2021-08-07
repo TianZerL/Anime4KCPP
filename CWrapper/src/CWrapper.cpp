@@ -131,25 +131,18 @@ extern "C"
         }
     }
 
-    ac_instance acGetInstance2(unsigned int managers, ac_managerData* managerData, ac_parameters* parameters, ac_processType type, ac_error* error)
+    ac_error acInitProcessor(ac_manager_t managers, ac_managerData* managerData)
     {
-        if (error != nullptr)
-            *error = AC_OK;
-
         acCreator = std::make_unique<Anime4KCPP::ACCreator>();
 
         if (managers & AC_Manager_OpenCL_Anime4K09)
         {
 #ifndef ENABLE_OPENCL
-            if (error != nullptr)
-                *error = AC_ERROR_OPENCL_NOT_SUPPORTED;
-            return nullptr;
+            return AC_ERROR_OPENCL_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
             {
-                if (error != nullptr)
-                    *error = AC_ERROR_NULL_DATA;
-                return nullptr;
+                return AC_ERROR_NULL_DATA;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
                 (managerData->OpenCLAnime4K09Data->pID,
@@ -161,15 +154,11 @@ extern "C"
         if (managers & AC_Manager_OpenCL_ACNet)
         {
 #ifndef ENABLE_OPENCL
-            if (error != nullptr)
-                *error = AC_ERROR_OPENCL_NOT_SUPPORTED;
-            return nullptr;
+            return AC_ERROR_OPENCL_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
             {
-                if (error != nullptr)
-                    *error = AC_ERROR_NULL_DATA;
-                return nullptr;
+                return AC_ERROR_NULL_DATA;
             }
             acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
                 (managerData->OpenCLACNetData->pID,
@@ -182,9 +171,7 @@ extern "C"
         if (managers & AC_Manager_Cuda)
         {
 #ifndef ENABLE_CUDA
-            if (error != nullptr)
-                *error = AC_ERROR_CUDA_NOT_SUPPORTED;
-            return nullptr;
+            return AC_ERROR_CUDA_NOT_SUPPORTED;
 #else
             if (managerData == nullptr || managerData->CUDAData == nullptr)
             {
@@ -203,11 +190,27 @@ extern "C"
         catch (const std::exception& err)
         {
             lastCoreError = err.what();
-            if (error != nullptr)
-                *error = AC_ERROR_INIT_GPU;
-            return nullptr;
+            return AC_ERROR_INIT_GPU;
         }
 
+        return AC_OK;
+    }
+
+    ac_instance acGetInstance2(ac_manager_t managers, ac_managerData* managerData, ac_parameters* parameters, ac_processType type, ac_error* error)
+    {
+        ac_error err = acInitProcessor(managers, managerData);
+
+        if (error != nullptr)
+            *error = err;
+        
+        if (err != AC_OK)
+            return nullptr;
+
+        return acGetInstance3(parameters, type, error);
+    }
+
+    ac_instance acGetInstance3(ac_parameters* parameters, ac_processType type, ac_error* error)
+    {
         return reinterpret_cast<ac_instance>(acCreator->create(getParameters(parameters), getProcessorType(type, error)));
     }
 
@@ -848,7 +851,7 @@ extern "C"
             memcpy(err, lastCoreError.c_str(), lastCoreError.size() + 1);
     }
 
-    void acBenchmark(unsigned int pID, unsigned int dID, double* CPUScore, double* GPUScore)
+    void acBenchmark(const int  pID, const int  dID, double* CPUScore, double* GPUScore)
     {
         double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 #ifdef ENABLE_OPENCL
@@ -861,7 +864,7 @@ extern "C"
         *GPUScore = _OpenCLScore;
     }
 
-    double acBenchmark2(ac_processType processType, unsigned int pID, unsigned int dID)
+    double acBenchmark2(ac_processType processType, const int pID, const int dID)
     {
         switch (processType)
         {

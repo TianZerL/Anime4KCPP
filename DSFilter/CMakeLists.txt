@@ -22,7 +22,7 @@ if(Build_DS_Filter)
 
     install(
         TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION DSFilter
+        RUNTIME DESTINATION bin
     )
 
 endif()

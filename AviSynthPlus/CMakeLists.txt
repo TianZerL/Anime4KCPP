@@ -19,8 +19,8 @@ if(Build_AviSynthPlus_Plugin)
 
     install(
         TARGETS ${PROJECT_NAME}
-        RUNTIME DESTINATION AviSynthPlusPlugin
-        LIBRARY DESTINATION AviSynthPlusPlugin
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION bin
     )
 
 endif()

@@ -47,7 +47,7 @@ endif()
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 
 install(
-    TARGETS ${PROJECT_NAME} EXPORT Anime4KCPPCore
+    TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
     ARCHIVE DESTINATION core/lib
     LIBRARY DESTINATION core/lib
     RUNTIME DESTINATION bin
@@ -58,7 +58,7 @@ install(
     DESTINATION core/include
 )
 
-install(EXPORT Anime4KCPPCore DESTINATION core/cmake)
+install(EXPORT ${PROJECT_NAME} DESTINATION core/cmake)
 
 configure_file(${TOP_DIR}/cmake/Anime4KCPPCoreConfig.cmake.in Anime4KCPPCoreConfig.cmake @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Anime4KCPPCoreConfig.cmake DESTINATION core/cmake)
