@@ -45,6 +45,11 @@ if(Use_Eigen3)
     target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
 endif()
 
+if(NOT Disable_Parallel)
+    find_package(Threads REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+endif()
+
 if(Use_TBB)
     find_package(TBB REQUIRED)
     target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
