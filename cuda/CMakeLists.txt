@@ -22,7 +22,7 @@ if(Enable_CUDA)
             set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --use_fast_math")
         endif()
 
-        include_directories(${TOP_DIR}/Anime4KCore/include include)
+        include_directories(${TOP_DIR}/core/include include)
         file(GLOB SOURCE  src/*.cu)
         file(GLOB INCLUDE  include/*.cuh)
 
@@ -44,7 +44,7 @@ if(Enable_CUDA)
         endif()
 
         aux_source_directory(src SOURCE)
-        include_directories(${TOP_DIR}/Anime4KCore/include include)
+        include_directories(${TOP_DIR}/core/include include)
         file(GLOB INCLUDE include/*.cuh)
 
         source_group("cuda_include" FILES ${INCLUDE}) 

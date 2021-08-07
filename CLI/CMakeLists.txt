@@ -4,9 +4,14 @@ if(Build_CLI)
 
     aux_source_directory(src SOURCE)
 
-    include_directories(${TOP_DIR}/Anime4KCore/include include)
+    include_directories(include)
+    
     file(GLOB INCLUDE include/*.hpp)
 
+    add_definitions(-DENABLE_VIDEO)
+    add_definitions(-DENABLE_IMAGE_IO)
+    add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
+    
     if(Use_Boost_filesystem)
         add_definitions(-DUSE_BOOST_FILESYSTEM) 
     endif()
@@ -14,15 +19,10 @@ if(Build_CLI)
     if(Enable_NCNN)
         add_definitions(-DENABLE_NCNN)
     endif()
-
-    add_definitions(-DENABLE_VIDEO)
-    add_definitions(-DENABLE_IMAGE_IO)
     
     if(Enable_Preview_GUI)
         add_definitions(-DENABLE_PREVIEW_GUI)
     endif()
-
-    add_definitions(-DCOMPILER="${CMAKE_CXX_COMPILER_ID}")
 
     add_executable(${PROJECT_NAME} ${INCLUDE} ${SOURCE})
 

@@ -2,24 +2,20 @@ project(Anime4KCPP_GUI LANGUAGES CXX)
 
 if(Build_GUI)
 
-    include_directories(include ${TOP_DIR}/Anime4KCore/include)
-    file(GLOB INCLUDE include/*.h)
-
     aux_source_directory(src SOURCE)
+
+    include_directories(include)
+
+    file(GLOB INCLUDE include/*.h)
 
     find_package(Qt${Qt_Version} COMPONENTS Widgets LinguistTools REQUIRED)
 
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
     set(CMAKE_AUTOUIC ON)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
 
-    set(TS_FILES 
-    ./src/Anime4KCPP_GUI_zh_CN.ts 
-    ./src/Anime4KCPP_GUI_zh_TW.ts 
-    ./src/Anime4KCPP_GUI_ja_JP.ts 
-    ./src/Anime4KCPP_GUI_fr_FR.ts)
+    file(GLOB TS_FILES ./src/*.ts)
     set(UI_FILE ./src/mainwindow.ui)
     set(QRC_FILE ./src/logo.qrc)
 
@@ -43,8 +39,7 @@ if(Build_GUI)
         add_definitions(-DENABLE_PREVIEW_GUI)
     endif()
 
-    add_executable(Anime4KCPP_GUI
-        WIN32
+    add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
         ${INCLUDE}
         ${SOURCE}
         ${QM_FILES}

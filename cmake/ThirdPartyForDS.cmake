@@ -1,4 +1,8 @@
-target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${DirectShow_SDK_PATH}>)
+target_include_directories(
+    ${PROJECT_NAME} 
+    PRIVATE
+        ${DirectShow_SDK_PATH}
+)
 
 if(OS_64_Bit)
     find_library(DirectShow_LIBS 
@@ -12,6 +16,4 @@ else()
     NO_DEFAULT_PATH REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${DirectShow_LIBS} winmm)
-
-include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
+target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore ${DirectShow_LIBS} winmm)

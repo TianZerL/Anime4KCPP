@@ -4,15 +4,9 @@ if(Build_C_Wrapper)
 
     aux_source_directory(src SOURCE)
 
-    include_directories(${TOP_DIR}/Anime4KCore/include include)
+    include_directories(include)
 
     file(GLOB INCLUDE include/*.h)
-
-    add_definitions(-DBUILT_IN_KERNEL)
-
-    if(Use_Legacy_OpenCL_API)
-        add_definitions(-DLEGACY_OPENCL_API)
-    endif()
 
     if(Enable_Video)
         add_definitions(-DENABLE_VIDEO)

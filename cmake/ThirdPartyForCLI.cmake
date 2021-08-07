@@ -32,7 +32,11 @@ if(${CURL_FOUND})
     add_definitions(-DENABLE_LIBCURL)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${TOP_DIR}/ThirdParty/include/cmdline>)
+target_include_directories(
+    ${PROJECT_NAME} 
+    PRIVATE
+        ${TOP_DIR}/ThirdParty/include/cmdline
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore)
 

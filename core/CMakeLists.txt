@@ -2,7 +2,6 @@ project(Anime4KCPPCore LANGUAGES CXX)
 
 aux_source_directory(src SOURCE)
 
-include_directories(include)
 file(GLOB INCLUDE include/*.hpp)
 
 if(Built_In_Kernel)

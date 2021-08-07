@@ -28,10 +28,21 @@ endif()
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} BASE_NAME "AC")
 
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+find_package(OpenCV REQUIRED)
+
+target_include_directories(
+    ${PROJECT_NAME} 
+    PUBLIC 
+        $<BUILD_INTERFACE:${TOP_DIR}/core/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> 
+        $<BUILD_INTERFACE:${OpenCV_INCLUDE_DIRS}>
+        $<INSTALL_INTERFACE:core/include>
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 if(Use_Eigen3)
-    target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${EIGEN3_INCLUDE_DIR}>)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
 endif()
 
 if(Use_TBB)
@@ -50,7 +61,7 @@ endif()
 
 if(Enable_OpenCL)
     find_package(OpenCL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${TOP_DIR}/ThirdParty/include/opencl>)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/ThirdParty/include/opencl)
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 endif()
 
@@ -62,15 +73,9 @@ elseif(Use_OpenCV_With_MINGW_For_Clang)
     set(MINGW True)
 endif()
 
-find_package(OpenCV REQUIRED)
-
-target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${OpenCV_INCLUDE_DIRS}>)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 if(Use_OpenCV_With_MSVC_For_Clang)
     set(MSVC ${TMP_FALG})
 elseif(Use_OpenCV_With_MINGW_For_Clang)
     set(MINGW ${TMP_FALG})
 endif()
-
-target_include_directories(${PROJECT_NAME} PUBLIC $<INSTALL_INTERFACE:core/include>)

@@ -1,4 +1,8 @@
-target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${AviSynthPlus_SDK_PATH}/include>)
+target_include_directories(
+    ${PROJECT_NAME} 
+    PRIVATE
+        ${AviSynthPlus_SDK_PATH}/include
+)
 
 if(OS_64_Bit)
     find_library(AviSynthPlus_LIBS 
@@ -12,6 +16,4 @@ else()
     NO_DEFAULT_PATH REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${AviSynthPlus_LIBS})
-
-include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
+target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore ${AviSynthPlus_LIBS})

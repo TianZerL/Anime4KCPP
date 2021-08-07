@@ -25,7 +25,7 @@ option(Build_VapourSynth_Plugin "Build Anime4KCPP for VapourSynth plugin or not"
 option(Build_AviSynthPlus_Plugin "Build Anime4KCPP for AviSynthPlus plugin or not" OFF)
 option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_Static_C_Wrapper "Build Anime4KCPP core c wrapper as static library" OFF)
-option(Build_Static_Core "Build Anime4KCPP core as static library" OFF)
+option(Build_Static_Core "Build Anime4KCPP core as static library" ON)
 option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)

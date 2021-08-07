@@ -1,4 +1,8 @@
-target_include_directories(${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${VapourSynth_SDK_PATH}/include>)
+target_include_directories(
+    ${PROJECT_NAME} 
+    PRIVATE 
+        ${VapourSynth_SDK_PATH}/include
+)
 
 if(OS_64_Bit)
     find_library(VapourSynth_LIBS 
@@ -12,6 +16,4 @@ else()
     REQUIRED)
 endif()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${VapourSynth_LIBS})
-
-include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
+target_link_libraries(${PROJECT_NAME} PRIVATE Anime4KCPPCore ${VapourSynth_LIBS})
