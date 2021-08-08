@@ -27,7 +27,6 @@ option(Build_C_Wrapper "Build C wrapper of Anime4KCPP or not" OFF)
 option(Build_Static_C_Wrapper "Build Anime4KCPP core c wrapper as static library" OFF)
 option(Build_Static_Core "Build Anime4KCPP core as static library" ON)
 option(Built_In_Kernel "Built-in kernel or not" ON)
-option(Use_TBB "Use TBB for parallel processing" OFF)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
 option(Ryzen_Optimization "Accelerate the AMD Ryzen CPU" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
@@ -57,7 +56,7 @@ if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     endif()
 endif()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+if(MSVC)
     if(Enable_Fast_Math)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
     endif()
@@ -65,13 +64,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
     endif()
 else()
-    if(NOT Use_TBB)
-        find_package(OpenMP)
-        if (OpenMP_FOUND)
-            set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-            add_definitions(-DUSE_OPENMP)
-        endif()
-    endif()
     if(Enable_Fast_Math)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
     endif()
@@ -108,10 +100,52 @@ endif()
 set(VapourSynth_SDK_PATH "VapourSynth SDK path" CACHE PATH "Where to look for VapourSynth SDK")
 set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK path" CACHE PATH "Where to look for AviSynthPlus SDK")
 
-if(Use_TBB)
-    set(TBB_INCLUDE_PATH "TBB include path" CACHE PATH "Where to look for TBB include")
-    set(TBB_LIB_PATH "TBB lib path" CACHE PATH "Where to look for TBB lib")
-    add_definitions(-DUSE_TBB)
+if(NOT Disable_Parallel)
+
+    set(Parallel_Library "Auto" CACHE STRING "Auto, PPL, OpenMP, TBB or Built-in")
+
+    if(NOT Parallel_Library MATCHES "^(Auto|PPL|OpenMP|TBB|Built-in)$")
+        message (
+            FATAL_ERROR "Unkonw value of Parallel_Library\n"
+        )
+    endif()
+
+    if(Parallel_Library MATCHES "Auto")
+        if(MSVC)
+            if(NOT (MSVC_VERSION LESS 1600))
+                add_definitions(-DUSE_PPL -DPARALLEL_LIBRARY="PPL")
+                set(Parallel_Library_Type PPL)
+            else()
+                add_definitions(-DUSE_OPENMP -DPARALLEL_LIBRARY="OpenMP")
+                set(Parallel_Library_Type OpenMP)
+            endif()
+        elseif()
+            add_definitions(-DUSE_OPENMP -DPARALLEL_LIBRARY="OpenMP")
+            set(Parallel_Library_Type OpenMP)
+        endif()
+    elseif(Parallel_Library MATCHES "PPL")
+        if(MSVC AND NOT (MSVC_VERSION LESS 1600))
+            add_definitions(-DUSE_PPL -DPARALLEL_LIBRARY="PPL")
+            set(Parallel_Library_Type PPL)
+        else()
+            message (
+                FATAL_ERROR "PPL only available in MSVC10 or newer\n"
+            )
+        endif()
+    elseif(Parallel_Library MATCHES "TBB")
+        add_definitions(-DUSE_TBB -DPARALLEL_LIBRARY="TBB")
+        set(Parallel_Library_Type TBB)
+    elseif(Parallel_Library MATCHES "OpenMP")
+        add_definitions(-DUSE_OPENMP -DPARALLEL_LIBRARY="OpenMP")
+        set(Parallel_Library_Type OpenMP)
+    else()
+        add_definitions(-DPARALLEL_LIBRARY="Built-in")
+        set(Parallel_Library_Type Built-in)
+    endif()
+
+else()
+    add_definitions(-DDISABLE_PARALLEL -DPARALLEL_LIBRARY="None")
+    set(Parallel_Library_Type None)
 endif()
 
 if (OpenCL_Provider MATCHES "Intel")
@@ -150,12 +184,11 @@ message(STATUS
 "   Build GUI ${Build_GUI}\n"
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
 "   Build AviSynthPlus plugin ${Build_AviSynthPlus_Plugin}\n"
-"   Build C Wrapper ${Build_C_Wrapper}\n\n"
-"   Build Static C Wrapper${Build_Static_C_Wrapper}\n"
-"   Build Static Core ${Build_Static_Core}\n"
+"   Build C wrapper ${Build_C_Wrapper}\n\n"
+"   Build static C wrapper${Build_Static_C_Wrapper}\n"
+"   Build static core ${Build_Static_Core}\n"
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
-"   Use TBB ${Use_TBB}\n"
 "   Use Eigen3 ${Use_Eigen3}\n"
 "   Use Legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
 "   Ryzen Optimization ${Ryzen_Optimization}\n"
@@ -167,7 +200,8 @@ message(STATUS
 "   Enable video ${Enable_Video}\n"
 "   Enable Preview GUI ${Enable_Preview_GUI}\n"
 "   Enable image IO ${Enable_Image_IO}\n"
-"   Disable Parallel ${Disable_Parallel}\n"
+"   Disable parallel ${Disable_Parallel}\n"
+"   Parallel library ${Parallel_Library_Type}\n"
 )
 if(WIN32)
     message(STATUS
@@ -209,10 +243,6 @@ if(Use_Eigen3)
         endif()
     endif()
     add_definitions(-DUSE_EIGEN3)
-endif()
-
-if(Disable_Parallel)
-    add_definitions(-DDISABLE_PARALLEL)
 endif()
 
 message(STATUS  

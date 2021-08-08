@@ -1,7 +1,7 @@
 set(Build_Static_Core @Build_Static_Core@)
 set(Enable_NCNN @Enable_NCNN@)
-set(Use_TBB @Use_TBB@)
 set(Disable_Parallel @Disable_Parallel@)
+set(Enable_Video @Enable_Video@)
 
 find_package(OpenCV REQUIRED)
 
@@ -10,11 +10,17 @@ if(Enable_NCNN)
 endif()
 
 if(NOT Disable_Parallel)
-    find_package(Threads REQUIRED)
-endif()
+    set(Parallel_Library_Type @Parallel_Library_Type@)
 
-if(Use_TBB)
-    find_package(TBB REQUIRED)
+    find_package(Threads REQUIRED)
+
+    if(Parallel_Library_Type STREQUAL OpenMP)
+        find_package(OpenMP REQUIRED)
+    elseif(Parallel_Library_Type STREQUAL TBB)
+        find_package(TBB REQUIRED)
+    endif()
+elseif(Enable_Video)
+    find_package(Threads REQUIRED)
 endif()
 
 if(Build_Static_Core)

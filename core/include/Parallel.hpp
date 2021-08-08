@@ -3,7 +3,7 @@
 #include <utility>
 
 #ifndef DISABLE_PARALLEL
-#if defined(_MSC_VER) && !defined(USE_TBB)
+#if defined(USE_PPL)
 #include <ppl.h>
 namespace Parallel = Concurrency;
 #elif defined(USE_TBB)
@@ -26,7 +26,7 @@ template <typename F>
 inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& func)
 {
 #ifndef DISABLE_PARALLEL
-#if defined(_MSC_VER) || defined(USE_TBB)
+#if defined(USE_PPL) || defined(USE_TBB)
     Parallel::parallel_for(first, last, std::forward<F>(func));
 #elif defined(USE_OPENMP)
 #pragma omp parallel for
@@ -34,7 +34,7 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
     {
         func(i);
     }
-#else
+#else // Built-in parallel library
     static const size_t threadNum = std::thread::hardware_concurrency();
     if (threadNum > 1)
     {
@@ -66,7 +66,7 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
         }
     }
 #endif
-#else
+#else // Disable parallel
     for (int i = first; i < last; i++)
     {
         func(i);

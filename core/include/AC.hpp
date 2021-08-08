@@ -12,14 +12,6 @@
 #include"ACException.hpp"
 #include"ACProcessor.hpp"
 
-#if defined(_MSC_VER) && !defined(USE_TBB)
-#define PARALLEL_LIBRARY "PPL"
-#elif defined(USE_TBB)
-#define PARALLEL_LIBRARY "TBB"
-#else
-#define PARALLEL_LIBRARY "OpenMP"
-#endif
-
 namespace Anime4KCPP
 {
     struct AC_EXPORT Parameters;
