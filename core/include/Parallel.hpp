@@ -38,25 +38,20 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
     static const size_t threadNum = std::thread::hardware_concurrency();
     if (threadNum > 1)
     {
+        std::vector<std::future<void>> taskList;
+        taskList.reserve(static_cast<size_t>(last) - static_cast<size_t>(first));
+
         static Anime4KCPP::Utils::ThreadPool pool(threadNum);
-        std::mutex mtx;
-        std::condition_variable cnd;
-        int count = last - first;
 
         for (int i = first; i < last; i++)
         {
-            pool.exec([&mtx, &cnd, &count, &func, i]()
-                {
+            taskList.emplace_back(pool.exec(
+                [&func](int i) {
                     func(i);
-                    std::unique_lock<std::mutex> lock(mtx);
-                    if (--count == 0)
-                        cnd.notify_one();
-                });
+                }, i));
         }
 
-        std::unique_lock<std::mutex> lock(mtx);
-        while (count != 0)
-            cnd.wait(lock);
+        std::for_each(taskList.begin(), taskList.end(), std::mem_fn(&std::future<void>::wait));
     }
     else
     {
