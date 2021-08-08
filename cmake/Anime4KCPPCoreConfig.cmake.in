@@ -12,6 +12,8 @@ endif()
 if(NOT Disable_Parallel)
     set(Parallel_Library_Type @Parallel_Library_Type@)
 
+    set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
     find_package(Threads REQUIRED)
 
     if(Parallel_Library_Type STREQUAL OpenMP)
