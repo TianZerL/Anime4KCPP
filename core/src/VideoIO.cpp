@@ -205,17 +205,26 @@ void Anime4KCPP::Utils::VideoIO::stopProcess() noexcept
 
 void Anime4KCPP::Utils::VideoIO::pauseProcess()
 {
-    pause = true;
+    if (!pause)
     {
-        std::lock_guard<std::mutex> lock(mtxRead);
-        while (pause)
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        pausePromise = std::make_unique<std::promise<void>>();
+        std::thread t([this, f = pausePromise->get_future()]()
+            {
+                std::lock_guard<std::mutex> lock(mtxRead);
+                f.wait();
+            });
+        t.detach();
+        pause = true;
     }
 }
 
-void Anime4KCPP::Utils::VideoIO::continueProcess() noexcept
+void Anime4KCPP::Utils::VideoIO::continueProcess()
 {
-    pause = false;
+    if (pause)
+    {
+        pausePromise->set_value();
+        pause = false;
+    }
 }
 
 bool Anime4KCPP::Utils::VideoIO::isPaused() noexcept
@@ -223,7 +232,7 @@ bool Anime4KCPP::Utils::VideoIO::isPaused() noexcept
     return pause;
 }
 
-inline void Anime4KCPP::Utils::VideoIO::setProgress(double p) noexcept
+void Anime4KCPP::Utils::VideoIO::setProgress(double p) noexcept
 {
     progress = p;
 }

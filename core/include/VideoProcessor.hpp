@@ -24,7 +24,7 @@ public:
     void processWithProgress(const std::function<void(double)>&& callBack);
     void stopVideoProcess() noexcept;
     void pauseVideoProcess();
-    void continueVideoProcess() noexcept;
+    void continueVideoProcess();
 
     std::string getInfo();
 private:

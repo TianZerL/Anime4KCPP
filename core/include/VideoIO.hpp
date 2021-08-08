@@ -45,7 +45,7 @@ public:
     double getProgress() noexcept;
     void stopProcess() noexcept;
     void pauseProcess();
-    void continueProcess() noexcept;
+    void continueProcess();
     bool isPaused() noexcept;
 private:
     void setProgress(double p) noexcept;
@@ -64,7 +64,8 @@ private:
     //callback data
     std::atomic<double> progress;
     std::atomic<size_t> stop;
-    std::atomic<bool> pause{ false };
+    bool pause{ false };
+    std::unique_ptr<std::promise<void>> pausePromise;
 };
 
 #endif
