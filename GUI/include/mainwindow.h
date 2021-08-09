@@ -215,7 +215,7 @@ private:
 
     GPUMode GPUState;
 
-    Anime4KCPP::ACCreator acCreator;
+    Anime4KCPP::ACInitializer initializer;
 
     QHash<QString, Language> languageSelector;
     QHash<QString, Anime4KCPP::CODEC> codecSelector;

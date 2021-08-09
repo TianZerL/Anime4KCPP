@@ -35,12 +35,12 @@ enum class GPGPU
     OpenCL, CUDA
 };
 
-class Anime4KCPPF : public GenericVideoFilter
+class Anime4KCPPFilter : public GenericVideoFilter
 {
 public:
-    Anime4KCPPF(
+    Anime4KCPPFilter(
         PClip _child,
-        Anime4KCPP::Parameters& inputs,
+        const Anime4KCPP::Parameters& parameters,
         bool CNN,
         bool GPUMode,
         GPGPU GPGPUModel,
@@ -53,22 +53,22 @@ public:
     
     PVideoFrame AC_STDCALL GetFrame(int n, IScriptEnvironment* env);
     template <typename T>
-    PVideoFrame FilterYUV(PVideoFrame& src, PVideoFrame& dst);
+    PVideoFrame FilterYUV(int n, IScriptEnvironment* env);
     template <typename T>
-    PVideoFrame FilterGrayscale(PVideoFrame& src, PVideoFrame& dst);
+    PVideoFrame FilterGrayscale(int n, IScriptEnvironment* env);
 
-    PVideoFrame FilterRGB(PVideoFrame& src, PVideoFrame& dst);
+    PVideoFrame FilterRGB(int n, IScriptEnvironment* env);
 private:
     Anime4KCPP::Parameters parameters;
-    Anime4KCPP::ACCreator acCreator;
+    Anime4KCPP::ACInitializer initializer;
     bool GPUMode;
     bool CNN;
     GPGPU GPGPUModel;
 };
 
-Anime4KCPPF::Anime4KCPPF(
+Anime4KCPPFilter::Anime4KCPPFilter(
     PClip _child,
-    Anime4KCPP::Parameters& inputs,
+    const Anime4KCPP::Parameters& parameters,
     bool CNN,
     bool GPUMode,
     GPGPU GPGPUModel,
@@ -79,8 +79,7 @@ Anime4KCPPF::Anime4KCPPF(
     IScriptEnvironment* env
 ) :
     GenericVideoFilter(_child),
-    parameters(inputs),
-    acCreator(),
+    parameters(parameters),
     CNN(CNN),
     GPUMode(GPUMode),
     GPGPUModel(GPGPUModel)
@@ -96,8 +95,8 @@ Anime4KCPPF::Anime4KCPPF(
         env->ThrowError("Anime4KCPP: RGB24 or YUV444 or Grayscale is needed for Anime4K09");
     }
 
-    vi.height = std::round(vi.height * inputs.zoomFactor);
-    vi.width = std::round(vi.width * inputs.zoomFactor);
+    vi.height = std::round(vi.height * parameters.zoomFactor);
+    vi.width = std::round(vi.width * parameters.zoomFactor);
 
     if (GPUMode)
     {
@@ -106,13 +105,13 @@ Anime4KCPPF::Anime4KCPPF(
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                     pID, dID, 
                     Anime4KCPP::CNNType::Default,
                     OpenCLQueueNum,
                     OpenCLParallelIO);
             else
-                acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
                     pID, dID, 
                     OpenCLQueueNum,
                     OpenCLParallelIO);
@@ -124,26 +123,30 @@ Anime4KCPPF::Anime4KCPPF(
 #endif // ENABLE_CUDA
             break;
         }
-        acCreator.init();
+        try
+        {
+            initializer.init();
+        }
+        catch (const std::exception& e)
+        {
+            env->ThrowError(e.what());
+        }
     }
 }
 
 
-PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
+PVideoFrame AC_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env)
 {
-    PVideoFrame src = child->GetFrame(n, env);
-    PVideoFrame dst = env->NewVideoFrameP(vi, &src);
-
     if (vi.IsY())
     {
         switch (vi.BitsPerComponent())
         {
         case 8:
-            return FilterGrayscale<unsigned char>(src, dst);
+            return FilterGrayscale<unsigned char>(n, env);
         case 16:
-            return FilterGrayscale<unsigned short>(src, dst);
+            return FilterGrayscale<unsigned short>(n, env);
         case 32:
-            return FilterGrayscale<float>(src, dst);
+            return FilterGrayscale<float>(n, env);
         }
     }
     if (vi.IsYUV())
@@ -151,19 +154,22 @@ PVideoFrame AC_STDCALL Anime4KCPPF::GetFrame(int n, IScriptEnvironment* env)
         switch (vi.BitsPerComponent())
         {
         case 8:
-            return FilterYUV<unsigned char>(src, dst);
+            return FilterYUV<unsigned char>(n, env);
         case 16:
-            return FilterYUV<unsigned short>(src, dst);
+            return FilterYUV<unsigned short>(n, env);
         case 32:
-            return FilterYUV<float>(src, dst);
+            return  FilterYUV<float>(n, env);
         }
     }
-    return FilterRGB(src, dst);
+    return FilterRGB(n, env);
 }
 
 template<typename T>
-PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
+PVideoFrame Anime4KCPPFilter::FilterYUV(int n, IScriptEnvironment* env)
 {
+    PVideoFrame src = child->GetFrame(n, env);
+    PVideoFrame dst = env->NewVideoFrameP(vi, &src);
+
     size_t srcPitchY = src->GetPitch(PLANAR_Y);
     size_t dstPitchY = dst->GetPitch(PLANAR_Y);
     size_t srcPitchU = src->GetPitch(PLANAR_U);
@@ -186,7 +192,7 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
     unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
 
-    Anime4KCPP::AC* ac = nullptr;
+    std::unique_ptr<Anime4KCPP::AC> ac;
 
     if (GPUMode)
     {
@@ -195,17 +201,17 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -213,26 +219,34 @@ PVideoFrame Anime4KCPPF::FilterYUV(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(
-        srcHY, srcLY, srcPitchY, srcpY, 
-        srcHU, srcLU, srcPitchU, srcpU,
-        srcHV, srcLV, srcPitchV, srcpV);
-    ac->process();
-    ac->saveImage(dstpY, dstPitchY, dstpU, dstPitchU, dstpV, dstPitchV);
-
-    Anime4KCPP::ACCreator::release(ac);
+    try
+    {
+        ac->loadImage(
+            srcHY, srcLY, srcPitchY, srcpY,
+            srcHU, srcLU, srcPitchU, srcpU,
+            srcHV, srcLV, srcPitchV, srcpV);
+        ac->process();
+        ac->saveImage(dstpY, dstPitchY, dstpU, dstPitchU, dstpV, dstPitchV);
+    }
+    catch (const std::exception& e)
+    {
+        env->ThrowError(e.what());
+    }
 
     return dst;
 }
 
 template<typename T>
-PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
+PVideoFrame Anime4KCPPFilter::FilterGrayscale(int n, IScriptEnvironment* env)
 {
+    PVideoFrame src = child->GetFrame(n, env);
+    PVideoFrame dst = env->NewVideoFrameP(vi, &src);
+
     size_t srcPitchY = src->GetPitch(PLANAR_Y);
     size_t dstPitchY = dst->GetPitch(PLANAR_Y);
 
@@ -243,7 +257,7 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
 
     unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
 
-    Anime4KCPP::AC* ac = nullptr;
+    std::unique_ptr<Anime4KCPP::AC> ac;
 
     if (GPUMode)
     {
@@ -252,17 +266,17 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -270,22 +284,30 @@ PVideoFrame Anime4KCPPF::FilterGrayscale(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(srcHY, srcLY, srcPitchY, srcpY, false, false, true);
-    ac->process();
-    ac->saveImage(dstpY, dstPitchY);
-
-    Anime4KCPP::ACCreator::release(ac);
+    try
+    {
+        ac->loadImage(srcHY, srcLY, srcPitchY, srcpY, false, false, true);
+        ac->process();
+        ac->saveImage(dstpY, dstPitchY);
+    }
+    catch (const std::exception& e)
+    {
+        env->ThrowError(e.what());
+    }
 
     return dst;
 }
 
-PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
+PVideoFrame Anime4KCPPFilter::FilterRGB(int n, IScriptEnvironment* env)
 {
+    PVideoFrame src = child->GetFrame(n, env);
+    PVideoFrame dst = env->NewVideoFrameP(vi, &src);
+
     size_t srcPitch = src->GetPitch();
     size_t dstPitch = dst->GetPitch();
 
@@ -295,7 +317,7 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
     unsigned char* srcp = const_cast<unsigned char*>(src->GetReadPtr());
     unsigned char* dstp = dst->GetWritePtr();
 
-    Anime4KCPP::AC* ac = nullptr;
+    std::unique_ptr<Anime4KCPP::AC> ac;
 
     if (GPUMode)
     {
@@ -304,17 +326,17 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_Anime4K09);
 #endif
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
             if (CNN)
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
-                ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
         }
@@ -322,16 +344,21 @@ PVideoFrame Anime4KCPPF::FilterRGB(PVideoFrame& src, PVideoFrame& dst)
     else
     {
         if (CNN)
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);
         else
-            ac = Anime4KCPP::ACCreator::create(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
+            ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_Anime4K09);
     }
 
-    ac->loadImage(srcH, srcL / 3, srcPitch, srcp);
-    ac->process();
-    ac->saveImage(dstp, dstPitch);
-
-    Anime4KCPP::ACCreator::release(ac);
+    try
+    {
+        ac->loadImage(srcH, srcL / 3, srcPitch, srcp);
+        ac->process();
+        ac->saveImage(dstp, dstPitch);
+    }
+    catch (const std::exception& e)
+    {
+        env->ThrowError(e.what());
+    }
 
     return dst;
 }
@@ -343,7 +370,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     if (clip == nullptr)
         env->ThrowError("Anime4KCPP: No input clip found, has clip of 'src' paramenter been specified ?");
 
-    Anime4KCPP::Parameters inputs(
+    Anime4KCPP::Parameters parameters(
         args[AC_passes].AsInt(),
         args[AC_pushColorCount].AsInt(),
         args[AC_strengthColor].AsFloat(),
@@ -363,19 +390,19 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     const char* GPGPUModelTmp = args[AC_GPGPUModel].AsString();
 
     if (!args[AC_passes].Defined())
-        inputs.passes = 2;
+        parameters.passes = 2;
     if (!args[AC_pushColorCount].Defined())
-        inputs.pushColorCount = 2;
+        parameters.pushColorCount = 2;
     if (!args[AC_strengthColor].Defined())
-        inputs.strengthColor = 0.3;
+        parameters.strengthColor = 0.3;
     if (!args[AC_strengthGradient].Defined())
-        inputs.strengthGradient = 1.0;
+        parameters.strengthGradient = 1.0;
     if (!args[AC_zoomFactor].Defined())
-        inputs.zoomFactor = 2.0;
+        parameters.zoomFactor = 2.0;
     if (!args[AC_HDN].Defined())
-        inputs.HDN = false;
+        parameters.HDN = false;
     if (!args[AC_HDNLevel].Defined())
-        inputs.HDNLevel = 1;
+        parameters.HDNLevel = 1;
     if (!args[AC_ACNet].Defined())
         CNN = false;
     if (!args[AC_GPUMode].Defined())
@@ -425,16 +452,16 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     else
         env->ThrowError("Anime4KCPP: GPGPUModel must be \"cuda\" or \"opencl\"");
 
-    if (inputs.strengthColor < 0.0 || inputs.strengthColor > 1.0)
+    if (parameters.strengthColor < 0.0 || parameters.strengthColor > 1.0)
         env->ThrowError("Anime4KCPP: strengthColor must range from 0 to 1!");
 
-    if (inputs.strengthGradient < 0.0 || inputs.strengthGradient > 1.0)
+    if (parameters.strengthGradient < 0.0 || parameters.strengthGradient > 1.0)
         env->ThrowError("Anime4KCPP: strengthGradient must range from 0 to 1!");
 
-    if (inputs.zoomFactor < 1.0)
+    if (parameters.zoomFactor < 1.0)
         env->ThrowError("Anime4KCPP: zoomFactor must >= 1.0!");
 
-    if (inputs.HDNLevel < 1 || inputs.HDNLevel > 3)
+    if (parameters.HDNLevel < 1 || parameters.HDNLevel > 3)
         env->ThrowError("Anime4KCPP: HDNLevel must range from 1 to 3!");
 
     if (OpenCLQueueNum < 1)
@@ -493,9 +520,9 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         }
     }
 
-    return new Anime4KCPPF(
+    return new Anime4KCPPFilter(
         clip,
-        inputs,
+        parameters,
         CNN,
         GPUMode,
         GPGPUModel,

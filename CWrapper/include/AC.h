@@ -77,7 +77,7 @@ extern "C"
         AC_ERROR_NULL_INSTANCE,
         AC_ERROR_NULL_PARAMETERS,
         AC_ERROR_NULL_DATA,
-        AC_ERROR_INIT_GPU,
+        AC_ERROR_INIT_PROCESSOR,
         AC_ERROR_PORCESSOR_TYPE,
         AC_ERROR_LOAD_IMAGE,
         AC_ERROR_LOAD_VIDEO,
@@ -91,7 +91,10 @@ extern "C"
         AC_ERROR_PREVIEW_GUI_DISABLE,
         AC_ERROR_IMAGE_IO_DISABLE,
         AC_ERROR_INSUFFICIENT_BUFFER_SIZE,
-        AC_ERROR_FAILED_TO_ENCODE
+        AC_ERROR_FAILED_TO_ENCODE,
+
+        //deprecated, use AC_ERROR_INIT_PROCESSOR
+        AC_ERROR_INIT_GPU = AC_ERROR_INIT_PROCESSOR,
     } ac_error;
 
     typedef enum ac_codec
@@ -178,9 +181,13 @@ extern "C"
     AC_C_DEPRECATED AC_C_EXPORT ac_bool AC_C_API acCheckGPUSupport(unsigned int pID, unsigned int dID, char* info, size_t* length);
     AC_C_DEPRECATED AC_C_EXPORT ac_bool AC_C_API acIsInitializedGPU(void);
     AC_C_DEPRECATED AC_C_EXPORT ac_bool AC_C_API acIsInitializedGPUCNN(void);
+    AC_C_DEPRECATED AC_C_EXPORT ac_error AC_C_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
+    AC_C_DEPRECATED AC_C_EXPORT void AC_C_API acReleaseGPU2(void);
 
     AC_C_EXPORT ac_version AC_C_API acGetVersion(void);
+
     AC_C_EXPORT ac_error AC_C_API acInitProcessor(ac_manager_t managers, ac_managerData* managerData);
+    AC_C_EXPORT void AC_C_API acReleaseAllProcessors(void);
 
     AC_C_EXPORT ac_instance AC_C_API acGetInstance2(
         ac_manager_t managers, ac_managerData* managerData,
@@ -201,8 +208,6 @@ extern "C"
     AC_C_EXPORT ac_error AC_C_API acSaveImage(ac_instance instance, const char* dstFile);
     AC_C_EXPORT ac_error AC_C_API acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size);
     AC_C_EXPORT ac_error AC_C_API acSetParameters(ac_instance instance, ac_parameters* parameters);
-    AC_C_EXPORT ac_error AC_C_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
-    AC_C_EXPORT void AC_C_API acReleaseGPU2(void);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
     AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarB(ac_instance instance, 
         int rowsY, int colsY, size_t strideY, unsigned char* y,

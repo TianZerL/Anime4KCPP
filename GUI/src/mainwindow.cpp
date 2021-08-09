@@ -1915,13 +1915,13 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             if (supported)
             {
                 if (ACNetMode)
-                    acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                    initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                         currPlatFormID, currDeviceID,
                         Anime4KCPP::CNNType::Default,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
                 else
-                    acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                    initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
                         currPlatFormID, currDeviceID,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
@@ -1941,7 +1941,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
                 info = ret();
                 if (supported)
                 {
-                    acCreator.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
+                    initializer.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
                 }
             }
             break;
@@ -1965,7 +1965,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         {
             try
             {
-                acCreator.init();
+                initializer.init();
             }
             catch (const std::exception& err)
             {
@@ -2104,7 +2104,7 @@ void MainWindow::on_pushButtonReleaseGPU_clicked()
 {
     if (GPUState == GPUMode::INITIALZED)
     {
-        acCreator.deinit(true);
+        initializer.release(true);
         GPUState = GPUMode::UNINITIALZED;
     }
 
@@ -2134,7 +2134,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
 {
     if (GPUState == GPUMode::INITIALZED)
     {
-        acCreator.deinit(true);
+        initializer.release(true);
         GPUState = GPUMode::UNINITIALZED;
         on_checkBoxGPUMode_stateChanged(ui->checkBoxGPUMode->checkState());
     }
@@ -2188,7 +2188,7 @@ void MainWindow::on_pushButtonContinue_clicked()
 
 void MainWindow::on_comboBoxGPGPU_currentIndexChanged(int idx)
 {
-    acCreator.deinit(true);
+    initializer.release(true);
     GPUState = GPUMode::UNINITIALZED;
     ui->spinBoxPlatformID->setEnabled(true);
     ui->spinBoxDeviceID->setEnabled(true);

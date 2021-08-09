@@ -55,7 +55,7 @@ private:
     BOOL IsP016(const CMediaType* pMediaType) const;
     BOOL CheckGPUSupport();
 private:
-    Anime4KCPP::ACCreator acCreator;
+    Anime4KCPP::ACInitializer initializer;
     Anime4KCPP::Parameters parameters;
     unsigned int pID, dID;
     double zf;

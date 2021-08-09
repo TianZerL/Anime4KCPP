@@ -438,7 +438,7 @@ int main(int argc, char* argv[])
     else
         type = Anime4KCPP::CNNType::ACNetHDNL0;
 
-    Anime4KCPP::ACCreator creator;
+    Anime4KCPP::ACInitializer initializer;
     std::unique_ptr<Anime4KCPP::AC> ac;
     Anime4KCPP::Parameters parameters(
         passes,
@@ -475,13 +475,13 @@ int main(int argc, char* argv[])
                 return 0;
 #else
                 if (CNN)
-                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+                    initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                         pID, dID,
                         type,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
                 else
-                    creator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+                    initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
                         pID, dID,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
@@ -492,7 +492,7 @@ int main(int argc, char* argv[])
                 std::cerr << "CUDA is not supported" << std::endl;
                 return 0;
 #else
-                creator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+                initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
                 break;
 #endif
             case GPGPU::NCNN:
@@ -510,20 +510,20 @@ int main(int argc, char* argv[])
                             std::cerr << "ncnn model or param file does not exist." << std::endl;
                             return 0;
                         }
-                        creator.pushManager<Anime4KCPP::NCNN::Manager>(
+                        initializer.pushManager<Anime4KCPP::NCNN::Manager>(
                             (modelPath / (type.toString() + std::string(".bin"))).generic_string(),
                             (modelPath / "ACNet.param").generic_string(),
                             dID, type, ncnnThreads);
                     }
                     else
                     {
-                        creator.pushManager<Anime4KCPP::NCNN::Manager>(dID, type, ncnnThreads);
+                        initializer.pushManager<Anime4KCPP::NCNN::Manager>(dID, type, ncnnThreads);
                     }
                 }
                 break;
 #endif
             }
-            creator.init();
+            initializer.init();
         }
 
         //create instance

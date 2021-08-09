@@ -18,12 +18,12 @@ namespace Anime4KCPP
 template<typename T, int W, int H, typename ...Types>
 inline double Anime4KCPP::benchmark(Types && ...args)
 {
-    Anime4KCPP::ACCreator creator;
+    Anime4KCPP::ACInitializer initializer;
 
-    creator.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
+    initializer.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
     try
     {
-        creator.init();
+        initializer.init();
     }
     catch (const std::exception&)
     {

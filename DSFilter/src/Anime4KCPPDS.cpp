@@ -160,19 +160,19 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     else
         type = Anime4KCPP::CNNType::ACNetHDNL0;
 
-    acCreator.deinit(true);
+    initializer.release(true);
     switch (GPGPUModel)
     {
     case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
         if (CNN)
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
+            initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
                 pID, dID,
                 type,
                 OpenCLQueueNum,
                 OpenCLParallelIO);
         else
-            acCreator.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
+            initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
                 pID, dID,
                 OpenCLQueueNum,
                 OpenCLParallelIO);
@@ -180,11 +180,11 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
         break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-        acCreator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+        initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
 #endif
         break;
     case GPGPU::CPU:
-        acCreator.pushManager<Anime4KCPP::CPU::Manager>();
+        initializer.pushManager<Anime4KCPP::CPU::Manager>();
         break;
     }
 }
@@ -336,7 +336,7 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
 
     try
     {
-        acCreator.init();
+        initializer.init();
     }
     catch (const std::exception& e)
     {

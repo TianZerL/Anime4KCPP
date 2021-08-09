@@ -5,7 +5,7 @@
 
 static std::string lastCoreError("No error");
 
-static std::unique_ptr<Anime4KCPP::ACCreator> acCreator;
+static Anime4KCPP::ACInitializer initializer;
 
 Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
 {
@@ -133,8 +133,7 @@ extern "C"
 
     ac_error acInitProcessor(ac_manager_t managers, ac_managerData* managerData)
     {
-        acCreator = std::make_unique<Anime4KCPP::ACCreator>();
-
+        initializer.release(true);
         if (managers & AC_Manager_OpenCL_Anime4K09)
         {
 #ifndef ENABLE_OPENCL
@@ -144,7 +143,7 @@ extern "C"
             {
                 return AC_ERROR_NULL_DATA;
             }
-            acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
+            initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
                 (managerData->OpenCLAnime4K09Data->pID,
                     managerData->OpenCLAnime4K09Data->dID,
                     managerData->OpenCLAnime4K09Data->OpenCLQueueNum,
@@ -160,7 +159,7 @@ extern "C"
             {
                 return AC_ERROR_NULL_DATA;
             }
-            acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
+            initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
                 (managerData->OpenCLACNetData->pID,
                     managerData->OpenCLACNetData->dID,
                     static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
@@ -179,21 +178,26 @@ extern "C"
                     *error = AC_ERROR_NULL_DATA;
                 return nullptr;
             }
-            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
+            initializer.pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
 #endif // !CUDA_ENABLE
         }
 
         try
         {
-            acCreator->init();
+            initializer.init();
         }
         catch (const std::exception& err)
         {
             lastCoreError = err.what();
-            return AC_ERROR_INIT_GPU;
+            return AC_ERROR_INIT_PROCESSOR;
         }
 
         return AC_OK;
+    }
+
+    void acReleaseAllProcessors(void)
+    {
+        initializer.release(true);
     }
 
     ac_instance acGetInstance2(ac_manager_t managers, ac_managerData* managerData, ac_parameters* parameters, ac_processType type, ac_error* error)
@@ -211,7 +215,7 @@ extern "C"
 
     ac_instance acGetInstance3(ac_parameters* parameters, ac_processType type, ac_error* error)
     {
-        return reinterpret_cast<ac_instance>(acCreator->create(getParameters(parameters), getProcessorType(type, error)));
+        return reinterpret_cast<ac_instance>(Anime4KCPP::ACCreator::create(getParameters(parameters), getProcessorType(type, error)));
     }
 
     void acFreeInstance(ac_instance instance, ac_bool releaseGPU, ac_bool releaseGPUCNN)
@@ -227,16 +231,14 @@ extern "C"
             Anime4KCPP::OpenCL::ACNet::release();
 #endif
 
-        if (acCreator != nullptr)
-            acCreator->deinit(true);
+        initializer.release(true);
     }
 
     void acFreeInstance2(ac_instance instance)
     {
-        acCreator->release(reinterpret_cast<Anime4KCPP::AC*>(instance));
+        initializer.release(reinterpret_cast<Anime4KCPP::AC*>(instance));
 
-        if (acCreator != nullptr)
-            acCreator->deinit(true);
+        initializer.release(true);
     }
 
     ac_error acInitParameters(ac_parameters* parameters)
@@ -440,65 +442,12 @@ extern "C"
 
     ac_error acInitGPU2(unsigned int managers, ac_managerData* managerData)
     {
-        acCreator = std::make_unique<Anime4KCPP::ACCreator>();
-
-        if (managers & AC_Manager_OpenCL_Anime4K09)
-        {
-#ifndef ENABLE_OPENCL
-            return AC_ERROR_OPENCL_NOT_SUPPORTED;
-#else
-            if (managerData == nullptr || managerData->OpenCLAnime4K09Data == nullptr)
-                return AC_ERROR_NULL_DATA;
-            acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>
-                (managerData->OpenCLAnime4K09Data->pID,
-                    managerData->OpenCLAnime4K09Data->dID,
-                    managerData->OpenCLAnime4K09Data->OpenCLQueueNum,
-                    static_cast<bool>(managerData->OpenCLAnime4K09Data->OpenCLParallelIO));
-#endif
-        }
-        if (managers & AC_Manager_OpenCL_ACNet)
-        {
-#ifndef ENABLE_OPENCL
-            return AC_ERROR_OPENCL_NOT_SUPPORTED;
-#else
-            if (managerData == nullptr || managerData->OpenCLACNetData == nullptr)
-                return AC_ERROR_NULL_DATA;
-            acCreator->pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>
-                (managerData->OpenCLACNetData->pID,
-                    managerData->OpenCLACNetData->dID,
-                    static_cast<Anime4KCPP::CNNType::Value>(managerData->OpenCLACNetData->CNNType),
-                    managerData->OpenCLACNetData->OpenCLQueueNum,
-                    static_cast<bool>(managerData->OpenCLACNetData->OpenCLParallelIO));
-#endif
-        }
-        if (managers & AC_Manager_Cuda)
-        {
-#ifndef ENABLE_CUDA
-            return AC_ERROR_CUDA_NOT_SUPPORTED;
-#else
-            if (managerData == nullptr || managerData->CUDAData == nullptr)
-                return AC_ERROR_NULL_DATA;
-            acCreator->pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
-#endif // !CUDA_ENABLE
-        }
-
-        try
-        {
-            acCreator->init();
-        }
-        catch (const std::exception& err)
-        {
-            lastCoreError = err.what();
-            return AC_ERROR_INIT_GPU;
-        }
-
-        return AC_OK;
+        return acInitProcessor(managers, managerData);
     }
 
     void acReleaseGPU2(void)
     {
-        if (acCreator != nullptr)
-            acCreator->deinit(true);
+        acReleaseAllProcessors();
     }
 
     ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
