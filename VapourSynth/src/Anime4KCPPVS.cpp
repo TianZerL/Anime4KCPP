@@ -34,13 +34,13 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
 #ifdef ENABLE_OPENCL
             if (data->CNN)
                 data->initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                    data->pID, data->dID, 
-                    Anime4KCPP::CNNType::Default, 
+                    data->pID, data->dID,
+                    Anime4KCPP::CNNType::Default,
                     data->OpenCLQueueNum,
                     data->OpenCLParallelIO);
             else
                 data->initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
-                    data->pID, data->dID, 
+                    data->pID, data->dID,
                     data->OpenCLQueueNum,
                     data->OpenCLParallelIO);
 #endif // ENABLE_OPENCL
@@ -335,7 +335,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         (data->vi.format->colorFamily != cmYUV && data->vi.format->colorFamily != cmRGB && data->vi.format->colorFamily != cmGray) ||
         (data->vi.format->bitsPerSample != 8 && data->vi.format->bitsPerSample != 16 && data->vi.format->bitsPerSample != 32))
     {
-        vsapi->setError(out, 
+        vsapi->setError(out,
             "Anime4KCPP: supported data type: RGB, YUV and Grayscale, depth with 8 or 16bit integer or 32bit float)");
         vsapi->freeNode(data->node);
         return;
@@ -386,11 +386,11 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (data->vi.format->id != pfGray16 &&
         data->vi.format->id != pfGray8 &&
         data->vi.format->id != pfGrayS &&
-        data->vi.format->id != pfRGB24 && 
+        data->vi.format->id != pfRGB24 &&
         data->vi.format->id != pfRGB48 &&
         data->vi.format->id != pfRGBS &&
-        data->vi.format->id != pfYUV444P8 && 
-        data->vi.format->id != pfYUV444P16 && 
+        data->vi.format->id != pfYUV444P8 &&
+        data->vi.format->id != pfYUV444P16 &&
         data->vi.format->id != pfYUV444PS &&
         data->CNN == false)
     {
@@ -441,9 +441,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 #endif // !ENABLE_OPENCL
         data->GPGPUModel = GPGPU::OpenCL;
     }
-    else if(GPGPUModel == "cuda")
+    else if (GPGPUModel == "cuda")
     {
-        
+
 #ifndef ENABLE_CUDA
         vsapi->setError(out, "Anime4KCPP: CUDA is unsupported");
         vsapi->freeNode(data->node);
@@ -624,7 +624,7 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
 {
     int err;
     std::string GPGPUModel;
-    const char * tmpStr = vsapi->propGetData(in, "GPGPUModel", 0, &err);
+    const char* tmpStr = vsapi->propGetData(in, "GPGPUModel", 0, &err);
     if (err)
         GPGPUModel = "opencl";
     else
@@ -632,7 +632,7 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
     std::transform(GPGPUModel.begin(), GPGPUModel.end(), GPGPUModel.begin(), ::tolower);
 
 #ifdef ENABLE_OPENCL
-    if(GPGPUModel=="opencl")
+    if (GPGPUModel == "opencl")
         vsapi->logMessage(mtDebug, Anime4KCPP::OpenCL::listGPUs()().c_str());
     else
 #endif // ENABLE_OPENCL
@@ -641,7 +641,7 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
             vsapi->logMessage(mtDebug, Anime4KCPP::Cuda::listGPUs()().c_str());
         else
 #endif // ENABLE_CUDA
-        vsapi->logMessage(mtWarning, "unkonwn GPGPUModel module");
+            vsapi->logMessage(mtWarning, "unkonwn GPGPUModel module");
 }
 
 static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)

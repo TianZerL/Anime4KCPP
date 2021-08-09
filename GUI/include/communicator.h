@@ -7,7 +7,7 @@ class Communicator : public QObject
 {
     Q_OBJECT
 public:
-    explicit Communicator(QObject *parent = nullptr);
+    explicit Communicator(QObject* parent = nullptr);
 
 signals:
     void error(int row, QString err);

@@ -50,7 +50,7 @@ public:
         bool OpenCLParallelIO,
         IScriptEnvironment* env
     );
-    
+
     PVideoFrame AC_STDCALL GetFrame(int n, IScriptEnvironment* env);
     template <typename T>
     PVideoFrame FilterYUV(int n, IScriptEnvironment* env);
@@ -106,13 +106,13 @@ Anime4KCPPFilter::Anime4KCPPFilter(
 #ifdef ENABLE_OPENCL
             if (CNN)
                 initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                    pID, dID, 
+                    pID, dID,
                     Anime4KCPP::CNNType::Default,
                     OpenCLQueueNum,
                     OpenCLParallelIO);
             else
                 initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
-                    pID, dID, 
+                    pID, dID,
                     OpenCLQueueNum,
                     OpenCLParallelIO);
 #endif // ENABLE_OPENCL
@@ -158,7 +158,7 @@ PVideoFrame AC_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env
         case 16:
             return FilterYUV<unsigned short>(n, env);
         case 32:
-            return  FilterYUV<float>(n, env);
+            return FilterYUV<float>(n, env);
         }
     }
     return FilterRGB(n, env);
@@ -555,7 +555,7 @@ AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* e
         else
 #endif // ENABLE_CUDA
             env->ThrowError("unkonwn GPGPUModel module");
- 
+
     return AVSValue();
 }
 
@@ -623,9 +623,9 @@ extern "C" AC_EXPORT const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironme
 
     env->AddFunction("listGPUs", "[GPGPUModel]s", listGPUs, nullptr);
 
-    env->AddFunction("benchmark", 
+    env->AddFunction("benchmark",
         "[platformID]i"
-        "[deviceID]i", 
+        "[deviceID]i",
         benchmark, nullptr);
 
     env->AddFunction("Anime4KCPP",

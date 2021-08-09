@@ -34,7 +34,7 @@ static int dID = 0;
 static size_t workGroupSizeBase = 32;
 
 Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters) 
+    AC(parameters)
 {
     if (param.HDN)
     {
@@ -157,7 +157,7 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImageB()
         for (int i = 0; i < scaleTimes; i++)
         {
             dstY.create(tmpY.rows * 2, tmpY.cols * 2, CV_8UC1);
-            if(parallelIO)
+            if (parallelIO)
                 runKernelPB(tmpY, dstY);
             else
                 runKernelB(tmpY, dstY);
@@ -892,7 +892,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             cl::Kernel tmpKernel{ program[HDNL1], "conv8To8" };
             tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
-            break;
+        break;
         case CNNType::ACNetHDNL2:
         {
 #ifndef BUILT_IN_KERNEL
@@ -912,7 +912,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             cl::Kernel tmpKernel{ program[HDNL2], "conv8To8" };
             tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
-            break;
+        break;
         case CNNType::ACNetHDNL3:
         {
 #ifndef BUILT_IN_KERNEL
@@ -932,7 +932,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             cl::Kernel tmpKernel{ program[HDNL3], "conv8To8" };
             tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
-            break;
+        break;
         case CNNType::Default:
         default:
         {
@@ -957,7 +957,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
             cl::Kernel tmpKernel{ program[HDNL0], "conv8To8" };
             tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
         }
-            break;
+        break;
         }
     }
     catch (const cl::Error& e)

@@ -31,7 +31,7 @@ namespace Anime4KCPP
             const size_t srcStep = src.step;
             const size_t step = tmpMat.step;
 
-            Anime4KCPP::Utils::ParallelFor(0, h, 
+            Anime4KCPP::Utils::ParallelFor(0, h,
                 [&](const int i) {
                     T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
                     float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
@@ -41,7 +41,7 @@ namespace Anime4KCPP
         }
 
         template<typename F>
-        void changEachPixelNToN(F && callBack, cv::Mat & tmpMat)
+        void changEachPixelNToN(F&& callBack, cv::Mat& tmpMat)
         {
             const int h = tmpMat.rows, w = tmpMat.cols;
             const int channels = tmpMat.channels();
@@ -51,7 +51,7 @@ namespace Anime4KCPP
             cv::Mat tmp;
             tmp.create(h, w, tmpMat.type());
 
-            Anime4KCPP::Utils::ParallelFor(0, h, 
+            Anime4KCPP::Utils::ParallelFor(0, h,
                 [&](const int i) {
                     float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
                     float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
@@ -73,7 +73,7 @@ namespace Anime4KCPP
             const size_t step = tmpMat.step;
             const size_t dstStep = img.step;
 
-            Anime4KCPP::Utils::ParallelFor(0, h, 
+            Anime4KCPP::Utils::ParallelFor(0, h,
                 [&](const int i) {
                     float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
                     T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
@@ -450,7 +450,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const float* k
         const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
         const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
-        
+
         auto t0 = *tl * k0;
         auto t1 = *tc * k1;
         auto t2 = *tr * k2;
@@ -798,6 +798,6 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const float
         *outMat = static_cast<float>(CLAMP(luma, 0.0f, 1.0f));
 #endif
         }, tmpMat);
-        }
+}
 
 #endif

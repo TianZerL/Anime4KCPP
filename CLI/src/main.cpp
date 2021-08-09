@@ -38,9 +38,9 @@ static bool mergeAudio2Video(const std::string& dstFile, const std::string& srcF
     std::cout << "Merging audio..." << std::endl;
 
     std::string command(
-        "ffmpeg -loglevel 40 -i \"" + 
-        tmpFile + "\" -i \"" + srcFile + 
-        "\" -c copy -map 0:v -map 1 -map -1:v -y \"" + 
+        "ffmpeg -loglevel 40 -i \"" +
+        tmpFile + "\" -i \"" + srcFile +
+        "\" -c copy -map 0:v -map 1 -map -1:v -y \"" +
         dstFile + "\"");
 
     std::cout << command << std::endl;
@@ -51,11 +51,11 @@ static bool mergeAudio2Video(const std::string& dstFile, const std::string& srcF
 static bool video2GIF(const std::string& srcFile, const std::string& dstFile)
 {
     std::string commandGeneratePalette(
-        "ffmpeg -i \"" + srcFile + 
+        "ffmpeg -i \"" + srcFile +
         "\" -vf palettegen -y palette.png");
     std::string command2Gif(
-        "ffmpeg -i \"" + srcFile + 
-        "\" -i palette.png -y -lavfi paletteuse \"" + 
+        "ffmpeg -i \"" + srcFile +
+        "\" -i palette.png -y -lavfi paletteuse \"" +
         dstFile + "\"");
 
     std::cout << commandGeneratePalette << std::endl;

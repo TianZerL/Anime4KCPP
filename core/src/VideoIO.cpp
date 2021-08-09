@@ -209,10 +209,10 @@ void Anime4KCPP::Utils::VideoIO::pauseProcess()
     {
         pausePromise = std::make_unique<std::promise<void>>();
         std::thread t([this, f = pausePromise->get_future()]()
-            {
-                std::lock_guard<std::mutex> lock(mtxRead);
-                f.wait();
-            });
+        {
+            std::lock_guard<std::mutex> lock(mtxRead);
+            f.wait();
+        });
         t.detach();
         pause = true;
     }

@@ -645,7 +645,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
         commandQueueList.resize(commandQueueNum);
         for (int i = 0; i < commandQueueNum; i++)
         {
-            commandQueueList[i] = cl::CommandQueue(context, device);       
+            commandQueueList[i] = cl::CommandQueue(context, device);
         }
         if (parallelIO)
         {
@@ -674,7 +674,7 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
             throw ACException<ExceptionType::GPU, true>("Kernel build error", e.getBuildLog().front().second, e.err());
         }
 
-        cl::Kernel tmpKernel{ program, "pushColor"};
+        cl::Kernel tmpKernel{ program, "pushColor" };
         tmpKernel.getWorkGroupInfo(device, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, &workGroupSizeBase);
     }
     catch (const cl::Error& e)

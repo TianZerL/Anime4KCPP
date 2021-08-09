@@ -149,7 +149,7 @@ private slots:
     void on_actionSimplifiedChinese_triggered();
 
     void on_actionTraditionalChinese_triggered();
-    
+
     void on_actionJapanese_triggered();
 
     void on_actionFrench_triggered();

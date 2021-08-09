@@ -22,10 +22,10 @@ extern "C"
             unsigned int* pID,
             unsigned int* dID,
             double* zoomFactor,
-            int *H,
-            int *W,
-            int *GPGPUModel,
-            int* OpenCLQueueNum, 
+            int* H,
+            int* W,
+            int* GPGPUModel,
+            int* OpenCLQueueNum,
             bool* OpenCLParallelIO
             ) PURE;
 
@@ -39,7 +39,7 @@ extern "C"
             int H,
             int W,
             int GPGPUModel,
-            int OpenCLQueueNum, 
+            int OpenCLQueueNum,
             bool OpenCLParallelIO
             ) PURE;
 

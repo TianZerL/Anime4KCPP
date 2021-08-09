@@ -32,14 +32,14 @@ public:
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
     STDMETHODIMP GetParameters(
-        bool* HDN, int* HDNLevel, bool* CNN, 
-        unsigned int* pID, unsigned int* dID, 
-        double* zoomFactor, int *H, int* W, int* GPGPUModel, 
+        bool* HDN, int* HDNLevel, bool* CNN,
+        unsigned int* pID, unsigned int* dID,
+        double* zoomFactor, int* H, int* W, int* GPGPUModel,
         int* OpenCLQueueNum, bool* OpenCLParallelIO);
     STDMETHODIMP SetParameters(
-        bool HDN, int HDNLevel, bool CNN, 
-        unsigned int pID, unsigned int dID, 
-        double zoomFactor, int H, int W, int GPGPUModel, 
+        bool HDN, int HDNLevel, bool CNN,
+        unsigned int pID, unsigned int dID,
+        double zoomFactor, int H, int W, int GPGPUModel,
         int OpenCLQueueNum, bool OpenCLParallelIO);
     STDMETHODIMP GetGPUInfo(std::string& info);
 

@@ -209,21 +209,21 @@ extern "C"
     AC_C_EXPORT ac_error AC_C_API acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size);
     AC_C_EXPORT ac_error AC_C_API acSetParameters(ac_instance instance, ac_parameters* parameters);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarB(ac_instance instance, 
+    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarB(ac_instance instance,
         int rowsY, int colsY, size_t strideY, unsigned char* y,
         int rowsU, int colsU, size_t strideU, unsigned char* u,
         int rowsV, int colsV, size_t strideV, unsigned char* v);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
     AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, ac_bool inputAsYUV444);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarW(ac_instance instance, 
+    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarW(ac_instance instance,
         int rowsY, int colsY, size_t strideY, unsigned short* y,
         int rowsU, int colsU, size_t strideU, unsigned short* u,
         int rowsV, int colsV, size_t strideV, unsigned short* v);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
     AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, size_t stride, float* r, float* g, float* b, ac_bool inputAsYUV444);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarF(ac_instance instance, 
+    AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarF(ac_instance instance,
         int rowsY, int colsY, size_t strideY, float* y,
         int rowsU, int colsU, size_t strideU, float* u,
         int rowsV, int colsV, size_t strideV, float* v);

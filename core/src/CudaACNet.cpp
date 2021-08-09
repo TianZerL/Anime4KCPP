@@ -31,7 +31,7 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 
 inline void Anime4KCPP::Cuda::ACNet::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
 {
-    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step};
+    ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step };
     if (param.HDN)
     {
         switch (param.HDNLevel)
@@ -65,12 +65,12 @@ inline void Anime4KCPP::Cuda::ACNet::runKernelW(const cv::Mat& orgImg, cv::Mat& 
         {
         case 1:
             cuRunKernelACNetHDN1W(
-                reinterpret_cast<const unsigned short*>(orgImg.data), 
+                reinterpret_cast<const unsigned short*>(orgImg.data),
                 reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
             break;
         case 2:
             cuRunKernelACNetHDN2W(
-                reinterpret_cast<const unsigned short*>(orgImg.data), 
+                reinterpret_cast<const unsigned short*>(orgImg.data),
                 reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
             break;
         case 3:

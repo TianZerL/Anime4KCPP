@@ -121,7 +121,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"CPU", _GPGPUModelString, 10, lpPath);
 #endif
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", L"2.0", _zoomFactor, 10, lpPath);
-    zf =  _wtof(_zoomFactor);
+    zf = _wtof(_zoomFactor);
     zf = parameters.zoomFactor = zf >= 1.0 ? zf : 1.0;
 
     if (!_wcsicmp(_GPGPUModelString, L"OpenCL"))
@@ -296,7 +296,7 @@ HRESULT Anime4KCPPDS::CheckInputType(const CMediaType* mtIn)
     CheckPointer(mtIn, E_POINTER);
 
     // VIDEOINFOHEADER and VIDEOINFOHEADER2 is supported
-    if (!IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2) && 
+    if (!IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2) &&
         !IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo))
         return VFW_E_TYPE_NOT_ACCEPTED;
 
@@ -330,7 +330,7 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
     CheckPointer(mtIn, E_POINTER);
     CheckPointer(mtOut, E_POINTER);
 
-    if (!IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo2) && 
+    if (!IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo2) &&
         !IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo))
         return VFW_E_TYPE_NOT_ACCEPTED;
 
@@ -666,7 +666,7 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
         MessageBoxExA(nullptr, "OpenCL is not supported", "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
         return FALSE;
 #endif
-    break;
+        break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
     {
@@ -681,7 +681,7 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
         MessageBoxExA(nullptr, "CUDA is not supported", "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
         return FALSE;
 #endif 
-    break;
+        break;
     }
 
     return TRUE;
@@ -737,7 +737,7 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(bool HDN, int HDNLevel, bool CNN, unsig
     default:
         _GPGPUModel = L"OpenCL";
     }
-    
+
     //write config
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"pID", _pID, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"dID", _dID, lpPath);

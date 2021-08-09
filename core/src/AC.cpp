@@ -48,7 +48,7 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
         cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
         dstImg = orgImg;
-        inputGrayscale =false;
+        inputGrayscale = false;
         checkAlphaChannel = true;
         break;
     case 3:
@@ -397,7 +397,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     {
         inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
-                cv::Mat(rows, cols, CV_8UC1, b, stride),
+            cv::Mat(rows, cols, CV_8UC1, b, stride),
                 cv::Mat(rows, cols, CV_8UC1, g, stride),
                 cv::Mat(rows, cols, CV_8UC1, r, stride)},
             orgImg);
@@ -429,8 +429,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
         cv::merge(std::vector<cv::Mat>{
             cv::Mat(rows, cols, CV_16UC1, b, stride),
             cv::Mat(rows, cols, CV_16UC1, g, stride),
-            cv::Mat(rows, cols, CV_16UC1, r, stride)},
-            orgImg);
+            cv::Mat(rows, cols, CV_16UC1, r, stride)}, orgImg);
         dstImg = orgImg;
     }
     orgH = rows;
@@ -459,8 +458,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, floa
         cv::merge(std::vector<cv::Mat>{
             cv::Mat(rows, cols, CV_32FC1, b, stride),
             cv::Mat(rows, cols, CV_32FC1, g, stride),
-            cv::Mat(rows, cols, CV_32FC1, r, stride)},
-            orgImg);
+            cv::Mat(rows, cols, CV_32FC1, r, stride)}, orgImg);
         dstImg = orgImg;
     }
     orgH = rows;
@@ -477,7 +475,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, floa
 void Anime4KCPP::AC::loadImage(
     int rowsY, int colsY, size_t strideY, unsigned char* y,
     int rowsU, int colsU, size_t strideU, unsigned char* u,
-    int rowsV, int colsV, size_t strideV, unsigned char* v) 
+    int rowsV, int colsV, size_t strideV, unsigned char* v)
 {
     dstY = orgY = cv::Mat(rowsY, colsY, CV_8UC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_8UC1, u, strideU);
@@ -497,7 +495,7 @@ void Anime4KCPP::AC::loadImage(
 void Anime4KCPP::AC::loadImage(
     int rowsY, int colsY, size_t strideY, unsigned short* y,
     int rowsU, int colsU, size_t strideU, unsigned short* u,
-    int rowsV, int colsV, size_t strideV, unsigned short* v) 
+    int rowsV, int colsV, size_t strideV, unsigned short* v)
 {
     dstY = orgY = cv::Mat(rowsY, colsY, CV_16UC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u, strideU);
@@ -517,7 +515,7 @@ void Anime4KCPP::AC::loadImage(
 void Anime4KCPP::AC::loadImage(
     int rowsY, int colsY, size_t strideY, float* y,
     int rowsU, int colsU, size_t strideU, float* u,
-    int rowsV, int colsV, size_t strideV, float* v) 
+    int rowsV, int colsV, size_t strideV, float* v)
 {
     dstY = orgY = cv::Mat(rowsY, colsY, CV_32FC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_32FC1, u, strideU);
@@ -631,7 +629,7 @@ void Anime4KCPP::AC::saveImage(const std::string suffix, std::vector<unsigned ch
         tmpImg = tmp;
     }
 
-    if(!cv::imencode(suffix, tmpImg, buf))
+    if (!cv::imencode(suffix, tmpImg, buf))
         throw ACException<ExceptionType::RunTimeError>("Failed to encode image data");
 }
 
@@ -803,7 +801,7 @@ void Anime4KCPP::AC::saveImageBufferSize(size_t& dataSize, size_t dstStride)
     }
     else if (inputRGB32)
         stride += stride / 3;
- 
+
     size_t step = dstStride > stride ? dstStride : stride;
     dataSize = step * H;
 }
@@ -858,7 +856,7 @@ std::string Anime4KCPP::AC::getInfo()
     }
     oss << "Processor info: " << std::endl
         << " " << getProcessorInfo() << std::endl;
-    
+
     return oss.str();
 }
 
@@ -973,6 +971,6 @@ Anime4KCPP::Parameters::Parameters(
 ) noexcept :
     passes(passes), pushColorCount(pushColorCount),
     strengthColor(strengthColor), strengthGradient(strengthGradient),
-    zoomFactor(zoomFactor), fastMode(fastMode), preprocessing(preprocessing), 
-    postprocessing(postprocessing),preFilters(preFilters), postFilters(postFilters),
-    maxThreads(maxThreads),HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}
+    zoomFactor(zoomFactor), fastMode(fastMode), preprocessing(preprocessing),
+    postprocessing(postprocessing), preFilters(preFilters), postFilters(postFilters),
+    maxThreads(maxThreads), HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}

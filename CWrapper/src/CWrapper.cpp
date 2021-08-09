@@ -206,7 +206,7 @@ extern "C"
 
         if (error != nullptr)
             *error = err;
-        
+
         if (err != AC_OK)
             return nullptr;
 

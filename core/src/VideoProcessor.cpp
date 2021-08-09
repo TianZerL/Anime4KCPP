@@ -72,11 +72,11 @@ void Anime4KCPP::VideoProcessor::processWithPrintProgress()
                 std::cout << std::endl;
             else
                 std::cout
-                    << std::fixed << std::setprecision(2)
-                    << std::setw(7) << progress * 100 << '%'
-                    << "    elpsed: " << std::setw(10) << currTime << 's'
-                    << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
-                    << '\r';
+                << std::fixed << std::setprecision(2)
+                << std::setw(7) << progress * 100 << '%'
+                << "    elpsed: " << std::setw(10) << currTime << 's'
+                << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
+                << '\r';
         });
 }
 

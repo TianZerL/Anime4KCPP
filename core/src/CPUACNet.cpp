@@ -1,7 +1,7 @@
 #include"CPUACNet.hpp"
 
 Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters) 
+    AC(parameters)
 {
     if (param.HDN)
         switch (param.HDNLevel)
@@ -117,7 +117,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processB(tmpImg, dstImg , scaleTimes);
+        processor->processB(tmpImg, dstImg, scaleTimes);
 
         if (param.isNonIntegerScale())
         {
@@ -135,7 +135,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        
+
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
@@ -235,7 +235,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImageW()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        
+
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
@@ -282,7 +282,7 @@ void Anime4KCPP::CPU::ACNet::processYUVImageF()
         if (!scaleTimes)
             scaleTimes++;
 
-        processor->processF(orgY, dstY , scaleTimes);
+        processor->processF(orgY, dstY, scaleTimes);
 
         if (param.isNonIntegerScale())
         {
@@ -335,7 +335,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImageF()
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
             cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-        
+
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 

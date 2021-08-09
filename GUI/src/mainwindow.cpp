@@ -104,10 +104,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
-    if (!ui->actionQuit_confirmation->isChecked() || 
+    if (!ui->actionQuit_confirmation->isChecked() ||
         QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
-        tr("Do you really want to exit?"),
-        QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
+            tr("Do you really want to exit?"),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
     {
         writeConfig(config);
         event->accept();
@@ -642,7 +642,7 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
     bool GPUMode = ui->checkBoxGPUMode->isChecked();
     bool ACNetMode = ui->checkBoxACNet->isChecked();
 
-    if(GPUMode)
+    if (GPUMode)
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
@@ -687,7 +687,7 @@ FileType MainWindow::fileType(const QFileInfo& file)
     auto imageSuffixes = imageSuffix.split(":", Qt::SkipEmptyParts);
     auto videoSuffixes = videoSuffix.split(":", Qt::SkipEmptyParts);
 #endif
-    
+
     if (imageSuffixes.contains(file.suffix(), Qt::CaseInsensitive))
         return FileType::IMAGE;
     if (videoSuffixes.contains(file.suffix(), Qt::CaseInsensitive))
@@ -788,7 +788,7 @@ bool MainWindow::video2GIF(const QString& srcFile, const QString& dstFile)
 
     ret &= p2.waitForFinished(-1);
     ret &= (p2.exitStatus() == QProcess::ExitStatus::NormalExit);
-    
+
     QFile::remove(dstFile + "_palette.png");
 
     if (ret)
@@ -1322,7 +1322,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
 
                     totalCount--;
-                
+
                     emit cm.done(image.second, 1.0 - (totalCount / total),
                         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
                 });
@@ -1338,8 +1338,8 @@ void MainWindow::on_pushButtonStart_clicked()
                 {
                     videoProcessor.loadVideo(video.first.first.toUtf8().toStdString());
                     videoProcessor.setVideoSaveInfo(
-                        video.first.second.toUtf8().toStdString() + 
-                        std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()), 
+                        video.first.second.toUtf8().toStdString() +
+                        std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()),
                         ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
@@ -1407,9 +1407,9 @@ void MainWindow::on_pushButtonStart_clicked()
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             }
         }
-        
+
         std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
-        
+
         emit cm.allDone(
             std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll)
             .count());
@@ -1514,7 +1514,7 @@ void MainWindow::on_actionSet_FFmpeg_path_triggered()
     ).simplified();
 
     if (ok)
-    {       
+    {
         if (!tmpFFmpegPath.contains("ffmpeg", Qt::CaseInsensitive) || !checkFFmpegPath(tmpFFmpegPath))
             errorHandler("The path is not correct or failed to check ffmpeg");
         else
@@ -1905,7 +1905,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         switch (GPGPUModel)
         {
         case GPGPU::OpenCL:
-            {
+        {
 #ifdef ENABLE_OPENCL
             int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
             bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
@@ -1931,20 +1931,20 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
             return;
 #endif
-            }
-            break;
+        }
+        break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
+        {
+            Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
+            supported = ret;
+            info = ret();
+            if (supported)
             {
-                Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
-                supported = ret;
-                info = ret();
-                if (supported)
-                {
-                    initializer.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
-                }
+                initializer.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
             }
-            break;
+        }
+        break;
 #else
             errorHandler(ErrorType::CUDA_NOT_SUPPORT);
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);

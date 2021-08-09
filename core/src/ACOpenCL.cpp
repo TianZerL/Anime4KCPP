@@ -40,7 +40,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
             if (devicesNumber == 0)
             {
                 msg << " No supported GPU in this platform" << std::endl;
-            }  
+            }
 
             devicesVector.emplace_back(devicesNumber);
             for (size_t j = 0; j < devicesNumber; j++)
