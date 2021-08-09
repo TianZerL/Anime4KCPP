@@ -46,15 +46,12 @@ void Anime4KCPP::VideoProcessor::process()
         [this]()
         {
             Utils::Frame frame = videoIO.read();
-            cv::Mat orgFrame = frame.first;
-            cv::Mat dstFrame;
-
-            auto ac = ACCreator::createUP(param, type);
-            ac->loadImage(orgFrame);
-            ac->process();
-            ac->saveImage(dstFrame);
-
-            frame.first = dstFrame;
+            { // Reduce memory usage
+                auto ac = ACCreator::createUP(param, type);
+                ac->loadImage(frame.first);
+                ac->process();
+                ac->saveImage(frame.first);
+            }
             videoIO.write(frame);
         }, param.maxThreads
     ).process();
@@ -68,15 +65,15 @@ void Anime4KCPP::VideoProcessor::processWithPrintProgress()
             auto e = std::chrono::steady_clock::now();
             double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
 
-            if (progress == 1.0)
-                std::cout << std::endl;
-            else
-                std::cout
+            std::cout
                 << std::fixed << std::setprecision(2)
                 << std::setw(7) << progress * 100 << '%'
                 << "    elpsed: " << std::setw(10) << currTime << 's'
                 << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
                 << '\r';
+
+            if (progress == 1.0)
+                std::cout << std::endl;
         });
 }
 
