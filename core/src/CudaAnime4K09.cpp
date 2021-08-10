@@ -4,6 +4,39 @@
 #include"FilterProcessor.hpp"
 #include"CudaAnime4K09.hpp"
 
+namespace Anime4KCPP::Cuda::detail
+{
+    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, const Parameters& param)
+    {
+        ACCudaParamAnime4K09 cuParam{
+        orgImg.cols, orgImg.rows,
+        dstImg.cols, dstImg.rows,
+        orgImg.step,
+        param.passes, param.pushColorCount,
+        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
+        };
+
+        ACCudaDataType dataType;
+
+        switch (orgImg.depth())
+        {
+        case CV_8U:
+            dataType = ACCudaDataType::AC_8U;
+            break;
+        case CV_16U:
+            dataType = ACCudaDataType::AC_16U;
+            break;
+        case CV_32F:
+            dataType = ACCudaDataType::AC_32F;
+            break;
+        default:
+            throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
+        }
+
+        cuRunKernelAnime4K09(orgImg.data, dstImg.data, dataType, &cuParam);
+    }
+}
+
 Anime4KCPP::Cuda::Anime4K09::Anime4K09(const Parameters& parameters) :
     AC(parameters) {}
 
@@ -61,52 +94,17 @@ std::string Anime4KCPP::Cuda::Anime4K09::getFiltersInfo()
     return oss.str();
 }
 
-inline void Anime4KCPP::Cuda::Anime4K09::runKernelB(const cv::Mat& orgImg, cv::Mat& dstImg)
+void Anime4KCPP::Cuda::Anime4K09::processYUVImage()
 {
-    ACCudaParamAnime4K09 cuParam{
-        orgImg.cols, orgImg.rows,
-        dstImg.cols, dstImg.rows,
-        orgImg.step,
-        param.passes, param.pushColorCount,
-        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
-    };
-    cuRunKernelAnime4K09B(orgImg.data, dstImg.data, &cuParam);
-}
+    cv::Mat tmpImg;
+    cv::merge(std::vector<cv::Mat>{ orgImg, orgU, orgV }, tmpImg);
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
 
-inline void Anime4KCPP::Cuda::Anime4K09::runKernelW(const cv::Mat& orgImg, cv::Mat& dstImg)
-{
-    ACCudaParamAnime4K09 cuParam{
-        orgImg.cols, orgImg.rows,
-        dstImg.cols, dstImg.rows,
-        orgImg.step,
-        param.passes, param.pushColorCount,
-        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
-    };
-    cuRunKernelAnime4K09W(reinterpret_cast<const unsigned short*>(orgImg.data), reinterpret_cast<unsigned short*>(dstImg.data), &cuParam);
-}
-
-inline void Anime4KCPP::Cuda::Anime4K09::runKernelF(const cv::Mat& orgImg, cv::Mat& dstImg)
-{
-    ACCudaParamAnime4K09 cuParam{
-        orgImg.cols, orgImg.rows,
-        dstImg.cols, dstImg.rows,
-        orgImg.step,
-        param.passes, param.pushColorCount,
-        static_cast<float>(param.strengthColor),static_cast<float>(param.strengthGradient)
-    };
-    cuRunKernelAnime4K09F(reinterpret_cast<const float*>(orgImg.data), reinterpret_cast<float*>(dstImg.data), &cuParam);
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processYUVImageB()
-{
-    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
-
-    dstImg.create(H, W, CV_8UC4);
+    dstImg.create(height, width, CV_MAKE_TYPE(tmpImg.depth(), 4));
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelB(orgImg, dstImg);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
+    detail::runKernel(tmpImg, dstImg, param);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
@@ -114,135 +112,34 @@ void Anime4KCPP::Cuda::Anime4K09::processYUVImageB()
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
     std::vector<cv::Mat> yuv(3);
     cv::split(dstImg, yuv);
-    dstY = yuv[Y];
+    dstImg = yuv[Y];
     dstU = yuv[U];
     dstV = yuv[V];
 }
 
-void Anime4KCPP::Cuda::Anime4K09::processRGBImageB()
+void Anime4KCPP::Cuda::Anime4K09::processRGBImage()
 {
-    dstImg.create(H, W, CV_8UC4);
+    cv::Mat tmpImg = orgImg;
+    dstImg.create(height, width, CV_MAKE_TYPE(tmpImg.depth(), 4));
     if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelB(orgImg, dstImg);
+        FilterProcessor(tmpImg, param.preFilters).process();
+    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
+    detail::runKernel(tmpImg, dstImg, param);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();
 }
 
-void Anime4KCPP::Cuda::Anime4K09::processGrayscaleB()
+void Anime4KCPP::Cuda::Anime4K09::processGrayscale()
 {
     cv::Mat tmpImg;
     cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
 
-    dstImg.create(H, W, CV_8UC4);
+    dstImg.create(height, width, CV_MAKE_TYPE(tmpImg.depth(), 4));
     if (param.preprocessing)//Pretprocessing(CPU)
         FilterProcessor(tmpImg, param.preFilters).process();
     cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
-    runKernelB(tmpImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processYUVImageW()
-{
-    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
-
-    dstImg.create(H, W, CV_16UC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelW(orgImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-    std::vector<cv::Mat> yuv(3);
-    cv::split(dstImg, yuv);
-    dstY = yuv[Y];
-    dstU = yuv[U];
-    dstV = yuv[V];
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processRGBImageW()
-{
-    dstImg.create(H, W, CV_16UC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelW(orgImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processGrayscaleW()
-{
-    cv::Mat tmpImg;
-    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
-
-    dstImg.create(H, W, CV_16UC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(tmpImg, param.preFilters).process();
-    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
-    runKernelW(tmpImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processYUVImageF()
-{
-    cv::merge(std::vector<cv::Mat>{ orgY, orgU, orgV }, orgImg);
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_YUV2BGR);
-
-    dstImg.create(H, W, CV_32FC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-    std::vector<cv::Mat> yuv(3);
-    cv::split(dstImg, yuv);
-    dstY = yuv[Y];
-    dstU = yuv[U];
-    dstV = yuv[V];
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processRGBImageF()
-{
-    dstImg.create(H, W, CV_32FC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(orgImg, param.preFilters).process();
-    cv::cvtColor(orgImg, orgImg, cv::COLOR_BGR2BGRA);
-    runKernelF(orgImg, dstImg);
-    cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
-    if (param.postprocessing)//Postprocessing(CPU)
-        FilterProcessor(dstImg, param.postFilters).process();
-}
-
-void Anime4KCPP::Cuda::Anime4K09::processGrayscaleF()
-{
-    cv::Mat tmpImg;
-    cv::cvtColor(orgImg, tmpImg, cv::COLOR_GRAY2BGR);
-
-    dstImg.create(H, W, CV_32FC4);
-    if (param.preprocessing)//Pretprocessing(CPU)
-        FilterProcessor(tmpImg, param.preFilters).process();
-    cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2BGRA);
-    runKernelF(tmpImg, dstImg);
+    detail::runKernel(tmpImg, dstImg, param);
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGRA2BGR);
     if (param.postprocessing)//Postprocessing(CPU)
         FilterProcessor(dstImg, param.postFilters).process();

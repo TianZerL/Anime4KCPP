@@ -18,41 +18,41 @@ namespace Anime4KCPP
         TYPE_ITEM(GPU)
     }
 
-    template<typename errType, bool addtlInfo = false>
+    template<typename exceptionType, bool addtlInfo = false>
     class ACException;
 }
 
-template<typename errType>
-class Anime4KCPP::ACException<errType, true> :public std::runtime_error
+template<typename exceptionType>
+class Anime4KCPP::ACException<exceptionType, true> :public std::runtime_error
 {
 public:
     ACException(const std::string& errMsg, int addltErrCode);
     ACException(const std::string& errMsg, const std::string& addtlInfo, int addltErrCode);
 };
 
-template<typename errType>
-class Anime4KCPP::ACException<errType, false> :public std::runtime_error
+template<typename exceptionType>
+class Anime4KCPP::ACException<exceptionType, false> :public std::runtime_error
 {
 public:
     ACException(const std::string& errMsg);
 };
 
-template<typename errType>
-Anime4KCPP::ACException<errType, false>::ACException(const std::string& errMsg) :
+template<typename exceptionType>
+Anime4KCPP::ACException<exceptionType, false>::ACException(const std::string& errMsg) :
     std::runtime_error(
         std::string(
             "An error occurred. \n\n"
-            "Error type: ") + errType::string + "\n\n"
+            "Error type: ") + exceptionType::string + "\n\n"
         "Error message :\n" +
         errMsg + "\n"
     ) {}
 
-template<typename errType>
-Anime4KCPP::ACException<errType, true>::ACException(const std::string& errMsg, const int addltErrCode) :
+template<typename exceptionType>
+Anime4KCPP::ACException<exceptionType, true>::ACException(const std::string& errMsg, const int addltErrCode) :
     std::runtime_error(
         std::string(
             "An error occurred. \n\n"
-            "Error type: ") + errType::string + "\n\n"
+            "Error type: ") + exceptionType::string + "\n\n"
         "Error message :\n" +
         errMsg + "\n\n"
         "Additional error code :\n" 
@@ -61,12 +61,12 @@ Anime4KCPP::ACException<errType, true>::ACException(const std::string& errMsg, c
         "No additional information\n"
     ) {}
 
-template<typename errType>
-Anime4KCPP::ACException<errType, true>::ACException(const std::string& errMsg, const std::string& addtlInfo, const int addltErrCode) :
+template<typename exceptionType>
+Anime4KCPP::ACException<exceptionType, true>::ACException(const std::string& errMsg, const std::string& addtlInfo, const int addltErrCode) :
     std::runtime_error(
         std::string(
             "An error occurred. \n\n"
-            "Error type: ") + errType::string + "\n\n"
+            "Error type: ") + exceptionType::string + "\n\n"
         "Error message :\n" +
         errMsg + "\n\n"
         "Additional error code :\n"

@@ -1,44 +1,37 @@
 #pragma once
 
-#ifdef ENABLE_CUDA
+#ifndef ENABLE_CUDA
 
 #include<string>
 
 namespace Anime4KCPP::Cuda
 {
-    typedef struct
+    enum class ACCudaDataType
+    {
+        AC_8U, AC_16U, AC_32F
+    };
+
+    struct ACCudaParamAnime4K09
     {
         int orgW, orgH;
         int W, H;
         size_t stride;
         int passes, pushColorCount;
         float strengthColor, strengthGradient;
-    }ACCudaParamAnime4K09;
+    };
 
-    typedef struct
+    struct ACCudaParamACNet
     {
         int orgW, orgH;
         size_t stride;
-    }ACCudaParamACNet;
+    };
 
-    void cuRunKernelAnime4K09B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamAnime4K09* param);
-    void cuRunKernelAnime4K09W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamAnime4K09* param);
-    void cuRunKernelAnime4K09F(const float* inputData, float* outputData, ACCudaParamAnime4K09* param);
+    void cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param);
 
-    void cuRunKernelACNetHDN0B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN1B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN2B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN3B(const unsigned char* inputData, unsigned char* outputData, ACCudaParamACNet* param);
-        
-    void cuRunKernelACNetHDN0W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN1W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN2W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN3W(const unsigned short* inputData, unsigned short* outputData, ACCudaParamACNet* param);
-
-    void cuRunKernelACNetHDN0F(const float* inputData, float* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN1F(const float* inputData, float* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN2F(const float* inputData, float* outputData, ACCudaParamACNet* param);
-    void cuRunKernelACNetHDN3F(const float* inputData, float* outputData, ACCudaParamACNet* param);
+    void cuRunKernelACNetHDN0(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
+    void cuRunKernelACNetHDN1(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
+    void cuRunKernelACNetHDN2(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
+    void cuRunKernelACNetHDN3(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
 
     void cuSetDeviceID(const int id);
     int cuGetDeviceID() noexcept;

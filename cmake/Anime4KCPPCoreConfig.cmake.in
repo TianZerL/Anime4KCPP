@@ -1,13 +1,8 @@
 set(Build_Static_Core @Build_Static_Core@)
-set(Enable_NCNN @Enable_NCNN@)
 set(Disable_Parallel @Disable_Parallel@)
 set(Enable_Video @Enable_Video@)
 
 find_package(OpenCV REQUIRED)
-
-if(Enable_NCNN)
-    find_package(ncnn REQUIRED)
-endif()
 
 if(NOT Disable_Parallel)
     set(Parallel_Library_Type @Parallel_Library_Type@)

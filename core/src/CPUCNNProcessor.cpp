@@ -1,5 +1,7 @@
 #ifndef ENABLE_OPENCV_DNN
 
+#include <limits>
+
 #ifdef USE_RYZEN
 #include<immintrin.h>
 #elif defined(USE_EIGEN3)
@@ -10,502 +12,300 @@
 #include"Parallel.hpp"
 #include"CPUCNNProcessor.hpp"
 
-#define NORMB(X) (static_cast<float>(X) / static_cast<float>(255.0))
-#define NORMW(X) (static_cast<float>(X) / static_cast<float>(65535.0))
-#define UNNORMB(n) ((n) >= static_cast<float>(1.0)? static_cast<uint8_t>(255) : ((n) <= static_cast<float>(0.0) ? static_cast<uint8_t>(0) : static_cast<uint8_t>(n * static_cast<float>(255.0) + static_cast<float>(0.5))))
-#define UNNORMW(n) ((n) >= static_cast<float>(1.0)? static_cast<uint16_t>(65535) : ((n) <= static_cast<float>(0.0) ? static_cast<uint16_t>(0) : static_cast<uint16_t>(n * static_cast<float>(65535.0) + static_cast<float>(0.5))))
-#define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
-
-namespace Anime4KCPP
+namespace Anime4KCPP::CPU::detail
 {
-    namespace detail
+    template<typename T, typename F>
+    void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
     {
-        template<typename T, typename F>
-        void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
-        {
-            const int h = src.rows, w = src.cols;
-            const int jMAX = w * outChannels;
+        const int h = src.rows, w = src.cols;
+        const int jMAX = w * outChannels;
 
-            tmpMat.create(h, w, CV_32FC(outChannels));
+        tmpMat.create(h, w, CV_32FC(outChannels));
 
-            const size_t srcStep = src.step;
-            const size_t step = tmpMat.step;
+        const size_t srcStep = src.step;
+        const size_t step = tmpMat.step;
 
-            Anime4KCPP::Utils::ParallelFor(0, h,
-                [&](const int i) {
-                    T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
-                    float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                    for (int j = 0; j < jMAX; j += outChannels)
-                        callBack(i, j, tmpLineData + j, lineData);
-                });
-        }
+        Anime4KCPP::Utils::ParallelFor(0, h,
+            [&](const int i) {
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
+                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
+                for (int j = 0; j < jMAX; j += outChannels)
+                    callBack(i, j, tmpLineData + j, lineData);
+            });
+    }
 
-        template<typename F>
-        void changEachPixelNToN(F&& callBack, cv::Mat& tmpMat)
-        {
-            const int h = tmpMat.rows, w = tmpMat.cols;
-            const int channels = tmpMat.channels();
-            const int jMAX = w * channels;
-            const size_t step = tmpMat.step;
+    template<typename F>
+    void changEachPixelNToN(F&& callBack, cv::Mat& tmpMat)
+    {
+        const int h = tmpMat.rows, w = tmpMat.cols;
+        const int channels = tmpMat.channels();
+        const int jMAX = w * channels;
+        const size_t step = tmpMat.step;
 
-            cv::Mat tmp;
-            tmp.create(h, w, tmpMat.type());
+        cv::Mat tmp;
+        tmp.create(h, w, tmpMat.type());
 
-            Anime4KCPP::Utils::ParallelFor(0, h,
-                [&](const int i) {
-                    float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                    float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
-                    for (int j = 0; j < jMAX; j += channels)
-                        callBack(i, j, tmpLineData + j, lineData);
-                });
+        Anime4KCPP::Utils::ParallelFor(0, h,
+            [&](const int i) {
+                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
+                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
+                for (int j = 0; j < jMAX; j += channels)
+                    callBack(i, j, tmpLineData + j, lineData);
+            });
 
-            tmpMat = tmp;
-        }
+        tmpMat = tmp;
+    }
 
-        template<typename T, typename F>
-        void changEachPixelNTo1(cv::Mat& img, F&& callBack, const cv::Mat& tmpMat)
-        {
-            const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
-            img.create(h, w, cv::DataType<T>::type);
+    template<typename T, typename F>
+    void changEachPixelNTo1(cv::Mat& img, F&& callBack, const cv::Mat& tmpMat)
+    {
+        const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
+        img.create(h, w, cv::DataType<T>::type);
 
-            const int jMAX = w;
-            const size_t channels = tmpMat.channels();
-            const size_t step = tmpMat.step;
-            const size_t dstStep = img.step;
+        const int jMAX = w;
+        const size_t channels = tmpMat.channels();
+        const size_t step = tmpMat.step;
+        const size_t dstStep = img.step;
 
-            Anime4KCPP::Utils::ParallelFor(0, h,
-                [&](const int i) {
-                    float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-                    T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
-                    for (int j = 0; j < jMAX; j++)
-                        callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
-                });
-        }
+        Anime4KCPP::Utils::ParallelFor(0, h,
+            [&](const int i) {
+                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
+                T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
+                for (int j = 0; j < jMAX; j++)
+                    callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
+            });
+    }
+
+    template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+    constexpr float norm(T v)
+    {
+        return static_cast<float>(v) / std::numeric_limits<T>::max();
+    }
+
+    template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
+    constexpr float norm(T v)
+    {
+        return static_cast<float>(v);
+    }
+
+    template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+    constexpr T unnorm(float v)
+    {
+        return v >= 1.0f ?
+            std::numeric_limits<T>::max() :
+            (v <= 0.0f ?
+                std::numeric_limits<T>::min() :
+                static_cast<T>(std::roundf(v * std::numeric_limits<T>::max())));
+    }
+
+    template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
+    constexpr T unnorm(float v)
+    {
+        return v < 0.0f ? 0.0f : (1.0f < v ? 1.0f : v);
+    }
+
+    template<typename T>
+    void conv1To8Impl(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
+    {
+        const int channels = 8;
+        const int srcChannels = img.channels();
+        const size_t lineStep = img.step1();
+        detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, ChanFP outMat, T* curLine) {
+            const int orgJ = j / channels * srcChannels;
+            const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
+            const int jn = orgJ > srcChannels ? -srcChannels : 0;
+
+            T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            T* const cLineData = curLine;
+            T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+
+            T* tl = nLineData + orgJ + jn, * tc = nLineData + orgJ, * tr = nLineData + orgJ + jp;
+            T* ml = cLineData + orgJ + jn, * mc = cLineData + orgJ, * mr = cLineData + orgJ + jp;
+            T* bl = pLineData + orgJ + jn, * bc = pLineData + orgJ, * br = pLineData + orgJ + jp;
+
+            const float tln = norm<T>(tl[Y]);
+            const float tcn = norm<T>(tc[Y]);
+            const float trn = norm<T>(tr[Y]);
+            const float mln = norm<T>(ml[Y]);
+            const float mcn = norm<T>(mc[Y]);
+            const float mrn = norm<T>(mr[Y]);
+            const float bln = norm<T>(bl[Y]);
+            const float bcn = norm<T>(bc[Y]);
+            const float brn = norm<T>(br[Y]);
+
+#ifdef USE_RYZEN
+            const float* kptr = kernels;
+            const float* bptr = biases;
+
+            _mm256_zeroall();
+
+            __m256 _out0 = _mm256_loadu_ps(bptr);
+            __m256 _out1 = _mm256_setzero_ps();
+            __m256 _out2 = _mm256_setzero_ps();
+
+            const __m256 _r0 = _mm256_set1_ps(tln);
+            const __m256 _r1 = _mm256_set1_ps(tcn);
+            const __m256 _r2 = _mm256_set1_ps(trn);
+            const __m256 _r3 = _mm256_set1_ps(mln);
+            const __m256 _r4 = _mm256_set1_ps(mcn);
+            const __m256 _r5 = _mm256_set1_ps(mrn);
+            const __m256 _r6 = _mm256_set1_ps(bln);
+            const __m256 _r7 = _mm256_set1_ps(bcn);
+            const __m256 _r8 = _mm256_set1_ps(brn);
+
+            const __m256 _k0 = _mm256_loadu_ps(kptr);
+            const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
+            const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
+            const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
+            const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
+            const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
+            const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
+            const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
+            const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+
+            _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
+            _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
+            _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
+            _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
+            _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
+            _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
+            _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
+            _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
+            _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
+
+            _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
+
+            _mm256_storeu_ps(outMat, _out0);
+
+#elif defined(USE_EIGEN3)
+            float* kptr = const_cast<float*>(kernels);
+            float* bptr = const_cast<float*>(biases);
+
+            Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
+
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
+            const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
+
+            auto t0 = tln * k0;
+            auto t1 = tcn * k1;
+            auto t2 = trn * k2;
+            auto t3 = mln * k3;
+            auto t4 = mcn * k4;
+            auto t5 = mrn * k5;
+            auto t6 = bln * k6;
+            auto t7 = bcn * k7;
+            auto t8 = brn * k8;
+
+            out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
+
+            Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
+#else
+            const float* kptr = kernels;
+
+            const float* k0 = kptr;
+            const float* k1 = kptr + 8;
+            const float* k2 = kptr + 16;
+            const float* k3 = kptr + 24;
+            const float* k4 = kptr + 32;
+            const float* k5 = kptr + 40;
+            const float* k6 = kptr + 48;
+            const float* k7 = kptr + 56;
+            const float* k8 = kptr + 64;
+
+            float out[8];
+            std::copy_n(biases, 8, out);
+
+            for (size_t i = 0; i < 8; i++)
+                out[i] += tln * k0[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += tcn * k1[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += trn * k2[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += mln * k3[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += mcn * k4[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += mrn * k5[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += bln * k6[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += bcn * k7[i];
+            for (size_t i = 0; i < 8; i++)
+                out[i] += brn * k8[i];
+
+            for (size_t i = 0; i < 8; i++)
+                out[i] = std::max<float>(out[i], 0);
+
+            std::copy_n(out, 8, outMat);
+#endif // USE_RYZEN
+            }, tmpMat, 8);
+    }
+
+    template<typename T>
+    void convTranspose8To1Impl(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
+    {
+        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, LineFP inMat) {
+            const int index = ((i & 1) << 1) + (j & 1);
+
+            //180 degree rotation for kernel
+            //0 1  to  3 2
+            //2 3      1 0
+
+#ifdef USE_RYZEN
+            const __m256 _in = _mm256_loadu_ps(inMat);
+            const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
+            const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
+            const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
+            const __m128 _r2 = _mm256_castps256_ps128(_r0);
+            const __m128 _r3 = _mm_add_ps(_r1, _r2);
+
+            const float luma = _mm_cvtss_f32(_r3);
+
+            _mm256_zeroupper();
+
+#elif defined(USE_EIGEN3)
+            float* kptr = const_cast<float*>(kernels + index * 8);
+
+            const float luma =
+                Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
+                .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
+#else
+            const float* kptr = kernels + index * 8;
+
+            float luma = 0;
+            for (size_t i = 0; i < 8; i++)
+                luma += kptr[i] * inMat[i];
+#endif
+
+            *outMat = unnorm<T>(luma);
+            }, tmpMat);
     }
 }
 
-void Anime4KCPP::CPU::CNNProcessor::conv1To8B(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::conv1To8(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
-    const int channels = 8;
-    const int srcChannels = img.channels();
-    const size_t lineStep = img.step;
-    detail::changEachPixel1ToN<unsigned char>(img, [&](const int i, const int j, ChanFP outMat, LineB curLine) {
-        const int orgJ = j / channels * srcChannels;
-        const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
-        const int jn = orgJ > srcChannels ? -srcChannels : 0;
-
-        const LineB pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-        const LineB cLineData = curLine;
-        const LineB nLineData = i > 0 ? curLine - lineStep : curLine;
-
-        const PixelB tl = nLineData + orgJ + jn, tc = nLineData + orgJ, tr = nLineData + orgJ + jp;
-        const PixelB ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
-        const PixelB bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
-
-        const float tln = NORMB(tl[Y]);
-        const float tcn = NORMB(tc[Y]);
-        const float trn = NORMB(tr[Y]);
-        const float mln = NORMB(ml[Y]);
-        const float mcn = NORMB(mc[Y]);
-        const float mrn = NORMB(mr[Y]);
-        const float bln = NORMB(bl[Y]);
-        const float bcn = NORMB(bc[Y]);
-        const float brn = NORMB(br[Y]);
-
-#ifdef USE_RYZEN
-        const float* kptr = kernels;
-        const float* bptr = biases;
-
-        _mm256_zeroall();
-
-        __m256 _out0 = _mm256_loadu_ps(bptr);
-        __m256 _out1 = _mm256_setzero_ps();
-        __m256 _out2 = _mm256_setzero_ps();
-
-        const __m256 _r0 = _mm256_set1_ps(tln);
-        const __m256 _r1 = _mm256_set1_ps(tcn);
-        const __m256 _r2 = _mm256_set1_ps(trn);
-        const __m256 _r3 = _mm256_set1_ps(mln);
-        const __m256 _r4 = _mm256_set1_ps(mcn);
-        const __m256 _r5 = _mm256_set1_ps(mrn);
-        const __m256 _r6 = _mm256_set1_ps(bln);
-        const __m256 _r7 = _mm256_set1_ps(bcn);
-        const __m256 _r8 = _mm256_set1_ps(brn);
-
-        const __m256 _k0 = _mm256_loadu_ps(kptr);
-        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
-
-        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
-        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
-        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
-        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
-        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
-
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
-
-        _mm256_storeu_ps(outMat, _out0);
-
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels);
-        float* bptr = const_cast<float*>(biases);
-
-        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
-
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
-
-        auto t0 = tln * k0;
-        auto t1 = tcn * k1;
-        auto t2 = trn * k2;
-        auto t3 = mln * k3;
-        auto t4 = mcn * k4;
-        auto t5 = mrn * k5;
-        auto t6 = bln * k6;
-        auto t7 = bcn * k7;
-        auto t8 = brn * k8;
-
-        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
-
-        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
-#else
-        const float* kptr = kernels;
-
-        const float* k0 = kptr;
-        const float* k1 = kptr + 8;
-        const float* k2 = kptr + 16;
-        const float* k3 = kptr + 24;
-        const float* k4 = kptr + 32;
-        const float* k5 = kptr + 40;
-        const float* k6 = kptr + 48;
-        const float* k7 = kptr + 56;
-        const float* k8 = kptr + 64;
-
-        float out[8];
-        std::copy_n(biases, 8, out);
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] += tln * k0[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += tcn * k1[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += trn * k2[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mln * k3[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mcn * k4[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mrn * k5[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += bln * k6[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += bcn * k7[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += brn * k8[i];
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] = std::max<float>(out[i], 0);
-
-        std::copy_n(out, 8, outMat);
-#endif // USE_RYZEN
-        }, tmpMat, 8);
-}
-
-void Anime4KCPP::CPU::CNNProcessor::conv1To8W(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
-{
-    const int channels = 8;
-    const int srcChannels = img.channels();
-    const size_t lineStep = img.step;
-    detail::changEachPixel1ToN<unsigned short>(img, [&](const int i, const int j, ChanFP outMat, LineW curLine) {
-        const int orgJ = j / channels * srcChannels;
-        const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
-        const int jn = orgJ > srcChannels ? -srcChannels : 0;
-
-        const LineB tempLine = reinterpret_cast<LineB>(curLine);
-        const LineW pLineData = i < img.rows - 1 ? reinterpret_cast<LineW>(tempLine + lineStep) : curLine;
-        const LineW cLineData = curLine;
-        const LineW nLineData = i > 0 ? reinterpret_cast<LineW>(tempLine - lineStep) : curLine;
-
-        const PixelW tl = nLineData + orgJ + jn, tc = nLineData + orgJ, tr = nLineData + orgJ + jp;
-        const PixelW ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
-        const PixelW bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
-
-        const float tln = NORMW(tl[Y]);
-        const float tcn = NORMW(tc[Y]);
-        const float trn = NORMW(tr[Y]);
-        const float mln = NORMW(ml[Y]);
-        const float mcn = NORMW(mc[Y]);
-        const float mrn = NORMW(mr[Y]);
-        const float bln = NORMW(bl[Y]);
-        const float bcn = NORMW(bc[Y]);
-        const float brn = NORMW(br[Y]);
-
-#ifdef USE_RYZEN
-        const float* kptr = kernels;
-        const float* bptr = biases;
-
-        _mm256_zeroall();
-
-        __m256 _out0 = _mm256_loadu_ps(bptr);
-        __m256 _out1 = _mm256_setzero_ps();
-        __m256 _out2 = _mm256_setzero_ps();
-
-        const __m256 _r0 = _mm256_set1_ps(tln);
-        const __m256 _r1 = _mm256_set1_ps(tcn);
-        const __m256 _r2 = _mm256_set1_ps(trn);
-        const __m256 _r3 = _mm256_set1_ps(mln);
-        const __m256 _r4 = _mm256_set1_ps(mcn);
-        const __m256 _r5 = _mm256_set1_ps(mrn);
-        const __m256 _r6 = _mm256_set1_ps(bln);
-        const __m256 _r7 = _mm256_set1_ps(bcn);
-        const __m256 _r8 = _mm256_set1_ps(brn);
-
-        const __m256 _k0 = _mm256_loadu_ps(kptr);
-        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
-
-        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
-        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
-        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
-        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
-        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
-
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
-
-        _mm256_storeu_ps(outMat, _out0);
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels);
-        float* bptr = const_cast<float*>(biases);
-
-        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
-
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
-
-        auto t0 = tln * k0;
-        auto t1 = tcn * k1;
-        auto t2 = trn * k2;
-        auto t3 = mln * k3;
-        auto t4 = mcn * k4;
-        auto t5 = mrn * k5;
-        auto t6 = bln * k6;
-        auto t7 = bcn * k7;
-        auto t8 = brn * k8;
-
-        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
-
-        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
-#else
-        const float* kptr = kernels;
-
-        const float* k0 = kptr;
-        const float* k1 = kptr + 8;
-        const float* k2 = kptr + 16;
-        const float* k3 = kptr + 24;
-        const float* k4 = kptr + 32;
-        const float* k5 = kptr + 40;
-        const float* k6 = kptr + 48;
-        const float* k7 = kptr + 56;
-        const float* k8 = kptr + 64;
-
-        float out[8];
-        std::copy_n(biases, 8, out);
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] += tln * k0[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += tcn * k1[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += trn * k2[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mln * k3[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mcn * k4[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += mrn * k5[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += bln * k6[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += bcn * k7[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += brn * k8[i];
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] = std::max<float>(out[i], 0);
-
-        std::copy_n(out, 8, outMat);
-#endif // USE_RYZEN
-
-        }, tmpMat, 8);
-}
-
-void Anime4KCPP::CPU::CNNProcessor::conv1To8F(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
-{
-    const int channels = 8;
-    const int srcChannels = img.channels();
-    const size_t lineStep = img.step;
-    detail::changEachPixel1ToN<float>(img, [&](const int i, const int j, ChanFP outMat, LineF curLine) {
-        const int orgJ = j / channels * srcChannels;
-        const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
-        const int jn = orgJ > srcChannels ? -srcChannels : 0;
-
-        const LineB tempLine = reinterpret_cast<LineB>(curLine);
-        const LineF pLineData = i < img.rows - 1 ? reinterpret_cast<LineF>(tempLine + lineStep) : curLine;
-        const LineF cLineData = curLine;
-        const LineF nLineData = i > 0 ? reinterpret_cast<LineF>(tempLine - lineStep) : curLine;
-
-        const PixelF tl = nLineData + orgJ + jn, tc = nLineData + orgJ, tr = nLineData + orgJ + jp;
-        const PixelF ml = cLineData + orgJ + jn, mc = cLineData + orgJ, mr = cLineData + orgJ + jp;
-        const PixelF bl = pLineData + orgJ + jn, bc = pLineData + orgJ, br = pLineData + orgJ + jp;
-
-#ifdef USE_RYZEN
-        const float* kptr = kernels;
-        const float* bptr = biases;
-
-        _mm256_zeroall();
-
-        __m256 _out0 = _mm256_loadu_ps(bptr);
-        __m256 _out1 = _mm256_setzero_ps();
-        __m256 _out2 = _mm256_setzero_ps();
-
-        const __m256 _r0 = _mm256_broadcast_ss(tl);
-        const __m256 _r1 = _mm256_broadcast_ss(tc);
-        const __m256 _r2 = _mm256_broadcast_ss(tr);
-        const __m256 _r3 = _mm256_broadcast_ss(ml);
-        const __m256 _r4 = _mm256_broadcast_ss(mc);
-        const __m256 _r5 = _mm256_broadcast_ss(mr);
-        const __m256 _r6 = _mm256_broadcast_ss(bl);
-        const __m256 _r7 = _mm256_broadcast_ss(bc);
-        const __m256 _r8 = _mm256_broadcast_ss(br);
-
-        const __m256 _k0 = _mm256_loadu_ps(kptr);
-        const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-        const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-        const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-        const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-        const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-        const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-        const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-        const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
-
-        _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-        _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-        _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
-        _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
-        _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
-        _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
-        _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-        _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-        _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
-
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
-
-        _mm256_storeu_ps(outMat, _out0);
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels);
-        float* bptr = const_cast<float*>(biases);
-
-        Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
-
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + 8, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k2(kptr + 16, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k3(kptr + 24, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k4(kptr + 32, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k5(kptr + 40, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k6(kptr + 48, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k7(kptr + 56, 8);
-        const Eigen::Map<Eigen::Array<float, 8, 1>> k8(kptr + 64, 8);
-
-        auto t0 = *tl * k0;
-        auto t1 = *tc * k1;
-        auto t2 = *tr * k2;
-        auto t3 = *ml * k3;
-        auto t4 = *mc * k4;
-        auto t5 = *mr * k5;
-        auto t6 = *bl * k6;
-        auto t7 = *bc * k7;
-        auto t8 = *br * k8;
-
-        out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
-
-        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
-#else
-        const float* kptr = kernels;
-
-        const float* k0 = kptr;
-        const float* k1 = kptr + 8;
-        const float* k2 = kptr + 16;
-        const float* k3 = kptr + 24;
-        const float* k4 = kptr + 32;
-        const float* k5 = kptr + 40;
-        const float* k6 = kptr + 48;
-        const float* k7 = kptr + 56;
-        const float* k8 = kptr + 64;
-
-        float out[8];
-        std::copy_n(biases, 8, out);
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *tl * k0[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *tc * k1[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *tr * k2[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *ml * k3[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *mc * k4[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *mr * k5[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *bl * k6[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *bc * k7[i];
-        for (size_t i = 0; i < 8; i++)
-            out[i] += *br * k8[i];
-
-        for (size_t i = 0; i < 8; i++)
-            out[i] = std::max<float>(out[i], 0);
-
-        std::copy_n(out, 8, outMat);
-#endif // USE_RYZEN
-
-        }, tmpMat, 8);
+    switch (img.depth())
+    {
+    case CV_8U:
+        detail::conv1To8Impl<unsigned char>(img, kernels, biases, tmpMat);
+        break;
+    case CV_16U:
+        detail::conv1To8Impl<unsigned short>(img, kernels, biases, tmpMat);
+        break;
+    case CV_32F:
+        detail::conv1To8Impl<float>(img, kernels, biases, tmpMat);
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
+    }
 }
 
 void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* biases, cv::Mat& tmpMat)
@@ -675,129 +475,22 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         }, tmpMat);
 }
 
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1B(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
+void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
 {
-    detail::changEachPixelNTo1<unsigned char>(img, [&](const int i, const int j, ChanB outMat, LineFP inMat) {
-        const int index = ((i & 1) << 1) + (j & 1);
-
-        //180 degree rotation for kernel
-        //0 1  to  3 2
-        //2 3      1 0
-
-#ifdef USE_RYZEN
-        const __m256 _in = _mm256_loadu_ps(inMat);
-        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
-        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
-        const __m128 _r2 = _mm256_castps256_ps128(_r0);
-        const __m128 _r3 = _mm_add_ps(_r1, _r2);
-
-        const float luma = _mm_cvtss_f32(_r3);
-
-        _mm256_zeroupper();
-
-        *outMat = UNNORMB(luma);
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels + index * 8);
-
-        const float luma =
-            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
-            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
-
-        *outMat = UNNORMB(luma);
-#else
-        const float* kptr = kernels + index * 8;
-
-        float luma = 0;
-        for (size_t i = 0; i < 8; i++)
-            luma += kptr[i] * inMat[i];
-
-        *outMat = UNNORMB(luma);
-#endif
-        }, tmpMat);
-}
-
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1W(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
-{
-    detail::changEachPixelNTo1<unsigned short>(img, [&](const int i, const int j, ChanW outMat, LineFP inMat) {
-        const int index = ((i & 1) << 1) + (j & 1);
-
-        //180 degree rotation for kernel
-        //0 1  to  3 2
-        //2 3      1 0
-
-#ifdef USE_RYZEN
-        const __m256 _in = _mm256_loadu_ps(inMat);
-        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
-        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
-        const __m128 _r2 = _mm256_castps256_ps128(_r0);
-        const __m128 _r3 = _mm_add_ps(_r1, _r2);
-
-        const float luma = _mm_cvtss_f32(_r3);
-
-        _mm256_zeroupper();
-
-        *outMat = UNNORMW(luma);
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels + index * 8);
-
-        const float luma =
-            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
-            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
-
-        *outMat = UNNORMW(luma);
-#else
-        const float* kptr = kernels + index * 8;
-
-        float luma = 0;
-        for (size_t i = 0; i < 8; i++)
-            luma += kptr[i] * inMat[i];
-
-        *outMat = UNNORMW(luma);
-#endif
-        }, tmpMat);
-}
-
-void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1F(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
-{
-    detail::changEachPixelNTo1<float>(img, [&](const int i, const int j, ChanF outMat, LineFP inMat) {
-        const int index = ((i & 1) << 1) + (j & 1);
-
-        //180 degree rotation for kernel
-        //0 1  to  3 2
-        //2 3      1 0
-#ifdef USE_RYZEN
-        const __m256 _in = _mm256_loadu_ps(inMat);
-        const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
-        const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-        const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
-        const __m128 _r2 = _mm256_castps256_ps128(_r0);
-        const __m128 _r3 = _mm_add_ps(_r1, _r2);
-
-        const float luma = _mm_cvtss_f32(_r3);
-
-        _mm256_zeroupper();
-
-        *outMat = CLAMP(luma, 0.0f, 1.0f);
-#elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels + index * 8);
-
-        const float luma =
-            Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
-            .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
-
-        *outMat = CLAMP(luma, 0.0f, 1.0f);
-#else
-        const float* kptr = kernels + index * 8;
-
-        float luma = 0;
-        for (size_t i = 0; i < 8; i++)
-            luma += kptr[i] * inMat[i];
-
-        *outMat = static_cast<float>(CLAMP(luma, 0.0f, 1.0f));
-#endif
-        }, tmpMat);
+    switch (img.depth())
+    {
+    case CV_8U:
+        detail::convTranspose8To1Impl<unsigned char>(img, kernels, tmpMat);
+        break;
+    case CV_16U:
+        detail::convTranspose8To1Impl<unsigned short>(img, kernels, tmpMat);
+        break;
+    case CV_32F:
+        detail::convTranspose8To1Impl<float>(img, kernels, tmpMat);
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
+    }
 }
 
 #endif

@@ -1,5 +1,7 @@
 #ifdef ENABLE_NCNN
 
+#include<net.h>
+
 #include"ACNetType.hpp"
 #include"ACNCNN.hpp"
 

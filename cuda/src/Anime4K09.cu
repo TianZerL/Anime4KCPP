@@ -387,17 +387,18 @@ static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KC
     cudaStreamDestroy(stream);
 }
 
-void Anime4KCPP::Cuda::cuRunKernelAnime4K09B(const unsigned char *inputData, unsigned char *outputData, ACCudaParamAnime4K09 *param)
+void Anime4KCPP::Cuda::cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param);
 {
-    cuRunKernelAnime4K09Impl<uchar>(inputData, outputData, param);
-}
-
-void Anime4KCPP::Cuda::cuRunKernelAnime4K09W(const unsigned short *inputData, unsigned short *outputData, ACCudaParamAnime4K09 *param)
-{
-    cuRunKernelAnime4K09Impl<ushort>(inputData, outputData, param);
-}
-
-void Anime4KCPP::Cuda::cuRunKernelAnime4K09F(const float *inputData, float *outputData, ACCudaParamAnime4K09 *param)
-{
-    cuRunKernelAnime4K09Impl<float>(inputData, outputData, param);
+    switch (type)
+    {
+    case ACCudaDataType::AC_8U:
+        cuRunKernelAnime4K09Impl<uchar>(reinterpret_cast<const uchar *>(inputData), reinterpret_cast<uchar *>(outputData), param);
+        break;
+    case ACCudaDataType::AC_16U:
+        cuRunKernelAnime4K09Impl<ushort>(reinterpret_cast<const ushort *>(inputData), reinterpret_cast<ushort *>(outputData), param);
+        break;
+    case ACCudaDataType::AC_32F:
+        cuRunKernelAnime4K09Impl<float>(reinterpret_cast<const float *>(inputData), reinterpret_cast<float *>(outputData), param);
+        break;
+    }
 }

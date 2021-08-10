@@ -1,6 +1,21 @@
 #include"CPUACNetProcessor.hpp"
 
 #ifdef ENABLE_OPENCV_DNN
+
+namespace Anime4KCPP::CPU::detail
+{
+    cv::Mat processImpl(const cv::Mat& blob, int scaleTimes, int width)
+    {
+        for (int i = 0; i < scaleTimes; i++)
+        {
+            net.setInput(blob);
+            blob = net.forward();
+            width <<= 1;
+        }
+        return blob.reshape(1, width);
+    }
+}
+
 Anime4KCPP::CPU::ACNetHDN::ACNetHDN(std::string modelPath)
 {
     try
@@ -17,111 +32,53 @@ Anime4KCPP::CPU::ACNetHDN::ACNetHDN(std::string modelPath)
     net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 }
 
-void Anime4KCPP::CPU::ACNetHDN::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
+void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
     int w = src.rows;
     cv::Mat tmp;
     cv::extractChannel(src, tmp, 0);
-    cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 255.0);
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        net.setInput(blob);
-        blob = net.forward();
-        w <<= 1;
-    }
-    blob.reshape(1, w).convertTo(dst, CV_8UC1, 255.0);
-}
 
-void Anime4KCPP::CPU::ACNetHDN::processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    int w = src.rows;
-    cv::Mat tmp;
-    cv::extractChannel(src, tmp, 0);
-    cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 65535.0);
-    for (int i = 0; i < scaleTimes; i++)
+    switch (src.depth())
     {
-        net.setInput(blob);
-        blob = net.forward();
-        w <<= 1;
+    case CV_8U: 
+        cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 255.0);
+        detail::processImpl(blob, scaleTimes, w).convertTo(dst, CV_8UC1, 255.0);
+        break;
+    case CV_16U:
+        cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 65535.0);
+        detail::processImpl(blob, scaleTimes, w).convertTo(dst, CV_16UC1, 65535.0);
+        break;
+    case CV_32F:
+        cv::Mat blob = cv::dnn::blobFromImage(tmp);   
+        dst = detail::processImpl(blob, scaleTimes, w);
+        break;
+    default:
+        throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
     }
-    blob.reshape(1, w).convertTo(dst, CV_16UC1, 65535.0);
-}
-
-void Anime4KCPP::CPU::ACNetHDN::processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    int w = src.rows;
-    cv::Mat tmp;
-    cv::extractChannel(src, tmp, 0);
-    cv::Mat blob = cv::dnn::blobFromImage(tmp);
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        net.setInput(blob);
-        blob = net.forward();
-        w <<= 1;
-    }
-    dst = blob.reshape(1, w);
 }
 
 #else
 
+#define ACNET_PROCESS_IMPL                                 \
+    cv::Mat tmpMat;                                        \
+    for (int i = 0; i < scaleTimes; i++)                   \
+    {                                                      \
+        conv1To8(src, kernelsL1, biasL1, tmpMat);          \
+        conv8To8(kernels[L2], biases[L2], tmpMat);         \
+        conv8To8(kernels[L3], biases[L3], tmpMat);         \
+        conv8To8(kernels[L4], biases[L4], tmpMat);         \
+        conv8To8(kernels[L5], biases[L5], tmpMat);         \
+        conv8To8(kernels[L6], biases[L6], tmpMat);         \
+        conv8To8(kernels[L7], biases[L7], tmpMat);         \
+        conv8To8(kernels[L8], biases[L8], tmpMat);         \
+        conv8To8(kernels[L9], biases[L9], tmpMat);         \
+        convTranspose8To1(dst, kernelsL10, tmpMat);        \
+    }
+
 constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
-
-void Anime4KCPP::CPU::ACNetHDNL0::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
+void Anime4KCPP::CPU::ACNetHDNL0::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8B(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1B(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL0::processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8W(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1W(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-
-void Anime4KCPP::CPU::ACNetHDNL0::processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8F(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1F(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
+    ACNET_PROCESS_IMPL
 }
 
 alignas(32)
@@ -725,61 +682,9 @@ const float Anime4KCPP::CPU::ACNetHDNL0::biases[8][8] =
 }
 };
 
-void Anime4KCPP::CPU::ACNetHDNL1::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
+void Anime4KCPP::CPU::ACNetHDNL1::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8B(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1B(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL1::processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8W(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1W(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL1::processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8F(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1F(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
+    ACNET_PROCESS_IMPL
 }
 
 alignas(32)
@@ -1386,61 +1291,9 @@ const float Anime4KCPP::CPU::ACNetHDNL1::biases[8][8] =
 };
 
 
-void Anime4KCPP::CPU::ACNetHDNL2::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
+void Anime4KCPP::CPU::ACNetHDNL2::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8B(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1B(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL2::processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8W(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1W(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL2::processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8F(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1F(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
+    ACNET_PROCESS_IMPL
 }
 
 alignas(32)
@@ -2047,61 +1900,9 @@ const float Anime4KCPP::CPU::ACNetHDNL2::biases[8][8] =
 };
 
 
-void Anime4KCPP::CPU::ACNetHDNL3::processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
+void Anime4KCPP::CPU::ACNetHDNL3::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8B(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1B(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL3::processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8W(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1W(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
-}
-
-void Anime4KCPP::CPU::ACNetHDNL3::processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
-{
-    cv::Mat tmpMat, tmpHandler = src;
-    for (int i = 0; i < scaleTimes; i++)
-    {
-        conv1To8F(tmpHandler, kernelsL1, biasL1, tmpMat);
-        conv8To8(kernels[L2], biases[L2], tmpMat);
-        conv8To8(kernels[L3], biases[L3], tmpMat);
-        conv8To8(kernels[L4], biases[L4], tmpMat);
-        conv8To8(kernels[L5], biases[L5], tmpMat);
-        conv8To8(kernels[L6], biases[L6], tmpMat);
-        conv8To8(kernels[L7], biases[L7], tmpMat);
-        conv8To8(kernels[L8], biases[L8], tmpMat);
-        conv8To8(kernels[L9], biases[L9], tmpMat);
-        convTranspose8To1F(tmpHandler, kernelsL10, tmpMat);
-    }
-    dst = tmpHandler;
+    ACNET_PROCESS_IMPL
 }
 
 alignas(32)
@@ -2691,29 +2492,29 @@ const float Anime4KCPP::CPU::ACNetHDNL3::biases[8][8] =
 };
 #endif
 
-Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(const CNNType type)
+Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(int typeIndex)
 {
-    switch (type)
+    switch (typeIndex)
     {
-    case CNNType::ACNetHDNL0:
+    case 0:
 #ifdef ENABLE_OPENCV_DNN
         return new ACNetHDN("./models/ACNetHDNL0.onnx");
 #else
         return new ACNetHDNL0();
 #endif
-    case CNNType::ACNetHDNL1:
+    case 1:
 #ifdef ENABLE_OPENCV_DNN
         return new ACNetHDN("./models/ACNetHDNL1.onnx");
 #else
         return new ACNetHDNL1();
 #endif
-    case CNNType::ACNetHDNL2:
+    case 2:
 #ifdef ENABLE_OPENCV_DNN
         return new ACNetHDN("./models/ACNetHDNL2.onnx");
 #else
         return new ACNetHDNL2();
 #endif
-    case CNNType::ACNetHDNL3:
+    case 3:
 #ifdef ENABLE_OPENCV_DNN
         return new ACNetHDN("./models/ACNetHDNL3.onnx");
 #else

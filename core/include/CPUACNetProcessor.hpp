@@ -15,19 +15,17 @@ namespace Anime4KCPP::CPU
     class ACNetHDNL2;
     class ACNetHDNL3;
 #endif
-    ACNetProcessor* createACNetProcessor(const CNNType type);
+    ACNetProcessor* createACNetProcessor(int typeIndex);
     void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
 }
 
-class Anime4KCPP::CPU::ACNetProcessor 
+class Anime4KCPP::CPU::ACNetProcessor : public CNNProcessor
 {
 public:
     ACNetProcessor() = default;
     virtual ~ACNetProcessor() = default;
 
-    virtual void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) = 0;
-    virtual void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) = 0;
-    virtual void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) = 0;
+    virtual void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) = 0;
 };
 
 #ifdef ENABLE_OPENCV_DNN
@@ -36,23 +34,19 @@ class Anime4KCPP::CPU::ACNetHDN : public ACNetProcessor
 public:
     ACNetHDN(std::string modelPath);
     ~ACNetHDN() override = default;
-    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     cv::dnn::Net net;
 };
 
 #else
 
-class Anime4KCPP::CPU::ACNetHDNL0 : public ACNetProcessor, public CNNProcessor
+class Anime4KCPP::CPU::ACNetHDNL0 : public ACNetProcessor
 {
 public:
     ACNetHDNL0() = default;
     ~ACNetHDNL0() override = default;
-    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -61,14 +55,12 @@ private:
     alignas(32) const static float biases[8][8];
 };
 
-class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor, public CNNProcessor
+class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor
 {
 public:
     ACNetHDNL1() = default;
     ~ACNetHDNL1() override = default;
-    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -77,14 +69,12 @@ private:
     alignas(32) const static float biases[8][8];
 };
 
-class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor, public CNNProcessor
+class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor
 {
 public:
     ACNetHDNL2() = default;
     ~ACNetHDNL2() override = default;
-    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];
@@ -93,14 +83,12 @@ private:
     alignas(32) const static float biases[8][8];
 };
 
-class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor, public CNNProcessor
+class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor
 {
 public:
     ACNetHDNL3() = default;
     ~ACNetHDNL3() override = default;
-    void processB(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processW(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
-    void processF(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
+    void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
     alignas(32) const static float kernelsL1[9 * 8];
     alignas(32) const static float kernels[8][9 * 8 * 8];

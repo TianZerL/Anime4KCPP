@@ -1,26 +1,10 @@
 #include"CPUACNet.hpp"
+#include"ACNetType.hpp"
 
 Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters)
 {
-    if (param.HDN)
-        switch (param.HDNLevel)
-        {
-        case 1:
-            processor = createACNetProcessor(CNNType::ACNetHDNL1);
-            break;
-        case 2:
-            processor = createACNetProcessor(CNNType::ACNetHDNL2);
-            break;
-        case 3:
-            processor = createACNetProcessor(CNNType::ACNetHDNL3);
-            break;
-        default:
-            processor = createACNetProcessor(CNNType::ACNetHDNL1);
-            break;
-        }
-    else
-        processor = createACNetProcessor(CNNType::ACNetHDNL0);
+    processor = createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel));
 }
 
 Anime4KCPP::CPU::ACNet::~ACNet()
@@ -32,24 +16,7 @@ void Anime4KCPP::CPU::ACNet::setParameters(const Parameters& parameters)
 {
     AC::setParameters(parameters);
     releaseACNetProcessor(processor);
-    if (param.HDN)
-        switch (param.HDNLevel)
-        {
-        case 1:
-            processor = createACNetProcessor(CNNType::ACNetHDNL1);
-            break;
-        case 2:
-            processor = createACNetProcessor(CNNType::ACNetHDNL2);
-            break;
-        case 3:
-            processor = createACNetProcessor(CNNType::ACNetHDNL3);
-            break;
-        default:
-            processor = createACNetProcessor(CNNType::ACNetHDNL1);
-            break;
-        }
-    else
-        processor = createACNetProcessor(CNNType::ACNetHDNL0);
+    processor = createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel));
 }
 
 std::string Anime4KCPP::CPU::ACNet::getInfo()
@@ -74,7 +41,7 @@ std::string Anime4KCPP::CPU::ACNet::getFiltersInfo()
     return oss.str();
 }
 
-void Anime4KCPP::CPU::ACNet::processYUVImageB()
+void Anime4KCPP::CPU::ACNet::processYUVImage()
 {
     if (!param.fastMode)
     {
@@ -82,11 +49,11 @@ void Anime4KCPP::CPU::ACNet::processYUVImageB()
         if (!scaleTimes)
             scaleTimes++;
 
-        processor->processB(orgY, dstY, scaleTimes);
+        processor->process(orgImg, dstImg, scaleTimes);
 
         if (param.isNonIntegerScale())
         {
-            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
         }
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -94,19 +61,21 @@ void Anime4KCPP::CPU::ACNet::processYUVImageB()
     }
     else
     {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+        cv::Mat tmpImg = orgImg;
 
-        processor->processB(orgY, dstY, 1);
+        if (param.zoomFactor > 2.0)
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        processor->process(tmpImg, dstImg, 1);
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
         cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
     }
 }
 
-void Anime4KCPP::CPU::ACNet::processRGBImageB()
+void Anime4KCPP::CPU::ACNet::processRGBImage()
 {
     if (!param.fastMode)
     {
@@ -117,11 +86,11 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processB(tmpImg, dstImg, scaleTimes);
+        processor->process(tmpImg, dstImg, scaleTimes);
 
         if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
         }
 
         cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -131,15 +100,15 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
     }
     else
     {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        processor->processB(tmpImg, dstImg, 1);
+        if (param.zoomFactor > 2.0)
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
+        else if (param.zoomFactor < 2.0)
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+
+        processor->process(tmpImg, dstImg, 1);
 
         cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
@@ -148,7 +117,7 @@ void Anime4KCPP::CPU::ACNet::processRGBImageB()
     }
 }
 
-void Anime4KCPP::CPU::ACNet::processGrayscaleB()
+void Anime4KCPP::CPU::ACNet::processGrayscale()
 {
     if (!param.fastMode)
     {
@@ -156,221 +125,23 @@ void Anime4KCPP::CPU::ACNet::processGrayscaleB()
         if (!scaleTimes)
             scaleTimes++;
 
-        processor->processB(orgImg, dstImg, scaleTimes);
+        processor->process(orgImg, dstImg, scaleTimes);
 
         if (param.isNonIntegerScale())
         {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
+            cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
         }
     }
     else
     {
+        cv::Mat tmpImg = orgImg;
+
         if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
         else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
+            cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        processor->processB(orgImg, dstImg, 1);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processYUVImageW()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        processor->processW(orgY, dstY, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-
-        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        processor->processW(orgY, dstY, 1);
-
-        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processRGBImageW()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        cv::Mat tmpImg;
-        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
-
-        processor->processW(tmpImg, dstImg, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-
-        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
-
-        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        cv::Mat tmpImg;
-        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
-
-        processor->processW(tmpImg, dstImg, 1);
-
-        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
-
-        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processGrayscaleW()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        processor->processW(orgImg, dstImg, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        processor->processW(orgImg, dstImg, 1);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processYUVImageF()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        processor->processF(orgY, dstY, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstY, dstY, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-
-        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgY, orgY, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        processor->processF(orgY, dstY, 1);
-
-        cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::resize(orgV, dstV, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processRGBImageF()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        cv::Mat tmpImg;
-        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
-
-        processor->processF(tmpImg, dstImg, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-
-        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
-
-        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        cv::Mat tmpImg;
-        cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
-
-        processor->processF(tmpImg, dstImg, 1);
-
-        cv::resize(tmpImg, tmpImg, cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
-        cv::mixChannels(dstImg, tmpImg, std::vector<int>{0, 0});
-
-        cv::cvtColor(tmpImg, dstImg, cv::COLOR_YUV2BGR);
-    }
-}
-
-void Anime4KCPP::CPU::ACNet::processGrayscaleF()
-{
-    if (!param.fastMode)
-    {
-        int scaleTimes = Utils::fastCeilLog2(param.zoomFactor);
-        if (!scaleTimes)
-            scaleTimes++;
-
-        processor->processF(orgImg, dstImg, scaleTimes);
-
-        if (param.isNonIntegerScale())
-        {
-            cv::resize(dstImg, dstImg, cv::Size(W, H), param.zoomFactor, param.zoomFactor, cv::INTER_AREA);
-        }
-    }
-    else
-    {
-        if (param.zoomFactor > 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_CUBIC);
-        else if (param.zoomFactor < 2.0)
-            cv::resize(orgImg, orgImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
-
-        processor->processF(orgImg, dstImg, 1);
+        processor->process(tmpImg, dstImg, 1);
     }
 }
 

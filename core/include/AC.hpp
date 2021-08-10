@@ -164,29 +164,22 @@ public:
     virtual Processor::Type getProcessorType() noexcept = 0;
     virtual std::string getProcessorInfo() = 0;
 protected:
-    virtual void processYUVImageB() = 0;
-    virtual void processRGBImageB() = 0;
-    virtual void processGrayscaleB() = 0;
-
-    virtual void processYUVImageW() = 0;
-    virtual void processRGBImageW() = 0;
-    virtual void processGrayscaleW() = 0;
-
-    virtual void processYUVImageF() = 0;
-    virtual void processRGBImageF() = 0;
-    virtual void processGrayscaleF() = 0;
+    virtual void processYUVImage() = 0;
+    virtual void processRGBImage() = 0;
+    virtual void processGrayscale() = 0;
 private:
-    cv::Mat alphaChannel;
     bool inputRGB32 = false;
     bool checkAlphaChannel = false;
     bool inputYUV = false;
     bool inputGrayscale = false;
+
+    cv::Mat alphaChannel;
 protected:
-    int bitDepth = 8;
-    int orgH, orgW, H, W;
+    int height, width;
+
     cv::Mat orgImg, dstImg;
-    cv::Mat orgY, orgU, orgV;
-    cv::Mat dstY, dstU, dstV;
+    cv::Mat orgU, orgV;
+    cv::Mat dstU, dstV;
 
     Parameters param;
 };

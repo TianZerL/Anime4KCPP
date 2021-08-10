@@ -34,18 +34,21 @@
     ml2.w *kernelsL[L][n * 72 + 7 * 9 + 3] + mc2.w *kernelsL[L][n * 72 + 7 * 9 + 4] + mr2.w *kernelsL[L][n * 72 + 7 * 9 + 5] + \
     bl2.w *kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w *kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w *kernelsL[L][n * 72 + 7 * 9 + 8] + biasL[L][n]
 
-#define DECLARE_ACNET_HDN_INTERFACE_FUNCTION(level)                                                                                            \
-    void Anime4KCPP::Cuda::cuRunKernelACNetHDN##level##B(const unsigned char *inputData, unsigned char *outputData, ACCudaParamACNet *param)   \
-    {                                                                                                                                          \
-        cuRunKernelACNetImpl<uchar>(inputData, outputData, param);                                                                             \
-    }                                                                                                                                          \
-    void Anime4KCPP::Cuda::cuRunKernelACNetHDN##level##W(const unsigned short *inputData, unsigned short *outputData, ACCudaParamACNet *param) \
-    {                                                                                                                                          \
-        cuRunKernelACNetImpl<ushort>(inputData, outputData, param);                                                                            \
-    }                                                                                                                                          \
-    void Anime4KCPP::Cuda::cuRunKernelACNetHDN##level##F(const float *inputData, float *outputData, ACCudaParamACNet *param)                   \
-    {                                                                                                                                          \
-        cuRunKernelACNetImpl<float>(inputData, outputData, param);                                                                             \
+#define DECLARE_ACNET_HDN_INTERFACE_FUNCTION(level)                                                                                          \
+    void Anime4KCPP::Cuda::cuRunKernelACNetHDN##level(const void *inputData, void *outputData, ACCudaDataType type, ACCudaParamACNet *param) \
+    {                                                                                                                                        \
+        switch (type)                                                                                                                        \
+        {                                                                                                                                    \
+        case ACCudaDataType::AC_8U:                                                                                                          \
+            cuRunKernelACNetImpl<uchar>(reinterpret_cast<const uchar *>(inputData), reinterpret_cast<uchar *>(outputData), param);           \
+            break;                                                                                                                           \
+        case ACCudaDataType::AC_16U:                                                                                                         \
+            cuRunKernelACNetImpl<ushort>(reinterpret_cast<const ushort *>(inputData), reinterpret_cast<ushort *>(outputData), param);        \
+            break;                                                                                                                           \
+        case ACCudaDataType::AC_32F:                                                                                                         \
+            cuRunKernelACNetImpl<float>(reinterpret_cast<const float *>(inputData), reinterpret_cast<float *>(outputData), param);           \
+            break;                                                                                                                           \
+        }                                                                                                                                    \
     }
 
 constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;

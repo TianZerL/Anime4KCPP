@@ -2,8 +2,6 @@
 
 #ifdef ENABLE_NCNN
 
-#include<net.h>
-
 #include"AC.hpp"
 #include"CNN.hpp"
 
@@ -16,7 +14,7 @@ class Anime4KCPP::NCNN::ACNet :public AC
 {
 public:
     explicit ACNet(const Parameters& parameters = Parameters());
-    ~ACNet() override = default;
+    ~ACNet() override;
     void setParameters(const Parameters& parameters) override;
 
     std::string getInfo() override;
@@ -33,27 +31,17 @@ public:
     static void release();
     static bool isInitialized();
 private:
-    void processCPU(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes = 1, ncnn::Mat* dataHolder = nullptr);
-    void processVK(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes = 1, ncnn::Mat* dataHolder = nullptr);
-
-    void processYUVImageB() override;
-    void processRGBImageB() override;
-    void processGrayscaleB() override;
-
-    void processYUVImageW() override;
-    void processRGBImageW() override;
-    void processGrayscaleW() override;
-
-    void processYUVImageF() override;
-    void processRGBImageF() override;
-    void processGrayscaleF() override;
+    void processYUVImage() override;
+    void processRGBImage() override;
+    void processGrayscale() override;
 
     Processor::Type getProcessorType() noexcept override;
     std::string getProcessorInfo() override;
 private:
-    int currACNetypeIndex;
+    int ACNetTypeIndex;
 
-    ncnn::Mat defaultDataHolder;
+    struct DataHolder;
+    std::unique_ptr<DataHolder> dataHolder;
 };
 
 #endif // ENABLE_NCNN
