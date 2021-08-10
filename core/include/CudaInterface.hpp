@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef ENABLE_CUDA
+#ifdef ENABLE_CUDA
 
 #include<string>
 
