@@ -209,7 +209,7 @@ void Anime4KCPP::Cuda::ACNet::processGrayscale()
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
         cv::Mat outMat(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-        detail::runKernel(tmpImg, outMat, ACNetTypeIndex););
+        detail::runKernel(tmpImg, outMat, ACNetTypeIndex);
         dstImg = outMat;
     }
 }
