@@ -481,28 +481,20 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
         cv::merge(std::vector<cv::Mat>{ dstImg, dstU, dstV }, tmpImg);
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
     }
-    if (tmpImg.depth() == CV_32F)
-    {
-        cv::Mat tmp;
-        tmpImg.convertTo(tmp, CV_8UC(tmpImg.channels()), 255.0);
-        tmpImg = tmp;
-    }
-    if (checkAlphaChannel)
+    else if (checkAlphaChannel)
     {
         std::string fileSuffix = dstFile.substr(dstFile.rfind('.'));
         if (std::string(".jpg.jpeg.bmp").find(fileSuffix) != std::string::npos)
         {
-            cv::Mat tmp;
-            cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
-            tmp.convertTo(tmp, CV_32FC3, 1.0 / 255.0);
-            cv::multiply(tmpImg, tmp, tmp, 1.0, CV_8UC3);
-            tmpImg = tmp;
+            cv::Mat alpha, out;
+            cv::cvtColor(alphaChannel, alpha, cv::COLOR_GRAY2BGR);
+            alpha.convertTo(alpha, CV_32FC3, 1.0 / 255.0);
+            cv::multiply(tmpImg, alpha, out, 1.0, CV_8U);
+            tmpImg = out;
         }
         else
         {
-            cv::Mat tmp;
-            cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
-            tmpImg = tmp;
+            cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmpImg);
         }
     }
 
@@ -515,22 +507,27 @@ void Anime4KCPP::AC::saveImage(const std::string suffix, std::vector<unsigned ch
     cv::Mat tmpImg = dstImg;
     if (inputYUV)
     {
-        if (dstImg.size() == dstU.size() && dstU.size() == dstV.size())
-            cv::merge(std::vector<cv::Mat>{ dstImg, dstU, dstV }, tmpImg);
-        else
-            throw ACException<ExceptionType::IO>("Only YUV444 or RGB(BGR) can be encoded");
-    }
-    else if (inputRGB32)
-    {
-        cv::Mat tmp;
-        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
-        tmpImg = tmp;
+        if (dstImg.size() != dstU.size())
+            cv::resize(dstU, dstU, dstImg.size(), 0.0, 0.0, cv::INTER_CUBIC);
+        if (dstImg.size() != dstV.size())
+            cv::resize(dstV, dstV, dstImg.size(), 0.0, 0.0, cv::INTER_CUBIC);
+        cv::merge(std::vector<cv::Mat>{ dstImg, dstU, dstV }, tmpImg);
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
     }
     else if (checkAlphaChannel)
     {
-        cv::Mat tmp;
-        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
-        tmpImg = tmp;
+        if (std::string(".jpg.jpeg.bmp").find(suffix) != std::string::npos)
+        {
+            cv::Mat alpha, out;
+            cv::cvtColor(alphaChannel, alpha, cv::COLOR_GRAY2BGR);
+            alpha.convertTo(alpha, CV_32FC3, 1.0 / 255.0);
+            cv::multiply(tmpImg, alpha, out, 1.0, CV_8U);
+            tmpImg = out;
+        }
+        else
+        {
+            cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmpImg);
+        }
     }
 
     if (!cv::imencode(suffix, tmpImg, buf))
@@ -549,15 +546,11 @@ void Anime4KCPP::AC::saveImage(cv::Mat& dstImage)
     }
     else if (inputRGB32)
     {
-        cv::Mat tmp;
-        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
-        tmpImg = tmp;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_RGB2RGBA);
     }
     else if (checkAlphaChannel)
     {
-        cv::Mat tmp;
-        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
-        tmpImg = tmp;
+        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmpImg);
     }
 
     dstImage = tmpImg;
@@ -595,15 +588,11 @@ void Anime4KCPP::AC::saveImage(unsigned char* data, size_t dstStride)
     }
     else if (inputRGB32)
     {
-        cv::Mat tmp;
-        cv::cvtColor(tmpImg, tmp, cv::COLOR_RGB2RGBA);
-        tmpImg = tmp;
+        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_RGB2RGBA);
     }
     else if (checkAlphaChannel)
     {
-        cv::Mat tmp;
-        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmp);
-        tmpImg = tmp;
+        cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmpImg);
     }
 
     size_t stride = tmpImg.step;
@@ -704,7 +693,7 @@ void Anime4KCPP::AC::saveImageBufferSize(size_t& dataSize, size_t dstStride)
     {
         stride = dstImg.step + dstU.step + dstV.step;
     }
-    else if (inputRGB32)
+    else if (inputRGB32 || checkAlphaChannel)
         stride += stride / 3;
 
     size_t step = dstStride > stride ? dstStride : stride;
@@ -778,10 +767,11 @@ std::string Anime4KCPP::AC::getFiltersInfo()
 void Anime4KCPP::AC::showImage(bool R2B)
 {
 #ifdef ENABLE_PREVIEW_GUI
-    cv::Mat tmpImg = dstImg;
-
+    cv::Mat tmpImg;
     if (R2B)
-        cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2RGB);
+        cv::cvtColor(dstImg, tmpImg, cv::COLOR_BGR2RGB);
+    else
+        tmpImg = dstImg;
 
     if (inputYUV)
     {
@@ -792,14 +782,14 @@ void Anime4KCPP::AC::showImage(bool R2B)
             cv::resize(dstV, tmpV, dstImg.size(), 0.0, 0.0, cv::INTER_CUBIC);
         cv::merge(std::vector<cv::Mat>{ dstImg, tmpU, tmpV }, tmpImg);
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
-    }
-
-    if (checkAlphaChannel)
+    } 
+    else if (checkAlphaChannel)
     {
-        cv::Mat tmp;
-        cv::cvtColor(alphaChannel, tmp, cv::COLOR_GRAY2BGR);
-        tmp.convertTo(tmp, CV_32FC3, 1.0 / 255.0);
-        cv::multiply(tmpImg, tmp, tmpImg, 1.0, CV_8UC3);
+        cv::Mat alpha, out;
+        cv::cvtColor(alphaChannel, alpha, cv::COLOR_GRAY2BGR);
+        alpha.convertTo(alpha, CV_32FC3, 1.0 / 255.0);
+        cv::multiply(tmpImg, alpha, out, 1.0, CV_8U);
+        tmpImg = out;
     }
 
     cv::imshow("preview", tmpImg);
