@@ -41,23 +41,22 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
         cv::extractChannel(orgImg, alphaChannel, A);
         cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-        dstImg = orgImg;
         inputGrayscale = false;
         checkAlphaChannel = true;
         break;
     case 3:
-        dstImg = orgImg;
         inputGrayscale = false;
         checkAlphaChannel = false;
         break;
     case 1:
-        dstImg = orgImg;
         inputGrayscale = true;
         checkAlphaChannel = false;
         break;
     default:
         throw ACException<ExceptionType::IO>("Failed to load file: incorrect file format.");
     }
+
+    dstImg = orgImg;
 
     inputRGB32 = false;
     inputYUV = false;
@@ -83,19 +82,16 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
             cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
         }
         cv::cvtColor(orgImg, orgImg, cv::COLOR_RGBA2RGB);
-        dstImg = orgImg;
         inputRGB32 = !param.alpha;
         inputGrayscale = false;
         checkAlphaChannel = param.alpha;
         break;
     case 3:
-        dstImg = orgImg;
         inputRGB32 = false;
         inputGrayscale = false;
         checkAlphaChannel = false;
         break;
     case 1:
-        dstImg = orgImg;
         inputRGB32 = false;
         inputGrayscale = true;
         checkAlphaChannel = false;
@@ -103,6 +99,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
     default:
         throw ACException<ExceptionType::IO>("Failed to load data: incorrect file format.");
     }
+
+    dstImg = orgImg;
 
     inputYUV = false;
 
@@ -126,23 +124,22 @@ void Anime4KCPP::AC::loadImage(const std::vector<unsigned char>& buf)
         cv::extractChannel(orgImg, alphaChannel, A);
         cv::resize(alphaChannel, alphaChannel, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
         cv::cvtColor(orgImg, orgImg, cv::COLOR_BGRA2BGR);
-        dstImg = orgImg;
         inputGrayscale = false;
         checkAlphaChannel = true;
         break;
     case 3:
-        dstImg = orgImg;
         inputGrayscale = false;
         checkAlphaChannel = false;
         break;
     case 1:
-        dstImg = orgImg;
         inputGrayscale = true;
         checkAlphaChannel = false;
         break;
     default:
         throw ACException<ExceptionType::IO>("Failed to load data: incorrect file format.");
     }
+
+    dstImg = orgImg;
 
     inputRGB32 = false;
     inputYUV = false;
