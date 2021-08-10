@@ -387,7 +387,7 @@ static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KC
     cudaStreamDestroy(stream);
 }
 
-void Anime4KCPP::Cuda::cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param);
+void Anime4KCPP::Cuda::cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param)
 {
     switch (type)
     {
