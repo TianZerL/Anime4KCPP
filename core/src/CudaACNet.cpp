@@ -6,9 +6,8 @@
 
 namespace Anime4KCPP::Cuda::detail
 {
-    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int index)
+    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes, int index)
     {
-        ACCudaParamACNet cuParam{ orgImg.cols, orgImg.rows, orgImg.step };
         ACCudaDataType dataType;
 
         switch (orgImg.depth())
@@ -26,23 +25,37 @@ namespace Anime4KCPP::Cuda::detail
             throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
         }
 
+        void (*cuRunKernelACNet)(const void*, void*, ACCudaDataType, ACCudaParamACNet*);
+
         switch (index)
         {
         case 0:
-            cuRunKernelACNetHDN0(orgImg.data, dstImg.data, dataType, &cuParam);
+            cuRunKernelACNet = cuRunKernelACNetHDN0;
             break;
         case 1:
-            cuRunKernelACNetHDN1(orgImg.data, dstImg.data, dataType, &cuParam);
+            cuRunKernelACNet = cuRunKernelACNetHDN1;
             break;
         case 2:
-            cuRunKernelACNetHDN2(orgImg.data, dstImg.data, dataType, &cuParam);
+            cuRunKernelACNet = cuRunKernelACNetHDN2;
             break;
         case 3:
-            cuRunKernelACNetHDN3(orgImg.data, dstImg.data, dataType, &cuParam);
+            cuRunKernelACNet = cuRunKernelACNetHDN3;
             break;
         default:
-            cuRunKernelACNetHDN1(orgImg.data, dstImg.data, dataType, &cuParam);
+            cuRunKernelACNet = cuRunKernelACNetHDN1;
             break;
+        }
+
+        cv::Mat tmpImg = orgImg;
+        for (int i = 0; i < scaleTimes; i++)
+        {
+            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
+
+            ACCudaParamACNet cuParam{ tmpImg.cols, tmpImg.rows, tmpImg.step };
+
+            cuRunKernelACNet(tmpImg.data, dstImg.data, dataType, &cuParam);
+
+            tmpImg = dstImg;
         }
     }
 }
@@ -90,13 +103,8 @@ void Anime4KCPP::Cuda::ACNet::processYUVImage()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(orgImg, dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -114,8 +122,8 @@ void Anime4KCPP::Cuda::ACNet::processYUVImage()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::Mat outMat(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-        detail::runKernel(tmpImg, outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(tmpImg, outMat, 1, ACNetTypeIndex);
         dstImg = outMat;
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -136,14 +144,9 @@ void Anime4KCPP::Cuda::ACNet::processRGBImage()
 
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
-        tmpImg = yuv[Y];
 
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(yuv[Y], dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -168,8 +171,8 @@ void Anime4KCPP::Cuda::ACNet::processRGBImage()
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
 
-        cv::Mat outMat(yuv[Y].rows * 2, yuv[Y].cols * 2, yuv[Y].type());
-        detail::runKernel(yuv[Y], outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(yuv[Y], outMat, 1, ACNetTypeIndex);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
@@ -187,13 +190,8 @@ void Anime4KCPP::Cuda::ACNet::processGrayscale()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(orgImg, dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -208,8 +206,8 @@ void Anime4KCPP::Cuda::ACNet::processGrayscale()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::Mat outMat(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-        detail::runKernel(tmpImg, outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(tmpImg, outMat, 1, ACNetTypeIndex);
         dstImg = outMat;
     }
 }

@@ -108,7 +108,7 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(const std::vector<unsigned char>& buf)
+void Anime4KCPP::AC::loadImage(const std::vector<std::uint8_t>& buf)
 {
     if (!param.alpha)
         orgImg = cv::imdecode(buf, cv::IMREAD_COLOR);
@@ -148,7 +148,7 @@ void Anime4KCPP::AC::loadImage(const std::vector<unsigned char>& buf)
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(const unsigned char* buf, size_t size)
+void Anime4KCPP::AC::loadImage(const std::uint8_t* buf, std::size_t size)
 {
     if (!param.alpha)
         loadImage(cv::imdecode(cv::Mat{ 1, static_cast<int>(size), CV_8UC1, (void*)buf }, cv::IMREAD_COLOR));
@@ -156,7 +156,7 @@ void Anime4KCPP::AC::loadImage(const unsigned char* buf, size_t size)
         loadImage(cv::imdecode(cv::Mat{ 1, static_cast<int>(size), CV_8UC1, (void*)buf }, cv::IMREAD_UNCHANGED));
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint8_t* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     if(inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
         throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
@@ -206,7 +206,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint16_t* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     if (inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
         throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
@@ -256,7 +256,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
     if (inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
         throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
@@ -306,7 +306,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, b
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint8_t* r, std::uint8_t* g, std::uint8_t* b, bool inputAsYUV444)
 {
     if (inputYUV = inputAsYUV444)
     {
@@ -332,7 +332,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint16_t* r, std::uint16_t* g, std::uint16_t* b, bool inputAsYUV444)
 {
     if (inputYUV = inputAsYUV444)
     {
@@ -358,7 +358,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
     width = std::round(param.zoomFactor * orgImg.cols);
 }
 
-void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
+void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
 {
     if (inputYUV = inputAsYUV444)
     {
@@ -385,9 +385,9 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, floa
 }
 
 void Anime4KCPP::AC::loadImage(
-    int rowsY, int colsY, size_t strideY, unsigned char* y,
-    int rowsU, int colsU, size_t strideU, unsigned char* u,
-    int rowsV, int colsV, size_t strideV, unsigned char* v)
+    int rowsY, int colsY, std::size_t strideY, std::uint8_t* y,
+    int rowsU, int colsU, std::size_t strideU, std::uint8_t* u,
+    int rowsV, int colsV, std::size_t strideV, std::uint8_t* v)
 {
     dstImg = orgImg = cv::Mat(rowsY, colsY, CV_8UC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_8UC1, u, strideU);
@@ -403,9 +403,9 @@ void Anime4KCPP::AC::loadImage(
 }
 
 void Anime4KCPP::AC::loadImage(
-    int rowsY, int colsY, size_t strideY, unsigned short* y,
-    int rowsU, int colsU, size_t strideU, unsigned short* u,
-    int rowsV, int colsV, size_t strideV, unsigned short* v)
+    int rowsY, int colsY, std::size_t strideY, std::uint16_t* y,
+    int rowsU, int colsU, std::size_t strideU, std::uint16_t* u,
+    int rowsV, int colsV, std::size_t strideV, std::uint16_t* v)
 {
     dstImg = orgImg = cv::Mat(rowsY, colsY, CV_16UC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_16UC1, u, strideU);
@@ -421,9 +421,9 @@ void Anime4KCPP::AC::loadImage(
 }
 
 void Anime4KCPP::AC::loadImage(
-    int rowsY, int colsY, size_t strideY, float* y,
-    int rowsU, int colsU, size_t strideU, float* u,
-    int rowsV, int colsV, size_t strideV, float* v)
+    int rowsY, int colsY, std::size_t strideY, float* y,
+    int rowsU, int colsU, std::size_t strideU, float* u,
+    int rowsV, int colsV, std::size_t strideV, float* v)
 {
     dstImg = orgImg = cv::Mat(rowsY, colsY, CV_32FC1, y, strideY);
     dstU = orgU = cv::Mat(rowsU, colsU, CV_32FC1, u, strideU);
@@ -487,7 +487,7 @@ void Anime4KCPP::AC::saveImage(const std::string& dstFile)
 }
 #endif // ENABLE_IMAGE_IO
 
-void Anime4KCPP::AC::saveImage(const std::string suffix, std::vector<unsigned char>& buf)
+void Anime4KCPP::AC::saveImage(const std::string suffix, std::vector<std::uint8_t>& buf)
 {
     cv::Mat tmpImg = dstImg;
     if (inputYUV)
@@ -559,7 +559,7 @@ void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
     }
 }
 
-void Anime4KCPP::AC::saveImage(unsigned char* data, size_t dstStride)
+void Anime4KCPP::AC::saveImage(std::uint8_t* data, std::size_t dstStride)
 {
     cv::Mat tmpImg = dstImg;
     if (data == nullptr)
@@ -580,59 +580,59 @@ void Anime4KCPP::AC::saveImage(unsigned char* data, size_t dstStride)
         cv::merge(std::vector<cv::Mat>{ tmpImg, alphaChannel }, tmpImg);
     }
 
-    size_t stride = tmpImg.step;
-    size_t step = dstStride > stride ? dstStride : stride;
+    std::size_t stride = tmpImg.step;
+    std::size_t step = dstStride > stride ? dstStride : stride;
     if (stride == step)
     {
-        memcpy(data, tmpImg.data, stride * tmpImg.rows);
+        std::memcpy(data, tmpImg.data, stride * tmpImg.rows);
     }
     else
     {
-        for (size_t i = 0; i < tmpImg.rows; i++)
+        for (std::size_t i = 0; i < tmpImg.rows; i++)
         {
-            memcpy(data, tmpImg.data + i * stride, stride);
+            std::memcpy(data, tmpImg.data + i * stride, stride);
             data += step;
         }
     }
 }
 
 void Anime4KCPP::AC::saveImage(
-    unsigned char* r, size_t dstStrideR,
-    unsigned char* g, size_t dstStrideG,
-    unsigned char* b, size_t dstStrideB)
+    std::uint8_t* r, std::size_t dstStrideR,
+    std::uint8_t* g, std::size_t dstStrideG,
+    std::uint8_t* b, std::size_t dstStrideB)
 {
     if (r == nullptr || g == nullptr || b == nullptr)
         throw ACException<ExceptionType::RunTimeError>("Pointers can not be nullptr");
     if (inputYUV)
     {
-        size_t strideY = dstImg.step;
-        size_t strideU = dstU.step;
-        size_t strideV = dstV.step;
+        std::size_t strideY = dstImg.step;
+        std::size_t strideU = dstU.step;
+        std::size_t strideV = dstV.step;
 
-        size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
-        size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
-        size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
+        std::size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
+        std::size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
+        std::size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
 
-        size_t HY = dstImg.rows;
-        size_t HUV = dstU.rows;
+        std::size_t HY = dstImg.rows;
+        std::size_t HUV = dstU.rows;
 
         if (strideY == stepY && strideU == stepU && strideV == stepV)
         {
-            memcpy(r, dstImg.data, strideY * HY);
-            memcpy(g, dstU.data, strideU * HUV);
-            memcpy(b, dstV.data, strideV * HUV);
+            std::memcpy(r, dstImg.data, strideY * HY);
+            std::memcpy(g, dstU.data, strideU * HUV);
+            std::memcpy(b, dstV.data, strideV * HUV);
         }
         else
         {
-            for (size_t i = 0; i < HY; i++)
+            for (std::size_t i = 0; i < HY; i++)
             {
-                memcpy(r, dstImg.data + i * strideY, strideY);
+                std::memcpy(r, dstImg.data + i * strideY, strideY);
                 r += stepY;
 
                 if (i < HUV)
                 {
-                    memcpy(g, dstU.data + i * strideU, strideU);
-                    memcpy(b, dstV.data + i * strideV, strideV);
+                    std::memcpy(g, dstU.data + i * strideU, strideU);
+                    std::memcpy(b, dstV.data + i * strideV, strideV);
                     b += stepV;
                     g += stepU;
                 }
@@ -644,23 +644,23 @@ void Anime4KCPP::AC::saveImage(
         std::vector<cv::Mat> bgr(3);
         cv::split(dstImg, bgr);
 
-        size_t stride = bgr[R].step;
-        size_t height = bgr[B].rows;
-        size_t step = dstStrideR > stride ? dstStrideR : stride;
+        std::size_t stride = bgr[R].step;
+        std::size_t height = bgr[B].rows;
+        std::size_t step = dstStrideR > stride ? dstStrideR : stride;
 
         if (stride == step)
         {
-            memcpy(b, bgr[B].data, stride * height);
-            memcpy(g, bgr[G].data, stride * height);
-            memcpy(r, bgr[R].data, stride * height);
+            std::memcpy(b, bgr[B].data, stride * height);
+            std::memcpy(g, bgr[G].data, stride * height);
+            std::memcpy(r, bgr[R].data, stride * height);
         }
         else
         {
-            for (size_t i = 0; i < height; i++)
+            for (std::size_t i = 0; i < height; i++)
             {
-                memcpy(b, bgr[B].data + i * stride, stride);
-                memcpy(g, bgr[G].data + i * stride, stride);
-                memcpy(r, bgr[R].data + i * stride, stride);
+                std::memcpy(b, bgr[B].data + i * stride, stride);
+                std::memcpy(g, bgr[G].data + i * stride, stride);
+                std::memcpy(r, bgr[R].data + i * stride, stride);
 
                 b += step;
                 g += step;
@@ -670,9 +670,9 @@ void Anime4KCPP::AC::saveImage(
     }
 }
 
-void Anime4KCPP::AC::saveImageBufferSize(size_t& dataSize, size_t dstStride)
+void Anime4KCPP::AC::saveImageBufferSize(std::size_t& dataSize, std::size_t dstStride)
 {
-    size_t stride = dstImg.step;
+    std::size_t stride = dstImg.step;
 
     if (inputYUV)
     {
@@ -681,24 +681,24 @@ void Anime4KCPP::AC::saveImageBufferSize(size_t& dataSize, size_t dstStride)
     else if (inputRGB32 || checkAlphaChannel)
         stride += stride / 3;
 
-    size_t step = dstStride > stride ? dstStride : stride;
+    std::size_t step = dstStride > stride ? dstStride : stride;
     dataSize = step * dstImg.rows;;
 }
 
-void Anime4KCPP::AC::saveImageBufferSize(size_t& rSize, size_t dstStrideR, size_t& gSize, size_t dstStrideG, size_t& bSize, size_t dstStrideB)
+void Anime4KCPP::AC::saveImageBufferSize(std::size_t& rSize, std::size_t dstStrideR, std::size_t& gSize, std::size_t dstStrideG, std::size_t& bSize, std::size_t dstStrideB)
 {
     if (inputYUV)
     {
-        size_t strideY = dstImg.step;
-        size_t strideU = dstU.step;
-        size_t strideV = dstV.step;
+        std::size_t strideY = dstImg.step;
+        std::size_t strideU = dstU.step;
+        std::size_t strideV = dstV.step;
 
-        size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
-        size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
-        size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
+        std::size_t stepY = dstStrideR > strideY ? dstStrideR : strideY;
+        std::size_t stepU = dstStrideG > strideU ? dstStrideG : strideU;
+        std::size_t stepV = dstStrideB > strideV ? dstStrideB : strideV;
 
-        size_t HY = dstImg.rows;
-        size_t HUV = dstU.rows;
+        std::size_t HY = dstImg.rows;
+        std::size_t HUV = dstU.rows;
 
         rSize = stepY * HY;
         gSize = stepU * HUV;
@@ -706,8 +706,8 @@ void Anime4KCPP::AC::saveImageBufferSize(size_t& rSize, size_t dstStrideR, size_
     }
     else
     {
-        size_t stride = dstImg.step / 3;
-        size_t step = dstStrideR > stride ? dstStrideR : stride;
+        std::size_t stride = dstImg.step / 3;
+        std::size_t step = dstStrideR > stride ? dstStrideR : stride;
 
         rSize = step * dstImg.rows;
         gSize = step * dstImg.rows;
@@ -821,8 +821,8 @@ Anime4KCPP::Parameters::Parameters(
     bool fastMode,
     bool preprocessing,
     bool postprocessing,
-    unsigned char preFilters,
-    unsigned char postFilters,
+    std::uint8_t preFilters,
+    std::uint8_t postFilters,
     unsigned int maxThreads,
     bool HDN,
     int HDNLevel,

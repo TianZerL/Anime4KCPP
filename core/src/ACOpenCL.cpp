@@ -22,28 +22,28 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
     {
         cl::Platform::get(&platforms);
 
-        const size_t platformsNumber = platforms.size();
+        const std::size_t platformsNumber = platforms.size();
 
         if (platformsNumber == 0)
         {
             return GPUList(0, { 0 }, "Failed to list opencl gpu infomation: No supported OpenCL GPU");
         }
 
-        for (size_t i = 0; i < platformsNumber; i++)
+        for (std::size_t i = 0; i < platformsNumber; i++)
         {
             std::string platformName;
             platforms[i].getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
             msg << "Platform " << i << ": " << platformName << std::endl;
             platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
-            const size_t devicesNumber = devices.size();
+            const std::size_t devicesNumber = devices.size();
             if (devicesNumber == 0)
             {
                 msg << " No supported GPU in this platform" << std::endl;
             }
 
             devicesVector.emplace_back(devicesNumber);
-            for (size_t j = 0; j < devicesNumber; j++)
+            for (std::size_t j = 0; j < devicesNumber; j++)
             {
                 std::string deviceName;
                 devices[j].getInfo<std::string>(CL_DEVICE_NAME, &deviceName);

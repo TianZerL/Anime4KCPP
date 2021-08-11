@@ -10,7 +10,7 @@
 
 inline std::string& ltrim(std::string& s)
 {
-    size_t pos = s.find_first_not_of(" \n\r\t");
+    std::size_t pos = s.find_first_not_of(" \n\r\t");
     if (pos != std::string::npos)
         s.erase(0, pos);
     return s;
@@ -18,7 +18,7 @@ inline std::string& ltrim(std::string& s)
 
 inline std::string& rtrim(std::string& s)
 {
-    size_t pos = s.find_last_not_of(" \n\r\t");
+    std::size_t pos = s.find_last_not_of(" \n\r\t");
     if (pos != std::string::npos)
         s.erase(pos + 1);
     return s;
@@ -35,8 +35,8 @@ struct ConfigError
 {
     std::string filePath;
     std::string lineData;
-    size_t lineNumber = 0;
-    size_t pos = 0;
+    std::size_t lineNumber = 0;
+    std::size_t pos = 0;
 
     void printErrorInfo()
     {
@@ -75,9 +75,9 @@ public:
 
         std::string currLine;
 
-        size_t pos = 0;
+        std::size_t pos = 0;
         std::string key, value;
-        size_t lineNumber = 0;
+        std::size_t lineNumber = 0;
         std::string lineData;
         while (std::getline(inputFile, currLine))
         {
@@ -136,7 +136,7 @@ public:
     T get(const std::string& key);
 
 private:
-    void setError(const std::string& lineData, size_t lineNumber, size_t pos)
+    void setError(const std::string& lineData, std::size_t lineNumber, std::size_t pos)
     {
         err.lineData = lineData;
         err.lineNumber = lineNumber;

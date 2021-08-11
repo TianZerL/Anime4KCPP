@@ -8,9 +8,9 @@
 
 #define CURL_ERROR_CHECK(code) if (code != CURLcode::CURLE_OK) throw std::runtime_error(curl_easy_strerror(code))
 
-static size_t dataHandler(unsigned char* data, size_t size, size_t nmemb, std::vector<unsigned char>* buf)
+static std::size_t dataHandler(std::uint8_t* data, std::size_t size, std::size_t nmemb, std::vector<std::uint8_t>* buf)
 {
-    size_t length = size * nmemb;
+    std::size_t length = size * nmemb;
 
     buf->insert(buf->end(), data, data + length);
 
@@ -40,7 +40,7 @@ void Downloader::release() noexcept
     }
 }
 
-void Downloader::download(std::string url, const std::vector<unsigned char>& buf)
+void Downloader::download(std::string url, const std::vector<std::uint8_t>& buf)
 {
     CURLcode code = CURLcode::CURLE_OK;
 

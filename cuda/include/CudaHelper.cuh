@@ -1,6 +1,8 @@
 #ifndef __CUDA_HELPER__
 #define __CUDA_HELPER__
 
+#include <cstdint>
+
 #include "ACException.hpp"
 #include "device_launch_parameters.h"
 
@@ -17,8 +19,8 @@
     if (err != cudaSuccess) \
     throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(cudaGetErrorString(err), std::string(__FILE__), __LINE__)
 
-typedef unsigned char uchar;
-typedef unsigned short ushort;
+typedef std::uint8_t uchar;
+typedef std::uint16_t ushort;
 
 extern int currCudaDeviceID;
 

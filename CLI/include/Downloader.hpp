@@ -10,7 +10,7 @@ public:
 
     void init();
     void release() noexcept;
-    void download(std::string url, const std::vector<unsigned char>& buf);
+    void download(std::string url, const std::vector<std::uint8_t>& buf);
 
 private:
     void* curl = nullptr;

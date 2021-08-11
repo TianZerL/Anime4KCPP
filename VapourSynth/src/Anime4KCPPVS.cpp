@@ -78,22 +78,22 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        size_t srcH = vsapi->getFrameHeight(src, 0);
-        size_t srcW = vsapi->getFrameWidth(src, 0);
+        std::size_t srcH = vsapi->getFrameHeight(src, 0);
+        std::size_t srcW = vsapi->getFrameWidth(src, 0);
 
-        size_t srcSrtide = vsapi->getStride(src, 0);
+        std::size_t srcSrtide = vsapi->getStride(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        size_t dstSrtide = vsapi->getStride(dst, 0);
+        std::size_t dstSrtide = vsapi->getStride(dst, 0);
 
         T* srcR = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
         T* srcG = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 1)));
         T* srcB = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 2)));
 
-        unsigned char* dstR = vsapi->getWritePtr(dst, 0);
-        unsigned char* dstG = vsapi->getWritePtr(dst, 1);
-        unsigned char* dstB = vsapi->getWritePtr(dst, 2);
+        std::uint8_t* dstR = vsapi->getWritePtr(dst, 0);
+        std::uint8_t* dstG = vsapi->getWritePtr(dst, 1);
+        std::uint8_t* dstB = vsapi->getWritePtr(dst, 2);
 
         std::unique_ptr<Anime4KCPP::AC> ac;
 
@@ -159,30 +159,30 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        size_t srcHY = vsapi->getFrameHeight(src, 0);
-        size_t srcWY = vsapi->getFrameWidth(src, 0);
-        size_t srcHU = vsapi->getFrameHeight(src, 1);
-        size_t srcWU = vsapi->getFrameWidth(src, 1);
-        size_t srcHV = vsapi->getFrameHeight(src, 2);
-        size_t srcWV = vsapi->getFrameWidth(src, 2);
+        std::size_t srcHY = vsapi->getFrameHeight(src, 0);
+        std::size_t srcWY = vsapi->getFrameWidth(src, 0);
+        std::size_t srcHU = vsapi->getFrameHeight(src, 1);
+        std::size_t srcWU = vsapi->getFrameWidth(src, 1);
+        std::size_t srcHV = vsapi->getFrameHeight(src, 2);
+        std::size_t srcWV = vsapi->getFrameWidth(src, 2);
 
-        size_t srcSrtideY = vsapi->getStride(src, 0);
-        size_t srcSrtideU = vsapi->getStride(src, 1);
-        size_t srcSrtideV = vsapi->getStride(src, 2);
+        std::size_t srcSrtideY = vsapi->getStride(src, 0);
+        std::size_t srcSrtideU = vsapi->getStride(src, 1);
+        std::size_t srcSrtideV = vsapi->getStride(src, 2);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        size_t dstSrtideY = vsapi->getStride(dst, 0);
-        size_t dstSrtideU = vsapi->getStride(dst, 1);
-        size_t dstSrtideV = vsapi->getStride(dst, 2);
+        std::size_t dstSrtideY = vsapi->getStride(dst, 0);
+        std::size_t dstSrtideU = vsapi->getStride(dst, 1);
+        std::size_t dstSrtideV = vsapi->getStride(dst, 2);
 
         T* srcY = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
         T* srcU = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 1)));
         T* srcV = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 2)));
 
-        unsigned char* dstY = vsapi->getWritePtr(dst, 0);
-        unsigned char* dstU = vsapi->getWritePtr(dst, 1);
-        unsigned char* dstV = vsapi->getWritePtr(dst, 2);
+        std::uint8_t* dstY = vsapi->getWritePtr(dst, 0);
+        std::uint8_t* dstU = vsapi->getWritePtr(dst, 1);
+        std::uint8_t* dstV = vsapi->getWritePtr(dst, 2);
 
         std::unique_ptr<Anime4KCPP::AC> ac;
 
@@ -251,18 +251,18 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        size_t srcH = vsapi->getFrameHeight(src, 0);
-        size_t srcW = vsapi->getFrameWidth(src, 0);
+        std::size_t srcH = vsapi->getFrameHeight(src, 0);
+        std::size_t srcW = vsapi->getFrameWidth(src, 0);
 
-        size_t srcSrtide = vsapi->getStride(src, 0);
+        std::size_t srcSrtide = vsapi->getStride(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        size_t dstSrtide = vsapi->getStride(dst, 0);
+        std::size_t dstSrtide = vsapi->getStride(dst, 0);
 
         T* srcY = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
 
-        unsigned char* dstY = vsapi->getWritePtr(dst, 0);
+        std::uint8_t* dstY = vsapi->getWritePtr(dst, 0);
 
         std::unique_ptr<Anime4KCPP::AC> ac;
 
@@ -594,9 +594,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<float>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
         else
             if (data->vi.format->bitsPerSample == 8)
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned char>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<std::uint8_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<unsigned short>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameYUV<std::uint16_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
     }
     else if (data->vi.format->colorFamily == cmGray)
     {
@@ -604,9 +604,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<float>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
         else
             if (data->vi.format->bitsPerSample == 8)
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned char>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<std::uint8_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<unsigned short>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrameGrayscale<std::uint16_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
     }
     else
     {
@@ -614,9 +614,9 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
             vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<float>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
         else
             if (data->vi.format->bitsPerSample == 8)
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned char>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<std::uint8_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
             else
-                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<unsigned short>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
+                vsapi->createFilter(in, out, "Anime4KCPP", Anime4KCPPInit, Anime4KCPPGetFrame<std::uint16_t>, Anime4KCPPFree, fmParallel, 0, data.release(), core);
     }
 }
 

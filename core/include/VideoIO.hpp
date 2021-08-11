@@ -20,7 +20,7 @@
 namespace Anime4KCPP::Utils
 {
     class VideoIO;
-    typedef std::pair<cv::Mat, size_t> Frame;
+    typedef std::pair<cv::Mat, std::size_t> Frame;
 }
 
 class Anime4KCPP::Utils::VideoIO
@@ -31,7 +31,7 @@ public:
     VideoIO(const VideoIO&) = delete;
     VideoIO& operator=(const VideoIO&) = delete;
     //initialize frame process callback function `p` and thread count `t`, it's ready to call process after this
-    VideoIO& init(std::function<void()>&& p, size_t t) noexcept;
+    VideoIO& init(std::function<void()>&& p, std::size_t t) noexcept;
     void process();
     //initialize VideoCapture
     bool openReader(const std::string& srcFile);
@@ -50,12 +50,12 @@ public:
 private:
     void setProgress(double p) noexcept;
 private:
-    size_t threads = 0;
+    std::size_t threads = 0;
     std::function<void()> processor;
     cv::VideoCapture reader;
     cv::VideoWriter writer;
     std::queue <Frame> rawFrames;
-    std::unordered_map<size_t, cv::Mat> frameMap;
+    std::unordered_map<std::size_t, cv::Mat> frameMap;
     //lock
     std::mutex mtxRead;
     std::condition_variable cndRead;
@@ -63,7 +63,7 @@ private:
     std::condition_variable cndWrite;
     //callback data
     std::atomic<double> progress;
-    std::atomic<size_t> stop;
+    std::atomic<std::size_t> stop;
     bool pause{ false };
     std::unique_ptr<std::promise<void>> pausePromise;
 };

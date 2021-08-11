@@ -41,11 +41,7 @@ HRESULT ACProp::OnConnect(IUnknown* pUnk)
         return E_NOINTERFACE;
 
     CheckPointer(pIAC, E_FAIL);
-    pIAC->GetParameters(
-        &HDN, &HDNLevel, &CNN, 
-        &pID, &dID, &zoomFactor, 
-        &H, &W, &GPGPUModelIdx, 
-        &OpenCLQueueNum, &OpenCLParallelIO);
+    pIAC->GetParameters(data);
 
     pIAC->GetGPUInfo(GPUInfo);
 
@@ -67,36 +63,36 @@ HRESULT ACProp::OnDisconnect()
 
 HRESULT ACProp::OnActivate()
 {
-    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN), HDN);
-    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), CNN);
-    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_OpenCLParallelIO), OpenCLParallelIO);
+    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN), data.HDN);
+    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN), data.CNN);
+    Button_SetCheck(GetDlgItem(m_Dlg, IDC_CHECK_OpenCLParallelIO), data.OpenCLParallelIO);
 
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CPU");
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"OpenCL");
     ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), L"CUDA");
-    ComboBox_SetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), GPGPUModelIdx);
+    ComboBox_SetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU), data.GPGPUModel);
 
     TCHAR sz[STR_MAX_LENGTH];
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%lf\0"), zoomFactor);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%lf\0"), data.zoomFactor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), HDNLevel);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.HDNLevel);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_HDNLevel), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), pID);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.pID);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_PID), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), dID);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.dID);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_DID), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), OpenCLQueueNum);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.OpenCLQueueNum);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_OpenCLQueueNum), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), H);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.H);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_H), sz);
 
-    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), W);
+    StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.W);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_W), sz);
 
     MultiByteToWideChar(CP_ACP, 0, GPUInfo.c_str(), -1, sz, STR_MAX_LENGTH);
@@ -122,59 +118,51 @@ HRESULT ACProp::OnApplyChanges()
 {
     GetValues();
     CheckPointer(pIAC, E_POINTER);
-    pIAC->SetParameters(
-        HDN, HDNLevel, CNN, 
-        pID, dID, zoomFactor, 
-        H, W, GPGPUModelIdx,
-        OpenCLQueueNum, OpenCLParallelIO);
+    pIAC->SetParameters(data);
 
     return NOERROR;
 }
 
 void ACProp::GetValues()
 {
-    HDN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN)) == BST_CHECKED;
+    data.HDN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_HDN)) == BST_CHECKED;
 
-    CNN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN)) == BST_CHECKED;
+    data.CNN = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_CNN)) == BST_CHECKED;
 
-    OpenCLParallelIO = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_OpenCLParallelIO)) == BST_CHECKED;
+    data.OpenCLParallelIO = Button_GetCheck(GetDlgItem(m_Dlg, IDC_CHECK_OpenCLParallelIO)) == BST_CHECKED;
 
-    GPGPUModelIdx = ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU));
+    data.GPGPUModel = ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_GPGPU));
 
     TCHAR sz[STR_MAX_LENGTH];
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_ZF), sz, STR_MAX_LENGTH);
-    zoomFactor = _wtof(sz);
-    zoomFactor = zoomFactor >= 1.0 ? zoomFactor : 1.0;
+    data.zoomFactor = _wtof(sz);
+    data.zoomFactor = data.zoomFactor >= 1.0 ? data.zoomFactor : 1.0;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_HDNLevel), sz, STR_MAX_LENGTH);
-    HDNLevel = _wtoi(sz);
-    HDNLevel = (HDNLevel < 0 || HDNLevel > 3) ? 1 : HDNLevel;
+    data.HDNLevel = _wtoi(sz);
+    data.HDNLevel = (data.HDNLevel < 0 || data.HDNLevel > 3) ? 1 : data.HDNLevel;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_PID), sz, STR_MAX_LENGTH);
-    pID = _wtoi(sz);
-    pID = pID < 0 ? 0 : pID;
+    data.pID = _wtoi(sz);
+    data.pID = data.pID < 0 ? 0 : data.pID;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_DID), sz, STR_MAX_LENGTH);
-    dID = _wtoi(sz);
-    dID = dID < 0 ? 0 : dID;
+    data.dID = _wtoi(sz);
+    data.dID = data.dID < 0 ? 0 : data.dID;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_OpenCLQueueNum), sz, STR_MAX_LENGTH);
-    OpenCLQueueNum = _wtoi(sz);
-    OpenCLQueueNum = OpenCLQueueNum < 1 ? 1 : OpenCLQueueNum;
+    data.OpenCLQueueNum = _wtoi(sz);
+    data.OpenCLQueueNum = data.OpenCLQueueNum < 1 ? 1 : data.OpenCLQueueNum;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_H), sz, STR_MAX_LENGTH);
-    H = _wtoi(sz);
-    H = H < 0 ? 0 : H;
+    data.H = _wtoi(sz);
+    data.H = data.H < 0 ? 0 : data.H;
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_W), sz, STR_MAX_LENGTH);
-    W = _wtoi(sz);
-    W = W < 0 ? 0 : W;
+    data.W = _wtoi(sz);
+    data.W = data.W < 0 ? 0 : data.W;
 }
 
 ACProp::ACProp(LPUNKNOWN lpunk, HRESULT* phr) :
     CBasePropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), lpunk,
-        IDD_ACPROP, IDS_TITLE),
-    HDN(false), CNN(false), HDNLevel(1), pID(0), dID(0), 
-    zoomFactor(2.0), H(1080), W(1920), GPGPUModelIdx(0),
-    OpenCLQueueNum(4), OpenCLParallelIO(false),
-    pIAC(NULL), bInit(FALSE) {}
+        IDD_ACPROP, IDS_TITLE), data{}, pIAC(NULL), bInit(FALSE) {}

@@ -18,12 +18,12 @@ namespace Anime4KCPP::Filter::detail
         const int h = src.rows, w = src.cols;
         const int channels = src.channels();
         const int jMAX = w * channels;
-        const size_t step = src.step;
+        const std::size_t step = src.step;
 
         Anime4KCPP::Utils::ParallelFor(0, h,
             [&](const int i) {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
-                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<std::size_t>(i) * step);
+                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<std::size_t>(i) * step);
                 for (int j = 0; j < jMAX; j += channels)
                     callBack(i, j, tmpLineData + j, lineData);
             });
@@ -51,7 +51,7 @@ namespace Anime4KCPP::Filter::detail
     static void CASSharpeningImpl(cv::Mat& img)
     {
         const int channels = img.channels();
-        const size_t lineStep = img.step1();
+        const std::size_t lineStep = img.step1();
         detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
@@ -86,7 +86,7 @@ namespace Anime4KCPP::Filter::detail
     }
 }
 
-Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, unsigned char filters)
+Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, std::uint8_t filters)
     :filters(filters), srcImgRef(srcImg)
 {
     H = srcImgRef.rows;
@@ -135,7 +135,7 @@ void Anime4KCPP::FilterProcessor::process()
     }
 }
 
-std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(unsigned char filters)
+std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(std::uint8_t filters)
 {
     std::vector<std::string> ret;
     if (filters & Filter::Median_Blur)
@@ -161,10 +161,10 @@ void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& srcImgRef)
     switch (srcImgRef.depth())
     {
     case CV_8U:
-        Filter::detail::CASSharpeningImpl<unsigned char>(srcImgRef);
+        Filter::detail::CASSharpeningImpl<std::uint8_t>(srcImgRef);
         break;
     case CV_16U:
-        Filter::detail::CASSharpeningImpl<unsigned short>(srcImgRef);
+        Filter::detail::CASSharpeningImpl<std::uint16_t>(srcImgRef);
         break;
     case CV_32F:
         Filter::detail::CASSharpeningImpl<float>(srcImgRef);

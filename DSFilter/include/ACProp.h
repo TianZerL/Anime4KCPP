@@ -7,6 +7,26 @@
 #include "Anime4KCPP.hpp"
 #include "resource.h"
 
+namespace GPGPU
+{
+    static constexpr int CPU = 0, OpenCL = 1, CUDA = 2;
+};
+
+struct ACPropData
+{
+    bool CNN = true;
+    bool HDN = false;
+    int HDNLevel = 1;
+    unsigned int pID = 0;
+    unsigned int dID = 0;
+    double zoomFactor = 2.0;
+    int H = 1080;
+    int W = 1920;
+    int GPGPUModel = GPGPU::OpenCL;
+    int OpenCLQueueNum = 4;
+    bool OpenCLParallelIO = false;
+};
+
 extern "C"
 {
     // {82F56FD7-717C-46CA-94C4-C1DBD380BCA4}
@@ -16,35 +36,15 @@ extern "C"
     DECLARE_INTERFACE_(IAC, IUnknown)
     {
         STDMETHOD(GetParameters) (THIS_
-            bool* HDN,
-            int* HDNLevel,
-            bool* CNN,
-            unsigned int* pID,
-            unsigned int* dID,
-            double* zoomFactor,
-            int* H,
-            int* W,
-            int* GPGPUModel,
-            int* OpenCLQueueNum,
-            bool* OpenCLParallelIO
+            ACPropData& data
             ) PURE;
 
         STDMETHOD(SetParameters) (THIS_
-            bool HDN,
-            int HDNLevel,
-            bool CNN,
-            unsigned int pID,
-            unsigned int dID,
-            double zoomFactor,
-            int H,
-            int W,
-            int GPGPUModel,
-            int OpenCLQueueNum,
-            bool OpenCLParallelIO
+            const ACPropData & data
             ) PURE;
 
         STDMETHOD(GetGPUInfo) (THIS_
-            std::string & info
+            std::string& info
             ) PURE;
     };
 }
@@ -67,15 +67,8 @@ private:
 private:
     ACProp(LPUNKNOWN lpunk, HRESULT* phr);
 private:
-    bool HDN, CNN;
-    int HDNLevel;
-    unsigned int pID, dID;
-    double zoomFactor;
-    int H, W;
+    ACPropData data;
     std::string GPUInfo;
-    int GPGPUModelIdx;
-    int OpenCLQueueNum;
-    bool OpenCLParallelIO;
 
     IAC* pIAC;
     BOOL bInit;

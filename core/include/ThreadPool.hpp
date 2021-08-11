@@ -16,7 +16,7 @@ namespace Anime4KCPP::Utils
 class Anime4KCPP::Utils::ThreadPool
 {
 public:
-    explicit ThreadPool(size_t maxThreadCount);
+    explicit ThreadPool(std::size_t maxThreadCount);
     ~ThreadPool();
 
     template<typename F>
@@ -33,7 +33,7 @@ private:
     bool stop;
 };
 
-inline Anime4KCPP::Utils::ThreadPool::ThreadPool(size_t maxThreadCount)
+inline Anime4KCPP::Utils::ThreadPool::ThreadPool(std::size_t maxThreadCount)
     :stop(false)
 {
     threads.reserve(maxThreadCount);

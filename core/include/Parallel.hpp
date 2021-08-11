@@ -35,11 +35,11 @@ inline void Anime4KCPP::Utils::ParallelFor(const int first, const int last, F&& 
         func(i);
     }
 #else // Built-in parallel library
-    static const size_t threadNum = std::thread::hardware_concurrency();
+    static const std::size_t threadNum = std::thread::hardware_concurrency();
     if (threadNum > 1)
     {
         std::vector<std::future<void>> taskList;
-        taskList.reserve(static_cast<size_t>(last) - static_cast<size_t>(first));
+        taskList.reserve(static_cast<std::size_t>(last) - static_cast<std::size_t>(first));
 
         static Anime4KCPP::Utils::ThreadPool pool(threadNum);
 

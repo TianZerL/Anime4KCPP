@@ -31,7 +31,7 @@ namespace Anime4KCPP::OpenCL::detail
     static bool parallelIO = false;
     static int pID = 0;
     static int dID = 0;
-    static size_t workGroupSizeBase = 32;
+    static std::size_t workGroupSizeBase = 32;
 
     static std::string readKernel(const std::string& fileName)
     {
@@ -47,31 +47,31 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelN(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, const Parameters& param)
     {
-        double nWidth, nHeight;
+        cl_float nWidth, nHeight;
         if (param.zoomFactor == 2.0)
         {
-            nWidth = 1.0 / dstImg.cols;
-            nHeight = 1.0 / dstImg.rows;
+            nWidth = 1.0f / dstImg.cols;
+            nHeight = 1.0f / dstImg.rows;
         }
         else
         {
-            nWidth = static_cast<double>(orgImg.cols) / dstImg.cols;
-            nHeight = static_cast<double>(orgImg.rows) / dstImg.rows;
+            nWidth = static_cast<cl_float>(orgImg.cols) / dstImg.cols;
+            nHeight = static_cast<cl_float>(orgImg.rows) / dstImg.rows;
         }
 
-        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
-        const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-        const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-        const std::array<size_t, 2> size =
+        static constexpr std::array<cl::size_type, 3> start = { 0,0,0 };
+        const std::array<cl::size_type, 3> orgRegion = { static_cast<cl::size_type>(orgImg.cols),static_cast<cl::size_type>(orgImg.rows),1 };
+        const std::array<cl::size_type, 3> dstRegion = { static_cast<cl::size_type>(dstImg.cols),static_cast<cl::size_type>(dstImg.rows),1 };
+        const std::array<cl::size_type, 2> size =
         {
             ALIGN_UP(dstImg.cols, workGroupSizeBase),
             ALIGN_UP(dstImg.rows, workGroupSizeBase)
         };
 
-        const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
-        const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
-        const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
-        const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
+        const cl_float pushColorStrength = static_cast<cl_float>(param.strengthColor);
+        const cl_float pushGradientStrength = static_cast<cl_float>(param.strengthGradient);
+        const cl_float normalizedWidth = nWidth;
+        const cl_float normalizedHeight = nHeight;
 
         try
         {
@@ -118,7 +118,7 @@ namespace Anime4KCPP::OpenCL::detail
 
             int i;
             //enqueue
-            commandQueue.enqueueWriteImage(imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data);
+            commandQueue.enqueueWriteImage(imageBuffer0, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data);
             commandQueue.enqueueNDRangeKernel(kernelGetGray, cl::NullRange, cl::NDRange(size[0], size[1]));
             for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
             {
@@ -143,7 +143,7 @@ namespace Anime4KCPP::OpenCL::detail
                 }
             }
             //blocking read
-            commandQueue.enqueueReadImage(imageBuffer1, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data);
+            commandQueue.enqueueReadImage(imageBuffer1, CL_TRUE, start, dstRegion, dstImg.step, 0, dstImg.data);
         }
         catch (const cl::Error& e)
         {
@@ -153,31 +153,31 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, const Parameters& param)
     {
-        double nWidth, nHeight;
+        cl_float nWidth, nHeight;
         if (param.zoomFactor == 2.0)
         {
-            nWidth = 1.0 / dstImg.cols;
-            nHeight = 1.0 / dstImg.rows;
+            nWidth = 1.0f / dstImg.cols;
+            nHeight = 1.0f / dstImg.rows;
         }
         else
         {
-            nWidth = static_cast<double>(orgImg.cols) / dstImg.cols;
-            nHeight = static_cast<double>(orgImg.rows) / dstImg.rows;
+            nWidth = static_cast<cl_float>(orgImg.cols) / dstImg.cols;
+            nHeight = static_cast<cl_float>(orgImg.rows) / dstImg.rows;
         }
 
-        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
-        const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-        const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-        const std::array<size_t, 2> size =
+        static constexpr std::array<cl::size_type, 3> start = { 0,0,0 };
+        const std::array<cl::size_type, 3> orgRegion = { static_cast<cl::size_type>(orgImg.cols),static_cast<cl::size_type>(orgImg.rows),1 };
+        const std::array<cl::size_type, 3> dstRegion = { static_cast<cl::size_type>(dstImg.cols),static_cast<cl::size_type>(dstImg.rows),1 };
+        const std::array<cl::size_type, 2> size =
         {
             ALIGN_UP(dstImg.cols, workGroupSizeBase),
             ALIGN_UP(dstImg.rows, workGroupSizeBase)
         };
 
-        const cl_float pushColorStrength = static_cast<const cl_float>(param.strengthColor);
-        const cl_float pushGradientStrength = static_cast<const cl_float>(param.strengthGradient);
-        const cl_float normalizedWidth = static_cast<const cl_float>(nWidth);
-        const cl_float normalizedHeight = static_cast<const cl_float>(nHeight);
+        const cl_float pushColorStrength = static_cast<cl_float>(param.strengthColor);
+        const cl_float pushGradientStrength = static_cast<cl_float>(param.strengthGradient);
+        const cl_float normalizedWidth = nWidth;
+        const cl_float normalizedHeight = nHeight;
 
         try
         {
@@ -230,7 +230,7 @@ namespace Anime4KCPP::OpenCL::detail
             cl::Event  readFinishedEvent;
 
             //enqueue
-            commandQueueIO.enqueueWriteImage(imageBuffer0, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
+            commandQueueIO.enqueueWriteImage(imageBuffer0, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
             commandQueue.enqueueNDRangeKernel(kernelGetGray, cl::NullRange, cl::NDRange(size[0], size[1]), cl::NullRange, &waitForWriteFinishedEvent);
             for (i = 0; i < param.passes && i < param.pushColorCount; i++)//pcc for push color count
             {
@@ -256,7 +256,7 @@ namespace Anime4KCPP::OpenCL::detail
             }
             //blocking read
             commandQueue.enqueueMarkerWithWaitList(nullptr, &readReadyEvent);
-            commandQueueIO.enqueueReadImage(imageBuffer1, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
+            commandQueueIO.enqueueReadImage(imageBuffer1, CL_FALSE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
             readFinishedEvent.wait();
         }
         catch (const cl::Error& e)

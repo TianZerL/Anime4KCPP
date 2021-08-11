@@ -12,11 +12,6 @@ enum class ColorFormat
     YV12, IYUV, NV12, RGB24, RGB32, P016
 };
 
-enum GPGPU
-{
-    CPU, OpenCL, CUDA
-};
-
 class Anime4KCPPDS :
     public CTransformFilter, ISpecifyPropertyPages, IAC
 {
@@ -31,16 +26,8 @@ public:
     virtual HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
-    STDMETHODIMP GetParameters(
-        bool* HDN, int* HDNLevel, bool* CNN,
-        unsigned int* pID, unsigned int* dID,
-        double* zoomFactor, int* H, int* W, int* GPGPUModel,
-        int* OpenCLQueueNum, bool* OpenCLParallelIO);
-    STDMETHODIMP SetParameters(
-        bool HDN, int HDNLevel, bool CNN,
-        unsigned int pID, unsigned int dID,
-        double zoomFactor, int H, int W, int GPGPUModel,
-        int OpenCLQueueNum, bool OpenCLParallelIO);
+    STDMETHODIMP GetParameters(ACPropData& data);
+    STDMETHODIMP SetParameters(const ACPropData& data);
     STDMETHODIMP GetGPUInfo(std::string& info);
 
     STDMETHODIMP GetPages(CAUUID* pPages);
@@ -57,14 +44,8 @@ private:
 private:
     Anime4KCPP::ACInitializer initializer;
     Anime4KCPP::Parameters parameters;
-    unsigned int pID, dID;
-    double zf;
-    bool CNN;
-    int H, W;
-    GPGPU GPGPUModel;
+    ACPropData data;
     int GPUCheckResult;
-    int OpenCLQueueNum;
-    bool OpenCLParallelIO;
 
     size_t srcH, srcW, dstH, dstW;
     LONG dstDataLength;

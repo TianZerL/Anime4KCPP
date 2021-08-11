@@ -15,7 +15,7 @@ namespace Anime4KCPP::Cuda
     {
         int orgW, orgH;
         int W, H;
-        size_t stride;
+        std::size_t stride;
         int passes, pushColorCount;
         float strengthColor, strengthGradient;
     };
@@ -23,7 +23,7 @@ namespace Anime4KCPP::Cuda
     struct ACCudaParamACNet
     {
         int orgW, orgH;
-        size_t stride;
+        std::size_t stride;
     };
 
     void cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param);

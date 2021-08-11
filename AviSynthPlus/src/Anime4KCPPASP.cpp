@@ -142,9 +142,9 @@ PVideoFrame AC_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env
         switch (vi.BitsPerComponent())
         {
         case 8:
-            return FilterGrayscale<unsigned char>(n, env);
+            return FilterGrayscale<std::uint8_t>(n, env);
         case 16:
-            return FilterGrayscale<unsigned short>(n, env);
+            return FilterGrayscale<std::uint16_t>(n, env);
         case 32:
             return FilterGrayscale<float>(n, env);
         }
@@ -154,9 +154,9 @@ PVideoFrame AC_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env
         switch (vi.BitsPerComponent())
         {
         case 8:
-            return FilterYUV<unsigned char>(n, env);
+            return FilterYUV<std::uint8_t>(n, env);
         case 16:
-            return FilterYUV<unsigned short>(n, env);
+            return FilterYUV<std::uint16_t>(n, env);
         case 32:
             return FilterYUV<float>(n, env);
         }
@@ -170,27 +170,27 @@ PVideoFrame Anime4KCPPFilter::FilterYUV(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    size_t srcPitchY = src->GetPitch(PLANAR_Y);
-    size_t dstPitchY = dst->GetPitch(PLANAR_Y);
-    size_t srcPitchU = src->GetPitch(PLANAR_U);
-    size_t dstPitchU = dst->GetPitch(PLANAR_U);
-    size_t srcPitchV = src->GetPitch(PLANAR_V);
-    size_t dstPitchV = dst->GetPitch(PLANAR_V);
+    std::size_t srcPitchY = src->GetPitch(PLANAR_Y);
+    std::size_t dstPitchY = dst->GetPitch(PLANAR_Y);
+    std::size_t srcPitchU = src->GetPitch(PLANAR_U);
+    std::size_t dstPitchU = dst->GetPitch(PLANAR_U);
+    std::size_t srcPitchV = src->GetPitch(PLANAR_V);
+    std::size_t dstPitchV = dst->GetPitch(PLANAR_V);
 
-    size_t srcHY = src->GetHeight(PLANAR_Y);
-    size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
-    size_t srcHU = src->GetHeight(PLANAR_U);
-    size_t srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
-    size_t srcHV = src->GetHeight(PLANAR_V);
-    size_t srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
+    std::size_t srcHY = src->GetHeight(PLANAR_Y);
+    std::size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+    std::size_t srcHU = src->GetHeight(PLANAR_U);
+    std::size_t srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
+    std::size_t srcHV = src->GetHeight(PLANAR_V);
+    std::size_t srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
     T* srcpU = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U)));
     T* srcpV = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_V)));
 
-    unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
-    unsigned char* dstpU = dst->GetWritePtr(PLANAR_U);
-    unsigned char* dstpV = dst->GetWritePtr(PLANAR_V);
+    std::uint8_t* dstpY = dst->GetWritePtr(PLANAR_Y);
+    std::uint8_t* dstpU = dst->GetWritePtr(PLANAR_U);
+    std::uint8_t* dstpV = dst->GetWritePtr(PLANAR_V);
 
     std::unique_ptr<Anime4KCPP::AC> ac;
 
@@ -247,15 +247,15 @@ PVideoFrame Anime4KCPPFilter::FilterGrayscale(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    size_t srcPitchY = src->GetPitch(PLANAR_Y);
-    size_t dstPitchY = dst->GetPitch(PLANAR_Y);
+    std::size_t srcPitchY = src->GetPitch(PLANAR_Y);
+    std::size_t dstPitchY = dst->GetPitch(PLANAR_Y);
 
-    size_t srcHY = src->GetHeight(PLANAR_Y);
-    size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+    std::size_t srcHY = src->GetHeight(PLANAR_Y);
+    std::size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
 
-    unsigned char* dstpY = dst->GetWritePtr(PLANAR_Y);
+    std::uint8_t* dstpY = dst->GetWritePtr(PLANAR_Y);
 
     std::unique_ptr<Anime4KCPP::AC> ac;
 
@@ -308,14 +308,14 @@ PVideoFrame Anime4KCPPFilter::FilterRGB(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    size_t srcPitch = src->GetPitch();
-    size_t dstPitch = dst->GetPitch();
+    std::size_t srcPitch = src->GetPitch();
+    std::size_t dstPitch = dst->GetPitch();
 
-    size_t srcH = src->GetHeight();
-    size_t srcL = src->GetRowSize();
+    std::size_t srcH = src->GetHeight();
+    std::size_t srcL = src->GetRowSize();
 
-    unsigned char* srcp = const_cast<unsigned char*>(src->GetReadPtr());
-    unsigned char* dstp = dst->GetWritePtr();
+    std::uint8_t* srcp = const_cast<std::uint8_t*>(src->GetReadPtr());
+    std::uint8_t* dstp = dst->GetWritePtr();
 
     std::unique_ptr<Anime4KCPP::AC> ac;
 

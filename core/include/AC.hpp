@@ -4,6 +4,7 @@
 #include<atomic>
 #include<future>
 #include<cmath>
+#include<cstdint>
 
 #include<opencv2/opencv.hpp>
 
@@ -22,7 +23,7 @@ namespace Anime4KCPP
 
     namespace Filter
     {
-        static constexpr unsigned char
+        static constexpr std::uint8_t
             Median_Blur = 1 << 0,
             Mean_Blur = 1 << 1,
             CAS_Sharpening = 1 << 2,
@@ -55,8 +56,8 @@ struct Anime4KCPP::Parameters
     bool fastMode;
     bool preprocessing;
     bool postprocessing;
-    unsigned char preFilters;
-    unsigned char postFilters;
+    std::uint8_t preFilters;
+    std::uint8_t postFilters;
     unsigned int maxThreads;
     bool HDN;
     bool alpha;
@@ -79,8 +80,8 @@ struct Anime4KCPP::Parameters
         bool fastMode = false,
         bool preprocessing = false,
         bool postprocessing = false,
-        unsigned char preFilters = 4,
-        unsigned char postFilters = 40,
+        std::uint8_t preFilters = 4,
+        std::uint8_t postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency(),
         bool HDN = false,
         int HDNLevel = 1,
@@ -102,43 +103,43 @@ public:
     void loadImage(const std::string& srcFile);
 #endif // ENABLE_IMAGE_IO
     void loadImage(const cv::Mat& srcImage);
-    void loadImage(const std::vector<unsigned char>& buf);
-    void loadImage(const unsigned char* buf, size_t size);
-    void loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
-    void loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444 = false);
-    void loadImage(int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, bool inputAsYUV444 = false);
-    void loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444 = false);
+    void loadImage(const std::vector<std::uint8_t>& buf);
+    void loadImage(const std::uint8_t* buf, std::size_t size);
+    void loadImage(int rows, int cols, std::size_t stride, std::uint8_t* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, std::size_t stride, std::uint16_t* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, std::size_t stride, float* data, bool inputAsYUV444 = false, bool inputAsRGB32 = false, bool inputAsGrayscale = false);
+    void loadImage(int rows, int cols, std::size_t stride, std::uint8_t* r, std::uint8_t* g, std::uint8_t* b, bool inputAsYUV444 = false);
+    void loadImage(int rows, int cols, std::size_t stride, std::uint16_t* r, std::uint16_t* g, std::uint16_t* b, bool inputAsYUV444 = false);
+    void loadImage(int rows, int cols, std::size_t stride, float* r, float* g, float* b, bool inputAsYUV444 = false);
     void loadImage(
-        int rowsY, int colsY, size_t strideY, unsigned char* y,
-        int rowsU, int colsU, size_t strideU, unsigned char* u,
-        int rowsV, int colsV, size_t strideV, unsigned char* v);
+        int rowsY, int colsY, std::size_t strideY, std::uint8_t* y,
+        int rowsU, int colsU, std::size_t strideU, std::uint8_t* u,
+        int rowsV, int colsV, std::size_t strideV, std::uint8_t* v);
     void loadImage(
-        int rowsY, int colsY, size_t strideY, unsigned short* y,
-        int rowsU, int colsU, size_t strideU, unsigned short* u,
-        int rowsV, int colsV, size_t strideV, unsigned short* v);
+        int rowsY, int colsY, std::size_t strideY, std::uint16_t* y,
+        int rowsU, int colsU, std::size_t strideU, std::uint16_t* u,
+        int rowsV, int colsV, std::size_t strideV, std::uint16_t* v);
     void loadImage(
-        int rowsY, int colsY, size_t strideY, float* y,
-        int rowsU, int colsU, size_t strideU, float* u,
-        int rowsV, int colsV, size_t strideV, float* v);
+        int rowsY, int colsY, std::size_t strideY, float* y,
+        int rowsU, int colsU, std::size_t strideU, float* u,
+        int rowsV, int colsV, std::size_t strideV, float* v);
     void loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v);
 #ifdef ENABLE_IMAGE_IO
     void saveImage(const std::string& dstFile);
 #endif // ENABLE_IMAGE_IO
-    void saveImage(const std::string suffix, std::vector<unsigned char>& buf);
+    void saveImage(const std::string suffix, std::vector<std::uint8_t>& buf);
     void saveImage(cv::Mat& dstImage);
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
-    void saveImage(unsigned char* data, size_t dstStride = 0);
+    void saveImage(std::uint8_t* data, std::size_t dstStride = 0);
     void saveImage(
-        unsigned char* r, size_t dstStrideR, 
-        unsigned char* g, size_t dstStrideG, 
-        unsigned char* b, size_t dstStrideB);
-    void saveImageBufferSize(size_t& dataSize, size_t dstStride = 0);
+        std::uint8_t* r, std::size_t dstStrideR, 
+        std::uint8_t* g, std::size_t dstStrideG, 
+        std::uint8_t* b, std::size_t dstStrideB);
+    void saveImageBufferSize(std::size_t& dataSize, std::size_t dstStride = 0);
     void saveImageBufferSize(
-        size_t& rSize, size_t dstStrideR, 
-        size_t& gSize, size_t dstStrideG, 
-        size_t& bSize, size_t dstStrideB);
+        std::size_t& rSize, std::size_t dstStrideR, 
+        std::size_t& gSize, std::size_t dstStrideG, 
+        std::size_t& bSize, std::size_t dstStrideB);
     void saveImageShape(int& cols, int& rows, int& channels);
     //R2B = true will exchange R channel and B channel
     void showImage(bool R2B = false);

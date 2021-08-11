@@ -22,13 +22,13 @@ namespace Anime4KCPP::CPU::detail
 
         tmpMat.create(h, w, CV_32FC(outChannels));
 
-        const size_t srcStep = src.step;
-        const size_t step = tmpMat.step;
+        const std::size_t srcStep = src.step;
+        const std::size_t step = tmpMat.step;
 
         Anime4KCPP::Utils::ParallelFor(0, h,
             [&](const int i) {
-                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * srcStep);
-                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<std::size_t>(i) * srcStep);
+                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
                 for (int j = 0; j < jMAX; j += outChannels)
                     callBack(i, j, tmpLineData + j, lineData);
             });
@@ -40,15 +40,15 @@ namespace Anime4KCPP::CPU::detail
         const int h = tmpMat.rows, w = tmpMat.cols;
         const int channels = tmpMat.channels();
         const int jMAX = w * channels;
-        const size_t step = tmpMat.step;
+        const std::size_t step = tmpMat.step;
 
         cv::Mat tmp;
         tmp.create(h, w, tmpMat.type());
 
         Anime4KCPP::Utils::ParallelFor(0, h,
             [&](const int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i) * step);
-                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<size_t>(i) * step);
+                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
+                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<std::size_t>(i) * step);
                 for (int j = 0; j < jMAX; j += channels)
                     callBack(i, j, tmpLineData + j, lineData);
             });
@@ -63,16 +63,16 @@ namespace Anime4KCPP::CPU::detail
         img.create(h, w, cv::DataType<T>::type);
 
         const int jMAX = w;
-        const size_t channels = tmpMat.channels();
-        const size_t step = tmpMat.step;
-        const size_t dstStep = img.step;
+        const std::size_t channels = tmpMat.channels();
+        const std::size_t step = tmpMat.step;
+        const std::size_t dstStep = img.step;
 
         Anime4KCPP::Utils::ParallelFor(0, h,
             [&](const int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<size_t>(i >> 1) * step);
-                T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<size_t>(i) * dstStep);
+                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i >> 1) * step);
+                T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<std::size_t>(i) * dstStep);
                 for (int j = 0; j < jMAX; j++)
-                    callBack(i, j, tmpLineData + j, lineData + static_cast<size_t>(j >> 1) * channels);
+                    callBack(i, j, tmpLineData + j, lineData + static_cast<std::size_t>(j >> 1) * channels);
             });
     }
 
@@ -109,7 +109,7 @@ namespace Anime4KCPP::CPU::detail
     {
         const int channels = 8;
         const int srcChannels = img.channels();
-        const size_t lineStep = img.step1();
+        const std::size_t lineStep = img.step1();
         detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, float* outMat, T* curLine) {
             const int orgJ = j / channels * srcChannels;
             const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
@@ -222,26 +222,26 @@ namespace Anime4KCPP::CPU::detail
             float out[8];
             std::copy_n(biases, 8, out);
 
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += tln * k0[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += tcn * k1[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += trn * k2[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += mln * k3[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += mcn * k4[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += mrn * k5[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += bln * k6[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += bcn * k7[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += brn * k8[i];
 
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] = std::max<float>(out[i], 0);
 
             std::copy_n(out, 8, outMat);
@@ -281,7 +281,7 @@ namespace Anime4KCPP::CPU::detail
             const float* const kptr = kernels + index * 8;
 
             float luma = 0;
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 luma += kptr[i] * inMat[i];
 #endif
 
@@ -295,10 +295,10 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8(const cv::Mat& img, const float* ke
     switch (img.depth())
     {
     case CV_8U:
-        detail::conv1To8Impl<unsigned char>(img, kernels, biases, tmpMat);
+        detail::conv1To8Impl<std::uint8_t>(img, kernels, biases, tmpMat);
         break;
     case CV_16U:
-        detail::conv1To8Impl<unsigned short>(img, kernels, biases, tmpMat);
+        detail::conv1To8Impl<std::uint16_t>(img, kernels, biases, tmpMat);
         break;
     case CV_32F:
         detail::conv1To8Impl<float>(img, kernels, biases, tmpMat);
@@ -311,7 +311,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv1To8(const cv::Mat& img, const float* ke
 void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* biases, cv::Mat& tmpMat)
 {
     const int channels = 8;
-    const size_t lineStep = tmpMat.step1();
+    const std::size_t lineStep = tmpMat.step1();
     detail::changEachPixelNToN([&](const int i, const int j, float* outMat, float* curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
@@ -332,7 +332,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         __m256 _out1 = _mm256_setzero_ps();
         __m256 _out2 = _mm256_setzero_ps();
 
-        for (size_t i = 0; i < 8; i += 2)
+        for (std::size_t i = 0; i < 8; i += 2)
         {
             const __m256 _r00 = _mm256_broadcast_ss(tl + i);
             const __m256 _r01 = _mm256_broadcast_ss(tc + i);
@@ -403,7 +403,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
 
-        for (size_t i = 0; i < 8; i++)
+        for (std::size_t i = 0; i < 8; i++)
         {
             const Eigen::Map<Eigen::Array<float, 8, 1>> k0(kptr + i * 72);
             const Eigen::Map<Eigen::Array<float, 8, 1>> k1(kptr + i * 72 + 8);
@@ -434,7 +434,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         std::copy_n(biases, 8, out);
 
         const float* const kptr = kernels;
-        for (size_t c = 0; c < 8; c++)
+        for (std::size_t c = 0; c < 8; c++)
         {
             const float* const k0 = kptr + c * 72;
             const float* const k1 = kptr + c * 72 + 8;
@@ -446,27 +446,27 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
             const float* const k7 = kptr + c * 72 + 56;
             const float* const k8 = kptr + c * 72 + 64;
 
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += tl[c] * k0[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += tc[c] * k1[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += tr[c] * k2[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += ml[c] * k3[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += mc[c] * k4[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += mr[c] * k5[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += bl[c] * k6[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += bc[c] * k7[i];
-            for (size_t i = 0; i < 8; i++)
+            for (std::size_t i = 0; i < 8; i++)
                 out[i] += br[c] * k8[i];
         }
 
-        for (size_t i = 0; i < 8; i++)
+        for (std::size_t i = 0; i < 8; i++)
             out[i] = std::max<float>(out[i], 0);
 
         std::copy_n(out, 8, outMat);
@@ -480,10 +480,10 @@ void Anime4KCPP::CPU::CNNProcessor::convTranspose8To1(cv::Mat& img, const float*
     switch (img.depth())
     {
     case CV_8U:
-        detail::convTranspose8To1Impl<unsigned char>(img, kernels, tmpMat);
+        detail::convTranspose8To1Impl<std::uint8_t>(img, kernels, tmpMat);
         break;
     case CV_16U:
-        detail::convTranspose8To1Impl<unsigned short>(img, kernels, tmpMat);
+        detail::convTranspose8To1Impl<std::uint16_t>(img, kernels, tmpMat);
         break;
     case CV_32F:
         detail::convTranspose8To1Impl<float>(img, kernels, tmpMat);

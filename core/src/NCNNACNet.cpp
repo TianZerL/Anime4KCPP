@@ -22,7 +22,7 @@ namespace Anime4KCPP::NCNN::detail
         {
             in.create(orgImg.cols, orgImg.rows, 1);
             float* dst = reinterpret_cast<float*>(in.data);
-            unsigned char* src = orgImg.data;
+            std::uint8_t* src = orgImg.data;
             for (int i = 0; i < orgImg.rows; i++)
             {
                 std::memcpy(dst, src, orgImg.cols * sizeof(float));
@@ -59,7 +59,7 @@ namespace Anime4KCPP::NCNN::detail
         {
             in.create(orgImg.cols, orgImg.rows, 1);
             float* dst = reinterpret_cast<float*>(in.data);
-            unsigned char* src = orgImg.data;
+            std::uint8_t* src = orgImg.data;
             for (int i = 0; i < orgImg.rows; i++)
             {
                 std::memcpy(dst, src, orgImg.cols * sizeof(float));

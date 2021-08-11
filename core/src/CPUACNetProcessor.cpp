@@ -60,10 +60,10 @@ void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int sc
 #else
 
 #define ACNET_PROCESS_IMPL                         \
-    cv::Mat tmpMat;                                \
+    cv::Mat tmpMat, tmp = src;                     \
     for (int i = 0; i < scaleTimes; i++)           \
     {                                              \
-        conv1To8(src, kernelsL1, biasL1, tmpMat);  \
+        conv1To8(tmp, kernelsL1, biasL1, tmpMat);  \
         conv8To8(kernels[0], biases[0], tmpMat);   \
         conv8To8(kernels[1], biases[1], tmpMat);   \
         conv8To8(kernels[2], biases[2], tmpMat);   \
@@ -72,8 +72,9 @@ void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int sc
         conv8To8(kernels[5], biases[5], tmpMat);   \
         conv8To8(kernels[6], biases[6], tmpMat);   \
         conv8To8(kernels[7], biases[7], tmpMat);   \
-        convTranspose8To1(dst, kernelsL10, tmpMat);\
-    }
+        convTranspose8To1(tmp, kernelsL10, tmpMat);\
+    }                                              \
+    dst = tmp;
 
 void Anime4KCPP::CPU::ACNetHDNL0::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {

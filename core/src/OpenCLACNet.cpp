@@ -33,7 +33,7 @@ namespace Anime4KCPP::OpenCL::detail
     static bool parallelIO = false;
     static int pID = 0;
     static int dID = 0;
-    static size_t workGroupSizeBase = 32;
+    static std::size_t workGroupSizeBase = 32;
 
     static std::string readKernel(const std::string& fileName)
     {
@@ -49,15 +49,15 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelN(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, int index)
     {
-        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
-        const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-        const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-        const std::array<size_t, 2> orgSize =
+        static constexpr std::array<cl::size_type, 3> start = { 0,0,0 };
+        const std::array<cl::size_type, 3> orgRegion = { static_cast<cl::size_type>(orgImg.cols),static_cast<cl::size_type>(orgImg.rows),1 };
+        const std::array<cl::size_type, 3> dstRegion = { static_cast<cl::size_type>(dstImg.cols),static_cast<cl::size_type>(dstImg.rows),1 };
+        const std::array<cl::size_type, 2> orgSize =
         {
             ALIGN_UP(orgImg.cols, workGroupSizeBase),
             ALIGN_UP(orgImg.rows, workGroupSizeBase)
         };
-        const std::array<size_t, 2> dstSize =
+        const std::array<cl::size_type, 2> dstSize =
         {
             ALIGN_UP(dstImg.cols, workGroupSizeBase),
             ALIGN_UP(dstImg.rows, workGroupSizeBase)
@@ -127,7 +127,7 @@ namespace Anime4KCPP::OpenCL::detail
             kernelConvTranspose8To1L10.setArg(0, sizeof(cl_mem), &imageBufferTmp1);
             kernelConvTranspose8To1L10.setArg(1, sizeof(cl_mem), &imageBufferDst);
 
-            commandQueue.enqueueWriteImage(imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data);
+            commandQueue.enqueueWriteImage(imageBufferOrg, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data);
             commandQueue.enqueueNDRangeKernel(kernelConv1To8L1, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L2, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L3, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
@@ -138,7 +138,7 @@ namespace Anime4KCPP::OpenCL::detail
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L8, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L9, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConvTranspose8To1L10, cl::NullRange, cl::NDRange(dstSize[0], dstSize[1]));
-            commandQueue.enqueueReadImage(imageBufferDst, CL_TRUE, orgin, dstRegion, dstImg.step, 0, dstImg.data);
+            commandQueue.enqueueReadImage(imageBufferDst, CL_TRUE, start, dstRegion, dstImg.step, 0, dstImg.data);
         }
         catch (const cl::Error& e)
         {
@@ -148,15 +148,15 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, int index)
     {
-        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
-        const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
-        const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
-        const std::array<size_t, 2> orgSize =
+        static constexpr std::array<cl::size_type, 3> start = { 0,0,0 };
+        const std::array<cl::size_type, 3> orgRegion = { static_cast<cl::size_type>(orgImg.cols),static_cast<cl::size_type>(orgImg.rows),1 };
+        const std::array<cl::size_type, 3> dstRegion = { static_cast<cl::size_type>(dstImg.cols),static_cast<cl::size_type>(dstImg.rows),1 };
+        const std::array<cl::size_type, 2> orgSize =
         {
             ALIGN_UP(orgImg.cols, workGroupSizeBase),
             ALIGN_UP(orgImg.rows, workGroupSizeBase)
         };
-        const std::array<size_t, 2> dstSize =
+        const std::array<cl::size_type, 2> dstSize =
         {
             ALIGN_UP(dstImg.cols, workGroupSizeBase),
             ALIGN_UP(dstImg.rows, workGroupSizeBase)
@@ -233,7 +233,7 @@ namespace Anime4KCPP::OpenCL::detail
             cl::Event& readReadyEvent = waitForReadReadyEvent.front();
             cl::Event  readFinishedEvent;
 
-            commandQueueIO.enqueueWriteImage(imageBufferOrg, CL_FALSE, orgin, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
+            commandQueueIO.enqueueWriteImage(imageBufferOrg, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
             commandQueue.enqueueNDRangeKernel(kernelConv1To8L1, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]), cl::NullRange, &waitForWriteFinishedEvent);
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L2, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L3, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
@@ -244,7 +244,7 @@ namespace Anime4KCPP::OpenCL::detail
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L8, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L9, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConvTranspose8To1L10, cl::NullRange, cl::NDRange(dstSize[0], dstSize[1]), cl::NullRange, nullptr, &readReadyEvent);
-            commandQueueIO.enqueueReadImage(imageBufferDst, CL_FALSE, orgin, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
+            commandQueueIO.enqueueReadImage(imageBufferDst, CL_FALSE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
             readFinishedEvent.wait();
         }
         catch (const cl::Error& e)
@@ -253,7 +253,7 @@ namespace Anime4KCPP::OpenCL::detail
         }
     }
 
-    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int index)
+    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes, int index)
     {
         int channelType;
         switch (orgImg.depth())
@@ -271,10 +271,16 @@ namespace Anime4KCPP::OpenCL::detail
             throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
         }
 
-        if (parallelIO)
-            runKernelP(orgImg, dstImg, channelType, index);
-        else
-            runKernelN(orgImg, dstImg, channelType, index);
+        cv::Mat tmpImg = orgImg;
+        for (int i = 0; i < scaleTimes; i++)
+        {
+            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
+            if (parallelIO)
+                runKernelP(tmpImg, dstImg, channelType, index);
+            else
+                runKernelN(tmpImg, dstImg, channelType, index);
+            tmpImg = dstImg;
+        }
     }
 }
 
@@ -330,13 +336,8 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImage()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(orgImg, dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -354,8 +355,8 @@ void Anime4KCPP::OpenCL::ACNet::processYUVImage()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::Mat outMat(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-        detail::runKernel(tmpImg, outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(tmpImg, outMat, 1, ACNetTypeIndex);
         dstImg = outMat;
 
         cv::resize(orgU, dstU, cv::Size(0, 0), param.zoomFactor, param.zoomFactor, cv::INTER_CUBIC);
@@ -376,14 +377,9 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
 
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
-        tmpImg = yuv[Y];
 
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(yuv[Y], dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -408,8 +404,8 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
         std::vector<cv::Mat> yuv(3);
         cv::split(tmpImg, yuv);
 
-        cv::Mat outMat(yuv[Y].rows * 2, yuv[Y].cols * 2, yuv[Y].type());
-        detail::runKernel(yuv[Y], outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(yuv[Y], outMat, 1, ACNetTypeIndex);
 
         cv::resize(yuv[U], yuv[U], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
         cv::resize(yuv[V], yuv[V], cv::Size(0, 0), 2.0, 2.0, cv::INTER_CUBIC);
@@ -427,13 +423,8 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscale()
         if (!scaleTimes)
             scaleTimes++;
 
-        cv::Mat tmpImg = orgImg;
-        for (int i = 0; i < scaleTimes; i++)
-        {
-            dstImg.create(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-            detail::runKernel(tmpImg, dstImg, ACNetTypeIndex);
-            tmpImg = dstImg;
-        }
+        detail::runKernel(orgImg, dstImg, scaleTimes, ACNetTypeIndex);
+
         if (param.isNonIntegerScale())
         {
             cv::resize(dstImg, dstImg, cv::Size(width, height), 0.0, 0.0, cv::INTER_AREA);
@@ -448,8 +439,8 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscale()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        cv::Mat outMat(tmpImg.rows * 2, tmpImg.cols * 2, tmpImg.type());
-        detail::runKernel(tmpImg, outMat, ACNetTypeIndex);
+        cv::Mat outMat;
+        detail::runKernel(tmpImg, outMat, 1, ACNetTypeIndex);
         dstImg = outMat;
     }
 }

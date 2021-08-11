@@ -657,7 +657,7 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_LIBCURL
                 if (web)
                 {
-                    std::vector<unsigned char> buf;
+                    std::vector<std::uint8_t> buf;
 
                     Downloader downloader;
                     downloader.init();
@@ -703,7 +703,7 @@ int main(int argc, char* argv[])
                 if (!videoCapture.isOpened())
                     throw std::runtime_error("Error: Unable to open the video file");
 
-                size_t totalFrameCount = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
+                std::size_t totalFrameCount = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
                 if (frameStart >= totalFrameCount)
                     throw std::runtime_error(
                         "Error: Unable to locate frame position: " +

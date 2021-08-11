@@ -8,7 +8,7 @@ Anime4KCPP::Utils::VideoIO::~VideoIO()
     reader.release();
 }
 
-Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void()>&& p, size_t t) noexcept
+Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void()>&& p, std::size_t t) noexcept
 {
     processor = std::move(p);
     threads = t;
@@ -18,14 +18,14 @@ Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void(
 void Anime4KCPP::Utils::VideoIO::process()
 {
     ThreadPool pool(threads + 1);
-    stop = static_cast<size_t>(reader.get(cv::CAP_PROP_FRAME_COUNT));
+    stop = static_cast<std::size_t>(reader.get(cv::CAP_PROP_FRAME_COUNT));
 
     pool.exec([this]()
         {
-            for (size_t i = 0; i < stop; i++)
+            for (std::size_t i = 0; i < stop; i++)
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
-                std::unordered_map<size_t, cv::Mat>::iterator it;
+                std::unordered_map<std::size_t, cv::Mat>::iterator it;
                 for (;;)
                 {
                     it = frameMap.find(i);
@@ -40,7 +40,7 @@ void Anime4KCPP::Utils::VideoIO::process()
             }
         });
 
-    for (size_t i = 0; i < stop; i++)
+    for (std::size_t i = 0; i < stop; i++)
     {
         cv::Mat frame;
         if (!reader.read(frame))
@@ -52,7 +52,7 @@ void Anime4KCPP::Utils::VideoIO::process()
             std::unique_lock<std::mutex> lock(mtxRead);
             while (rawFrames.size() >= threads)
                 cndRead.wait(lock);
-            rawFrames.emplace(std::pair<cv::Mat, size_t>(frame, i));
+            rawFrames.emplace(std::pair<cv::Mat, std::size_t>(frame, i));
         }
         pool.exec(processor);
     }
