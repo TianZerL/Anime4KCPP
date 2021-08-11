@@ -17,22 +17,20 @@ namespace Anime4KCPP
     struct AC_EXPORT Parameters;
     class AC_EXPORT AC;
 
-    enum BGRA
-    {
-        B = 0, G = 1, R = 2, A = 3
-    };
+    static constexpr int B = 0, G = 1, R = 2, A = 3;
+    static constexpr int Y = 0, U = 1, V = 2;
 
-    enum YUV
+    namespace Filter
     {
-        Y = 0, U = 1, V = 2
-    };
-
-    enum FilterType : uint8_t
-    {
-        MEDIAN_BLUR = 1, MEAN_BLUR = 2, CAS_SHARPENING = 4,
-        GAUSSIAN_BLUR_WEAK = 8, GAUSSIAN_BLUR = 16,
-        BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
-    };
+        static constexpr unsigned char
+            Median_Blur = 1 << 0,
+            Mean_Blur = 1 << 1,
+            CAS_Sharpening = 1 << 2,
+            Gaussian_Blur_Weak = 1 << 3,
+            Gaussian_Blur = 1 << 4,
+            Bilateral_Filter = 1 << 5,
+            Bilateral_Filter_Fast = 1 << 6;
+    }
 
     namespace Utils
     {
@@ -57,8 +55,8 @@ struct Anime4KCPP::Parameters
     bool fastMode;
     bool preprocessing;
     bool postprocessing;
-    uint8_t preFilters;
-    uint8_t postFilters;
+    unsigned char preFilters;
+    unsigned char postFilters;
     unsigned int maxThreads;
     bool HDN;
     bool alpha;
@@ -81,8 +79,8 @@ struct Anime4KCPP::Parameters
         bool fastMode = false,
         bool preprocessing = false,
         bool postprocessing = false,
-        uint8_t preFilters = 4,
-        uint8_t postFilters = 40,
+        unsigned char preFilters = 4,
+        unsigned char postFilters = 40,
         unsigned int maxThreads = std::thread::hardware_concurrency(),
         bool HDN = false,
         int HDNLevel = 1,

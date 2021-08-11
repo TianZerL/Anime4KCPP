@@ -6,9 +6,6 @@
 #define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})
 #define LERP(x, y, w) ((x) * (1.0 - (w)) + (y) * (w))
 #define REC(n) ((n) < 1 ? 1.0 : 1.0 / (n))
-#define UNFLOATB(n) ((n) >= 255 ? 255 : ((n) <= 0 ? 0 : uint8_t((n) + 0.5)))
-#define UNFLOATW(n) ((n) >= 65535 ? 65535 : ((n) <= 0 ? 0 : uint16_t((n) + 0.5)))
-#define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
 namespace Anime4KCPP::Filter::detail
 {
@@ -89,7 +86,7 @@ namespace Anime4KCPP::Filter::detail
     }
 }
 
-Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, uint8_t filters)
+Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, unsigned char filters)
     :filters(filters), srcImgRef(srcImg)
 {
     H = srcImgRef.rows;
@@ -98,39 +95,39 @@ Anime4KCPP::FilterProcessor::FilterProcessor(cv::Mat& srcImg, uint8_t filters)
 
 void Anime4KCPP::FilterProcessor::process()
 {
-    if (filters & MEDIAN_BLUR)
+    if (filters & Filter::Median_Blur)
     {
         cv::Mat tmpImg;
         cv::medianBlur(srcImgRef, tmpImg, 3);
         srcImgRef = tmpImg;
     }
-    if (filters & MEAN_BLUR)
+    if (filters & Filter::Mean_Blur)
     {
         cv::Mat tmpImg;
         cv::blur(srcImgRef, tmpImg, cv::Size(3, 3));
         srcImgRef = tmpImg;
     }
-    if (filters & CAS_SHARPENING)
+    if (filters & Filter::CAS_Sharpening)
         CASSharpening(srcImgRef);
-    if (filters & GAUSSIAN_BLUR_WEAK)
+    if (filters & Filter::Gaussian_Blur_Weak)
     {
         cv::Mat tmpImg;
         cv::GaussianBlur(srcImgRef, tmpImg, cv::Size(3, 3), 0.5);
         srcImgRef = tmpImg;
     }
-    else if (filters & GAUSSIAN_BLUR)
+    else if (filters & Filter::Gaussian_Blur)
     {
         cv::Mat tmpImg;
         cv::GaussianBlur(srcImgRef, tmpImg, cv::Size(3, 3), 1);
         srcImgRef = tmpImg;
     }
-    if (filters & BILATERAL_FILTER)
+    if (filters & Filter::Bilateral_Filter)
     {
         cv::Mat tmpImg;
         cv::bilateralFilter(srcImgRef, tmpImg, 9, 30, 30);
         srcImgRef = tmpImg;
     }
-    else if (filters & BILATERAL_FILTER_FAST)
+    else if (filters & Filter::Bilateral_Filter_Fast)
     {
         cv::Mat tmpImg;
         cv::bilateralFilter(srcImgRef, tmpImg, 5, 35, 35);
@@ -138,22 +135,22 @@ void Anime4KCPP::FilterProcessor::process()
     }
 }
 
-std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(uint8_t filters)
+std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(unsigned char filters)
 {
     std::vector<std::string> ret;
-    if (filters & MEDIAN_BLUR)
+    if (filters & Filter::Median_Blur)
         ret.emplace_back("Median blur");
-    if (filters & MEAN_BLUR)
+    if (filters & Filter::Mean_Blur)
         ret.emplace_back("Mean blur");
-    if (filters & CAS_SHARPENING)
+    if (filters & Filter::CAS_Sharpening)
         ret.emplace_back("CAS Sharpening");
-    if (filters & GAUSSIAN_BLUR_WEAK)
+    if (filters & Filter::Gaussian_Blur_Weak)
         ret.emplace_back("Gaussian blur weak");
-    else if (filters & GAUSSIAN_BLUR)
+    else if (filters & Filter::Gaussian_Blur)
         ret.emplace_back("Gaussian blur");
-    if (filters & BILATERAL_FILTER)
+    if (filters & Filter::Bilateral_Filter)
         ret.emplace_back("Bilateral filter");
-    else if (filters & BILATERAL_FILTER_FAST)
+    else if (filters & Filter::Bilateral_Filter_Fast)
         ret.emplace_back("Bilateral filter faster");
     return ret;
 }

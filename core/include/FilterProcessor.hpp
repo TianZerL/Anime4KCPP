@@ -10,13 +10,13 @@ namespace Anime4KCPP
 class Anime4KCPP::FilterProcessor
 {
 public:
-    FilterProcessor(cv::Mat& srcImg, uint8_t _filters);
+    FilterProcessor(cv::Mat& srcImg, unsigned char filters);
     void process();
-    static std::vector<std::string> filterToString(uint8_t filters);
+    static std::vector<std::string> filterToString(unsigned char filters);
 private:
     void CASSharpening(cv::Mat& src);
 private:
     int H, W;
     cv::Mat& srcImgRef;
-    uint8_t filters;
+    unsigned char filters;
 };

@@ -239,7 +239,7 @@ int main(int argc, char* argv[])
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
         "Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
         "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | "
-        "0100000 = 0101000 = 40(D)", false, 4, cmdline::range(1, 127));
+        "0100000 = 0101000 = 40(D)", false, Anime4KCPP::Filter::CAS_Sharpening, cmdline::range(1, 127));
     opt.add<unsigned int>("postFilters", 'e',
         "Enhancement filter, only working when postprocessing is true,there are 5 options by binary:"
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
         "0101000 = 40(D), so you can put 40 to enable Gaussian blur weak and Bilateral filter, "
         "which also is what I recommend for image that < 1080P, 48 for image that >= 1080P, "
         "and for performance I recommend to use 72 for video that < 1080P, 80 for video that >=1080P",
-        false, 40, cmdline::range(1, 127));
+        false, Anime4KCPP::Filter::Gaussian_Blur_Weak | Anime4KCPP::Filter::Bilateral_Filter, cmdline::range(1, 127));
     opt.add("GPUMode", 'q', "Enable GPU acceleration");
     opt.add("CNNMode", 'w', "Enable ACNet");
     opt.add("HDN", 'H', "Enable HDN mode for ACNet");
