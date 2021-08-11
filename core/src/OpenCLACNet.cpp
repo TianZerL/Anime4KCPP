@@ -19,7 +19,7 @@
 
 namespace Anime4KCPP::OpenCL::detail
 {
-    constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
+    static constexpr int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
     //init OpenCL arguments
     static bool isInitializedFlag = false;
@@ -49,7 +49,7 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelN(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, int index)
     {
-        constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
         const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
         const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
         const std::array<size_t, 2> orgSize =
@@ -148,7 +148,7 @@ namespace Anime4KCPP::OpenCL::detail
 
     static void runKernelP(const cv::Mat& orgImg, cv::Mat& dstImg, int channelType, int index)
     {
-        constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
         const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
         const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
         const std::array<size_t, 2> orgSize =

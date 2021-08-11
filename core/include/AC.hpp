@@ -34,18 +34,6 @@ namespace Anime4KCPP
         BILATERAL_FILTER = 32, BILATERAL_FILTER_FAST = 64
     };
 
-    typedef float* ChanF;
-    typedef unsigned char* ChanB;
-    typedef unsigned short* ChanW;
-
-    typedef float* PixelF;
-    typedef unsigned char* PixelB;
-    typedef unsigned short* PixelW;
-
-    typedef float* LineF;
-    typedef unsigned char* LineB;
-    typedef unsigned short* LineW;
-
     namespace Utils
     {
         int fastCeilLog2(double v) noexcept;

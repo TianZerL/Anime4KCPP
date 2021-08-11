@@ -51,7 +51,7 @@
         }                                                                                                                                    \
     }
 
-constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
+static constexpr int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 
 __global__ static void conv1To8(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,

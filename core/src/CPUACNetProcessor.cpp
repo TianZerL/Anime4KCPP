@@ -59,23 +59,22 @@ void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int sc
 
 #else
 
-#define ACNET_PROCESS_IMPL                                 \
-    cv::Mat tmpMat;                                        \
-    for (int i = 0; i < scaleTimes; i++)                   \
-    {                                                      \
-        conv1To8(src, kernelsL1, biasL1, tmpMat);          \
-        conv8To8(kernels[L2], biases[L2], tmpMat);         \
-        conv8To8(kernels[L3], biases[L3], tmpMat);         \
-        conv8To8(kernels[L4], biases[L4], tmpMat);         \
-        conv8To8(kernels[L5], biases[L5], tmpMat);         \
-        conv8To8(kernels[L6], biases[L6], tmpMat);         \
-        conv8To8(kernels[L7], biases[L7], tmpMat);         \
-        conv8To8(kernels[L8], biases[L8], tmpMat);         \
-        conv8To8(kernels[L9], biases[L9], tmpMat);         \
-        convTranspose8To1(dst, kernelsL10, tmpMat);        \
+#define ACNET_PROCESS_IMPL                         \
+    cv::Mat tmpMat;                                \
+    for (int i = 0; i < scaleTimes; i++)           \
+    {                                              \
+        conv1To8(src, kernelsL1, biasL1, tmpMat);  \
+        conv8To8(kernels[0], biases[0], tmpMat);   \
+        conv8To8(kernels[1], biases[1], tmpMat);   \
+        conv8To8(kernels[2], biases[2], tmpMat);   \
+        conv8To8(kernels[3], biases[3], tmpMat);   \
+        conv8To8(kernels[4], biases[4], tmpMat);   \
+        conv8To8(kernels[5], biases[5], tmpMat);   \
+        conv8To8(kernels[6], biases[6], tmpMat);   \
+        conv8To8(kernels[7], biases[7], tmpMat);   \
+        convTranspose8To1(dst, kernelsL10, tmpMat);\
     }
 
-constexpr static int L2 = 0, L3 = 1, L4 = 2, L5 = 3, L6 = 4, L7 = 5, L8 = 6, L9 = 7;
 void Anime4KCPP::CPU::ACNetHDNL0::process(const cv::Mat& src, cv::Mat& dst, int scaleTimes)
 {
     ACNET_PROCESS_IMPL

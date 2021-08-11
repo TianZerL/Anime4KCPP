@@ -30,7 +30,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr static T clampAndInvert(double v)
+    static constexpr T clampAndInvert(double v)
     {
         return std::numeric_limits<T>::max() -
             (v > std::numeric_limits<T>::max() ?
@@ -41,7 +41,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr static T clampAndInvert(double v)
+    static constexpr T clampAndInvert(double v)
     {
         return static_cast<T>(1.0 - (v < 0.0 ? 0.0 : (1.0 < v ? 1.0 : v)));
     }

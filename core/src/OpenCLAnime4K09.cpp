@@ -59,7 +59,7 @@ namespace Anime4KCPP::OpenCL::detail
             nHeight = static_cast<double>(orgImg.rows) / dstImg.rows;
         }
 
-        constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
         const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
         const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
         const std::array<size_t, 2> size =
@@ -165,7 +165,7 @@ namespace Anime4KCPP::OpenCL::detail
             nHeight = static_cast<double>(orgImg.rows) / dstImg.rows;
         }
 
-        constexpr std::array<size_t, 3> orgin = { 0,0,0 };
+        static constexpr std::array<size_t, 3> orgin = { 0,0,0 };
         const std::array<size_t, 3> orgRegion = { static_cast<const size_t>(orgImg.cols),static_cast<const size_t>(orgImg.rows),1 };
         const std::array<size_t, 3> dstRegion = { static_cast<const size_t>(dstImg.cols),static_cast<const size_t>(dstImg.rows),1 };
         const std::array<size_t, 2> size =

@@ -77,19 +77,19 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr static float norm(T v)
+    static constexpr float norm(T v)
     {
         return static_cast<float>(v) / std::numeric_limits<T>::max();
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr static float norm(T v)
+    static constexpr float norm(T v)
     {
         return static_cast<float>(v);
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr static T unnorm(float v)
+    static constexpr T unnorm(float v)
     {
         return v >= 1.0f ?
             std::numeric_limits<T>::max() :
@@ -99,7 +99,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr static T unnorm(float v)
+    static constexpr T unnorm(float v)
     {
         return v < 0.0f ? 0.0f : (1.0f < v ? 1.0f : v);
     }

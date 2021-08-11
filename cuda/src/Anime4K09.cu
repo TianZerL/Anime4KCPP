@@ -1,5 +1,3 @@
-#include <type_traits>
-
 #include "CudaHelper.cuh"
 #include "CudaInterface.hpp"
 

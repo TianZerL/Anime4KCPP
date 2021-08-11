@@ -74,7 +74,7 @@ namespace Anime4KCPP::Filter::detail
             const T minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
             const T maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
 
-            constexpr double peak = LERP(-0.125, -0.2, 1.0);
+            static constexpr double peak = LERP(-0.125, -0.2, 1.0);
             const double wR = peak * std::sqrt(MIN(minR, 255 - maxR) * REC(maxR));
             const double wG = peak * std::sqrt(MIN(minG, 255 - maxG) * REC(maxG));
             const double wB = peak * std::sqrt(MIN(minB, 255 - maxB) * REC(maxB));
