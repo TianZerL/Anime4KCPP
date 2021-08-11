@@ -1,9 +1,6 @@
 #ifndef __CUDA_HELPER__
 #define __CUDA_HELPER__
 
-#include <type_traits>
-#include <limits>
-
 #include "ACException.hpp"
 #include "device_launch_parameters.h"
 
@@ -26,32 +23,49 @@ typedef unsigned short ushort;
 extern int currCudaDeviceID;
 
 template <typename T>
-struct PixelValue
+struct PixelValue;
+
+template <>
+struct PixelValue<uchar>
 {
-    template <typename P = T, std::enable_if_t<std::is_integral<P>::value> * = nullptr>
-    __device__ static constexpr P max()
+    __device__ static constexpr uchar max()
     {
-        return std::numeric_limits<P>::max();
+        return 255;
     }
 
-    template <typename P = T, std::enable_if_t<std::is_integral<P>::value> * = nullptr>
-    __device__ static constexpr P min()
+    __device__ static constexpr uchar min()
     {
-        return std::numeric_limits<P>::min();
+        return 0;
+    }
+};
+
+template <>
+struct PixelValue<ushort>
+{
+    __device__ static constexpr ushort max()
+    {
+        return 65535;
     }
 
-    template <typename P = T, std::enable_if_t<std::is_floating_point<P>::value> * = nullptr>
-    __device__ static constexpr P max()
+    __device__ static constexpr ushort min()
+    {
+        return 0;
+    }
+};
+
+template <>
+struct PixelValue<float>
+{
+    __device__ static constexpr float max()
     {
         return 1.0f;
     }
 
-    template <typename P = T, std::enable_if_t<std::std::is_floating_point<P>::value> * = nullptr>
-    __device__ static constexpr P min()
+    __device__ static constexpr float min()
     {
         return 0.0f;
     }
-}
+};
 
 template <typename T, int dim>
 struct Vec;
