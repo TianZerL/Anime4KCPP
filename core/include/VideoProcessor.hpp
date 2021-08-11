@@ -15,7 +15,7 @@ class Anime4KCPP::VideoProcessor
 public:
     VideoProcessor(const Parameters& parameters, Processor::Type type);
     explicit VideoProcessor(AC& config);
-    void setVideoSaveInfo(const std::string& dstFile, CODEC codec = CODEC::MP4V, double fps = 0.0);
+    void setVideoSaveInfo(const std::string& dstFile, Codec codec = Codec::MP4V, double fps = 0.0);
     void loadVideo(const std::string& srcFile);
     void saveVideo();
 

@@ -4,7 +4,7 @@
 
 namespace Anime4KCPP
 {
-    enum class CODEC
+    enum class Codec
     {
         OTHER = -1, MP4V = 0, DXVA = 1, AVC1 = 2, VP09 = 3, HEVC = 4, AV01 = 5
     };

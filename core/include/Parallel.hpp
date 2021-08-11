@@ -1,18 +1,18 @@
 #pragma once
 
-#include <utility>
+#include<utility>
 
 #ifndef DISABLE_PARALLEL
 #if defined(USE_PPL)
-#include <ppl.h>
+#include<ppl.h>
 namespace Parallel = Concurrency;
 #elif defined(USE_TBB)
-#include <tbb/parallel_for.h>
+#include<tbb/parallel_for.h>
 namespace Parallel = tbb;
 #elif defined(USE_OPENMP)
-#include <omp.h>
+#include<omp.h>
 #else
-#include "ThreadPool.hpp"
+#include"ThreadPool.hpp"
 #endif
 #endif // !DISABLE_PARALLEL
 

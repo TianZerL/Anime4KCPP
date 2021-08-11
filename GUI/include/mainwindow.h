@@ -102,7 +102,7 @@ private:
     bool video2GIF(const QString& srcFile, const QString& dstFile);
 
     std::unique_ptr<Anime4KCPP::AC> getACUP();
-    Anime4KCPP::CODEC getCodec(const QString& codec);
+    Anime4KCPP::Codec getCodec(const QString& codec);
 
     void logToTextBrowser(const QString& info);
 
@@ -218,7 +218,7 @@ private:
     Anime4KCPP::ACInitializer initializer;
 
     QHash<QString, Language> languageSelector;
-    QHash<QString, Anime4KCPP::CODEC> codecSelector;
+    QHash<QString, Anime4KCPP::Codec> codecSelector;
 
     std::atomic<bool> stopVideoProcessing;
     std::atomic<VideoProcessingState> videoProcessingState;

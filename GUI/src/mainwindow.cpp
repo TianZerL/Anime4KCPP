@@ -26,13 +26,13 @@ MainWindow::MainWindow(QWidget* parent)
     languageSelector["ja_JP"] = Language::ja_JP;
     languageSelector["fr_FR"] = Language::fr_FR;
     //initialize codec
-    codecSelector["mp4v"] = Anime4KCPP::CODEC::MP4V;
-    codecSelector["dxva"] = Anime4KCPP::CODEC::DXVA;
-    codecSelector["avc1"] = Anime4KCPP::CODEC::AVC1;
-    codecSelector["vp09"] = Anime4KCPP::CODEC::VP09;
-    codecSelector["hevc"] = Anime4KCPP::CODEC::HEVC;
-    codecSelector["av01"] = Anime4KCPP::CODEC::AV01;
-    codecSelector["other"] = Anime4KCPP::CODEC::OTHER;
+    codecSelector["mp4v"] = Anime4KCPP::Codec::MP4V;
+    codecSelector["dxva"] = Anime4KCPP::Codec::DXVA;
+    codecSelector["avc1"] = Anime4KCPP::Codec::AVC1;
+    codecSelector["vp09"] = Anime4KCPP::Codec::VP09;
+    codecSelector["hevc"] = Anime4KCPP::Codec::HEVC;
+    codecSelector["av01"] = Anime4KCPP::Codec::AV01;
+    codecSelector["other"] = Anime4KCPP::Codec::OTHER;
     //initialize textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
     ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
@@ -723,7 +723,7 @@ QString MainWindow::getVideoOutputSuffix()
     return "." + suffix;
 }
 
-inline Anime4KCPP::CODEC MainWindow::getCodec(const QString& codec)
+inline Anime4KCPP::Codec MainWindow::getCodec(const QString& codec)
 {
     return codecSelector[codec];
 }

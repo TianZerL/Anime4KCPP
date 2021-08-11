@@ -2,12 +2,16 @@
 
 #ifdef ENABLE_VIDEO
 
-#include<opencv2/opencv.hpp>
 #include<atomic>
+#include<future>
+#include<mutex>
+#include<condition_variable>
+#include<memory>
 #include<queue>
 #include<unordered_map>
 
-#include"ThreadPool.hpp"
+#include<opencv2/opencv.hpp>
+
 #include"VideoCodec.hpp"
 
 #if (CV_VERSION_MAJOR < 3)
@@ -37,7 +41,7 @@ public:
     //initialize VideoCapture
     bool openReader(const std::string& srcFile);
     //initialize VideoWriter
-    bool openWriter(const std::string& dstFile, CODEC codec, const cv::Size& size, double forceFps = 0.0);
+    bool openWriter(const std::string& dstFile, Codec codec, const cv::Size& size, double forceFps = 0.0);
     //get the specifying video property from VideoCapture
     double get(int p);
     void release();

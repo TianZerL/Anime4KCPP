@@ -24,7 +24,7 @@ void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile)
     width = std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_WIDTH));
 }
 
-void Anime4KCPP::VideoProcessor::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
+void Anime4KCPP::VideoProcessor::setVideoSaveInfo(const std::string& dstFile, const Codec codec, const double fps)
 {
     if (!videoIO.openWriter(dstFile, codec, cv::Size(width, height), fps))
         throw ACException<ExceptionType::IO>("Failed to initialize video writer.");

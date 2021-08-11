@@ -68,23 +68,23 @@ static bool video2GIF(const std::string& srcFile, const std::string& dstFile)
     return flag;
 }
 
-static Anime4KCPP::CODEC string2Codec(const std::string& codec)
+static Anime4KCPP::Codec string2Codec(const std::string& codec)
 {
     if (codec == "mp4v")
-        return Anime4KCPP::CODEC::MP4V;
+        return Anime4KCPP::Codec::MP4V;
     if (codec == "dxva")
-        return Anime4KCPP::CODEC::DXVA;
+        return Anime4KCPP::Codec::DXVA;
     if (codec == "avc1")
-        return Anime4KCPP::CODEC::AVC1;
+        return Anime4KCPP::Codec::AVC1;
     if (codec == "vp09")
-        return Anime4KCPP::CODEC::VP09;
+        return Anime4KCPP::Codec::VP09;
     if (codec == "hevc")
-        return Anime4KCPP::CODEC::HEVC;
+        return Anime4KCPP::Codec::HEVC;
     if (codec == "av01")
-        return Anime4KCPP::CODEC::AV01;
+        return Anime4KCPP::Codec::AV01;
     if (codec == "other")
-        return Anime4KCPP::CODEC::OTHER;
-    return Anime4KCPP::CODEC::MP4V;
+        return Anime4KCPP::Codec::OTHER;
+    return Anime4KCPP::Codec::MP4V;
 }
 
 static void showVersionInfo()

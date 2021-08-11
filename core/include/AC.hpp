@@ -1,8 +1,7 @@
 #pragma once
 
 #include<iostream>
-#include<atomic>
-#include<future>
+#include<memory>
 #include<cmath>
 #include<cstdint>
 

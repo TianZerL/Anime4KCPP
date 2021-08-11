@@ -1093,7 +1093,7 @@ extern "C"
 
         try
         {
-            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::CODEC(codec), fps);
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->setVideoSaveInfo(dstFile, Anime4KCPP::Codec(codec), fps);
         }
         catch (const std::exception& err)
         {
