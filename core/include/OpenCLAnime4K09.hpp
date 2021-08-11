@@ -12,8 +12,7 @@ namespace Anime4KCPP::OpenCL
 class Anime4KCPP::OpenCL::Anime4K09 :public AC
 {
 public:
-    explicit Anime4K09(const Parameters& parameters = Parameters());
-    ~Anime4K09() override = default;
+    using AC::AC;
 
     std::string getInfo() override;
     std::string getFiltersInfo() override;

@@ -10,9 +10,10 @@ namespace Anime4KCPP::CPU
 class Anime4KCPP::CPU::ACNet :public AC
 {
 public:
-    explicit ACNet(const Parameters& parameters = Parameters());
+    explicit ACNet(const Parameters& parameters);
     ~ACNet() override;
     void setParameters(const Parameters& parameters) override;
+
     std::string getInfo() override;
     std::string getFiltersInfo() override;
 private:

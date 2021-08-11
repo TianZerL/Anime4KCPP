@@ -13,7 +13,7 @@ namespace Anime4KCPP::NCNN
 class Anime4KCPP::NCNN::ACNet :public AC
 {
 public:
-    explicit ACNet(const Parameters& parameters = Parameters());
+    explicit ACNet(const Parameters& parameters);
     ~ACNet() override;
     void setParameters(const Parameters& parameters) override;
 

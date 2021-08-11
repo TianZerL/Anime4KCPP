@@ -13,7 +13,7 @@ namespace Anime4KCPP::NCNN::detail
     static ncnn::VulkanDevice* vkdev = nullptr;
     static ncnn::Net net[Anime4KCPP::ACNetType::TotalTypeCount];
 
-    void processCPU(const cv::Mat& orgImg, cv::Mat& dstImg, const int scaleTimes, int index, ncnn::Mat& holder)
+    static void processCPU(const cv::Mat& orgImg, cv::Mat& dstImg, const int scaleTimes, int index, ncnn::Mat& holder)
     {
         ncnn::Mat in;
         if (orgImg.step == orgImg.cols * sizeof(float))
@@ -42,7 +42,7 @@ namespace Anime4KCPP::NCNN::detail
         dstImg = cv::Mat{ holder.h, holder.w,CV_32FC1, holder.data };
     }
 
-    void processVK(const cv::Mat& orgImg, cv::Mat& dstImg, const int scaleTimes, int index, ncnn::Mat& holder)
+    static void processVK(const cv::Mat& orgImg, cv::Mat& dstImg, const int scaleTimes, int index, ncnn::Mat& holder)
     {
         ncnn::VkAllocator* blob_vkallocator = vkdev->acquire_blob_allocator();
         ncnn::VkAllocator* staging_vkallocator = vkdev->acquire_staging_allocator();
@@ -96,7 +96,7 @@ namespace Anime4KCPP::NCNN::detail
         vkdev->reclaim_staging_allocator(staging_vkallocator);
     }
 
-    void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes, int index, ncnn::Mat& dataHolder)
+    static void runKernel(const cv::Mat& orgImg, cv::Mat& dstImg, int scaleTimes, int index, ncnn::Mat& dataHolder)
     {
         float normScale;
 

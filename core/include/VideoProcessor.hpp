@@ -30,7 +30,7 @@ public:
 private:
     double fps;
     double totalFrameCount;
-    int H, W;
+    int height, width;
 
     Utils::VideoIO videoIO;
     Parameters param;

@@ -10,31 +10,82 @@
 #define UNFLOATW(n) ((n) >= 65535 ? 65535 : ((n) <= 0 ? 0 : uint16_t((n) + 0.5)))
 #define CLAMP(v, lo, hi) ((v < lo) ? lo : (hi < v) ? hi : v)
 
-namespace Anime4KCPP
+namespace Anime4KCPP::Filter::detail
 {
-    namespace detail
+    template<typename T, typename F>
+    static void changEachPixel(cv::Mat& src, F&& callBack)
     {
-        template<typename T, typename F>
-        void changEachPixel(cv::Mat& src, F&& callBack)
-        {
-            cv::Mat tmp;
-            src.copyTo(tmp);
+        cv::Mat tmp;
+        src.copyTo(tmp);
 
-            const int h = src.rows, w = src.cols;
-            const int channels = src.channels();
-            const int jMAX = w * channels;
-            const size_t step = src.step;
+        const int h = src.rows, w = src.cols;
+        const int channels = src.channels();
+        const int jMAX = w * channels;
+        const size_t step = src.step;
 
-            Anime4KCPP::Utils::ParallelFor(0, h,
-                [&](const int i) {
-                    T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
-                    T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
-                    for (int j = 0; j < jMAX; j += channels)
-                        callBack(i, j, tmpLineData + j, lineData);
-                });
+        Anime4KCPP::Utils::ParallelFor(0, h,
+            [&](const int i) {
+                T* lineData = reinterpret_cast<T*>(src.data + static_cast<size_t>(i) * step);
+                T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<size_t>(i) * step);
+                for (int j = 0; j < jMAX; j += channels)
+                    callBack(i, j, tmpLineData + j, lineData);
+            });
 
-            src = tmp;
-        }
+        src = tmp;
+    }
+
+    template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+    static constexpr T clamp(double v)
+    {
+        return v > std::numeric_limits<T>::max() ?
+                std::numeric_limits<T>::max() :
+                (std::numeric_limits<T>::min() > v ?
+                    std::numeric_limits<T>::min() :
+                    static_cast<T>(std::round(v)));
+    }
+
+    template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
+    static constexpr T clamp(double v)
+    {
+        return static_cast<T>(v < 0.0 ? 0.0 : (1.0 < v ? 1.0 : v));
+    }
+
+    template<typename T>
+    static void CASSharpeningImpl(cv::Mat& img)
+    {
+        const int channels = img.channels();
+        const size_t lineStep = img.step1();
+        detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
+            const int jp = j < (img.cols - 1)* channels ? channels : 0;
+            const int jn = j > channels ? -channels : 0;
+
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+
+            const T* const tc = nLineData + j;
+            const T* const ml = cLineData + j + jn, * const mc = pixel, * const mr = cLineData + j + jp;
+            const T* const bc = pLineData + j;
+
+            const T minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
+            const T maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
+            const T minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
+            const T maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
+            const T minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
+            const T maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
+
+            constexpr double peak = LERP(-0.125, -0.2, 1.0);
+            const double wR = peak * std::sqrt(MIN(minR, 255 - maxR) * REC(maxR));
+            const double wG = peak * std::sqrt(MIN(minG, 255 - maxG) * REC(maxG));
+            const double wB = peak * std::sqrt(MIN(minB, 255 - maxB) * REC(maxB));
+
+            const double r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
+            const double g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
+            const double b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
+            pixel[R] = clamp<T>(r);
+            pixel[G] = clamp<T>(g);
+            pixel[B] = clamp<T>(b);
+            });
     }
 }
 
@@ -107,111 +158,19 @@ std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(uint8_t fil
     return ret;
 }
 
-inline void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& srcImgRef)
+void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& srcImgRef)
 {
     const int lineStep = W * 3;
     switch (srcImgRef.depth())
     {
     case CV_8U:
-        detail::changEachPixel<unsigned char>(srcImgRef, [&](const int i, const int j, PixelB pixel, LineB curLine) {
-            const int jp = j < (W - 1) * 3 ? 3 : 0;
-            const int jn = j > 3 ? -3 : 0;
-
-            const LineB pLineData = i < H - 1 ? curLine + lineStep : curLine;
-            const LineB cLineData = curLine;
-            const LineB nLineData = i > 0 ? curLine - lineStep : curLine;
-
-            const PixelB tc = nLineData + j;
-            const PixelB ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-            const PixelB bc = pLineData + j;
-
-            const uint8_t minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const uint8_t maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const uint8_t minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const uint8_t maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const uint8_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-            const uint8_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-
-            constexpr double peak = LERP(-0.125, -0.2, 1.0);
-            const double wR = peak * std::sqrt(MIN(minR, 255 - maxR) * REC(maxR));
-            const double wG = peak * std::sqrt(MIN(minG, 255 - maxG) * REC(maxG));
-            const double wB = peak * std::sqrt(MIN(minB, 255 - maxB) * REC(maxB));
-
-            const double r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
-            const double g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
-            const double b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
-            pixel[R] = UNFLOATB(r);
-            pixel[G] = UNFLOATB(g);
-            pixel[B] = UNFLOATB(b);
-            });
+        Filter::detail::CASSharpeningImpl<unsigned char>(srcImgRef);
         break;
     case CV_16U:
-        detail::changEachPixel<unsigned short>(srcImgRef, [&](const int i, const int j, PixelW pixel, LineW curLine) {
-            const int jp = j < (W - 1) * 3 ? 3 : 0;
-            const int jn = j > 3 ? -3 : 0;
-
-            const LineW pLineData = i < H - 1 ? curLine + lineStep : curLine;
-            const LineW cLineData = curLine;
-            const LineW nLineData = i > 0 ? curLine - lineStep : curLine;
-
-            const PixelW tc = nLineData + j;
-            const PixelW ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-            const PixelW bc = pLineData + j;
-
-            const uint16_t minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const uint16_t maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const uint16_t minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const uint16_t maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const uint16_t minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-            const uint16_t maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-
-            constexpr double peak = LERP(-0.125, -0.2, 1.0);
-            const double wR = peak * std::sqrt(MIN(minR, 65535 - maxR) * REC(maxR));
-            const double wG = peak * std::sqrt(MIN(minG, 65535 - maxG) * REC(maxG));
-            const double wB = peak * std::sqrt(MIN(minB, 65535 - maxB) * REC(maxB));
-
-            const double r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
-            const double g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
-            const double b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
-            pixel[R] = UNFLOATW(r);
-            pixel[G] = UNFLOATW(g);
-            pixel[B] = UNFLOATW(b);
-            });
+        Filter::detail::CASSharpeningImpl<unsigned short>(srcImgRef);
         break;
     case CV_32F:
-        detail::changEachPixel<float>(srcImgRef, [&](const int i, const int j, PixelF pixel, LineF curLine) {
-            const int jp = j < (W - 1) * 3 ? 3 : 0;
-            const int jn = j > 3 ? -3 : 0;
-
-            const LineF pLineData = i < H - 1 ? curLine + lineStep : curLine;
-            const LineF cLineData = curLine;
-            const LineF nLineData = i > 0 ? curLine - lineStep : curLine;
-
-            const PixelF tc = nLineData + j;
-            const PixelF ml = cLineData + j + jn, mc = pixel, mr = cLineData + j + jp;
-            const PixelF bc = pLineData + j;
-
-            const float minR = MIN5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const float maxR = MAX5(tc[R], ml[R], mc[R], mr[R], bc[R]);
-            const float minG = MIN5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const float maxG = MAX5(tc[G], ml[G], mc[G], mr[G], bc[G]);
-            const float minB = MIN5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-            const float maxB = MAX5(tc[B], ml[B], mc[B], mr[B], bc[B]);
-
-            constexpr float peak = LERP(-0.125, -0.2, 1.0);
-            const float wR = peak * sqrtf(MIN(minR, 1.0f - maxR) * REC(maxR));
-            const float wG = peak * sqrtf(MIN(minG, 1.0f - maxG) * REC(maxG));
-            const float wB = peak * sqrtf(MIN(minB, 1.0f - maxB) * REC(maxB));
-
-            const float r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0f + 4.0f * wR);
-            const float g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0f + 4.0f * wG);
-            const float b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0f + 4.0f * wB);
-
-            pixel[R] = CLAMP(r, 0.0f, 1.0f);
-            pixel[G] = CLAMP(g, 0.0f, 1.0f);
-            pixel[B] = CLAMP(b, 0.0f, 1.0f);
-
-            });
+        Filter::detail::CASSharpeningImpl<float>(srcImgRef);
         break;
     }
 

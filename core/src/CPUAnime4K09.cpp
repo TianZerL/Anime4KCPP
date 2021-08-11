@@ -8,7 +8,7 @@
 namespace Anime4KCPP::CPU::detail
 {
     template<typename T, typename F>
-    void changEachPixel(cv::Mat& src, F&& callBack)
+    static void changEachPixel(cv::Mat& src, F&& callBack)
     {
         cv::Mat tmp;
         src.copyTo(tmp);
@@ -30,7 +30,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr T clampAndInvert(double v)
+    constexpr static T clampAndInvert(double v)
     {
         return std::numeric_limits<T>::max() -
             (v > std::numeric_limits<T>::max() ?
@@ -41,13 +41,13 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr T clampAndInvert(double v)
+    constexpr static T clampAndInvert(double v)
     {
         return static_cast<T>(1.0 - (v < 0.0 ? 0.0 : (1.0 < v ? 1.0 : v)));
     }
 
     template<typename T>
-    void getLightest(T* mc, T* a, T* b, T* c, double strength) noexcept
+    static void getLightest(T* mc, const T* a, const T* b, const T* c, double strength) noexcept
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
         for (int i = 0; i <= 3; i++)    //RGBA
@@ -55,7 +55,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void getAverage(T* mc, T* a, T* b, T* c, double strength) noexcept
+    static void getAverage(T* mc, const T* a, const T* b, const T* c, double strength) noexcept
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
         for (int i = 0; i <= 2; i++)    //RGB
@@ -63,7 +63,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void getGray(cv::Mat& img)
+    static void getGray(cv::Mat& img)
     {
         detail::changEachPixel<T>(img, [](const int i, const int j, T* pixel, T* curLine) {
             pixel[A] = pixel[R] * 0.299 + pixel[G] * 0.587 + pixel[B] * 0.114;
@@ -71,7 +71,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void pushColor(cv::Mat& img, double strength)
+    static void pushColor(cv::Mat& img, double strength)
     {
         const int channels = img.channels();
         const size_t lineStep = img.step1();
@@ -79,13 +79,14 @@ namespace Anime4KCPP::CPU::detail
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
 
-            T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-            T* const cLineData = curLine;
-            T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
-            T* tl = nLineData + j + jn, * tc = nLineData + j, * tr = nLineData + j + jp;
-            T* ml = cLineData + j + jn, * mc = pixel, * mr = cLineData + j + jp;
-            T* bl = pLineData + j + jn, * bc = pLineData + j, * br = pLineData + j + jp;
+            const T* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
+            const T* const ml = cLineData + j + jn, * const mr = cLineData + j + jp;
+            const T* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
+            T* const mc = pixel;
 
             T maxD, minL;
 
@@ -144,7 +145,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void getGradient(cv::Mat& img)
+    static void getGradient(cv::Mat& img)
     {
         const int channels = img.channels();
         const size_t lineStep = img.step1();
@@ -152,9 +153,9 @@ namespace Anime4KCPP::CPU::detail
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
 
-            T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-            T* const cLineData = curLine;
-            T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
             double gradX =
                 (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
@@ -169,7 +170,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void pushGradient(cv::Mat& img, double strength)
+    static void pushGradient(cv::Mat& img, double strength)
     {
         const int channels = img.channels();
         const size_t lineStep = img.step1();
@@ -177,13 +178,14 @@ namespace Anime4KCPP::CPU::detail
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
 
-            T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-            T* const cLineData = curLine;
-            T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
-            T* tl = nLineData + j + jn, * tc = nLineData + j, * tr = nLineData + j + jp;
-            T* ml = cLineData + j + jn, * mc = pixel, * mr = cLineData + j + jp;
-            T* bl = pLineData + j + jn, * bc = pLineData + j, * br = pLineData + j + jp;
+            const T* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
+            const T* const ml = cLineData + j + jn, * const mr = cLineData + j + jp;
+            const T* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
+            T* const mc = pixel;
 
             T maxD, minL;
 
@@ -234,7 +236,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void processImpl(cv::Mat& src, const Parameters& param)
+    static void processImpl(cv::Mat& src, const Parameters& param)
     {
         int pushColorCount = param.pushColorCount;
 
@@ -248,7 +250,7 @@ namespace Anime4KCPP::CPU::detail
         }
     }
 
-    void runKernel(cv::Mat& img, const Parameters& param)
+    static void runKernel(cv::Mat& img, const Parameters& param)
     {
         switch (img.depth())
         {
@@ -266,9 +268,6 @@ namespace Anime4KCPP::CPU::detail
         }
     }
 }
-
-Anime4KCPP::CPU::Anime4K09::Anime4K09(const Parameters& parameters) :
-    AC(parameters) {}
 
 std::string Anime4KCPP::CPU::Anime4K09::getInfo()
 {

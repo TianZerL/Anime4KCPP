@@ -15,7 +15,7 @@
 namespace Anime4KCPP::CPU::detail
 {
     template<typename T, typename F>
-    void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
+    static void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
     {
         const int h = src.rows, w = src.cols;
         const int jMAX = w * outChannels;
@@ -35,7 +35,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename F>
-    void changEachPixelNToN(F&& callBack, cv::Mat& tmpMat)
+    static void changEachPixelNToN(F&& callBack, cv::Mat& tmpMat)
     {
         const int h = tmpMat.rows, w = tmpMat.cols;
         const int channels = tmpMat.channels();
@@ -57,7 +57,7 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, typename F>
-    void changEachPixelNTo1(cv::Mat& img, F&& callBack, const cv::Mat& tmpMat)
+    static void changEachPixelNTo1(cv::Mat& img, F&& callBack, const cv::Mat& tmpMat)
     {
         const int h = 2 * tmpMat.rows, w = 2 * tmpMat.cols;
         img.create(h, w, cv::DataType<T>::type);
@@ -77,19 +77,19 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr float norm(T v)
+    constexpr static float norm(T v)
     {
         return static_cast<float>(v) / std::numeric_limits<T>::max();
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr float norm(T v)
+    constexpr static float norm(T v)
     {
         return static_cast<float>(v);
     }
 
     template<typename T, std::enable_if_t<std::is_integral<T>::value>* = nullptr>
-    constexpr T unnorm(float v)
+    constexpr static T unnorm(float v)
     {
         return v >= 1.0f ?
             std::numeric_limits<T>::max() :
@@ -99,29 +99,29 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T, std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
-    constexpr T unnorm(float v)
+    constexpr static T unnorm(float v)
     {
         return v < 0.0f ? 0.0f : (1.0f < v ? 1.0f : v);
     }
 
     template<typename T>
-    void conv1To8Impl(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
+    static void conv1To8Impl(const cv::Mat& img, const float* kernels, const float* biases, cv::Mat& tmpMat)
     {
         const int channels = 8;
         const int srcChannels = img.channels();
         const size_t lineStep = img.step1();
-        detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, ChanFP outMat, T* curLine) {
+        detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, float* outMat, T* curLine) {
             const int orgJ = j / channels * srcChannels;
             const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
             const int jn = orgJ > srcChannels ? -srcChannels : 0;
 
-            T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-            T* const cLineData = curLine;
-            T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
-            T* tl = nLineData + orgJ + jn, * tc = nLineData + orgJ, * tr = nLineData + orgJ + jp;
-            T* ml = cLineData + orgJ + jn, * mc = cLineData + orgJ, * mr = cLineData + orgJ + jp;
-            T* bl = pLineData + orgJ + jn, * bc = pLineData + orgJ, * br = pLineData + orgJ + jp;
+            const T* tl = nLineData + orgJ + jn, * const tc = nLineData + orgJ, * const tr = nLineData + orgJ + jp;
+            const T* ml = cLineData + orgJ + jn, * const mc = cLineData + orgJ, * const mr = cLineData + orgJ + jp;
+            const T* bl = pLineData + orgJ + jn, * const bc = pLineData + orgJ, * const br = pLineData + orgJ + jp;
 
             const float tln = norm<T>(tl[Y]);
             const float tcn = norm<T>(tc[Y]);
@@ -134,8 +134,8 @@ namespace Anime4KCPP::CPU::detail
             const float brn = norm<T>(br[Y]);
 
 #ifdef USE_RYZEN
-            const float* kptr = kernels;
-            const float* bptr = biases;
+            const float* const kptr = kernels;
+            const float* const bptr = biases;
 
             _mm256_zeroall();
 
@@ -178,8 +178,8 @@ namespace Anime4KCPP::CPU::detail
             _mm256_storeu_ps(outMat, _out0);
 
 #elif defined(USE_EIGEN3)
-            float* kptr = const_cast<float*>(kernels);
-            float* bptr = const_cast<float*>(biases);
+            float* const kptr = const_cast<float*>(kernels);
+            float* const bptr = const_cast<float*>(biases);
 
             Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
 
@@ -207,17 +207,17 @@ namespace Anime4KCPP::CPU::detail
 
             Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
-            const float* kptr = kernels;
+            const float* const kptr = kernels;
 
-            const float* k0 = kptr;
-            const float* k1 = kptr + 8;
-            const float* k2 = kptr + 16;
-            const float* k3 = kptr + 24;
-            const float* k4 = kptr + 32;
-            const float* k5 = kptr + 40;
-            const float* k6 = kptr + 48;
-            const float* k7 = kptr + 56;
-            const float* k8 = kptr + 64;
+            const float* const k0 = kptr;
+            const float* const k1 = kptr + 8;
+            const float* const k2 = kptr + 16;
+            const float* const k3 = kptr + 24;
+            const float* const k4 = kptr + 32;
+            const float* const k5 = kptr + 40;
+            const float* const k6 = kptr + 48;
+            const float* const k7 = kptr + 56;
+            const float* const k8 = kptr + 64;
 
             float out[8];
             std::copy_n(biases, 8, out);
@@ -250,9 +250,9 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    void convTranspose8To1Impl(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
+    static void convTranspose8To1Impl(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
     {
-        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, LineFP inMat) {
+        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, float* inMat) {
             const int index = ((i & 1) << 1) + (j & 1);
 
             //180 degree rotation for kernel
@@ -272,13 +272,13 @@ namespace Anime4KCPP::CPU::detail
             _mm256_zeroupper();
 
 #elif defined(USE_EIGEN3)
-            float* kptr = const_cast<float*>(kernels + index * 8);
+            float* const kptr = const_cast<float*>(kernels + index * 8);
 
             const float luma =
                 Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
                 .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
 #else
-            const float* kptr = kernels + index * 8;
+            const float* const kptr = kernels + index * 8;
 
             float luma = 0;
             for (size_t i = 0; i < 8; i++)
@@ -312,21 +312,21 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 {
     const int channels = 8;
     const size_t lineStep = tmpMat.step1();
-    detail::changEachPixelNToN([&](const int i, const int j, ChanFP outMat, LineFP curLine) {
+    detail::changEachPixelNToN([&](const int i, const int j, float* outMat, float* curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
 
-        const LineFP pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
-        const LineFP cLineData = curLine;
-        const LineFP nLineData = i > 0 ? curLine - lineStep : curLine;
+        const float* const pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
+        const float* const cLineData = curLine;
+        const float* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        const PixelFP tl = nLineData + j + jn, tc = nLineData + j, tr = nLineData + j + jp;
-        const PixelFP ml = cLineData + j + jn, mc = cLineData + j, mr = cLineData + j + jp;
-        const PixelFP bl = pLineData + j + jn, bc = pLineData + j, br = pLineData + j + jp;
+        const float* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
+        const float* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
+        const float* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
 
 #ifdef USE_RYZEN
-        const float* kptr = kernels;
-        const float* bptr = biases;
+        const float* const kptr = kernels;
+        const float* const bptr = biases;
 
         __m256 _out0 = _mm256_loadu_ps(bptr);
         __m256 _out1 = _mm256_setzero_ps();
@@ -398,8 +398,8 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         _mm256_storeu_ps(outMat, _out0);
 #elif defined(USE_EIGEN3)
-        float* kptr = const_cast<float*>(kernels);
-        float* bptr = const_cast<float*>(biases);
+        float* const kptr = const_cast<float*>(kernels);
+        float* const bptr = const_cast<float*>(biases);
 
         Eigen::Array<float, 8, 1> out = Eigen::Map<Eigen::Array<float, 8, 1>>(bptr, 8);
 
@@ -433,18 +433,18 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         float out[8];
         std::copy_n(biases, 8, out);
 
-        const float* kptr = kernels;
+        const float* const kptr = kernels;
         for (size_t c = 0; c < 8; c++)
         {
-            const float* k0 = kptr + c * 72;
-            const float* k1 = kptr + c * 72 + 8;
-            const float* k2 = kptr + c * 72 + 16;
-            const float* k3 = kptr + c * 72 + 24;
-            const float* k4 = kptr + c * 72 + 32;
-            const float* k5 = kptr + c * 72 + 40;
-            const float* k6 = kptr + c * 72 + 48;
-            const float* k7 = kptr + c * 72 + 56;
-            const float* k8 = kptr + c * 72 + 64;
+            const float* const k0 = kptr + c * 72;
+            const float* const k1 = kptr + c * 72 + 8;
+            const float* const k2 = kptr + c * 72 + 16;
+            const float* const k3 = kptr + c * 72 + 24;
+            const float* const k4 = kptr + c * 72 + 32;
+            const float* const k5 = kptr + c * 72 + 40;
+            const float* const k6 = kptr + c * 72 + 48;
+            const float* const k7 = kptr + c * 72 + 56;
+            const float* const k8 = kptr + c * 72 + 64;
 
             for (size_t i = 0; i < 8; i++)
                 out[i] += tl[c] * k0[i];

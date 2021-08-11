@@ -37,9 +37,6 @@ namespace Anime4KCPP::Cuda::detail
     }
 }
 
-Anime4KCPP::Cuda::Anime4K09::Anime4K09(const Parameters& parameters) :
-    AC(parameters) {}
-
 std::string Anime4KCPP::Cuda::Anime4K09::getInfo()
 {
     std::ostringstream oss;

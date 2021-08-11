@@ -35,8 +35,8 @@ struct ConfigError
 {
     std::string filePath;
     std::string lineData;
-    size_t lineNumber;
-    size_t pos;
+    size_t lineNumber = 0;
+    size_t pos = 0;
 
     void printErrorInfo()
     {

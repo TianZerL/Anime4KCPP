@@ -18,7 +18,7 @@ namespace Anime4KCPP
 template<typename T, int W, int H, typename ...Types>
 inline double Anime4KCPP::benchmark(Types && ...args)
 {
-    Anime4KCPP::ACInitializer initializer;
+    ACInitializer initializer;
 
     initializer.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
     try
@@ -37,7 +37,7 @@ inline double Anime4KCPP::benchmark(Types && ...args)
     std::chrono::steady_clock::time_point s;
     std::chrono::steady_clock::time_point e;
 
-    T ac{};
+    T ac(Parameters{});
     ac.loadImage(testImg, testImg, testImg); // YUV
     ac.process();
 

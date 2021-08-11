@@ -290,9 +290,6 @@ namespace Anime4KCPP::OpenCL::detail
     }
 }
 
-Anime4KCPP::OpenCL::Anime4K09::Anime4K09(const Parameters& parameters) :
-    AC(parameters) {};
-
 void Anime4KCPP::OpenCL::Anime4K09::init(const int platformID, const int deviceID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
 {
     if (!detail::isInitializedFlag)

@@ -6,32 +6,27 @@
 Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type)
     :param(parameters), type(type)
 {
-    H = W = 0;
     totalFrameCount = fps = 0.0;
-};
+    width = height = 0;
+}
 
 Anime4KCPP::VideoProcessor::VideoProcessor(AC& config)
-    :param(config.getParameters()), type(config.getProcessorType())
-{
-    H = W = 0;
-    totalFrameCount = fps = 0.0;
-};
+    :VideoProcessor(config.getParameters(), config.getProcessorType()) {}
 
 void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile)
 {
     if (!videoIO.openReader(srcFile))
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
-    double orgH = videoIO.get(cv::CAP_PROP_FRAME_HEIGHT);
-    double orgW = videoIO.get(cv::CAP_PROP_FRAME_WIDTH);
+
     fps = videoIO.get(cv::CAP_PROP_FPS);
     totalFrameCount = videoIO.get(cv::CAP_PROP_FRAME_COUNT);
-    H = std::round(param.zoomFactor * orgH);
-    W = std::round(param.zoomFactor * orgW);
+    height = std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_HEIGHT));
+    width = std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_WIDTH));
 }
 
 void Anime4KCPP::VideoProcessor::setVideoSaveInfo(const std::string& dstFile, const CODEC codec, const double fps)
 {
-    if (!videoIO.openWriter(dstFile, codec, cv::Size(W, H), fps))
+    if (!videoIO.openWriter(dstFile, codec, cv::Size(width, height), fps))
         throw ACException<ExceptionType::IO>("Failed to initialize video writer.");
 }
 

@@ -13,8 +13,7 @@ namespace Anime4KCPP::OpenCL
 class Anime4KCPP::OpenCL::ACNet :public AC
 {
 public:
-    explicit ACNet(const Parameters& parameters = Parameters());
-    ~ACNet() override = default;
+    explicit ACNet(const Parameters& parameters);
     void setParameters(const Parameters& parameters) override;
 
     std::string getInfo() override;
