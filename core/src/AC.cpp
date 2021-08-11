@@ -1,7 +1,7 @@
 #include"AC.hpp"
 
 Anime4KCPP::AC::AC(const Parameters& parameters) :
-    param(parameters) {}
+    height(0), width(0), param(parameters) {}
 
 Anime4KCPP::AC::~AC()
 {
@@ -158,46 +158,44 @@ void Anime4KCPP::AC::loadImage(const unsigned char* buf, size_t size)
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
-    switch (inputAsRGB32 + inputAsYUV444)
-    {
-    case 0:
-        if (inputAsGrayscale)
-        {
-            inputGrayscale = true;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_8UC1, data, stride);
-        }
-        else
-        {
-            inputGrayscale = false;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_8UC3, data, stride);
-        }
-        break;
-    case 1:
-        if (inputAsRGB32)
-        {
-            inputRGB32 = true;
-            inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
-        }
-        else //YUV444
-        {
-            inputRGB32 = false;
-            inputYUV = true;
+    if(inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
+        throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
 
-            std::vector<cv::Mat> yuv(3);
-            cv::split(cv::Mat{ rows, cols, CV_8UC3, data, stride }, yuv);
-            orgImg = yuv[Y];
-            dstU = orgU = yuv[U];
-            dstV = orgV = yuv[V];
-        }
+    if (inputAsYUV444)
+    {
+        inputYUV = true;
+        inputRGB32 = false;
         inputGrayscale = false;
-        break;
-    case 2:
-        throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(cv::Mat{ rows, cols, CV_8UC3, data, stride }, yuv);
+        orgImg = yuv[Y];
+        dstU = orgU = yuv[U];
+        dstV = orgV = yuv[V];
+    }
+    else if (inputAsRGB32)
+    {
+        inputYUV = false;
+        inputRGB32 = true;
+        inputGrayscale = false;
+
+        cv::cvtColor(cv::Mat(rows, cols, CV_8UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
+    }
+    else if (inputAsGrayscale)
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = true;
+
+        orgImg = cv::Mat(rows, cols, CV_8UC1, data, stride);
+    }
+    else
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = false;
+
+        orgImg = cv::Mat(rows, cols, CV_8UC3, data, stride);
     }
 
     dstImg = orgImg;
@@ -210,46 +208,44 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
-    switch (inputAsRGB32 + inputAsYUV444)
-    {
-    case 0:
-        if (inputAsGrayscale)
-        {
-            inputGrayscale = true;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_16UC1, data, stride);
-        }
-        else
-        {
-            inputGrayscale = false;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_16UC3, data, stride);
-        }
-        break;
-    case 1:
-        if (inputAsRGB32)
-        {
-            inputRGB32 = true;
-            inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_16UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
-        }
-        else //YUV444
-        {
-            inputRGB32 = false;
-            inputYUV = true;
+    if (inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
+        throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
 
-            std::vector<cv::Mat> yuv(3);
-            cv::split(cv::Mat{ rows, cols, CV_16UC3, data, stride }, yuv);
-            orgImg = yuv[Y];
-            dstU = orgU = yuv[U];
-            dstV = orgV = yuv[V];
-        }
+    if (inputAsYUV444)
+    {
+        inputYUV = true;
+        inputRGB32 = false;
         inputGrayscale = false;
-        break;
-    case 2:
-        throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(cv::Mat{ rows, cols, CV_16UC3, data, stride }, yuv);
+        orgImg = yuv[Y];
+        dstU = orgU = yuv[U];
+        dstV = orgV = yuv[V];
+    }
+    else if (inputAsRGB32)
+    {
+        inputYUV = false;
+        inputRGB32 = true;
+        inputGrayscale = false;
+
+        cv::cvtColor(cv::Mat(rows, cols, CV_16UC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
+    }
+    else if (inputAsGrayscale)
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = true;
+
+        orgImg = cv::Mat(rows, cols, CV_16UC1, data, stride);
+    }
+    else
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = false;
+
+        orgImg = cv::Mat(rows, cols, CV_16UC3, data, stride);
     }
 
     dstImg = orgImg;
@@ -262,46 +258,44 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
 {
-    switch (inputAsRGB32 + inputAsYUV444)
-    {
-    case 0:
-        if (inputAsGrayscale)
-        {
-            inputGrayscale = true;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_32FC1, data, stride);
-        }
-        else
-        {
-            inputGrayscale = false;
-            inputRGB32 = false;
-            inputYUV = false;
-            orgImg = cv::Mat(rows, cols, CV_32FC3, data, stride);
-        }
-        break;
-    case 1:
-        if (inputAsRGB32)
-        {
-            inputRGB32 = true;
-            inputYUV = false;
-            cv::cvtColor(cv::Mat(rows, cols, CV_32FC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
-        }
-        else //YUV444
-        {
-            inputRGB32 = false;
-            inputYUV = true;
+    if (inputAsYUV444 + inputAsRGB32 + inputAsGrayscale > 1)
+        throw ACException<ExceptionType::IO>("Failed to load data: Incompatible arguments.");
 
-            std::vector<cv::Mat> yuv(3);
-            cv::split(cv::Mat{ rows, cols, CV_32FC3, data, stride }, yuv);
-            orgImg = yuv[Y];
-            dstU = orgU = yuv[U];
-            dstV = orgV = yuv[V];
-        }
+    if (inputAsYUV444)
+    {
+        inputYUV = true;
+        inputRGB32 = false;
         inputGrayscale = false;
-        break;
-    case 2:
-        throw ACException<ExceptionType::IO>("Failed to load data: inputAsRGB32 and inputAsYUV444 can't be ture at same time.");
+
+        std::vector<cv::Mat> yuv(3);
+        cv::split(cv::Mat{ rows, cols, CV_32FC3, data, stride }, yuv);
+        orgImg = yuv[Y];
+        dstU = orgU = yuv[U];
+        dstV = orgV = yuv[V];
+    }
+    else if (inputAsRGB32)
+    {
+        inputYUV = false;
+        inputRGB32 = true;
+        inputGrayscale = false;
+
+        cv::cvtColor(cv::Mat(rows, cols, CV_32FC4, data, stride), orgImg, cv::COLOR_RGBA2RGB);
+    }
+    else if (inputAsGrayscale)
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = true;
+
+        orgImg = cv::Mat(rows, cols, CV_32FC1, data, stride);
+    }
+    else
+    {
+        inputYUV = false;
+        inputRGB32 = false;
+        inputGrayscale = false;
+
+        orgImg = cv::Mat(rows, cols, CV_32FC3, data, stride);
     }
 
     dstImg = orgImg;
@@ -314,16 +308,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* data, b
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, bool inputAsYUV444)
 {
-    if (inputAsYUV444)
+    if (inputYUV = inputAsYUV444)
     {
-        inputYUV = true;
         orgImg = cv::Mat(rows, cols, CV_8UC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_8UC1, g, stride);
         dstV = orgV = cv::Mat(rows, cols, CV_8UC1, b, stride);
     }
     else
     {
-        inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
             cv::Mat(rows, cols, CV_8UC1, b, stride),
             cv::Mat(rows, cols, CV_8UC1, g, stride),
@@ -342,16 +334,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned char*
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, bool inputAsYUV444)
 {
-    if (inputAsYUV444)
+    if (inputYUV = inputAsYUV444)
     {
-        inputYUV = true;
         orgImg = cv::Mat(rows, cols, CV_16UC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_16UC1, g, stride);
         dstV = orgV = cv::Mat(rows, cols, CV_16UC1, b, stride);
     }
     else
     {
-        inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
             cv::Mat(rows, cols, CV_16UC1, b, stride),
             cv::Mat(rows, cols, CV_16UC1, g, stride),
@@ -370,16 +360,14 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, unsigned short
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
 {
-    if (inputAsYUV444)
+    if (inputYUV = inputAsYUV444)
     {
-        inputYUV = true;
         orgImg = cv::Mat(rows, cols, CV_32FC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_32FC1, g, stride);
         dstV = orgV = cv::Mat(rows, cols, CV_32FC1, b, stride);
     }
     else
     {
-        inputYUV = false;
         cv::merge(std::vector<cv::Mat>{
             cv::Mat(rows, cols, CV_32FC1, b, stride),
             cv::Mat(rows, cols, CV_32FC1, g, stride),
