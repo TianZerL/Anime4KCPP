@@ -29,7 +29,7 @@ namespace Anime4KCPP::OpenCL::detail
     static cl::CommandQueue commandQueueIO;
     static int commandQueueNum = 4;
     static int commandQueueCount = 0;
-    static std::vector<cl::CommandQueue> commandQueueList(commandQueueNum);
+    static std::vector<cl::CommandQueue> commandQueueList;
     static bool parallelIO = false;
     static int pID = 0;
     static int dID = 0;
@@ -375,7 +375,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
         cv::Mat tmpImg;
         cv::cvtColor(orgImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(tmpImg, yuv);
 
         detail::runKernel(yuv[Y], dstImg, scaleTimes, ACNetTypeIndex);
@@ -401,7 +401,7 @@ void Anime4KCPP::OpenCL::ACNet::processRGBImage()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(tmpImg, yuv);
 
         cv::Mat outMat;

@@ -19,8 +19,8 @@
     if (err != cudaSuccess) \
     throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(cudaGetErrorString(err), std::string(__FILE__), __LINE__)
 
-typedef std::uint8_t uchar;
-typedef std::uint16_t ushort;
+using uchar = std::uint8_t;
+using ushort = std::uint16_t;
 
 extern int currCudaDeviceID;
 

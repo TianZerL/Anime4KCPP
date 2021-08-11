@@ -284,7 +284,7 @@ extern "C"
 #endif // ENABLE_IMAGE_IO
     }
 
-    ac_error acLoadImageFromBuffer(ac_instance instance, const unsigned char* buf, size_t size)
+    ac_error acLoadImageFromBuffer(ac_instance instance, const uint8_t* buf, size_t size)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -356,14 +356,14 @@ extern "C"
 #endif // ENABLE_IMAGE_IO
     }
 
-    ac_error acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size)
+    ac_error acSaveImageToBuffer(ac_instance instance, const char* suffix, uint8_t* buf, size_t size)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
 
         try
         {
-            std::vector<unsigned char> data;
+            std::vector<uint8_t> data;
             reinterpret_cast<Anime4KCPP::AC*>(instance)->saveImage(suffix, data);
 
             if (data.size() > size)
@@ -450,7 +450,7 @@ extern "C"
         acReleaseAllProcessors();
     }
 
-    ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444)
+    ac_error acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* r, uint8_t* g, uint8_t* b, ac_bool inputAsYUV444)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -461,9 +461,9 @@ extern "C"
     }
 
     ac_error acLoadImageYUVPlanarB(ac_instance instance,
-        int rowsY, int colsY, size_t strideY, unsigned char* y,
-        int rowsU, int colsU, size_t strideU, unsigned char* u,
-        int rowsV, int colsV, size_t strideV, unsigned char* v)
+        int rowsY, int colsY, size_t strideY, uint8_t* y,
+        int rowsU, int colsU, size_t strideU, uint8_t* u,
+        int rowsV, int colsV, size_t strideV, uint8_t* v)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -476,7 +476,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    ac_error acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -489,7 +489,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data)
+    ac_error acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* data)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -499,7 +499,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, ac_bool inputAsYUV444)
+    ac_error acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* r, uint16_t* g, uint16_t* b, ac_bool inputAsYUV444)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -510,9 +510,9 @@ extern "C"
     }
 
     ac_error acLoadImageYUVPlanarW(ac_instance instance,
-        int rowsY, int colsY, size_t strideY, unsigned short* y,
-        int rowsU, int colsU, size_t strideU, unsigned short* u,
-        int rowsV, int colsV, size_t strideV, unsigned short* v)
+        int rowsY, int colsY, size_t strideY, uint16_t* y,
+        int rowsU, int colsU, size_t strideU, uint16_t* u,
+        int rowsV, int colsV, size_t strideV, uint16_t* v)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -525,7 +525,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
+    ac_error acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -538,7 +538,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data)
+    ac_error acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* data)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -598,9 +598,9 @@ extern "C"
     }
 
     ac_error acSaveImageRGBPlanar(ac_instance instance,
-        unsigned char* r, size_t strideR,
-        unsigned char* g, size_t strideG,
-        unsigned char* b, size_t strideB)
+        uint8_t* r, size_t strideR,
+        uint8_t* g, size_t strideG,
+        uint8_t* b, size_t strideB)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;
@@ -620,7 +620,7 @@ extern "C"
         return AC_OK;
     }
 
-    ac_error acSaveImageRGBPacked(ac_instance instance, unsigned char* data, size_t stride)
+    ac_error acSaveImageRGBPacked(ac_instance instance, uint8_t* data, size_t stride)
     {
         if (instance == nullptr)
             return AC_ERROR_NULL_INSTANCE;

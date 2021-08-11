@@ -107,7 +107,7 @@ void Anime4KCPP::Cuda::Anime4K09::processYUVImage()
         FilterProcessor(dstImg, param.postFilters).process();
 
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-    std::vector<cv::Mat> yuv(3);
+    cv::Mat yuv[3];
     cv::split(dstImg, yuv);
     dstImg = yuv[Y];
     dstU = yuv[U];

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include <ac_c_export.h>
 
@@ -118,8 +119,8 @@ extern "C"
         ac_bool fastMode;
         ac_bool preprocessing;
         ac_bool postprocessing;
-        unsigned char preFilters;
-        unsigned char postFilters;
+        uint8_t preFilters;
+        uint8_t postFilters;
         unsigned int maxThreads;
         ac_bool HDN;
         int HDNLevel;
@@ -202,26 +203,26 @@ extern "C"
     AC_C_EXPORT void AC_C_API acFreeInstance2(ac_instance instance);
     AC_C_EXPORT ac_error AC_C_API acInitParameters(ac_parameters* parameters);
     AC_C_EXPORT ac_error AC_C_API acLoadImage(ac_instance instance, const char* srcFile);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageFromBuffer(ac_instance instance, const unsigned char* buf, size_t size);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageFromBuffer(ac_instance instance, const uint8_t* buf, size_t size);
     AC_C_EXPORT ac_error AC_C_API acProcess(ac_instance instance);
     AC_C_EXPORT ac_error AC_C_API acShowImage(ac_instance instance, ac_bool R2B);
     AC_C_EXPORT ac_error AC_C_API acSaveImage(ac_instance instance, const char* dstFile);
-    AC_C_EXPORT ac_error AC_C_API acSaveImageToBuffer(ac_instance instance, const char* suffix, unsigned char* buf, size_t size);
+    AC_C_EXPORT ac_error AC_C_API acSaveImageToBuffer(ac_instance instance, const char* suffix, uint8_t* buf, size_t size);
     AC_C_EXPORT ac_error AC_C_API acSetParameters(ac_instance instance, ac_parameters* parameters);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* r, unsigned char* g, unsigned char* b, ac_bool inputAsYUV444);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* r, uint8_t* g, uint8_t* b, ac_bool inputAsYUV444);
     AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarB(ac_instance instance,
-        int rowsY, int colsY, size_t strideY, unsigned char* y,
-        int rowsU, int colsU, size_t strideU, unsigned char* u,
-        int rowsV, int colsV, size_t strideV, unsigned char* v);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, unsigned char* data);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* r, unsigned short* g, unsigned short* b, ac_bool inputAsYUV444);
+        int rowsY, int colsY, size_t strideY, uint8_t* y,
+        int rowsU, int colsU, size_t strideU, uint8_t* u,
+        int rowsV, int colsV, size_t strideV, uint8_t* v);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleB(ac_instance instance, int rows, int cols, size_t stride, uint8_t* data);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* r, uint16_t* g, uint16_t* b, ac_bool inputAsYUV444);
     AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarW(ac_instance instance,
-        int rowsY, int colsY, size_t strideY, unsigned short* y,
-        int rowsU, int colsU, size_t strideU, unsigned short* u,
-        int rowsV, int colsV, size_t strideV, unsigned short* v);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
-    AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, unsigned short* data);
+        int rowsY, int colsY, size_t strideY, uint16_t* y,
+        int rowsU, int colsU, size_t strideU, uint16_t* u,
+        int rowsV, int colsV, size_t strideV, uint16_t* v);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
+    AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleW(ac_instance instance, int rows, int cols, size_t stride, uint16_t* data);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPlanarF(ac_instance instance, int rows, int cols, size_t stride, float* r, float* g, float* b, ac_bool inputAsYUV444);
     AC_C_EXPORT ac_error AC_C_API acLoadImageYUVPlanarF(ac_instance instance,
         int rowsY, int colsY, size_t strideY, float* y,
@@ -229,8 +230,8 @@ extern "C"
         int rowsV, int colsV, size_t strideV, float* v);
     AC_C_EXPORT ac_error AC_C_API acLoadImageRGBPackedF(ac_instance instance, int rows, int cols, size_t stride, float* data, ac_bool inputAsYUV444, ac_bool inputAsRGB32);
     AC_C_EXPORT ac_error AC_C_API acLoadImageGrayscaleF(ac_instance instance, int rows, int cols, size_t stride, float* data);
-    AC_C_EXPORT ac_error AC_C_API acSaveImageRGBPlanar(ac_instance instance, unsigned char* r, size_t strideR, unsigned char* g, size_t strideG, unsigned char* b, size_t strideB);
-    AC_C_EXPORT ac_error AC_C_API acSaveImageRGBPacked(ac_instance instance, unsigned char* data, size_t stride);
+    AC_C_EXPORT ac_error AC_C_API acSaveImageRGBPlanar(ac_instance instance, uint8_t* r, size_t strideR, uint8_t* g, size_t strideG, uint8_t* b, size_t strideB);
+    AC_C_EXPORT ac_error AC_C_API acSaveImageRGBPacked(ac_instance instance, uint8_t* data, size_t stride);
     //acGetInfo may need to run two times for getting length of info string first
     AC_C_EXPORT ac_error AC_C_API acGetInfo(ac_instance instance, char* info, size_t* length);
     //acGetFiltersInfo may need to run two times for getting length of info string first

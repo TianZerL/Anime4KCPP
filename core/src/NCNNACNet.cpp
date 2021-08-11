@@ -350,7 +350,7 @@ void Anime4KCPP::NCNN::ACNet::processRGBImage()
         cv::Mat tmpImg = orgImg;
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_BGR2YUV);
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(tmpImg, yuv);
 
         detail::runKernel(yuv[Y], dstImg, scaleTimes, ACNetTypeIndex, dataHolder->data);
@@ -376,7 +376,7 @@ void Anime4KCPP::NCNN::ACNet::processRGBImage()
         else if (param.zoomFactor < 2.0)
             cv::resize(tmpImg, tmpImg, cv::Size(0, 0), param.zoomFactor / 2.0, param.zoomFactor / 2.0, cv::INTER_AREA);
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(tmpImg, yuv);
 
         detail::runKernel(yuv[Y], dstImg, 1, ACNetTypeIndex, dataHolder->data);

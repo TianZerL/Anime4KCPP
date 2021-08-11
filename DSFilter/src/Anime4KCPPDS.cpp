@@ -782,7 +782,7 @@ STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
 
 
     size_t tmp = 0;
-    std::vector<std::string> subInfo(4);
+    std::vector<std::string> subInfo;
     for (size_t i = 0; i < tmpStr.size(); i++)
     {
         if (tmpStr[i] == '\n')

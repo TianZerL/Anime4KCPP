@@ -20,7 +20,8 @@
 namespace Anime4KCPP::Utils
 {
     class VideoIO;
-    typedef std::pair<cv::Mat, std::size_t> Frame;
+
+    using Frame = std::pair<cv::Mat, std::size_t>;
 }
 
 class Anime4KCPP::Utils::VideoIO
@@ -64,8 +65,8 @@ private:
     //callback data
     std::atomic<double> progress;
     std::atomic<std::size_t> stop;
-    bool pause{ false };
     std::unique_ptr<std::promise<void>> pausePromise;
+    bool pause{ false };
 };
 
 #endif

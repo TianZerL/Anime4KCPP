@@ -6,10 +6,6 @@
 
 namespace Anime4KCPP::CPU
 {
-    typedef float* ChanFP;
-    typedef float* LineFP;
-    typedef float* PixelFP;
-    
     class CNNProcessor;
 }
 

@@ -27,7 +27,7 @@ namespace Anime4KCPP::OpenCL::detail
     static cl::CommandQueue commandQueueIO;
     static int commandQueueNum = 4;
     static int commandQueueCount = 0;
-    static std::vector<cl::CommandQueue> commandQueueList(commandQueueNum);
+    static std::vector<cl::CommandQueue> commandQueueList;
     static bool parallelIO = false;
     static int pID = 0;
     static int dID = 0;
@@ -394,7 +394,7 @@ void Anime4KCPP::OpenCL::Anime4K09::processYUVImage()
         FilterProcessor(dstImg, param.postFilters).process();
 
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2YUV);
-    std::vector<cv::Mat> yuv(3);
+    cv::Mat yuv[3];
     cv::split(dstImg, yuv);
     dstImg = yuv[Y];
     dstU = yuv[U];

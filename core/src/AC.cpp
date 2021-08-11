@@ -167,7 +167,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
         inputRGB32 = false;
         inputGrayscale = false;
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(cv::Mat{ rows, cols, CV_8UC3, data, stride }, yuv);
         orgImg = yuv[Y];
         dstU = orgU = yuv[U];
@@ -217,7 +217,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
         inputRGB32 = false;
         inputGrayscale = false;
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(cv::Mat{ rows, cols, CV_16UC3, data, stride }, yuv);
         orgImg = yuv[Y];
         dstU = orgU = yuv[U];
@@ -267,7 +267,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* da
         inputRGB32 = false;
         inputGrayscale = false;
 
-        std::vector<cv::Mat> yuv(3);
+        cv::Mat yuv[3];
         cv::split(cv::Mat{ rows, cols, CV_32FC3, data, stride }, yuv);
         orgImg = yuv[Y];
         dstU = orgU = yuv[U];
@@ -551,7 +551,7 @@ void Anime4KCPP::AC::saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b)
     }
     else
     {
-        std::vector<cv::Mat> bgr(3);
+        cv::Mat bgr[3];
         cv::split(dstImg, bgr);
         r = bgr[R];
         g = bgr[G];
@@ -641,7 +641,7 @@ void Anime4KCPP::AC::saveImage(
     }
     else
     {
-        std::vector<cv::Mat> bgr(3);
+        cv::Mat bgr[3];
         cv::split(dstImg, bgr);
 
         std::size_t stride = bgr[R].step;
