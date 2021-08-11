@@ -41,7 +41,7 @@ namespace Anime4KCPP
 // compute log2(v) then do ceil(v)
 inline int Anime4KCPP::Utils::fastCeilLog2(double v) noexcept
 {
-    long long int data = *reinterpret_cast<long long int*>(&v);
+    long long data = *reinterpret_cast<long long*>(&v);
     return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) != 0));
 }
 

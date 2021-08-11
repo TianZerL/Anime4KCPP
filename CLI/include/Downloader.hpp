@@ -14,7 +14,6 @@ public:
 
 private:
     void* curl = nullptr;
-
 };
 
 #endif // ENABLE_LIBCURL

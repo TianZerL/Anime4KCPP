@@ -10,7 +10,7 @@ static Anime4KCPP::ACInitializer initializer;
 Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
 {
     if (c_parameters == nullptr)
-        return std::move(Anime4KCPP::Parameters());
+        return Anime4KCPP::Parameters{};
 
     Anime4KCPP::Parameters cpp_parameters(
         c_parameters->passes,
