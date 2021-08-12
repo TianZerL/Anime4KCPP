@@ -43,7 +43,7 @@ extern "C"
             const ACPropData & data
             ) PURE;
 
-        STDMETHOD(GetGPUInfo) (THIS_
+        STDMETHOD(GetProcessorInfo) (THIS_
             std::string& info
             ) PURE;
     };
@@ -68,7 +68,7 @@ private:
     ACProp(LPUNKNOWN lpunk, HRESULT* phr);
 private:
     ACPropData data;
-    std::string GPUInfo;
+    std::string ProcessorInfo;
 
     IAC* pIAC;
     BOOL bInit;

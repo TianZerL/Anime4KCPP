@@ -1,3 +1,6 @@
+#include <intrin.h>
+#include <regex>
+
 #include "Anime4KCPPDS.h"
 
 // Filter info
@@ -82,6 +85,22 @@ BOOL APIENTRY DllMain(HANDLE hModule,
 {
     hDLLInstance = (HMODULE)hModule;
     return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
+}
+
+static std::string GetCPUBrandString()
+{
+    int CPUInfo[4] = { -1 };
+    char CPUBrandString[0x40] = { 0 };
+    char* sptr = CPUBrandString;
+
+    for (int i = 0x80000002; i <= 0x80000004; i++)
+    {
+        __cpuid(CPUInfo, i);
+        memcpy(sptr, CPUInfo, sizeof(CPUInfo));
+        sptr += 16;
+    }
+
+    return CPUBrandString;
 }
 
 Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
@@ -701,7 +720,7 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(ACPropData& data)
     data.OpenCLQueueNum = this->data.OpenCLQueueNum;
     data.OpenCLParallelIO = this->data.OpenCLParallelIO;
 
-    return NOERROR;
+    return S_OK;
 }
 
 STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data)
@@ -751,52 +770,45 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data)
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"zoomFactor", _zoomFactor, lpPath);
     WritePrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", _GPGPUModel, lpPath);
 
-    return NOERROR;
+    return S_OK;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetGPUInfo(std::string& info)
+STDMETHODIMP Anime4KCPPDS::GetProcessorInfo(std::string& info)
 {
-    std::string tmpStr;
-    switch (data.GPGPUModel)
+    try
     {
-    case GPGPU::CPU:
-        tmpStr = "Anime4KCPP for DirectShow will ues CPU\n";
-        break;
-    case GPGPU::OpenCL:
-#ifdef ENABLE_OPENCL
-    {
-        Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
-        tmpStr = GPUInfo();
-    }
-#endif
-    break;
-    case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
-    {
-        Anime4KCPP::Cuda::GPUList GPUInfo = Anime4KCPP::Cuda::listGPUs();
-        tmpStr = GPUInfo();
-    }
-#endif
-    break;
-    }
-
-
-    size_t tmp = 0;
-    std::vector<std::string> subInfo;
-    for (size_t i = 0; i < tmpStr.size(); i++)
-    {
-        if (tmpStr[i] == '\n')
+        switch (data.GPGPUModel)
         {
-            subInfo.emplace_back(tmpStr.substr(tmp, i - tmp));
-            tmp = i;
+        case GPGPU::CPU:
+            info = "CPU:\n" + GetCPUBrandString();
+            break;
+        case GPGPU::OpenCL:
+#ifdef ENABLE_OPENCL
+        {
+            Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
+            info = "OpenCL:\r\n" + GPUInfo();
         }
+#endif
+        break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+        {
+            Anime4KCPP::Cuda::GPUList GPUInfo = Anime4KCPP::Cuda::listGPUs();
+            info = "CUDA:\r\n" + GPUInfo();
+        }
+#endif
+        break;
+        }
+
+        info = std::regex_replace(info, std::regex("\n"), "\r\n");
     }
-    for (auto& s : subInfo)
+    catch (const std::exception& e)
     {
-        info += (s + "\r");
+        info = e.what();
+        return E_UNEXPECTED;
     }
 
-    return NOERROR;
+    return S_OK;
 }
 
 STDMETHODIMP Anime4KCPPDS::GetPages(CAUUID* pPages)
@@ -810,5 +822,5 @@ STDMETHODIMP Anime4KCPPDS::GetPages(CAUUID* pPages)
 
     *(pPages->pElems) = CLSID_ACProp;
 
-    return NOERROR;
+    return S_OK;
 }

@@ -28,7 +28,7 @@ public:
 
     STDMETHODIMP GetParameters(ACPropData& data);
     STDMETHODIMP SetParameters(const ACPropData& data);
-    STDMETHODIMP GetGPUInfo(std::string& info);
+    STDMETHODIMP GetProcessorInfo(std::string& info);
 
     STDMETHODIMP GetPages(CAUUID* pPages);
 

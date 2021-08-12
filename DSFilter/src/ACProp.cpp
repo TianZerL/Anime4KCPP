@@ -43,11 +43,11 @@ HRESULT ACProp::OnConnect(IUnknown* pUnk)
     CheckPointer(pIAC, E_FAIL);
     pIAC->GetParameters(data);
 
-    pIAC->GetGPUInfo(GPUInfo);
+    pIAC->GetProcessorInfo(ProcessorInfo);
 
     bInit = FALSE;
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT ACProp::OnDisconnect()
@@ -58,7 +58,7 @@ HRESULT ACProp::OnDisconnect()
         pIAC = NULL;
     }
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT ACProp::OnActivate()
@@ -95,7 +95,7 @@ HRESULT ACProp::OnActivate()
     StringCchPrintf(sz, NUMELMS(sz), TEXT("%d\0"), data.W);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_W), sz);
 
-    MultiByteToWideChar(CP_ACP, 0, GPUInfo.c_str(), -1, sz, STR_MAX_LENGTH);
+    MultiByteToWideChar(CP_ACP, 0, ProcessorInfo.c_str(), -1, sz, STR_MAX_LENGTH);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_GPUINFO), sz);
 
     MultiByteToWideChar(CP_ACP, 0, ANIME4KCPP_CORE_VERSION, -1, sz, STR_MAX_LENGTH);
@@ -103,7 +103,7 @@ HRESULT ACProp::OnActivate()
 
     bInit = TRUE;
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT ACProp::OnDeactivate()
@@ -111,7 +111,7 @@ HRESULT ACProp::OnDeactivate()
     bInit = FALSE;
     GetValues();
 
-    return NOERROR;
+    return S_OK;
 }
 
 HRESULT ACProp::OnApplyChanges()
@@ -120,7 +120,7 @@ HRESULT ACProp::OnApplyChanges()
     CheckPointer(pIAC, E_POINTER);
     pIAC->SetParameters(data);
 
-    return NOERROR;
+    return S_OK;
 }
 
 void ACProp::GetValues()
