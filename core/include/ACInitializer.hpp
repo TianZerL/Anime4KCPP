@@ -32,13 +32,12 @@ public:
     void init();
     void release(bool clearManagerList = false);
 private:
-    using ManagerSPVector = std::vector<std::shared_ptr<Processor::Manager>>;
 
-    ManagerSPVector managers;
+    std::vector<std::unique_ptr<Processor::Manager>> managers;
 };
 
 template<typename Manager, typename... Types>
 inline void Anime4KCPP::ACInitializer::pushManager(Types&&... args)
 {
-    managers.emplace_back(std::make_shared<Manager>(std::forward<Types>(args)...));
+    managers.emplace_back(std::make_unique<Manager>(std::forward<Types>(args)...));
 }
