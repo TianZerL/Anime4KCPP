@@ -427,7 +427,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     std::string GPGPUModelString = GPGPUModelTmp;
     std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
 
-    GPGPU GPGPUModel;
+    GPGPU GPGPUModel = GPGPU::OpenCL;
     if (GPGPUModelString == "opencl")
     {
 #ifndef ENABLE_OPENCL
@@ -446,7 +446,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     {
         if (GPUMode)
         {
-            env->ThrowError("Anime4KCPP: OpenCL or CUDA is unsupported");
+            env->ThrowError("Anime4KCPP: GPU mode is unsupported");
         }
     }
     else
