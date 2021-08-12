@@ -1,17 +1,20 @@
 #ifdef ENABLE_VIDEO
 
+#include<thread>
+
 #include"ACCreator.hpp"
 #include"VideoProcessor.hpp"
 
-Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type)
-    :param(parameters), type(type)
+Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type, unsigned int threads)
+    :threads(threads), param(parameters), type(type)
 {
     totalFrameCount = fps = 0.0;
     width = height = 0;
 }
 
-Anime4KCPP::VideoProcessor::VideoProcessor(AC& config)
-    :VideoProcessor(config.getParameters(), config.getProcessorType()) {}
+Anime4KCPP::VideoProcessor::VideoProcessor(AC& config, unsigned int threads)
+    :VideoProcessor(config.getParameters(), config.getProcessorType(), 
+        threads ? threads : std::thread::hardware_concurrency()) {}
 
 void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile)
 {
@@ -48,7 +51,7 @@ void Anime4KCPP::VideoProcessor::process()
                 ac->saveImage(frame.first);
             }
             videoIO.write(frame);
-        }, param.maxThreads
+        }, threads
     ).process();
 }
 
@@ -112,7 +115,7 @@ std::string Anime4KCPP::VideoProcessor::getInfo()
         << "Video information" << std::endl
         << "----------------------------------------------" << std::endl
         << "FPS: " << fps << std::endl
-        << "Threads: " << param.maxThreads << std::endl
+        << "Threads: " << threads << std::endl
         << "Total frames: " << totalFrameCount << std::endl
         << "----------------------------------------------" << std::endl;
     return oss.str();

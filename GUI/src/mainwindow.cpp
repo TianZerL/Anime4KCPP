@@ -580,7 +580,6 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
     bool videoMode = false;
     bool preprocessing = ui->checkBoxEnablePreprocessing->isChecked();
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
-    unsigned int threads = ui->spinBoxThreads->value();
     bool HDN = ui->checkBoxHDN->isChecked();
     int HDNLevel = ui->spinBoxHDNLevel->value();
     bool alpha = ui->checkBoxAlphaChannel->isChecked();
@@ -632,7 +631,6 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
         postprocessing,
         prefilters,
         postfilters,
-        threads,
         HDN,
         HDNLevel,
         alpha
@@ -1331,7 +1329,7 @@ void MainWindow::on_pushButtonStart_clicked()
         {
             std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
             std::chrono::steady_clock::time_point startTime, endTime;
-            Anime4KCPP::VideoProcessor videoProcessor(*ac);
+            Anime4KCPP::VideoProcessor videoProcessor(*ac, ui->spinBoxThreads->value());
             for (QPair<QPair<QString, QString>, int> const& video : videos)
             {
                 try

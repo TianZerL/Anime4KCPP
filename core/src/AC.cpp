@@ -806,7 +806,6 @@ void Anime4KCPP::Parameters::reset() noexcept
     postprocessing = false;
     preFilters = 4;
     postFilters = 40;
-    maxThreads = std::thread::hardware_concurrency();
     HDN = false;
     HDNLevel = 1;
     alpha = false;
@@ -823,7 +822,6 @@ Anime4KCPP::Parameters::Parameters(
     bool postprocessing,
     std::uint8_t preFilters,
     std::uint8_t postFilters,
-    unsigned int maxThreads,
     bool HDN,
     int HDNLevel,
     bool alpha
@@ -832,4 +830,4 @@ Anime4KCPP::Parameters::Parameters(
     strengthColor(strengthColor), strengthGradient(strengthGradient),
     zoomFactor(zoomFactor), fastMode(fastMode), preprocessing(preprocessing),
     postprocessing(postprocessing), preFilters(preFilters), postFilters(postFilters),
-    maxThreads(maxThreads), HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}
+    HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}

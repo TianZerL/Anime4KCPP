@@ -7,6 +7,7 @@
 #include<future>
 #include<queue>
 #include<vector>
+#include<cstddef>
 
 namespace Anime4KCPP::Utils
 {

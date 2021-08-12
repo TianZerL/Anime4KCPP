@@ -451,7 +451,6 @@ int main(int argc, char* argv[])
         postprocessing,
         preFilters,
         postFilters,
-        threads,
         HDN,
         HDNLevel,
         alpha
@@ -803,7 +802,7 @@ int main(int argc, char* argv[])
                 else
                     outputTmpName = "tmp_out.mp4";
 
-                Anime4KCPP::VideoProcessor videoProcessor(*ac);
+                Anime4KCPP::VideoProcessor videoProcessor(*ac, threads);
                 if (filesystem::is_directory(inputPath))
                 {
                     if (!filesystem::is_directory(outputPath))

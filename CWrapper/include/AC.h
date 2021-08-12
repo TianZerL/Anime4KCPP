@@ -121,7 +121,6 @@ extern "C"
         ac_bool postprocessing;
         uint8_t preFilters;
         uint8_t postFilters;
-        unsigned int maxThreads;
         ac_bool HDN;
         int HDNLevel;
         ac_bool alpha;
@@ -257,7 +256,11 @@ extern "C"
     AC_C_EXPORT ac_videoProcessor AC_C_API acGetVideoProcessor(
         ac_parameters* parameters, ac_processType type, ac_error* error
     );
+    AC_C_EXPORT ac_videoProcessor AC_C_API acGetVideoProcessorWithThreads(
+        ac_parameters* parameters, ac_processType type, unsigned int threads ,ac_error* error
+    );
     AC_C_EXPORT ac_videoProcessor AC_C_API acGetVideoProcessorFromInstance(ac_instance instance);
+    AC_C_EXPORT ac_videoProcessor AC_C_API acGetVideoProcessorFromInstanceWithThreads(ac_instance instance, unsigned int threads);
     AC_C_EXPORT void AC_C_API acFreeVideoProcessor(ac_videoProcessor instance);
     AC_C_EXPORT ac_error AC_C_API acLoadVideo(ac_videoProcessor instance, const char* srcFile);
     AC_C_EXPORT ac_error AC_C_API acProcessVideo(ac_videoProcessor instance);

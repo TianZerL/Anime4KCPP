@@ -2,8 +2,8 @@
 
 #include<iostream>
 #include<memory>
-#include<thread>
 #include<cmath>
+#include<cstddef>
 #include<cstdint>
 
 #include<opencv2/opencv.hpp>
@@ -58,7 +58,6 @@ struct Anime4KCPP::Parameters
     bool postprocessing;
     std::uint8_t preFilters;
     std::uint8_t postFilters;
-    unsigned int maxThreads;
     bool HDN;
     bool alpha;
     int HDNLevel;
@@ -82,7 +81,6 @@ struct Anime4KCPP::Parameters
         bool postprocessing = false,
         std::uint8_t preFilters = 4,
         std::uint8_t postFilters = 40,
-        unsigned int maxThreads = std::thread::hardware_concurrency(),
         bool HDN = false,
         int HDNLevel = 1,
         bool alpha = false

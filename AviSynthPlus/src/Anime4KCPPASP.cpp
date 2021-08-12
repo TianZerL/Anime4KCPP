@@ -376,7 +376,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
         args[AC_strengthColor].AsFloat(),
         args[AC_strengthGradient].AsFloat(),
         args[AC_zoomFactor].AsFloat(),
-        false, false, false, 4, 40, std::thread::hardware_concurrency(),
+        false, false, false, 4, 40,
         args[AC_HDN].AsBool(),
         args[AC_HDNLevel].AsInt()
     );

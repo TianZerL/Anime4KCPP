@@ -6,9 +6,11 @@
 #include<future>
 #include<mutex>
 #include<condition_variable>
+#include<functional>
 #include<memory>
 #include<queue>
 #include<unordered_map>
+#include<cstddef>
 
 #include<opencv2/opencv.hpp>
 

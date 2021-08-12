@@ -23,7 +23,6 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
         c_parameters->postprocessing,
         c_parameters->preFilters,
         c_parameters->postFilters,
-        c_parameters->maxThreads,
         c_parameters->HDN,
         c_parameters->HDNLevel,
         c_parameters->alpha);
@@ -256,7 +255,6 @@ extern "C"
         parameters->postprocessing = AC_FALSE;
         parameters->preFilters = 4;
         parameters->postFilters = 40;
-        parameters->maxThreads = 4;
         parameters->HDN = AC_FALSE;
 
         return AC_OK;
@@ -942,14 +940,24 @@ extern "C"
 
     ac_videoProcessor acGetVideoProcessor(ac_parameters* parameters, ac_processType type, ac_error* error)
     {
+        return acGetVideoProcessorWithThreads(parameters, type, 0, error);
+    }
+
+    ac_videoProcessor acGetVideoProcessorWithThreads(ac_parameters* parameters, ac_processType type, unsigned int threads, ac_error* error)
+    {
         if (error != nullptr)
             *error = AC_OK;
-        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(getParameters(parameters), getProcessorType(type, error)));
+        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(getParameters(parameters), getProcessorType(type, error), threads));
     }
 
     ac_videoProcessor acGetVideoProcessorFromInstance(ac_instance instance)
     {
-        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(*reinterpret_cast<Anime4KCPP::AC*>(instance)));
+        return acGetVideoProcessorFromInstanceWithThreads(instance, 0);
+    }
+
+    ac_videoProcessor acGetVideoProcessorFromInstanceWithThreads(ac_instance instance, unsigned int threads)
+    {
+        return reinterpret_cast<ac_instance>(new Anime4KCPP::VideoProcessor(*reinterpret_cast<Anime4KCPP::AC*>(instance), threads));
     }
 
     void  acFreeVideoProcessor(ac_videoProcessor instance)
