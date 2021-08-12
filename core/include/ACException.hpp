@@ -6,7 +6,7 @@
 #define TYPE_ITEM(Name)\
 struct Name\
 {\
-    static constexpr const char* const string = #Name;\
+    static constexpr const char* string = #Name;\
 };
 
 namespace Anime4KCPP

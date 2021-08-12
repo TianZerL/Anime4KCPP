@@ -8,7 +8,7 @@
 
 namespace Anime4KCPP::OpenCL
 {
-    static constexpr const char* kernelFunction =
+    static const std::string kernelFunction =
         R"(__kernel void conv1To8(
     __read_only image2d_t srcImg, 
     __write_only image2d_array_t tmpImgOut)
@@ -402,7 +402,6 @@ __kernel void convTranspose8To1(
 
     static const std::string ACNetKernelSourceString[] =
     {
-    std::string{
     R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -2065,9 +2064,8 @@ __constant float kernelsL10[4 * 8] =
 -0.5734,  0.2077,
 -0.0851,  0.2771,
  0.0415, -0.1858
-};)"} + kernelFunction
+};)" + kernelFunction
 ,
-std::string{
 R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -3729,9 +3727,8 @@ __constant float kernelsL10[4 * 8] =
 -0.0938,  0.3156,
  0.1137, -0.2165,
  0.2273, -0.1284
-};)"} + kernelFunction
+};)" + kernelFunction
 ,
-std::string{
 R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -5394,9 +5391,8 @@ __constant float kernelsL10[4 * 8] =
 -0.1703,  0.0033,
  0.3061,  0.1827,
  0.2443, -0.1259
-};)"} + kernelFunction
+};)" + kernelFunction
 ,
-std::string{
 R"(#define RELU(x) fmax(x, 0.0f)
 
 __constant sampler_t samplerN = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
@@ -7059,7 +7055,7 @@ __constant float kernelsL10[4 * 8] =
 -0.3396,  0.0336,
  0.1052, -0.4180,
  0.0799, -0.3587
-};)"} + kernelFunction
+};)" + kernelFunction
     };
 }
 
