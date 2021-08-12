@@ -55,26 +55,6 @@ void Anime4KCPP::VideoProcessor::process()
     ).process();
 }
 
-void Anime4KCPP::VideoProcessor::processWithPrintProgress()
-{
-    auto s = std::chrono::steady_clock::now();
-    processWithProgress([&s](double progress)
-        {
-            auto e = std::chrono::steady_clock::now();
-            double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
-
-            std::cout
-                << std::fixed << std::setprecision(2)
-                << std::setw(7) << progress * 100 << '%'
-                << "    elpsed: " << std::setw(10) << currTime << 's'
-                << "    remaining: " << std::setw(10) << currTime / progress - currTime << 's'
-                << '\r';
-
-            if (progress == 1.0)
-                std::cout << std::endl;
-        });
-}
-
 void Anime4KCPP::VideoProcessor::processWithProgress(const std::function<void(double)>&& callBack)
 {
     std::future<void> p = std::async(std::launch::async, &VideoProcessor::process, this);

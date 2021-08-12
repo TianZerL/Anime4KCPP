@@ -1012,7 +1012,22 @@ extern "C"
 
         try
         {
-            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithPrintProgress();
+            auto s = std::chrono::steady_clock::now();
+            reinterpret_cast<Anime4KCPP::VideoProcessor*>(instance)->processWithProgress(
+                [&s](double progress)
+                {
+                    auto e = std::chrono::steady_clock::now();
+                    double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
+
+                    std::fprintf(stderr,
+                        "%7.2f%%     elpsed: %10.2fs    remaining: %10.2fs\r",
+                        progress * 100,
+                        currTime,
+                        currTime / progress - currTime);
+
+                    if (progress == 1.0)
+                        std::cout << std::endl;
+                });
         }
         catch (const std::exception& err)
         {

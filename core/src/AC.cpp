@@ -733,8 +733,8 @@ std::string Anime4KCPP::AC::getInfo()
         oss << orgImg.cols << "x" << orgImg.rows << " to " << width << "x" << height << std::endl
             << "----------------------------------------------" << std::endl;
     }
-    oss << "Processor info: " << std::endl
-        << " " << getProcessorInfo() << std::endl;
+    oss << "Processor info: \n "
+        << getProcessorInfo() << std::endl;
 
     return oss.str();
 }

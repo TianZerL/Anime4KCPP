@@ -33,6 +33,26 @@ static bool checkFFmpeg()
     return !std::system("ffmpeg -version");
 }
 
+static void processVideoWithProgress(Anime4KCPP::VideoProcessor& videoPeocessor)
+{
+    auto s = std::chrono::steady_clock::now();
+    videoPeocessor.processWithProgress(
+        [&s](double progress)
+        {
+            auto e = std::chrono::steady_clock::now();
+            double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
+
+            std::fprintf(stderr,
+                "%7.2f%%     elpsed: %10.2fs    remaining: %10.2fs\r",
+                progress * 100,
+                currTime,
+                currTime / progress - currTime);
+
+            if (progress == 1.0)
+                std::cout << std::endl;
+        });
+}
+
 static bool mergeAudio2Video(const std::string& dstFile, const std::string& srcFile, const std::string& tmpFile)
 {
     std::cout << "Merging audio..." << std::endl;
@@ -835,7 +855,7 @@ int main(int argc, char* argv[])
                         if (disableProgress)
                             videoProcessor.process();
                         else
-                            videoProcessor.processWithPrintProgress();
+                            processVideoWithProgress(videoProcessor);
                         std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                         std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 
@@ -873,7 +893,7 @@ int main(int argc, char* argv[])
                     if (disableProgress)
                         videoProcessor.process();
                     else
-                        videoProcessor.processWithPrintProgress();
+                        processVideoWithProgress(videoProcessor);
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
                     std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
 

@@ -20,7 +20,6 @@ public:
     void saveVideo();
 
     void process();
-    void processWithPrintProgress();
     void processWithProgress(const std::function<void(double)>&& callBack);
     void stopVideoProcess() noexcept;
     void pauseVideoProcess();

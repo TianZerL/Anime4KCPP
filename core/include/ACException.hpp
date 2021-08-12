@@ -1,6 +1,6 @@
 #pragma once
 
-#include<sstream>
+#include<string>
 #include<exception>
 
 #define TYPE_ITEM(Name)\
