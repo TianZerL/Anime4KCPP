@@ -2030,25 +2030,25 @@ void MainWindow::on_actionBenchmark_triggered()
     QTextStream outStream(&resultText);
 
     outStream
-        << "CPU score:" << Qt::endl
-        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << Qt::endl
-        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << Qt::endl
-        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << Qt::endl << Qt::endl;
+        << "CPU score:\n"
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS\n\n";
 
 #ifdef ENABLE_OPENCL
     outStream
-        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << Qt::endl
-        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << Qt::endl
-        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << Qt::endl
-        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << Qt::endl << Qt::endl;
+        << "OpenCL score: (pID = " << pID << ", dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS\n\n";
 #endif 
 
 #ifdef ENABLE_CUDA
     outStream
-        << "CUDA score:" << " (dID = " << dID << ")" << Qt::endl
-        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << Qt::endl
-        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << Qt::endl
-        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << Qt::endl << Qt::endl;
+        << "CUDA score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS\n\n";
 #endif 
 
     QMessageBox::information(this,

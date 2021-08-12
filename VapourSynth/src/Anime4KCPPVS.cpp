@@ -500,15 +500,16 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 #ifdef ENABLE_OPENCL
             {
                 Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
-                if (data->pID >= list.platforms ||
-                    data->dID >= list[data->pID])
+                if (data->pID < 0 || data->dID < 0 ||
+                    data->pID >= list.platforms || data->dID >= list[data->pID])
                 {
                     std::ostringstream err;
-                    err << "Platform ID or device ID index out of range" << std::endl
-                        << "Run core.anim4kcpp.listGPUs for available platforms and devices" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    platform ID: " << data->pID << std::endl
-                        << "    device ID: " << data->dID << std::endl;
+                    err << 
+                        "Anime4KCPP: Platform ID or device ID index out of range\n"
+                        "Run core.anim4kcpp.listGPUs() for available platforms and devices\n"
+                        "Your input is: \n"
+                        "    platform ID: " << data->pID << "\n"
+                        "    device ID: " << data->dID << '\n';
                     vsapi->setError(out, err.str().c_str());
                     vsapi->freeNode(data->node);
                     return;
@@ -518,12 +519,13 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 if (!ret)
                 {
                     std::ostringstream err;
-                    err << "The current device is unavailable" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    platform ID: " << data->pID << std::endl
-                        << "    device ID: " << data->dID << std::endl
-                        << "Error: " << std::endl
-                        << "    " + ret() << std::endl;
+                    err << 
+                        "Anime4KCPP: The current device is unavailable\n"
+                        "Your input is: \n"
+                        "    platform ID: " << data->pID << "\n"
+                        "    device ID: " << data->dID << "\n"
+                        "Error: \n"
+                        "    " + ret() << '\n';
                     vsapi->setError(out, err.str().c_str());
                     vsapi->freeNode(data->node);
                     return;
@@ -545,10 +547,11 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 else if (data->dID >= list.devices)
                 {
                     std::ostringstream err;
-                    err << "Device ID index out of range" << std::endl
-                        << "Run core.anim4kcpp.listGPUs for available CUDA devices" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    device ID: " << data->dID << std::endl;
+                    err << 
+                        "Anime4KCPP: Device ID index out of range\n"
+                        "Run core.anim4kcpp.listGPUs() for available CUDA devices\n"
+                        "Your input is: \n"
+                        "    device ID: " << data->dID << '\n';
                     vsapi->setError(out, err.str().c_str());
                     vsapi->freeNode(data->node);
                     return;
@@ -558,11 +561,12 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
                 if (!ret)
                 {
                     std::ostringstream err;
-                    err << "The current device is unavailable" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    device ID: " << data->dID << std::endl
-                        << "Error: " << std::endl
-                        << "    " + ret() << std::endl;
+                    err << 
+                        "Anime4KCPP: The current device is unavailable\n"
+                        "Your input is: \n"
+                        "    device ID: " << data->dID << "\n"
+                        "Error: \n"
+                        "    " + ret() << '\n';
                     vsapi->setError(out, err.str().c_str());
                     vsapi->freeNode(data->node);
                     return;
@@ -673,28 +677,28 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
 
     std::ostringstream oss;
 
-    oss << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
+    oss << "Benchmark test under 8-bit integer input and serial processing...\n\n";
 
     oss
-        << "CPU score:" << std::endl
-        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
+        << "CPU score:\n"
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS\n\n";
 
 #ifdef ENABLE_OPENCL
     oss
-        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
-#endif
+        << "OpenCL score: (pID = " << pID << ", dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS\n\n";
+#endif 
 
 #ifdef ENABLE_CUDA
     oss
-        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
+        << "CUDA score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS\n\n";
 #endif 
 
     vsapi->logMessage(mtDebug, oss.str().c_str());

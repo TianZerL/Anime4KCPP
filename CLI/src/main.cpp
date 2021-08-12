@@ -43,13 +43,13 @@ static void processVideoWithProgress(Anime4KCPP::VideoProcessor& videoPeocessor)
             double currTime = std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0;
 
             std::fprintf(stderr,
-                "%7.2f%%     elpsed: %10.2fs    remaining: %10.2fs\r",
+                "%7.2f%%     elpsed: %8.2fs    remaining: %8.2fs\r",
                 progress * 100,
                 currTime,
                 currTime / progress - currTime);
 
             if (progress == 1.0)
-                std::cout << std::endl;
+                std::putc('\n', stderr);
         });
 }
 
@@ -121,40 +121,40 @@ static void showVersionInfo()
 static void showGPUList()
 {
 #if !defined(ENABLE_OPENCL) && !defined(ENABLE_OCUDA) && !defined(ENABLE_NCNN)
-    std::cerr << "Error: No GPU found" << std::endl << std::endl;
+    std::cerr << "Error: No GPU acceleration mode supported\n";
 #endif
 
 #ifdef ENABLE_OPENCL
-    std::cout << "OpenCL:" << std::endl;
+    std::cout << "OpenCL:\n";
     Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
     if (OpenCLGPUList.platforms == 0)
-        std::cerr << "Error: No OpenCL GPU found" << std::endl << std::endl;
+        std::cerr << "Error: No OpenCL GPU found\n";
     else
-        std::cout << OpenCLGPUList() << std::endl;
+        std::cout << OpenCLGPUList();
 #endif
 
 #ifdef ENABLE_CUDA
-    std::cout << "Cuda:" << std::endl;
+    std::cout << "CUDA:\n";
     Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
     if (CUDAGPUList.devices == 0)
-        std::cerr << "Error: No CUDA GPU found" << std::endl << std::endl;
+        std::cerr << "Error: No CUDA GPU found\n";
     else
-        std::cout << CUDAGPUList() << std::endl;
+        std::cout << CUDAGPUList();
 #endif
 
 #ifdef ENABLE_NCNN
-    std::cout << "NCNN:" << std::endl;
+    std::cout << "ncnn:\n";
     Anime4KCPP::NCNN::GPUList NCNNGPUList = Anime4KCPP::NCNN::listGPUs();
     if (NCNNGPUList.devices == 0)
-        std::cerr << "Error: No NCNN Vulkan GPU found" << std::endl << std::endl;
+        std::cerr << "Error: No ncnn Vulkan GPU found\n";
     else
-        std::cout << NCNNGPUList() << std::endl;
+        std::cout << NCNNGPUList();
 #endif
 }
 
 static void benchmark(const int pID, const int dID)
 {
-    std::cout << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
+    std::cout << "Benchmark test under 8-bit integer input and serial processing...\n" << std::endl;
 
     double CPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 720, 480>();
     double CPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1280, 720>();
@@ -183,39 +183,39 @@ static void benchmark(const int pID, const int dID)
 #endif 
 
     std::cout
-        << "CPU score:" << std::endl
-        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
+        << "CPU score:\n"
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS\n" << std::endl;
 
 #ifdef ENABLE_OPENCL
     std::cout
-        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
+        << "OpenCL score: (pID = " << pID << ", dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS\n" << std::endl;
 #endif 
 
 #ifdef ENABLE_CUDA
     std::cout
-        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
+        << "CUDA score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS\n" << std::endl;
 #endif 
 
 #ifdef ENABLE_NCNN
     std::cout
-        << "NCNN CPU score:" << std::endl
-        << " DVD(480P->960P):" << NCNNCPUScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P):" << NCNNCPUScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P):" << NCNNCPUScoreFHD << " FPS" << std::endl << std::endl;
+        << "NCNN CPU score:\n"
+        << " DVD(480P->960P):" << NCNNCPUScoreDVD << " FPS\n"
+        << " HD(720P->1440P):" << NCNNCPUScoreHD << " FPS\n"
+        << " FHD(1080P->2160P):" << NCNNCPUScoreFHD << " FPS\n" << std::endl;
 
     std::cout
-        << "NCNN Vulkan score:" << " (dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P):" << NCNNVKScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P):" << NCNNVKScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P):" << NCNNVKScoreFHD << " FPS" << std::endl << std::endl;
+        << "NCNN Vulkan score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P):" << NCNNVKScoreDVD << " FPS\n"
+        << " HD(720P->1440P):" << NCNNVKScoreHD << " FPS\n"
+        << " FHD(1080P->2160P):" << NCNNVKScoreFHD << " FPS\n" << std::endl;
 #endif 
 }
 
@@ -354,9 +354,9 @@ int main(int argc, char* argv[])
     {
         const std::string& path = opt.get<std::string>("configTemplate");
         if (createConfigTemplate(path, config))
-            std::cout << "Generated config template to: " << path << std::endl;
+            std::cout << "Generated config template to: " << path << '\n';
         else
-            std::cerr << "Failed to generate config template." << path << std::endl;
+            std::cerr << "Failed to generate config template: " << path << '\n';
         return 0;
     }
 
@@ -392,7 +392,7 @@ int main(int argc, char* argv[])
 #else
         if (GPU)
         {
-            std::cerr << "No GPU processor available" << std::endl;
+            std::cerr << "No GPU processor available\n";
             return 0;
         }
 #endif
@@ -403,7 +403,7 @@ int main(int argc, char* argv[])
         GPGPUModel = GPGPU::NCNN;
     else
     {
-        std::cerr << R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")" << std::endl;
+        std::cerr << R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")" << '\n';
         return 0;
     }
 
@@ -432,7 +432,7 @@ int main(int argc, char* argv[])
 
     if (!web && !filesystem::exists(inputPath))
     {
-        std::cerr << "input file or directory does not exist." << std::endl;
+        std::cerr << "input file or directory does not exist.\n";
         return 0;
     }
 
@@ -477,9 +477,9 @@ int main(int argc, char* argv[])
     );
 
     std::cout
-        << "----------------------------------------------" << std::endl
-        << "Welcome to Anime4KCPP" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------\n"
+        << "Welcome to Anime4KCPP\n"
+        << "----------------------------------------------\n";
 
     try
     {
@@ -490,7 +490,7 @@ int main(int argc, char* argv[])
             {
             case GPGPU::OpenCL:
 #ifndef ENABLE_OPENCL
-                std::cerr << "OpenCL is not supported" << std::endl;
+                std::cerr << "OpenCL is not supported\n";
                 return 0;
 #else
                 if (CNN)
@@ -508,7 +508,7 @@ int main(int argc, char* argv[])
                 break;
             case GPGPU::CUDA:
 #ifndef ENABLE_CUDA
-                std::cerr << "CUDA is not supported" << std::endl;
+                std::cerr << "CUDA is not supported\n";
                 return 0;
 #else
                 initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
@@ -516,7 +516,7 @@ int main(int argc, char* argv[])
 #endif
             case GPGPU::NCNN:
 #ifndef ENABLE_NCNN
-                std::cerr << "ncnn is not supported" << std::endl;
+                std::cerr << "ncnn is not supported\n";
                 return 0;
 #else
                 {
@@ -526,7 +526,7 @@ int main(int argc, char* argv[])
 
                         if (!filesystem::exists(modelPath))
                         {
-                            std::cerr << "ncnn model or param file does not exist." << std::endl;
+                            std::cerr << "ncnn model or param file does not exist.\n";
                             return 0;
                         }
                         initializer.pushManager<Anime4KCPP::NCNN::Manager>(
@@ -556,11 +556,11 @@ int main(int argc, char* argv[])
                 Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
                 if (!ret)
                 {
-                    std::cerr << ret() << std::endl;
+                    std::cerr << ret() << '\n';
                     return 0;
                 }
                 else
-                    std::cerr << ret() << std::endl;
+                    std::cerr << ret() << '\n';
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
@@ -574,11 +574,11 @@ int main(int argc, char* argv[])
                 Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
                 if (!ret)
                 {
-                    std::cerr << ret() << std::endl;
+                    std::cerr << ret() << '\n';
                     return 0;
                 }
                 else
-                    std::cerr << ret() << std::endl;
+                    std::cerr << ret() << '\n';
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
@@ -590,13 +590,13 @@ int main(int argc, char* argv[])
             {
 #ifdef ENABLE_NCNN
                 if (dID < 0)
-                    std::cerr << "ncnn uses CPU" << std::endl;
+                    std::cerr << "ncnn uses CPU\n";
 
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
                 else
                 {
-                    std::cerr << "ncnn only for ACNet" << std::endl;
+                    std::cerr << "ncnn only for ACNet\n";
                     return 0;
                 }
 #endif
@@ -622,9 +622,9 @@ int main(int argc, char* argv[])
                 std::vector<std::pair<std::string, std::string>> filePaths;
 
                 std::cout
-                    << ac->getInfo() << std::endl
-                    << ac->getFiltersInfo() << std::endl
-                    << "Scanning..." << std::endl;
+                    << ac->getInfo() << '\n'
+                    << ac->getFiltersInfo() << '\n'
+                    << "Scanning..." << std::endl;;
 
                 for (auto& file : currDir)
                 {
@@ -638,8 +638,8 @@ int main(int argc, char* argv[])
                     filePaths.emplace_back(std::make_pair(currInputPath, currOutputPath));
                 }
 
-                std::cout << filePaths.size() << " files total" << std::endl
-                    << "Start processing..." << std::endl;
+                std::cout << filePaths.size() << " files total" << '\n'
+                    << "Start processing...\n" << std::endl;
 
                 std::atomic_uint64_t progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -661,11 +661,9 @@ int main(int argc, char* argv[])
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout
-                    << std::endl
                     << "Total time: "
                     << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
-                    << " s"
-                    << std::endl
+                    << " s\n"
                     << "All finished." << std::endl;
             }
             else
@@ -689,8 +687,8 @@ int main(int argc, char* argv[])
 #endif // ENABLE_LIBCURL
                     ac->loadImage(currInputPath);
 
-                std::cout << ac->getInfo() << std::endl;
-                std::cout << ac->getFiltersInfo() << std::endl;
+                std::cout << ac->getInfo() << '\n';
+                std::cout << ac->getFiltersInfo() << '\n';
 
                 std::cout << "Processing..." << std::endl;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -715,8 +713,8 @@ int main(int argc, char* argv[])
 #ifdef ENABLE_PREVIEW_GUI
                 std::string currInputPath = inputPath.string();
 
-                std::cout << ac->getInfo() << std::endl;
-                std::cout << ac->getFiltersInfo() << std::endl;
+                std::cout << ac->getInfo() << '\n';
+                std::cout << ac->getFiltersInfo() << '\n';
 
                 cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
                 if (!videoCapture.isOpened())
@@ -744,8 +742,8 @@ int main(int argc, char* argv[])
                     videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
 
                 std::cout
-                    << "Previewing..." << std::endl
-                    << "  Start frame: " << frameStart << std::endl
+                    << "Previewing...\n"
+                    << "  Start frame: " << frameStart << '\n'
                     << "  Total frame: " << totalFrameCount << std::endl;
 
                 while (videoCapture.read(frame))
@@ -818,7 +816,7 @@ int main(int argc, char* argv[])
                 std::string outputTmpName = outputPath.string();
 
                 if (!ffmpeg)
-                    std::cerr << "Please install ffmpeg, otherwise the output file will be silent." << std::endl;
+                    std::cerr << "Please install ffmpeg, otherwise the output file will be silent.\n";
                 else
                     outputTmpName = "tmp_out.mp4";
 
@@ -846,9 +844,9 @@ int main(int argc, char* argv[])
                         videoProcessor.loadVideo(currInputPath);
                         videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                        std::cout << ac->getInfo() << std::endl;
-                        std::cout << videoProcessor.getInfo() << std::endl;
-                        std::cout << ac->getFiltersInfo() << std::endl;
+                        std::cout << ac->getInfo() << '\n';
+                        std::cout << videoProcessor.getInfo() << '\n';
+                        std::cout << ac->getFiltersInfo() << '\n';
 
                         std::cout << "Processing..." << std::endl;
                         std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -857,7 +855,11 @@ int main(int argc, char* argv[])
                         else
                             processVideoWithProgress(videoProcessor);
                         std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                        std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+                        std::cout 
+                            << "Total process time: " 
+                            << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 
+                            << " min" 
+                            << std::endl;
 
                         videoProcessor.saveVideo();
 
@@ -884,9 +886,9 @@ int main(int argc, char* argv[])
                     videoProcessor.loadVideo(currInputPath);
                     videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
 
-                    std::cout << ac->getInfo() << std::endl;
-                    std::cout << videoProcessor.getInfo() << std::endl;
-                    std::cout << ac->getFiltersInfo() << std::endl;
+                    std::cout << ac->getInfo() << '\n';
+                    std::cout << videoProcessor.getInfo() << '\n';
+                    std::cout << ac->getFiltersInfo() << '\n';
 
                     std::cout << "Processing..." << std::endl;
                     std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
@@ -895,7 +897,11 @@ int main(int argc, char* argv[])
                     else
                         processVideoWithProgress(videoProcessor);
                     std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                    std::cout << "Total process time: " << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 << " min" << std::endl;
+                    std::cout 
+                        << "Total process time: " 
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 
+                        << " min" 
+                        << std::endl;
 
                     videoProcessor.saveVideo();
 
@@ -919,9 +925,9 @@ int main(int argc, char* argv[])
     catch (const std::exception& err)
     {
         std::cerr
-            << std::endl
+            << '\n'
             << err.what()
-            << std::endl;
+            << '\n';
     }
     return 0;
 }

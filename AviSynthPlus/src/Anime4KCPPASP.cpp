@@ -482,12 +482,13 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                 if (!ret)
                 {
                     std::ostringstream err;
-                    err << "Anime4KCPP: The current device is unavailable" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    platform ID: " << pID << std::endl
-                        << "    device ID: " << dID << std::endl
-                        << "Error: " << std::endl
-                        << "    " + ret() << std::endl;
+                    err <<
+                        "Anime4KCPP: The current device is unavailable\n"
+                        "Your input is: \n"
+                        "    platform ID: " << pID << "\n"
+                        "    device ID: " << dID << "\n"
+                        "Error: \n"
+                        "    " + ret() << '\n';
                     env->ThrowError(err.str().c_str());
                 }
             }
@@ -501,12 +502,12 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
                 if (!ret)
                 {
                     std::ostringstream err;
-                    err << "Anime4KCPP: The current device is unavailable" << std::endl
-                        << "Your input is: " << std::endl
-                        << "    platform ID: " << pID << std::endl
-                        << "    device ID: " << dID << std::endl
-                        << "Error: " << std::endl
-                        << "    " + ret() << std::endl;
+                    err << 
+                        "Anime4KCPP: The current device is unavailable\n"
+                        "Your input is: \n"
+                        "    device ID: " << dID << "\n"
+                        "Error: \n"
+                        "    " + ret() << '\n';
                     env->ThrowError(err.str().c_str());
                 }
             }
@@ -587,28 +588,28 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
 
     std::ostringstream oss;
 
-    oss << "Benchmark test under 8-bit integer input and serial processing..." << std::endl << std::endl;
+    oss << "Benchmark test under 8-bit integer input and serial processing...\n\n";
 
     oss
-        << "CPU score:" << std::endl
-        << " DVD(480P->960P): " << CPUScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CPUScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS" << std::endl << std::endl;
+        << "CPU score:\n"
+        << " DVD(480P->960P): " << CPUScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CPUScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CPUScoreFHD << " FPS\n\n";
 
 #ifdef ENABLE_OPENCL
     oss
-        << "OpenCL score:" << " (pID = " << pID << ", dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS" << std::endl << std::endl;
-#endif
+        << "OpenCL score: (pID = " << pID << ", dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << OpenCLScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << OpenCLScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << OpenCLScoreFHD << " FPS\n\n";
+#endif 
 
 #ifdef ENABLE_CUDA
     oss
-        << "CUDA score:" << " (dID = " << dID << ")" << std::endl
-        << " DVD(480P->960P): " << CudaScoreDVD << " FPS" << std::endl
-        << " HD(720P->1440P): " << CudaScoreHD << " FPS" << std::endl
-        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS" << std::endl << std::endl;
+        << "CUDA score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << CudaScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << CudaScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS\n\n";
 #endif 
 
     env->ThrowError(oss.str().c_str());

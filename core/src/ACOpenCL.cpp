@@ -102,7 +102,7 @@ Anime4KCPP::OpenCL::GPUList::GPUList(
 
 int Anime4KCPP::OpenCL::GPUList::operator[](int pID) const
 {
-    return devices[pID];
+    return devices.at(pID);
 }
 
 std::string& Anime4KCPP::OpenCL::GPUList::operator()() noexcept
