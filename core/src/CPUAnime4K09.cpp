@@ -273,14 +273,14 @@ std::string Anime4KCPP::CPU::Anime4K09::getInfo()
 {
     std::ostringstream oss;
     oss << AC::getInfo()
-        << "----------------------------------------------" << std::endl
-        << "Passes: " << param.passes << std::endl
-        << "pushColorCount: " << param.pushColorCount << std::endl
-        << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "Fast Mode: " << std::boolalpha << param.fastMode << std::endl
-        << "Strength Color: " << param.strengthColor << std::endl
-        << "Strength Gradient: " << param.strengthGradient << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Passes: " << param.passes << '\n'
+        << "pushColorCount: " << param.pushColorCount << '\n'
+        << "Zoom Factor: " << param.zoomFactor << '\n'
+        << "Fast Mode: " << std::boolalpha << param.fastMode << '\n'
+        << "Strength Color: " << param.strengthColor << '\n'
+        << "Strength Gradient: " << param.strengthGradient << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -288,34 +288,34 @@ std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
-        << "----------------------------------------------" << std::endl
-        << "Preprocessing filters list:" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Preprocessing filters list:" << '\n'
+        << "----------------------------------------------" << '\n';
     if (!param.preprocessing)
-        oss << "Preprocessing disabled" << std::endl;
+        oss << "Preprocessing disabled" << '\n';
     else
     {
         std::vector<std::string>preFiltersString = FilterProcessor::filterToString(param.preFilters);
         if (preFiltersString.empty())
-            oss << "Preprocessing disabled" << std::endl;
+            oss << "Preprocessing disabled" << '\n';
         else
             for (auto& filters : preFiltersString)
-                oss << filters << std::endl;
+                oss << filters << '\n';
     }
 
-    oss << "----------------------------------------------" << std::endl
-        << "Postprocessing filters list:" << std::endl
-        << "----------------------------------------------" << std::endl;
+    oss << "----------------------------------------------" << '\n'
+        << "Postprocessing filters list:" << '\n'
+        << "----------------------------------------------" << '\n';
     if (!param.postprocessing)
-        oss << "Postprocessing disabled" << std::endl;
+        oss << "Postprocessing disabled" << '\n';
     else
     {
         std::vector<std::string>postFiltersString = FilterProcessor::filterToString(param.postFilters);
         if (postFiltersString.empty())
-            oss << "Postprocessing disabled" << std::endl;
+            oss << "Postprocessing disabled" << '\n';
         else
             for (auto& filters : postFiltersString)
-                oss << filters << std::endl;
+                oss << filters << '\n';
     }
 
     return oss.str();

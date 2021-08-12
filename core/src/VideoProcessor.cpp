@@ -91,13 +91,13 @@ void Anime4KCPP::VideoProcessor::continueVideoProcess()
 std::string Anime4KCPP::VideoProcessor::getInfo()
 {
     std::ostringstream oss;
-    oss << "----------------------------------------------" << std::endl
-        << "Video information" << std::endl
-        << "----------------------------------------------" << std::endl
-        << "FPS: " << fps << std::endl
-        << "Threads: " << threads << std::endl
-        << "Total frames: " << totalFrameCount << std::endl
-        << "----------------------------------------------" << std::endl;
+    oss << "----------------------------------------------" << '\n'
+        << "Video information" << '\n'
+        << "----------------------------------------------" << '\n'
+        << "FPS: " << fps << '\n'
+        << "Threads: " << threads << '\n'
+        << "Total frames: " << totalFrameCount << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 

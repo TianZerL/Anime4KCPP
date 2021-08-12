@@ -449,15 +449,15 @@ std::string Anime4KCPP::OpenCL::ACNet::getInfo()
 {
     std::ostringstream oss;
     oss << AC::getInfo()
-        << "----------------------------------------------" << std::endl
-        << "OpenCL Platform ID:" << detail::pID << std::endl
-        << "OpenCL Device ID:" << detail::dID << std::endl
-        << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
-        << "Number of OpenCL Command Queues:" << detail::commandQueueNum << std::endl
-        << "OpenCL Parallel IO Command Queues:" << std::boolalpha << detail::parallelIO << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "OpenCL Platform ID:" << detail::pID << '\n'
+        << "OpenCL Device ID:" << detail::dID << '\n'
+        << "Zoom Factor: " << param.zoomFactor << '\n'
+        << "HDN Mode: " << std::boolalpha << param.HDN << '\n'
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << '\n'
+        << "Number of OpenCL Command Queues:" << detail::commandQueueNum << '\n'
+        << "OpenCL Parallel IO Command Queues:" << std::boolalpha << detail::parallelIO << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -465,9 +465,9 @@ std::string Anime4KCPP::OpenCL::ACNet::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
-        << "----------------------------------------------" << std::endl
-        << "Filter not supported" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Filter not supported" << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -567,8 +567,8 @@ Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() noexce
 std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
 {
     std::ostringstream oss;
-    oss << "Processor type: " << getProcessorType() << std::endl
-        << "Current OpenCL devices:" << std::endl
+    oss << "Processor type: " << getProcessorType() << '\n'
+        << "Current OpenCL devices:" << '\n'
         << " " + detail::device.getInfo<CL_DEVICE_NAME>();
     return oss.str();
 }

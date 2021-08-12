@@ -33,13 +33,13 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
         {
             std::string platformName;
             platforms[i].getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
-            msg << "Platform " << i << ": " << platformName << std::endl;
+            msg << "Platform " << i << ": " << platformName << '\n';
             platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
             const std::size_t devicesNumber = devices.size();
             if (devicesNumber == 0)
             {
-                msg << " No supported GPU in this platform" << std::endl;
+                msg << " No supported GPU in this platform" << '\n';
             }
 
             devicesVector.emplace_back(devicesNumber);
@@ -47,7 +47,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
             {
                 std::string deviceName;
                 devices[j].getInfo<std::string>(CL_DEVICE_NAME, &deviceName);
-                msg << " Device " << j << ": " << deviceName << std::endl;
+                msg << " Device " << j << ": " << deviceName << '\n';
             }
             devices.clear();
         }

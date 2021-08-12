@@ -23,11 +23,11 @@ std::string Anime4KCPP::CPU::ACNet::getInfo()
 {
     std::ostringstream oss;
     oss << AC::getInfo()
-        << "----------------------------------------------" << std::endl
-        << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Zoom Factor: " << param.zoomFactor << '\n'
+        << "HDN Mode: " << std::boolalpha << param.HDN << '\n'
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -35,9 +35,9 @@ std::string Anime4KCPP::CPU::ACNet::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
-        << "----------------------------------------------" << std::endl
-        << "Filter not supported" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Filter not supported" << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 

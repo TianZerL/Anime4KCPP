@@ -725,16 +725,16 @@ void Anime4KCPP::AC::saveImageShape(int& cols, int& rows, int& channels)
 std::string Anime4KCPP::AC::getInfo()
 {
     std::ostringstream oss;
-    oss << "----------------------------------------------" << std::endl
-        << "Parameter information" << std::endl
-        << "----------------------------------------------" << std::endl;
+    oss << "----------------------------------------------" << '\n'
+        << "Parameter information" << '\n'
+        << "----------------------------------------------" << '\n';
     if (orgImg.cols && orgImg.rows)
     {
-        oss << orgImg.cols << "x" << orgImg.rows << " to " << width << "x" << height << std::endl
-            << "----------------------------------------------" << std::endl;
+        oss << orgImg.cols << "x" << orgImg.rows << " to " << width << "x" << height << '\n'
+            << "----------------------------------------------" << '\n';
     }
     oss << "Processor info: \n "
-        << getProcessorInfo() << std::endl;
+        << getProcessorInfo() << '\n';
 
     return oss.str();
 }
@@ -742,9 +742,9 @@ std::string Anime4KCPP::AC::getInfo()
 std::string Anime4KCPP::AC::getFiltersInfo()
 {
     std::ostringstream oss;
-    oss << "----------------------------------------------" << std::endl
-        << "Filter information" << std::endl
-        << "----------------------------------------------" << std::endl;
+    oss << "----------------------------------------------" << '\n'
+        << "Filter information" << '\n'
+        << "----------------------------------------------" << '\n';
 
     return oss.str();
 }

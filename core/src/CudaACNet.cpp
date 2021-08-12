@@ -76,12 +76,12 @@ std::string Anime4KCPP::Cuda::ACNet::getInfo()
 {
     std::ostringstream oss;
     oss << AC::getInfo()
-        << "----------------------------------------------" << std::endl
-        << "CUDA Device ID: " << cuGetDeviceID() << std::endl
-        << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "CUDA Device ID: " << cuGetDeviceID() << '\n'
+        << "Zoom Factor: " << param.zoomFactor << '\n'
+        << "HDN Mode: " << std::boolalpha << param.HDN << '\n'
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -89,9 +89,9 @@ std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
-        << "----------------------------------------------" << std::endl
-        << "Filter not supported" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Filter not supported" << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -220,8 +220,8 @@ Anime4KCPP::Processor::Type Anime4KCPP::Cuda::ACNet::getProcessorType() noexcept
 std::string Anime4KCPP::Cuda::ACNet::getProcessorInfo()
 {
     std::ostringstream oss;
-    oss << "Processor type: " << getProcessorType() << std::endl
-        << "Current CUDA devices:" << std::endl
+    oss << "Processor type: " << getProcessorType() << '\n'
+        << "Current CUDA devices:" << '\n'
         << cuGetDeviceInfo(cuGetDeviceID());
     return oss.str();
 }

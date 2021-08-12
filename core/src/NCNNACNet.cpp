@@ -162,12 +162,12 @@ std::string Anime4KCPP::NCNN::ACNet::getInfo()
 {
     std::ostringstream oss;
     oss << AC::getInfo()
-        << "----------------------------------------------" << std::endl
-        << "NCNN device product ID: " << (detail::vkdev ? std::to_string(detail::vkdev->info.device_id()) : "-1") << std::endl
-        << "Zoom Factor: " << param.zoomFactor << std::endl
-        << "HDN Mode: " << std::boolalpha << param.HDN << std::endl
-        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "NCNN device product ID: " << (detail::vkdev ? std::to_string(detail::vkdev->info.device_id()) : "-1") << '\n'
+        << "Zoom Factor: " << param.zoomFactor << '\n'
+        << "HDN Mode: " << std::boolalpha << param.HDN << '\n'
+        << "HDN Level: " << (param.HDN ? param.HDNLevel : 0) << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -175,9 +175,9 @@ std::string Anime4KCPP::NCNN::ACNet::getFiltersInfo()
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
-        << "----------------------------------------------" << std::endl
-        << "Filter not supported" << std::endl
-        << "----------------------------------------------" << std::endl;
+        << "----------------------------------------------" << '\n'
+        << "Filter not supported" << '\n'
+        << "----------------------------------------------" << '\n';
     return oss.str();
 }
 
@@ -425,8 +425,8 @@ Anime4KCPP::Processor::Type Anime4KCPP::NCNN::ACNet::getProcessorType() noexcept
 std::string Anime4KCPP::NCNN::ACNet::getProcessorInfo()
 {
     std::ostringstream oss;
-    oss << "Processor type: " << getProcessorType() << std::endl
-        << "Current NCNN devices:" << std::endl
+    oss << "Processor type: " << getProcessorType() << '\n'
+        << "Current NCNN devices:" << '\n'
         << (detail::vkdev ? (std::string{ " Type: " } + detail::vkdev->info.device_name()) : " Type: CPU");
     return oss.str();
 }
