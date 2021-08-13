@@ -1932,8 +1932,8 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         }
         break;
         case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
         {
+#ifdef ENABLE_CUDA
             Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(currDeviceID);
             supported = ret;
             info = ret();
@@ -1941,13 +1941,13 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
             {
                 initializer.pushManager<Anime4KCPP::Cuda::Manager>(currDeviceID);
             }
-        }
-        break;
 #else
             errorHandler(ErrorType::CUDA_NOT_SUPPORT);
             ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);
             return;
 #endif 
+        }
+        break;
         }
 
         if (!supported)
