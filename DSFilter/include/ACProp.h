@@ -17,8 +17,8 @@ struct ACPropData
     bool CNN = true;
     bool HDN = false;
     int HDNLevel = 1;
-    unsigned int pID = 0;
-    unsigned int dID = 0;
+    int pID = 0;
+    int dID = 0;
     double zoomFactor = 2.0;
     int H = 1080;
     int W = 1920;

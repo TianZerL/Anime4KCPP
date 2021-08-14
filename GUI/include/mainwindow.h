@@ -209,7 +209,7 @@ private:
 
     bool foundFFmpegFlag;
     QString ffmpegPath;
-    unsigned int totalTaskCount;
+    int totalTaskCount;
     Language currLanguage;
     Style currStyle;
 

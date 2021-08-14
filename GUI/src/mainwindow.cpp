@@ -202,8 +202,8 @@ void MainWindow::readConfig(const QSettings* conf)
     bool fastMode = conf->value("/Arguments/fastMode", false).toBool();
     int codec = conf->value("/Arguments/codec", 0).toInt();
     double fps = conf->value("/Arguments/fps", 0.0).toDouble();
-    unsigned int pID = conf->value("/Arguments/pID", 0).toUInt();
-    unsigned int dID = conf->value("/Arguments/dID", 0).toUInt();
+    int pID = conf->value("/Arguments/pID", 0).toInt();
+    int dID = conf->value("/Arguments/dID", 0).toInt();
     int OpenCLQueueNum = conf->value("/Arguments/OpenCLQueueNumber", 1).toInt();
     bool OpenCLParallelIO = conf->value("/Arguments/OpenCLParallelIO", false).toBool();
     bool alphaChannel = conf->value("/Arguments/alphaChannel", false).toBool();
@@ -330,8 +330,8 @@ void MainWindow::writeConfig(QSettings* conf)
     bool fastMode = ui->checkBoxFastMode->isChecked();
     int codec = ui->comboBoxCodec->currentIndex();
     double fps = ui->doubleSpinBoxFPS->value();
-    unsigned int pID = ui->spinBoxPlatformID->value();
-    unsigned int dID = ui->spinBoxDeviceID->value();
+    int pID = ui->spinBoxPlatformID->value();
+    int dID = ui->spinBoxDeviceID->value();
     int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
     bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
     bool alphaChannel = ui->checkBoxAlphaChannel->isChecked();
@@ -1894,7 +1894,7 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 {
     if ((state == Qt::Checked) && (GPUState == GPUMode::UNINITIALZED))
     {
-        unsigned int currPlatFormID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
+        int currPlatformID = ui->spinBoxPlatformID->value(), currDeviceID = ui->spinBoxDeviceID->value();
         GPGPU GPGPUModel = static_cast<GPGPU>(ui->comboBoxGPGPU->currentIndex());
         bool ACNetMode = ui->checkBoxACNet->isChecked();
         bool supported = false;
@@ -1907,20 +1907,20 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
 #ifdef ENABLE_OPENCL
             int OpenCLQueueNum = ui->spinBoxOpenCLQueueNum->value();
             bool OpenCLParallelIO = ui->checkBoxOpenCLParallelIO->isChecked();
-            Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatFormID, currDeviceID);
+            Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(currPlatformID, currDeviceID);
             supported = ret;
             info = ret();
             if (supported)
             {
                 if (ACNetMode)
                     initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
-                        currPlatFormID, currDeviceID,
+                        currPlatformID, currDeviceID,
                         Anime4KCPP::CNNType::Default,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
                 else
                     initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::Anime4K09>>(
-                        currPlatFormID, currDeviceID,
+                        currPlatformID, currDeviceID,
                         OpenCLQueueNum,
                         OpenCLParallelIO);
             }
