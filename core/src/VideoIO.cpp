@@ -61,9 +61,7 @@ void Anime4KCPP::Utils::VideoIO::process()
 
 bool Anime4KCPP::Utils::VideoIO::openReader(const std::string& srcFile)
 {
-    if (!reader.open(srcFile, cv::CAP_FFMPEG))
-        return reader.open(srcFile);
-    return reader.isOpened();
+    return reader.open(srcFile);
 }
 
 bool Anime4KCPP::Utils::VideoIO::openWriter(const std::string& dstFile, const Codec codec, const cv::Size& size, const double forceFps)

@@ -1000,6 +1000,7 @@ void MainWindow::on_radioButtonFast_clicked()
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxAlphaChannel->setChecked(true);
+    ui->comboBoxCodec->setCurrentText("mp4v");
     //preprocessing
     ui->checkBoxEnablePreprocessing->setChecked(true);
     ui->checkBoxPreMedian->setChecked(false);
@@ -1030,18 +1031,20 @@ void MainWindow::on_radioButtonBalance_clicked()
     ui->checkBoxEnablePreprocessing->setChecked(false);
     ui->checkBoxEnablePostprocessing->setChecked(false);
     ui->checkBoxAlphaChannel->setChecked(true);
+    ui->comboBoxCodec->setCurrentText("mp4v");
 }
 
 void MainWindow::on_radioButtonQuality_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
-    ui->checkBoxHDN->setChecked(true);
+    ui->checkBoxHDN->setChecked(false);
     ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
     ui->checkBoxEnablePostprocessing->setChecked(false);
     ui->checkBoxAlphaChannel->setChecked(true);
+    ui->comboBoxCodec->setCurrentText("avc1");
 }
 
 void MainWindow::on_checkBoxEnablePreprocessing_stateChanged(int arg1)
@@ -1134,7 +1137,7 @@ void MainWindow::on_pushButtonPreview_clicked()
 #ifdef ENABLE_PREVIEW_GUI
             std::string currInputPath = previewFile.absoluteFilePath().toUtf8().toStdString();
 
-            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+            cv::VideoCapture videoCapture(currInputPath);
             if (!videoCapture.isOpened())
                 throw std::runtime_error("Error: Unable to open the video file");
 
@@ -1632,7 +1635,7 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
 #ifdef ENABLE_PREVIEW_GUI
             std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
 
-            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+            cv::VideoCapture videoCapture(currInputPath);
             try
             {
                 if (!videoCapture.isOpened())
@@ -1756,7 +1759,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         {
 #ifdef ENABLE_PREVIEW_GUI
             std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
-            cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+            cv::VideoCapture videoCapture(currInputPath);
 
             try
             {

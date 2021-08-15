@@ -716,7 +716,7 @@ int main(int argc, char* argv[])
                 std::cout << ac->getInfo() << '\n';
                 std::cout << ac->getFiltersInfo() << '\n';
 
-                cv::VideoCapture videoCapture(currInputPath, cv::CAP_FFMPEG);
+                cv::VideoCapture videoCapture(currInputPath);
                 if (!videoCapture.isOpened())
                     throw std::runtime_error("Error: Unable to open the video file");
 
