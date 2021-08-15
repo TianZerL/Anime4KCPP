@@ -251,16 +251,16 @@ int main(int argc, char* argv[])
     opt.add("fastMode", 'f', "Faster but maybe low quality");
     opt.add("videoMode", 'v', "Video process");
     opt.add("preview", 's', "Preview image");
-    opt.add<unsigned int>("start", 'S', "Specify the start frame number for video previewing", false, 0);
+    opt.add<std::size_t>("start", 'S', "Specify the start frame number for video previewing", false, 0);
     opt.add("preprocessing", 'b', "Enable preprocessing");
     opt.add("postprocessing", 'a', "Enable postprocessing");
-    opt.add<unsigned int>("preFilters", 'r',
+    opt.add<uint8_t>("preFilters", 'r',
         "Enhancement filter, only working when preprocessing is true,there are 5 options by binary:"
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
         "Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
         "you can freely combine them, eg: Gaussian blur weak + Bilateral filter = 0001000 | "
         "0100000 = 0101000 = 40(D)", false, Anime4KCPP::Filter::CAS_Sharpening, cmdline::range(1, 127));
-    opt.add<unsigned int>("postFilters", 'e',
+    opt.add<uint8_t>("postFilters", 'e',
         "Enhancement filter, only working when postprocessing is true,there are 5 options by binary:"
         "Median blur=0000001, Mean blur=0000010, CAS Sharpening=0000100, Gaussian blur weak=0001000, "
         "Gaussian blur=0010000, Bilateral filter=0100000, Bilateral filter faster=1000000, "
@@ -307,47 +307,47 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    std::string input = opt.get<std::string>("input");
-    bool defaultOutputName = !opt.exist("output");
-    std::string output = defaultOutputName ? std::string{} : opt.get<std::string>("output");
-    bool videoMode = opt.exist("videoMode");
-    bool preview = opt.exist("preview");
-    bool listGPUs = opt.exist("listGPUs");
-    bool version = opt.exist("version");
-    bool web = opt.exist("web");
-    bool doBenchmark = opt.exist("benchmark");
-    bool ncnn = opt.exist("ncnn");
-    unsigned int frameStart = opt.get<unsigned int>("start");
-    bool configTemplate = opt.exist("configTemplate");
-    std::string testMode = opt.get<std::string>("testMode");
+    auto input = opt.get<std::string>("input");
+    auto defaultOutputName = !opt.exist("output");
+    auto output = defaultOutputName ? std::string{} : opt.get<std::string>("output");
+    auto videoMode = opt.exist("videoMode");
+    auto preview = opt.exist("preview");
+    auto listGPUs = opt.exist("listGPUs");
+    auto version = opt.exist("version");
+    auto web = opt.exist("web");
+    auto doBenchmark = opt.exist("benchmark");
+    auto ncnn = opt.exist("ncnn");
+    auto frameStart = opt.get<std::size_t>("start");
+    auto configTemplate = opt.exist("configTemplate");
+    auto testMode = opt.get<std::string>("testMode");
 
     //args which can be saved to config
-    int passes = config.get<int>("passes");
-    int pushColorCount = config.get<int>("pushColorCount");
-    int HDNLevel = config.get<int>("HDNLevel");
-    double strengthColor = config.get<double>("strengthColor");
-    double strengthGradient = config.get<double>("strengthGradient");
-    double zoomFactor = config.get<double>("zoomFactor");
-    double forceFps = config.get<double>("forceFps");
-    bool fastMode = config.get<bool>("fastMode");
-    bool preprocessing = config.get<bool>("preprocessing");
-    bool postprocessing = config.get<bool>("postprocessing");
-    bool GPU = config.get<bool>("GPUMode");
-    bool CNN = config.get<bool>("CNNMode");
-    bool HDN = config.get<bool>("HDN");
-    bool disableProgress = config.get<bool>("disableProgress");
-    bool alpha = config.get<bool>("alpha");
-    uint8_t preFilters = config.get<unsigned int>("preFilters");
-    uint8_t postFilters = config.get<unsigned int>("postFilters");
-    int pID = config.get<int>("platformID");
-    int dID = config.get<int>("deviceID");
-    int OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
-    bool OpenCLParallelIO = config.get<bool>("OpenCLParallelIO");
-    unsigned int threads = config.get<unsigned int>("threads");
-    unsigned int ncnnThreads = config.get<unsigned int>("ncnnThreads");
-    std::string codec = config.get<std::string>("codec");
-    std::string GPGPUModelString = config.get<std::string>("GPGPUModel");
-    std::string ncnnModelPath = config.get<std::string>("ncnnModelPath");
+    auto passes = config.get<int>("passes");
+    auto pushColorCount = config.get<int>("pushColorCount");
+    auto HDNLevel = config.get<int>("HDNLevel");
+    auto strengthColor = config.get<double>("strengthColor");
+    auto strengthGradient = config.get<double>("strengthGradient");
+    auto zoomFactor = config.get<double>("zoomFactor");
+    auto forceFps = config.get<double>("forceFps");
+    auto fastMode = config.get<bool>("fastMode");
+    auto preprocessing = config.get<bool>("preprocessing");
+    auto postprocessing = config.get<bool>("postprocessing");
+    auto GPU = config.get<bool>("GPUMode");
+    auto CNN = config.get<bool>("CNNMode");
+    auto HDN = config.get<bool>("HDN");
+    auto disableProgress = config.get<bool>("disableProgress");
+    auto alpha = config.get<bool>("alpha");
+    auto preFilters = config.get<uint8_t>("preFilters");
+    auto postFilters = config.get<uint8_t>("postFilters");
+    auto pID = config.get<int>("platformID");
+    auto dID = config.get<int>("deviceID");
+    auto OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
+    auto OpenCLParallelIO = config.get<bool>("OpenCLParallelIO");
+    auto threads = config.get<unsigned int>("threads");
+    auto ncnnThreads = config.get<unsigned int>("ncnnThreads");
+    auto codec = config.get<std::string>("codec");
+    auto GPGPUModelString = config.get<std::string>("GPGPUModel");
+    auto ncnnModelPath = config.get<std::string>("ncnnModelPath");
 
     //Generate config template
     if (configTemplate)

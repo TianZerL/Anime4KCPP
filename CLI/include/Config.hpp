@@ -6,7 +6,7 @@
 #include <fstream>
 #include <unordered_map>
 
-#include <cmdline.h>
+#include <cmdline.hpp>
 
 inline std::string& ltrim(std::string& s)
 {
@@ -41,9 +41,9 @@ struct ConfigError
     void printErrorInfo()
     {
         std::cerr
-            << "Invalid format: in file \"" << filePath << "\" line: " << lineNumber << ':' << pos << std::endl
-            << lineData << std::endl
-            << std::string(pos >= 1 ? pos : 0, ' ') << '^' << std::endl;
+            << "Invalid format: in file \"" << filePath << "\" line: " << lineNumber << ':' << pos << '\n'
+            << lineData << '\n'
+            << std::string(pos >= 1 ? pos : 0, ' ') << "^\n";
     }
 };
 
@@ -166,10 +166,10 @@ public:
     {
         if (!outputFile.is_open())
             return;
-        outputFile << "# " << header << std::endl << std::endl;
+        outputFile << "# " << header << "\n\n";
         for (auto& kv : kvMap)
         {
-            outputFile << kv.first << " = " << kv.second << std::endl;
+            outputFile << kv.first << " = " << kv.second << '\n';
         }
     }
 
