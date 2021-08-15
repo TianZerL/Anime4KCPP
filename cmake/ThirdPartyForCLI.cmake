@@ -1,17 +1,17 @@
 set(CMDLINE_H_URL https://github.com/TianZerL/cmdline/raw/master/cmdline.hpp)
 set(SHA1_CMDLINE "3e4cd84558ecb4330c0cb0b7ff0a427ceade3c41")
 
-if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h)
-    file(SHA1 ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h LOCAL_SHA1_CMDLINE)
+if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp)
+    file(SHA1 ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp LOCAL_SHA1_CMDLINE)
 
     if(NOT ${LOCAL_SHA1_CMDLINE} STREQUAL ${SHA1_CMDLINE})
         message("Warning:")
-        message("   Local SHA1 for comline.h:   ${LOCAL_SHA1_CMDLINE}")
+        message("   Local SHA1 for comline.hpp:   ${LOCAL_SHA1_CMDLINE}")
         message("   Expected SHA1:              ${SHA1_CMDLINE}")
-        message("   Mismatch SHA1 for cmdline.h, trying to download it...")
+        message("   Mismatch SHA1 for cmdline.hpp, trying to download it...")
 
         file(
-            DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h 
+            DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp 
             SHOW_PROGRESS 
             EXPECTED_HASH SHA1=${SHA1_CMDLINE}
         )
@@ -19,7 +19,7 @@ if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h)
     endif()
 else()
     file(
-        DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.h 
+        DOWNLOAD ${CMDLINE_H_URL} ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp 
         SHOW_PROGRESS 
         EXPECTED_HASH SHA1=${SHA1_CMDLINE}
     )
