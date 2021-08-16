@@ -1,6 +1,18 @@
 #pragma once
 
-#include"ACInitializer.hpp"
+#include"ACCPU.hpp"
+
+#ifdef ENABLE_OPENCL
+#include"ACOpenCL.hpp"
+#endif
+
+#ifdef ENABLE_CUDA
+#include"ACCuda.hpp"
+#endif
+
+#ifdef ENABLE_NCNN
+#include"ACNCNN.hpp"
+#endif
 
 namespace Anime4KCPP
 {

@@ -29,21 +29,22 @@ class Anime4KCPP::CPU::Manager : public Anime4KCPP::Processor::Manager
 public:
     Manager() = default;
     void init() override;
-    void release() override;
-    bool isInitialized() override;
-    bool isSupport() override;
+    void release() noexcept override;
+    bool isInitialized() noexcept override;
+    bool isSupport() noexcept override;
+    const char* name() noexcept override { return "CPU Processor Manager"; };
 };
 
 inline void Anime4KCPP::CPU::Manager::init() {}
 
-inline void Anime4KCPP::CPU::Manager::release() {}
+inline void Anime4KCPP::CPU::Manager::release() noexcept {}
 
-inline bool Anime4KCPP::CPU::Manager::isInitialized()
+inline bool Anime4KCPP::CPU::Manager::isInitialized() noexcept
 {
     return true;
 }
 
-inline bool Anime4KCPP::CPU::Manager::isSupport()
+inline bool Anime4KCPP::CPU::Manager::isSupport() noexcept
 {
     return true;
 }

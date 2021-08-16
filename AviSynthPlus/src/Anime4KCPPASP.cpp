@@ -123,13 +123,14 @@ Anime4KCPPFilter::Anime4KCPPFilter(
 #endif // ENABLE_CUDA
             break;
         }
-        try
+
+        if (initializer.init() != initializer.size())
         {
-            initializer.init();
-        }
-        catch (const std::exception& e)
-        {
-            env->ThrowError(e.what());
+            std::ostringstream oss("Unable to initialize:\n", std::ios_base::ate);
+            for (auto& error : initializer.failure())
+                oss << "  " << error;
+            oss << '\n';
+            env->ThrowError(oss.str().c_str());
         }
     }
 }
@@ -469,55 +470,48 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
 
     if (GPUMode)
     {
-        try
+        std::string info;
+        switch (GPGPUModel)
         {
-            std::string info;
-            switch (GPGPUModel)
-            {
-            case GPGPU::OpenCL:
+        case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
+        {
+            Anime4KCPP::OpenCL::GPUInfo ret =
+                Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
+            if (!ret)
             {
-                Anime4KCPP::OpenCL::GPUInfo ret =
-                    Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
-                if (!ret)
-                {
-                    std::ostringstream err;
-                    err <<
-                        "Anime4KCPP: The current device is unavailable\n"
-                        "Your input is: \n"
-                        "    platform ID: " << pID << "\n"
-                        "    device ID: " << dID << "\n"
-                        "Error: \n"
-                        "    " + ret() << '\n';
-                    env->ThrowError(err.str().c_str());
-                }
-            }
-#endif
-            break;
-            case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
-            {
-                Anime4KCPP::Cuda::GPUInfo ret =
-                    Anime4KCPP::Cuda::checkGPUSupport(dID);
-                if (!ret)
-                {
-                    std::ostringstream err;
-                    err << 
-                        "Anime4KCPP: The current device is unavailable\n"
-                        "Your input is: \n"
-                        "    device ID: " << dID << "\n"
-                        "Error: \n"
-                        "    " + ret() << '\n';
-                    env->ThrowError(err.str().c_str());
-                }
-            }
-#endif
-            break;
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: The current device is unavailable\n"
+                    "Your input is: \n"
+                    "    platform ID: " << pID << "\n"
+                    "    device ID: " << dID << "\n"
+                    "Error: \n"
+                    "    " + ret() << '\n';
+                env->ThrowError(err.str().c_str());
             }
         }
-        catch (const std::exception& err)
+#endif
+        break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
         {
-            env->ThrowError(err.what());
+            Anime4KCPP::Cuda::GPUInfo ret =
+                Anime4KCPP::Cuda::checkGPUSupport(dID);
+            if (!ret)
+            {
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: The current device is unavailable\n"
+                    "Your input is: \n"
+                    "    device ID: " << dID << "\n"
+                    "Error: \n"
+                    "    " + ret() << '\n';
+                env->ThrowError(err.str().c_str());
+            }
+        }
+#endif
+        break;
         }
     }
 

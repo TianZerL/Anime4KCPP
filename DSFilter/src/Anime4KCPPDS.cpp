@@ -353,13 +353,14 @@ HRESULT Anime4KCPPDS::CheckTransform(const CMediaType* mtIn, const CMediaType* m
         !IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo))
         return VFW_E_TYPE_NOT_ACCEPTED;
 
-    try
+    if (initializer.init() != initializer.size())
     {
-        initializer.init();
-    }
-    catch (const std::exception& e)
-    {
-        MessageBoxExA(nullptr, e.what(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
+        std::ostringstream oss("Unable to initialize:\n", std::ios_base::ate);
+        for (auto& error : initializer.failure())
+            oss << "  " << error;
+        oss << '\n';
+
+        MessageBoxExA(nullptr, oss.str().c_str(), "Anime4KCPPDS Error", MB_APPLMODAL | MB_ICONERROR, LANG_ENGLISH);
         return VFW_E_TYPE_NOT_ACCEPTED;
     }
 

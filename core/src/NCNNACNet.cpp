@@ -285,7 +285,7 @@ void Anime4KCPP::NCNN::ACNet::init(const int deviceID, const int threads)
     detail::isInitializedFlag = true;
 }
 
-void Anime4KCPP::NCNN::ACNet::release()
+void Anime4KCPP::NCNN::ACNet::release() noexcept
 {
     if (!detail::isInitializedFlag)
         return;
@@ -301,7 +301,7 @@ void Anime4KCPP::NCNN::ACNet::release()
     detail::isInitializedFlag = false;
 }
 
-bool Anime4KCPP::NCNN::ACNet::isInitialized()
+bool Anime4KCPP::NCNN::ACNet::isInitialized() noexcept
 {
     return detail::isInitializedFlag;
 }

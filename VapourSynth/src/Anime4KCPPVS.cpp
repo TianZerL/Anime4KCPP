@@ -51,13 +51,14 @@ static void VS_CC Anime4KCPPInit(VSMap* in, VSMap* out, void** instanceData, VSN
 #endif // ENABLE_CUDA
             break;
         }
-        try
+        if (data->initializer.init() != data->initializer.size())
         {
-            data->initializer.init();
-        }
-        catch (const std::exception& e)
-        {
-            vsapi->setError(out, e.what());
+            std::ostringstream oss("Unable to initialize:\n", std::ios_base::ate);
+            for (auto& error : data->initializer.failure())
+                oss << "  " << error;
+            oss << '\n';
+
+            vsapi->setError(out, oss.str().c_str());
             vsapi->freeNode(data->node);
             std::default_delete<Anime4KCPPData>{}(data);
             return;
@@ -492,96 +493,81 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (data->GPU)
     {
         std::string info;
-        try
+        switch (data->GPGPUModel)
         {
-            switch (data->GPGPUModel)
-            {
-            case GPGPU::OpenCL:
+        case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
-            {
-                Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
-                if (data->pID < 0 || data->dID < 0 ||
-                    data->pID >= list.platforms || data->dID >= list[data->pID])
-                {
-                    std::ostringstream err;
-                    err << 
-                        "Anime4KCPP: Platform ID or device ID index out of range\n"
-                        "Run core.anim4kcpp.listGPUs() for available platforms and devices\n"
-                        "Your input is: \n"
-                        "    platform ID: " << data->pID << "\n"
-                        "    device ID: " << data->dID << '\n';
-                    vsapi->setError(out, err.str().c_str());
-                    vsapi->freeNode(data->node);
-                    return;
-                }
-                Anime4KCPP::OpenCL::GPUInfo ret =
-                    Anime4KCPP::OpenCL::checkGPUSupport(data->pID, data->dID);
-                if (!ret)
-                {
-                    std::ostringstream err;
-                    err << 
-                        "Anime4KCPP: The current device is unavailable\n"
-                        "Your input is: \n"
-                        "    platform ID: " << data->pID << "\n"
-                        "    device ID: " << data->dID << "\n"
-                        "Error: \n"
-                        "    " + ret() << '\n';
-                    vsapi->setError(out, err.str().c_str());
-                    vsapi->freeNode(data->node);
-                    return;
-                }
-                info = ret();
-            }
-#endif
-            break;
-            case GPGPU::CUDA:
-#ifdef ENABLE_CUDA
-            {
-                Anime4KCPP::Cuda::GPUList list = Anime4KCPP::Cuda::listGPUs();
-                if (list.devices == 0)
-                {
-                    vsapi->setError(out, list().c_str());
-                    vsapi->freeNode(data->node);
-                    return;
-                }
-                else if (data->dID >= list.devices)
-                {
-                    std::ostringstream err;
-                    err << 
-                        "Anime4KCPP: Device ID index out of range\n"
-                        "Run core.anim4kcpp.listGPUs() for available CUDA devices\n"
-                        "Your input is: \n"
-                        "    device ID: " << data->dID << '\n';
-                    vsapi->setError(out, err.str().c_str());
-                    vsapi->freeNode(data->node);
-                    return;
-                }
-                Anime4KCPP::Cuda::GPUInfo ret =
-                    Anime4KCPP::Cuda::checkGPUSupport(data->dID);
-                if (!ret)
-                {
-                    std::ostringstream err;
-                    err << 
-                        "Anime4KCPP: The current device is unavailable\n"
-                        "Your input is: \n"
-                        "    device ID: " << data->dID << "\n"
-                        "Error: \n"
-                        "    " + ret() << '\n';
-                    vsapi->setError(out, err.str().c_str());
-                    vsapi->freeNode(data->node);
-                    return;
-                }
-                info = ret();
-            }
-#endif
-            break;
-            }
-        }
-        catch (const std::exception& e)
         {
-            vsapi->setError(out, e.what());
-            vsapi->freeNode(data->node);
-            return;
+            Anime4KCPP::OpenCL::GPUList list = Anime4KCPP::OpenCL::listGPUs();
+            if (data->pID < 0 || data->dID < 0 ||
+                data->pID >= list.platforms || data->dID >= list[data->pID])
+            {
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: Platform ID or device ID index out of range\n"
+                    "Run core.anim4kcpp.listGPUs() for available platforms and devices\n"
+                    "Your input is: \n"
+                    "    platform ID: " << data->pID << "\n"
+                    "    device ID: " << data->dID << '\n';
+                vsapi->setError(out, err.str().c_str());
+                vsapi->freeNode(data->node);
+                return;
+            }
+            Anime4KCPP::OpenCL::GPUInfo ret =
+                Anime4KCPP::OpenCL::checkGPUSupport(data->pID, data->dID);
+            if (!ret)
+            {
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: The current device is unavailable\n"
+                    "Your input is: \n"
+                    "    platform ID: " << data->pID << "\n"
+                    "    device ID: " << data->dID << "\n"
+                    "Error: \n"
+                    "    " + ret() << '\n';
+                vsapi->setError(out, err.str().c_str());
+                vsapi->freeNode(data->node);
+                return;
+            }
+            info = ret();
+        }
+#endif
+        break;
+        case GPGPU::CUDA:
+#ifdef ENABLE_CUDA
+        {
+            Anime4KCPP::Cuda::GPUList list = Anime4KCPP::Cuda::listGPUs();
+            if (data->dID < 0 || data->dID >= list.devices)
+            {
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: Device ID index out of range\n"
+                    "Run core.anim4kcpp.listGPUs() for available CUDA devices\n"
+                    "Your input is: \n"
+                    "    device ID: " << data->dID << '\n';
+                vsapi->setError(out, err.str().c_str());
+                vsapi->freeNode(data->node);
+                return;
+            }
+            Anime4KCPP::Cuda::GPUInfo ret =
+                Anime4KCPP::Cuda::checkGPUSupport(data->dID);
+            if (!ret)
+            {
+                std::ostringstream err;
+                err <<
+                    "Anime4KCPP: The current device is unavailable\n"
+                    "Your input is: \n"
+                    "    device ID: " << data->dID << "\n"
+                    "Error: \n"
+                    "    " + ret() << '\n';
+                vsapi->setError(out, err.str().c_str());
+                vsapi->freeNode(data->node);
+                return;
+            }
+            info = ret();
+        }
+#endif
+        break;
         }
         vsapi->logMessage(mtDebug, ("Current GPU information: \n" + info).c_str());
     }

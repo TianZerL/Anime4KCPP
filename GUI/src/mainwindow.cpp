@@ -1287,7 +1287,7 @@ void MainWindow::on_pushButtonStart_clicked()
         }
 
         double total = static_cast<double>(imageCount) + static_cast<double>(videoCount);
-        std::atomic_int totalCount = imageCount + videoCount;
+        std::atomic<int> totalCount = imageCount + videoCount;
 
         Communicator cm;
         connect(&cm, SIGNAL(done(int, double, quint64)),
@@ -1319,7 +1319,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
                     catch (const std::exception& err)
                     {
-                        emit cm.error(image.second, QString::fromStdString(err.what()));
+                        emit cm.error(image.second, err.what());
                     }
 
                     totalCount--;
@@ -1377,7 +1377,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 }
                 catch (const std::exception& err)
                 {
-                    emit cm.error(video.second, QString::fromStdString(err.what()));
+                    emit cm.error(video.second, err.what());
                 }
 
                 if (stopVideoProcessing)
@@ -1636,16 +1636,8 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
             std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
 
             cv::VideoCapture videoCapture(currInputPath);
-            try
-            {
-                if (!videoCapture.isOpened())
-                    throw std::runtime_error("Error: Unable to open the video file");
-            }
-            catch (const std::exception& err)
-            {
-                errorHandler(err.what());
-                break;
-            }
+            if (!videoCapture.isOpened())
+                throw std::runtime_error("Error: Unable to open the video file");
 
             double fps = ui->doubleSpinBoxFPS->value();
             int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
@@ -1759,18 +1751,10 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         {
 #ifdef ENABLE_PREVIEW_GUI
             std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
-            cv::VideoCapture videoCapture(currInputPath);
 
-            try
-            {
-                if (!videoCapture.isOpened())
-                    throw std::runtime_error("Error: Unable to open the video file");
-            }
-            catch (const std::exception& err)
-            {
-                errorHandler(err.what());
-                break;
-            }
+            cv::VideoCapture videoCapture(currInputPath);
+            if (!videoCapture.isOpened())
+                throw std::runtime_error("Error: Unable to open the video file");
 
             double fps = ui->doubleSpinBoxFPS->value();
             int delay = 1000.0 / (fps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : fps);
@@ -1964,15 +1948,16 @@ void MainWindow::on_checkBoxGPUMode_stateChanged(int state)
         }
         else
         {
-            try
+            if (initializer.init() != initializer.size())
             {
-                initializer.init();
-            }
-            catch (const std::exception& err)
-            {
+                std::ostringstream oss("Unable to initialize:\n", std::ios_base::ate);
+                for (auto& error : initializer.failure())
+                    oss << "  " << error;
+                oss << '\n';
+
                 QMessageBox::warning(this,
                     tr("Warning"),
-                    QString::fromStdString(err.what()),
+                    QString::fromStdString(oss.str()),
                     QMessageBox::Ok);
 
                 ui->checkBoxGPUMode->setCheckState(Qt::Unchecked);

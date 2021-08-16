@@ -1,24 +1,15 @@
 #pragma once
 
-#include"ACCPU.hpp"
-
-#ifdef ENABLE_OPENCL
-#include"ACOpenCL.hpp"
-#endif
-
-#ifdef ENABLE_CUDA
-#include"ACCuda.hpp"
-#endif
-
-#ifdef ENABLE_NCNN
-#include"ACNCNN.hpp"
-#endif
+#include<vector>
+#include<string>
+#include<memory>
+#include<cstddef>
 
 #include"ACManager.hpp"
 
 namespace Anime4KCPP
 {
-    class AC_EXPORT ACInitializer;
+    class ACInitializer;
 }
 
 class Anime4KCPP::ACInitializer
@@ -32,11 +23,15 @@ public:
     template<typename Manager, typename... Types>
     void pushManager(Types&&... args);
 
-    void init();
+    std::size_t init();
     void release(bool clearManagerList = false);
+
+    std::size_t size();
+    const std::vector<std::string>& failure();
 private:
 
     std::vector<std::unique_ptr<Processor::Manager>> managers;
+    std::vector<std::string> failures;
 };
 
 template<typename Manager, typename... Types>
@@ -50,19 +45,44 @@ inline Anime4KCPP::ACInitializer::~ACInitializer()
     release(true);
 }
 
-inline void Anime4KCPP::ACInitializer::init()
+inline std::size_t Anime4KCPP::ACInitializer::init()
 {
+    std::size_t count = 0;
+
+    if(!failures.empty())
+        failures.clear();
+
     for (auto& manager : managers)
     {
         if (!manager->isSupport())
-            throw ACException<ExceptionType::RunTimeError>("Try initializing unsupported processor");
+        {
+            failures.emplace_back(manager->name());
+            continue;
+        }
         if (!manager->isInitialized())
-            manager->init();
+        {
+            try
+            {
+                manager->init();
+            }
+            catch (const std::exception& e)
+            {
+                failures.emplace_back(manager->name());
+                failures.emplace_back(e.what());
+                continue;
+            }
+        }
+        count++;
     }
+
+    return count;
 }
 
 inline void Anime4KCPP::ACInitializer::release(bool clearManagerList)
 {
+    if (!failures.empty())
+        failures.clear();
+
     for (auto& manager : managers)
     {
         if (manager->isInitialized())
@@ -70,4 +90,14 @@ inline void Anime4KCPP::ACInitializer::release(bool clearManagerList)
     }
     if (clearManagerList)
         managers.clear();
+}
+
+inline std::size_t Anime4KCPP::ACInitializer::size()
+{
+    return managers.size();
+}
+
+inline const std::vector<std::string>& Anime4KCPP::ACInitializer::failure()
+{
+    return failures;
 }

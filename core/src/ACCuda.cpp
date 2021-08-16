@@ -3,14 +3,28 @@
 #include"CudaInterface.hpp"
 #include"ACCuda.hpp"
 
-Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs()
+Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs() noexcept
 {
-    return GPUList(cuGetDeviceCount(), cuGetCudaInfo());
+    try
+    {
+        return GPUList(cuGetDeviceCount(), cuGetCudaInfo());
+    }
+    catch (const std::exception& e)
+    {
+        return GPUList(0, e.what());
+    }
 }
 
-Anime4KCPP::Cuda::GPUInfo Anime4KCPP::Cuda::checkGPUSupport(const int dID)
+Anime4KCPP::Cuda::GPUInfo Anime4KCPP::Cuda::checkGPUSupport(const int dID) noexcept
 {
-    return GPUInfo(cuCheckDeviceSupport(dID), cuGetDeviceInfo(dID));
+    try
+    {
+        return GPUInfo(cuCheckDeviceSupport(dID), cuGetDeviceInfo(dID));
+    }
+    catch (const std::exception& e)
+    {
+        return GPUInfo(false, e.what());
+    }
 }
 
 Anime4KCPP::Cuda::GPUList::GPUList(const int devices, std::string message)
@@ -34,7 +48,7 @@ Anime4KCPP::Cuda::GPUInfo::operator bool() const noexcept
     return supported;
 }
 
-Anime4KCPP::Cuda::Manager::Manager(const int dID)
+Anime4KCPP::Cuda::Manager::Manager(const int dID) noexcept
     : dID(dID) {}
 
 void Anime4KCPP::Cuda::Manager::init()
@@ -43,18 +57,18 @@ void Anime4KCPP::Cuda::Manager::init()
         cuSetDeviceID(dID);
 }
 
-void Anime4KCPP::Cuda::Manager::release()
+void Anime4KCPP::Cuda::Manager::release() noexcept
 {
     if (cuGetDeviceID() == dID)
         cuReleaseCuda();
 }
 
-bool Anime4KCPP::Cuda::Manager::isInitialized()
+bool Anime4KCPP::Cuda::Manager::isInitialized() noexcept
 {
     return cuGetDeviceID() == dID;
 }
 
-bool Anime4KCPP::Cuda::Manager::isSupport()
+bool Anime4KCPP::Cuda::Manager::isSupport() noexcept
 {
     return cuCheckDeviceSupport(dID);
 }

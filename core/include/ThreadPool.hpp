@@ -5,6 +5,7 @@
 #include<condition_variable>
 #include<functional>
 #include<future>
+#include<memory>
 #include<queue>
 #include<vector>
 #include<cstddef>

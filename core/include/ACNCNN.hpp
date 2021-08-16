@@ -14,7 +14,7 @@ namespace Anime4KCPP
         struct AC_EXPORT GPUList;
 
         //return platforms, devices of each platform, all devices information
-        AC_EXPORT GPUList listGPUs();
+        AC_EXPORT GPUList listGPUs() noexcept;
     }
 
     namespace Processor
@@ -30,11 +30,13 @@ class Anime4KCPP::NCNN::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
     Manager(std::string modelPath, std::string paramPath, int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency());
-    Manager(int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency());
+    Manager(int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency()) noexcept;
     void init() override;
-    void release() override;
-    bool isInitialized() override;
-    bool isSupport() override;
+    void release() noexcept override;
+    bool isInitialized() noexcept override;
+    bool isSupport() noexcept override;
+    const char* name() noexcept override { return "NCNN Processor Manager"; };
+
 private:
     bool testFlag;
     int dID, threads;

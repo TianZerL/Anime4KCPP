@@ -33,7 +33,7 @@ namespace Anime4KCPP::Cuda
     void cuRunKernelACNetHDN2(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
     void cuRunKernelACNetHDN3(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamACNet* param);
 
-    void cuSetDeviceID(const int id);
+    void cuSetDeviceID(const int id) noexcept;
     int cuGetDeviceID() noexcept;
     void cuReleaseCuda() noexcept;
 

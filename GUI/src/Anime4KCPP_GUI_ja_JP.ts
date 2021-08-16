@@ -616,7 +616,7 @@
     <message>
         <location filename="mainwindow.ui" line="1250"/>
         <location filename="../../Build/GUI/Anime4KCPP_GUI_autogen/include_Release/ui_mainwindow.h" line="1077"/>
-        <location filename="mainwindow.cpp" line="2058"/>
+        <location filename="mainwindow.cpp" line="2043"/>
         <source>Benchmark</source>
         <translation>性能試験</translation>
     </message>
@@ -960,7 +960,7 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="108"/>
-        <location filename="mainwindow.cpp" line="2168"/>
+        <location filename="mainwindow.cpp" line="2153"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
@@ -973,7 +973,7 @@
         <location filename="mainwindow.cpp" line="168"/>
         <location filename="mainwindow.cpp" line="900"/>
         <location filename="mainwindow.cpp" line="967"/>
-        <location filename="mainwindow.cpp" line="1882"/>
+        <location filename="mainwindow.cpp" line="1866"/>
         <source>ready</source>
         <translation>準備</translation>
     </message>
@@ -1027,10 +1027,10 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="556"/>
+        <location filename="mainwindow.cpp" line="1943"/>
         <location filename="mainwindow.cpp" line="1959"/>
-        <location filename="mainwindow.cpp" line="1974"/>
-        <location filename="mainwindow.cpp" line="2000"/>
-        <location filename="mainwindow.cpp" line="2081"/>
+        <location filename="mainwindow.cpp" line="1985"/>
+        <location filename="mainwindow.cpp" line="2066"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
@@ -1056,9 +1056,9 @@
     <message>
         <location filename="mainwindow.cpp" line="823"/>
         <location filename="mainwindow.cpp" line="1596"/>
-        <location filename="mainwindow.cpp" line="1984"/>
-        <location filename="mainwindow.cpp" line="2088"/>
-        <location filename="mainwindow.cpp" line="2113"/>
+        <location filename="mainwindow.cpp" line="1969"/>
+        <location filename="mainwindow.cpp" line="2073"/>
+        <location filename="mainwindow.cpp" line="2098"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -1103,19 +1103,19 @@
         <translation>クリップボードにコピーされたログ</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1852"/>
+        <location filename="mainwindow.cpp" line="1836"/>
         <source>please select a folder</source>
         <translation>フォルダを選択してください</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1960"/>
+        <location filename="mainwindow.cpp" line="1944"/>
         <source>Failed to initialize GPU: </source>
         <oldsource>Failed to initialize GPU:
 </oldsource>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2058"/>
+        <location filename="mainwindow.cpp" line="2043"/>
         <source>Benchmark test under 8-bit integer input and serial processing
 
 </source>
@@ -1134,7 +1134,7 @@
         <translation type="vanished">ACNet の GPU アクセラレーションはサポートされていません。</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2169"/>
+        <location filename="mainwindow.cpp" line="2154"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>すべてのミッションが中止されたことを確認しますか?</translation>
     </message>
@@ -1144,13 +1144,13 @@
         <translation type="vanished">GPUアクセラレーションを有効にしようとしていますが、これはまだ実験的な機能ですか、互換性をチェックして初期化しますか?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2001"/>
-        <location filename="mainwindow.cpp" line="2082"/>
+        <location filename="mainwindow.cpp" line="1986"/>
+        <location filename="mainwindow.cpp" line="2067"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>GPU アクセラレーションはこのプラットフォームではサポートされていません。</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2114"/>
+        <location filename="mainwindow.cpp" line="2099"/>
         <source>Successfully release GPU</source>
         <translation>成功した GPU リリース</translation>
     </message>

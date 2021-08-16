@@ -11,7 +11,7 @@
 
 #include"ACOpenCL.hpp"
 
-Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
+Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs() noexcept
 {
     std::vector<cl::Platform> platforms;
     std::vector<cl::Device> devices;
@@ -59,7 +59,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs()
     }
 }
 
-Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, const int dID)
+Anime4KCPP::OpenCL::GPUInfo Anime4KCPP::OpenCL::checkGPUSupport(const int pID, const int dID) noexcept
 {
     std::vector<cl::Platform> platforms;
     std::vector<cl::Device> devices;

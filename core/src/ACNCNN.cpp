@@ -5,7 +5,7 @@
 #include"ACNetType.hpp"
 #include"ACNCNN.hpp"
 
-Anime4KCPP::NCNN::GPUList Anime4KCPP::NCNN::listGPUs()
+Anime4KCPP::NCNN::GPUList Anime4KCPP::NCNN::listGPUs() noexcept
 {
     int gpuCount = ncnn::get_gpu_count();
     std::string gpuInfo;
@@ -54,8 +54,8 @@ Anime4KCPP::NCNN::Manager::Manager(std::string modelPath, std::string paramPath,
     }
 }
 
-Anime4KCPP::NCNN::Manager::Manager(const int dID, const CNNType type, const int threads)
-    : Manager(std::move(std::string{}), std::move(std::string{}), dID, type, threads)
+Anime4KCPP::NCNN::Manager::Manager(const int dID, const CNNType type, const int threads) noexcept
+    : Manager(std::string{}, std::string{}, dID, type, threads)
 {
     testFlag = false;
 }
@@ -77,18 +77,18 @@ void Anime4KCPP::NCNN::Manager::init()
 
 }
 
-void Anime4KCPP::NCNN::Manager::release()
+void Anime4KCPP::NCNN::Manager::release() noexcept
 {
     if (Anime4KCPP::NCNN::ACNet::isInitialized())
         Anime4KCPP::NCNN::ACNet::release();
 }
 
-bool Anime4KCPP::NCNN::Manager::isInitialized()
+bool Anime4KCPP::NCNN::Manager::isInitialized() noexcept
 {
     return Anime4KCPP::NCNN::ACNet::isInitialized();
 }
 
-bool Anime4KCPP::NCNN::Manager::isSupport()
+bool Anime4KCPP::NCNN::Manager::isSupport() noexcept
 {
     return true;
 }

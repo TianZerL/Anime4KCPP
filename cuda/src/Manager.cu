@@ -3,7 +3,7 @@
 
 int currCudaDeviceID = 0;
 
-void Anime4KCPP::Cuda::cuSetDeviceID(const int id)
+void Anime4KCPP::Cuda::cuSetDeviceID(const int id) noexcept
 {
     if (id < 0 || id >= cuGetDeviceCount())
         currCudaDeviceID = 0;

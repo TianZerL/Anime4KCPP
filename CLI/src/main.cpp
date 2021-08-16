@@ -228,6 +228,13 @@ static bool createConfigTemplate(const std::string& path, Config& config)
     return true;
 }
 
+template<typename ...Args>
+static void logErrorAndExit(Args&&... args)
+{
+    (std::cerr << ... << args) << '\n';
+    std::exit(1);
+}
+
 int main(int argc, char* argv[])
 {
     Config config;
@@ -356,7 +363,7 @@ int main(int argc, char* argv[])
         if (createConfigTemplate(path, config))
             std::cout << "Generated config template to: " << path << '\n';
         else
-            std::cerr << "Failed to generate config template: " << path << '\n';
+            logErrorAndExit("Failed to generate config template: ", path);
         return 0;
     }
 
@@ -392,8 +399,7 @@ int main(int argc, char* argv[])
 #else
         if (GPU)
         {
-            std::cerr << "No GPU processor available\n";
-            return 0;
+            logErrorAndExit("No GPU processor available");
         }
 #endif
     }
@@ -403,8 +409,7 @@ int main(int argc, char* argv[])
         GPGPUModel = GPGPU::NCNN;
     else
     {
-        std::cerr << R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")" << '\n';
-        return 0;
+        logErrorAndExit(R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")");
     }
 
     if (ncnn)
@@ -424,7 +429,7 @@ int main(int argc, char* argv[])
         else
             oss << "_Anime4K09";
         oss << "_x" << std::fixed << std::setprecision(2) << zoomFactor
-            << inputPath.extension().string();
+            << ".mkv";
 
         outputPath = inputPath.parent_path() /
             ((filesystem::is_directory(inputPath) ? "output" : inputPath.stem().string()) + oss.str());
@@ -432,8 +437,7 @@ int main(int argc, char* argv[])
 
     if (!web && !filesystem::exists(inputPath))
     {
-        std::cerr << "input file or directory does not exist.\n";
-        return 0;
+        logErrorAndExit("input file or directory does not exist.");
     }
 
     Anime4KCPP::CNNType type{};
@@ -490,8 +494,7 @@ int main(int argc, char* argv[])
             {
             case GPGPU::OpenCL:
 #ifndef ENABLE_OPENCL
-                std::cerr << "OpenCL is not supported\n";
-                return 0;
+                logErrorAndExit("OpenCL is not supported");
 #else
                 if (CNN)
                     initializer.pushManager<Anime4KCPP::OpenCL::Manager<Anime4KCPP::OpenCL::ACNet>>(
@@ -508,41 +511,43 @@ int main(int argc, char* argv[])
                 break;
             case GPGPU::CUDA:
 #ifndef ENABLE_CUDA
-                std::cerr << "CUDA is not supported\n";
-                return 0;
+                logErrorAndExit("CUDA is not supported");
 #else
                 initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
-                break;
 #endif
+                break;
             case GPGPU::NCNN:
 #ifndef ENABLE_NCNN
-                std::cerr << "ncnn is not supported\n";
-                return 0;
+                logErrorAndExit("ncnn is not supported");
 #else
+                if (testMode == "ncnn_load_model")
                 {
-                    if (testMode == "ncnn_load_model")
-                    {
-                        filesystem::path modelPath = filesystem::weakly_canonical(ncnnModelPath);
+                    filesystem::path modelPath = filesystem::weakly_canonical(ncnnModelPath);
 
-                        if (!filesystem::exists(modelPath))
-                        {
-                            std::cerr << "ncnn model or param file does not exist.\n";
-                            return 0;
-                        }
-                        initializer.pushManager<Anime4KCPP::NCNN::Manager>(
-                            (modelPath / (type.toString() + std::string(".bin"))).generic_string(),
-                            (modelPath / "ACNet.param").generic_string(),
-                            dID, type, ncnnThreads);
-                    }
-                    else
+                    if (!filesystem::exists(modelPath))
                     {
-                        initializer.pushManager<Anime4KCPP::NCNN::Manager>(dID, type, ncnnThreads);
+                        logErrorAndExit("ncnn model or param file does not exist.");
                     }
+                    initializer.pushManager<Anime4KCPP::NCNN::Manager>(
+                        (modelPath / (type.toString() + std::string(".bin"))).generic_string(),
+                        (modelPath / "ACNet.param").generic_string(),
+                        dID, type, ncnnThreads);
                 }
-                break;
+                else
+                {
+                    initializer.pushManager<Anime4KCPP::NCNN::Manager>(dID, type, ncnnThreads);
+                }
 #endif
+                break;
             }
-            initializer.init();
+            if (initializer.init() != initializer.size())
+            {
+                std::ostringstream oss("Unable to initialize:\n", std::ios_base::ate);
+                for (auto& error : initializer.failure())
+                    oss << "  " << error;
+                oss << '\n';
+                logErrorAndExit(oss.str());
+            }
         }
 
         //create instance
@@ -556,11 +561,10 @@ int main(int argc, char* argv[])
                 Anime4KCPP::OpenCL::GPUInfo ret = Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
                 if (!ret)
                 {
-                    std::cerr << ret() << '\n';
-                    return 0;
+                    logErrorAndExit(ret());
                 }
                 else
-                    std::cerr << ret() << '\n';
+                    std::cout << ret() << '\n';
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::OpenCL_ACNet);
                 else
@@ -574,11 +578,10 @@ int main(int argc, char* argv[])
                 Anime4KCPP::Cuda::GPUInfo ret = Anime4KCPP::Cuda::checkGPUSupport(dID);
                 if (!ret)
                 {
-                    std::cerr << ret() << '\n';
-                    return 0;
+                    logErrorAndExit(ret());
                 }
                 else
-                    std::cerr << ret() << '\n';
+                    std::cout << ret() << '\n';
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
@@ -590,14 +593,13 @@ int main(int argc, char* argv[])
             {
 #ifdef ENABLE_NCNN
                 if (dID < 0)
-                    std::cerr << "ncnn uses CPU\n";
+                    std::cout << "ncnn uses CPU\n";
 
                 if (CNN)
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::NCNN_ACNet);
                 else
                 {
-                    std::cerr << "ncnn only for ACNet\n";
-                    return 0;
+                    logErrorAndExit("ncnn only for ACNet");
                 }
 #endif
             }
@@ -641,7 +643,7 @@ int main(int argc, char* argv[])
                 std::cout << filePaths.size() << " files total" << '\n'
                     << "Start processing...\n" << std::endl;
 
-                std::atomic_uint64_t progress = 0;
+                std::atomic<std::uint64_t> progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
                 Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()),
@@ -810,15 +812,15 @@ int main(int argc, char* argv[])
                     .find(outputSuffix) != std::string::npos)
                     outputPath.replace_extension(".mkv");
 
-                bool gif = outputSuffix == std::string(".gif");
+                bool gif = (outputSuffix == ".gif");
 
                 bool ffmpeg = checkFFmpeg();
                 std::string outputTmpName = outputPath.string();
 
                 if (!ffmpeg)
-                    std::cerr << "Please install ffmpeg, otherwise the output file will be silent.\n";
+                    std::cout << "Please install ffmpeg, otherwise the output file will be silent.\n";
                 else
-                    outputTmpName = "tmp_out.mp4";
+                    outputTmpName = inputPath.stem().string() + "_tmp_out.mp4";
 
                 Anime4KCPP::VideoProcessor videoProcessor(*ac, threads);
                 if (filesystem::is_directory(inputPath))
@@ -834,7 +836,7 @@ int main(int argc, char* argv[])
                         //Check GIF
                         std::string inputSuffix = file.path().extension().string();
                         std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
-                        gif = inputSuffix == std::string(".gif");
+                        gif = (inputSuffix == ".gif");
 
                         auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
                         filesystem::create_directories(tmpOutputPath.parent_path());
@@ -924,10 +926,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& err)
     {
-        std::cerr
-            << '\n'
-            << err.what()
-            << '\n';
+        logErrorAndExit('\n', err.what());
     }
     return 0;
 }

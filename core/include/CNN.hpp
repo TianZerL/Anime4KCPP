@@ -21,7 +21,7 @@ public:
         switch (value)
         {
         case Anime4KCPP::CNNType::Default:
-            return "ACNetHDNL0";
+            return "Default";
         case Anime4KCPP::CNNType::ACNetHDNL0:
             return "ACNetHDNL0";
         case Anime4KCPP::CNNType::ACNetHDNL1:

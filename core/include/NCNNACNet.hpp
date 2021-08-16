@@ -28,8 +28,8 @@ public:
 
     static void init(int deviceID, int threads);
 
-    static void release();
-    static bool isInitialized();
+    static void release() noexcept;
+    static bool isInitialized() noexcept;
 private:
     void processYUVImage() override;
     void processRGBImage() override;

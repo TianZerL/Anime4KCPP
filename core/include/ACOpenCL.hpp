@@ -17,9 +17,9 @@ namespace Anime4KCPP
         struct AC_EXPORT GPUInfo;
 
         //return platforms, devices of each platform, all devices information
-        AC_EXPORT GPUList listGPUs();
+        AC_EXPORT GPUList listGPUs() noexcept;
         //return result and information
-        AC_EXPORT GPUInfo checkGPUSupport(int pID, int dID);
+        AC_EXPORT GPUInfo checkGPUSupport(int pID, int dID) noexcept;
     }
 
     namespace Processor
@@ -61,15 +61,22 @@ class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
     template<typename P = T, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::Anime4K09>::value>* = nullptr>
-    Manager(int pID = 0, int dID = 0, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false);
+    Manager(int pID = 0, int dID = 0, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false) noexcept;
 
     template<typename P = T, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::ACNet>::value>* = nullptr>
-    Manager(int pID = 0, int dID = 0, CNNType type = CNNType::Default, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false);
+    Manager(int pID = 0, int dID = 0, CNNType type = CNNType::Default, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false) noexcept;
 
     void init() override;
-    void release() override;
-    bool isInitialized() override;
-    bool isSupport() override;
+    void release() noexcept override;
+    bool isInitialized() noexcept override;
+    bool isSupport() noexcept override;
+
+    const char* name() noexcept override {
+        if constexpr (std::is_same<T, Anime4KCPP::OpenCL::ACNet>::value)
+            return "OpenCL ACNet Processor Manager"; 
+        else
+            return "OpenCL Anime4K09 Processor Manager";
+    };
 
 private:
     template<typename P = T>
@@ -86,12 +93,12 @@ private:
 
 template<typename T>
 template<typename P, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::Anime4K09>::value>*>
-inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO) noexcept
     : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(Anime4KCPP::CNNType::Default) {}
 
 template<typename T>
 template<typename P, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::ACNet>::value>*>
-inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO)
+inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO) noexcept
     : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
 
 template<typename T>
@@ -101,20 +108,20 @@ inline void Anime4KCPP::OpenCL::Manager<T>::init()
 }
 
 template<typename T>
-inline void Anime4KCPP::OpenCL::Manager<T>::release()
+inline void Anime4KCPP::OpenCL::Manager<T>::release() noexcept
 {
     if (T::isInitialized())
         T::release();
 }
 
 template<typename T>
-inline bool Anime4KCPP::OpenCL::Manager<T>::isInitialized()
+inline bool Anime4KCPP::OpenCL::Manager<T>::isInitialized() noexcept
 {
     return T::isInitialized();
 }
 
 template<typename T>
-inline bool Anime4KCPP::OpenCL::Manager<T>::isSupport()
+inline bool Anime4KCPP::OpenCL::Manager<T>::isSupport() noexcept
 {
     return Anime4KCPP::OpenCL::checkGPUSupport(pID, dID);
 }
