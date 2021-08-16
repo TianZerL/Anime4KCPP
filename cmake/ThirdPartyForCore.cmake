@@ -4,7 +4,7 @@ set(SHA1_OPENCL_HPP "de739352c21ea9bf9b082bb903caec7de9212f97")
 if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)
     file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_SHA1_OPENCL_HPP)
 
-    if(NOT ${LOCAL_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
+    if(NOT ${LOCAL_SHA1_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
         message("Warning:")
         message("   Local SHA1 for opencl.hpp:   ${LOCAL_SHA1_OPENCL_HPP}")
         message("   Expected SHA1:              ${SHA1_OPENCL_HPP}")

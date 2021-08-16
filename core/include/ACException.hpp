@@ -1,7 +1,7 @@
 #pragma once
 
 #include<string>
-#include<exception>
+#include<stdexcept>
 
 #define TYPE_ITEM(Name)\
 struct Name\
