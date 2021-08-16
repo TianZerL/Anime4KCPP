@@ -1,5 +1,5 @@
 set(CMDLINE_H_URL https://github.com/TianZerL/cmdline/raw/master/cmdline.hpp)
-set(SHA1_CMDLINE "f352d35f3789e8d972e2e3e15edbd4137529fb02")
+set(SHA1_CMDLINE "a3db560d700df5e4a19a40d43178f0839b9eec10")
 
 if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp)
     file(SHA1 ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp LOCAL_SHA1_CMDLINE)

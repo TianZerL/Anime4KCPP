@@ -22,14 +22,9 @@ inline double Anime4KCPP::benchmark(Types && ...args)
     ACInitializer initializer;
 
     initializer.pushManager<typename Processor::GetManager<T>::Manager>(std::forward<Types>(args)...);
-    try
-    {
-        initializer.init();
-    }
-    catch (const std::exception&)
-    {
+
+    if (!initializer.init())
         return 0.0;
-    }
 
     cv::Mat testImg = cv::Mat::zeros(cv::Size(W, H), CV_8UC1);
     cv::randu(testImg, cv::Scalar::all(0.0f), cv::Scalar::all(1.0f));
