@@ -24,6 +24,7 @@ namespace Anime4KCPP
 class Anime4KCPP::ACInitializer
 {
 public:
+    ACInitializer() = default;
     ACInitializer(const ACInitializer&) = delete;
     ACInitializer(ACInitializer&&) = delete;
     ~ACInitializer();
