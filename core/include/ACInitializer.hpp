@@ -44,3 +44,30 @@ inline void Anime4KCPP::ACInitializer::pushManager(Types&&... args)
 {
     managers.emplace_back(std::make_unique<Manager>(std::forward<Types>(args)...));
 }
+
+inline Anime4KCPP::ACInitializer::~ACInitializer()
+{
+    release(true);
+}
+
+inline void Anime4KCPP::ACInitializer::init()
+{
+    for (auto& manager : managers)
+    {
+        if (!manager->isSupport())
+            throw ACException<ExceptionType::RunTimeError>("Try initializing unsupported processor");
+        if (!manager->isInitialized())
+            manager->init();
+    }
+}
+
+inline void Anime4KCPP::ACInitializer::release(bool clearManagerList)
+{
+    for (auto& manager : managers)
+    {
+        if (manager->isInitialized())
+            manager->release();
+    }
+    if (clearManagerList)
+        managers.clear();
+}
