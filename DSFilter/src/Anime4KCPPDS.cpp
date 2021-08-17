@@ -450,16 +450,16 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 
         srcH = std::abs(pVi->bmiHeader.biHeight);
         srcW = std::abs(pVi->bmiHeader.biWidth);
-        dstH = std::round(srcH * data.zoomFactor);
-        dstW = std::round(srcW * data.zoomFactor);
-        dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * data.zoomFactor * data.zoomFactor);
-        pVi->bmiHeader.biHeight = dstH;
-        pVi->bmiHeader.biWidth = dstW;
+        dstH = (size_t)std::round(srcH * data.zoomFactor);
+        dstW = (size_t)std::round(srcW * data.zoomFactor);
+        dstDataLength = (LONG)std::ceil(pVi->bmiHeader.biSizeImage * data.zoomFactor * data.zoomFactor);
+        pVi->bmiHeader.biHeight = (LONG)dstH;
+        pVi->bmiHeader.biWidth = (LONG)dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
         pMediaType->SetSampleSize(dstDataLength);
 
-        SetRect(&pVi->rcSource, 0, 0, dstW, dstH);
-        SetRect(&pVi->rcTarget, 0, 0, dstW, dstH);
+        SetRect(&pVi->rcSource, 0, 0, (int)dstW, (int)dstH);
+        SetRect(&pVi->rcTarget, 0, 0, (int)dstW, (int)dstH);
     }
     else
     {
@@ -468,16 +468,16 @@ HRESULT Anime4KCPPDS::GetMediaType(int iPosition, CMediaType* pMediaType)
 
         srcH = std::abs(pVi->bmiHeader.biHeight);
         srcW = std::abs(pVi->bmiHeader.biWidth);
-        dstH = std::round(srcH * data.zoomFactor);
-        dstW = std::round(srcW * data.zoomFactor);
-        dstDataLength = std::ceil(pVi->bmiHeader.biSizeImage * data.zoomFactor * data.zoomFactor);
-        pVi->bmiHeader.biHeight = dstH;
-        pVi->bmiHeader.biWidth = dstW;
+        dstH = (size_t)std::round(srcH * data.zoomFactor);
+        dstW = (size_t)std::round(srcW * data.zoomFactor);
+        dstDataLength = (LONG)std::ceil(pVi->bmiHeader.biSizeImage * data.zoomFactor * data.zoomFactor);
+        pVi->bmiHeader.biHeight = (LONG)dstH;
+        pVi->bmiHeader.biWidth = (LONG)dstW;
         pVi->bmiHeader.biSizeImage = dstDataLength;
         pMediaType->SetSampleSize(dstDataLength);
 
-        SetRect(&pVi->rcSource, 0, 0, dstW, dstH);
-        SetRect(&pVi->rcTarget, 0, 0, dstW, dstH);
+        SetRect(&pVi->rcSource, 0, 0, (int)dstW, (int)dstH);
+        SetRect(&pVi->rcTarget, 0, 0, (int)dstW, (int)dstH);
     }
 
     return S_OK;
@@ -529,32 +529,36 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         case ColorFormat::IYUV:
         case ColorFormat::YV12:
         {
-            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t srcSize = (pIn->GetActualDataLength() * 2) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() * 2) / 3;
             size_t strideY = dstSize / dstH;
-            size_t strideUV = strideY >> 1;
+            size_t strideUV = strideY / 2;
+            int srcHY = (int)srcH, srcWY = (int)srcW;
+            int srcHUV = srcHY / 2, srcWUV = srcWY / 2;
 
             BYTE* pYIn = pBufferIn,
                 * pUIn = pYIn + srcSize,
-                * pVIn = pUIn + (srcSize >> 2);
+                * pVIn = pUIn + (srcSize / 4);
             BYTE* pYOut = pBufferOut,
                 * pUOut = pYOut + dstSize,
-                * pVOut = pUOut + (dstSize >> 2);
+                * pVOut = pUOut + (dstSize / 4);
 
             ac->loadImage(
-                srcH, srcW, 0, pYIn,
-                srcH >> 1, srcW >> 1, 0, pUIn,
-                srcH >> 1, srcW >> 1, 0, pVIn);
+                srcHY, srcWY, 0, pYIn,
+                srcHUV, srcWUV, 0, pUIn,
+                srcHUV, srcWUV, 0, pVIn);
             ac->process();
             ac->saveImage(pYOut, strideY, pUOut, strideUV, pVOut, strideUV);
         }
         break;
         case ColorFormat::NV12:
         {
-            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t srcSize = (pIn->GetActualDataLength() * 2) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() * 2) / 3;
             size_t stride = dstSize / dstH;
-            size_t dstHUV = dstH >> 1;
+            size_t dstHUV = dstH / 2;
+            int srcHY = (int)srcH, srcWY = (int)srcW;
+            int srcHUV = srcHY / 2, srcWUV = srcWY / 2;
 
             BYTE* pYIn = pBufferIn,
                 * pUVIn = pYIn + srcSize;
@@ -564,19 +568,19 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             cv::Mat dstY;
             cv::Mat dstUV;
 
-            cv::Mat srcY(srcH, srcW, CV_8UC1, pYIn);
-            cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_8UC2, pUVIn);
+            cv::Mat srcY(srcHY, srcWY, CV_8UC1, pYIn);
+            cv::Mat srcUV(srcHUV, srcWUV, CV_8UC2, pUVIn);
 
             ac->loadImage(srcY);
             ac->process();
             ac->saveImage(dstY);
 
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+            cv::resize(srcUV, dstUV, cv::Size((int)dstW / 2, (int)dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
 
             if (stride == dstW)
             {
                 memcpy(pYOut, dstY.data, dstSize);
-                memcpy(pUVOut, dstUV.data, dstSize >> 1);
+                memcpy(pUVOut, dstUV.data, dstSize / 2);
             }
             else
             {
@@ -595,10 +599,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         break;
         case ColorFormat::P016:
         {
-            size_t srcSize = (pIn->GetActualDataLength() << 1) / 3;
-            size_t dstSize = (pOut->GetActualDataLength() << 1) / 3;
+            size_t srcSize = (pIn->GetActualDataLength() * 2) / 3;
+            size_t dstSize = (pOut->GetActualDataLength() * 2) / 3;
             size_t stride = dstSize / dstH;
-            size_t dstHUV = dstH >> 1;
+            size_t dstHUV = dstH / 2;
+            int srcHY = (int)srcH, srcWY = (int)srcW;
+            int srcHUV = srcHY / 2, srcWUV = srcWY / 2;
 
             BYTE* pYIn = pBufferIn,
                 * pUVIn = pYIn + srcSize;
@@ -608,19 +614,19 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             cv::Mat dstY;
             cv::Mat dstUV;
 
-            cv::Mat srcY(srcH, srcW, CV_16UC1, pYIn);
-            cv::Mat srcUV(srcH >> 1, srcW >> 1, CV_16UC2, pUVIn);
+            cv::Mat srcY(srcHY, srcWY, CV_16UC1, pYIn);
+            cv::Mat srcUV(srcHUV, srcWUV, CV_16UC2, pUVIn);
 
             ac->loadImage(srcY);
             ac->process();
             ac->saveImage(dstY);
 
-            cv::resize(srcUV, dstUV, cv::Size(dstW >> 1, dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
+            cv::resize(srcUV, dstUV, cv::Size((int)dstW / 2, (int)dstHUV), 0.0, 0.0, cv::INTER_CUBIC);
 
             if (stride == dstW)
             {
                 memcpy(pYOut, dstY.data, dstSize);
-                memcpy(pUVOut, dstUV.data, dstSize >> 1);
+                memcpy(pUVOut, dstUV.data, dstSize / 2);
             }
             else
             {
@@ -640,9 +646,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         case ColorFormat::RGB24:
         {
             size_t stride = pOut->GetActualDataLength() / dstH;
-            cv::Mat srcTmp(srcH, srcW, CV_8UC3, pBufferIn);
+            int srcHRGB = (int)srcH, srcWRGB = (int)srcW;
+
+            cv::Mat srcTmp(srcHRGB, srcWRGB, CV_8UC3, pBufferIn);
             cv::flip(srcTmp, srcTmp, 0);
-            ac->loadImage(srcH, srcW, 0, srcTmp.data);
+
+            ac->loadImage(srcTmp);
             ac->process();
             ac->saveImage(pBufferOut, stride);
         }
@@ -650,9 +659,12 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
         case ColorFormat::RGB32:
         {
             size_t stride = pOut->GetActualDataLength() / dstH;
-            cv::Mat srcTmp(srcH, srcW, CV_8UC4, pBufferIn);
+            int srcHRGB = (int)srcH, srcWRGB = (int)srcW;
+
+            cv::Mat srcTmp(srcHRGB, srcWRGB, CV_8UC4, pBufferIn);
             cv::flip(srcTmp, srcTmp, 0);
-            ac->loadImage(srcH, srcW, 0, srcTmp.data, false, true);
+
+            ac->loadImage(srcTmp);
             ac->process();
             ac->saveImage(pBufferOut, stride);
         }
