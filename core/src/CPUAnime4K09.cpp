@@ -51,7 +51,7 @@ namespace Anime4KCPP::CPU::detail
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
         for (int i = 0; i <= 3; i++)    //RGBA
-            mc[i] = mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset;
+            mc[i] = static_cast<T>(mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset);
     }
 
     template<typename T>
@@ -59,14 +59,14 @@ namespace Anime4KCPP::CPU::detail
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
         for (int i = 0; i <= 2; i++)    //RGB
-            mc[i] = mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset;
+            mc[i] = static_cast<T>(mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset);
     }
 
     template<typename T>
     static void getGray(cv::Mat& img)
     {
         detail::changEachPixel<T>(img, [](const int i, const int j, T* pixel, T* curLine) {
-            pixel[A] = pixel[R] * 0.299 + pixel[G] * 0.587 + pixel[B] * 0.114;
+            pixel[A] = static_cast<T>(pixel[R] * 0.299 + pixel[G] * 0.587 + pixel[B] * 0.114);
             });
     }
 

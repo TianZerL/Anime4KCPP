@@ -79,14 +79,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrame(int n, int activationReason, v
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        std::size_t srcH = vsapi->getFrameHeight(src, 0);
-        std::size_t srcW = vsapi->getFrameWidth(src, 0);
+        int srcH = vsapi->getFrameHeight(src, 0);
+        int srcW = vsapi->getFrameWidth(src, 0);
 
-        std::size_t srcSrtide = vsapi->getStride(src, 0);
+        int srcSrtide = vsapi->getStride(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        std::size_t dstSrtide = vsapi->getStride(dst, 0);
+        int dstSrtide = vsapi->getStride(dst, 0);
 
         T* srcR = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
         T* srcG = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 1)));
@@ -160,22 +160,22 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameYUV(int n, int activationReason
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        std::size_t srcHY = vsapi->getFrameHeight(src, 0);
-        std::size_t srcWY = vsapi->getFrameWidth(src, 0);
-        std::size_t srcHU = vsapi->getFrameHeight(src, 1);
-        std::size_t srcWU = vsapi->getFrameWidth(src, 1);
-        std::size_t srcHV = vsapi->getFrameHeight(src, 2);
-        std::size_t srcWV = vsapi->getFrameWidth(src, 2);
+        int srcHY = vsapi->getFrameHeight(src, 0);
+        int srcWY = vsapi->getFrameWidth(src, 0);
+        int srcHU = vsapi->getFrameHeight(src, 1);
+        int srcWU = vsapi->getFrameWidth(src, 1);
+        int srcHV = vsapi->getFrameHeight(src, 2);
+        int srcWV = vsapi->getFrameWidth(src, 2);
 
-        std::size_t srcSrtideY = vsapi->getStride(src, 0);
-        std::size_t srcSrtideU = vsapi->getStride(src, 1);
-        std::size_t srcSrtideV = vsapi->getStride(src, 2);
+        int srcSrtideY = vsapi->getStride(src, 0);
+        int srcSrtideU = vsapi->getStride(src, 1);
+        int srcSrtideV = vsapi->getStride(src, 2);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        std::size_t dstSrtideY = vsapi->getStride(dst, 0);
-        std::size_t dstSrtideU = vsapi->getStride(dst, 1);
-        std::size_t dstSrtideV = vsapi->getStride(dst, 2);
+        int dstSrtideY = vsapi->getStride(dst, 0);
+        int dstSrtideU = vsapi->getStride(dst, 1);
+        int dstSrtideV = vsapi->getStride(dst, 2);
 
         T* srcY = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
         T* srcU = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 1)));
@@ -252,14 +252,14 @@ static const VSFrameRef* VS_CC Anime4KCPPGetFrameGrayscale(int n, int activation
     {
         const VSFrameRef* src = vsapi->getFrameFilter(n, data->node, frameCtx);
 
-        std::size_t srcH = vsapi->getFrameHeight(src, 0);
-        std::size_t srcW = vsapi->getFrameWidth(src, 0);
+        int srcH = vsapi->getFrameHeight(src, 0);
+        int srcW = vsapi->getFrameWidth(src, 0);
 
-        std::size_t srcSrtide = vsapi->getStride(src, 0);
+        int srcSrtide = vsapi->getStride(src, 0);
 
         VSFrameRef* dst = vsapi->newVideoFrame(data->vi.format, data->vi.width, data->vi.height, src, core);
 
-        std::size_t dstSrtide = vsapi->getStride(dst, 0);
+        int dstSrtide = vsapi->getStride(dst, 0);
 
         T* srcY = const_cast<T*>(reinterpret_cast<const T*>(vsapi->getReadPtr(src, 0)));
 
@@ -342,11 +342,11 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         return;
     }
 
-    data->parameters.passes = vsapi->propGetInt(in, "passes", 0, &err);
+    data->parameters.passes = static_cast<int>(vsapi->propGetInt(in, "passes", 0, &err));
     if (err)
         data->parameters.passes = 2;
 
-    data->parameters.pushColorCount = vsapi->propGetInt(in, "pushColorCount", 0, &err);
+    data->parameters.pushColorCount = static_cast<int>(vsapi->propGetInt(in, "pushColorCount", 0, &err));
     if (err)
         data->parameters.pushColorCount = 2;
 
@@ -404,7 +404,7 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
     if (err)
         data->parameters.HDN = false;
 
-    data->parameters.HDNLevel = vsapi->propGetInt(in, "HDNLevel", 0, &err);
+    data->parameters.HDNLevel = static_cast<int>(vsapi->propGetInt(in, "HDNLevel", 0, &err));
     if (err)
         data->parameters.HDNLevel = 1;
     else if (data->parameters.HDNLevel < 1 || data->parameters.HDNLevel > 3)
@@ -468,15 +468,15 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
         return;
     }
 
-    data->pID = vsapi->propGetInt(in, "platformID", 0, &err);
+    data->pID = static_cast<int>(vsapi->propGetInt(in, "platformID", 0, &err));
     if (err || !data->GPU)
         data->pID = 0;
 
-    data->dID = vsapi->propGetInt(in, "deviceID", 0, &err);
+    data->dID = static_cast<int>(vsapi->propGetInt(in, "deviceID", 0, &err));
     if (err || !data->GPU)
         data->dID = 0;
 
-    data->OpenCLQueueNum = vsapi->propGetInt(in, "OpenCLQueueNum", 0, &err);
+    data->OpenCLQueueNum = static_cast<int>(vsapi->propGetInt(in, "OpenCLQueueNum", 0, &err));
     if (err)
         data->OpenCLQueueNum = 4;
     else if (data->OpenCLQueueNum < 1)
@@ -574,8 +574,8 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     if (data->parameters.zoomFactor != 1.0)
     {
-        data->vi.width = std::round(data->vi.width * data->parameters.zoomFactor);
-        data->vi.height = std::round(data->vi.height * data->parameters.zoomFactor);
+        data->vi.width = static_cast<int>(std::round(data->vi.width * data->parameters.zoomFactor));
+        data->vi.height = static_cast<int>(std::round(data->vi.height * data->parameters.zoomFactor));
     }
 
     if (data->vi.format->colorFamily == cmYUV)
@@ -637,11 +637,11 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
 static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
 {
     int err = 0;
-    int pID = vsapi->propGetInt(in, "platformID", 0, &err);
+    int pID = static_cast<int>(vsapi->propGetInt(in, "platformID", 0, &err));
     if (err || !pID)
         pID = 0;
 
-    int dID = vsapi->propGetInt(in, "deviceID", 0, &err);
+    int dID = static_cast<int>(vsapi->propGetInt(in, "deviceID", 0, &err));
     if (err || !dID)
         dID = 0;
 

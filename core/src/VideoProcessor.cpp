@@ -23,8 +23,8 @@ void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile)
 
     fps = videoIO.get(cv::CAP_PROP_FPS);
     totalFrameCount = videoIO.get(cv::CAP_PROP_FRAME_COUNT);
-    height = std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_HEIGHT));
-    width = std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_WIDTH));
+    height = static_cast<int>(std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_HEIGHT)));
+    width = static_cast<int>(std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_WIDTH)));
 }
 
 void Anime4KCPP::VideoProcessor::setVideoSaveInfo(const std::string& dstFile, const Codec codec, const double fps)

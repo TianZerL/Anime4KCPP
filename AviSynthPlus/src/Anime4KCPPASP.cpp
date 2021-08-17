@@ -3,13 +3,13 @@
 #include "Anime4KCPP.hpp"
 
 #ifdef _MSC_VER
-#define AC_STDCALL __stdcall
-#define AC_CDECL __cdecl
-#define AC_EXPORT __declspec(dllexport)
+#define AC_ASP_STDCALL __stdcall
+#define AC_ASP_CDECL __cdecl
+#define AC_ASP_EXPORT __declspec(dllexport)
 #else
-#define AC_STDCALL __attribute__((__stdcall__))
-#define AC_CDECL __attribute__((__cdecl__))
-#define AC_EXPORT
+#define AC_ASP_STDCALL __attribute__((__stdcall__))
+#define AC_ASP_CDECL __attribute__((__cdecl__))
+#define AC_ASP_EXPORT
 #endif
 
 enum AC_Parameters
@@ -51,7 +51,7 @@ public:
         IScriptEnvironment* env
     );
 
-    PVideoFrame AC_STDCALL GetFrame(int n, IScriptEnvironment* env);
+    PVideoFrame AC_ASP_STDCALL GetFrame(int n, IScriptEnvironment* env);
     template <typename T>
     PVideoFrame FilterYUV(int n, IScriptEnvironment* env);
     template <typename T>
@@ -95,8 +95,8 @@ Anime4KCPPFilter::Anime4KCPPFilter(
         env->ThrowError("Anime4KCPP: RGB24 or YUV444 or Grayscale is needed for Anime4K09");
     }
 
-    vi.height = std::round(vi.height * parameters.zoomFactor);
-    vi.width = std::round(vi.width * parameters.zoomFactor);
+    vi.height = static_cast<int>(std::round(vi.height * parameters.zoomFactor));
+    vi.width = static_cast<int>(std::round(vi.width * parameters.zoomFactor));
 
     if (GPUMode)
     {
@@ -136,7 +136,7 @@ Anime4KCPPFilter::Anime4KCPPFilter(
 }
 
 
-PVideoFrame AC_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env)
+PVideoFrame AC_ASP_STDCALL Anime4KCPPFilter::GetFrame(int n, IScriptEnvironment* env)
 {
     if (vi.IsY())
     {
@@ -171,19 +171,19 @@ PVideoFrame Anime4KCPPFilter::FilterYUV(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    std::size_t srcPitchY = src->GetPitch(PLANAR_Y);
-    std::size_t dstPitchY = dst->GetPitch(PLANAR_Y);
-    std::size_t srcPitchU = src->GetPitch(PLANAR_U);
-    std::size_t dstPitchU = dst->GetPitch(PLANAR_U);
-    std::size_t srcPitchV = src->GetPitch(PLANAR_V);
-    std::size_t dstPitchV = dst->GetPitch(PLANAR_V);
+    int srcPitchY = src->GetPitch(PLANAR_Y);
+    int dstPitchY = dst->GetPitch(PLANAR_Y);
+    int srcPitchU = src->GetPitch(PLANAR_U);
+    int dstPitchU = dst->GetPitch(PLANAR_U);
+    int srcPitchV = src->GetPitch(PLANAR_V);
+    int dstPitchV = dst->GetPitch(PLANAR_V);
 
-    std::size_t srcHY = src->GetHeight(PLANAR_Y);
-    std::size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
-    std::size_t srcHU = src->GetHeight(PLANAR_U);
-    std::size_t srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
-    std::size_t srcHV = src->GetHeight(PLANAR_V);
-    std::size_t srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
+    int srcHY = src->GetHeight(PLANAR_Y);
+    int srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+    int srcHU = src->GetHeight(PLANAR_U);
+    int srcLU = src->GetRowSize(PLANAR_U) / sizeof(T);
+    int srcHV = src->GetHeight(PLANAR_V);
+    int srcLV = src->GetRowSize(PLANAR_V) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
     T* srcpU = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_U)));
@@ -248,11 +248,11 @@ PVideoFrame Anime4KCPPFilter::FilterGrayscale(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    std::size_t srcPitchY = src->GetPitch(PLANAR_Y);
-    std::size_t dstPitchY = dst->GetPitch(PLANAR_Y);
+    int srcPitchY = src->GetPitch(PLANAR_Y);
+    int dstPitchY = dst->GetPitch(PLANAR_Y);
 
-    std::size_t srcHY = src->GetHeight(PLANAR_Y);
-    std::size_t srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
+    int srcHY = src->GetHeight(PLANAR_Y);
+    int srcLY = src->GetRowSize(PLANAR_Y) / sizeof(T);
 
     T* srcpY = const_cast<T*>(reinterpret_cast<const T*>(src->GetReadPtr(PLANAR_Y)));
 
@@ -309,11 +309,11 @@ PVideoFrame Anime4KCPPFilter::FilterRGB(int n, IScriptEnvironment* env)
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
 
-    std::size_t srcPitch = src->GetPitch();
-    std::size_t dstPitch = dst->GetPitch();
+    int srcPitch = src->GetPitch();
+    int dstPitch = dst->GetPitch();
 
-    std::size_t srcH = src->GetHeight();
-    std::size_t srcL = src->GetRowSize();
+    int srcH = src->GetHeight();
+    int srcL = src->GetRowSize();
 
     std::uint8_t* srcp = const_cast<std::uint8_t*>(src->GetReadPtr());
     std::uint8_t* dstp = dst->GetWritePtr();
@@ -364,7 +364,7 @@ PVideoFrame Anime4KCPPFilter::FilterRGB(int n, IScriptEnvironment* env)
     return dst;
 }
 
-AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue AC_ASP_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
     PClip clip = args[0].AsClip();
 
@@ -529,7 +529,7 @@ AVSValue AC_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEnviro
     );
 }
 
-AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue AC_ASP_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
     std::string GPGPUModel;
     const char* tmpStr = args[0].AsString();
@@ -554,7 +554,7 @@ AVSValue AC_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironment* e
     return AVSValue();
 }
 
-AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* env)
+AVSValue AC_ASP_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
     int pID = 0;
     int dID = 0;
@@ -610,9 +610,9 @@ AVSValue AC_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* 
     return AVSValue();
 }
 
-const AVS_Linkage* AVS_linkage = 0;
+const AVS_Linkage* AVS_linkage = nullptr;
 
-extern "C" AC_EXPORT const char* AC_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
+extern "C" AC_ASP_EXPORT const char* AC_ASP_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
 {
     AVS_linkage = vectors;
 

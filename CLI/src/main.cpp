@@ -722,15 +722,15 @@ int main(int argc, char* argv[])
                 if (!videoCapture.isOpened())
                     throw std::runtime_error("Error: Unable to open the video file");
 
-                std::size_t totalFrameCount = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
+                std::size_t totalFrameCount = static_cast<std::size_t>(videoCapture.get(cv::CAP_PROP_FRAME_COUNT));
                 if (frameStart >= totalFrameCount)
                     throw std::runtime_error(
                         "Error: Unable to locate frame position: " +
                         std::to_string(frameStart) + " of " +
                         std::to_string(totalFrameCount - 1));
 
-                videoCapture.set(cv::CAP_PROP_POS_FRAMES, frameStart);
-                int delay = 500.0 / (forceFps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : forceFps);
+                videoCapture.set(cv::CAP_PROP_POS_FRAMES, static_cast<double>(frameStart));
+                int delay = static_cast<int>(500.0 / (forceFps < 1.0 ? videoCapture.get(cv::CAP_PROP_FPS) : forceFps));
                 char keyCode = 'q';
                 std::string windowName =
                     "Previewing, press 'q','ESC' or 'Enter' to exit, "
@@ -740,8 +740,8 @@ int main(int argc, char* argv[])
                 cv::Mat frame;
                 cv::namedWindow(windowName, cv::WindowFlags::WINDOW_NORMAL);
                 cv::resizeWindow(windowName,
-                    videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5,
-                    videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5);
+                    static_cast<int>(videoCapture.get(cv::CAP_PROP_FRAME_WIDTH) * zoomFactor + 0.5),
+                    static_cast<int>(videoCapture.get(cv::CAP_PROP_FRAME_HEIGHT) * zoomFactor + 0.5));
 
                 std::cout
                     << "Previewing...\n"

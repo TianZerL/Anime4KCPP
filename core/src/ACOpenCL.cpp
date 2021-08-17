@@ -22,28 +22,28 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs() noexcept
     {
         cl::Platform::get(&platforms);
 
-        const std::size_t platformsNumber = platforms.size();
+        const int platformsNumber = static_cast<int>(platforms.size());
 
         if (platformsNumber == 0)
         {
-            return GPUList(0, { 0 }, "Failed to list opencl gpu infomation: No supported OpenCL GPU");
+            return GPUList(0, { 0 }, "No supported OpenCL GPU");
         }
 
-        for (std::size_t i = 0; i < platformsNumber; i++)
+        for (int i = 0; i < platformsNumber; i++)
         {
             std::string platformName;
             platforms[i].getInfo<std::string>(CL_PLATFORM_NAME, &platformName);
             msg << "Platform " << i << ": " << platformName << '\n';
             platforms[i].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
-            const std::size_t devicesNumber = devices.size();
+            const int devicesNumber = static_cast<int>(devices.size());
             if (devicesNumber == 0)
             {
                 msg << " No supported GPU in this platform" << '\n';
             }
 
             devicesVector.emplace_back(devicesNumber);
-            for (std::size_t j = 0; j < devicesNumber; j++)
+            for (int j = 0; j < devicesNumber; j++)
             {
                 std::string deviceName;
                 devices[j].getInfo<std::string>(CL_DEVICE_NAME, &deviceName);
@@ -51,7 +51,7 @@ Anime4KCPP::OpenCL::GPUList Anime4KCPP::OpenCL::listGPUs() noexcept
             }
             devices.clear();
         }
-        return GPUList{ static_cast<const int>(platformsNumber), devicesVector, msg.str() };
+        return GPUList{ platformsNumber, devicesVector, msg.str() };
     }
     catch (const std::exception& e)
     {

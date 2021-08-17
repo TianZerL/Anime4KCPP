@@ -61,8 +61,8 @@ void Anime4KCPP::AC::loadImage(const std::string& srcFile)
     inputRGB32 = false;
     inputYUV = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 #endif // ENABLE_IMAGE_IO
 
@@ -104,8 +104,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& srcImage)
 
     inputYUV = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(const std::vector<std::uint8_t>& buf)
@@ -144,8 +144,8 @@ void Anime4KCPP::AC::loadImage(const std::vector<std::uint8_t>& buf)
     inputRGB32 = false;
     inputYUV = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(const std::uint8_t* buf, std::size_t size)
@@ -202,8 +202,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
 
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint16_t* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
@@ -252,8 +252,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
 
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* data, bool inputAsYUV444, bool inputAsRGB32, bool inputAsGrayscale)
@@ -302,8 +302,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* da
 
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint8_t* r, std::uint8_t* g, std::uint8_t* b, bool inputAsYUV444)
@@ -328,8 +328,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint16_t* r, std::uint16_t* g, std::uint16_t* b, bool inputAsYUV444)
@@ -354,8 +354,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
@@ -380,8 +380,8 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* r,
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(
@@ -398,8 +398,8 @@ void Anime4KCPP::AC::loadImage(
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(
@@ -416,8 +416,8 @@ void Anime4KCPP::AC::loadImage(
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(
@@ -434,8 +434,8 @@ void Anime4KCPP::AC::loadImage(
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat& v)
@@ -449,8 +449,8 @@ void Anime4KCPP::AC::loadImage(const cv::Mat& y, const cv::Mat& u, const cv::Mat
     inputRGB32 = false;
     checkAlphaChannel = false;
 
-    height = std::round(param.zoomFactor * orgImg.rows);
-    width = std::round(param.zoomFactor * orgImg.cols);
+    height = static_cast<int>(std::round(param.zoomFactor * orgImg.rows));
+    width = static_cast<int>(std::round(param.zoomFactor * orgImg.cols));
 }
 
 #ifdef ENABLE_IMAGE_IO
