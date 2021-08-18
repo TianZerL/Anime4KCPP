@@ -5,6 +5,7 @@
 #include<chrono>
 #include<memory>
 #include<cmath>
+#include<cstring>
 #include<cstddef>
 #include<cstdint>
 
@@ -44,7 +45,8 @@ namespace Anime4KCPP
 // compute log2(v) then do ceil(v)
 inline int Anime4KCPP::Utils::fastCeilLog2(double v) noexcept
 {
-    long long data = *reinterpret_cast<long long*>(&v);
+    std::uint64_t data;
+    std::memcpy(&data, &v, sizeof(double));
     return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) != 0));
 }
 
@@ -132,13 +134,13 @@ public:
     void saveImage(cv::Mat& r, cv::Mat& g, cv::Mat& b);
     void saveImage(std::uint8_t* data, std::size_t dstStride = 0);
     void saveImage(
-        std::uint8_t* r, std::size_t dstStrideR, 
-        std::uint8_t* g, std::size_t dstStrideG, 
+        std::uint8_t* r, std::size_t dstStrideR,
+        std::uint8_t* g, std::size_t dstStrideG,
         std::uint8_t* b, std::size_t dstStrideB);
     void saveImageBufferSize(std::size_t& dataSize, std::size_t dstStride = 0);
     void saveImageBufferSize(
-        std::size_t& rSize, std::size_t dstStrideR, 
-        std::size_t& gSize, std::size_t dstStrideG, 
+        std::size_t& rSize, std::size_t dstStrideR,
+        std::size_t& gSize, std::size_t dstStrideG,
         std::size_t& bSize, std::size_t dstStrideB);
     void saveImageShape(int& cols, int& rows, int& channels);
     //R2B = true will exchange R channel and B channel
