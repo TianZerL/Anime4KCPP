@@ -1,6 +1,6 @@
 #ifndef ENABLE_OPENCV_DNN
 
-#include <limits>
+#include<limits>
 
 #ifdef USE_RYZEN
 #include<immintrin.h>
@@ -25,7 +25,7 @@ namespace Anime4KCPP::CPU::detail
         const std::size_t srcStep = src.step;
         const std::size_t step = tmpMat.step;
 
-        Anime4KCPP::Utils::ParallelFor(0, h,
+        Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
                 T* lineData = reinterpret_cast<T*>(src.data + static_cast<std::size_t>(i) * srcStep);
                 float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
@@ -45,7 +45,7 @@ namespace Anime4KCPP::CPU::detail
         cv::Mat tmp;
         tmp.create(h, w, tmpMat.type());
 
-        Anime4KCPP::Utils::ParallelFor(0, h,
+        Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
                 float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
                 float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<std::size_t>(i) * step);
@@ -67,7 +67,7 @@ namespace Anime4KCPP::CPU::detail
         const std::size_t step = tmpMat.step;
         const std::size_t dstStep = img.step;
 
-        Anime4KCPP::Utils::ParallelFor(0, h,
+        Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
                 float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i >> 1) * step);
                 T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<std::size_t>(i) * dstStep);

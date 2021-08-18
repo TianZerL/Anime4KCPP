@@ -1303,7 +1303,7 @@ void MainWindow::on_pushButtonStart_clicked()
         std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
         if (imageCount > 0)
         {
-            Anime4KCPP::Utils::ParallelFor(0, images.size(),
+            Anime4KCPP::Utils::parallelFor(0, images.size(),
                 [this, total, &images, &cm, &totalCount](const int i) {
                     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                     std::chrono::steady_clock::time_point startTime, endTime;

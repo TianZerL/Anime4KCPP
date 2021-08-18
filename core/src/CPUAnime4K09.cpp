@@ -18,7 +18,7 @@ namespace Anime4KCPP::CPU::detail
         const int jMAX = w * channels;
         const std::size_t step = src.step;
 
-        Anime4KCPP::Utils::ParallelFor(0, h,
+        Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
                 T* lineData = reinterpret_cast<T*>(src.data + static_cast<std::size_t>(i) * step);
                 T* tmpLineData = reinterpret_cast<T*>(tmp.data + static_cast<std::size_t>(i) * step);

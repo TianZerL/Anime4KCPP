@@ -646,7 +646,7 @@ int main(int argc, char* argv[])
                 std::atomic<std::uint64_t> progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-                Anime4KCPP::Utils::ParallelFor(0, static_cast<const int>(filePaths.size()),
+                Anime4KCPP::Utils::parallelFor(0, static_cast<const int>(filePaths.size()),
                     [&](const int i) {
                         Anime4KCPP::AC* pAc = Anime4KCPP::ACCreator::create(parameters, ac->getProcessorType());
                         pAc->loadImage(filePaths[i].first);
