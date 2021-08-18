@@ -24,6 +24,10 @@ if(Enable_OpenCV_DNN)
     add_definitions(-DENABLE_OPENCV_DNN)
 endif()
 
+if(Use_Eigen3)
+    add_definitions(-DUSE_EIGEN3)
+endif(Use_Eigen3)
+
 if(Enable_Video)
     add_definitions(-DENABLE_VIDEO)
 endif()

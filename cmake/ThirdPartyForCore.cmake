@@ -42,7 +42,25 @@ target_include_directories(
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OpenCV_LIBS})
 
 if(Use_Eigen3)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
+    if(NOT EIGEN3_INCLUDE_DIR)
+        find_package (Eigen3)
+        if(TARGET Eigen3::Eigen)
+            target_link_libraries (${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+        else()
+            message(
+                FATAL_ERROR "Unable to find eigen3 automatically, please set the Eigen3 location (EIGEN3_INCLUDE_DIR) manually\n"
+            )
+                set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Directory that contains Eigen3 headers")
+        endif()
+    else()
+        if(EXISTS ${EIGEN3_INCLUDE_DIR}/Eigen/Core)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
+        else()
+            message(
+                FATAL_ERROR "Unable to find eigen3, make sure Eigen3 location (EIGEN3_INCLUDE_DIR) is properly\n"
+            )
+        endif()
+    endif()
 endif()
 
 if(NOT Disable_Parallel)

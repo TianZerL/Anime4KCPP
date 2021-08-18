@@ -208,6 +208,7 @@ namespace Anime4KCPP::CPU::detail
             Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
             const float* const kptr = kernels;
+            const float* const bptr = biases;
 
             const float* const k0 = kptr;
             const float* const k1 = kptr + 8;
@@ -219,8 +220,8 @@ namespace Anime4KCPP::CPU::detail
             const float* const k7 = kptr + 56;
             const float* const k8 = kptr + 64;
 
-            float out[8];
-            std::copy_n(biases, 8, out);
+            float* out = outMat;
+            std::copy_n(bptr, 8, out);
 
             for (std::size_t i = 0; i < 8; i++)
                 out[i] += tln * k0[i];
@@ -242,9 +243,8 @@ namespace Anime4KCPP::CPU::detail
                 out[i] += brn * k8[i];
 
             for (std::size_t i = 0; i < 8; i++)
-                out[i] = std::max<float>(out[i], 0);
+                out[i] = std::max(out[i], 0.0f);
 
-            std::copy_n(out, 8, outMat);
 #endif // USE_RYZEN
             }, tmpMat, 8);
     }
@@ -430,10 +430,12 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
-        float out[8];
-        std::copy_n(biases, 8, out);
-
         const float* const kptr = kernels;
+        const float* const bptr = biases;
+
+        float* out = outMat;
+        std::copy_n(bptr, 8, out);
+
         for (std::size_t c = 0; c < 8; c++)
         {
             const float* const k0 = kptr + c * 72;
@@ -467,9 +469,8 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         }
 
         for (std::size_t i = 0; i < 8; i++)
-            out[i] = std::max<float>(out[i], 0);
+            out[i] = std::max(out[i], 0.0f);
 
-        std::copy_n(out, 8, outMat);
 #endif // USE_RYZEN
 
         }, tmpMat);
