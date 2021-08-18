@@ -220,14 +220,6 @@ if(Enable_OpenCL)
     add_definitions(-DENABLE_OPENCL)
 endif()
 
-if(Enable_NCNN)
-    set(ncnn_DIR "ncnn library path" CACHE PATH "Directory that contains ncnnConfig.cmake")
-endif()
-
-if(Ryzen_Optimization)
-    add_definitions(-DUSE_RYZEN)
-endif()
-
 message(STATUS  
 "C++ compiler flags:\n"
     ${CMAKE_CXX_FLAGS}

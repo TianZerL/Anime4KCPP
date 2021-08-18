@@ -24,6 +24,10 @@ if(Enable_OpenCV_DNN)
     add_definitions(-DENABLE_OPENCV_DNN)
 endif()
 
+if(Ryzen_Optimization)
+    add_definitions(-DUSE_RYZEN)
+endif()
+
 if(Use_Eigen3)
     add_definitions(-DUSE_EIGEN3)
 endif(Use_Eigen3)
