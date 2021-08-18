@@ -27,19 +27,24 @@ if(Build_C_Wrapper)
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
+    set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_c_export.h"
+    )
+
     install(
         TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
         ARCHIVE DESTINATION c_api/lib
         LIBRARY DESTINATION c_api/lib
         RUNTIME DESTINATION c_api/bin
-    )
-    
-    install(
-        FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_c_export.h
-        DESTINATION c_api/include
+        PUBLIC_HEADER DESTINATION c_api/include
     )
 
-    install(EXPORT ${PROJECT_NAME} DESTINATION c_api/cmake)
+    install(
+        EXPORT ${PROJECT_NAME}
+        NAMESPACE Anime4KCPP::
+        DESTINATION c_api/cmake
+    )
     
     configure_file(${TOP_DIR}/cmake/CWrapperConfig.cmake.in acConfig.cmake @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/acConfig.cmake DESTINATION c_api/cmake)

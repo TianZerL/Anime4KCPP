@@ -35,7 +35,7 @@ namespace Anime4KCPP::OpenCL::detail
 
     static std::string readKernel(const std::string& fileName)
     {
-        std::ifstream kernelFile(fileName);
+        std::ifstream kernelFile("kernels/" + fileName);
         if (!kernelFile.is_open())
             throw ACException<ExceptionType::IO>("Failed to open kernel file.");
 

@@ -53,19 +53,27 @@ endif()
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_export.h"
+)
+
 install(
     TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
     ARCHIVE DESTINATION core/lib
     LIBRARY DESTINATION core/lib
     RUNTIME DESTINATION bin
+    PUBLIC_HEADER DESTINATION core/include
 )
+
+install(DIRECTORY models/ DESTINATION bin/models)
+install(DIRECTORY kernels/ DESTINATION bin/kernels)
 
 install(
-    FILES ${INCLUDE} ${CMAKE_CURRENT_BINARY_DIR}/ac_export.h
-    DESTINATION core/include
+    EXPORT ${PROJECT_NAME}
+    NAMESPACE Anime4KCPP::
+    DESTINATION core/cmake
 )
-
-install(EXPORT ${PROJECT_NAME} DESTINATION core/cmake)
 
 configure_file(${TOP_DIR}/cmake/Anime4KCPPCoreConfig.cmake.in Anime4KCPPCoreConfig.cmake @ONLY)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/Anime4KCPPCoreConfig.cmake DESTINATION core/cmake)
