@@ -220,7 +220,7 @@ namespace Anime4KCPP::CPU::detail
             const float* const k7 = kptr + 56;
             const float* const k8 = kptr + 64;
 
-            float* out = outMat;
+            float out[8];
             std::copy_n(bptr, 8, out);
 
             for (std::size_t i = 0; i < 8; i++)
@@ -243,7 +243,7 @@ namespace Anime4KCPP::CPU::detail
                 out[i] += brn * k8[i];
 
             for (std::size_t i = 0; i < 8; i++)
-                out[i] = std::max(out[i], 0.0f);
+                outMat[i] = std::max(out[i], 0.0f);
 
 #endif // USE_RYZEN
             }, tmpMat, 8);
@@ -433,7 +433,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const float* const kptr = kernels;
         const float* const bptr = biases;
 
-        float* out = outMat;
+        float out[8];
         std::copy_n(bptr, 8, out);
 
         for (std::size_t c = 0; c < 8; c++)
@@ -469,7 +469,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         }
 
         for (std::size_t i = 0; i < 8; i++)
-            out[i] = std::max(out[i], 0.0f);
+            outMat[i] = std::max(out[i], 0.0f);
 
 #endif // USE_RYZEN
 
