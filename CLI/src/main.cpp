@@ -311,9 +311,11 @@ int main(int argc, char* argv[])
     opt.add("ncnn", 'N', "Open ncnn and ACNet");
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
-    opt.set_program_name("Anime4KCPP_CLI");
+    opt.add<std::string>("suffix", 'E', "Mandatory specify the suffix of the output file ", false);
     opt.add<std::string>("configTemplate", '\000', "Generate config template", false);
     opt.add<std::string>("testMode", '\000', "function test for development only", false);
+
+    opt.set_program_name("Anime4KCPP_CLI");
 
     opt.parse_check(argc, argv);
 
@@ -336,6 +338,7 @@ int main(int argc, char* argv[])
     auto frameStart = opt.get<std::size_t>("start");
     auto configTemplate = opt.exist("configTemplate");
     auto testMode = opt.get<std::string>("testMode");
+    auto suffix = opt.get<std::string>("suffix");
 
     //args which can be saved to config
     auto passes = config.get<int>("passes");
@@ -429,6 +432,11 @@ int main(int argc, char* argv[])
         GPU = true;
     }
 
+    if (!suffix.empty() && suffix.front() != '.')
+    {
+        suffix.insert(suffix.begin(), '.');
+    }
+
     filesystem::path inputPath(input), outputPath(output);
     if (defaultOutputName)
     {
@@ -438,10 +446,12 @@ int main(int argc, char* argv[])
         else
             oss << "_Anime4K09";
         oss << "_x" << std::fixed << std::setprecision(2) << zoomFactor
-            << ".mkv";
+            << (suffix.empty() ? inputPath.extension().string() : suffix);
 
-        outputPath = inputPath.parent_path() /
-            ((filesystem::is_directory(inputPath) ? "output" : inputPath.stem().string()) + oss.str());
+        outputPath = filesystem::current_path() / (
+            (filesystem::is_directory(inputPath) ?
+                "output" : inputPath.stem().string())
+            + oss.str());
     }
 
     if (!web && !filesystem::exists(inputPath))
@@ -644,7 +654,9 @@ int main(int argc, char* argv[])
                     auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
                     filesystem::create_directories(tmpOutputPath.parent_path());
                     std::string currInputPath = file.path().string();
-                    std::string currOutputPath = tmpOutputPath.string();
+                    std::string currOutputPath = (suffix.empty() ?
+                        tmpOutputPath.string() :
+                        tmpOutputPath.string() + suffix);
 
                     filePaths.emplace_back(std::make_pair(currInputPath, currOutputPath));
                 }
@@ -666,7 +678,8 @@ int main(int argc, char* argv[])
                         }
                         catch (const std::exception& e)
                         {
-                            logMessageSafely("Failed to process: ", filePaths[i].first, "\nError: ", e.what(), '\n');
+                            logMessageSafely("\rFailed to process: ", filePaths[i].first, 
+                                "\nError message:\n'''\n", e.what(), "\n'''\n\n");
                             return;
                         }
                         if (!disableProgress)
@@ -679,11 +692,15 @@ int main(int argc, char* argv[])
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout
-                    << "\nTotal time: "
+                    << "Total time: "
                     << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
                     << " s\n"
                     << progress << '/' << filePaths.size()
-                    << " finished." << std::endl;
+                    << " finished.\n"
+                    << "\nSaved to "
+                    << (outputPath.is_absolute() ? 
+                        outputPath : (filesystem::current_path() / outputPath.lexically_normal()))
+                    << std::endl;
             }
             else
             {
@@ -722,7 +739,14 @@ int main(int argc, char* argv[])
                 if (preview)
                     ac->showImage();
                 else
+                {
                     ac->saveImage(currOutputPath);
+                    std::cout 
+                        << "\nSaved to " 
+                        << (outputPath.is_absolute() ? 
+                            outputPath : (filesystem::current_path() / outputPath.lexically_normal()))
+                        << std::endl;
+                }
             }
         }
         else // Video
@@ -858,7 +882,9 @@ int main(int argc, char* argv[])
                         auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
                         filesystem::create_directories(tmpOutputPath.parent_path());
                         std::string currInputPath = file.path().string();
-                        std::string currOutputPath = tmpOutputPath.replace_extension(gif ? ".gif" : ".mkv").string();
+                        std::string currOutputPath = (gif ?
+                            tmpOutputPath.replace_extension(".gif").string() :
+                            tmpOutputPath.string() + (suffix.empty() ? ".mkv" : suffix));
 
                         videoProcessor.loadVideo(currInputPath);
                         videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
@@ -896,6 +922,12 @@ int main(int argc, char* argv[])
                             }
                         }
                     }
+
+                    std::cout
+                        << "\nSaved to "
+                        << (outputPath.is_absolute() ? 
+                            outputPath : (filesystem::current_path() / outputPath.lexically_normal()))
+                        << std::endl;
                 }
                 else
                 {
@@ -937,6 +969,12 @@ int main(int argc, char* argv[])
                                 filesystem::remove(outputTmpName);
                         }
                     }
+
+                    std::cout
+                        << "\nSaved to "
+                        << (outputPath.is_absolute() ? 
+                            outputPath : (filesystem::current_path() / outputPath.lexically_normal()))
+                        << std::endl;
                 }
             }
         }
