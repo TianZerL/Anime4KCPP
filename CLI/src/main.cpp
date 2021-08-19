@@ -235,14 +235,30 @@ static void logErrorAndExit(Args&&... args)
     std::exit(1);
 }
 
-template<typename ...Args>
-static void logMessageSafely(Args&&... args)
+class SafeLoger
 {
-    static std::mutex mtx;
-    std::lock_guard<std::mutex> lock(mtx);
+public:
+    template<typename ...Args>
+    static void logMessage(Args&&... args)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
 
-    (std::cout << ... << args);
-}
+        (std::cout << ... << args);
+    }
+
+    template<typename ...Args>
+    static void logError(Args&&... args)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+
+        (std::cerr << ... << args);
+    }
+
+private:
+    static std::mutex mtx;
+};
+
+std::mutex SafeLoger::mtx;
 
 int main(int argc, char* argv[])
 {
@@ -664,11 +680,11 @@ int main(int argc, char* argv[])
                 std::cout << filePaths.size() << " files total" << '\n'
                     << "Start processing...\n" << std::endl;
 
-                std::atomic<std::uint64_t> progress = 0;
+                std::atomic<std::size_t> progress = 0;
                 std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-                Anime4KCPP::Utils::parallelFor(0, static_cast<const int>(filePaths.size()),
-                    [&](const int i) {
+                Anime4KCPP::Utils::parallelFor(static_cast<std::size_t>(0), filePaths.size(),
+                    [&](const std::size_t i) {
                         auto pAc = Anime4KCPP::ACCreator::createUP(parameters, ac->getProcessorType());
                         try
                         {
@@ -678,15 +694,19 @@ int main(int argc, char* argv[])
                         }
                         catch (const std::exception& e)
                         {
-                            logMessageSafely("\rFailed to process: ", filePaths[i].first, 
-                                "\nError message:\n'''\n", e.what(), "\n'''\n\n");
+                            SafeLoger::logError(
+                                "\rFailed to process: ", 
+                                filePaths[i].first,
+                                "\nError message:\n'''\n", 
+                                e.what(), "\n'''\n\n");
+
                             return;
                         }
+
+                        progress++;
+
                         if (!disableProgress)
-                        {
-                            progress++;
-                            logMessageSafely('\r' , progress , '/' , filePaths.size());
-                        }
+                            SafeLoger::logMessage('\r' , progress , '/' , filePaths.size());
                     });
 
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
@@ -870,6 +890,13 @@ int main(int argc, char* argv[])
                         outputPath = outputPath.parent_path() / outputPath.stem();
 
                     filesystem::recursive_directory_iterator currDir(inputPath);
+                    std::vector<std::pair<std::string, std::string>> filePaths;
+
+                    std::cout
+                        << ac->getInfo() << '\n'
+                        << ac->getFiltersInfo() << '\n'
+                        << "Scanning..." << std::endl;;
+
                     for (auto& file : currDir)
                     {
                         if (filesystem::is_directory(file.path()))
@@ -886,46 +913,68 @@ int main(int argc, char* argv[])
                             tmpOutputPath.replace_extension(".gif").string() :
                             tmpOutputPath.string() + (suffix.empty() ? ".mkv" : suffix));
 
-                        videoProcessor.loadVideo(currInputPath);
-                        videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                        filePaths.emplace_back(std::make_pair(currInputPath, currOutputPath));
+                    }
 
-                        std::cout << ac->getInfo() << '\n';
-                        std::cout << videoProcessor.getInfo() << '\n';
-                        std::cout << ac->getFiltersInfo() << '\n';
+                    std::size_t totalFiles = filePaths.size();
+                    std::cout << filePaths.size() << " files total" << '\n'
+                        << "Start processing...\n" << std::endl;
 
-                        std::cout << "Processing..." << std::endl;
-                        std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
-                        if (disableProgress)
-                            videoProcessor.process();
-                        else
-                            processVideoWithProgress(videoProcessor);
-                        std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
-                        std::cout 
-                            << "Total process time: " 
-                            << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0 / 60.0 
-                            << " min" 
-                            << std::endl;
+                    std::size_t progress = 0;
+                    std::chrono::steady_clock::time_point s = std::chrono::steady_clock::now();
 
-                        videoProcessor.saveVideo();
+                    for (std::size_t i = 0; i < totalFiles; i++)
+                    {
+                        try
+                        {
+                            videoProcessor.loadVideo(filePaths[i].first);
+                            videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                            if (disableProgress)
+                                videoProcessor.process();
+                            else
+                                processVideoWithProgress(videoProcessor);
+                            videoProcessor.saveVideo();
+                        }
+                        catch (const std::exception& e)
+                        {
+                            std::cerr
+                                << "\nFailed to process: "
+                                << filePaths[i].first
+                                << "\nError message:\n'''\n"
+                                << e.what() << "\n'''\n\n";
+
+                            continue;
+                        }
 
                         if (ffmpeg)
                         {
                             if (!gif)
                             {
-                                if (mergeAudio2Video(currOutputPath, currInputPath, outputTmpName))
+                                if (mergeAudio2Video(filePaths[i].second, filePaths[i].first, outputTmpName))
                                     filesystem::remove(outputTmpName);
                             }
                             else
                             {
-                                if (video2GIF(outputTmpName, currOutputPath))
+                                if (video2GIF(outputTmpName, filePaths[i].second))
                                     filesystem::remove(outputTmpName);
                             }
                         }
+
+                        progress++;
+
+                        if (!disableProgress)
+                            std::cout << progress << '/' << filePaths.size() << std::endl;
                     }
+                    std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                     std::cout
+                        << "\nTotal time: "
+                        << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
+                        << " s\n"
+                        << progress << '/' << filePaths.size()
+                        << " finished.\n"
                         << "\nSaved to "
-                        << (outputPath.is_absolute() ? 
+                        << (outputPath.is_absolute() ?
                             outputPath : (filesystem::current_path() / outputPath.lexically_normal()))
                         << std::endl;
                 }

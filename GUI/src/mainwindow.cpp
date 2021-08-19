@@ -1307,8 +1307,8 @@ void MainWindow::on_pushButtonStart_clicked()
         QList<QPair<QString, QString>> errorList;
         if (imageCount > 0)
         {
-            Anime4KCPP::Utils::parallelFor(0, images.size(),
-                [this, total, &images, &cm, &totalCount, &errorList](const int i)
+            Anime4KCPP::Utils::parallelFor(static_cast<qsizetype>(0), images.size(),
+                [this, total, &images, &cm, &totalCount, &errorList](const qsizetype i)
                 {
                     if (stopProcessing)
                         return;

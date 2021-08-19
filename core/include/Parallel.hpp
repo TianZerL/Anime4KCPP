@@ -18,19 +18,19 @@ namespace Parallel = tbb;
 
 namespace Anime4KCPP::Utils
 {
-    template <typename F>
-    void parallelFor(const int first, const int last, F&& func);
+    template <typename IndexType, typename F>
+    void parallelFor(IndexType first, IndexType last, F&& func);
 }
 
-template <typename F>
-inline void Anime4KCPP::Utils::parallelFor(const int first, const int last, F&& func)
+template <typename IndexType, typename F>
+inline void Anime4KCPP::Utils::parallelFor(const IndexType first, const IndexType last, F&& func)
 {
 #ifndef DISABLE_PARALLEL
 #if defined(USE_PPL) || defined(USE_TBB)
     Parallel::parallel_for(first, last, std::forward<F>(func));
 #elif defined(USE_OPENMP)
 #pragma omp parallel for
-    for (int i = first; i < last; i++)
+    for (IndexType i = first; i < last; i++)
     {
         func(i);
     }
@@ -43,10 +43,10 @@ inline void Anime4KCPP::Utils::parallelFor(const int first, const int last, F&& 
 
         static Anime4KCPP::Utils::ThreadPool pool(threadNum);
 
-        for (int i = first; i < last; i++)
+        for (IndexType i = first; i < last; i++)
         {
             taskList.emplace_back(pool.exec(
-                [&func](int i) {
+                [&func](IndexType i) {
                     func(i);
                 }, i));
         }
@@ -55,14 +55,14 @@ inline void Anime4KCPP::Utils::parallelFor(const int first, const int last, F&& 
     }
     else
     {
-        for (int i = first; i < last; i++)
+        for (IndexType i = first; i < last; i++)
         {
             func(i);
         }
     }
 #endif
 #else // Disable parallel
-    for (int i = first; i < last; i++)
+    for (IndexType i = first; i < last; i++)
     {
         func(i);
     }
