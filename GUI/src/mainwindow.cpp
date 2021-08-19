@@ -91,10 +91,8 @@ MainWindow::MainWindow(QWidget* parent)
         ui->spinBoxHDNLevel->setEnabled(false);
     }
     //stop flag
-    stopVideoProcessing = false;
-    videoProcessingState = VideoProcessingState::NORMAL;
-    //Register
-    qRegisterMetaType<std::string>("std::string");
+    stopProcessing = false;
+    processingState = ProcessingState::NORMAL;
 }
 
 MainWindow::~MainWindow()
@@ -807,9 +805,13 @@ void MainWindow::solt_done_renewState(int row, double pro, quint64 time)
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
-void MainWindow::solt_error_renewState(int row, QString err)
+void MainWindow::solt_setError_renewState(int row)
 {
     tableModel->setData(tableModel->index(row, 4), tr("error"), Qt::DisplayRole);
+}
+
+void MainWindow::solt_showError_renewState(QString err)
+{
     errorHandler(err);
 }
 
@@ -842,10 +844,10 @@ void MainWindow::solt_allDone_remindUser(quint64 totalTime)
     on_pushButtonClear_clicked();
 }
 
-void MainWindow::solt_showInfo_renewTextBrowser(std::string info)
+void MainWindow::solt_logInfo_renewTextBrowser(QString info)
 {
     ui->textBrowserInfoOut->insertPlainText(
-        QDateTime::currentDateTime().toString(Qt::DateFormat::ISODateWithMs) + "  " + QString::fromStdString(info));
+        QDateTime::currentDateTime().toString(Qt::DateFormat::ISODateWithMs) + "  " + info);
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
 
@@ -1273,16 +1275,12 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 if (fileType(QFileInfo(filePath)) == FileType::IMAGE)
                 {
-                    images << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
-                        outputPath + "/" +
-                        outputFileName), i);
+                    images.append(qMakePair(QPair<QString, QString>{filePath, outputPath + "/" + outputFileName}, i));
                     imageCount++;
                 }
                 else
                 {
-                    videos << QPair<QPair<QString, QString>, int>(QPair<QString, QString>(filePath,
-                        outputPath + "/" +
-                        outputFileName), i);
+                    videos.append(qMakePair(QPair<QString, QString>{filePath, outputPath + "/" + outputFileName}, i));
                     videoCount++;
                 }
             }
@@ -1294,27 +1292,48 @@ void MainWindow::on_pushButtonStart_clicked()
         Communicator cm;
         connect(&cm, SIGNAL(done(int, double, quint64)),
             this, SLOT(solt_done_renewState(int, double, quint64)), Qt::QueuedConnection);
-        connect(&cm, SIGNAL(error(int, QString)),
-            this, SLOT(solt_error_renewState(int, QString)), Qt::QueuedConnection);
-        connect(&cm, SIGNAL(showInfo(std::string)),
-            this, SLOT(solt_showInfo_renewTextBrowser(std::string)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(setError(int)),
+            this, SLOT(solt_setError_renewState(int)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(showError(QString)),
+            this, SLOT(solt_showError_renewState(QString)), Qt::QueuedConnection);
+        connect(&cm, SIGNAL(logInfo(QString)),
+            this, SLOT(solt_logInfo_renewTextBrowser(QString)), Qt::QueuedConnection);
         connect(&cm, SIGNAL(allDone(quint64)),
             this, SLOT(solt_allDone_remindUser(quint64)), Qt::QueuedConnection);
         connect(&cm, SIGNAL(updateProgress(double, double, double)),
             this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)), Qt::QueuedConnection);
         std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
+
+        QList<QPair<QString, QString>> errorList;
         if (imageCount > 0)
         {
             Anime4KCPP::Utils::parallelFor(0, images.size(),
-                [this, total, &images, &cm, &totalCount](const int i) 
+                [this, total, &images, &cm, &totalCount, &errorList](const int i)
                 {
+                    if (stopProcessing)
+                        return;
+
+                    while (processingState == ProcessingState::PAUSE)
+                    {
+                        if (stopProcessing)
+                        {
+                            return;
+                        }
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    }
+
+                    if (processingState == ProcessingState::CONTINUE)
+                        processingState = ProcessingState::NORMAL;
+
+                    totalCount--;
+
                     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                     std::chrono::steady_clock::time_point startTime, endTime;
                     auto& image = images.at(i);
                     try
                     {
                         ac->loadImage(image.first.first.toUtf8().toStdString());
-                        emit cm.showInfo(("Image: " + image.first.first).toStdString() + ", start processing...\n");
+                        emit cm.logInfo("Image: " + image.first.first + ", start processing...\n");
                         startTime = std::chrono::steady_clock::now();
                         ac->process();
                         endTime = std::chrono::steady_clock::now();
@@ -1322,22 +1341,33 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
                     catch (const std::exception& err)
                     {
-                        emit cm.error(image.second, err.what());
+                        errorList.append(QPair<QString, QString>{image.first.first, err.what()});
+                        emit cm.setError(image.second);
+                        emit cm.logInfo("Failed: " + image.first.first + ", " + err.what() + '\n');
+                        return;
                     }
-
-                    totalCount--;
 
                     emit cm.done(image.second, 1.0 - (totalCount / total),
                         std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
                 });
+
+            if (stopProcessing)
+            {
+                stopProcessing = false;
+                processingState = ProcessingState::NORMAL;
+                emit cm.allDone(0);
+                return;
+            }
         }
         if (videoCount > 0)
         {
             std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
             std::chrono::steady_clock::time_point startTime, endTime;
             Anime4KCPP::VideoProcessor videoProcessor(*ac, ui->spinBoxThreads->value());
-            for (QPair<QPair<QString, QString>, int> const& video : videos)
+            for (const auto& video : videos)
             {
+                totalCount--;
+
                 try
                 {
                     videoProcessor.loadVideo(video.first.first.toUtf8().toStdString());
@@ -1345,32 +1375,27 @@ void MainWindow::on_pushButtonStart_clicked()
                         video.first.second.toUtf8().toStdString() +
                         std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()),
                         ui->doubleSpinBoxFPS->value());
-                    emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
+                    emit cm.logInfo("Video: " + video.first.first + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     videoProcessor.processWithProgress(
                         [this, &videoProcessor, &startTime, &cm](double v)
                         {
-                            if (stopVideoProcessing)
+                            if (stopProcessing)
                             {
-                                if (videoProcessingState == VideoProcessingState::PAUSED)
-                                {
-                                    videoProcessor.continueVideoProcess();
-                                    videoProcessingState = VideoProcessingState::NORMAL;
-                                }
                                 videoProcessor.stopVideoProcess();
                                 return;
                             }
-                            if (videoProcessingState == VideoProcessingState::PAUSE)
+                            if (processingState == ProcessingState::PAUSE)
                             {
                                 videoProcessor.pauseVideoProcess();
-                                videoProcessingState = VideoProcessingState::PAUSED;
+                                processingState = ProcessingState::PAUSED;
                             }
-                            else if (videoProcessingState == VideoProcessingState::CONTINUE)
+                            else if (processingState == ProcessingState::CONTINUE)
                             {
                                 videoProcessor.continueVideoProcess();
-                                videoProcessingState = VideoProcessingState::NORMAL;
+                                processingState = ProcessingState::NORMAL;
                             }
-                            else if (videoProcessingState == VideoProcessingState::NORMAL)
+                            else if (processingState == ProcessingState::NORMAL)
                             {
                                 double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
                                 double remaining = elpsed / v - elpsed;
@@ -1382,12 +1407,16 @@ void MainWindow::on_pushButtonStart_clicked()
                 }
                 catch (const std::exception& err)
                 {
-                    emit cm.error(video.second, err.what());
+                    errorList.append(QPair<QString, QString>{video.first.first, err.what()});
+                    emit cm.setError(video.second);
+                    emit cm.logInfo("Failed: " + video.first.first + ", " + err.what() + '\n');
+                    continue;
                 }
 
-                if (stopVideoProcessing)
+                if (stopProcessing)
                 {
-                    stopVideoProcessing = false;
+                    stopProcessing = false;
+                    processingState = ProcessingState::NORMAL;
                     emit cm.allDone(0);
                     return;
                 }
@@ -1407,14 +1436,30 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
                 }
 
-                totalCount--;
-
                 emit cm.done(video.second, 1.0 - (totalCount / total),
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             }
         }
 
         std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
+
+        if (!errorList.isEmpty())
+        {
+            QString errorMsg = QString("%1 task(s) failed:\n\n").arg(errorList.size());
+            qsizetype lengthToShow = errorList.size() < 5 ? errorList.size() : 5;
+            qsizetype lengthMore = errorList.size() - lengthToShow;
+
+            for (qsizetype i = 0; i < lengthToShow; i++)
+            {
+                const auto& e = errorList.at(i);
+                errorMsg+= QString("%1: %2\n").arg(e.first, e.second);
+            }
+
+            if (lengthMore)
+                errorMsg += QString("and %1 more ...").arg(lengthMore);
+
+            emit cm.showError(errorMsg);
+        }
 
         emit cm.allDone(
             std::chrono::duration_cast<std::chrono::milliseconds>(endTimeForAll - startTimeForAll)
@@ -2159,20 +2204,20 @@ void MainWindow::on_pushButtonForceStop_clicked()
         tr("Do you really want to stop all tasks?"),
         QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
     {
-        stopVideoProcessing = true;
+        stopProcessing = true;
     }
 }
 
 void MainWindow::on_pushButtonPause_clicked()
 {
-    videoProcessingState = VideoProcessingState::PAUSE;
+    processingState = ProcessingState::PAUSE;
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(true);
 }
 
 void MainWindow::on_pushButtonContinue_clicked()
 {
-    videoProcessingState = VideoProcessingState::CONTINUE;
+    processingState = ProcessingState::CONTINUE;
     ui->pushButtonPause->setEnabled(true);
     ui->pushButtonContinue->setEnabled(false);
 }

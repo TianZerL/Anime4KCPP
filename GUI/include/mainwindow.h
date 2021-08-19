@@ -55,7 +55,7 @@ enum class GPUMode
     INITIALZED, UNINITIALZED, UNSUPPORT
 };
 
-enum class VideoProcessingState
+enum class ProcessingState
 {
     NORMAL, PAUSE, PAUSED, CONTINUE
 };
@@ -108,9 +108,10 @@ private:
 
 private slots:
     void solt_done_renewState(int row, double pro, quint64 time);
-    void solt_error_renewState(int row, QString err);
+    void solt_setError_renewState(int row);
+    void solt_showError_renewState(QString err);
     void solt_allDone_remindUser(quint64 totalTime);
-    void solt_showInfo_renewTextBrowser(std::string info);
+    void solt_logInfo_renewTextBrowser(QString info);
     void solt_updateProgress_updateCurrentTaskProgress(double v, double elpsed, double remaining);
 
 private slots:
@@ -220,7 +221,7 @@ private:
     QHash<QString, Language> languageSelector;
     QHash<QString, Anime4KCPP::Codec> codecSelector;
 
-    std::atomic<bool> stopVideoProcessing;
-    std::atomic<VideoProcessingState> videoProcessingState;
+    std::atomic<bool> stopProcessing;
+    std::atomic<ProcessingState> processingState;
 };
 #endif // MAINWINDOW_H

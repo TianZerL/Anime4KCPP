@@ -10,10 +10,11 @@ public:
     explicit Communicator(QObject* parent = nullptr);
 
 signals:
-    void error(int row, QString err);
+    void setError(int row);
+    void showError(QString msg);
     void done(int row, double pro, quint64 time);
     void allDone(quint64 totalTime);
-    void showInfo(std::string info);
+    void logInfo(QString info);
     void updateProgress(double v, double elpsed, double remaining);
 };
 

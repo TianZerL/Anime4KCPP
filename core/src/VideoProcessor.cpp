@@ -93,6 +93,9 @@ void Anime4KCPP::VideoProcessor::processWithProgress(const std::function<void(do
 
 void Anime4KCPP::VideoProcessor::stopVideoProcess() noexcept
 {
+    if (videoIO.isPaused())
+        videoIO.continueProcess();
+
     videoIO.stopProcess();
 }
 
