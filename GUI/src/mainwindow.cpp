@@ -821,7 +821,9 @@ void MainWindow::solt_allDone_remindUser(quint64 totalTime)
     {
         QMessageBox::information(this,
             tr("Notice"),
-            QString("All tasks done\nTotal time: %1 s").arg(totalTime / 1000.0),
+            totalTime > 0 ? 
+            QString("All tasks done\nTotal time: %1 s").arg(totalTime / 1000.0) :
+            tr("Processing stopped"),
             QMessageBox::Ok);
     }
     ui->tableViewProcessingList->setEnabled(true);
@@ -1304,7 +1306,8 @@ void MainWindow::on_pushButtonStart_clicked()
         if (imageCount > 0)
         {
             Anime4KCPP::Utils::parallelFor(0, images.size(),
-                [this, total, &images, &cm, &totalCount](const int i) {
+                [this, total, &images, &cm, &totalCount](const int i) 
+                {
                     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
                     std::chrono::steady_clock::time_point startTime, endTime;
                     auto& image = images.at(i);
@@ -1344,33 +1347,35 @@ void MainWindow::on_pushButtonStart_clicked()
                         ui->doubleSpinBoxFPS->value());
                     emit cm.showInfo(("Video: " + video.first.first).toStdString() + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
-                    videoProcessor.processWithProgress([this, &videoProcessor, &startTime, &cm](double v) {
-                        if (stopVideoProcessing)
+                    videoProcessor.processWithProgress(
+                        [this, &videoProcessor, &startTime, &cm](double v)
                         {
-                            if (videoProcessingState == VideoProcessingState::PAUSED)
+                            if (stopVideoProcessing)
+                            {
+                                if (videoProcessingState == VideoProcessingState::PAUSED)
+                                {
+                                    videoProcessor.continueVideoProcess();
+                                    videoProcessingState = VideoProcessingState::NORMAL;
+                                }
+                                videoProcessor.stopVideoProcess();
+                                return;
+                            }
+                            if (videoProcessingState == VideoProcessingState::PAUSE)
+                            {
+                                videoProcessor.pauseVideoProcess();
+                                videoProcessingState = VideoProcessingState::PAUSED;
+                            }
+                            else if (videoProcessingState == VideoProcessingState::CONTINUE)
                             {
                                 videoProcessor.continueVideoProcess();
                                 videoProcessingState = VideoProcessingState::NORMAL;
                             }
-                            videoProcessor.stopVideoProcess();
-                            return;
-                        }
-                        if (videoProcessingState == VideoProcessingState::PAUSE)
-                        {
-                            videoProcessor.pauseVideoProcess();
-                            videoProcessingState = VideoProcessingState::PAUSED;
-                        }
-                        else if (videoProcessingState == VideoProcessingState::CONTINUE)
-                        {
-                            videoProcessor.continueVideoProcess();
-                            videoProcessingState = VideoProcessingState::NORMAL;
-                        }
-                        else if (videoProcessingState == VideoProcessingState::NORMAL)
-                        {
-                            double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
-                            double remaining = elpsed / v - elpsed;
-                            emit cm.updateProgress(v, elpsed, remaining);
-                        }
+                            else if (videoProcessingState == VideoProcessingState::NORMAL)
+                            {
+                                double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
+                                double remaining = elpsed / v - elpsed;
+                                emit cm.updateProgress(v, elpsed, remaining);
+                            }
                         });
                     endTime = std::chrono::steady_clock::now();
                     videoProcessor.saveVideo();
@@ -1383,7 +1388,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 if (stopVideoProcessing)
                 {
                     stopVideoProcessing = false;
-                    emit cm.allDone(-1);
+                    emit cm.allDone(0);
                     return;
                 }
 
