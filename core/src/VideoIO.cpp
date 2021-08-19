@@ -5,6 +5,7 @@
 
 Anime4KCPP::Utils::VideoIO::~VideoIO()
 {
+    stopProcess();
     release();
 }
 
@@ -24,12 +25,13 @@ void Anime4KCPP::Utils::VideoIO::process()
 
     stop = false;
 
+    finished = 0;
+
     pool.exec([this, &barrier]()
         {
             double totalFrame = reader.get(cv::CAP_PROP_FRAME_COUNT);
-            finished = totalFrame;
 
-            for (std::size_t frameCount = 0; frameCount < finished; frameCount++)
+            for (std::size_t frameCount = 0; finished == 0 || frameCount < finished; frameCount++)
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
                 std::unordered_map<std::size_t, cv::Mat>::iterator it;
