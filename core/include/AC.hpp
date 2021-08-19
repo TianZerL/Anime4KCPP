@@ -1,5 +1,7 @@
 #pragma once
 
+#include<algorithm>
+#include<utility>
 #include<string>
 #include<vector>
 #include<chrono>

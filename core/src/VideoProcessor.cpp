@@ -1,5 +1,6 @@
 #ifdef ENABLE_VIDEO
 
+#include<exception>
 #include<thread>
 
 #include"ACCreator.hpp"
@@ -40,19 +41,36 @@ void Anime4KCPP::VideoProcessor::saveVideo()
 
 void Anime4KCPP::VideoProcessor::process()
 {
+    std::once_flag eptrFlag;
+    std::exception_ptr eptr;
+
     videoIO.init(
-        [this]()
+        [&]()
         {
             Utils::Frame frame = videoIO.read();
+            try
             { // Reduce memory usage
                 auto ac = ACCreator::createUP(param, type);
                 ac->loadImage(frame.first);
                 ac->process();
                 ac->saveImage(frame.first);
             }
+            catch (...)
+            {
+                std::call_once(eptrFlag,
+                    [&]()
+                    {
+                        videoIO.stopProcess();
+                        eptr = std::current_exception();
+                    });
+                return;
+            }
             videoIO.write(frame);
-        }, threads
-    ).process();
+        }
+    , threads).process();
+
+    if (eptr)
+        std::rethrow_exception(eptr);
 }
 
 void Anime4KCPP::VideoProcessor::processWithProgress(const std::function<void(double)>&& callBack)

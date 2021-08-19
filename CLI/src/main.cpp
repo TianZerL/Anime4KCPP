@@ -235,6 +235,15 @@ static void logErrorAndExit(Args&&... args)
     std::exit(1);
 }
 
+template<typename ...Args>
+static void logMessageSafely(Args&&... args)
+{
+    static std::mutex mtx;
+    std::lock_guard<std::mutex> lock(mtx);
+
+    (std::cout << ... << args);
+}
+
 int main(int argc, char* argv[])
 {
     Config config;
@@ -648,25 +657,33 @@ int main(int argc, char* argv[])
 
                 Anime4KCPP::Utils::parallelFor(0, static_cast<const int>(filePaths.size()),
                     [&](const int i) {
-                        Anime4KCPP::AC* pAc = Anime4KCPP::ACCreator::create(parameters, ac->getProcessorType());
-                        pAc->loadImage(filePaths[i].first);
-                        pAc->process();
-                        pAc->saveImage(filePaths[i].second);
-                        Anime4KCPP::ACCreator::release(pAc);
+                        auto pAc = Anime4KCPP::ACCreator::createUP(parameters, ac->getProcessorType());
+                        try
+                        {
+                            pAc->loadImage(filePaths[i].first);
+                            pAc->process();
+                            pAc->saveImage(filePaths[i].second);
+                        }
+                        catch (const std::exception& e)
+                        {
+                            logMessageSafely("Failed to process: ", filePaths[i].first, "\nError: ", e.what(), '\n');
+                            return;
+                        }
                         if (!disableProgress)
                         {
                             progress++;
-                            std::cout << '\r' << progress << '/' << filePaths.size();
+                            logMessageSafely('\r' , progress , '/' , filePaths.size());
                         }
                     });
 
                 std::chrono::steady_clock::time_point e = std::chrono::steady_clock::now();
 
                 std::cout
-                    << "Total time: "
+                    << "\nTotal time: "
                     << std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count() / 1000.0
                     << " s\n"
-                    << "All finished." << std::endl;
+                    << progress << '/' << filePaths.size()
+                    << " finished." << std::endl;
             }
             else
             {

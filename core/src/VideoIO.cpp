@@ -5,8 +5,7 @@
 
 Anime4KCPP::Utils::VideoIO::~VideoIO()
 {
-    writer.release();
-    reader.release();
+    release();
 }
 
 Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void()>&& p, std::size_t t) noexcept
@@ -18,45 +17,61 @@ Anime4KCPP::Utils::VideoIO& Anime4KCPP::Utils::VideoIO::init(std::function<void(
 
 void Anime4KCPP::Utils::VideoIO::process()
 {
-    ThreadPool pool(threads + 1);
-    stop = static_cast<std::size_t>(reader.get(cv::CAP_PROP_FRAME_COUNT));
+    std::promise<void> barrier;
+    std::future<void> barrierFuture = barrier.get_future();
 
-    pool.exec([this]()
+    ThreadPool pool(threads + 1);
+
+    stop = false;
+
+    pool.exec([this, &barrier]()
         {
-            for (std::size_t i = 0; i < stop; i++)
+            double totalFrame = reader.get(cv::CAP_PROP_FRAME_COUNT);
+            finished = totalFrame;
+
+            for (std::size_t frameCount = 0; frameCount < finished; frameCount++)
             {
                 std::unique_lock<std::mutex> lock(mtxWrite);
                 std::unordered_map<std::size_t, cv::Mat>::iterator it;
-                for (;;)
-                {
-                    it = frameMap.find(i);
-                    if (it == frameMap.end())
-                        cndWrite.wait(lock);
-                    else
-                        break;
-                }
+
+                while (!stop && ((it = frameMap.find(frameCount)) == frameMap.end()))
+                    cndWrite.wait(lock);
+
+                if (stop)
+                    return barrier.set_value();
+
                 writer.write(it->second);
                 frameMap.erase(it);
-                setProgress(static_cast<double>(i + 1) / static_cast<double>(stop));
+                setProgress(static_cast<double>(frameCount) / totalFrame);
             }
+
+            barrier.set_value();
         });
 
-    for (std::size_t i = 0; i < stop; i++)
+
+    for (std::size_t frameCount = 0;; frameCount++)
     {
         cv::Mat frame;
         if (!reader.read(frame))
         {
-            stop = i;
+            finished = frameCount;
             break;
         }
         {
             std::unique_lock<std::mutex> lock(mtxRead);
-            while (rawFrames.size() >= threads)
+
+            while (!stop && rawFrames.size() >= threads)
                 cndRead.wait(lock);
-            rawFrames.emplace(std::pair<cv::Mat, std::size_t>(frame, i));
+
+            if (stop)
+                break;
+
+            rawFrames.emplace(frame, frameCount);
         }
         pool.exec(processor);
     }
+
+    barrierFuture.wait();
 }
 
 bool Anime4KCPP::Utils::VideoIO::openReader(const std::string& srcFile)
@@ -167,15 +182,20 @@ double Anime4KCPP::Utils::VideoIO::get(int p)
 
 void Anime4KCPP::Utils::VideoIO::release()
 {
-    writer.release();
     reader.release();
+    writer.release();
+
+    if (!rawFrames.empty())
+        std::queue<Frame>().swap(rawFrames);
+    if (!frameMap.empty())
+        frameMap.clear();
 }
 
 Anime4KCPP::Utils::Frame Anime4KCPP::Utils::VideoIO::read()
 {
     Frame ret;
     {
-        std::lock_guard<std::mutex> lock(mtxRead);
+        const std::lock_guard<std::mutex> lock(mtxRead);
         ret = std::move(rawFrames.front());
         rawFrames.pop();
     }
@@ -186,7 +206,7 @@ Anime4KCPP::Utils::Frame Anime4KCPP::Utils::VideoIO::read()
 void Anime4KCPP::Utils::VideoIO::write(const Frame& frame)
 {
     {
-        std::lock_guard<std::mutex> lock(mtxWrite);
+        const std::lock_guard<std::mutex> lock(mtxWrite);
         frameMap.emplace(frame.second, frame.first);
     }
     cndWrite.notify_one();
@@ -199,7 +219,12 @@ double Anime4KCPP::Utils::VideoIO::getProgress() noexcept
 
 void Anime4KCPP::Utils::VideoIO::stopProcess() noexcept
 {
-    stop = 1;
+    {
+        std::scoped_lock lock(mtxRead, mtxWrite);
+        stop = true;
+    }
+    cndRead.notify_one();
+    cndWrite.notify_one();
 }
 
 void Anime4KCPP::Utils::VideoIO::pauseProcess()
@@ -209,7 +234,7 @@ void Anime4KCPP::Utils::VideoIO::pauseProcess()
         pausePromise = std::make_unique<std::promise<void>>();
         std::thread t([this, f = pausePromise->get_future()]()
         {
-            std::lock_guard<std::mutex> lock(mtxRead);
+            const std::lock_guard<std::mutex> lock(mtxRead);
             f.wait();
         });
         t.detach();

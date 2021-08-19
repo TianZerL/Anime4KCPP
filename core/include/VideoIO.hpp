@@ -70,9 +70,10 @@ private:
     std::condition_variable cndWrite;
     //callback data
     std::atomic<double> progress;
-    std::atomic<std::size_t> stop;
+    std::atomic<std::size_t> finished;
     std::unique_ptr<std::promise<void>> pausePromise;
-    bool pause{ false };
+    bool pause = false;
+    bool stop = false ;
 };
 
 #endif
