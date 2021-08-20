@@ -110,12 +110,13 @@ static Anime4KCPP::Codec string2Codec(const std::string& codec)
 static void showVersionInfo()
 {
     std::cerr
-        << "Anime4KCPPCLI" << std::endl
-        << "Anime4KCPP core version: " << ANIME4KCPP_CORE_VERSION << std::endl
-        << "Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << std::endl
-        << "Build date: " << __DATE__ << " " << __TIME__ << std::endl
-        << "Compiler: " << ANIME4KCPP_CORE_COMPILER << std::endl
-        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
+        << "Anime4KCPPCLI" << '\n'
+        << "Build date: " << __DATE__ << " " << __TIME__ << '\n'
+        << "Anime4KCPP core information:\n" 
+        << "  Version: " << ANIME4KCPP_CORE_VERSION << '\n'
+        << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
+        << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
+        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << '\n';
 }
 
 static void showGPUList()
@@ -452,7 +453,6 @@ int main(int argc, char* argv[])
     if(videoMode)
         logErrorAndExit("Video processing support is not turned on.");
 #endif // !ENABLE_VIDEO
-
 
     if (!suffix.empty() && suffix.front() != '.')
     {
