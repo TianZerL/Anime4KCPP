@@ -2,6 +2,12 @@ project(Anime4KCPP_CLI LANGUAGES CXX)
 
 if(Build_CLI)
 
+    if(NOT Enable_Image_IO)
+        message (
+            FATAL_ERROR "To compile the CLI, you cannot turn off image IO support from the core\n"
+        )
+    endif()
+
     aux_source_directory(src SOURCE)
 
     include_directories(include)

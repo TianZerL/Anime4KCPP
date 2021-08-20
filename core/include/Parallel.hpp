@@ -1,8 +1,6 @@
 #ifndef ANIME4KCPP_CORE_PARALLEL_HPP
 #define ANIME4KCPP_CORE_PARALLEL_HPP
 
-#include<utility>
-
 #ifndef DISABLE_PARALLEL
 #if defined(USE_PPL)
 #include<ppl.h>

@@ -29,6 +29,8 @@ static bool checkFFmpeg()
     return !std::system("ffmpeg -version");
 }
 
+#ifdef ENABLE_VIDEO
+
 static void processVideoWithProgress(Anime4KCPP::VideoProcessor& videoPeocessor)
 {
     auto s = std::chrono::steady_clock::now();
@@ -102,6 +104,8 @@ static Anime4KCPP::Codec string2Codec(const std::string& codec)
         return Anime4KCPP::Codec::OTHER;
     return Anime4KCPP::Codec::MP4V;
 }
+
+#endif // ENABLE_VIDEO
 
 static void showVersionInfo()
 {
@@ -444,6 +448,12 @@ int main(int argc, char* argv[])
         GPU = true;
     }
 
+#ifndef ENABLE_VIDEO
+    if(videoMode)
+        logErrorAndExit("Video processing support is not turned on.");
+#endif // !ENABLE_VIDEO
+
+
     if (!suffix.empty() && suffix.front() != '.')
     {
         suffix.insert(suffix.begin(), '.');
@@ -767,6 +777,7 @@ int main(int argc, char* argv[])
         }
         else // Video
         {
+#ifdef ENABLE_VIDEO
             if (preview)
             {
 #ifdef ENABLE_PREVIEW_GUI
@@ -1022,6 +1033,7 @@ int main(int argc, char* argv[])
                         << std::endl;
                 }
             }
+#endif // ENABLE_VIDEO
         }
     }
     catch (const std::exception& err)

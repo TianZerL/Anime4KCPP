@@ -126,7 +126,9 @@ if(NOT Disable_Parallel)
             add_definitions(-DUSE_PPL)
             set(Parallel_Library_Type PPL)
         else()
-            message(FATAL_ERROR "PPL only available in MSVC10 or newer\n")
+            message (
+                FATAL_ERROR "PPL only available in MSVC10 or newer\n"
+            )
         endif()
     elseif(Parallel_Library MATCHES "TBB")
         add_definitions(-DUSE_TBB)

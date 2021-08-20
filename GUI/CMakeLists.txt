@@ -2,6 +2,12 @@ project(Anime4KCPP_GUI LANGUAGES CXX)
 
 if(Build_GUI)
 
+    if(NOT Enable_Image_IO OR NOT Enable_Video)
+        message (
+            FATAL_ERROR "To compile the GUI, you cannot turn off image IO or Video support from the core\n"
+        )
+    endif()
+
     aux_source_directory(src SOURCE)
 
     include_directories(include)
