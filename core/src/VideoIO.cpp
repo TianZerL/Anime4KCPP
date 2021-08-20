@@ -193,16 +193,14 @@ void Anime4KCPP::Utils::VideoIO::release()
         frameMap.clear();
 }
 
-Anime4KCPP::Utils::Frame Anime4KCPP::Utils::VideoIO::read()
+void Anime4KCPP::Utils::VideoIO::read(Frame& frame)
 {
-    Frame ret;
     {
         const std::lock_guard<std::mutex> lock(mtxRead);
-        ret = std::move(rawFrames.front());
+        frame = std::move(rawFrames.front());
         rawFrames.pop();
     }
     cndRead.notify_one();
-    return ret;
 }
 
 void Anime4KCPP::Utils::VideoIO::write(const Frame& frame)

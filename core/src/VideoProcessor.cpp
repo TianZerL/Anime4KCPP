@@ -47,7 +47,9 @@ void Anime4KCPP::VideoProcessor::process()
     videoIO.init(
         [&]()
         {
-            Utils::Frame frame = videoIO.read();
+            Utils::Frame frame;
+            videoIO.read(frame);
+
             try
             { // Reduce memory usage
                 auto ac = ACCreator::createUP(param, type);
@@ -65,6 +67,7 @@ void Anime4KCPP::VideoProcessor::process()
                     });
                 return;
             }
+
             videoIO.write(frame);
         }
     , threads).process();

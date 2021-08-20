@@ -48,7 +48,7 @@ public:
     //get the specifying video property from VideoCapture
     double get(int p);
     void release();
-    Frame read();
+    void read(Frame& frame);
     void write(const Frame& frame);
     double getProgress() noexcept;
     void stopProcess() noexcept;
