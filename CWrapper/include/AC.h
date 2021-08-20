@@ -25,7 +25,7 @@
 #ifdef __cplusplus
 extern "C"
 {
-#endif
+#endif // __cplusplus
 
     typedef enum ac_processType
     {
@@ -288,6 +288,6 @@ extern "C"
 
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
 #endif // !ANIME4KCPP_CWRAPPER_AC_H

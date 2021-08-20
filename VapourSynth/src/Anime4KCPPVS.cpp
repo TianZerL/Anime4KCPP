@@ -8,7 +8,8 @@ enum class GPGPU
     OpenCL, CUDA
 };
 
-struct Anime4KCPPData {
+struct Anime4KCPPData 
+{
     VSNodeRef* node = nullptr;
     VSVideoInfo vi{};
     bool CNN = true;
@@ -693,6 +694,7 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin* plugin)
 {
     configFunc("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VAPOURSYNTH_API_VERSION, 1, plugin);
+
     registerFunc("Anime4KCPP",
         "src:clip;"
         "passes:int:opt;"
