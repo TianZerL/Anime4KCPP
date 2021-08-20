@@ -139,43 +139,43 @@ namespace Anime4KCPP::CPU::detail
 
             _mm256_zeroall();
 
-            __m256 _out0 = _mm256_loadu_ps(bptr);
-            __m256 _out1 = _mm256_setzero_ps();
-            __m256 _out2 = _mm256_setzero_ps();
+            __m256 out0 = _mm256_loadu_ps(bptr);
+            __m256 out1 = _mm256_setzero_ps();
+            __m256 out2 = _mm256_setzero_ps();
 
-            const __m256 _r0 = _mm256_set1_ps(tln);
-            const __m256 _r1 = _mm256_set1_ps(tcn);
-            const __m256 _r2 = _mm256_set1_ps(trn);
-            const __m256 _r3 = _mm256_set1_ps(mln);
-            const __m256 _r4 = _mm256_set1_ps(mcn);
-            const __m256 _r5 = _mm256_set1_ps(mrn);
-            const __m256 _r6 = _mm256_set1_ps(bln);
-            const __m256 _r7 = _mm256_set1_ps(bcn);
-            const __m256 _r8 = _mm256_set1_ps(brn);
+            const __m256 r0 = _mm256_set1_ps(tln);
+            const __m256 r1 = _mm256_set1_ps(tcn);
+            const __m256 r2 = _mm256_set1_ps(trn);
+            const __m256 r3 = _mm256_set1_ps(mln);
+            const __m256 r4 = _mm256_set1_ps(mcn);
+            const __m256 r5 = _mm256_set1_ps(mrn);
+            const __m256 r6 = _mm256_set1_ps(bln);
+            const __m256 r7 = _mm256_set1_ps(bcn);
+            const __m256 r8 = _mm256_set1_ps(brn);
 
-            const __m256 _k0 = _mm256_loadu_ps(kptr);
-            const __m256 _k1 = _mm256_loadu_ps(kptr + 8);
-            const __m256 _k2 = _mm256_loadu_ps(kptr + 16);
-            const __m256 _k3 = _mm256_loadu_ps(kptr + 24);
-            const __m256 _k4 = _mm256_loadu_ps(kptr + 32);
-            const __m256 _k5 = _mm256_loadu_ps(kptr + 40);
-            const __m256 _k6 = _mm256_loadu_ps(kptr + 48);
-            const __m256 _k7 = _mm256_loadu_ps(kptr + 56);
-            const __m256 _k8 = _mm256_loadu_ps(kptr + 64);
+            const __m256 k0 = _mm256_loadu_ps(kptr);
+            const __m256 k1 = _mm256_loadu_ps(kptr + 8);
+            const __m256 k2 = _mm256_loadu_ps(kptr + 16);
+            const __m256 k3 = _mm256_loadu_ps(kptr + 24);
+            const __m256 k4 = _mm256_loadu_ps(kptr + 32);
+            const __m256 k5 = _mm256_loadu_ps(kptr + 40);
+            const __m256 k6 = _mm256_loadu_ps(kptr + 48);
+            const __m256 k7 = _mm256_loadu_ps(kptr + 56);
+            const __m256 k8 = _mm256_loadu_ps(kptr + 64);
 
-            _out0 = _mm256_fmadd_ps(_r0, _k0, _out0);
-            _out1 = _mm256_fmadd_ps(_r1, _k1, _out1);
-            _out2 = _mm256_fmadd_ps(_r2, _k2, _out2);
-            _out0 = _mm256_fmadd_ps(_r3, _k3, _out0);
-            _out1 = _mm256_fmadd_ps(_r4, _k4, _out1);
-            _out2 = _mm256_fmadd_ps(_r5, _k5, _out2);
-            _out0 = _mm256_fmadd_ps(_r6, _k6, _out0);
-            _out1 = _mm256_fmadd_ps(_r7, _k7, _out1);
-            _out2 = _mm256_fmadd_ps(_r8, _k8, _out2);
+            out0 = _mm256_fmadd_ps(r0, k0, out0);
+            out1 = _mm256_fmadd_ps(r1, k1, out1);
+            out2 = _mm256_fmadd_ps(r2, k2, out2);
+            out0 = _mm256_fmadd_ps(r3, k3, out0);
+            out1 = _mm256_fmadd_ps(r4, k4, out1);
+            out2 = _mm256_fmadd_ps(r5, k5, out2);
+            out0 = _mm256_fmadd_ps(r6, k6, out0);
+            out1 = _mm256_fmadd_ps(r7, k7, out1);
+            out2 = _mm256_fmadd_ps(r8, k8, out2);
 
-            _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
+            out0 = _mm256_max_ps(_mm256_add_ps(out2, _mm256_add_ps(out0, out1)), _mm256_setzero_ps());
 
-            _mm256_storeu_ps(outMat, _out0);
+            _mm256_storeu_ps(outMat, out0);
 
 #elif defined(USE_EIGEN3)
             float* const kptr = const_cast<float*>(kernels);
@@ -260,17 +260,14 @@ namespace Anime4KCPP::CPU::detail
             //2 3      1 0
 
 #ifdef USE_RYZEN
-            const __m256 _in = _mm256_loadu_ps(inMat);
-            const __m256 _k0 = _mm256_loadu_ps(kernels + index * 8);
-            const __m256 _r0 = _mm256_dp_ps(_in, _k0, 0xf1);
-            const __m128 _r1 = _mm256_extractf128_ps(_r0, 0x01);
-            const __m128 _r2 = _mm256_castps256_ps128(_r0);
-            const __m128 _r3 = _mm_add_ps(_r1, _r2);
+            const __m256 in = _mm256_loadu_ps(inMat);
+            const __m256 k0 = _mm256_loadu_ps(kernels + index * 8);
+            const __m256 r0 = _mm256_dp_ps(in, k0, 0xf1);
+            const __m128 r1 = _mm256_extractf128_ps(r0, 0x01);
+            const __m128 r2 = _mm256_castps256_ps128(r0);
+            const __m128 r3 = _mm_add_ps(r1, r2);
 
-            const float luma = _mm_cvtss_f32(_r3);
-
-            _mm256_zeroupper();
-
+            const float luma = _mm_cvtss_f32(r3);
 #elif defined(USE_EIGEN3)
             float* const kptr = const_cast<float*>(kernels + index * 8);
 
@@ -328,75 +325,75 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const float* const kptr = kernels;
         const float* const bptr = biases;
 
-        __m256 _out0 = _mm256_loadu_ps(bptr);
-        __m256 _out1 = _mm256_setzero_ps();
-        __m256 _out2 = _mm256_setzero_ps();
+        __m256 out0 = _mm256_loadu_ps(bptr);
+        __m256 out1 = _mm256_setzero_ps();
+        __m256 out2 = _mm256_setzero_ps();
 
         for (std::size_t i = 0; i < 8; i += 2)
         {
-            const __m256 _r00 = _mm256_broadcast_ss(tl + i);
-            const __m256 _r01 = _mm256_broadcast_ss(tc + i);
-            const __m256 _r02 = _mm256_broadcast_ss(tr + i);
-            const __m256 _r03 = _mm256_broadcast_ss(ml + i);
-            const __m256 _r04 = _mm256_broadcast_ss(mc + i);
-            const __m256 _r05 = _mm256_broadcast_ss(mr + i);
-            const __m256 _r06 = _mm256_broadcast_ss(bl + i);
-            const __m256 _r07 = _mm256_broadcast_ss(bc + i);
-            const __m256 _r08 = _mm256_broadcast_ss(br + i);
+            const __m256 r00 = _mm256_broadcast_ss(tl + i);
+            const __m256 r01 = _mm256_broadcast_ss(tc + i);
+            const __m256 r02 = _mm256_broadcast_ss(tr + i);
+            const __m256 r03 = _mm256_broadcast_ss(ml + i);
+            const __m256 r04 = _mm256_broadcast_ss(mc + i);
+            const __m256 r05 = _mm256_broadcast_ss(mr + i);
+            const __m256 r06 = _mm256_broadcast_ss(bl + i);
+            const __m256 r07 = _mm256_broadcast_ss(bc + i);
+            const __m256 r08 = _mm256_broadcast_ss(br + i);
 
-            const __m256 _k00 = _mm256_loadu_ps(kptr + i * 72);
-            const __m256 _k01 = _mm256_loadu_ps(kptr + i * 72 + 8);
-            const __m256 _k02 = _mm256_loadu_ps(kptr + i * 72 + 16);
-            const __m256 _k03 = _mm256_loadu_ps(kptr + i * 72 + 24);
-            const __m256 _k04 = _mm256_loadu_ps(kptr + i * 72 + 32);
-            const __m256 _k05 = _mm256_loadu_ps(kptr + i * 72 + 40);
-            const __m256 _k06 = _mm256_loadu_ps(kptr + i * 72 + 48);
-            const __m256 _k07 = _mm256_loadu_ps(kptr + i * 72 + 56);
-            const __m256 _k08 = _mm256_loadu_ps(kptr + i * 72 + 64);
+            const __m256 k00 = _mm256_loadu_ps(kptr + i * 72);
+            const __m256 k01 = _mm256_loadu_ps(kptr + i * 72 + 8);
+            const __m256 k02 = _mm256_loadu_ps(kptr + i * 72 + 16);
+            const __m256 k03 = _mm256_loadu_ps(kptr + i * 72 + 24);
+            const __m256 k04 = _mm256_loadu_ps(kptr + i * 72 + 32);
+            const __m256 k05 = _mm256_loadu_ps(kptr + i * 72 + 40);
+            const __m256 k06 = _mm256_loadu_ps(kptr + i * 72 + 48);
+            const __m256 k07 = _mm256_loadu_ps(kptr + i * 72 + 56);
+            const __m256 k08 = _mm256_loadu_ps(kptr + i * 72 + 64);
 
-            _out0 = _mm256_fmadd_ps(_r00, _k00, _out0);
-            _out1 = _mm256_fmadd_ps(_r01, _k01, _out1);
-            _out2 = _mm256_fmadd_ps(_r02, _k02, _out2);
-            _out0 = _mm256_fmadd_ps(_r03, _k03, _out0);
-            _out1 = _mm256_fmadd_ps(_r04, _k04, _out1);
-            _out2 = _mm256_fmadd_ps(_r05, _k05, _out2);
-            _out0 = _mm256_fmadd_ps(_r06, _k06, _out0);
-            _out1 = _mm256_fmadd_ps(_r07, _k07, _out1);
-            _out2 = _mm256_fmadd_ps(_r08, _k08, _out2);
+            out0 = _mm256_fmadd_ps(r00, k00, out0);
+            out1 = _mm256_fmadd_ps(r01, k01, out1);
+            out2 = _mm256_fmadd_ps(r02, k02, out2);
+            out0 = _mm256_fmadd_ps(r03, k03, out0);
+            out1 = _mm256_fmadd_ps(r04, k04, out1);
+            out2 = _mm256_fmadd_ps(r05, k05, out2);
+            out0 = _mm256_fmadd_ps(r06, k06, out0);
+            out1 = _mm256_fmadd_ps(r07, k07, out1);
+            out2 = _mm256_fmadd_ps(r08, k08, out2);
 
-            const __m256 _r10 = _mm256_broadcast_ss(tl + i + 1);
-            const __m256 _r11 = _mm256_broadcast_ss(tc + i + 1);
-            const __m256 _r12 = _mm256_broadcast_ss(tr + i + 1);
-            const __m256 _r13 = _mm256_broadcast_ss(ml + i + 1);
-            const __m256 _r14 = _mm256_broadcast_ss(mc + i + 1);
-            const __m256 _r15 = _mm256_broadcast_ss(mr + i + 1);
-            const __m256 _r16 = _mm256_broadcast_ss(bl + i + 1);
-            const __m256 _r17 = _mm256_broadcast_ss(bc + i + 1);
-            const __m256 _r18 = _mm256_broadcast_ss(br + i + 1);
+            const __m256 r10 = _mm256_broadcast_ss(tl + i + 1);
+            const __m256 r11 = _mm256_broadcast_ss(tc + i + 1);
+            const __m256 r12 = _mm256_broadcast_ss(tr + i + 1);
+            const __m256 r13 = _mm256_broadcast_ss(ml + i + 1);
+            const __m256 r14 = _mm256_broadcast_ss(mc + i + 1);
+            const __m256 r15 = _mm256_broadcast_ss(mr + i + 1);
+            const __m256 r16 = _mm256_broadcast_ss(bl + i + 1);
+            const __m256 r17 = _mm256_broadcast_ss(bc + i + 1);
+            const __m256 r18 = _mm256_broadcast_ss(br + i + 1);
 
-            const __m256 _k10 = _mm256_loadu_ps(kptr + (i + 1) * 72);
-            const __m256 _k11 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 8);
-            const __m256 _k12 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 16);
-            const __m256 _k13 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 24);
-            const __m256 _k14 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 32);
-            const __m256 _k15 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 40);
-            const __m256 _k16 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 48);
-            const __m256 _k17 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 56);
-            const __m256 _k18 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 64);
+            const __m256 k10 = _mm256_loadu_ps(kptr + (i + 1) * 72);
+            const __m256 k11 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 8);
+            const __m256 k12 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 16);
+            const __m256 k13 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 24);
+            const __m256 k14 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 32);
+            const __m256 k15 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 40);
+            const __m256 k16 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 48);
+            const __m256 k17 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 56);
+            const __m256 k18 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 64);
 
-            _out0 = _mm256_fmadd_ps(_r10, _k10, _out0);
-            _out1 = _mm256_fmadd_ps(_r11, _k11, _out1);
-            _out2 = _mm256_fmadd_ps(_r12, _k12, _out2);
-            _out0 = _mm256_fmadd_ps(_r13, _k13, _out0);
-            _out1 = _mm256_fmadd_ps(_r14, _k14, _out1);
-            _out2 = _mm256_fmadd_ps(_r15, _k15, _out2);
-            _out0 = _mm256_fmadd_ps(_r16, _k16, _out0);
-            _out1 = _mm256_fmadd_ps(_r17, _k17, _out1);
-            _out2 = _mm256_fmadd_ps(_r18, _k18, _out2);
+            out0 = _mm256_fmadd_ps(r10, k10, out0);
+            out1 = _mm256_fmadd_ps(r11, k11, out1);
+            out2 = _mm256_fmadd_ps(r12, k12, out2);
+            out0 = _mm256_fmadd_ps(r13, k13, out0);
+            out1 = _mm256_fmadd_ps(r14, k14, out1);
+            out2 = _mm256_fmadd_ps(r15, k15, out2);
+            out0 = _mm256_fmadd_ps(r16, k16, out0);
+            out1 = _mm256_fmadd_ps(r17, k17, out1);
+            out2 = _mm256_fmadd_ps(r18, k18, out2);
         }
-        _out0 = _mm256_max_ps(_mm256_add_ps(_out2, _mm256_add_ps(_out0, _out1)), _mm256_setzero_ps());
+        out0 = _mm256_max_ps(_mm256_add_ps(out2, _mm256_add_ps(out0, out1)), _mm256_setzero_ps());
 
-        _mm256_storeu_ps(outMat, _out0);
+        _mm256_storeu_ps(outMat, out0);
 #elif defined(USE_EIGEN3)
         float* const kptr = const_cast<float*>(kernels);
         float* const bptr = const_cast<float*>(biases);
