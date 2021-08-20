@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_CREATOR_HPP
+#define ANIME4KCPP_CORE_AC_CREATOR_HPP
 
 #include"ACCPU.hpp"
 
@@ -27,3 +28,5 @@ public:
     static AC* create(const Parameters& parameters, Processor::Type type);
     static void release(AC* ac) noexcept;
 };
+
+#endif // !ANIME4KCPP_CORE_AC_CREATOR_HPP

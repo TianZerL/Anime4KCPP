@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_OPENCL_ANIME4K09_KERNEL_HPP
+#define ANIME4KCPP_CORE_OPENCL_ANIME4K09_KERNEL_HPP
 
 #ifdef ENABLE_OPENCL
 
@@ -289,6 +290,8 @@ __kernel void pushGradient(__read_only image2d_t srcImg, __write_only image2d_t 
 })";
 }
 
-#endif
+#endif // BUILT_IN_KERNEL
 
-#endif
+#endif // ENABLE_OPENCL
+
+#endif // !ANIME4KCPP_CORE_OPENCL_ANIME4K09_KERNEL_HPP

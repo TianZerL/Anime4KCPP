@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_VIDEO_PROCESSOR_HPP
+#define ANIME4KCPP_CORE_VIDEO_PROCESSOR_HPP
 
 #ifdef ENABLE_VIDEO
 
@@ -38,3 +39,5 @@ private:
 };
 
 #endif // ENABLE_VIDEO
+
+#endif // !ANIME4KCPP_CORE_VIDEO_PROCESSOR_HPP

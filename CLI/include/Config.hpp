@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CLI_CONFIG_HPP
+#define ANIME4KCPP_CLI_CONFIG_HPP
 
 #include <iostream>
 #include <sstream>
@@ -246,3 +247,5 @@ inline bool Config::get<bool>(const std::string& key)
     converter >> ret;
     return ret;
 }
+
+#endif // !ANIME4KCPP_CLI_CONFIG_HPP

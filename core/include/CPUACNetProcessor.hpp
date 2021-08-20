@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CPU_ACNET_PROCESSOR_HPP
+#define ANIME4KCPP_CORE_CPU_ACNET_PROCESSOR_HPP
 
 #include"AC.hpp"
 #include"CPUCNNProcessor.hpp"
@@ -97,3 +98,5 @@ private:
     alignas(32) const static float biases[8][8];
 };
 #endif // ENABLE_OPENCV_DNN
+
+#endif // !ANIME4KCPP_CORE_CPU_ACNET_PROCESSOR_HPP

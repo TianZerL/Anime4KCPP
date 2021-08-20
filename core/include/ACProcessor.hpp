@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_PROCESSOR_HPP
+#define ANIME4KCPP_CORE_AC_PROCESSOR_HPP
+
 #include<sstream>
 
 namespace Anime4KCPP
@@ -34,3 +36,5 @@ inline std::ostream& Anime4KCPP::Processor::operator<<(std::ostream& stream, Ani
     }
     return stream;
 }
+
+#endif // !ANIME4KCPP_CORE_AC_PROCESSOR_HPP

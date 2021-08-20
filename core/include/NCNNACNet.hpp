@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_NCNN_ACNET_HPP
+#define ANIME4KCPP_CORE_NCNN_ACNET_HPP
 
 #ifdef ENABLE_NCNN
 
@@ -45,3 +46,5 @@ private:
 };
 
 #endif // ENABLE_NCNN
+
+#endif // !ANIME4KCPP_CORE_NCNN_ACNET_HPP

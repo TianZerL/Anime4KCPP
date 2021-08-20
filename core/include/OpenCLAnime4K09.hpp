@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_OPENCL_ANIME4K09_HPP
+#define ANIME4KCPP_CORE_OPENCL_ANIME4K09_HPP
 
 #ifdef ENABLE_OPENCL
 
@@ -31,4 +32,6 @@ private:
     static void initOpenCL();
 };
 
-#endif
+#endif // ENABLE_OPENCL
+
+#endif // !ANIME4KCPP_CORE_OPENCL_ANIME4K09_HPP

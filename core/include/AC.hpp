@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_HPP
+#define ANIME4KCPP_CORE_AC_HPP
 
 #include<algorithm>
 #include<utility>
@@ -174,3 +175,5 @@ protected:
 
     Parameters param;
 };
+
+#endif // !ANIME4KCPP_CORE_AC_HPP

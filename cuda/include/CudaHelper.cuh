@@ -1,5 +1,5 @@
-#ifndef __CUDA_HELPER__
-#define __CUDA_HELPER__
+#ifndef ANIME4KCPP_CUDA_CUDA_HELPER_CUH
+#define ANIME4KCPP_CUDA_CUDA_HELPER_CUH
 
 #include <cstdint>
 
@@ -140,4 +140,4 @@ __inline__ __device__ float clamp(float f, float a, float b)
     return fmaxf(a, fminf(f, b));
 }
 
-#endif
+#endif // !ANIME4KCPP_CUDA_CUDA_HELPER_CUH

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_INITIALIZER_HPP
+#define ANIME4KCPP_CORE_AC_INITIALIZER_HPP
 
 #include<vector>
 #include<string>
@@ -101,3 +102,5 @@ inline const std::vector<std::string>& Anime4KCPP::ACInitializer::failure()
 {
     return failures;
 }
+
+#endif // !ANIME4KCPP_CORE_AC_INITIALIZER_HPP

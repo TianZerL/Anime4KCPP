@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_OPENCL_HPP
+#define ANIME4KCPP_CORE_AC_OPENCL_HPP
 
 #ifdef ENABLE_OPENCL
 
@@ -142,4 +143,6 @@ inline std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::ACNet>::value> Anime
         T::init(pID, dID, type, OpenCLQueueNum, OpenCLParallelIO);
 }
 
-#endif
+#endif // ENABLE_OPENCL
+
+#endif // !ANIME4KCPP_CORE_AC_OPENCL_HPP

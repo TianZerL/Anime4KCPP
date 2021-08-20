@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef ANIME4KCPP_GUI_MAINWINDOW_H
+#define ANIME4KCPP_GUI_MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QTranslator>
@@ -224,4 +224,5 @@ private:
     std::atomic<bool> stopProcessing;
     std::atomic<ProcessingState> processingState;
 };
-#endif // MAINWINDOW_H
+
+#endif // !ANIME4KCPP_GUI_MAINWINDOW_H

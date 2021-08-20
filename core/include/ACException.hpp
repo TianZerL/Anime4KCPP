@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_EXCEPTION_HPP
+#define ANIME4KCPP_CORE_AC_EXCEPTION_HPP
 
 #include<string>
 #include<stdexcept>
@@ -74,3 +75,5 @@ Anime4KCPP::ACException<exceptionType, true>::ACException(const std::string& err
         "Additional information :\n" +
         addtlInfo + "\n"
     ) {}
+
+#endif // !ANIME4KCPP_CORE_AC_EXCEPTION_HPP

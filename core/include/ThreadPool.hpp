@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_THREADPOOL_HPP
+#define ANIME4KCPP_CORE_THREADPOOL_HPP
 
 #include<thread>
 #include<mutex>
@@ -100,3 +101,5 @@ inline auto Anime4KCPP::Utils::ThreadPool::exec(F&& f, Args && ...args)
 
     return ret;
 }
+
+#endif // !ANIME4KCPP_CORE_THREADPOOL_HPP

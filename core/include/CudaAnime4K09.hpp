@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CUDA_ANIME4K09_HPP
+#define ANIME4KCPP_CORE_CUDA_ANIME4K09_HPP
 
 #ifdef ENABLE_CUDA
 
@@ -25,4 +26,6 @@ private:
     std::string getProcessorInfo() override;
 };
 
-#endif
+#endif // ENABLE_CUDA
+
+#endif // !ANIME4KCPP_CORE_CUDA_ANIME4K09_HPP

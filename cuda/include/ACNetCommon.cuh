@@ -1,5 +1,5 @@
-#ifndef __ACNET_COMMON_CUH__
-#define __ACNET_COMMON_CUH__
+#ifndef ANIME4KCPP_CUDA_ACNET_COMMON_CUH
+#define ANIME4KCPP_CUDA_ACNET_COMMON_CUH
 
 #define RELU(x) fmaxf(x, 0.0f)
 
@@ -312,4 +312,4 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     cudaStreamDestroy(stream);
 }
 
-#endif
+#endif // !ANIME4KCPP_CUDA_ACNET_COMMON_CUH

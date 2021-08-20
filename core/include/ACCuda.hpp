@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_CUDA_HPP
+#define ANIME4KCPP_CORE_AC_CUDA_HPP
 
 #ifdef ENABLE_CUDA
 
@@ -67,3 +68,5 @@ struct Anime4KCPP::Cuda::GPUInfo
 };
 
 #endif
+
+#endif // !ANIME4KCPP_CORE_AC_CUDA_HPP

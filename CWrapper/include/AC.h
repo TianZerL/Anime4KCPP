@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CWRAPPER_AC_H
+#define ANIME4KCPP_CWRAPPER_AC_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -288,3 +289,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+#endif // !ANIME4KCPP_CWRAPPER_AC_H

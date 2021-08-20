@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_NCNN_ACNET_ID_HPP
+#define ANIME4KCPP_CORE_NCNN_ACNET_ID_HPP
 
 #ifdef ENABLE_NCNN
 
@@ -29,3 +30,5 @@ namespace Anime4KCPP::NCNN::ACNetParamID
 }
 
 #endif // ENABLE_NCNN
+
+#endif // !ANIME4KCPP_CORE_NCNN_ACNET_ID_HPP

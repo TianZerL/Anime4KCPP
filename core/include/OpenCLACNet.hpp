@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_OPENCL_ACNET_HPP
+#define ANIME4KCPP_CORE_OPENCL_ACNET_HPP
 
 #ifdef ENABLE_OPENCL
 
@@ -40,4 +41,6 @@ private:
     int ACNetTypeIndex;
 };
 
-#endif
+#endif // ENABLE_OPENCL
+
+#endif // !ANIME4KCPP_CORE_OPENCL_ACNET_HPP

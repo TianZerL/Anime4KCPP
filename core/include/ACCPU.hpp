@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_CPU_HPP
+#define ANIME4KCPP_CORE_AC_CPU_HPP
 
 #include"CPUAnime4K09.hpp"
 #include"CPUACNet.hpp"
@@ -48,3 +49,5 @@ inline bool Anime4KCPP::CPU::Manager::isSupport() noexcept
 {
     return true;
 }
+
+#endif // !ANIME4KCPP_CORE_AC_CPU_HPP

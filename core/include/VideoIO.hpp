@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_VIDEO_IO_HPP
+#define ANIME4KCPP_CORE_VIDEO_IO_HPP
 
 #ifdef ENABLE_VIDEO
 
@@ -76,4 +77,6 @@ private:
     bool stop = false ;
 };
 
-#endif
+#endif // ENABLE_VIDEO
+
+#endif // !ANIME4KCPP_CORE_VIDEO_IO_HPP

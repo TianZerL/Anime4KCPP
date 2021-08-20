@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CNN_HPP
+#define ANIME4KCPP_CORE_CNN_HPP
 
 namespace Anime4KCPP
 {
@@ -38,3 +39,5 @@ public:
 private:
     Value value;
 };
+
+#endif // !ANIME4KCPP_CORE_CNN_HPP

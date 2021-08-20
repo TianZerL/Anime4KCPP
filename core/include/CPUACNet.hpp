@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CPU_ACNET_HPP
+#define ANIME4KCPP_CORE_CPU_ACNET_HPP
 
 #include"CPUACNetProcessor.hpp"
 
@@ -26,3 +27,5 @@ private:
 private:
     ACNetProcessor* processor;
 };
+
+#endif // !ANIME4KCPP_CORE_CPU_ACNET_HPP

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CPU_CNN_PROCESSOR_HPP
+#define ANIME4KCPP_CORE_CPU_CNN_PROCESSOR_HPP
 
 #ifndef ENABLE_OPENCV_DNN
 
@@ -18,3 +19,5 @@ protected:
 };
 
 #endif // !ENABLE_OPENCV_DNN
+
+#endif // !ANIME4KCPP_CORE_CPU_CNN_PROCESSOR_HPP

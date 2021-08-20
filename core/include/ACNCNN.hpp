@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_AC_NCNN_HPP
+#define ANIME4KCPP_CORE_AC_NCNN_HPP
 
 #ifdef ENABLE_NCNN
 
@@ -53,4 +54,6 @@ struct Anime4KCPP::NCNN::GPUList
     std::string& operator()() noexcept;
 };
 
-#endif
+#endif // ENABLE_NCNN
+
+#endif // !ANIME4KCPP_CORE_AC_NCNN_HPP

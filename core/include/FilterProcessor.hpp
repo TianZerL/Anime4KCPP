@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_FILTER_PROCESSOR_HPP
+#define ANIME4KCPP_CORE_FILTER_PROCESSOR_HPP
 
 #include"AC.hpp"
 
@@ -20,3 +21,5 @@ private:
     cv::Mat& srcImgRef;
     std::uint8_t filters;
 };
+
+#endif // !ANIME4KCPP_CORE_FILTER_PROCESSOR_HPP

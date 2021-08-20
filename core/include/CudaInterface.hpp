@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CUDA_INTERFACE_HPP
+#define ANIME4KCPP_CORE_CUDA_INTERFACE_HPP
 
 #ifdef ENABLE_CUDA
 
@@ -43,4 +44,6 @@ namespace Anime4KCPP::Cuda
     bool cuCheckDeviceSupport(const int id) noexcept;
 }
 
-#endif
+#endif // ENABLE_CUDA
+
+#endif // !ANIME4KCPP_CORE_CUDA_INTERFACE_HPP

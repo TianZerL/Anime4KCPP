@@ -1,3 +1,6 @@
+#ifndef ANIME4KCPP_CLI_DOWNLOADER_HPP
+#define ANIME4KCPP_CLI_DOWNLOADER_HPP
+
 #ifdef ENABLE_LIBCURL
 
 #include <string>
@@ -17,3 +20,5 @@ private:
 };
 
 #endif // ENABLE_LIBCURL
+
+#endif // !ANIME4KCPP_CLI_DOWNLOADER_HPP

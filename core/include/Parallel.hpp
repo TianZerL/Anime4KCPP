@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_PARALLEL_HPP
+#define ANIME4KCPP_CORE_PARALLEL_HPP
 
 #include<utility>
 
@@ -68,3 +69,5 @@ inline void Anime4KCPP::Utils::parallelFor(const IndexType first, const IndexTyp
     }
 #endif // !DISABLE_PARALLEL
 }
+
+#endif // !ANIME4KCPP_CORE_PARALLEL_HPP

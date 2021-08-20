@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CPU_ANIME4K09_HPP
+#define ANIME4KCPP_CORE_CPU_ANIME4K09_HPP
 
 #include"AC.hpp"
 
@@ -22,3 +23,5 @@ private:
     Processor::Type getProcessorType() noexcept override;
     std::string getProcessorInfo() override;
 };
+
+#endif // !ANIME4KCPP_CORE_CPU_ANIME4K09_HPP

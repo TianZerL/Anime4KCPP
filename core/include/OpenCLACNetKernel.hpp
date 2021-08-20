@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_OPENCL_ACNET_KERNEL_HPP
+#define ANIME4KCPP_CORE_OPENCL_ACNET_KERNEL_HPP
 
 #ifdef ENABLE_OPENCL
 
@@ -7062,3 +7063,5 @@ __constant float kernelsL10[4 * 8] =
 #endif // BUILT_IN_KERNEL
 
 #endif // ENABLE_OPENCL
+
+#endif // !ANIME4KCPP_CORE_OPENCL_ACNET_KERNEL_HPP

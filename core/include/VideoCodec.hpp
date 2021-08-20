@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_VIDEO_CODEC_HPP
+#define ANIME4KCPP_CORE_VIDEO_CODEC_HPP
 
 #ifdef ENABLE_VIDEO
 
@@ -10,4 +11,6 @@ namespace Anime4KCPP
     };
 }
 
-#endif
+#endif // ENABLE_VIDEO
+
+#endif // !ANIME4KCPP_CORE_VIDEO_CODEC_HPP

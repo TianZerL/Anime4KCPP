@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ANIME4KCPP_CORE_CUDA_ACNET_HPP
+#define ANIME4KCPP_CORE_CUDA_ACNET_HPP
 
 #ifdef ENABLE_CUDA
 
@@ -29,4 +30,6 @@ private:
     int ACNetTypeIndex;
 };
 
-#endif
+#endif // ENABLE_CUDA
+
+#endif // !ANIME4KCPP_CORE_CUDA_ACNET_HPP

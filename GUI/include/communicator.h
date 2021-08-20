@@ -1,5 +1,5 @@
-#ifndef COMMUNICATOR_H
-#define COMMUNICATOR_H
+#ifndef ANIME4KCPP_GUI_COMMUNICATOR_H
+#define ANIME4KCPP_GUI_COMMUNICATOR_H
 
 #include <QObject>
 
@@ -18,4 +18,4 @@ signals:
     void updateProgress(double v, double elpsed, double remaining);
 };
 
-#endif // COMMUNICATOR_H
+#endif // !ANIME4KCPP_GUI_COMMUNICATOR_H
