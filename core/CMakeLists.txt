@@ -4,52 +4,34 @@ aux_source_directory(src SOURCE)
 
 file(GLOB INCLUDE include/*.hpp)
 
-if(Built_In_Kernel)
-    add_definitions(-DBUILT_IN_KERNEL)
-endif()
-
-if(Use_Legacy_OpenCL_API)
-    add_definitions(-DLEGACY_OPENCL_API)
-endif()
-
-if(Enable_Fast_Math)
-    add_definitions(-DENABLE_FAST_MATH)
-endif()
-
-if(Enable_NCNN)
-    add_definitions(-DENABLE_NCNN)
-endif()
-
-if(Enable_OpenCV_DNN)
-    add_definitions(-DENABLE_OPENCV_DNN)
-endif()
-
-if(Ryzen_Optimization)
-    add_definitions(-DUSE_RYZEN)
-endif()
-
-if(Use_Eigen3)
-    add_definitions(-DUSE_EIGEN3)
-endif(Use_Eigen3)
-
-if(Enable_Video)
-    add_definitions(-DENABLE_VIDEO)
-endif()
-
-if(Enable_Preview_GUI)
-    add_definitions(-DENABLE_PREVIEW_GUI)
-endif()
-
-if(Enable_Image_IO)
-    add_definitions(-DENABLE_IMAGE_IO)
-endif()
-
 if(Build_Static_Core)
     add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
     set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)
 else()
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
 endif()
+
+target_compile_definitions(
+    ${PROJECT_NAME} 
+    PUBLIC 
+        $<$<BOOL:${Built_In_Kernel}>:BUILT_IN_KERNEL>
+        $<$<BOOL:${Enable_NCNN}>:ENABLE_NCNN>
+        $<$<BOOL:${Enable_OpenCV_DNN}>:ENABLE_OPENCV_DNN>
+        $<$<BOOL:${Enable_Video}>:ENABLE_VIDEO>
+        $<$<BOOL:${Enable_Preview_GUI}>:ENABLE_PREVIEW_GUI>
+        $<$<BOOL:${Enable_Image_IO}>:ENABLE_IMAGE_IO>
+        $<$<BOOL:${Ryzen_Optimization}>:USE_RYZEN>
+        $<$<BOOL:${Use_Eigen3}>:USE_EIGEN3>
+        $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
+        $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
+        $<$<BOOL:${Use_Eigen3}>:USE_EIGEN3>
+
+        ANIME4KCPP_CORE_PARALLEL_LIBRARY="${Parallel_Library_Type}"
+        ANIME4KCPP_CORE_COMPILER="${CMAKE_CXX_COMPILER_ID}"     
+    PRIVATE
+        $<$<BOOL:${Use_Legacy_OpenCL_API}>:LEGACY_OPENCL_API>
+        $<$<BOOL:${Enable_Fast_Math}>:ENABLE_FAST_MATH>
+)
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 

@@ -6,18 +6,6 @@ if(Build_C_Wrapper)
 
     file(GLOB INCLUDE include/*.h)
 
-    if(Enable_Video)
-        add_definitions(-DENABLE_VIDEO)
-    endif()
-
-    if(Enable_Preview_GUI)
-        add_definitions(-DENABLE_PREVIEW_GUI)
-    endif()
-
-    if(Enable_Image_IO)
-        add_definitions(-DENABLE_IMAGE_IO)
-    endif()
-
     if(Build_Static_C_Wrapper)
         add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
         set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)

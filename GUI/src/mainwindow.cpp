@@ -1483,7 +1483,7 @@ void MainWindow::on_actionAbout_triggered()
             "Thanks for:\n"
             "semmyenator (Traditional Chinese,Japanese and French translation)")
         .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION,
-            QT_VERSION_STR, PARALLEL_LIBRARY, __DATE__, __TIME__),
+            QT_VERSION_STR, ANIME4KCPP_CORE_PARALLEL_LIBRARY, __DATE__, __TIME__),
         QMessageBox::Ok);
 }
 
