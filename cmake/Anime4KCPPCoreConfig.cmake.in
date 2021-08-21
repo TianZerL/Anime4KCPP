@@ -25,6 +25,7 @@ endif()
 if(Build_Static_Core)
     set(Enable_OpenCL @Enable_OpenCL@)
     set(Enable_CUDA @Enable_CUDA@)
+    set(Enable_NCNN @Enable_NCNN@)
 
     if(Enable_OpenCL)
         find_dependency(OpenCL REQUIRED)
@@ -33,6 +34,10 @@ if(Build_Static_Core)
     if(Enable_CUDA)
         get_filename_component(CUDA_Module_TARGET_DIR "${CMAKE_CURRENT_LIST_DIR}/../../cuda_module/cmake" REALPATH)
         include(${CUDA_Module_TARGET_DIR}/CUDA_Module.cmake)
+    endif()
+
+    if(Enable_NCNN)
+        find_dependency(ncnn REQUIRED)
     endif()
 endif()
 
