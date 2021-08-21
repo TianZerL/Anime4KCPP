@@ -14,21 +14,19 @@ endif()
 target_compile_definitions(
     ${PROJECT_NAME} 
     PUBLIC 
-        $<$<BOOL:${Built_In_Kernel}>:BUILT_IN_KERNEL>
+        $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
+        $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
         $<$<BOOL:${Enable_NCNN}>:ENABLE_NCNN>
-        $<$<BOOL:${Enable_OpenCV_DNN}>:ENABLE_OPENCV_DNN>
         $<$<BOOL:${Enable_Video}>:ENABLE_VIDEO>
         $<$<BOOL:${Enable_Preview_GUI}>:ENABLE_PREVIEW_GUI>
         $<$<BOOL:${Enable_Image_IO}>:ENABLE_IMAGE_IO>
-        $<$<BOOL:${Ryzen_Optimization}>:USE_RYZEN>
-        $<$<BOOL:${Use_Eigen3}>:USE_EIGEN3>
-        $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
-        $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
-        $<$<BOOL:${Use_Eigen3}>:USE_EIGEN3>
-
         ANIME4KCPP_CORE_PARALLEL_LIBRARY="${Parallel_Library_Type}"
         ANIME4KCPP_CORE_COMPILER="${CMAKE_CXX_COMPILER_ID}"     
     PRIVATE
+        $<$<BOOL:${Built_In_Kernel}>:BUILT_IN_KERNEL>
+        $<$<BOOL:${Enable_OpenCV_DNN}>:ENABLE_OPENCV_DNN>
+        $<$<BOOL:${Ryzen_Optimization}>:USE_RYZEN>
+        $<$<BOOL:${Use_Eigen3}>:USE_EIGEN3>
         $<$<BOOL:${Use_Legacy_OpenCL_API}>:LEGACY_OPENCL_API>
         $<$<BOOL:${Enable_Fast_Math}>:ENABLE_FAST_MATH>
 )
