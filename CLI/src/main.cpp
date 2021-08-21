@@ -109,14 +109,17 @@ static Anime4KCPP::Codec string2Codec(const std::string& codec)
 
 static void showVersionInfo()
 {
-    std::cerr
-        << "Anime4KCPPCLI" << '\n'
-        << "Build date: " << __DATE__ << " " << __TIME__ << '\n'
-        << "Anime4KCPP core information:\n" 
-        << "  Version: " << ANIME4KCPP_CORE_VERSION << '\n'
+    std::cout
+        << "Anime4KCPP CLI" << '\n'
+        << '\n'
+        << "Anime4KCPP core information:\n"
+        << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
         << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
         << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
-        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << '\n';
+        << "  processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << "\b \n"
+        << "  CPU Optimization: " << Anime4KCPP::CoreInfo::CPUOptimizationMode() << '\n'
+        << '\n'
+        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
 }
 
 static void showGPUList()

@@ -549,9 +549,9 @@ AVSValue AC_ASP_CDECL listGPUs(AVSValue args, void* user_data, IScriptEnvironmen
             env->ThrowError(Anime4KCPP::Cuda::listGPUs()().c_str());
         else
 #endif // ENABLE_CUDA
-            env->ThrowError("unkonwn GPGPUModel module");
+            env->ThrowError("unkonwn GPGPUModel");
 
-    return AVSValue();
+    return AVSValue{};
 }
 
 AVSValue AC_ASP_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironment* env)
@@ -610,18 +610,29 @@ AVSValue AC_ASP_CDECL benchmark(AVSValue args, void* user_data, IScriptEnvironme
     return AVSValue();
 }
 
+AVSValue AC_ASP_CDECL Anime4KCPPInfo(AVSValue args, void* user_data, IScriptEnvironment* env)
+{
+    std::ostringstream oss;
+    oss << "Anime4KCPP VapourSynth Plugin" << '\n'
+        << '\n'
+        << "Anime4KCPP core information:\n"
+        << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
+        << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
+        << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
+        << "  processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
+        << "  CPU Optimization: " << Anime4KCPP::CoreInfo::CPUOptimizationMode() << '\n'
+        << '\n'
+        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
+
+    env->ThrowError(oss.str().c_str());
+    return AVSValue{};
+}
+
 const AVS_Linkage* AVS_linkage = nullptr;
 
 extern "C" AC_ASP_EXPORT const char* AC_ASP_STDCALL AvisynthPluginInit3(IScriptEnvironment * env, const AVS_Linkage* const vectors)
 {
     AVS_linkage = vectors;
-
-    env->AddFunction("listGPUs", "[GPGPUModel]s", listGPUs, nullptr);
-
-    env->AddFunction("benchmark",
-        "[platformID]i"
-        "[deviceID]i",
-        benchmark, nullptr);
 
     env->AddFunction("Anime4KCPP",
         "c"
@@ -659,5 +670,14 @@ extern "C" AC_ASP_EXPORT const char* AC_ASP_STDCALL AvisynthPluginInit3(IScriptE
         "[OpenCLParallelIO]b",
         createAnime4KCPP, nullptr);
 
-    return "Anime4KCPP plugin for AviSynthPlus";
+    env->AddFunction("listGPUs", "[GPGPUModel]s", listGPUs, nullptr);
+
+    env->AddFunction("benchmark",
+        "[platformID]i"
+        "[deviceID]i",
+        benchmark, nullptr);
+
+    env->AddFunction("Anime4KCPPInfo", "", Anime4KCPPInfo, nullptr);
+
+    return "Anime4KCPP AviSynthPlus Plugins";
 }

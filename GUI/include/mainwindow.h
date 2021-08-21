@@ -19,8 +19,6 @@
 
 #include "Anime4KCPP.hpp"
 
-#define ANIME4KCPP_GUI_VERSION "1.13.0"
-
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE

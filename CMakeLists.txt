@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.8)
 project(Anime4KCPP)
 
 if(APPLE)
@@ -13,6 +13,8 @@ set(TOP_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
+
+string(TIMESTAMP TODAY "%Y-%m-%d")
 
 set(Qt_Version "5" CACHE STRING "5 or 6")
 set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability, older than 30")
@@ -176,6 +178,7 @@ endif()
 
 message(STATUS  
 "Building information:\n"
+"   Build in ${TODAY}\n"
 "   Build CLI ${Build_CLI}\n"
 "   Build GUI ${Build_GUI}\n"
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"

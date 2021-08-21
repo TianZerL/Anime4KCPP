@@ -98,7 +98,7 @@ HRESULT ACProp::OnActivate()
     MultiByteToWideChar(CP_ACP, 0, ProcessorInfo.c_str(), -1, sz, STR_MAX_LENGTH);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_GPUINFO), sz);
 
-    MultiByteToWideChar(CP_ACP, 0, ANIME4KCPP_CORE_VERSION, -1, sz, STR_MAX_LENGTH);
+    MultiByteToWideChar(CP_ACP, 0, Anime4KCPP::CoreInfo::version(), -1, sz, STR_MAX_LENGTH);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_VERSION), sz);
 
     bInit = TRUE;

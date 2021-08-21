@@ -8,8 +8,7 @@
 
 #include"ACInitializer.hpp"
 #include"ACCreator.hpp"
-
-#define ANIME4KCPP_CORE_VERSION "2.6.0"
+#include"CoreInfo.hpp"
 
 namespace Anime4KCPP
 {

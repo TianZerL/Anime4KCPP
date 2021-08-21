@@ -129,8 +129,8 @@ extern "C"
 
     typedef struct ac_version
     {
-        char coreVersion[6];
-        char wrapperVersion[6];
+        char coreVersion[32];
+        char wrapperVersion[32];
     } ac_version;
 
     typedef struct ac_OpenCLAnime4K09Data
@@ -166,6 +166,7 @@ extern "C"
     typedef void* ac_videoProcessor;
     typedef unsigned int ac_manager_t;
 
+    AC_C_DEPRECATED AC_C_EXPORT ac_version AC_C_API acGetVersion(void);
     AC_C_DEPRECATED AC_C_EXPORT ac_instance AC_C_API acGetInstance(
         ac_bool initGPU, ac_bool initGPUCNN,
         unsigned int platformID, unsigned int deviceID,
@@ -185,8 +186,7 @@ extern "C"
     AC_C_DEPRECATED AC_C_EXPORT ac_error AC_C_API acInitGPU2(unsigned int managers, ac_managerData* managerData);
     AC_C_DEPRECATED AC_C_EXPORT void AC_C_API acReleaseGPU2(void);
 
-    AC_C_EXPORT ac_version AC_C_API acGetVersion(void);
-
+    AC_C_EXPORT void AC_C_API acGetVersion2(ac_version* v);
     AC_C_EXPORT ac_error AC_C_API acInitProcessor(ac_manager_t managers, ac_managerData* managerData);
     AC_C_EXPORT void AC_C_API acReleaseAllProcessors(void);
 

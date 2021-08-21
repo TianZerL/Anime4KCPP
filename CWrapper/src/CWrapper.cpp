@@ -1,5 +1,3 @@
-#define C_WRAPPER_VERSION "1.6.0"
-
 #include "Anime4KCPP.hpp"
 #include "AC.h"
 
@@ -61,7 +59,16 @@ extern "C"
 {
     ac_version acGetVersion(void)
     {
-        return ac_version{ ANIME4KCPP_CORE_VERSION,C_WRAPPER_VERSION };
+        ac_version ret;
+        std::strcpy(ret.coreVersion, Anime4KCPP::CoreInfo::version());
+        std::strcpy(ret.wrapperVersion, ANIME4KCPP_C_WRAPPER_VERSION);
+        return ret;
+    }
+
+    void acGetVersion2(ac_version* v)
+    {
+        std::strcpy(v->coreVersion, Anime4KCPP::CoreInfo::version());
+        std::strcpy(v->wrapperVersion, ANIME4KCPP_C_WRAPPER_VERSION);
     }
 
     ac_instance acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error)

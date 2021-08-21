@@ -632,7 +632,7 @@ static void VS_CC Anime4KCPPListGPUs(const VSMap* in, VSMap* out, void* userData
             vsapi->logMessage(mtDebug, Anime4KCPP::Cuda::listGPUs()().c_str());
         else
 #endif // ENABLE_CUDA
-            vsapi->logMessage(mtWarning, "unkonwn GPGPUModel module");
+            vsapi->logMessage(mtWarning, "unkonwn GPGPUModel");
 }
 
 static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
@@ -691,6 +691,23 @@ static void VS_CC Anime4KCPPBenchmark(const VSMap* in, VSMap* out, void* userDat
     vsapi->logMessage(mtDebug, oss.str().c_str());
 }
 
+static void VS_CC Anime4KCPPInfo(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi)
+{
+    std::ostringstream oss;
+    oss << "Anime4KCPP VapourSynth Plugin" << '\n'
+        << '\n'
+        << "Anime4KCPP core information:\n"
+        << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
+        << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
+        << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
+        << "  processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
+        << "  CPU Optimization: " << Anime4KCPP::CoreInfo::CPUOptimizationMode() << '\n'
+        << '\n'
+        << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
+
+    vsapi->logMessage(mtDebug, oss.str().c_str());
+}
+
 VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegisterFunction registerFunc, VSPlugin* plugin)
 {
     configFunc("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VAPOURSYNTH_API_VERSION, 1, plugin);
@@ -714,6 +731,8 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit(VSConfigPlugin configFunc, VSRegiste
         Anime4KCPPCreate, nullptr, plugin);
 
     registerFunc("listGPUs", "GPGPUModel:data:opt", Anime4KCPPListGPUs, nullptr, plugin);
+
+    registerFunc("info", "", Anime4KCPPInfo, nullptr, plugin);
 
     registerFunc("benchmark",
         "platformID:int:opt;"

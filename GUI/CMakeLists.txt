@@ -1,4 +1,4 @@
-project(Anime4KCPP_GUI LANGUAGES CXX)
+project(Anime4KCPP_GUI VERSION 1.13.0 LANGUAGES CXX)
 
 if(Build_GUI)
 
@@ -44,6 +44,12 @@ if(Build_GUI)
         ${QM_FILES}
         ${UI_FILE}
         ${QRC_FILE}
+    )
+
+    target_compile_definitions(
+        ${PROJECT_NAME} 
+        PRIVATE 
+            ANIME4KCPP_GUI_VERSION="${PROJECT_VERSION}"
     )
 
     include(${TOP_DIR}/cmake/ThirdPartyForGUI.cmake)

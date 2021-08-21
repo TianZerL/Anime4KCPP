@@ -519,12 +519,12 @@ void MainWindow::initTextBrowser()
 {
     ui->textBrowserInfoOut->setText(
         "----------------------------------------------\n"
-        "           Welcome to Anime4KCPP GUI          \n"
-        "----------------------------------------------\n" +
-        QString("         Anime4KCPP GUI v%1                 \n"
-            "         Anime4KCPP Core v%2                \n"
-            "----------------------------------------------\n").arg(ANIME4KCPP_GUI_VERSION,
-                ANIME4KCPP_CORE_VERSION)
+        "           Welcome to Anime4KCPP GUI\n"
+        "----------------------------------------------\n" + QString{
+        "         Anime4KCPP GUI v%1\n"
+        "Anime4KCPP Core v%2\n"
+        "----------------------------------------------\n" }
+        .arg(ANIME4KCPP_GUI_VERSION, Anime4KCPP::CoreInfo::version())
     );
     ui->textBrowserInfoOut->moveCursor(QTextCursor::End);
 }
@@ -1469,22 +1469,36 @@ void MainWindow::on_pushButtonStart_clicked()
 
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::information(this,
-        tr("About"),
-        QString(
-            "Anime4KCPP GUI\n\n"
-            "Anime4KCPP GUI v%1\n"
-            "Anime4KCPP core v%2\n\n"
-            "Qt version: %3\n\n"
-            "Parallel library: %4\n\n"
-            "Build on %5 %6\n\n"
-            "GitHub: https://github.com/TianZerL/Anime4KCPP\n\n"
-            "Copyright (c) 2020 TianZerL\n\n"
-            "Thanks for:\n"
-            "semmyenator (Traditional Chinese,Japanese and French translation)")
-        .arg(ANIME4KCPP_GUI_VERSION, ANIME4KCPP_CORE_VERSION,
-            QT_VERSION_STR, ANIME4KCPP_CORE_PARALLEL_LIBRARY, __DATE__, __TIME__),
-        QMessageBox::Ok);
+    QString processors =
+        QString{ Anime4KCPP::CoreInfo::supportedProcessors() }.
+        split(',', Qt::SkipEmptyParts).
+        join("\n      ").
+        insert(0, "\n      ");
+
+    QString Info = QString{
+        "Anime4KCPP GUI v%1\n"
+        "Copyright (c) 2020-2021 TianZer\n"
+        "GitHub: https://github.com/TianZerL/Anime4KCPP \n\n"
+        "Build with QT%2\n\n"
+        "Anime4KCPP core information:\n"
+        "  Version: %3\n"
+        "  Parallel library: %4\n"
+        "  Compiler: %5\n"
+        "  Processors: %6\n"
+        "  CPU Optimization: %7\n\n"
+        "Special thanks for:\n"
+        "semmyenator (Traditional Chinese, Japanese and French translation)\n"
+    }.arg(
+        ANIME4KCPP_GUI_VERSION,
+        QT_VERSION_STR,
+        Anime4KCPP::CoreInfo::version(),
+        ANIME4KCPP_CORE_PARALLEL_LIBRARY,
+        ANIME4KCPP_CORE_COMPILER,
+        processors,
+        Anime4KCPP::CoreInfo::CPUOptimizationMode()
+    );
+
+    QMessageBox::about(this, tr("About"), Info);
 }
 
 void MainWindow::on_tabWidgetMain_tabBarClicked(int index)

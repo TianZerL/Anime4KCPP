@@ -1,4 +1,4 @@
-project(ac LANGUAGES CXX)
+project(ac VERSION 1.6.0 LANGUAGES CXX)
 
 if(Build_C_Wrapper)
 
@@ -12,6 +12,12 @@ if(Build_C_Wrapper)
     else()
         add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
     endif()
+
+    target_compile_definitions(
+        ${PROJECT_NAME} 
+        PRIVATE 
+            ANIME4KCPP_C_WRAPPER_VERSION="${PROJECT_VERSION}"
+    )
 
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
