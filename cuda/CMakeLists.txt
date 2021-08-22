@@ -22,7 +22,6 @@ if(Enable_CUDA)
             set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --use_fast_math")
         endif()
 
-        include_directories(${TOP_DIR}/core/include include)
         file(GLOB SOURCE  src/*.cu)
         file(GLOB INCLUDE  include/*.cuh)
 
@@ -44,7 +43,6 @@ if(Enable_CUDA)
         endif()
 
         aux_source_directory(src SOURCE)
-        include_directories(${TOP_DIR}/core/include include)
         file(GLOB INCLUDE include/*.cuh)
 
         source_group("cuda_include" FILES ${INCLUDE}) 
@@ -58,6 +56,10 @@ if(Enable_CUDA)
 
         add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
     endif()
+
+    target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/core/include include)
+
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_CUDA)
 
     set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
 

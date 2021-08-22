@@ -3,8 +3,6 @@ project(Anime4KCPPDS LANGUAGES CXX)
 if(Build_DS_Filter)
 
     aux_source_directory(src SOURCE)
-
-    include_directories(include)
     
     file(GLOB INCLUDE include/*.h)
 
@@ -14,6 +12,8 @@ if(Build_DS_Filter)
     add_definitions(-DUNICODE)
 
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
+
+    target_include_directories(${PROJECT_NAME} PRIVATE include)
 
     include(${TOP_DIR}/cmake/ThirdPartyForDS.cmake)
 

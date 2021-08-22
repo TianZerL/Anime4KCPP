@@ -9,12 +9,12 @@ if(Build_CLI)
     endif()
 
     aux_source_directory(src SOURCE)
-
-    include_directories(include)
     
     file(GLOB INCLUDE include/*.hpp)
 
     add_executable(${PROJECT_NAME} ${INCLUDE} ${SOURCE})
+
+    target_include_directories(${PROJECT_NAME} PRIVATE include)
 
     target_compile_definitions(
         ${PROJECT_NAME} 

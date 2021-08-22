@@ -10,8 +10,6 @@ if(Build_GUI)
 
     aux_source_directory(src SOURCE)
 
-    include_directories(include)
-
     file(GLOB INCLUDE include/*.h)
 
     find_package(Qt${Qt_Version} COMPONENTS Widgets LinguistTools REQUIRED)
@@ -45,6 +43,8 @@ if(Build_GUI)
         ${UI_FILE}
         ${QRC_FILE}
     )
+
+    target_include_directories(${PROJECT_NAME} PRIVATE include)
 
     target_compile_definitions(
         ${PROJECT_NAME} 

@@ -15,7 +15,6 @@ target_compile_definitions(
     ${PROJECT_NAME} 
     PUBLIC 
         $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
-        $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
         $<$<BOOL:${Enable_NCNN}>:ENABLE_NCNN>
         $<$<BOOL:${Enable_Video}>:ENABLE_VIDEO>
         $<$<BOOL:${Enable_Preview_GUI}>:ENABLE_PREVIEW_GUI>
