@@ -67,15 +67,15 @@ __global__ static void pushColor(
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * (x - 1), y - 1, cudaBoundaryModeZero);
     surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * (x + 1), y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * (x - 1), y, cudaBoundaryModeZero);
     surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * (x + 1), y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * (x - 1), y + 1, cudaBoundaryModeZero);
     surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * (x + 1), y + 1, cudaBoundaryModeZero);
 
     T maxD, minL;
 
@@ -146,15 +146,15 @@ __global__ static void getGradient(
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * (x - 1), y - 1, cudaBoundaryModeZero);
     surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * (x + 1), y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * (x - 1), y, cudaBoundaryModeZero);
     surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * (x + 1), y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * (x - 1), y + 1, cudaBoundaryModeZero);
     surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * (x + 1), y + 1, cudaBoundaryModeZero);
 
     const float gradX = tr.w + mr.w + mr.w + br.w - tl.w - ml.w - ml.w - bl.w;
     const float gradY = tl.w + tc.w + tc.w + tr.w - bl.w - bc.w - bc.w - br.w;
@@ -176,15 +176,15 @@ __global__ static void pushGradient(
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * (x - 1), y - 1, cudaBoundaryModeZero);
     surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * (x + 1), y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * (x - 1), y, cudaBoundaryModeZero);
     surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * (x + 1), y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * (x - 1), y + 1, cudaBoundaryModeZero);
     surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * (x + 1), y + 1, cudaBoundaryModeZero);
 
     T maxD, minL;
 
