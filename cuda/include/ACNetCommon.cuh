@@ -57,8 +57,8 @@ __global__ static void conv1To8(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
@@ -87,16 +87,16 @@ __global__ static void conv1To8(
     half c1234[4] = {__float2half(fc1234.x), __float2half(fc1234.y), __float2half(fc1234.z), __float2half(fc1234.w)};
     half c5678[4] = {__float2half(fc5678.x), __float2half(fc5678.y), __float2half(fc5678.z), __float2half(fc5678.w)};
 
-    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, sizeof(c1234) * x, y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, sizeof(c5678) * x, y, 1, cudaBoundaryModeZero);
 }
 
 __global__ static void conv8To8(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H, int L)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
@@ -135,8 +135,8 @@ __global__ static void conv8To8(
     half c1234[4] = {__float2half(fc1234.x), __float2half(fc1234.y), __float2half(fc1234.z), __float2half(fc1234.w)};
     half c5678[4] = {__float2half(fc5678.x), __float2half(fc5678.y), __float2half(fc5678.z), __float2half(fc5678.w)};
 
-    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, __umul24(sizeof(c1234), x), y, 0, cudaBoundaryModeZero);
-    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, __umul24(sizeof(c5678), x), y, 1, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c1234), dstImg, sizeof(c1234) * x, y, 0, cudaBoundaryModeZero);
+    surf2DLayeredwrite(*reinterpret_cast<ushort4*>(c5678), dstImg, sizeof(c5678) * x, y, 1, cudaBoundaryModeZero);
 }
 
 template <typename T>
@@ -144,8 +144,8 @@ __global__ static void convTranspose8To1(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
@@ -170,7 +170,7 @@ __global__ static void convTranspose8To1(
                     mc2.z * kernelsL10[24 + index] +
                     mc2.w * kernelsL10[28 + index], 0.0f, 1.0f) * scale + offset;
 
-    surf2Dwrite(c, dstImg, __umul24(sizeof(c), x), y, cudaBoundaryModeZero);
+    surf2Dwrite(c, dstImg, sizeof(c) * x, y, cudaBoundaryModeZero);
 }
 
 template <typename T>

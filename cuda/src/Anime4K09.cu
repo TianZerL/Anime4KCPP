@@ -35,8 +35,8 @@ __global__ static void getGray(
     cudaTextureObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
@@ -60,22 +60,22 @@ __global__ static void pushColor(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H, const float strength)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, __umul24(sizeof(mc), x - 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tc, srcImg, __umul24(sizeof(mc), x), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, __umul24(sizeof(mc), x + 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, __umul24(sizeof(mc), x - 1), y, cudaBoundaryModeZero);
-    surf2Dread(&mc, srcImg, __umul24(sizeof(mc), x), y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, __umul24(sizeof(mc), x + 1), y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, __umul24(sizeof(mc), x - 1), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&bc, srcImg, __umul24(sizeof(mc), x), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, __umul24(sizeof(mc), x + 1), y + 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
 
     T maxD, minL;
 
@@ -139,22 +139,22 @@ __global__ static void getGradient(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, __umul24(sizeof(mc), x - 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tc, srcImg, __umul24(sizeof(mc), x), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, __umul24(sizeof(mc), x + 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, __umul24(sizeof(mc), x - 1), y, cudaBoundaryModeZero);
-    surf2Dread(&mc, srcImg, __umul24(sizeof(mc), x), y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, __umul24(sizeof(mc), x + 1), y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, __umul24(sizeof(mc), x - 1), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&bc, srcImg, __umul24(sizeof(mc), x), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, __umul24(sizeof(mc), x + 1), y + 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
 
     const float gradX = tr.w + mr.w + mr.w + br.w - tl.w - ml.w - ml.w - bl.w;
     const float gradY = tl.w + tc.w + tc.w + tr.w - bl.w - bc.w - bc.w - br.w;
@@ -169,22 +169,22 @@ __global__ static void pushGradient(
     cudaSurfaceObject_t srcImg, cudaSurfaceObject_t dstImg,
     unsigned int W, unsigned int H, const float strength)
 {
-    const unsigned int x = __umul24(blockIdx.x, blockDim.x) + threadIdx.x;
-    const unsigned int y = __umul24(blockIdx.y, blockDim.y) + threadIdx.y;
+    const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+    const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (x >= W || y >= H)
         return;
 
     typename Vec4<T>::type tl, tc, tr, ml, mc, mr, bl, bc, br;
-    surf2Dread(&tl, srcImg, __umul24(sizeof(mc), x - 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tc, srcImg, __umul24(sizeof(mc), x), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&tr, srcImg, __umul24(sizeof(mc), x + 1), y - 1, cudaBoundaryModeZero);
-    surf2Dread(&ml, srcImg, __umul24(sizeof(mc), x - 1), y, cudaBoundaryModeZero);
-    surf2Dread(&mc, srcImg, __umul24(sizeof(mc), x), y, cudaBoundaryModeZero);
-    surf2Dread(&mr, srcImg, __umul24(sizeof(mc), x + 1), y, cudaBoundaryModeZero);
-    surf2Dread(&bl, srcImg, __umul24(sizeof(mc), x - 1), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&bc, srcImg, __umul24(sizeof(mc), x), y + 1, cudaBoundaryModeZero);
-    surf2Dread(&br, srcImg, __umul24(sizeof(mc), x + 1), y + 1, cudaBoundaryModeZero);
+    surf2Dread(&tl, srcImg, sizeof(mc) * x - 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tc, srcImg, sizeof(mc) * x, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&tr, srcImg, sizeof(mc) * x + 1, y - 1, cudaBoundaryModeZero);
+    surf2Dread(&ml, srcImg, sizeof(mc) * x - 1, y, cudaBoundaryModeZero);
+    surf2Dread(&mc, srcImg, sizeof(mc) * x, y, cudaBoundaryModeZero);
+    surf2Dread(&mr, srcImg, sizeof(mc) * x + 1, y, cudaBoundaryModeZero);
+    surf2Dread(&bl, srcImg, sizeof(mc) * x - 1, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&bc, srcImg, sizeof(mc) * x, y + 1, cudaBoundaryModeZero);
+    surf2Dread(&br, srcImg, sizeof(mc) * x + 1, y + 1, cudaBoundaryModeZero);
 
     T maxD, minL;
 
