@@ -1307,8 +1307,8 @@ void MainWindow::on_pushButtonStart_clicked()
         QList<QPair<QString, QString>> errorList;
         if (imageCount > 0)
         {
-            Anime4KCPP::Utils::parallelFor(static_cast<qsizetype>(0), images.size(),
-                [this, total, &images, &cm, &totalCount, &errorList](const qsizetype i)
+            Anime4KCPP::Utils::parallelFor(static_cast<decltype(images.size())>(0), images.size(),
+                [this, total, &images, &cm, &totalCount, &errorList](const decltype(images.size()) i)
                 {
                     if (stopProcessing)
                         return;
@@ -1445,11 +1445,11 @@ void MainWindow::on_pushButtonStart_clicked()
 
         if (!errorList.isEmpty())
         {
-            QString errorMsg = QString("%1 task(s) failed:\n\n").arg(errorList.size());
-            qsizetype lengthToShow = errorList.size() < 5 ? errorList.size() : 5;
-            qsizetype lengthMore = errorList.size() - lengthToShow;
+            auto errorMsg = QString("%1 task(s) failed:\n\n").arg(errorList.size());
+            auto lengthToShow = errorList.size() < 5 ? errorList.size() : 5;
+            auto lengthMore = errorList.size() - lengthToShow;
 
-            for (qsizetype i = 0; i < lengthToShow; i++)
+            for (decltype(lengthToShow) i = 0; i < lengthToShow; i++)
             {
                 const auto& e = errorList.at(i);
                 errorMsg+= QString("%1: %2\n").arg(e.first, e.second);

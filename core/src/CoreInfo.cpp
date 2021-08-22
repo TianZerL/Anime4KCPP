@@ -28,8 +28,8 @@ const char* Anime4KCPP::CoreInfo::CPUOptimizationMode()
 #define AC_ENUM_ITEM
 #include"ACRegister.hpp"
 #undef AC_ENUM_ITEM
-#define PROCESSOR_STRING(S) PROCESSOR_STRING_IMPL(S)
-#define PROCESSOR_STRING_IMPL(S) #S
+#define PROCESSOR_STRING(...) PROCESSOR_STRING_IMPL(__VA_ARGS__)
+#define PROCESSOR_STRING_IMPL(...) #__VA_ARGS__
 const char* Anime4KCPP::CoreInfo::supportedProcessors()
 {
     return
