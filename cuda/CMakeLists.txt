@@ -59,7 +59,7 @@ if(Enable_CUDA)
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/core/include include)
 
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_CUDA)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_CUDA)
 
     set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
 
