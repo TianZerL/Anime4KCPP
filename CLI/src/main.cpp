@@ -223,15 +223,6 @@ static void benchmark(const int pID, const int dID)
 #endif 
 }
 
-static bool createConfigTemplate(const std::string& path, Config& config)
-{
-    ConfigWriter configWriter;
-    if (!configWriter.initFile(path))
-        return false;
-    configWriter.set(config).write("Anime4KCPP_CLI config file");
-    return true;
-}
-
 template<typename ...Args>
 static void logErrorAndExit(Args&&... args)
 {
@@ -267,7 +258,7 @@ std::mutex SafeLoger::mtx;
 int main(int argc, char* argv[])
 {
     Config config;
-    auto& opt = config.getParser();
+    auto& opt = config.getOptParser();
     //Options
     opt.add<std::string>("input", 'i', "File for loading", false, "p1.png");
     opt.add<std::string>("output", 'o', "File for outputting", false);
@@ -332,17 +323,17 @@ int main(int argc, char* argv[])
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
     opt.add<std::string>("suffix", 'E', "Mandatory specify the suffix of the output file ", false);
-    opt.add<std::string>("configTemplate", '\000', "Generate config template", false);
     opt.add<std::string>("testMode", '\000', "function test for development only", false);
 
     opt.set_program_name("Anime4KCPP_CLI");
 
-    opt.parse_check(argc, argv);
-
-    if (!opt.rest().empty() && !config.initFile(opt.rest().front()).parseFile())
+    if (!config.parser(argc, argv))
     {
-        config.getLastError().printErrorInfo();
-        return 0;
+        for (auto&& e : config.getIniParser().error())
+        {
+            std::cerr << e << '\n';
+            return 1;
+        }
     }
 
     auto input = opt.get<std::string>("input");
@@ -356,7 +347,6 @@ int main(int argc, char* argv[])
     auto doBenchmark = opt.exist("benchmark");
     auto ncnn = opt.exist("ncnn");
     auto frameStart = opt.get<std::size_t>("start");
-    auto configTemplate = opt.exist("configTemplate");
     auto testMode = opt.get<std::string>("testMode");
     auto suffix = opt.get<std::string>("suffix");
 
@@ -368,20 +358,20 @@ int main(int argc, char* argv[])
     auto strengthGradient = config.get<double>("strengthGradient");
     auto zoomFactor = config.get<double>("zoomFactor");
     auto forceFps = config.get<double>("forceFps");
-    auto fastMode = config.get<bool>("fastMode");
-    auto preprocessing = config.get<bool>("preprocessing");
-    auto postprocessing = config.get<bool>("postprocessing");
-    auto GPU = config.get<bool>("GPUMode");
-    auto CNN = config.get<bool>("CNNMode");
-    auto HDN = config.get<bool>("HDN");
-    auto disableProgress = config.get<bool>("disableProgress");
-    auto alpha = config.get<bool>("alpha");
+    auto fastMode = config.exist("fastMode");
+    auto preprocessing = config.exist("preprocessing");
+    auto postprocessing = config.exist("postprocessing");
+    auto GPU = config.exist("GPUMode");
+    auto CNN = config.exist("CNNMode");
+    auto HDN = config.exist("HDN");
+    auto disableProgress = config.exist("disableProgress");
+    auto alpha = config.exist("alpha");
     auto preFilters = config.get<uint8_t>("preFilters");
     auto postFilters = config.get<uint8_t>("postFilters");
     auto pID = config.get<int>("platformID");
     auto dID = config.get<int>("deviceID");
     auto OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
-    auto OpenCLParallelIO = config.get<bool>("OpenCLParallelIO");
+    auto OpenCLParallelIO = config.exist("OpenCLParallelIO");
     auto threads = config.get<unsigned int>("threads");
     auto ncnnThreads = config.get<unsigned int>("ncnnThreads");
     auto codec = config.get<std::string>("codec");
@@ -389,13 +379,18 @@ int main(int argc, char* argv[])
     auto ncnnModelPath = config.get<std::string>("ncnnModelPath");
 
     //Generate config template
-    if (configTemplate)
-    {
-        const std::string& path = opt.get<std::string>("configTemplate");
-        if (createConfigTemplate(path, config))
-            std::cout << "Generated config template to: " << path << '\n';
+    if (config.checkGenerateConfigTemplate())
+    {      
+        if (auto pathCheck = config.generateConfigTemplate())
+        {
+            filesystem::path path(*pathCheck);
+            std::cout
+                << "Generated config template to: "
+                << (path.is_absolute() ? path : (filesystem::current_path() / path.lexically_normal()))
+                << '\n';
+        }
         else
-            logErrorAndExit("Failed to generate config template: ", path);
+            logErrorAndExit("Failed to generate config template");
         return 0;
     }
 

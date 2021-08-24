@@ -1,251 +1,90 @@
 #ifndef ANIME4KCPP_CLI_CONFIG_HPP
 #define ANIME4KCPP_CLI_CONFIG_HPP
 
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <fstream>
-#include <unordered_map>
+#include<string>
+#include<string_view>
 
-#include <cmdline.hpp>
-
-inline std::string& ltrim(std::string& s)
-{
-    std::size_t pos = s.find_first_not_of(" \n\r\t");
-    if (pos != std::string::npos)
-        s.erase(0, pos);
-    return s;
-}
-
-inline std::string& rtrim(std::string& s)
-{
-    std::size_t pos = s.find_last_not_of(" \n\r\t");
-    if (pos != std::string::npos)
-        s.erase(pos + 1);
-    return s;
-}
-
-inline std::string& trim(std::string& s)
-{
-    ltrim(s);
-    rtrim(s);
-    return s;
-}
-
-struct ConfigError
-{
-    std::string filePath;
-    std::string lineData;
-    std::size_t lineNumber = 0;
-    std::size_t pos = 0;
-
-    void printErrorInfo()
-    {
-        std::cerr
-            << "Invalid format: in file \"" << filePath << "\" line: " << lineNumber << ':' << pos << '\n'
-            << lineData << '\n'
-            << std::string(pos >= 1 ? pos : 0, ' ') << "^\n";
-    }
-};
+#include<cmdline.hpp>
+#include<ini17.hpp>
 
 class Config
 {
 public:
-    Config(const cmdline::parser& parser = cmdline::parser())
-        :parser(parser) {};
+	cmdline::parser& getOptParser()
+	{
+		return optParser;
+	}
 
-    cmdline::parser& getParser()
-    {
-        return parser;
-    }
+	ini17::Parser& getIniParser()
+	{
+		return iniParser;
+	}
 
-    Config& initFile(const std::string& path)
-    {
-        inputFile.open(path);
-        err.filePath = path;
-        return *this;
-    }
+	bool parser(int argc, char* argv[])
+	{
+		optParser.add<std::string>("configTemplate", '\000', "Generate config template", false);
+		optParser.parse_check(argc, argv);
+		generateConfigTemplateFlag = optParser.exist("configTemplate");
+		if (!optParser.rest().empty() && !iniParser.parseFile(optParser.rest().front()))
+			return false;
+		return true;
+	}
 
-    bool parseFile()
-    {
-        if (!inputFile.is_open())
-        {
-            setError("Unable to open config file", 0, 0);
-            return false;
-        }
+	template<typename T>
+	T get(std::string_view key)
+	{
+		if (generateConfigTemplateFlag)
+		{
+			auto&& value = optParser.get<T>(key.data());
+			iniSection.add(key, value);
+			return value;
+		}
+		if (auto check = iniParser.get<T>(key))
+		{
+			if (optParser.exist(key.data()))
+				return optParser.get<T>(key.data());
+			return *check;
+		}
+		return optParser.get<T>(key.data());
+	}
 
-        std::string currLine;
+	bool exist(std::string_view key)
+	{
+		if (generateConfigTemplateFlag)
+		{
+			bool value = optParser.exist(key.data());
+			iniSection.add(key, value);
+			return value;
+		}
+		if (auto check = iniParser.get<bool>(key))
+		{
+			if (optParser.exist(key.data()))
+				return true;
+			return *check;
+		}
+		return optParser.exist(key.data());
+	}
 
-        std::size_t pos = 0;
-        std::string key, value;
-        std::size_t lineNumber = 0;
-        std::string lineData;
-        while (std::getline(inputFile, currLine))
-        {
-            lineNumber++;
-            lineData = trim(currLine);
+	bool checkGenerateConfigTemplate()
+	{
+		return generateConfigTemplateFlag;
+	}
 
-            if (currLine.empty())
-                continue;
-
-            if (currLine.front() == '#')
-                continue;
-
-            if ((pos = currLine.find('#')) != std::string::npos)
-                rtrim(currLine.erase(pos));
-
-            if ((pos = currLine.find('=')) != std::string::npos)
-            {
-                key = currLine.substr(0, pos);
-                rtrim(key);
-                if (key.empty())
-                {
-                    setError(lineData, lineNumber, 0);
-                    return false;
-                }
-
-                value = currLine.substr(pos + 1);
-                ltrim(value);
-                if (value.empty())
-                {
-                    setError(lineData, lineNumber, pos + 1);
-                    return false;
-                }
-
-                kvMap.emplace(key, value);
-            }
-            else
-            {
-                setError(lineData, lineNumber, currLine.size());
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::unordered_map<std::string, std::string>& getMap()
-    {
-        return kvMap;
-    }
-
-    ConfigError getLastError()
-    {
-        return err;
-    }
-
-    template <typename T>
-    T get(const std::string& key);
+	std::optional<std::string_view> generateConfigTemplate()
+	{
+		std::string_view path = optParser.get<std::string>("configTemplate");
+		ini17::Generator generator;
+		generator.setHeader("Anime4KCPP CLI config file");
+		generator.push(iniSection);
+		return generator.generateFile(path) ? std::make_optional(path) : std::nullopt;
+	}
 
 private:
-    void setError(const std::string& lineData, std::size_t lineNumber, std::size_t pos)
-    {
-        err.lineData = lineData;
-        err.lineNumber = lineNumber;
-        err.pos = pos;
-    }
-
-private:
-    std::unordered_map<std::string, std::string> kvMap;
-    std::ifstream inputFile;
-
-    ConfigError err;
-    cmdline::parser parser;
+	bool generateConfigTemplateFlag = false;
+	cmdline::parser optParser;
+	ini17::Parser iniParser;
+	ini17::Section iniSection;
 };
 
-class ConfigWriter
-{
-public:
-    ConfigWriter() = default;
-
-    bool initFile(const std::string& path)
-    {
-        outputFile.open(path);
-        return outputFile.is_open();
-    }
-
-    void write(const std::string& header = "config file")
-    {
-        if (!outputFile.is_open())
-            return;
-        outputFile << "# " << header << "\n\n";
-        for (auto& kv : kvMap)
-        {
-            outputFile << kv.first << " = " << kv.second << '\n';
-        }
-    }
-
-    ConfigWriter& set(Config& config)
-    {
-        kvMap = config.getMap();
-        return *this;
-    }
-
-private:
-    std::unordered_map<std::string, std::string> kvMap;
-    std::ofstream outputFile;
-};
-
-template<typename T>
-inline T Config::get(const std::string& key)
-{
-    if (!inputFile.is_open())
-    {
-        const T& tmp = parser.get<T>(key);
-        kvMap.emplace(key, std::to_string(tmp));
-        return tmp;
-    }
-    auto it = kvMap.find(key);
-    if (it == kvMap.end())
-    {
-        const T& tmp = parser.get<T>(key);
-        kvMap.emplace(key, std::to_string(tmp));
-        return tmp;
-    }
-    std::istringstream converter(it->second);
-    T ret{};
-    converter >> ret;
-    return ret;
-}
-
-template <>
-inline std::string Config::get<std::string>(const std::string& key)
-{
-    if (!inputFile.is_open())
-    {
-        const std::string& tmp = parser.get<std::string>(key);
-        kvMap.emplace(key, tmp);
-        return tmp;
-    }
-    auto it = kvMap.find(key);
-    if (it == kvMap.end())
-    {
-        const std::string& tmp = parser.get<std::string>(key);
-        kvMap.emplace(key, tmp);
-        return tmp;
-    }
-    return it->second;
-}
-
-template <>
-inline bool Config::get<bool>(const std::string& key)
-{
-    if (!inputFile.is_open())
-    {
-        bool tmp = parser.exist(key);
-        kvMap.emplace(key, std::to_string(tmp));
-        return tmp;
-    }
-    auto it = kvMap.find(key);
-    if (it == kvMap.end())
-    {
-        bool tmp = parser.exist(key);
-        kvMap.emplace(key, std::to_string(tmp));
-        return tmp;
-    }
-    std::istringstream converter(it->second);
-    bool ret = false;
-    converter >> ret;
-    return ret;
-}
 
 #endif // !ANIME4KCPP_CLI_CONFIG_HPP
