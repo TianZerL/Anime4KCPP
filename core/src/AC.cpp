@@ -308,7 +308,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* da
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint8_t* r, std::uint8_t* g, std::uint8_t* b, bool inputAsYUV444)
 {
-    if (inputYUV = inputAsYUV444)
+    if ((inputYUV = inputAsYUV444))
     {
         orgImg = cv::Mat(rows, cols, CV_8UC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_8UC1, g, stride);
@@ -334,7 +334,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint16_t* r, std::uint16_t* g, std::uint16_t* b, bool inputAsYUV444)
 {
-    if (inputYUV = inputAsYUV444)
+    if ((inputYUV = inputAsYUV444))
     {
         orgImg = cv::Mat(rows, cols, CV_16UC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_16UC1, g, stride);
@@ -360,7 +360,7 @@ void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, std::uint
 
 void Anime4KCPP::AC::loadImage(int rows, int cols, std::size_t stride, float* r, float* g, float* b, bool inputAsYUV444)
 {
-    if (inputYUV = inputAsYUV444)
+    if ((inputYUV = inputAsYUV444))
     {
         orgImg = cv::Mat(rows, cols, CV_32FC1, r, stride);
         dstU = orgU = cv::Mat(rows, cols, CV_32FC1, g, stride);

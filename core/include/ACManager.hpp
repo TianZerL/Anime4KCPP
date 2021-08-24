@@ -12,6 +12,8 @@ namespace Anime4KCPP::Processor
 class Anime4KCPP::Processor::Manager
 {
 public:
+    virtual ~Manager() = default;
+
     virtual void init() = 0;
     virtual void release() noexcept = 0;
     virtual bool isInitialized() noexcept = 0;

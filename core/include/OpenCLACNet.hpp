@@ -29,9 +29,9 @@ public:
     static void release() noexcept;
     static bool isInitialized() noexcept;
 private:
-    void processYUVImage();
-    void processRGBImage();
-    void processGrayscale();
+    void processYUVImage() override;
+    void processRGBImage() override;
+    void processGrayscale() override;
 
     Processor::Type getProcessorType() noexcept override;
     std::string getProcessorInfo() override;
