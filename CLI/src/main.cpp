@@ -1,4 +1,5 @@
 #include<iostream>
+#include<cctype>
 
 #ifdef USE_BOOST_FILESYSTEM
 #include<boost/filesystem.hpp>
@@ -230,6 +231,13 @@ static void logErrorAndExit(Args&&... args)
     std::exit(1);
 }
 
+static void string2LowerInPlace(std::string& s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+        [](unsigned char c) {return std::tolower(c); }
+    );
+}
+
 class SafeLoger
 {
 public:
@@ -414,7 +422,7 @@ int main(int argc, char* argv[])
     }
 
     GPGPU GPGPUModel;
-    std::transform(GPGPUModelString.begin(), GPGPUModelString.end(), GPGPUModelString.begin(), ::tolower);
+    string2LowerInPlace(GPGPUModelString);
     if (GPGPUModelString == "opencl")
     {
 #ifdef ENABLE_OPENCL
@@ -872,7 +880,7 @@ int main(int argc, char* argv[])
                 // output suffix
                 std::string outputSuffix = outputPath.extension().string();
                 // transform to lower
-                std::transform(outputSuffix.begin(), outputSuffix.end(), outputSuffix.begin(), ::tolower);
+                string2LowerInPlace(outputSuffix);
 
                 if (std::string(".png.jpg.jpeg.bmp")
                     .find(outputSuffix) != std::string::npos)
@@ -908,7 +916,7 @@ int main(int argc, char* argv[])
                             continue;
                         //Check GIF
                         std::string inputSuffix = file.path().extension().string();
-                        std::transform(inputSuffix.begin(), inputSuffix.end(), inputSuffix.begin(), ::tolower);
+                        string2LowerInPlace(inputSuffix);
                         gif = (inputSuffix == ".gif");
 
                         auto tmpOutputPath = outputPath / file.path().lexically_relative(inputPath);
