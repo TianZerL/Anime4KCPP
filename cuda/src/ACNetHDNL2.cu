@@ -1,5 +1,3 @@
-#include <type_traits>
-
 #include "CudaHelper.cuh"
 #include "CudaInterface.hpp"
 
@@ -1598,10 +1596,10 @@ __device__ __constant__ static const float kernelsL[8][9 * 8 * 8] =
 };
 __device__ __constant__ static const float biasL[8][8] =
 {
-    {
-        7.2678e-02, 8.5350e-03, 5.0400e-02, 2.6268e-02, 6.2434e-02, 1.0483e-01, -7.1650e-39, 1.0062e-01
-    }
-    ,
+{
+ 7.2678e-02, 8.5350e-03, 5.0400e-02, 2.6268e-02, 6.2434e-02, 1.0483e-01, -7.1650e-39, 1.0062e-01
+}
+,
 {
 -4.9844e-39, -1.8567e-39,  6.0627e-04, -1.9234e-38,  1.8331e-02, -1.1364e-01, -8.3962e-03, -1.7372e-04
 }
