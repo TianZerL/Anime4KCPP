@@ -20,7 +20,10 @@ namespace Anime4KCPP::CPU
     void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
 }
 
-class Anime4KCPP::CPU::ACNetProcessor : public CNNProcessor
+class Anime4KCPP::CPU::ACNetProcessor 
+#ifndef ENABLE_OPENCV_DNN
+    : public CNNProcessor
+#endif
 {
 public:
     ACNetProcessor() = default;

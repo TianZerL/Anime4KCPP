@@ -4,7 +4,7 @@
 
 namespace Anime4KCPP::CPU::detail
 {
-    cv::Mat processImpl(const cv::Mat& blob, int scaleTimes, int width)
+    cv::Mat processImpl(cv::dnn::Net& net, cv::Mat&& blob, int scaleTimes, int width)
     {
         for (int i = 0; i < scaleTimes; i++)
         {
@@ -40,17 +40,16 @@ void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int sc
 
     switch (src.depth())
     {
-    case CV_8U: 
-        cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 255.0);
-        detail::processImpl(blob, scaleTimes, w).convertTo(dst, CV_8UC1, 255.0);
+    case CV_8U:
+        detail::processImpl(net, cv::dnn::blobFromImage(tmp, 1.0 / 255.0), scaleTimes, w)
+            .convertTo(dst, CV_8UC1, 255.0);
         break;
     case CV_16U:
-        cv::Mat blob = cv::dnn::blobFromImage(tmp, 1.0 / 65535.0);
-        detail::processImpl(blob, scaleTimes, w).convertTo(dst, CV_16UC1, 65535.0);
+        detail::processImpl(net, cv::dnn::blobFromImage(tmp, 1.0 / 65535.0), scaleTimes, w)
+            .convertTo(dst, CV_16UC1, 65535.0);
         break;
     case CV_32F:
-        cv::Mat blob = cv::dnn::blobFromImage(tmp);   
-        dst = detail::processImpl(blob, scaleTimes, w);
+        dst = detail::processImpl(net, cv::dnn::blobFromImage(tmp), scaleTimes, w);
         break;
     default:
         throw ACException<ExceptionType::RunTimeError>("Unsupported image data type");
