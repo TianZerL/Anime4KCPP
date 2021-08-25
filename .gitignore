@@ -11,8 +11,7 @@ CTestTestfile.cmake
 _deps
 .vscode
 
-Build
-build
+build*
 install
 ThirdParty
 DetectionSample
