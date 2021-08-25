@@ -191,6 +191,7 @@ message(STATUS
 "   Use Eigen3 ${Use_Eigen3}\n"
 "   Use Legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
 "   Ryzen Optimization ${Ryzen_Optimization}\n"
+"   Native Optimization ${Native_Optimization}\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
