@@ -2491,44 +2491,35 @@ const float Anime4KCPP::CPU::ACNetHDNL3::biases[8][8] =
 };
 #endif
 
-Anime4KCPP::CPU::ACNetProcessor* Anime4KCPP::CPU::createACNetProcessor(int typeIndex)
+std::unique_ptr<Anime4KCPP::CPU::ACNetProcessor> Anime4KCPP::CPU::createACNetProcessor(int typeIndex)
 {
     switch (typeIndex)
     {
     case 0:
 #ifdef ENABLE_OPENCV_DNN
-        return new ACNetHDN("./models/ACNetHDNL0.onnx");
+        return std::make_unique<ACNetHDN>("./models/ACNetHDNL0.onnx");
 #else
-        return new ACNetHDNL0();
+        return std::make_unique<ACNetHDNL0>();
 #endif
     case 1:
 #ifdef ENABLE_OPENCV_DNN
-        return new ACNetHDN("./models/ACNetHDNL1.onnx");
+        return std::make_unique<ACNetHDN>("./models/ACNetHDNL1.onnx");
 #else
-        return new ACNetHDNL1();
+        return std::make_unique<ACNetHDNL1>();
 #endif
     case 2:
 #ifdef ENABLE_OPENCV_DNN
-        return new ACNetHDN("./models/ACNetHDNL2.onnx");
+        return std::make_unique<ACNetHDN>("./models/ACNetHDNL2.onnx");
 #else
-        return new ACNetHDNL2();
+        return std::make_unique<ACNetHDNL2>();
 #endif
     case 3:
 #ifdef ENABLE_OPENCV_DNN
-        return new ACNetHDN("./models/ACNetHDNL3.onnx");
+        return std::make_unique<ACNetHDN>("./models/ACNetHDNL3.onnx");
 #else
-        return new ACNetHDNL3();
+        return std::make_unique<ACNetHDNL3>();
 #endif
     default:
         return nullptr;
-    }
-}
-
-void Anime4KCPP::CPU::releaseACNetProcessor(ACNetProcessor* processor) noexcept
-{
-    if (processor != nullptr)
-    {
-        delete processor;
-        processor = nullptr;
     }
 }

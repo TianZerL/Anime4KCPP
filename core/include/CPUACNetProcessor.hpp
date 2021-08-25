@@ -16,8 +16,7 @@ namespace Anime4KCPP::CPU
     class ACNetHDNL2;
     class ACNetHDNL3;
 #endif
-    ACNetProcessor* createACNetProcessor(int typeIndex);
-    void releaseACNetProcessor(ACNetProcessor* processor) noexcept;
+    std::unique_ptr<ACNetProcessor> createACNetProcessor(int typeIndex);
 }
 
 class Anime4KCPP::CPU::ACNetProcessor 
@@ -28,7 +27,6 @@ class Anime4KCPP::CPU::ACNetProcessor
 public:
     ACNetProcessor() = default;
     virtual ~ACNetProcessor() = default;
-
     virtual void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) = 0;
 };
 

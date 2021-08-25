@@ -2,20 +2,11 @@
 #include"ACNetType.hpp"
 
 Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters)
-{
-    processor = createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel));
-}
-
-Anime4KCPP::CPU::ACNet::~ACNet()
-{
-    releaseACNetProcessor(processor);
-}
+    AC(parameters), processor(createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel))) {}
 
 void Anime4KCPP::CPU::ACNet::setParameters(const Parameters& parameters)
 {
     AC::setParameters(parameters);
-    releaseACNetProcessor(processor);
     processor = createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel));
 }
 

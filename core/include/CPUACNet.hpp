@@ -12,7 +12,6 @@ class Anime4KCPP::CPU::ACNet :public AC
 {
 public:
     explicit ACNet(const Parameters& parameters);
-    ~ACNet() override;
     void setParameters(const Parameters& parameters) override;
 
     std::string getInfo() override;
@@ -25,7 +24,7 @@ private:
     Processor::Type getProcessorType() noexcept override;
     std::string getProcessorInfo() override;
 private:
-    ACNetProcessor* processor;
+    std::unique_ptr<ACNetProcessor> processor;
 };
 
 #endif // !ANIME4KCPP_CORE_CPU_ACNET_HPP

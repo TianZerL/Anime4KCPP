@@ -184,7 +184,7 @@ message(STATUS
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
 "   Build AviSynthPlus plugin ${Build_AviSynthPlus_Plugin}\n"
 "   Build C wrapper ${Build_C_Wrapper}\n\n"
-"   Build static C wrapper${Build_Static_C_Wrapper}\n"
+"   Build static C wrapper ${Build_Static_C_Wrapper}\n"
 "   Build static core ${Build_Static_Core}\n"
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
