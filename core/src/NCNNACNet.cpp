@@ -144,11 +144,9 @@ struct Anime4KCPP::NCNN::ACNet::DataHolder
 };
 
 Anime4KCPP::NCNN::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters)
-{
-    dataHolder = std::make_unique<DataHolder>();
-    ACNetTypeIndex = GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel);
-}
+    AC(parameters),   
+    ACNetTypeIndex(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel)),
+    dataHolder(std::make_unique<DataHolder>()) {}
 
 Anime4KCPP::NCNN::ACNet::ACNet::~ACNet() = default;
 

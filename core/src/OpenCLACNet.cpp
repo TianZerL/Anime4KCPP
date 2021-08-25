@@ -285,10 +285,7 @@ namespace Anime4KCPP::OpenCL::detail
 }
 
 Anime4KCPP::OpenCL::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters)
-{
-    ACNetTypeIndex = GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel);
-}
+    AC(parameters), ACNetTypeIndex(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel)) {}
 
 void Anime4KCPP::OpenCL::ACNet::setParameters(const Parameters& parameters)
 {

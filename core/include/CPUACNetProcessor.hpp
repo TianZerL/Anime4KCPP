@@ -50,11 +50,11 @@ public:
     ~ACNetHDNL0() override = default;
     void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    alignas(32) const static float kernelsL1[9 * 8];
-    alignas(32) const static float kernels[8][9 * 8 * 8];
-    alignas(32) const static float kernelsL10[4 * 8];
-    alignas(32) const static float biasL1[8];
-    alignas(32) const static float biases[8][8];
+    alignas(32) static const float kernelsL1[9 * 8];
+    alignas(32) static const float kernels[8][9 * 8 * 8];
+    alignas(32) static const float kernelsL10[4 * 8];
+    alignas(32) static const float biasL1[8];
+    alignas(32) static const float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL1 : public ACNetProcessor
@@ -64,11 +64,11 @@ public:
     ~ACNetHDNL1() override = default;
     void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    alignas(32) const static float kernelsL1[9 * 8];
-    alignas(32) const static float kernels[8][9 * 8 * 8];
-    alignas(32) const static float kernelsL10[4 * 8];
-    alignas(32) const static float biasL1[8];
-    alignas(32) const static float biases[8][8];
+    alignas(32) static const float kernelsL1[9 * 8];
+    alignas(32) static const float kernels[8][9 * 8 * 8];
+    alignas(32) static const float kernelsL10[4 * 8];
+    alignas(32) static const float biasL1[8];
+    alignas(32) static const float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL2 : public ACNetProcessor
@@ -78,11 +78,11 @@ public:
     ~ACNetHDNL2() override = default;
     void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    alignas(32) const static float kernelsL1[9 * 8];
-    alignas(32) const static float kernels[8][9 * 8 * 8];
-    alignas(32) const static float kernelsL10[4 * 8];
-    alignas(32) const static float biasL1[8];
-    alignas(32) const static float biases[8][8];
+    alignas(32) static const float kernelsL1[9 * 8];
+    alignas(32) static const float kernels[8][9 * 8 * 8];
+    alignas(32) static const float kernelsL10[4 * 8];
+    alignas(32) static const float biasL1[8];
+    alignas(32) static const float biases[8][8];
 };
 
 class Anime4KCPP::CPU::ACNetHDNL3 : public ACNetProcessor
@@ -92,11 +92,11 @@ public:
     ~ACNetHDNL3() override = default;
     void process(const cv::Mat& src, cv::Mat& dst, int scaleTimes) override;
 private:
-    alignas(32) const static float kernelsL1[9 * 8];
-    alignas(32) const static float kernels[8][9 * 8 * 8];
-    alignas(32) const static float kernelsL10[4 * 8];
-    alignas(32) const static float biasL1[8];
-    alignas(32) const static float biases[8][8];
+    alignas(32) static const float kernelsL1[9 * 8];
+    alignas(32) static const float kernels[8][9 * 8 * 8];
+    alignas(32) static const float kernelsL10[4 * 8];
+    alignas(32) static const float biasL1[8];
+    alignas(32) static const float biases[8][8];
 };
 #endif // ENABLE_OPENCV_DNN
 

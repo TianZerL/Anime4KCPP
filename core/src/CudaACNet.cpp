@@ -61,10 +61,7 @@ namespace Anime4KCPP::Cuda::detail
 }
 
 Anime4KCPP::Cuda::ACNet::ACNet(const Parameters& parameters) :
-    AC(parameters)
-{
-    ACNetTypeIndex = GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel);
-}
+    AC(parameters), ACNetTypeIndex(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel)) {}
 
 void Anime4KCPP::Cuda::ACNet::setParameters(const Parameters& parameters)
 {
