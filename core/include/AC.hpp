@@ -65,14 +65,16 @@ struct Anime4KCPP::Parameters
     bool postprocessing;
     std::uint8_t preFilters;
     std::uint8_t postFilters;
+    int HDNLevel;
     bool HDN;
     bool alpha;
-    int HDNLevel;
 
     // return true if zoomFactor is not a power of 2 or zoomFactor < 2.0
     inline bool isNonIntegerScale() noexcept
     {
-        return ((*reinterpret_cast<long long int*>(&zoomFactor)) << 12) || (zoomFactor < 2.0);
+        std::uint64_t data;
+        std::memcpy(&data, &zoomFactor, sizeof(double));
+        return ((data << 12) != 0) || (zoomFactor < 2.0);
     }
 
     void reset() noexcept;

@@ -830,4 +830,4 @@ Anime4KCPP::Parameters::Parameters(
     strengthColor(strengthColor), strengthGradient(strengthGradient),
     zoomFactor(zoomFactor), fastMode(fastMode), preprocessing(preprocessing),
     postprocessing(postprocessing), preFilters(preFilters), postFilters(postFilters),
-    HDN(HDN), HDNLevel(HDNLevel), alpha(alpha) {}
+    HDNLevel(HDNLevel), HDN(HDN), alpha(alpha) {}

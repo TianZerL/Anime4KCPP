@@ -18,8 +18,8 @@ private:
     void CASSharpening(cv::Mat& src);
 private:
     int H, W;
-    cv::Mat& srcImgRef;
     std::uint8_t filters;
+    cv::Mat& srcImgRef;
 };
 
 #endif // !ANIME4KCPP_CORE_FILTER_PROCESSOR_HPP

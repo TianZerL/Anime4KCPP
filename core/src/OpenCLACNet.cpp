@@ -35,6 +35,7 @@ namespace Anime4KCPP::OpenCL::detail
     static int dID = 0;
     static std::size_t workGroupSizeBase = 32;
 
+    [[maybe_unused]]
     static std::string readKernel(const std::string& fileName)
     {
         std::ifstream kernelFile("kernels/" + fileName);

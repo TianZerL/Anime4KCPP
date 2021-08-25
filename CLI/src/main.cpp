@@ -381,10 +381,11 @@ int main(int argc, char* argv[])
     auto OpenCLQueueNum = config.get<int>("OpenCLQueueNumber");
     auto OpenCLParallelIO = config.exist("OpenCLParallelIO");
     auto threads = config.get<unsigned int>("threads");
-    auto ncnnThreads = config.get<unsigned int>("ncnnThreads");
     auto codec = config.get<std::string>("codec");
     auto GPGPUModelString = config.get<std::string>("GPGPUModel");
     auto ncnnModelPath = config.get<std::string>("ncnnModelPath");
+    [[maybe_unused]]
+    auto ncnnThreads = config.get<unsigned int>("ncnnThreads");
 
     //Generate config template
     if (config.checkGenerateConfigTemplate())

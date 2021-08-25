@@ -157,7 +157,6 @@ std::vector<std::string> Anime4KCPP::FilterProcessor::filterToString(std::uint8_
 
 void Anime4KCPP::FilterProcessor::CASSharpening(cv::Mat& srcImgRef)
 {
-    const int lineStep = W * 3;
     switch (srcImgRef.depth())
     {
     case CV_8U:
