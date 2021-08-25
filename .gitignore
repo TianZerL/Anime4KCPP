@@ -12,6 +12,7 @@ _deps
 .vscode
 
 build*
+Build*
 install
 ThirdParty
 DetectionSample
