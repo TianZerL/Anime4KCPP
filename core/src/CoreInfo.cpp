@@ -16,16 +16,16 @@ const char* Anime4KCPP::CoreInfo::CPUOptimizationMode()
 {
     return
 #if defined(ENABLE_OPENCV_DNN)
-        "OpenCV DNN, "
+        "OpenCV DNN"
 #elif defined(USE_RYZEN)
-        "SIMD (AVX2), "
+        "SIMD (AVX2)"
 #elif defined(USE_EIGEN3)
-        "Eigen3, "
+        "Eigen3"
 #else
-        "Normal, "
+        "Normal"
 #endif // ENABLE_OPENCV_DNN
 #ifdef ENABLE_FAST_MATH
-        "Fast Math"
+        ", Fast Math"
 #endif // ENABLE_FAST_MATH
         ;
 }
