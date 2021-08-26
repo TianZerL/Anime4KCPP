@@ -32,12 +32,14 @@ option(Build_Static_Core "Build Anime4KCPP core as static library" ON)
 option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
 option(Ryzen_Optimization "Optimization for AMD Ryzen CPU" OFF)
-option(Native_Optimization "Optimization for native CPU arch" ON)
+option(Native_Optimization "Optimization for native CPU arch" OFF)
+option(Other_Optimization "Other optimizations may or may not useful" OFF)
+option(Maximum_Optimization "Enable maximum optimizations for the current platform" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_OpenCL "Enable OpenCL module" ON)
 option(Enable_NCNN "Enable ncnn module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
-option(Enable_AVX2 "Enable on AVX2 acceleration, AVX2 and FMA are required" OFF)
+option(Enable_AVX2 "Enable on AVX2 arch, AVX2 and FMA are required" OFF)
 option(Enable_OpenCV_DNN "Use OpenCV DNN module for CPU processing, not for DSFilter, models need to be loaded from the outside" OFF)
 option(Enable_Video "Enable video processor module" ON)
 option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
@@ -60,36 +62,45 @@ if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     endif()
 endif()
 
+if(Maximum_Optimization)
+    set(Other_Optimization ON)
+    set(Ryzen_Optimization ON)
+    set(Native_Optimization ON)
+    set(Enable_Fast_Math ON)
+endif()
+
 if(MSVC)
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        if(Enable_Fast_Math)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast /clang:-ffast-math")
-        endif()
+        add_compile_options(
+            $<$<BOOL:${Other_Optimization}>:-flto=thin>
+            $<$<BOOL:${Enable_Fast_Math}>:/fp:fast>
+            $<$<BOOL:${Enable_Fast_Math}>:/clang:-ffast-math>
+        )
         if(Enable_AVX2)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-mavx2 /clang:-mfma")
+            add_compile_options(/arch:AVX2)
         elseif(Native_Optimization)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-march=native")
+            add_compile_options(/clang:-march=native)
         elseif(Ryzen_Optimization)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-mavx2 /clang:-mfma")
+            add_compile_options(/arch:AVX2)
         endif()
     else()
-        if(Enable_Fast_Math)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
-        endif()
-        if(Enable_AVX2 OR Ryzen_Optimization)
-            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
-        endif()
+        add_compile_options(
+            $<$<BOOL:${Enable_Fast_Math}>:/fp:fast>
+            $<$<OR:$<BOOL:${Enable_AVX2}>,$<BOOL:${Ryzen_Optimization}>>:/arch:AVX2>
+        )
     endif()
 else()
-    if(Enable_Fast_Math)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
-    endif()
+    add_compile_options(
+        $<$<BOOL:${Other_Optimization}>:-flto=thin> 
+        $<$<BOOL:${Other_Optimization}>:-Ofast>
+        $<$<BOOL:${Enable_Fast_Math}>:-ffast-math>
+    )
     if(Enable_AVX2)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
+        add_compile_options(-mavx2 -mfma)
     elseif(Native_Optimization)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+        add_compile_options(-march=native)
     elseif(Ryzen_Optimization)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")  
+        add_compile_options(-mavx2 -mfma)
     endif()
 endif()
 
@@ -195,7 +206,7 @@ endif()
 
 message(STATUS  
 "Building information:\n"
-"   Build in ${TODAY}\n"
+"   Build date: ${TODAY}\n\n"
 "   Build CLI ${Build_CLI}\n"
 "   Build GUI ${Build_GUI}\n"
 "   Build VapourSynth plugin ${Build_VapourSynth_Plugin}\n"
@@ -209,6 +220,7 @@ message(STATUS
 "   Use Legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
 "   Ryzen Optimization ${Ryzen_Optimization}\n"
 "   Native Optimization ${Native_Optimization}\n"
+"   Other Optimization ${Other_Optimization}\n\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
@@ -217,7 +229,7 @@ message(STATUS
 "   Enable video ${Enable_Video}\n"
 "   Enable Preview GUI ${Enable_Preview_GUI}\n"
 "   Enable image IO ${Enable_Image_IO}\n"
-"   Disable parallel ${Disable_Parallel}\n"
+"   Disable parallel ${Disable_Parallel}\n\n"
 "   Parallel library ${Parallel_Library_Type}\n"
 )
 if(WIN32)
@@ -232,11 +244,6 @@ if(Enable_CUDA)
         enable_language(CUDA)
     endif()
 endif()
-
-message(STATUS  
-"C++ compiler flags:\n"
-    ${CMAKE_CXX_FLAGS}
-)
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(OS_64_Bit ON)
