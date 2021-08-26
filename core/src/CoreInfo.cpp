@@ -14,15 +14,20 @@ const char* Anime4KCPP::CoreInfo::version()
 
 const char* Anime4KCPP::CoreInfo::CPUOptimizationMode()
 {
+    return
 #if defined(ENABLE_OPENCV_DNN)
-    return "OpenCV DNN";
+        "OpenCV DNN, "
 #elif defined(USE_RYZEN)
-    return "SIMD (AVX2)";
+        "SIMD (AVX2), "
 #elif defined(USE_EIGEN3)
-    return "Eigen3";
+        "Eigen3, "
 #else
-    return "Normal";
+        "Normal, "
 #endif // ENABLE_OPENCV_DNN
+#ifdef ENABLE_FAST_MATH
+        "Fast Math"
+#endif // ENABLE_FAST_MATH
+        ;
 }
 
 #define AC_ENUM_ITEM

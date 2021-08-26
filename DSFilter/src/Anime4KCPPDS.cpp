@@ -1,5 +1,6 @@
 #include <intrin.h>
 #include <regex>
+#include <sstream>
 
 #include "Anime4KCPPDS.h"
 
@@ -788,18 +789,23 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data)
 
 STDMETHODIMP Anime4KCPPDS::GetProcessorInfo(std::string& info)
 {
+    info.append("Anime4KCPP core information:")
+        .append("\n  Compiler: ").append(ANIME4KCPP_CORE_COMPILER)
+        .append("\n  CPU Optimization: ").append(Anime4KCPP::CoreInfo::CPUOptimizationMode())
+        .append("\n\n");
+
     try
     {
         switch (data.GPGPUModel)
         {
         case GPGPU::CPU:
-            info = "CPU:\n" + GetCPUBrandString();
+            info.append("CPU:\n  " + GetCPUBrandString());
             break;
         case GPGPU::OpenCL:
 #ifdef ENABLE_OPENCL
         {
             Anime4KCPP::OpenCL::GPUList GPUInfo = Anime4KCPP::OpenCL::listGPUs();
-            info = "OpenCL:\r\n" + GPUInfo();
+            info.append("OpenCL:\n" + GPUInfo());
         }
 #endif
         break;
@@ -807,7 +813,7 @@ STDMETHODIMP Anime4KCPPDS::GetProcessorInfo(std::string& info)
 #ifdef ENABLE_CUDA
         {
             Anime4KCPP::Cuda::GPUList GPUInfo = Anime4KCPP::Cuda::listGPUs();
-            info = "CUDA:\r\n" + GPUInfo();
+            info.append("CUDA:\n" + GPUInfo());
         }
 #endif
         break;

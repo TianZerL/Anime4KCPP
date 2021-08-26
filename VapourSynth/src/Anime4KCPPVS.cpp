@@ -700,7 +700,7 @@ static void VS_CC Anime4KCPPInfo(const VSMap* in, VSMap* out, void* userData, VS
         << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
         << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
         << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
-        << "  processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
+        << "  Processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
         << "  CPU Optimization: " << Anime4KCPP::CoreInfo::CPUOptimizationMode() << '\n'
         << '\n'
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;

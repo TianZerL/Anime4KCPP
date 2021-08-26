@@ -619,7 +619,7 @@ AVSValue AC_ASP_CDECL Anime4KCPPInfo(AVSValue args, void* user_data, IScriptEnvi
         << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
         << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
         << "  Compiler: " << ANIME4KCPP_CORE_COMPILER << '\n'
-        << "  processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
+        << "  Processors: " << Anime4KCPP::CoreInfo::supportedProcessors() << '\n'
         << "  CPU Optimization: " << Anime4KCPP::CoreInfo::CPUOptimizationMode() << '\n'
         << '\n'
         << "GitHub: https://github.com/TianZerL/Anime4KCPP" << std::endl;
