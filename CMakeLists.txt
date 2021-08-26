@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.9)
 project(Anime4KCPP)
 
 if(APPLE)
@@ -69,38 +69,51 @@ if(Maximum_Optimization)
     set(Enable_Fast_Math ON)
 endif()
 
+if(Other_Optimization)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT IPO_Supported OUTPUT IPO_Error)
+
+    if(IPO_Supported)
+        message(STATUS "IPO enabled")
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    else()
+        message(STATUS "IPO not supported: ${IPO_Error}")
+    endif()
+endif()
+
 if(MSVC)
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(
-            $<$<BOOL:${Other_Optimization}>:-flto=thin>
-            $<$<BOOL:${Enable_Fast_Math}>:/fp:fast>
-            $<$<BOOL:${Enable_Fast_Math}>:/clang:-ffast-math>
-        )
+        if(Enable_Fast_Math)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast /clang:-ffast-math")
+        endif()
         if(Enable_AVX2)
-            add_compile_options(/arch:AVX2)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
         elseif(Native_Optimization)
-            add_compile_options(/clang:-march=native)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /clang:-march=native")
         elseif(Ryzen_Optimization)
-            add_compile_options(/arch:AVX2)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
         endif()
     else()
-        add_compile_options(
-            $<$<BOOL:${Enable_Fast_Math}>:/fp:fast>
-            $<$<OR:$<BOOL:${Enable_AVX2}>,$<BOOL:${Ryzen_Optimization}>>:/arch:AVX2>
-        )
+        if(Enable_Fast_Math)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /fp:fast")
+        endif()
+        if(Enable_AVX2 OR Ryzen_Optimization)
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+        endif()
     endif()
 else()
-    add_compile_options(
-        $<$<BOOL:${Other_Optimization}>:-flto=thin> 
-        $<$<BOOL:${Other_Optimization}>:-Ofast>
-        $<$<BOOL:${Enable_Fast_Math}>:-ffast-math>
-    )
+    if(Other_Optimization)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
+    endif()
+    if(Enable_Fast_Math)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
+    endif()
     if(Enable_AVX2)
-        add_compile_options(-mavx2 -mfma)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")
     elseif(Native_Optimization)
-        add_compile_options(-march=native)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
     elseif(Ryzen_Optimization)
-        add_compile_options(-mavx2 -mfma)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")  
     endif()
 endif()
 
@@ -238,6 +251,10 @@ if(WIN32)
     "   Build DSFilter ${Build_DS_Filter}\n"
     )
 endif()
+
+message(STATUS  
+"C++ compiler flags:\n ${CMAKE_CXX_FLAGS}"
+)
 
 if(Enable_CUDA)
     if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
