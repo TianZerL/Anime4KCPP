@@ -47,6 +47,7 @@ if(Enable_CUDA)
         ${PROJECT_NAME} PROPERTIES 
             CUDA_RUNTIME_LIBRARY Static
             CUDA_ARCHITECTURES "${CUDA_Minimum_CC}-virtual;${CUDA_CC}-real"
+            POSITION_INDEPENDENT_CODE ON
     )
 
     install(
