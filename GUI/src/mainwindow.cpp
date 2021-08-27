@@ -1128,7 +1128,6 @@ void MainWindow::on_pushButtonPreview_clicked()
         break;
     case FileType::GIF:
     case FileType::VIDEO:
-    {
         try
         {
 #ifdef ENABLE_PREVIEW_GUI
@@ -1208,8 +1207,7 @@ void MainWindow::on_pushButtonPreview_clicked()
         {
             errorHandler(err.what());
         }
-    }
-    break;
+        break;
     case FileType::BAD_TYPE:
         errorHandler(ErrorType::BAD_TYPE);
         return;
@@ -1661,15 +1659,14 @@ void MainWindow::on_pushButtonCopyText_clicked()
 
 void MainWindow::on_pushButtonPreviewOriginal_clicked()
 {
-    QString filePath = ui->lineEditPreview->text();
-    if (filePath.isEmpty())
+    QFileInfo previewFile(ui->lineEditPreview->text());
+    if (!previewFile.exists())
     {
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
 
-    QFileInfo fileInfo(filePath);
-    FileType type = fileType(fileInfo);
+    FileType type = fileType(previewFile);
 
     ui->pushButtonPreviewOriginal->setEnabled(false);
 
@@ -1677,18 +1674,17 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
     {
     case FileType::IMAGE:
     {
-        cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_COLOR);
+        cv::Mat orgImg = cv::imread(previewFile.filePath().toUtf8().toStdString(), cv::IMREAD_COLOR);
         cv::imshow("original image", orgImg);
         cv::waitKey();
         break;
     }
     case FileType::GIF:
     case FileType::VIDEO:
-    {
         try
         {
 #ifdef ENABLE_PREVIEW_GUI
-            std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+            std::string currInputPath = previewFile.absoluteFilePath().toUtf8().toStdString();
 
             cv::VideoCapture videoCapture(currInputPath);
             if (!videoCapture.isOpened())
@@ -1762,8 +1758,7 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
         {
             errorHandler(err.what());
         }
-    }
-    break;
+        break;
     case FileType::BAD_TYPE:
         errorHandler(ErrorType::BAD_TYPE);
         return;
@@ -1774,15 +1769,14 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
 
 void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
 {
-    QString filePath = ui->lineEditPreview->text();
-    if (filePath.isEmpty())
+    QFileInfo previewFile(ui->lineEditPreview->text());
+    if (!previewFile.exists())
     {
         errorHandler(ErrorType::FILE_NOT_EXIST);
         return;
     }
 
-    QFileInfo fileInfo(filePath);
-    FileType type = fileType(fileInfo);
+    FileType type = fileType(previewFile);
 
     ui->pushButtonPreviewOnlyResize->setEnabled(false);
 
@@ -1791,7 +1785,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     {
     case FileType::IMAGE:
     {
-        cv::Mat orgImg = cv::imread(filePath.toUtf8().toStdString(), cv::IMREAD_COLOR);
+        cv::Mat orgImg = cv::imread(previewFile.filePath().toUtf8().toStdString(), cv::IMREAD_COLOR);
         cv::resize(orgImg, orgImg, cv::Size(0, 0), zoomFactor, zoomFactor, cv::INTER_CUBIC);
         cv::imshow("resized image", orgImg);
         cv::waitKey();
@@ -1799,11 +1793,10 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
     }
     case FileType::GIF:
     case FileType::VIDEO:
-    {
         try
         {
 #ifdef ENABLE_PREVIEW_GUI
-            std::string currInputPath = fileInfo.absoluteFilePath().toUtf8().toStdString();
+            std::string currInputPath = previewFile.absoluteFilePath().toUtf8().toStdString();
 
             cv::VideoCapture videoCapture(currInputPath);
             if (!videoCapture.isOpened())
@@ -1878,8 +1871,7 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
         {
             errorHandler(err.what());
         }
-    }
-    break;
+        break;
     case FileType::BAD_TYPE:
         errorHandler(ErrorType::BAD_TYPE);
         return;
