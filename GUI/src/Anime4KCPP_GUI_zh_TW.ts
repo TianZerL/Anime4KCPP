@@ -4,10 +4,6 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Index</source>
-        <translation type="vanished">主頁</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="300"/>
         <source>output path:</source>
         <oldsource>input path: </oldsource>
@@ -454,12 +450,12 @@
     <message>
         <location filename="mainwindow.ui" line="1180"/>
         <source>Style</source>
-        <translation type="unfinished"></translation>
+        <translation>UI風格</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1197"/>
         <source>FFmpeg</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1255"/>
@@ -479,26 +475,17 @@
     <message>
         <location filename="mainwindow.ui" line="1286"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>預設</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1291"/>
         <source>Fusion</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1296"/>
         <source>Fusion dark</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable GPU acceleration for ACNet, this will take a while, please don&apos;t close it.</source>
-        <oldsource>Enable GPU acceleration for ACNet</oldsource>
-        <translation type="vanished">開啟ACNet GPU加速，這會花些時間，請勿關閉。</translation>
-    </message>
-    <message>
-        <source>GPU acceleration for ACNet</source>
-        <translation type="vanished">ACNet GPU加速</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1281"/>
@@ -627,21 +614,13 @@
     <message>
         <location filename="mainwindow.ui" line="981"/>
         <source>GPGPU model</source>
-        <translation type="unfinished"></translation>
+        <translation>GPGPU模型</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1029"/>
         <source>platform id</source>
         <oldsource>plateform id</oldsource>
         <translation>平臺ID</translation>
-    </message>
-    <message>
-        <source>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">指定平臺ID，若您已經開啟過GPU加速則需要重啟Anime4KCPP以修改此值</translation>
-    </message>
-    <message>
-        <source>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">指定設備ID，若您已經開啟過GPU加速則需要重啟Anime4KCPP以修改此值</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1082"/>
@@ -758,10 +737,6 @@
         <translation></translation>
     </message>
     <message>
-        <source>Chinese</source>
-        <translation type="vanished">中文</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="1240"/>
         <source>Quit confirmation</source>
         <translation>退出時確認</translation>
@@ -777,31 +752,8 @@
         <translation>列出GPU設備</translation>
     </message>
     <message>
-        <source>Input file</source>
-        <oldsource>Input file name</oldsource>
-        <translation type="vanished">輸入檔</translation>
-    </message>
-    <message>
-        <source>Output file</source>
-        <oldsource>Output file name</oldsource>
-        <translation type="vanished">輸出檔</translation>
-    </message>
-    <message>
-        <source>full path</source>
-        <oldsource>input path</oldsource>
-        <translation type="vanished">完整路徑</translation>
-    </message>
-    <message>
-        <source>output path</source>
-        <translation type="vanished">輸出路徑</translation>
-    </message>
-    <message>
-        <source>State</source>
-        <translation type="vanished">狀態</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="106"/>
-        <location filename="mainwindow.cpp" line="2202"/>
+        <location filename="mainwindow.cpp" line="2204"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
@@ -833,10 +785,6 @@
         <translation>錯誤</translation>
     </message>
     <message>
-        <source>Only ASCII encoding is supported</source>
-        <translation type="vanished">僅支持英文檔案名</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="468"/>
         <source>Dir does not exists</source>
         <translation>資料夾不存在</translation>
@@ -859,30 +807,31 @@
     <message>
         <location filename="mainwindow.cpp" line="498"/>
         <source>OpenCL is not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>當前不支持OpenCL</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="504"/>
         <source>CUDA is not supported</source>
-        <translation>不支持CUDA</translation>
+        <translation>当前不支持CUDA</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
         <location filename="mainwindow.cpp" line="1992"/>
         <location filename="mainwindow.cpp" line="2008"/>
         <location filename="mainwindow.cpp" line="2034"/>
-        <location filename="mainwindow.cpp" line="2115"/>
+        <location filename="mainwindow.cpp" line="2117"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1993"/>
         <source>Failed to initialize GPU: </source>
-        <translation type="unfinished"></translation>
+        <translation>未能初始化GPU: </translation>
     </message>
     <message>
-        <source>FFmpeg did not fount</source>
-        <translation type="vanished">未發現FFmpeg</translation>
+        <location filename="mainwindow.cpp" line="2093"/>
+        <source>Benchmark test under 8-bit integer input and serial processing</source>
+        <translation>8比特整數輸入和串列處理下的基準測試結果</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
@@ -903,15 +852,15 @@
         <location filename="mainwindow.cpp" line="824"/>
         <location filename="mainwindow.cpp" line="1655"/>
         <location filename="mainwindow.cpp" line="2018"/>
-        <location filename="mainwindow.cpp" line="2122"/>
-        <location filename="mainwindow.cpp" line="2147"/>
+        <location filename="mainwindow.cpp" line="2124"/>
+        <location filename="mainwindow.cpp" line="2149"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="827"/>
         <source>Processing stopped</source>
-        <translation type="unfinished"></translation>
+        <translation>處理已停止</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="928"/>
@@ -924,18 +873,13 @@
         <translation>請輸入網路視頻的URL</translation>
     </message>
     <message>
-        <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
-        <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
-        <translation type="vanished">您正在使用GPU加速模式，但依然啟用了預處理或者後處理，這可能會拖慢GPU的處理速度(通常依然快於CPU)，關閉他們嗎？</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="1509"/>
         <location filename="mainwindow.cpp" line="1522"/>
         <location filename="mainwindow.cpp" line="1535"/>
         <location filename="mainwindow.cpp" line="1548"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
-        <translation type="unfinished">中文翻譯檔</translation>
+        <translation>中文翻譯檔</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1566"/>
@@ -959,42 +903,18 @@
         <translation>請選擇一個資料夾</translation>
     </message>
     <message>
-        <source>Benchmark result:</source>
-        <translation type="vanished">性能測試結果:</translation>
-    </message>
-    <message>
-        <source>Successfully release GPU for ACNet</source>
-        <translation type="vanished">釋放ACNet GPU成功</translation>
-    </message>
-    <message>
-        <source>Unsupport GPU acceleration for ACNet in this platform</source>
-        <translation type="vanished">不支援將GPU加速用於ACNet</translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2203"/>
+        <location filename="mainwindow.cpp" line="2205"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>確認停止所有任務？</translation>
     </message>
     <message>
-        <source>You are trying to enable GPU acceleration, which is an experimental function, check and initialize GPU?</source>
-        <oldsource>You are trying to enable GPU acceleration, which is an experimental function, check and inital GPU?</oldsource>
-        <translation type="vanished">您正在嘗試啟用GPU加速，這還是一個實驗性功能，檢查相容性並初始化嗎？</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="2035"/>
-        <location filename="mainwindow.cpp" line="2116"/>
+        <location filename="mainwindow.cpp" line="2118"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平臺不支援GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2092"/>
-        <source>Benchmark test under 8-bit integer input and serial processing
-
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2148"/>
+        <location filename="mainwindow.cpp" line="2150"/>
         <source>Successfully release GPU</source>
         <translation>成功釋放GPU</translation>
     </message>
@@ -1002,10 +922,6 @@
         <location filename="mainwindow.cpp" line="462"/>
         <source>File does not exists</source>
         <translation>文件不存在</translation>
-    </message>
-    <message>
-        <source>File type error, only image support preview</source>
-        <translation type="vanished">檔案類型錯誤，僅支援圖片</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="480"/>

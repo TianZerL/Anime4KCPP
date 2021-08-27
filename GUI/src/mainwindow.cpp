@@ -2089,7 +2089,9 @@ void MainWindow::on_actionBenchmark_triggered()
 #endif 
 
     QMessageBox::information(this,
-        tr("Benchmark"), tr("Benchmark test under 8-bit integer input and serial processing\n\n") + resultText, QMessageBox::Ok);
+        tr("Benchmark"), 
+        tr("Benchmark test under 8-bit integer input and serial processing").append("\n\n").append(resultText), 
+        QMessageBox::Ok);
 }
 
 void MainWindow::on_pushButtonListGPUs_clicked()

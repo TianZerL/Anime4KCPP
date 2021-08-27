@@ -4,10 +4,6 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Index</source>
-        <translation type="vanished">メイン画面</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="300"/>
         <source>output path:</source>
         <oldsource>input path: </oldsource>
@@ -429,7 +425,7 @@
     <message>
         <location filename="mainwindow.ui" line="723"/>
         <source>Set HDN level from 1 to 3, higher for better denoising but maybe blurred</source>
-        <translation>HDN レベルを 1 から 3 に設定し、ノイズリダクションが高いほど、がぼやけ、詳細の欠如を引き起こす可能性があります。</translation>
+        <translation>HDN レベルを 1 から 3 に設定し、ノイズリダクションが高いほど、がぼやけ、詳細の欠如を引き起こす可能性があります</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="997"/>
@@ -454,12 +450,12 @@
     <message>
         <location filename="mainwindow.ui" line="1180"/>
         <source>Style</source>
-        <translation type="unfinished"></translation>
+        <translation>UIスタイル</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1197"/>
         <source>FFmpeg</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1255"/>
@@ -479,26 +475,17 @@
     <message>
         <location filename="mainwindow.ui" line="1286"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>デフォルト</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1291"/>
         <source>Fusion</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1296"/>
         <source>Fusion dark</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable GPU acceleration for ACNet, this will take a while, please don&apos;t close it.</source>
-        <oldsource>Enable GPU acceleration for ACNet</oldsource>
-        <translation type="vanished">ACNet GPUアクセラレーションをオンにし、これには少し時間がかかりますが、オフにしないでください。</translation>
-    </message>
-    <message>
-        <source>GPU acceleration for ACNet</source>
-        <translation type="vanished">ACNet GPU アクセラレーション</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1281"/>
@@ -535,7 +522,7 @@
     <message>
         <location filename="mainwindow.ui" line="776"/>
         <source>Strength for pushing color,range 0 to 1,higher for thinner edge</source>
-        <translation>エッジリファインメント強度、範囲0-1、値が高いほど、拡大された画像の知覚を改善するためにエッジを小さくします。</translation>
+        <translation>エッジリファインメント強度、範囲0-1、値が高いほど、拡大された画像の知覚を改善するためにエッジを小さくします</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="779"/>
@@ -545,7 +532,7 @@
     <message>
         <location filename="mainwindow.ui" line="796"/>
         <source>Strength for pushing gradient,range 0 to 1,higher for sharper edge</source>
-        <translation>加工強度、範囲0-1、値が大きいほどエッジがシャープになり、拡大画像の知覚が向上します。</translation>
+        <translation>加工強度、範囲0-1、値が大きいほどエッジがシャープになり、拡大画像の知覚が向上します</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="799"/>
@@ -586,7 +573,7 @@
     <message>
         <location filename="mainwindow.ui" line="929"/>
         <source>Specify the FPS of output video, 0 for auto</source>
-        <translation>出力映像のフレームレートを指定し、0 に設定して自動的に設定します。</translation>
+        <translation>出力映像のフレームレートを指定し、0 に設定して自動的に設定します</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="932"/>
@@ -596,7 +583,7 @@
     <message>
         <location filename="mainwindow.ui" line="951"/>
         <source>Preserve alpha channels for transparent image</source>
-        <translation>とうかチャネルがある場合は、とうかチャネルを保持します。</translation>
+        <translation>とうかチャネルがある場合は、とうかチャネルを保持します</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="954"/>
@@ -627,21 +614,13 @@
     <message>
         <location filename="mainwindow.ui" line="981"/>
         <source>GPGPU model</source>
-        <translation type="unfinished"></translation>
+        <translation>GPGPUモデル</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1029"/>
         <source>platform id</source>
         <oldsource>plateform id</oldsource>
         <translation>プラットフォーム ID</translation>
-    </message>
-    <message>
-        <source>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">プラットフォーム ID を指定します。GPU アクセラレーションをすでに有効にしている場合は、この値を変更するには、Anime4KCPP を再起動する必要があります。</translation>
-    </message>
-    <message>
-        <source>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">デバイス ID を指定します。GPU アクセラレーションをすでに有効にしている場合は、この値を変更するには、Anime4KCPP を再起動する必要があります。</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1082"/>
@@ -687,7 +666,7 @@
     <message>
         <location filename="mainwindow.ui" line="1079"/>
         <source>Release GPU in order to specify anoher GPU</source>
-        <translation>現在の GPU を解放して、別の GPU を選択します。</translation>
+        <translation>現在の GPU を解放して、別の GPU を選択します</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1094"/>
@@ -758,10 +737,6 @@
         <translation></translation>
     </message>
     <message>
-        <source>Chinese</source>
-        <translation type="vanished">中文</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="1240"/>
         <source>Quit confirmation</source>
         <translation>終了時に確認</translation>
@@ -777,31 +752,8 @@
         <translation>GPUデバイス一覧</translation>
     </message>
     <message>
-        <source>Input file</source>
-        <oldsource>Input file name</oldsource>
-        <translation type="vanished">入力ファイル</translation>
-    </message>
-    <message>
-        <source>Output file</source>
-        <oldsource>Output file name</oldsource>
-        <translation type="vanished">出力ファイル</translation>
-    </message>
-    <message>
-        <source>full path</source>
-        <oldsource>input path</oldsource>
-        <translation type="vanished">完全なパス</translation>
-    </message>
-    <message>
-        <source>output path</source>
-        <translation type="vanished">出力パス</translation>
-    </message>
-    <message>
-        <source>State</source>
-        <translation type="vanished">ステータス</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="106"/>
-        <location filename="mainwindow.cpp" line="2202"/>
+        <location filename="mainwindow.cpp" line="2204"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
@@ -833,13 +785,9 @@
         <translation>エラー</translation>
     </message>
     <message>
-        <source>Only ASCII encoding is supported</source>
-        <translation type="vanished">英語のファイル名のみがサポートされます。</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="468"/>
         <source>Dir does not exists</source>
-        <translation>フォルダが存在しません。</translation>
+        <translation>フォルダが存在しません</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="474"/>
@@ -849,40 +797,41 @@
     <message>
         <location filename="mainwindow.cpp" line="486"/>
         <source>Invalid url, please check your input</source>
-        <translation>サポートされていない URL については、入力内容を確認してください。</translation>
+        <translation>サポートされていない URL については、入力内容を確認してください</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="492"/>
         <source>Error image format, please check your input</source>
-        <translation>間違った画像形式は、あなたの入力を確認してください!</translation>
+        <translation>間違った画像形式は、あなたの入力を確認してください</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="498"/>
         <source>OpenCL is not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>OpenCLは現在サポートされていません</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="504"/>
         <source>CUDA is not supported</source>
-        <translation>Cudaはサポートされていません</translation>
+        <translation>CUDAは現在サポートされていません</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
         <location filename="mainwindow.cpp" line="1992"/>
         <location filename="mainwindow.cpp" line="2008"/>
         <location filename="mainwindow.cpp" line="2034"/>
-        <location filename="mainwindow.cpp" line="2115"/>
+        <location filename="mainwindow.cpp" line="2117"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1993"/>
         <source>Failed to initialize GPU: </source>
-        <translation type="unfinished"></translation>
+        <translation>GPUの初期化に失敗しました: </translation>
     </message>
     <message>
-        <source>FFmpeg did not fount</source>
-        <translation type="vanished">FFmpeg が見つかりません</translation>
+        <location filename="mainwindow.cpp" line="2093"/>
+        <source>Benchmark test under 8-bit integer input and serial processing</source>
+        <translation>8ビット整数入力およびシリアル処理でのベンチマーク結果</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
@@ -903,15 +852,15 @@
         <location filename="mainwindow.cpp" line="824"/>
         <location filename="mainwindow.cpp" line="1655"/>
         <location filename="mainwindow.cpp" line="2018"/>
-        <location filename="mainwindow.cpp" line="2122"/>
-        <location filename="mainwindow.cpp" line="2147"/>
+        <location filename="mainwindow.cpp" line="2124"/>
+        <location filename="mainwindow.cpp" line="2149"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="827"/>
         <source>Processing stopped</source>
-        <translation type="unfinished"></translation>
+        <translation>処理を停止しました</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="928"/>
@@ -921,12 +870,7 @@
     <message>
         <location filename="mainwindow.cpp" line="929"/>
         <source>Please input the url of web video</source>
-        <translation>インターネット動画のURLを入力して下さい。</translation>
-    </message>
-    <message>
-        <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
-        <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
-        <translation type="vanished">GPU アクセラレーション モードを使用していますが、まだ前処理または後処理が有効になっているため、GPU 処理が遅くなる可能性があります (通常は CPU よりも高速です) はオフにしますか?</translation>
+        <translation>インターネット動画のURLを入力して下さい</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1509"/>
@@ -935,7 +879,7 @@
         <location filename="mainwindow.cpp" line="1548"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
-        <translation type="unfinished">中国語翻訳ファイル</translation>
+        <translation>日本語の翻訳ファイル</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1566"/>
@@ -946,7 +890,7 @@
     <message>
         <location filename="mainwindow.cpp" line="1570"/>
         <source>Please input the FFmpeg path</source>
-        <translation>FFmpeg パスを入力してください。</translation>
+        <translation>FFmpeg パスを入力してください</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1656"/>
@@ -959,63 +903,35 @@
         <translation>フォルダを選択してください</translation>
     </message>
     <message>
-        <source>Benchmark result:</source>
-        <translation type="vanished">性能試験結果:</translation>
-    </message>
-    <message>
-        <source>Successfully release GPU for ACNet</source>
-        <translation type="vanished">ACNet GPU の成功をリリース</translation>
-    </message>
-    <message>
-        <source>Unsupport GPU acceleration for ACNet in this platform</source>
-        <translation type="vanished">ACNet の GPU アクセラレーションはサポートされていません。</translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2203"/>
+        <location filename="mainwindow.cpp" line="2205"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>すべてのミッションが中止されたことを確認しますか?</translation>
     </message>
     <message>
-        <source>You are trying to enable GPU acceleration, which is an experimental function, check and initialize GPU?</source>
-        <oldsource>You are trying to enable GPU acceleration, which is an experimental function, check and inital GPU?</oldsource>
-        <translation type="vanished">GPUアクセラレーションを有効にしようとしていますが、これはまだ実験的な機能ですか、互換性をチェックして初期化しますか?</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="2035"/>
-        <location filename="mainwindow.cpp" line="2116"/>
+        <location filename="mainwindow.cpp" line="2118"/>
         <source>Unsupport GPU acceleration in this platform</source>
-        <translation>GPU アクセラレーションはこのプラットフォームではサポートされていません。</translation>
+        <translation>GPU アクセラレーションはこのプラットフォームではサポートされていません</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2092"/>
-        <source>Benchmark test under 8-bit integer input and serial processing
-
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2148"/>
+        <location filename="mainwindow.cpp" line="2150"/>
         <source>Successfully release GPU</source>
         <translation>成功した GPU リリース</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="462"/>
         <source>File does not exists</source>
-        <translation>ファイルが存在しません。</translation>
-    </message>
-    <message>
-        <source>File type error, only image support preview</source>
-        <translation type="vanished">ファイルタイプエラー、画像のみサポート</translation>
+        <translation>ファイルが存在しません</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="480"/>
         <source>File type error, you can add it manually</source>
-        <translation>ファイルタイプのエラーが発生した場合、エンドコードを手動で追加することができます。</translation>
+        <translation>ファイルタイプのエラーが発生した場合、エンドコードを手動で追加することができます</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="456"/>
         <source>Processing list empty</source>
-        <translation>処理リストが空です。</translation>
+        <translation>処理リストが空です</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="49"/>

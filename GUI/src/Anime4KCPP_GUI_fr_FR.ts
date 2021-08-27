@@ -4,10 +4,6 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <source>Index</source>
-        <translation type="vanished">Page d&apos;accueil</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="300"/>
         <source>output path:</source>
         <oldsource>input path: </oldsource>
@@ -54,7 +50,7 @@
         <location filename="mainwindow.ui" line="40"/>
         <source>Drag and drop files here(image or video), and you can edit the ouput file name or path here</source>
         <oldsource>Drag and drop files here(image or video), and yu can edit the ouput file name or path here</oldsource>
-        <translation>Faites glisser et déposer des fichiers ici (images ou vidéos), vous pouvez également modifier le nom et le chemin d’accès du fichier de sortie dans la table.</translation>
+        <translation>Faites glisser et déposer des fichiers ici (images ou vidéos), vous pouvez également modifier le nom et le chemin d’accès du fichier de sortie dans la table</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="56"/>
@@ -429,7 +425,7 @@
     <message>
         <location filename="mainwindow.ui" line="723"/>
         <source>Set HDN level from 1 to 3, higher for better denoising but maybe blurred</source>
-        <translation>Réglez le niveau HDN de 1 à 3, plus la réduction du bruit est élevée, mais peut causer du flou et un manque de détails.</translation>
+        <translation>Réglez le niveau HDN de 1 à 3, plus la réduction du bruit est élevée, mais peut causer du flou et un manque de détails</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="997"/>
@@ -454,12 +450,12 @@
     <message>
         <location filename="mainwindow.ui" line="1180"/>
         <source>Style</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1197"/>
         <source>FFmpeg</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1255"/>
@@ -479,26 +475,17 @@
     <message>
         <location filename="mainwindow.ui" line="1286"/>
         <source>Default</source>
-        <translation type="unfinished"></translation>
+        <translation>Par défaut</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1291"/>
         <source>Fusion</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1296"/>
         <source>Fusion dark</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enable GPU acceleration for ACNet, this will take a while, please don&apos;t close it.</source>
-        <oldsource>Enable GPU acceleration for ACNet</oldsource>
-        <translation type="vanished">Activez l’accélération du GPU ACNet, cela prendra un certain temps, ne l’éteignez pas.</translation>
-    </message>
-    <message>
-        <source>GPU acceleration for ACNet</source>
-        <translation type="vanished">Accélération du GPU ACNet</translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1281"/>
@@ -535,7 +522,7 @@
     <message>
         <location filename="mainwindow.ui" line="776"/>
         <source>Strength for pushing color,range 0 to 1,higher for thinner edge</source>
-        <translation>Intensité d&apos;amincissement des bords, plage 0-1, plus la valeur est élevée, plus le bord est petit pour améliorer la perception de l&apos;image agrandie.</translation>
+        <translation>Intensité d&apos;amincissement des bords, plage 0-1, plus la valeur est élevée, plus le bord est petit pour améliorer la perception de l&apos;image agrandie</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="779"/>
@@ -545,7 +532,7 @@
     <message>
         <location filename="mainwindow.ui" line="796"/>
         <source>Strength for pushing gradient,range 0 to 1,higher for sharper edge</source>
-        <translation>Force de traitement, plage 0-1, plus la valeur est élevée, plus le bord est net pour améliorer la perception de l&apos;image agrandie.</translation>
+        <translation>Force de traitement, plage 0-1, plus la valeur est élevée, plus le bord est net pour améliorer la perception de l&apos;image agrandie</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="799"/>
@@ -586,7 +573,7 @@
     <message>
         <location filename="mainwindow.ui" line="929"/>
         <source>Specify the FPS of output video, 0 for auto</source>
-        <translation>Spécifiez la fréquence d’image de la vidéo de sortie, définie sur 0 et définie automatiquement.</translation>
+        <translation>Spécifiez la fréquence d’image de la vidéo de sortie, définie sur 0 et définie automatiquement</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="932"/>
@@ -596,7 +583,7 @@
     <message>
         <location filename="mainwindow.ui" line="951"/>
         <source>Preserve alpha channels for transparent image</source>
-        <translation>Conservez des canaux transparents, le cas échéant.</translation>
+        <translation>Conservez des canaux transparents, le cas échéant</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="954"/>
@@ -627,21 +614,13 @@
     <message>
         <location filename="mainwindow.ui" line="981"/>
         <source>GPGPU model</source>
-        <translation type="unfinished"></translation>
+        <translation>Modèle GPGPU</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1029"/>
         <source>platform id</source>
         <oldsource>plateform id</oldsource>
         <translation>ID de plate-forme</translation>
-    </message>
-    <message>
-        <source>Specify platform id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">Spécifiez l’ID de la plate-forme. Si vous avez déjà activé l’accélération gpu, vous devez redémarrer Anime4KCPP pour modifier cette valeur.</translation>
-    </message>
-    <message>
-        <source>Specify device id, you need restart Anime4KCPP to change this if you enabled GPU acceleration</source>
-        <translation type="vanished">Spécifiez l’ID du périphérique. Si vous avez déjà activé l’accélération gpu, vous devrez redémarrer Anime4KCPP pour modifier cette valeur.</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1082"/>
@@ -651,7 +630,7 @@
     <message>
         <location filename="mainwindow.ui" line="1219"/>
         <source>Quit</source>
-        <translation type="unfinished"></translation>
+        <translation>Sortie</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1229"/>
@@ -692,7 +671,7 @@
     <message>
         <location filename="mainwindow.ui" line="1079"/>
         <source>Release GPU in order to specify anoher GPU</source>
-        <translation>Relâchez le GPU actuel pour sélectionner un autre GPU.</translation>
+        <translation>Relâchez le GPU actuel pour sélectionner un autre GPU</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1094"/>
@@ -753,17 +732,9 @@
         <translation>À propos de</translation>
     </message>
     <message>
-        <source>Quitter</source>
-        <translation type="vanished">退出</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="1224"/>
         <source>English</source>
         <translation></translation>
-    </message>
-    <message>
-        <source>Chinese</source>
-        <translation type="vanished">Chinois</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="1240"/>
@@ -781,31 +752,8 @@
         <translation>Liste des dispositifs GPU</translation>
     </message>
     <message>
-        <source>Input file</source>
-        <oldsource>Input file name</oldsource>
-        <translation type="vanished">Nom du fichier d’entrée</translation>
-    </message>
-    <message>
-        <source>Output file</source>
-        <oldsource>Output file name</oldsource>
-        <translation type="vanished">Nom du fichier de sortie</translation>
-    </message>
-    <message>
-        <source>full path</source>
-        <oldsource>input path</oldsource>
-        <translation type="vanished">chemin d’entrée</translation>
-    </message>
-    <message>
-        <source>output path</source>
-        <translation type="vanished">chemin de sortie</translation>
-    </message>
-    <message>
-        <source>State</source>
-        <translation type="vanished">État</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="106"/>
-        <location filename="mainwindow.cpp" line="2202"/>
+        <location filename="mainwindow.cpp" line="2204"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
@@ -837,13 +785,9 @@
         <translation>Erreur</translation>
     </message>
     <message>
-        <source>Only ASCII encoding is supported</source>
-        <translation type="vanished">Seuls les noms de fichiers anglais sont pris en charge.</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="468"/>
         <source>Dir does not exists</source>
-        <translation>Le dossier n’existe pas.</translation>
+        <translation>Le dossier n’existe pas</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="474"/>
@@ -853,45 +797,46 @@
     <message>
         <location filename="mainwindow.cpp" line="486"/>
         <source>Invalid url, please check your input</source>
-        <translation>Pour les URL non prises en charge, veuillez vérifier votre saisie.</translation>
+        <translation>Pour les URL non prises en charge, veuillez vérifier votre saisie</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="492"/>
         <source>Error image format, please check your input</source>
-        <translation>Mauvais format d&apos;image, veuillez vérifier votre saisie!</translation>
+        <translation>Mauvais format d&apos;image, veuillez vérifier votre saisie</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="498"/>
         <source>OpenCL is not supported</source>
-        <translation type="unfinished"></translation>
+        <translation>OpenCL n&apos;est pas pris en charge</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="504"/>
         <source>CUDA is not supported</source>
-        <translation>Cuda n&apos;est pas pris en charge</translation>
+        <translation>CUDA n&apos;est pas pris en charge</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
         <location filename="mainwindow.cpp" line="1992"/>
         <location filename="mainwindow.cpp" line="2008"/>
         <location filename="mainwindow.cpp" line="2034"/>
-        <location filename="mainwindow.cpp" line="2115"/>
+        <location filename="mainwindow.cpp" line="2117"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1993"/>
         <source>Failed to initialize GPU: </source>
-        <translation type="unfinished"></translation>
+        <translation>Échec de l&apos;initialisation du GPU : </translation>
     </message>
     <message>
-        <source>FFmpeg did not fount</source>
-        <translation type="vanished">Aucun FFmpeg trouvé.</translation>
+        <location filename="mainwindow.cpp" line="2093"/>
+        <source>Benchmark test under 8-bit integer input and serial processing</source>
+        <translation>Test de référence sous entrée d&apos;entiers 8 bits et traitement série</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="554"/>
         <source>FFmpeg not found</source>
-        <translation>Aucun FFmpeg trouvé.</translation>
+        <translation>Aucun FFmpeg trouvé</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="799"/>
@@ -907,15 +852,15 @@
         <location filename="mainwindow.cpp" line="824"/>
         <location filename="mainwindow.cpp" line="1655"/>
         <location filename="mainwindow.cpp" line="2018"/>
-        <location filename="mainwindow.cpp" line="2122"/>
-        <location filename="mainwindow.cpp" line="2147"/>
+        <location filename="mainwindow.cpp" line="2124"/>
+        <location filename="mainwindow.cpp" line="2149"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="827"/>
         <source>Processing stopped</source>
-        <translation type="unfinished"></translation>
+        <translation>Traitement arrêté</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="928"/>
@@ -925,12 +870,7 @@
     <message>
         <location filename="mainwindow.cpp" line="929"/>
         <source>Please input the url of web video</source>
-        <translation>Veuillez entrer l&apos;URL de la vidéo web.</translation>
-    </message>
-    <message>
-        <source>You are using GPU acceleration but still enabledpreprocessing or postprocessing, which is not GPU acceletation yet, and may slow down processing for GPU (usually still faster than CPU), close them?</source>
-        <oldsource>You are using GPU acceleration but still enablepreprocessing or postprocessing, which is not GPU acceletation yet,and may slow down processing for GPU(usually still faster than CPU), close them?</oldsource>
-        <translation type="vanished">Vous utilisez le mode d’accélération GPU, mais avez toujours le prétraitement ou le postprocessage activé, ce qui peut ralentir le traitement GPU (généralement encore plus rapide que le processeur), les désactiver?</translation>
+        <translation>Veuillez entrer l&apos;URL de la vidéo web</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1509"/>
@@ -939,7 +879,7 @@
         <location filename="mainwindow.cpp" line="1548"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
-        <translation type="unfinished">Fichiers de traduction en chinois</translation>
+        <translation>fichier de traduction français</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="1566"/>
@@ -963,53 +903,25 @@
         <translation>Veuillez sélectionner un dossier</translation>
     </message>
     <message>
-        <source>Benchmark result:</source>
-        <translation type="vanished">Résultats des tests de performance:</translation>
-    </message>
-    <message>
-        <source>Successfully release GPU for ACNet</source>
-        <translation type="vanished">Sortie du succès d’ACNet GPU</translation>
-    </message>
-    <message>
-        <source>Unsupport GPU acceleration for ACNet in this platform</source>
-        <translation type="vanished">L’accélération GPU pour ACNet n’est pas prise en charge.</translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2203"/>
+        <location filename="mainwindow.cpp" line="2205"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
     <message>
-        <source>You are trying to enable GPU acceleration, which is an experimental function, check and initialize GPU?</source>
-        <oldsource>You are trying to enable GPU acceleration, which is an experimental function, check and inital GPU?</oldsource>
-        <translation type="vanished">Essayez-vous d’activer l’accélération GPU, est-ce encore une fonctionnalité expérimentale, vérifier la compatibilité et initialiser?</translation>
-    </message>
-    <message>
         <location filename="mainwindow.cpp" line="2035"/>
-        <location filename="mainwindow.cpp" line="2116"/>
+        <location filename="mainwindow.cpp" line="2118"/>
         <source>Unsupport GPU acceleration in this platform</source>
-        <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme.</translation>
+        <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2092"/>
-        <source>Benchmark test under 8-bit integer input and serial processing
-
-</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="mainwindow.cpp" line="2148"/>
+        <location filename="mainwindow.cpp" line="2150"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="462"/>
         <source>File does not exists</source>
-        <translation>Le fichier n’existe pas.</translation>
-    </message>
-    <message>
-        <source>File type error, only image support preview</source>
-        <translation type="vanished">Erreur de type de fichier, seules les images sont prises en charge</translation>
+        <translation>Le fichier n’existe pas</translation>
     </message>
     <message>
         <location filename="mainwindow.cpp" line="480"/>
@@ -1019,7 +931,7 @@
     <message>
         <location filename="mainwindow.cpp" line="456"/>
         <source>Processing list empty</source>
-        <translation>La liste de traitement est vide.</translation>
+        <translation>La liste de traitement est vide</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="49"/>
