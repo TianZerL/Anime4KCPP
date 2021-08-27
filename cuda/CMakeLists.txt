@@ -16,7 +16,7 @@ if(Enable_CUDA)
         source_group("cuda_include" FILES ${INCLUDE}) 
         source_group("cuda_source" FILES ${SOURCE}) 
         
-        cuda_add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
+        cuda_add_library(${PROJECT_NAME} OBJECT ${INCLUDE} ${SOURCE})
     else()
         project(CUDA_Module LANGUAGES CUDA)
         
@@ -36,7 +36,7 @@ if(Enable_CUDA)
         message(STATUS "CMAKE_CUDA_FLAGS:            ${CMAKE_CUDA_FLAGS}")
         message(STATUS "CMAKE_CUDA_ARCHITECTURES:    ${CMAKE_CUDA_ARCHITECTURES}")
 
-        add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
+        add_library(${PROJECT_NAME} OBJECT ${INCLUDE} ${SOURCE})
     endif()
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/core/include include)
@@ -47,7 +47,6 @@ if(Enable_CUDA)
         ${PROJECT_NAME} PROPERTIES 
             CUDA_RUNTIME_LIBRARY Static
             CUDA_ARCHITECTURES "${CUDA_Minimum_CC}-virtual;${CUDA_CC}-real"
-            POSITION_INDEPENDENT_CODE ON
     )
 
     install(

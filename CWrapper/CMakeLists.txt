@@ -8,7 +8,6 @@ if(Build_C_Wrapper)
 
     if(Build_Static_C_Wrapper)
         add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
-        set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)
     else()
         add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
     endif()

@@ -5,10 +5,15 @@ aux_source_directory(src SOURCE)
 file(GLOB INCLUDE include/*.hpp)
 
 if(Build_Static_Core)
-    add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
-    set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS -DAC_STATIC_DEFINE)
+    add_library(${PROJECT_NAME} STATIC 
+        ${INCLUDE} ${SOURCE} 
+        $<$<BOOL:${Enable_CUDA}>:$<TARGET_OBJECTS:CUDA_Module>>
+    )
 else()
-    add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
+    add_library(${PROJECT_NAME} SHARED 
+        ${INCLUDE} ${SOURCE} 
+        $<$<BOOL:${Enable_CUDA}>:$<TARGET_OBJECTS:CUDA_Module>>
+    )
 endif()
 
 target_compile_definitions(

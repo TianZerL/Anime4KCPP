@@ -120,10 +120,6 @@ elseif(Enable_Video)
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 endif()
 
-if(Enable_CUDA)
-    target_link_libraries(${PROJECT_NAME} PRIVATE CUDA_Module)
-endif()
-
 if(Enable_NCNN)
     find_package(ncnn REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE ncnn)
