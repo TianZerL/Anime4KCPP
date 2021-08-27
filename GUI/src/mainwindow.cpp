@@ -575,7 +575,6 @@ std::unique_ptr<Anime4KCPP::AC> MainWindow::getACUP()
     double pushGradientStrength = ui->doubleSpinBoxPushGradientStrength->value();
     double zoomFactor = ui->doubleSpinBoxZoomFactor->value();
     bool fastMode = ui->checkBoxFastMode->isChecked();
-    bool videoMode = false;
     bool preprocessing = ui->checkBoxEnablePreprocessing->isChecked();
     bool postprocessing = ui->checkBoxEnablePostprocessing->isChecked();
     bool HDN = ui->checkBoxHDN->isChecked();
@@ -823,7 +822,7 @@ void MainWindow::solt_allDone_remindUser(quint64 totalTime)
     {
         QMessageBox::information(this,
             tr("Notice"),
-            totalTime > 0 ? 
+            totalTime > 0 ?
             QString("All tasks done\nTotal time: %1 s").arg(totalTime / 1000.0) :
             tr("Processing stopped"),
             QMessageBox::Ok);
@@ -1110,12 +1109,6 @@ void MainWindow::on_pushButtonPreview_clicked()
 
     FileType type = fileType(previewFile);
 
-    if (type == FileType::BAD_TYPE)
-    {
-        errorHandler(ErrorType::BAD_TYPE);
-        return;
-    }
-
     ui->pushButtonPreview->setEnabled(false);
 
     std::unique_ptr<Anime4KCPP::AC> ac = getACUP();
@@ -1216,6 +1209,10 @@ void MainWindow::on_pushButtonPreview_clicked()
             errorHandler(err.what());
         }
     }
+    break;
+    case FileType::BAD_TYPE:
+        errorHandler(ErrorType::BAD_TYPE);
+        return;
     }
 
     ui->pushButtonPreview->setEnabled(true);
@@ -1452,7 +1449,7 @@ void MainWindow::on_pushButtonStart_clicked()
             for (decltype(lengthToShow) i = 0; i < lengthToShow; i++)
             {
                 const auto& e = errorList.at(i);
-                errorMsg+= QString("%1: %2\n").arg(e.first, e.second);
+                errorMsg += QString("%1: %2\n").arg(e.first, e.second);
             }
 
             if (lengthMore)
@@ -1674,12 +1671,6 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
     QFileInfo fileInfo(filePath);
     FileType type = fileType(fileInfo);
 
-    if (type == FileType::BAD_TYPE)
-    {
-        errorHandler(ErrorType::BAD_TYPE);
-        return;
-    }
-
     ui->pushButtonPreviewOriginal->setEnabled(false);
 
     switch (type)
@@ -1772,6 +1763,10 @@ void MainWindow::on_pushButtonPreviewOriginal_clicked()
             errorHandler(err.what());
         }
     }
+    break;
+    case FileType::BAD_TYPE:
+        errorHandler(ErrorType::BAD_TYPE);
+        return;
     }
 
     ui->pushButtonPreviewOriginal->setEnabled(true);
@@ -1788,12 +1783,6 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
 
     QFileInfo fileInfo(filePath);
     FileType type = fileType(fileInfo);
-
-    if (type == FileType::BAD_TYPE)
-    {
-        errorHandler(ErrorType::BAD_TYPE);
-        return;
-    }
 
     ui->pushButtonPreviewOnlyResize->setEnabled(false);
 
@@ -1890,6 +1879,10 @@ void MainWindow::on_pushButtonPreviewOnlyResize_clicked()
             errorHandler(err.what());
         }
     }
+    break;
+    case FileType::BAD_TYPE:
+        errorHandler(ErrorType::BAD_TYPE);
+        return;
     }
 
     ui->pushButtonPreviewOnlyResize->setEnabled(true);
