@@ -118,6 +118,12 @@ else()
     endif()
 endif()
 
+if(Enable_CUDA)
+    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
+        enable_language(CUDA)
+    endif()
+endif()
+
 include(${TOP_DIR}/cmake/Detection.cmake)
 
 if(HAS_FILESYSTEM)
