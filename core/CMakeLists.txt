@@ -44,6 +44,11 @@ target_compile_definitions(
         $<$<BOOL:${Enable_Fast_Math}>:ENABLE_FAST_MATH>
 )
 
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_export.h"
+)
+
 if(Build_Static_Core)
     set_target_properties(
         ${PROJECT_NAME} PROPERTIES 
@@ -51,12 +56,12 @@ if(Build_Static_Core)
     )
 endif()
 
-include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
+if((NOT MSVC) AND Ofast_Optimization_For_Core)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+    target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+endif()
 
-set_target_properties(${PROJECT_NAME}
-    PROPERTIES
-    PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_export.h"
-)
+include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 
 install(
     TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}

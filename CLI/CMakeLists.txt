@@ -1,6 +1,5 @@
-project(Anime4KCPP_CLI LANGUAGES CXX)
-
 if(Build_CLI)
+    project(Anime4KCPP_CLI LANGUAGES CXX)
 
     if(NOT Enable_Image_IO)
         message (
@@ -21,6 +20,11 @@ if(Build_CLI)
         PRIVATE 
             $<$<BOOL:${Use_Boost_filesystem}>:USE_BOOST_FILESYSTEM>
     )
+
+    if((NOT MSVC) AND Ofast_Optimization_For_Other)
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForCLI.cmake)
 

@@ -36,13 +36,6 @@ if(Enable_CUDA)
             CUDA_EXTENSIONS OFF
     )
 
-    if(NOT CUDA_Auto_CC)
-        set_target_properties(
-            ${PROJECT_NAME} PROPERTIES 
-                CUDA_ARCHITECTURES "${CUDA_Minimum_CC}-virtual;${CUDA_CC}-real"
-        )
-    endif()
-
     if((NOT Build_Static_Core) OR (Build_Static_Core AND Build_Static_Core_PIC))
         set_target_properties(
             ${PROJECT_NAME} PROPERTIES 

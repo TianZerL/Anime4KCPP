@@ -1,6 +1,5 @@
-project(Anime4KCPP_GUI VERSION 1.13.0 LANGUAGES CXX)
-
 if(Build_GUI)
+    project(Anime4KCPP_GUI VERSION 1.13.0 LANGUAGES CXX)
 
     if(NOT Enable_Image_IO OR NOT Enable_Video)
         message (
@@ -31,9 +30,9 @@ if(Build_GUI)
     endif()
 
     if(Qt_Version MATCHES "5")
-        qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+        qt5_create_translation(QM_FILES ${SOURCE} ${TS_FILES})
     else()
-        qt6_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+        qt6_create_translation(QM_FILES ${SOURCE} ${TS_FILES})
     endif()
 
     add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
@@ -51,6 +50,11 @@ if(Build_GUI)
         PRIVATE 
             ANIME4KCPP_GUI_VERSION="${PROJECT_VERSION}"
     )
+
+    if((NOT MSVC) AND Ofast_Optimization_For_Other)
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForGUI.cmake)
 

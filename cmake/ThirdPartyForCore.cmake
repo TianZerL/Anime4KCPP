@@ -1,5 +1,3 @@
-include(${TOP_DIR}/cmake/Common.cmake)
-
 set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.15/include/CL/opencl.hpp)
 set(SHA1_OPENCL_HPP "de739352c21ea9bf9b082bb903caec7de9212f97")
 

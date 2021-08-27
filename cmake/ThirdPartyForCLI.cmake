@@ -1,5 +1,3 @@
-include(${TOP_DIR}/cmake/Common.cmake)
-
 set(CMDLINE_HPP_URL https://github.com/TianZerL/cmdline/raw/master/cmdline.hpp)
 set(SHA1_CMDLINE "c2d8d368a097feb6da1ec6d50735b13f2d082388")
 

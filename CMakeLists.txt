@@ -29,8 +29,10 @@ option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
 option(Ryzen_Optimization "Optimization for AMD Ryzen CPU" OFF)
 option(Native_Optimization "Optimization for native CPU arch" OFF)
-option(Other_Optimization "Other optimizations may or may not useful" OFF)
-option(Maximum_Optimization "Enable maximum optimizations for the current platform, may cause unknown bugs" OFF)
+option(Ofast_Optimization_For_Core "Enable -Ofast flag for core if supported" OFF)
+option(Ofast_Optimization_For_Other "Enable -Ofast flag for other if supported" OFF)
+option(IPO_Optimization "Link time optimization, may cause unknown bugs" OFF)
+option(Maximum_Optimization "Enable maximum optimizations for the current platform" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_OpenCL "Enable OpenCL module" ON)
 option(Enable_NCNN "Enable ncnn module" OFF)
@@ -73,6 +75,7 @@ if(Enable_CUDA)
     if(NOT CUDA_Auto_CC)
         set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability")
         set(CUDA_CC "75" CACHE PATH "Set the cuda compute capability")
+        set(CMAKE_CUDA_ARCHITECTURES ${CUDA_Minimum_CC}-virtual ${CUDA_CC}-real)
     endif()
     if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
         cmake_policy(SET CMP0104 NEW)
@@ -82,13 +85,13 @@ endif()
 
 if(Maximum_Optimization)
     set(CMAKE_BUILD_TYPE Release)
-    set(Other_Optimization ON)
+    set(Ofast_Optimization_For_Core ON)
     set(Ryzen_Optimization ON)
     set(Native_Optimization ON)
     set(Enable_Fast_Math ON)
 endif()
 
-if(Other_Optimization)
+if(IPO_Optimization)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT IPO_Supported OUTPUT IPO_Error)
 
@@ -248,17 +251,19 @@ message(STATUS
 "   Built-in kernel ${Built_In_Kernel}\n\n"
 "   Use Boost filesystem ${Use_Boost_filesystem}\n"
 "   Use Eigen3 ${Use_Eigen3}\n"
-"   Use Legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
-"   Ryzen Optimization ${Ryzen_Optimization}\n"
-"   Native Optimization ${Native_Optimization}\n"
-"   Other Optimization ${Other_Optimization}\n\n"
+"   Use legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
+"   Ryzen optimization ${Ryzen_Optimization}\n"
+"   Native optimization ${Native_Optimization}\n"
+"   IPO optimization ${IPO_Optimization}\n"
+"   Ofast optimization for core ${Ofast_Optimization_For_Core}\n"
+"   Ofast optimization for other ${Ofast_Optimization_For_Other}\n\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
 "   Enable AVX2 ${Enable_AVX2}\n"
 "   Enable OpenCV DNN ${Enable_OpenCV_DNN}\n"
 "   Enable video ${Enable_Video}\n"
-"   Enable Preview GUI ${Enable_Preview_GUI}\n"
+"   Enable preview GUI ${Enable_Preview_GUI}\n"
 "   Enable image IO ${Enable_Image_IO}\n"
 "   Disable parallel ${Disable_Parallel}\n\n"
 "   Parallel library ${Parallel_Library_Type}\n"

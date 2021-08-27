@@ -1,6 +1,5 @@
-project(ac VERSION 1.6.0 LANGUAGES CXX)
-
 if(Build_C_Wrapper)
+    project(ac VERSION 1.6.0 LANGUAGES CXX)
 
     aux_source_directory(src SOURCE)
 
@@ -18,6 +17,11 @@ if(Build_C_Wrapper)
             ANIME4KCPP_C_WRAPPER_VERSION="${PROJECT_VERSION}"
     )
 
+    set_target_properties(${PROJECT_NAME}
+        PROPERTIES
+        PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_c_export.h"
+    )
+
     if(Build_Static_C_Wrapper)
         set_target_properties(
             ${PROJECT_NAME} PROPERTIES 
@@ -25,12 +29,12 @@ if(Build_C_Wrapper)
         )
     endif()
 
-    include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
+    if((NOT MSVC) AND Ofast_Optimization_For_Other)
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    endif()
 
-    set_target_properties(${PROJECT_NAME}
-        PROPERTIES
-        PUBLIC_HEADER "${INCLUDE};${CMAKE_CURRENT_BINARY_DIR}/ac_c_export.h"
-    )
+    include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
     install(
         TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}

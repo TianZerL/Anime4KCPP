@@ -1,6 +1,5 @@
-project(Anime4KCPPDS LANGUAGES CXX)
-
 if(Build_DS_Filter)
+    project(Anime4KCPPDS LANGUAGES CXX)
 
     aux_source_directory(src SOURCE)
     
@@ -14,6 +13,11 @@ if(Build_DS_Filter)
     target_compile_definitions(${PROJECT_NAME} PRIVATE UNICODE _UNICODE)
 
     target_include_directories(${PROJECT_NAME} PRIVATE include)
+
+    if((NOT MSVC) AND Ofast_Optimization_For_Other)
+        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForDS.cmake)
 
