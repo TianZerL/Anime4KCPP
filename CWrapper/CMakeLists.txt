@@ -18,6 +18,13 @@ if(Build_C_Wrapper)
             ANIME4KCPP_C_WRAPPER_VERSION="${PROJECT_VERSION}"
     )
 
+    if(Build_Static_C_Wrapper)
+        set_target_properties(
+            ${PROJECT_NAME} PROPERTIES 
+                POSITION_INDEPENDENT_CODE ${Build_Static_C_Wrapper_PIC}
+        )
+    endif()
+
     include(${TOP_DIR}/cmake/ThirdPartyForCWrapper.cmake)  
 
     set_target_properties(${PROJECT_NAME}

@@ -44,6 +44,13 @@ target_compile_definitions(
         $<$<BOOL:${Enable_Fast_Math}>:ENABLE_FAST_MATH>
 )
 
+if(Build_Static_Core)
+    set_target_properties(
+        ${PROJECT_NAME} PROPERTIES 
+            POSITION_INDEPENDENT_CODE ${Build_Static_Core_PIC}
+    )
+endif()
+
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
 
 set_target_properties(${PROJECT_NAME}

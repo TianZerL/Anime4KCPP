@@ -42,6 +42,14 @@ option(Enable_Preview_GUI "Enable image preview in GUI window for core" ON)
 option(Enable_Image_IO "Enable image IO for core" ON)
 option(Disable_Parallel "Disable parallel processing" OFF)
 
+if(Build_Static_C_Wrapper)
+    option(Build_Static_C_Wrapper_PIC "If Build_Static_C_Wrapper is ON, build C_Wrapper with -fPIC" ON)
+endif()
+
+if(Build_Static_Core)
+    option(Build_Static_Core_PIC "If Build_Static_Core is ON, build core with -fPIC" OFF)
+endif()
+
 if(APPLE)
     option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" ON)
 else()

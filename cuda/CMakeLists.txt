@@ -33,8 +33,6 @@ if(Enable_CUDA)
         message(STATUS "CMAKE_CUDA_COMPILER:         ${CMAKE_CUDA_COMPILER}")
         message(STATUS "CMAKE_CUDA_COMPILER_ID:      ${CMAKE_CUDA_COMPILER_ID}")
         message(STATUS "CMAKE_CUDA_COMPILER_VERSION: ${CMAKE_CUDA_COMPILER_VERSION}")
-        message(STATUS "CMAKE_CUDA_FLAGS:            ${CMAKE_CUDA_FLAGS}")
-        message(STATUS "CMAKE_CUDA_ARCHITECTURES:    ${CMAKE_CUDA_ARCHITECTURES}")
 
         add_library(${PROJECT_NAME} OBJECT ${INCLUDE} ${SOURCE})
     endif()
@@ -48,6 +46,13 @@ if(Enable_CUDA)
             CUDA_RUNTIME_LIBRARY Static
             CUDA_ARCHITECTURES "${CUDA_Minimum_CC}-virtual;${CUDA_CC}-real"
     )
+
+    if((NOT Build_Static_Core) OR (Build_Static_Core AND Build_Static_Core_PIC))
+        set_target_properties(
+            ${PROJECT_NAME} PROPERTIES 
+                POSITION_INDEPENDENT_CODE True
+        )
+    endif()
 
     install(
         TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
