@@ -93,6 +93,10 @@ if(NOT Disable_Parallel)
                 set_property(TARGET OpenMP::OpenMP_CXX
                     PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS} Threads::Threads)
             endif()
+            if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+                set_property(TARGET OpenMP::OpenMP_CXX
+                    PROPERTY INTERFACE_LINK_LIBRARIES libomp)
+            endif()
         elseif(MSVC AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
             add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
             set_property(TARGET OpenMP::OpenMP_CXX

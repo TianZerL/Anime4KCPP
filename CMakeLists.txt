@@ -63,6 +63,7 @@ if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
 endif()
 
 if(Maximum_Optimization)
+    set(CMAKE_BUILD_TYPE Release)
     set(Other_Optimization ON)
     set(Ryzen_Optimization ON)
     set(Native_Optimization ON)
@@ -253,8 +254,14 @@ if(WIN32)
     )
 endif()
 
+if(NOT MSVC)
+    message(STATUS  
+    "Build type: ${CMAKE_BUILD_TYPE}\n"
+    )
+endif()
+
 message(STATUS  
-"C++ compiler flags:\n ${CMAKE_CXX_FLAGS}"
+"C++ compiler flags:\n ${CMAKE_CXX_FLAGS}\n"
 )
 
 if(Enable_CUDA)
