@@ -53,20 +53,28 @@ Anime4KCPP::Processor::Type getProcessorType(ac_processType type, ac_error* erro
     }
 }
 
+template<std::size_t size>
+void infocpy(char(&dst)[size], const char* src)
+{
+    std::size_t i = size;
+    char* pdst = dst;
+    while (i-- && (*pdst++ = *src++));
+}
+
 extern "C"
 {
     ac_version acGetVersion(void)
     {
         ac_version ret;
-        strcpy_s(ret.coreVersion, 32, Anime4KCPP::CoreInfo::version());
-        strcpy_s(ret.wrapperVersion, 32, ANIME4KCPP_C_WRAPPER_VERSION);
+        infocpy(ret.coreVersion, Anime4KCPP::CoreInfo::version());
+        infocpy(ret.wrapperVersion,ANIME4KCPP_C_WRAPPER_VERSION);
         return ret;
     }
 
     void acGetVersion2(ac_version* v)
     {
-        strcpy_s(v->coreVersion, 32, Anime4KCPP::CoreInfo::version());
-        strcpy_s(v->wrapperVersion, 32, ANIME4KCPP_C_WRAPPER_VERSION);
+        infocpy(v->coreVersion,Anime4KCPP::CoreInfo::version());
+        infocpy(v->wrapperVersion, ANIME4KCPP_C_WRAPPER_VERSION);
     }
 
     ac_instance acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error)
