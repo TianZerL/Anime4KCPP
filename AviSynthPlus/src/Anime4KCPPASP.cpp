@@ -80,8 +80,8 @@ Anime4KCPPFilter::Anime4KCPPFilter(
 ) :
     GenericVideoFilter(_child),
     parameters(parameters),
-    CNN(CNN),
     GPUMode(GPUMode),
+    CNN(CNN),
     GPGPUModel(GPGPUModel)
 {
     if ((!vi.IsRGB24() && (!vi.IsYUV() || !vi.IsPlanar()) && !vi.IsY()) ||

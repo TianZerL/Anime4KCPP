@@ -9,9 +9,9 @@ if(Build_DS_Filter)
     enable_language(RC)
     list(APPEND SOURCE src/Anime4KCPPDS.rc src/Anime4KCPPDS.def)
 
-    add_definitions(-DUNICODE)
-
     add_library(${PROJECT_NAME} SHARED ${INCLUDE} ${SOURCE})
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE UNICODE _UNICODE)
 
     target_include_directories(${PROJECT_NAME} PRIVATE include)
 

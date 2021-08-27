@@ -14,7 +14,7 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes =
 const AMOVIESETUP_PIN sudPins[] =
 {
     {
-        L"Input",
+        (LPWSTR)L"Input",
         FALSE,
         FALSE,
         FALSE,
@@ -25,7 +25,7 @@ const AMOVIESETUP_PIN sudPins[] =
         &sudPinTypes
     },
     {
-        L"Output",
+        (LPWSTR)L"Output",
         FALSE,
         TRUE,
         FALSE,
@@ -720,7 +720,7 @@ BOOL Anime4KCPPDS::CheckGPUSupport()
     return TRUE;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetParameters(ACPropData& data)
+STDMETHODIMP Anime4KCPPDS::GetParameters(ACPropData& data) noexcept
 {
     data.HDN = parameters.HDN;
     data.HDNLevel = parameters.HDNLevel;
@@ -737,12 +737,13 @@ STDMETHODIMP Anime4KCPPDS::GetParameters(ACPropData& data)
     return S_OK;
 }
 
-STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data)
+STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data) noexcept
 {
     CAutoLock cAutoLock(&lock);
 
-    TCHAR _pID[10], _dID[10], _OpenCLQueueNum[10], _OpenCLParallelIO[10], _CNN[10], _HDN[10], _HDNLevel[10], _H[10], _W[10], _zoomFactor[10], * _GPGPUModel = nullptr;
-
+    TCHAR _pID[10], _dID[10], _OpenCLQueueNum[10], _OpenCLParallelIO[10], _CNN[10], _HDN[10], _HDNLevel[10], _H[10], _W[10], _zoomFactor[10];
+    LPCTSTR _GPGPUModel = nullptr;
+    
     //convert to string
     _itow_s(data.pID, _pID, 10, 10);
     _itow_s(data.dID, _dID, 10, 10);
@@ -787,15 +788,15 @@ STDMETHODIMP Anime4KCPPDS::SetParameters(const ACPropData& data)
     return S_OK;
 }
 
-STDMETHODIMP Anime4KCPPDS::GetProcessorInfo(std::string& info)
+STDMETHODIMP Anime4KCPPDS::GetProcessorInfo(std::string& info) noexcept
 {
-    info.append("Anime4KCPP core information:")
-        .append("\n  Compiler: ").append(ANIME4KCPP_CORE_COMPILER)
-        .append("\n  CPU Optimization: ").append(Anime4KCPP::CoreInfo::CPUOptimizationMode())
-        .append("\n\n");
-
     try
     {
+        info.append("Anime4KCPP core information:")
+            .append("\n  Compiler: ").append(ANIME4KCPP_CORE_COMPILER)
+            .append("\n  CPU Optimization: ").append(Anime4KCPP::CoreInfo::CPUOptimizationMode())
+            .append("\n\n");
+
         switch (data.GPGPUModel)
         {
         case GPGPU::CPU:

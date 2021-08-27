@@ -10,7 +10,7 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
     if (c_parameters == nullptr)
         return Anime4KCPP::Parameters{};
 
-    Anime4KCPP::Parameters cpp_parameters(
+    return Anime4KCPP::Parameters(
         c_parameters->passes,
         c_parameters->pushColorCount,
         c_parameters->strengthColor,
@@ -24,8 +24,6 @@ Anime4KCPP::Parameters getParameters(ac_parameters* c_parameters)
         c_parameters->HDN,
         c_parameters->HDNLevel,
         c_parameters->alpha);
-
-    return std::move(cpp_parameters);
 }
 
 Anime4KCPP::Processor::Type getProcessorType(ac_processType type, ac_error* error)
@@ -60,15 +58,15 @@ extern "C"
     ac_version acGetVersion(void)
     {
         ac_version ret;
-        std::strcpy(ret.coreVersion, Anime4KCPP::CoreInfo::version());
-        std::strcpy(ret.wrapperVersion, ANIME4KCPP_C_WRAPPER_VERSION);
+        strcpy_s(ret.coreVersion, 32, Anime4KCPP::CoreInfo::version());
+        strcpy_s(ret.wrapperVersion, 32, ANIME4KCPP_C_WRAPPER_VERSION);
         return ret;
     }
 
     void acGetVersion2(ac_version* v)
     {
-        std::strcpy(v->coreVersion, Anime4KCPP::CoreInfo::version());
-        std::strcpy(v->wrapperVersion, ANIME4KCPP_C_WRAPPER_VERSION);
+        strcpy_s(v->coreVersion, 32, Anime4KCPP::CoreInfo::version());
+        strcpy_s(v->wrapperVersion, 32, ANIME4KCPP_C_WRAPPER_VERSION);
     }
 
     ac_instance acGetInstance(ac_bool initGPU, ac_bool initGPUCNN, unsigned int platformID, unsigned int deviceID, ac_parameters* parameters, ac_processType type, ac_error* error)

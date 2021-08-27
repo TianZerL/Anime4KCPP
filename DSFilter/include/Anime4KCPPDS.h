@@ -26,9 +26,9 @@ public:
     virtual HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
     virtual HRESULT Transform(IMediaSample* pIn, IMediaSample* pOut);
 
-    STDMETHODIMP GetParameters(ACPropData& data);
-    STDMETHODIMP SetParameters(const ACPropData& data);
-    STDMETHODIMP GetProcessorInfo(std::string& info);
+    STDMETHODIMP GetParameters(ACPropData& data) noexcept;
+    STDMETHODIMP SetParameters(const ACPropData& data) noexcept;
+    STDMETHODIMP GetProcessorInfo(std::string& info) noexcept;
 
     STDMETHODIMP GetPages(CAUUID* pPages);
 
