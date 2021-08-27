@@ -186,9 +186,7 @@ extern "C"
 #else
             if (managerData == nullptr || managerData->CUDAData == nullptr)
             {
-                if (error != nullptr)
-                    *error = AC_ERROR_NULL_DATA;
-                return nullptr;
+                return AC_ERROR_NULL_DATA;
             }
             initializer.pushManager<Anime4KCPP::Cuda::Manager>(managerData->CUDAData->dID);
 #endif // !CUDA_ENABLE
