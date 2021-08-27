@@ -1,3 +1,5 @@
+include(${TOP_DIR}/cmake/Common.cmake)
+
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} BASE_NAME "AC_C")
 

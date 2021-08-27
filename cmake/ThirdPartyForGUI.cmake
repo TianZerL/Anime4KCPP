@@ -1,3 +1,5 @@
+include(${TOP_DIR}/cmake/Common.cmake)
+
 target_link_libraries(
     ${PROJECT_NAME} 
     PRIVATE 

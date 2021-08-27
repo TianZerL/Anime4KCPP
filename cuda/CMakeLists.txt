@@ -1,6 +1,4 @@
 if(Enable_CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES ${CUDA_Minimum_CC}-virtual ${CUDA_CC}-real)
-
     if(${CMAKE_MINOR_VERSION} LESS 18)
         project(CUDA_Module LANGUAGES CXX)
 
@@ -12,16 +10,6 @@ if(Enable_CUDA)
         -gencode=arch=compute_${CUDA_Minimum_CC},code=\"compute_${CUDA_Minimum_CC},compute_${CUDA_Minimum_CC}\""
         )
 
-        if(MSVC)
-            set(CUDA_NVCC_FLAGS  "${CUDA_NVCC_FLAGS} -O3")
-        else()
-            set(CUDA_NVCC_FLAGS  "${CUDA_NVCC_FLAGS} -Xcompiler=-O3,-fPIC")
-        endif()
-
-        if(Enable_Fast_Math)
-            set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --use_fast_math")
-        endif()
-
         file(GLOB SOURCE  src/*.cu)
         file(GLOB INCLUDE  include/*.cuh)
 
@@ -30,13 +18,7 @@ if(Enable_CUDA)
         
         cuda_add_library(${PROJECT_NAME} STATIC ${INCLUDE} ${SOURCE})
     else()
-        project(CUDA_Module LANGUAGES CUDA) 
- 
-        if(MSVC)
-            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3")
-        else()
-            set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-O3,-fPIC")
-        endif()
+        project(CUDA_Module LANGUAGES CUDA)
         
         if(Enable_Fast_Math)
             set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
@@ -59,9 +41,11 @@ if(Enable_CUDA)
 
     target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/core/include include)
 
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ENABLE_CUDA)
-
-    set_target_properties(${PROJECT_NAME} PROPERTIES CUDA_RUNTIME_LIBRARY Static)
+    set_target_properties(
+        ${PROJECT_NAME} PROPERTIES 
+            CUDA_RUNTIME_LIBRARY Static
+            CUDA_ARCHITECTURES "${CUDA_Minimum_CC}-virtual;${CUDA_CC}-real"
+    )
 
     install(
         TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}

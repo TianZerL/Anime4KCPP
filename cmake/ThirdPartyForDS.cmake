@@ -1,3 +1,5 @@
+include(${TOP_DIR}/cmake/Common.cmake)
+
 target_include_directories(
     ${PROJECT_NAME} 
     PRIVATE

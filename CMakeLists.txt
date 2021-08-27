@@ -18,10 +18,6 @@ set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 
 string(TIMESTAMP TODAY "%Y-%m-%d")
 
-set(Qt_Version "5" CACHE STRING "5 or 6")
-set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability, older than 30")
-set(CUDA_CC "75" CACHE PATH "Set the cuda compute capability, older than 30")
-
 option(Build_GUI "Build GUI or not" OFF)
 option(Build_CLI "Build CLI or not" ON)
 option(Build_VapourSynth_Plugin "Build Anime4KCPP for VapourSynth plugin or not" OFF)
@@ -52,14 +48,21 @@ else()
     option(Use_Legacy_OpenCL_API "Compatible with old GPU which only supports OpenCL1.2" OFF)
 endif()
 
-include(${TOP_DIR}/cmake/Detection.cmake)
-
 if(WIN32 AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     option(Use_OpenCV_With_MSVC_For_Clang "Use OpenCV build by MSVC for Clang" ON)
     option(Use_OpenCV_With_MINGW_For_Clang "Use OpenCV build by MinGW for Clang" OFF)
     if(Use_OpenCV_With_MSVC_For_Clang AND Use_OpenCV_With_MINGW_For_Clang)
         message(FATAL_ERROR "Use_OpenCV_With_MSVC_For_Clang and Use_OpenCV_With_MINGW_For_Clang cannot be true at same time")
     endif()
+endif()
+
+if(Build_GUI)
+    set(Qt_Version "5" CACHE STRING "5 or 6")
+endif()
+
+if(Enable_CUDA)
+    set(CUDA_Minimum_CC "35" CACHE PATH "Set the minimum cuda compute capability, older than 30")
+    set(CUDA_CC "75" CACHE PATH "Set the cuda compute capability, older than 30")
 endif()
 
 if(Maximum_Optimization)
@@ -103,10 +106,6 @@ if(MSVC)
         endif()
     endif()
 else()
-    if(Other_Optimization)
-        add_compile_options(-Ofast)
-        add_link_options(-Ofast)
-    endif()
     if(Enable_Fast_Math)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffast-math")
     endif()
@@ -118,6 +117,8 @@ else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mfma")  
     endif()
 endif()
+
+include(${TOP_DIR}/cmake/Detection.cmake)
 
 if(HAS_FILESYSTEM)
     option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" OFF)
@@ -263,12 +264,6 @@ endif()
 message(STATUS  
 "C++ compiler flags:\n ${CMAKE_CXX_FLAGS}\n"
 )
-
-if(Enable_CUDA)
-    if(NOT ${CMAKE_MINOR_VERSION} LESS 18)
-        enable_language(CUDA)
-    endif()
-endif()
 
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)
     set(OS_64_Bit ON)
