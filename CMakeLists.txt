@@ -29,8 +29,8 @@ option(Built_In_Kernel "Built-in kernel or not" ON)
 option(Use_Eigen3 "Use Eigen3 for CPU processor acceleration" OFF)
 option(Ryzen_Optimization "Optimization for AMD Ryzen CPU" OFF)
 option(Native_Optimization "Optimization for native CPU arch" OFF)
-option(Ofast_Optimization_For_Core "Enable -Ofast flag for core if supported" OFF)
-option(Ofast_Optimization_For_Other "Enable -Ofast flag for other if supported" OFF)
+option(Other_Optimization_For_Core "Enable other optimizatio flag for core if supported" OFF)
+option(Other_Optimization_For_Other "Enable other optimizatio flag for other if supported" OFF)
 option(IPO_Optimization "Link time optimization, may cause unknown bugs" OFF)
 option(Maximum_Optimization "Enable maximum optimizations for the current platform" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
@@ -89,7 +89,7 @@ endif()
 
 if(Maximum_Optimization)
     set(CMAKE_BUILD_TYPE Release)
-    set(Ofast_Optimization_For_Core ON)
+    set(Other_Optimization_For_Core ON)
     set(Ryzen_Optimization ON)
     set(Native_Optimization ON)
     set(Enable_Fast_Math ON)
@@ -259,8 +259,8 @@ message(STATUS
 "   Ryzen optimization ${Ryzen_Optimization}\n"
 "   Native optimization ${Native_Optimization}\n"
 "   IPO optimization ${IPO_Optimization}\n"
-"   Ofast optimization for core ${Ofast_Optimization_For_Core}\n"
-"   Ofast optimization for other ${Ofast_Optimization_For_Other}\n\n"
+"   Other optimization for core ${Other_Optimization_For_Core}\n"
+"   Other optimization for other ${Other_Optimization_For_Other}\n\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"

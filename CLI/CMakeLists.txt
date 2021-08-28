@@ -21,9 +21,13 @@ if(Build_CLI)
             $<$<BOOL:${Use_Boost_filesystem}>:USE_BOOST_FILESYSTEM>
     )
 
-    if((NOT MSVC) AND Ofast_Optimization_For_Other)
-        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
-        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    if(Other_Optimization_For_Other)
+        if(MSVC)
+            target_compile_options(${PROJECT_NAME} PRIVATE /GA)
+        else()  
+            target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+            target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+        endif()
     endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForCLI.cmake)

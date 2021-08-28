@@ -29,7 +29,7 @@ if(Build_C_Wrapper)
         )
     endif()
 
-    if((NOT MSVC) AND Ofast_Optimization_For_Other)
+    if((NOT MSVC) AND Other_Optimization_For_Other)
         target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
         target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
     endif()

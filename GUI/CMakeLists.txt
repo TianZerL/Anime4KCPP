@@ -51,9 +51,13 @@ if(Build_GUI)
             ANIME4KCPP_GUI_VERSION="${PROJECT_VERSION}"
     )
 
-    if((NOT MSVC) AND Ofast_Optimization_For_Other)
-        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
-        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    if(Other_Optimization_For_Other)
+        if(MSVC)
+            target_compile_options(${PROJECT_NAME} PRIVATE /GA)
+        else()  
+            target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+            target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+        endif()
     endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForGUI.cmake)
