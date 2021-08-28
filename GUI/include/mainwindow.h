@@ -77,6 +77,8 @@ protected:
     void dropEvent(QDropEvent* event);
 
 private:
+    bool addTask(const QFileInfo& fileInfo, const QString& path, bool perfix = true);
+
     void readConfig(const QSettings* conf);
     void writeConfig(QSettings* conf);
 

@@ -141,54 +141,72 @@ void MainWindow::dropEvent(QDropEvent* event)
     if (urls.isEmpty())
         return;
 
-    QStringList files;
+    QSet<QString> files;
 
     for (QUrl& url : urls)
     {
         QString file = url.toLocalFile();
-        if (!files.contains(file))
-            files.append(file);
+        files << file;
     }
 
+    QString path;
+    if (ui->lineEditOutputPath->text().isEmpty())
+        path = QDir::currentPath();
+    else
+        path = QDir::cleanPath(ui->lineEditOutputPath->text());
+
+    bool success = true;
+    for (auto&& file : files)
+        success &= addTask(QFileInfo{ file }, path);
+
+    if (!success)
+        errorHandler(ErrorType::BAD_TYPE);
+
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
+}
+
+bool MainWindow::addTask(const QFileInfo& fileInfo, const QString& path, bool perfix)
+{
     QStandardItem* inputFile;
     QStandardItem* outputFile;
     QStandardItem* inputPath;
     QStandardItem* outputPath;
     QStandardItem* state;
 
-    for (QString& file : files)
+    FileType type = fileType(fileInfo);
+
+    if (type != FileType::BAD_TYPE)
     {
-        QFileInfo fileInfo(file);
-
-        FileType type = fileType(fileInfo);
-
-        if (type == FileType::BAD_TYPE)
-        {
-            errorHandler(ErrorType::BAD_TYPE);
-            continue;
-        }
-
         inputFile = new QStandardItem(fileInfo.fileName());
-        if (type == FileType::VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
-        else if (type == FileType::GIF)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else if (getImageOutputSuffix().isEmpty())
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
-        else
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
+
         inputPath = new QStandardItem(fileInfo.filePath());
-        state = new QStandardItem(tr("ready"));
-        if (ui->lineEditOutputPath->text().isEmpty())
-            outputPath = new QStandardItem(QDir::currentPath());
+
+        outputPath = new QStandardItem(path);
+
+        if (type == FileType::VIDEO)
+            outputFile = new QStandardItem(
+                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + getVideoOutputSuffix());
+        else if (type == FileType::GIF)
+            outputFile = new QStandardItem(
+                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + ".gif");
+        else if (getImageOutputSuffix().isEmpty())
+            outputFile = new QStandardItem(
+                (perfix ? (getOutputPrefix() + fileInfo.fileName()) : fileInfo.fileName()));
         else
-            outputPath = new QStandardItem(ui->lineEditOutputPath->text());
+            outputFile = new QStandardItem(
+                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + getImageOutputSuffix());
+
+        state = new QStandardItem(tr("ready"));
+
         tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
 
         totalTaskCount++;
+        return true;
     }
+    else
+        logToTextBrowser("Bad type for " + fileInfo.fileName());
 
-    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
+    return false;
 }
 
 void MainWindow::readConfig(const QSettings* conf)
@@ -886,44 +904,18 @@ void MainWindow::on_pushButtonPickFiles_clicked()
         return;
     files.removeDuplicates();
 
-    QStandardItem* inputFile;
-    QStandardItem* outputFile;
-    QStandardItem* inputPath;
-    QStandardItem* outputPath;
-    QStandardItem* state;
+    QString path;
+    if (ui->lineEditOutputPath->text().isEmpty())
+        path = QDir::currentPath();
+    else
+        path = QDir::cleanPath(ui->lineEditOutputPath->text());
 
+    bool success = true;
+    for (auto&& file : files)
+        success &= addTask(QFileInfo{ file }, path);
 
-    for (QString& file : files)
-    {
-        QFileInfo fileInfo(file);
-
-        FileType type = fileType(fileInfo);
-
-        if (type == FileType::BAD_TYPE)
-        {
-            errorHandler(ErrorType::BAD_TYPE);
-            continue;
-        }
-
-        inputFile = new QStandardItem(fileInfo.fileName());
-        if (type == FileType::VIDEO)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
-        else if (type == FileType::GIF)
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-        else if (getImageOutputSuffix().isEmpty())
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
-        else
-            outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
-        inputPath = new QStandardItem(fileInfo.filePath());
-        state = new QStandardItem(tr("ready"));
-        if (ui->lineEditOutputPath->text().isEmpty())
-            outputPath = new QStandardItem(QDir::currentPath());
-        else
-            outputPath = new QStandardItem(ui->lineEditOutputPath->text());
-        tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
-
-        totalTaskCount++;
-    }
+    if (!success)
+        errorHandler(ErrorType::BAD_TYPE);
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 }
@@ -956,38 +948,17 @@ void MainWindow::on_pushButtonWebVideo_clicked()
         errorHandler(ErrorType::URL_INVALID);
         return;
     }
-    QFileInfo fileInfo(url.path());
 
-    QStandardItem* inputFile;
-    QStandardItem* outputFile;
-    QStandardItem* inputPath;
-    QStandardItem* outputPath;
-    QStandardItem* state;
-
-    FileType type = fileType(fileInfo);
-
-    if (type == FileType::BAD_TYPE)
-    {
-        errorHandler(ErrorType::BAD_TYPE);
-        return;
-    }
-
-    inputFile = new QStandardItem(fileInfo.fileName());
-    if (type == FileType::VIDEO)
-        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
-    else if (type == FileType::GIF)
-        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-    else if (getImageOutputSuffix().isEmpty())
-        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
-    else
-        outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
-    inputPath = new QStandardItem(urlStr);
-    state = new QStandardItem(tr("ready"));
+    QString path;
     if (ui->lineEditOutputPath->text().isEmpty())
-        outputPath = new QStandardItem(QDir::currentPath());
+        path = QDir::currentPath();
     else
-        outputPath = new QStandardItem(ui->lineEditOutputPath->text());
-    tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
+        path = QDir::cleanPath(ui->lineEditOutputPath->text());
+
+    if (!addTask(QFileInfo{ url.path() }, path))
+        errorHandler(ErrorType::BAD_TYPE);
+  
+    ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 }
 
 void MainWindow::on_pushButtonClear_clicked()
@@ -1902,42 +1873,29 @@ void MainWindow::on_pushButtonPickFolder_clicked()
     if (folderPath.isEmpty())
         return;
     QDir folder(folderPath);
+
+    QDir basePath;
+    if (ui->lineEditOutputPath->text().isEmpty())
+        basePath = QDir::currentPath();
+    else
+        basePath = QDir::cleanPath(ui->lineEditOutputPath->text());
+
     QDirIterator folderIter(folderPath, QDir::Files, QDirIterator::Subdirectories);
 
-    QStandardItem* inputFile;
-    QStandardItem* outputFile;
-    QStandardItem* inputPath;
-    QStandardItem* outputPath;
-    QStandardItem* state;
+    bool success = true;
 
     while (folderIter.hasNext())
     {
         folderIter.next();
         QFileInfo fileInfo = folderIter.fileInfo();
-        FileType type = fileType(fileInfo);
-        QString path = folder.relativeFilePath(fileInfo.absolutePath());
-        if (type != FileType::BAD_TYPE)
-        {
-            inputFile = new QStandardItem(fileInfo.fileName());
-            if (type == FileType::VIDEO)
-                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getVideoOutputSuffix());
-            else if (type == FileType::GIF)
-                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + ".gif");
-            else if (getImageOutputSuffix().isEmpty())
-                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.fileName());
-            else
-                outputFile = new QStandardItem(getOutputPrefix() + fileInfo.baseName() + getImageOutputSuffix());
-            inputPath = new QStandardItem(fileInfo.filePath());
-            state = new QStandardItem(tr("ready"));
-            if (ui->lineEditOutputPath->text().isEmpty())
-                outputPath = new QStandardItem(QDir::currentPath() + "/" + path);
-            else
-                outputPath = new QStandardItem(ui->lineEditOutputPath->text() + "/" + path);
-            tableModel->appendRow({ inputFile,outputFile,inputPath,outputPath,state });
+        QString path = QDir::cleanPath(basePath.absoluteFilePath(
+                getOutputPrefix() + folder.dirName() + '/' + folder.relativeFilePath(fileInfo.absolutePath())));
 
-            totalTaskCount++;
-        }
+        success &= addTask(fileInfo, path, false);
     }
+
+    if (!success)
+        errorHandler(ErrorType::BAD_TYPE);
 
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 }
