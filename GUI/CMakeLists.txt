@@ -30,9 +30,9 @@ if(Build_GUI)
     endif()
 
     if(Qt_Version MATCHES "5")
-        qt5_create_translation(QM_FILES ${SOURCE} ${UI_FILE} ${TS_FILES})
+        qt5_create_translation(QM_FILES ${INCLUDE} ${SOURCE} ${UI_FILE} ${TS_FILES})
     else()
-        qt6_create_translation(QM_FILES ${SOURCE} ${UI_FILE} ${TS_FILES})
+        qt6_create_translation(QM_FILES ${INCLUDE} ${SOURCE} ${UI_FILE} ${TS_FILES})
     endif()
 
     add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
