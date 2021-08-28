@@ -14,9 +14,14 @@ if(Build_DS_Filter)
 
     target_include_directories(${PROJECT_NAME} PRIVATE include)
 
-    if((NOT MSVC) AND Other_Optimization_For_Other)
-        target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
-        target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+    if(Other_Optimization_For_Other)
+        if(MSVC AND (CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM"))
+            target_compile_options(${PROJECT_NAME} PRIVATE /O3)
+            target_link_options(${PROJECT_NAME} PRIVATE /O3)
+        else()
+            target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
+            target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
+        endif()
     endif()
 
     include(${TOP_DIR}/cmake/ThirdPartyForDS.cmake)
