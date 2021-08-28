@@ -55,7 +55,7 @@ enum class GPUMode
 
 enum class ProcessingState
 {
-    NORMAL, PAUSE, PAUSED, CONTINUE
+    STOP, PROCESSING, PAUSE, PAUSED, CONTINUE
 };
 
 enum class GPGPU

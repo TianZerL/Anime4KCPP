@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget* parent)
     }
     //stop flag
     stopProcessing = false;
-    processingState = ProcessingState::NORMAL;
+    processingState = ProcessingState::STOP;
 }
 
 MainWindow::~MainWindow()
@@ -102,6 +102,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::closeEvent(QCloseEvent* event)
 {
+    if (processingState != ProcessingState::STOP)
+    {
+        if (QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
+            tr("There are still tasks running. Stop them and exit?"),
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No))
+        {
+            stopProcessing = true;
+            writeConfig(config);
+            event->accept();
+            return;
+        }
+        event->ignore();
+        return;
+    }
+
     if (!ui->actionQuit_confirmation->isChecked() ||
         QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
             tr("Do you really want to exit?"),
@@ -1297,9 +1312,10 @@ void MainWindow::on_pushButtonStart_clicked()
             this, SLOT(solt_allDone_remindUser(quint64)), Qt::QueuedConnection);
         connect(&cm, SIGNAL(updateProgress(double, double, double)),
             this, SLOT(solt_updateProgress_updateCurrentTaskProgress(double, double, double)), Qt::QueuedConnection);
-        std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
 
+        processingState = ProcessingState::PROCESSING;
         QList<QPair<QString, QString>> errorList;
+        std::chrono::steady_clock::time_point startTimeForAll = std::chrono::steady_clock::now();
         if (imageCount > 0)
         {
             Anime4KCPP::Utils::parallelFor(static_cast<decltype(images.size())>(0), images.size(),
@@ -1318,7 +1334,7 @@ void MainWindow::on_pushButtonStart_clicked()
                     }
 
                     if (processingState == ProcessingState::CONTINUE)
-                        processingState = ProcessingState::NORMAL;
+                        processingState = ProcessingState::PROCESSING;
 
                     totalCount--;
 
@@ -1349,7 +1365,7 @@ void MainWindow::on_pushButtonStart_clicked()
             if (stopProcessing)
             {
                 stopProcessing = false;
-                processingState = ProcessingState::NORMAL;
+                processingState = ProcessingState::STOP;
                 emit cm.allDone(0);
                 return;
             }
@@ -1388,9 +1404,9 @@ void MainWindow::on_pushButtonStart_clicked()
                             else if (processingState == ProcessingState::CONTINUE)
                             {
                                 videoProcessor.continueVideoProcess();
-                                processingState = ProcessingState::NORMAL;
+                                processingState = ProcessingState::PROCESSING;
                             }
-                            else if (processingState == ProcessingState::NORMAL)
+                            else if (processingState == ProcessingState::PROCESSING)
                             {
                                 double elpsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime).count() / 1000.0;
                                 double remaining = elpsed / v - elpsed;
@@ -1411,7 +1427,7 @@ void MainWindow::on_pushButtonStart_clicked()
                 if (stopProcessing)
                 {
                     stopProcessing = false;
-                    processingState = ProcessingState::NORMAL;
+                    processingState = ProcessingState::STOP;
                     emit cm.allDone(0);
                     return;
                 }
@@ -1435,8 +1451,8 @@ void MainWindow::on_pushButtonStart_clicked()
                     std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
             }
         }
-
         std::chrono::steady_clock::time_point endTimeForAll = std::chrono::steady_clock::now();
+        processingState = ProcessingState::STOP;
 
         if (!errorList.isEmpty())
         {
