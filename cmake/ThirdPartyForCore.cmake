@@ -64,7 +64,7 @@ if(Use_Eigen3)
             message(
                 FATAL_ERROR "Unable to find eigen3 automatically, please set the Eigen3 location (EIGEN3_INCLUDE_DIR) manually\n"
             )
-                set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Directory that contains Eigen3 headers")
+            set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Directory that contains Eigen3 headers")
         endif()
     else()
         if(EXISTS ${EIGEN3_INCLUDE_DIR}/Eigen/Core)
