@@ -31,7 +31,7 @@ option(Ryzen_Optimization "Optimization for AMD Ryzen CPU" OFF)
 option(Native_Optimization "Optimization for native CPU arch" OFF)
 option(Other_Optimization_For_Core "Enable other optimizatio flag for core if supported" OFF)
 option(Other_Optimization_For_Other "Enable other optimizatio flag for other if supported" OFF)
-option(IPO_Optimization "Link time optimization, may cause unknown bugs" OFF)
+option(Enable_IPO "Enable link time optimization, may cause unknown bugs even slow performance" OFF)
 option(Maximum_Optimization "Enable maximum optimizations for the current platform" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
 option(Enable_OpenCL "Enable OpenCL module" ON)
@@ -98,7 +98,7 @@ if(Maximum_Optimization)
     set(Enable_Fast_Math ON)
 endif()
 
-if(IPO_Optimization)
+if(Enable_IPO)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT IPO_Supported OUTPUT IPO_Error)
 
@@ -129,7 +129,7 @@ if(MSVC)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
         endif()
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "IntelLLVM")
-        if(IPO_Optimization)
+        if(Enable_IPO)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Qipo")
         endif()
         if(Enable_Fast_Math)
@@ -298,13 +298,13 @@ message(STATUS
 "   Use legacy OpenCL API ${Use_Legacy_OpenCL_API}\n\n"
 "   Ryzen optimization ${Ryzen_Optimization}\n"
 "   Native optimization ${Native_Optimization}\n"
-"   IPO optimization ${IPO_Optimization}\n"
 "   Other optimization for core ${Other_Optimization_For_Core}\n"
 "   Other optimization for other ${Other_Optimization_For_Other}\n\n"
 "   Enable arm neon ${Enable_NEON}\n"
 "   Enable SSE4.2 ${Enable_SSE42}\n"
 "   Enable AVX ${Enable_AVX}\n"
 "   Enable AVX2 ${Enable_AVX2}\n\n"
+"   Enable IPO ${Enable_IPO}\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
