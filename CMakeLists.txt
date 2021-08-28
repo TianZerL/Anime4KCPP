@@ -83,6 +83,10 @@ if(Enable_CUDA)
     enable_language(CUDA)
 endif()
 
+if(Use_Eigen3)
+    set(EIGEN3_INCLUDE_DIR "" CACHE PATH "Directory that contains Eigen3 headers")
+endif()
+
 if(Maximum_Optimization)
     set(CMAKE_BUILD_TYPE Release)
     set(Ofast_Optimization_For_Core ON)
