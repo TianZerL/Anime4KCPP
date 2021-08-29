@@ -5,38 +5,54 @@
 
 #include"ACCreator.hpp"
 #include"VideoProcessor.hpp"
+#include"VideoIOConcurrent.hpp"
+#include"VideoIOThreads.hpp"
+#include"VideoIOSerial.hpp"
 
 Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type, unsigned int threads)
-    :threads(threads), param(parameters), type(type)
+    :fps(0.0), totalFrameCount(0.0), height(0), width(0), threads(threads), param(parameters), type(type)
 {
-    totalFrameCount = fps = 0.0;
-    width = height = 0;
+#ifdef ENABLE_VIDEOIO_CONCURRENT
+    if (threads >= std::thread::hardware_concurrency())
+        videoIO = std::make_unique<Video::VideoIOConcurrent>();
+    else if (threads > 1)
+        videoIO = std::make_unique<Video::VideoIOThreads>();
+    else
+        videoIO = std::make_unique<Video::VideoIOSerial>();
+#elif defined(DISABLE_PARALLEL)
+    videoIO = std::make_unique<Video::VideoIOSerial>();
+#else
+    if (threads > 1)
+        videoIO = std::make_unique<Video::VideoIOThreads>();
+    else
+        videoIO = std::make_unique<Video::VideoIOSerial>();
+#endif // ENABLE_VIDEOIO_CONCURRENT
 }
 
 Anime4KCPP::VideoProcessor::VideoProcessor(AC& config, unsigned int threads)
-    :VideoProcessor(config.getParameters(), config.getProcessorType(), 
+    :VideoProcessor(config.getParameters(), config.getProcessorType(),
         threads ? threads : std::thread::hardware_concurrency()) {}
 
 void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile)
 {
-    if (!videoIO.openReader(srcFile))
+    if (!videoIO->openReader(srcFile))
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
 
-    fps = videoIO.get(cv::CAP_PROP_FPS);
-    totalFrameCount = videoIO.get(cv::CAP_PROP_FRAME_COUNT);
-    height = static_cast<int>(std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_HEIGHT)));
-    width = static_cast<int>(std::round(param.zoomFactor * videoIO.get(cv::CAP_PROP_FRAME_WIDTH)));
+    fps = videoIO->get(cv::CAP_PROP_FPS);
+    totalFrameCount = videoIO->get(cv::CAP_PROP_FRAME_COUNT);
+    height = static_cast<int>(std::round(param.zoomFactor * videoIO->get(cv::CAP_PROP_FRAME_HEIGHT)));
+    width = static_cast<int>(std::round(param.zoomFactor * videoIO->get(cv::CAP_PROP_FRAME_WIDTH)));
 }
 
 void Anime4KCPP::VideoProcessor::setVideoSaveInfo(const std::string& dstFile, const Codec codec, const double fps)
 {
-    if (!videoIO.openWriter(dstFile, codec, cv::Size(width, height), fps))
+    if (!videoIO->openWriter(dstFile, codec, cv::Size(width, height), fps))
         throw ACException<ExceptionType::IO>("Failed to initialize video writer.");
 }
 
 void Anime4KCPP::VideoProcessor::saveVideo()
 {
-    videoIO.release();
+    videoIO->release();
 }
 
 void Anime4KCPP::VideoProcessor::process()
@@ -44,11 +60,11 @@ void Anime4KCPP::VideoProcessor::process()
     std::once_flag eptrFlag;
     std::exception_ptr eptr;
 
-    videoIO.init(
+    videoIO->init(
         [&]()
         {
-            Utils::Frame frame;
-            videoIO.read(frame);
+            Video::Frame frame;
+            videoIO->read(frame);
 
             try
             { // Reduce memory usage
@@ -62,13 +78,13 @@ void Anime4KCPP::VideoProcessor::process()
                 std::call_once(eptrFlag,
                     [&]()
                     {
-                        videoIO.stopProcess();
+                        videoIO->stopProcess();
                         eptr = std::current_exception();
                     });
                 return;
             }
 
-            videoIO.write(frame);
+            videoIO->write(frame);
         }
     , threads).process();
 
@@ -89,27 +105,27 @@ void Anime4KCPP::VideoProcessor::processWithProgress(const std::function<void(do
             p.get();
             break;
         }
-        double progress = videoIO.getProgress();
+        double progress = videoIO->getProgress();
         callBack(progress);
     }
 }
 
 void Anime4KCPP::VideoProcessor::stopVideoProcess() noexcept
 {
-    if (videoIO.isPaused())
-        videoIO.continueProcess();
+    if (videoIO->isPaused())
+        videoIO->continueProcess();
 
-    videoIO.stopProcess();
+    videoIO->stopProcess();
 }
 
 void Anime4KCPP::VideoProcessor::pauseVideoProcess()
 {
-    videoIO.pauseProcess();
+    videoIO->pauseProcess();
 }
 
 void Anime4KCPP::VideoProcessor::continueVideoProcess()
 {
-    videoIO.continueProcess();
+    videoIO->continueProcess();
 }
 
 std::string Anime4KCPP::VideoProcessor::getInfo()

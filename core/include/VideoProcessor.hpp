@@ -33,9 +33,9 @@ private:
     int height, width;
     unsigned int threads;
 
-    Utils::VideoIO videoIO;
     Parameters param;
     Processor::Type type;
+    std::unique_ptr<Video::VideoIO> videoIO;
 };
 
 #endif // ENABLE_VIDEO
