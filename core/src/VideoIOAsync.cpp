@@ -1,16 +1,20 @@
-#include"VideoIOConcurrent.hpp"
+#ifdef ENABLE_VIDEO
 
-#ifdef ENABLE_VIDEOIO_CONCURRENT
+#include<forward_list>
 
-void Anime4KCPP::Video::VideoIOConcurrent::process()
+#include"VideoIOAsync.hpp"
+
+void Anime4KCPP::Video::VideoIOAsync::process()
 {
-    Parallel::task_group tasks;
+    std::forward_list<std::future<void>> futures;
+
+    std::size_t limit = std::thread::hardware_concurrency();
 
     stop = false;
 
     finished = 0;
 
-    tasks.run([&]()
+    futures.emplace_front(std::async(std::launch::async, [&]()
         {
             double totalFrame = reader.get(cv::CAP_PROP_FRAME_COUNT);
 
@@ -29,7 +33,7 @@ void Anime4KCPP::Video::VideoIOConcurrent::process()
                 frameMap.erase(it);
                 setProgress(static_cast<double>(frameCount) / totalFrame);
             }
-        });
+        }));
 
 
     for (std::size_t frameCount = 0;; frameCount++)
@@ -43,7 +47,7 @@ void Anime4KCPP::Video::VideoIOConcurrent::process()
         {
             std::unique_lock<std::mutex> lock(mtxRead);
 
-            while (!stop && rawFrames.size() >= threads)
+            while (!stop && rawFrames.size() >= limit)
                 cndRead.wait(lock);
 
             if (stop)
@@ -51,10 +55,10 @@ void Anime4KCPP::Video::VideoIOConcurrent::process()
 
             rawFrames.emplace(frame, frameCount);
         }
-        tasks.run(processor);
+        futures.emplace_front(std::async(std::launch::async, processor));
     }
 
-    tasks.wait();
+    std::for_each(futures.begin(), futures.end(), std::mem_fn(&std::future<void>::wait));
 }
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef ANIME4KCPP_CORE_VIDEO_IO_SERIAL_HPP
 #define ANIME4KCPP_CORE_VIDEO_IO_SERIAL_HPP
 
-#if defined(ENABLE_VIDEO)
+#ifdef ENABLE_VIDEO
 
 #include"VideoIO.hpp"
 

@@ -61,7 +61,8 @@ MainWindow::MainWindow(QWidget* parent)
     ui->progressBarCurrentTask->reset();
     ui->progressBarCurrentTask->setRange(0, 100);
     //initialize arguments
-    ui->spinBoxThreads->setMinimum(1);
+    ui->spinBoxThreads->setMinimum(0);
+    ui->spinBoxThreads->setMaximum(512);
     ui->spinBoxHDNLevel->setRange(1, 3);
     ui->doubleSpinBoxPushColorStrength->setRange(0.0, 1.0);
     ui->doubleSpinBoxPushGradientStrength->setRange(0.0, 1.0);

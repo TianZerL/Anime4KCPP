@@ -279,7 +279,7 @@ int main(int argc, char* argv[])
     opt.add<double>("zoomFactor", 'z', "zoom factor for resizing", false, 2.0);
     opt.add<unsigned int>("threads", 't',
         "Threads count for video processing", false,
-        std::thread::hardware_concurrency(), cmdline::range(1u, 32 * std::thread::hardware_concurrency()));
+        std::thread::hardware_concurrency(), cmdline::range(0u, 32 * std::thread::hardware_concurrency()));
     opt.add<unsigned int>("ncnnThreads", 'T',
         "Threads count for ncnn module", false, 4,
         cmdline::range(1u, std::thread::hardware_concurrency()));

@@ -1,6 +1,7 @@
 #ifndef ANIME4KCPP_CORE_THREADPOOL_HPP
 #define ANIME4KCPP_CORE_THREADPOOL_HPP
 
+#include<algorithm>
 #include<thread>
 #include<mutex>
 #include<condition_variable>

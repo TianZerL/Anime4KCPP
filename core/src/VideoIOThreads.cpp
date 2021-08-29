@@ -5,16 +5,13 @@
 
 void Anime4KCPP::Video::VideoIOThreads::process()
 {
-    std::promise<void> barrier;
-    std::future<void> barrierFuture = barrier.get_future();
-
-    Utils::ThreadPool pool(threads + 1);
+    Utils::ThreadPool pool(threads);
 
     stop = false;
 
     finished = 0;
 
-    pool.exec([this, &barrier]()
+    pool.exec([this]()
         {
             double totalFrame = reader.get(cv::CAP_PROP_FRAME_COUNT);
 
@@ -27,16 +24,13 @@ void Anime4KCPP::Video::VideoIOThreads::process()
                     cndWrite.wait(lock);
 
                 if (stop)
-                    return barrier.set_value();
+                    return;
 
                 writer.write(it->second);
                 frameMap.erase(it);
                 setProgress(static_cast<double>(frameCount) / totalFrame);
             }
-
-            barrier.set_value();
         });
-
 
     for (std::size_t frameCount = 0;; frameCount++)
     {
@@ -59,8 +53,6 @@ void Anime4KCPP::Video::VideoIOThreads::process()
         }
         pool.exec(processor);
     }
-
-    barrierFuture.wait();
 }
 
 #endif
