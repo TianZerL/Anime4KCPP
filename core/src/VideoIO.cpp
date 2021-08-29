@@ -11,7 +11,8 @@ Anime4KCPP::Video::VideoIO::~VideoIO()
 Anime4KCPP::Video::VideoIO& Anime4KCPP::Video::VideoIO::init(std::function<void()>&& p, std::size_t t) noexcept
 {
     processor = std::move(p);
-    threads = t;
+    limit = threads = t;
+    stop = false;
     return *this;
 }
 

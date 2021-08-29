@@ -72,6 +72,7 @@ protected:
     std::mutex mtxWrite;
     std::condition_variable cndWrite;
 
+    std::size_t limit;
     std::atomic<double> progress;
     std::unique_ptr<std::promise<void>> pausePromise;
     bool pause = false;

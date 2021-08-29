@@ -8,9 +8,7 @@ void Anime4KCPP::Video::VideoIOAsync::process()
 {
     std::forward_list<std::future<void>> futures;
 
-    std::size_t limit = std::thread::hardware_concurrency();
-
-    stop = false;
+    limit = std::thread::hardware_concurrency();
 
     finished = 0;
 
@@ -34,7 +32,6 @@ void Anime4KCPP::Video::VideoIOAsync::process()
                 setProgress(static_cast<double>(frameCount) / totalFrame);
             }
         }));
-
 
     for (std::size_t frameCount = 0;; frameCount++)
     {

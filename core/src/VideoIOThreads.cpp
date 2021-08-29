@@ -7,8 +7,6 @@ void Anime4KCPP::Video::VideoIOThreads::process()
 {
     Utils::ThreadPool pool(threads);
 
-    stop = false;
-
     finished = 0;
 
     pool.exec([this]()
@@ -43,7 +41,7 @@ void Anime4KCPP::Video::VideoIOThreads::process()
         {
             std::unique_lock<std::mutex> lock(mtxRead);
 
-            while (!stop && rawFrames.size() >= threads)
+            while (!stop && rawFrames.size() >= limit)
                 cndRead.wait(lock);
 
             if (stop)
