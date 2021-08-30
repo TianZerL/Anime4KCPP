@@ -82,6 +82,8 @@ private:
     void readConfig(const QSettings* conf);
     void writeConfig(QSettings* conf);
 
+    QString getOutputpath();
+
     Language getLanguageValue(const QString& lang);
     QString getLanguageString(const Language lang);
 

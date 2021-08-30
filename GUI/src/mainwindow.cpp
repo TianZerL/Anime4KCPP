@@ -160,11 +160,7 @@ void MainWindow::dropEvent(QDropEvent* event)
         files << file;
     }
 
-    QString path;
-    if (ui->lineEditOutputPath->text().isEmpty())
-        path = QDir::currentPath();
-    else
-        path = QDir::cleanPath(ui->lineEditOutputPath->text());
+    QString path = getOutputpath();
 
     bool success = true;
     for (auto&& file : files)
@@ -453,6 +449,14 @@ void MainWindow::writeConfig(QSettings* conf)
     conf->setValue("/Postprocessing/GaussianBlur", postGaussian);
     conf->setValue("/Postprocessing/BilateralFilter", postBilateral);
     conf->setValue("/Postprocessing/BilateralFilterFaster", postBilateralFaster);
+}
+
+QString MainWindow::getOutputpath()
+{
+    QString path = ui->lineEditOutputPath->text();
+    if (path.isEmpty())
+        return QDir::current().absoluteFilePath("output");
+    return QDir::cleanPath(path);
 }
 
 Language MainWindow::getLanguageValue(const QString& lang)
@@ -919,11 +923,7 @@ void MainWindow::on_pushButtonPickFiles_clicked()
         return;
     files.removeDuplicates();
 
-    QString path;
-    if (ui->lineEditOutputPath->text().isEmpty())
-        path = QDir::currentPath();
-    else
-        path = QDir::cleanPath(ui->lineEditOutputPath->text());
+    QString path = getOutputpath();
 
     bool success = true;
     for (auto&& file : files)
@@ -964,11 +964,7 @@ void MainWindow::on_pushButtonWebVideo_clicked()
         return;
     }
 
-    QString path;
-    if (ui->lineEditOutputPath->text().isEmpty())
-        path = QDir::currentPath();
-    else
-        path = QDir::cleanPath(ui->lineEditOutputPath->text());
+    QString path = getOutputpath();
 
     if (!addTask(QFileInfo{ url.path() }, path))
         errorHandler(ErrorType::BAD_TYPE);
@@ -1891,11 +1887,7 @@ void MainWindow::on_pushButtonPickFolder_clicked()
         return;
     QDir folder(folderPath);
 
-    QDir basePath;
-    if (ui->lineEditOutputPath->text().isEmpty())
-        basePath = QDir::currentPath();
-    else
-        basePath = QDir::cleanPath(ui->lineEditOutputPath->text());
+    QDir basePath  = getOutputpath();
 
     QDirIterator folderIter(folderPath, QDir::Files, QDirIterator::Subdirectories);
 
@@ -2119,7 +2111,7 @@ void MainWindow::on_pushButtonListGPUs_clicked()
 
 void MainWindow::on_pushButtonOutputPathOpen_clicked()
 {
-    QDir outputPath(ui->lineEditOutputPath->text());
+    QDir outputPath(getOutputpath());
     if (!outputPath.exists())
     {
         errorHandler(ErrorType::DIR_NOT_EXIST);
