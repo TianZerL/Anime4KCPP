@@ -1,3 +1,5 @@
+#include <thread>
+
 #include <VapourSynth.h>
 #include <VSHelper.h>
 
@@ -479,7 +481,10 @@ static void VS_CC Anime4KCPPCreate(const VSMap* in, VSMap* out, void* userData, 
 
     data->OpenCLQueueNum = static_cast<int>(vsapi->propGetInt(in, "OpenCLQueueNum", 0, &err));
     if (err)
-        data->OpenCLQueueNum = 4;
+    {
+        int currentThreads = static_cast<int>(std::thread::hardware_concurrency());
+        data->OpenCLQueueNum = (currentThreads < 1) ? 1 : currentThreads;
+    }
     else if (data->OpenCLQueueNum < 1)
     {
         vsapi->setError(out, "Anime4KCPP: OpenCLQueueNum must >= 1");

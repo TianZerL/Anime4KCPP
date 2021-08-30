@@ -62,10 +62,10 @@ class Anime4KCPP::OpenCL::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
     template<typename P = T, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::Anime4K09>::value>* = nullptr>
-    Manager(int pID = 0, int dID = 0, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false) noexcept;
+    Manager(int pID = 0, int dID = 0, int OpenCLQueueNum = 1, bool OpenCLParallelIO = false) noexcept;
 
     template<typename P = T, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::ACNet>::value>* = nullptr>
-    Manager(int pID = 0, int dID = 0, CNNType type = CNNType::Default, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false) noexcept;
+    Manager(int pID = 0, int dID = 0, CNNType type = CNNType::Default, int OpenCLQueueNum = 1, bool OpenCLParallelIO = false) noexcept;
 
     void init() override;
     void release() noexcept override;
@@ -95,12 +95,14 @@ private:
 template<typename T>
 template<typename P, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::Anime4K09>::value>*>
 inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const int OpenCLQueueNum, const bool OpenCLParallelIO) noexcept
-    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(Anime4KCPP::CNNType::Default) {}
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum > 0 ? OpenCLQueueNum : 1),
+    OpenCLParallelIO(OpenCLParallelIO), type(Anime4KCPP::CNNType::Default) {}
 
 template<typename T>
 template<typename P, std::enable_if_t<std::is_same<P, Anime4KCPP::OpenCL::ACNet>::value>*>
 inline Anime4KCPP::OpenCL::Manager<T>::Manager(const int pID, const int dID, const CNNType type, const int OpenCLQueueNum, const bool OpenCLParallelIO) noexcept
-    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum), OpenCLParallelIO(OpenCLParallelIO), type(type) {}
+    : pID(pID), dID(dID), OpenCLQueueNum(OpenCLQueueNum > 0 ? OpenCLQueueNum : 1),
+    OpenCLParallelIO(OpenCLParallelIO), type(type) {}
 
 template<typename T>
 inline void Anime4KCPP::OpenCL::Manager<T>::init()

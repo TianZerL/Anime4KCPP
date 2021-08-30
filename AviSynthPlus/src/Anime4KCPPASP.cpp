@@ -1,3 +1,5 @@
+#include <thread>
+
 #include <avisynth.h>
 
 #include "Anime4KCPP.hpp"
@@ -413,7 +415,10 @@ AVSValue AC_ASP_CDECL createAnime4KCPP(AVSValue args, void* user_data, IScriptEn
     if (!args[AC_deviceID].Defined())
         dID = 0;
     if (!args[AC_OpenCLQueueNum].Defined())
-        OpenCLQueueNum = 4;
+    {
+        int currentThreads = static_cast<int>(std::thread::hardware_concurrency());
+        OpenCLQueueNum = (currentThreads < 1) ? 1 : currentThreads;
+    }
     if (!args[AC_OpenCLParallelIO].Defined())
         OpenCLParallelIO = false;
     if (!args[AC_GPGPUModel].Defined())

@@ -1,4 +1,6 @@
 #include <intrin.h>
+
+#include <thread>
 #include <regex>
 #include <sstream>
 
@@ -129,9 +131,13 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     parameters.HDN = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDN", 0, lpPath);
     parameters.HDNLevel = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"HDNLevel", 1, lpPath);
     data.OpenCLParallelIO = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"OpenCLParallelIO", 0, lpPath);
-    data.OpenCLQueueNum = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"OpenCLQueueNum", 4, lpPath);
+    int currentThreads = static_cast<int>(std::thread::hardware_concurrency());
+    if (currentThreads < 1)
+        currentThreads = 1;
+    data.OpenCLQueueNum = GetPrivateProfileInt(L"Anime4KCPP for DirectShow Config", L"OpenCLQueueNum", 
+        currentThreads, lpPath);
     if (data.OpenCLQueueNum < 1)
-        data.OpenCLQueueNum = 1;
+        data.OpenCLQueueNum = currentThreads;
 
 #ifdef ENABLE_OPENCL
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"OpenCL", _GPGPUModelString, 10, lpPath);

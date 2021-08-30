@@ -8,7 +8,8 @@ void Anime4KCPP::Video::VideoIOAsync::process()
 {
     std::forward_list<std::future<void>> futures;
 
-    limit = std::thread::hardware_concurrency();
+    if ((limit = std::thread::hardware_concurrency()) < 4)
+        limit = 4;
 
     finished = 0;
 

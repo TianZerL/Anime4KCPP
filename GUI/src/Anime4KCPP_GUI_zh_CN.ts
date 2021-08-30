@@ -218,7 +218,7 @@
     <message>
         <location filename="mainwindow.ui" line="368"/>
         <location filename="mainwindow.cpp" line="916"/>
-        <location filename="mainwindow.cpp" line="1223"/>
+        <location filename="mainwindow.cpp" line="1226"/>
         <source>image</source>
         <translation>图像</translation>
     </message>
@@ -241,7 +241,7 @@
     <message>
         <location filename="mainwindow.ui" line="410"/>
         <location filename="mainwindow.cpp" line="917"/>
-        <location filename="mainwindow.cpp" line="1224"/>
+        <location filename="mainwindow.cpp" line="1227"/>
         <source>video</source>
         <translation>视频</translation>
     </message>
@@ -476,7 +476,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="1247"/>
-        <location filename="mainwindow.cpp" line="2080"/>
+        <location filename="mainwindow.cpp" line="2083"/>
         <source>Benchmark</source>
         <translation>性能测试</translation>
     </message>
@@ -744,7 +744,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="1211"/>
-        <location filename="mainwindow.cpp" line="1497"/>
+        <location filename="mainwindow.cpp" line="1500"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
@@ -774,25 +774,25 @@
         <translation>列出GPU设备</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="122"/>
-        <location filename="mainwindow.cpp" line="136"/>
-        <location filename="mainwindow.cpp" line="2192"/>
+        <location filename="mainwindow.cpp" line="118"/>
+        <location filename="mainwindow.cpp" line="132"/>
+        <location filename="mainwindow.cpp" line="2195"/>
         <source>Confirm</source>
         <translation>确认</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="123"/>
+        <location filename="mainwindow.cpp" line="119"/>
         <source>There are still tasks running. Stop them and exit?</source>
         <oldsource>There are still tasks running. Stop them now?</oldsource>
         <translation>还有任务正在执行，现在停止他们并退出程序？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="137"/>
+        <location filename="mainwindow.cpp" line="133"/>
         <source>Do you really want to exit?</source>
         <translation>确认退出?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="214"/>
+        <location filename="mainwindow.cpp" line="210"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
@@ -842,21 +842,21 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="602"/>
-        <location filename="mainwindow.cpp" line="1980"/>
-        <location filename="mainwindow.cpp" line="1996"/>
-        <location filename="mainwindow.cpp" line="2022"/>
-        <location filename="mainwindow.cpp" line="2105"/>
+        <location filename="mainwindow.cpp" line="1983"/>
+        <location filename="mainwindow.cpp" line="1999"/>
+        <location filename="mainwindow.cpp" line="2025"/>
+        <location filename="mainwindow.cpp" line="2108"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1981"/>
+        <location filename="mainwindow.cpp" line="1984"/>
         <source>Failed to initialize GPU: </source>
         <translatorcomment>未能初始化GPU: </translatorcomment>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2081"/>
+        <location filename="mainwindow.cpp" line="2084"/>
         <source>Benchmark test under 8-bit integer input and serial processing</source>
         <translation>8位整数输入和串行处理下的基准测试结果</translation>
     </message>
@@ -877,10 +877,10 @@
     </message>
     <message>
         <location filename="mainwindow.cpp" line="872"/>
-        <location filename="mainwindow.cpp" line="1656"/>
-        <location filename="mainwindow.cpp" line="2006"/>
-        <location filename="mainwindow.cpp" line="2112"/>
-        <location filename="mainwindow.cpp" line="2137"/>
+        <location filename="mainwindow.cpp" line="1659"/>
+        <location filename="mainwindow.cpp" line="2009"/>
+        <location filename="mainwindow.cpp" line="2115"/>
+        <location filename="mainwindow.cpp" line="2140"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
@@ -900,48 +900,48 @@
         <translation>请输入网络视频的URL</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1510"/>
-        <location filename="mainwindow.cpp" line="1523"/>
-        <location filename="mainwindow.cpp" line="1536"/>
-        <location filename="mainwindow.cpp" line="1549"/>
+        <location filename="mainwindow.cpp" line="1513"/>
+        <location filename="mainwindow.cpp" line="1526"/>
+        <location filename="mainwindow.cpp" line="1539"/>
+        <location filename="mainwindow.cpp" line="1552"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation>中文翻译文件</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1567"/>
         <location filename="mainwindow.cpp" line="1570"/>
+        <location filename="mainwindow.cpp" line="1573"/>
         <source>FFmpeg path</source>
         <translation>FFmpeg路径</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1571"/>
+        <location filename="mainwindow.cpp" line="1574"/>
         <source>Please input the FFmpeg path</source>
         <translation>请输入FFmpeg路径</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1657"/>
+        <location filename="mainwindow.cpp" line="1660"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日志已拷贝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1886"/>
+        <location filename="mainwindow.cpp" line="1889"/>
         <source>please select a folder</source>
         <translation>请选择一个文件夹</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2193"/>
+        <location filename="mainwindow.cpp" line="2196"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>确认停止所有任务？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2023"/>
-        <location filename="mainwindow.cpp" line="2106"/>
+        <location filename="mainwindow.cpp" line="2026"/>
+        <location filename="mainwindow.cpp" line="2109"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平台不支持GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2138"/>
+        <location filename="mainwindow.cpp" line="2141"/>
         <source>Successfully release GPU</source>
         <translation>成功释放GPU</translation>
     </message>
@@ -963,7 +963,7 @@
     <message>
         <location filename="mainwindow.ui" line="49"/>
         <location filename="mainwindow.cpp" line="915"/>
-        <location filename="mainwindow.cpp" line="1222"/>
+        <location filename="mainwindow.cpp" line="1225"/>
         <source>pick files</source>
         <translation>打开文件</translation>
     </message>

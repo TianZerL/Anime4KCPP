@@ -30,8 +30,8 @@ namespace Anime4KCPP
 class Anime4KCPP::NCNN::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(std::string modelPath, std::string paramPath, int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency());
-    Manager(int dID = -1, CNNType type = CNNType::Default, int threads = std::thread::hardware_concurrency()) noexcept;
+    Manager(std::string modelPath, std::string paramPath, int dID = -1, CNNType type = CNNType::Default, int threads = 1);
+    Manager(int dID = -1, CNNType type = CNNType::Default, int threads = 1) noexcept;
     void init() override;
     void release() noexcept override;
     bool isInitialized() noexcept override;

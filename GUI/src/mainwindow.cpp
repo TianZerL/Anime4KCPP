@@ -47,14 +47,6 @@ MainWindow::MainWindow(QWidget* parent)
         "other"
         });
     ui->comboBoxCodec->setCurrentText("mp4v");
-    //initialize textBrowser
-    ui->fontComboBox->setFont(QFont("Consolas"));
-    ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
-    ui->spinBoxFontSize->setRange(9, 30);
-    ui->spinBoxFontSize->setValue(9);
-    initTextBrowser();
-    //accept drops
-    this->setAcceptDrops(true);
     //initialize tableView
     tableModel = new QStandardItemModel(this);
     tableModel->setColumnCount(5);
@@ -99,15 +91,19 @@ MainWindow::MainWindow(QWidget* parent)
     ui->pushButtonForceStop->setEnabled(false);
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(false);
-
-    if (!ui->checkBoxACNet->isChecked())
-    {
-        ui->checkBoxHDN->setEnabled(false);
-        ui->spinBoxHDNLevel->setEnabled(false);
-    }
+    //set to balance
+    ui->radioButtonBalance->click();
     //stop flag
-    stopProcessing = false;
     processingState = ProcessingState::STOP;
+    stopProcessing = false;
+    //initialize textBrowser
+    ui->fontComboBox->setFont(QFont("Consolas"));
+    ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
+    ui->spinBoxFontSize->setRange(9, 30);
+    ui->spinBoxFontSize->setValue(9);
+    initTextBrowser();
+    //accept drops
+    this->setAcceptDrops(true);
 }
 
 MainWindow::~MainWindow()
@@ -239,12 +235,16 @@ void MainWindow::readConfig(const QSettings* conf)
     QString outputPath = conf->value("/Output/path", QApplication::applicationDirPath() + "/output").toString();
     QString outputPrefix = conf->value("/Output/perfix", "output_anime4kcpp_").toString();
 
+    unsigned int currentThreads = std::thread::hardware_concurrency();
+    if (currentThreads < 1)
+        currentThreads = 1;
+
     int passes = conf->value("/Arguments/passes", 2).toInt();
     int pushColorCount = conf->value("/Arguments/pushColorCount", 2).toInt();
     double pushColorStrength = conf->value("/Arguments/pushColorStrength", 0.3).toDouble();
     double pushGradientStrength = conf->value("/Arguments/pushGradientStrength", 1.0).toDouble();
     double zoomFactor = conf->value("/Arguments/zoomFactor", 2.0).toDouble();
-    unsigned int threads = conf->value("/Arguments/threads", std::thread::hardware_concurrency()).toUInt();
+    unsigned int threads = conf->value("/Arguments/threads", currentThreads).toUInt();
     bool fastMode = conf->value("/Arguments/fastMode", false).toBool();
     int codec = conf->value("/Arguments/codec", 0).toInt();
     double fps = conf->value("/Arguments/fps", 0.0).toDouble();
@@ -254,7 +254,7 @@ void MainWindow::readConfig(const QSettings* conf)
     bool OpenCLParallelIO = conf->value("/Arguments/OpenCLParallelIO", false).toBool();
     bool alphaChannel = conf->value("/Arguments/alphaChannel", false).toBool();
 
-    bool ACNet = conf->value("/ACNet/ACNet", false).toBool();
+    bool ACNet = conf->value("/ACNet/ACNet", true).toBool();
     bool HDN = conf->value("/ACNet/HDN", false).toBool();
     int HDNLevel = conf->value("/ACNet/HDNLevel", 1).toInt();
 
@@ -998,7 +998,8 @@ void MainWindow::on_radioButtonFast_clicked()
     ui->checkBoxHDN->setChecked(false);
     ui->spinBoxPasses->setValue(2);
     ui->spinBoxPushColorCount->setValue(2);
-    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
+    unsigned int currentThreads = std::thread::hardware_concurrency();
+    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
     ui->doubleSpinBoxPushColorStrength->setValue(0.3);
     ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
@@ -1029,7 +1030,8 @@ void MainWindow::on_radioButtonBalance_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
     ui->checkBoxHDN->setChecked(false);
-    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
+    unsigned int currentThreads = std::thread::hardware_concurrency();
+    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
@@ -1042,7 +1044,8 @@ void MainWindow::on_radioButtonQuality_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
     ui->checkBoxHDN->setChecked(false);
-    ui->spinBoxThreads->setValue(std::thread::hardware_concurrency());
+    unsigned int currentThreads = std::thread::hardware_concurrency();
+    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
