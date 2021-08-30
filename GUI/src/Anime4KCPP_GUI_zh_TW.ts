@@ -11,7 +11,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="313"/>
-        <location filename="mainwindow.ui" line="1105"/>
+        <location filename="mainwindow.ui" line="1102"/>
         <source>pick</source>
         <translation>選擇</translation>
     </message>
@@ -217,8 +217,8 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="368"/>
-        <location filename="mainwindow.cpp" line="902"/>
-        <location filename="mainwindow.cpp" line="1209"/>
+        <location filename="mainwindow.cpp" line="916"/>
+        <location filename="mainwindow.cpp" line="1223"/>
         <source>image</source>
         <translation>圖像</translation>
     </message>
@@ -240,8 +240,8 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="410"/>
-        <location filename="mainwindow.cpp" line="903"/>
-        <location filename="mainwindow.cpp" line="1210"/>
+        <location filename="mainwindow.cpp" line="917"/>
+        <location filename="mainwindow.cpp" line="1224"/>
         <source>video</source>
         <translation>視頻</translation>
     </message>
@@ -428,73 +428,95 @@
         <translation>設置HDN等級，範圍從1到3，越高降噪效果越好，但可能導致模糊和缺少細節</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="997"/>
+        <location filename="mainwindow.ui" line="965"/>
+        <source>Try to enable hardware video decode</source>
+        <translation>嘗試啟用硬體視頻解碼</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="968"/>
+        <source>hardware video decode</source>
+        <oldsource>hardware decode</oldsource>
+        <translation>硬體視頻解碼</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="975"/>
+        <source>Try to enable hardware video encode</source>
+        <translation>嘗試啟用硬體視頻編碼</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="978"/>
+        <source>hardware video encode</source>
+        <oldsource>hardware encode</oldsource>
+        <translation>硬體視頻編碼</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="994"/>
         <source>number of OpenCL command queue</source>
         <translation>OpenCL命令隊列數</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1004"/>
+        <location filename="mainwindow.ui" line="1001"/>
         <source>Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL</source>
         <translation>指定OpenCL的命令隊列數，這可能會影響OpenCL的視頻處理性能</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1013"/>
+        <location filename="mainwindow.ui" line="1010"/>
         <source>Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL</source>
         <translation>對OpenCL使用並行IO命令隊列，這可能會影響OpenCL的性能</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1016"/>
+        <location filename="mainwindow.ui" line="1013"/>
         <source>OpenCL parallel IO command queue</source>
         <translation>OpenCL并行IO命令隊列</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1180"/>
+        <location filename="mainwindow.ui" line="1177"/>
         <source>Style</source>
         <translation>UI風格</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1197"/>
+        <location filename="mainwindow.ui" line="1194"/>
         <source>FFmpeg</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1255"/>
+        <location filename="mainwindow.ui" line="1252"/>
         <source>Traditional Chinese</source>
         <translation>繁體中文</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1260"/>
+        <location filename="mainwindow.ui" line="1257"/>
         <source>Japanese</source>
         <translation>日語</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1265"/>
+        <location filename="mainwindow.ui" line="1262"/>
         <source>French</source>
         <translation>法語</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1286"/>
+        <location filename="mainwindow.ui" line="1283"/>
         <source>Default</source>
         <translation>預設</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1291"/>
+        <location filename="mainwindow.ui" line="1288"/>
         <source>Fusion</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1296"/>
+        <location filename="mainwindow.ui" line="1293"/>
         <source>Fusion dark</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1281"/>
+        <location filename="mainwindow.ui" line="1278"/>
         <source>Set FFmpeg path</source>
         <translation>設置FFmpeg路徑</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1250"/>
-        <location filename="mainwindow.cpp" line="2067"/>
+        <location filename="mainwindow.ui" line="1247"/>
+        <location filename="mainwindow.cpp" line="2080"/>
         <source>Benchmark</source>
         <translation>性能測試</translation>
     </message>
@@ -571,74 +593,74 @@
         <translation>視頻編碼格式</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="929"/>
+        <location filename="mainwindow.ui" line="894"/>
         <source>Specify the FPS of output video, 0 for auto</source>
         <translation>指定輸出視頻的幀率，設為0則自動設定</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="932"/>
+        <location filename="mainwindow.ui" line="897"/>
         <source>FPS</source>
         <translation>幀率</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="951"/>
+        <location filename="mainwindow.ui" line="918"/>
         <source>Preserve alpha channels for transparent image</source>
         <translation>保留透明通道，如果有的話</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="954"/>
+        <location filename="mainwindow.ui" line="921"/>
         <source>alpha channel</source>
         <translation>透明通道</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="961"/>
+        <location filename="mainwindow.ui" line="928"/>
         <source>Faster but maybe low quality (Only for CPU)</source>
         <oldsource>Faster but maybe low quality</oldsource>
         <translation>更快但可能降低品質(僅支持CPU)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="964"/>
+        <location filename="mainwindow.ui" line="931"/>
         <source>fast mode</source>
         <translation>快速模式</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="971"/>
+        <location filename="mainwindow.ui" line="942"/>
         <source>Enable GPU acceleration</source>
         <translation>開啟GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="974"/>
+        <location filename="mainwindow.ui" line="945"/>
         <source>GPU acceleration</source>
         <translation>GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="981"/>
+        <location filename="mainwindow.ui" line="952"/>
         <source>GPGPU model</source>
         <translation>GPGPU模型</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1029"/>
+        <location filename="mainwindow.ui" line="1026"/>
         <source>platform id</source>
         <oldsource>plateform id</oldsource>
         <translation>平臺ID</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1082"/>
+        <location filename="mainwindow.ui" line="1079"/>
         <source>release GPU</source>
         <translation>釋放GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1229"/>
+        <location filename="mainwindow.ui" line="1226"/>
         <source>Simplified Chinese</source>
         <translation>簡體中文</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1276"/>
+        <location filename="mainwindow.ui" line="1273"/>
         <source>Check FFmpeg</source>
         <translation>檢查FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1050"/>
+        <location filename="mainwindow.ui" line="1047"/>
         <source>device id</source>
         <translation>設備ID</translation>
     </message>
@@ -649,303 +671,303 @@
         <translation>推薦使用mp4v，Windows下支援mp4v，dxva(硬體加速， 僅支援Windows)，avc1(即H264)和vp09(非常慢)，other選項保留做測試用。</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1039"/>
+        <location filename="mainwindow.ui" line="1036"/>
         <source>Specify platform id</source>
         <translation>指定平臺ID</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1060"/>
+        <location filename="mainwindow.ui" line="1057"/>
         <source>Specify device id</source>
         <translation>指定設備ID</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1069"/>
+        <location filename="mainwindow.ui" line="1066"/>
         <source>List platforms and devices</source>
         <translation>列出所有平臺以及設備</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1079"/>
+        <location filename="mainwindow.ui" line="1076"/>
         <source>Release GPU in order to specify anoher GPU</source>
         <translation>釋放當前GPU以便選擇其它GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1094"/>
+        <location filename="mainwindow.ui" line="1091"/>
         <source>Preview for test</source>
         <oldsource>preview for test</oldsource>
         <translation>快速預覽</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1112"/>
+        <location filename="mainwindow.ui" line="1109"/>
         <source>Quickly preview for testing arguments</source>
         <translation>快速預覽以測試參數</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1115"/>
+        <location filename="mainwindow.ui" line="1112"/>
         <source>preview</source>
         <translation>預覽</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1122"/>
+        <location filename="mainwindow.ui" line="1119"/>
         <source>only resize</source>
         <translation>僅放大</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1129"/>
+        <location filename="mainwindow.ui" line="1126"/>
         <source>original image</source>
         <oldsource>orgin image</oldsource>
         <translation>原圖</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1155"/>
+        <location filename="mainwindow.ui" line="1152"/>
         <source>Menu</source>
         <translation>菜單</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1162"/>
+        <location filename="mainwindow.ui" line="1159"/>
         <source>Language</source>
         <translation>語言</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1172"/>
+        <location filename="mainwindow.ui" line="1169"/>
         <source>Option</source>
         <translation>選項</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1176"/>
+        <location filename="mainwindow.ui" line="1173"/>
         <source>GUI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1191"/>
+        <location filename="mainwindow.ui" line="1188"/>
         <source>GPU</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1214"/>
-        <location filename="mainwindow.cpp" line="1484"/>
+        <location filename="mainwindow.ui" line="1211"/>
+        <location filename="mainwindow.cpp" line="1497"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1219"/>
+        <location filename="mainwindow.ui" line="1216"/>
         <source>Quit</source>
         <translation>退出</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1224"/>
+        <location filename="mainwindow.ui" line="1221"/>
         <source>English</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1240"/>
+        <location filename="mainwindow.ui" line="1237"/>
         <source>Quit confirmation</source>
         <translation>退出時確認</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1245"/>
+        <location filename="mainwindow.ui" line="1242"/>
         <source>List GPUs</source>
         <translation>列出GPU設備</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1072"/>
+        <location filename="mainwindow.ui" line="1069"/>
         <source>list GPUs</source>
         <translation>列出GPU設備</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="108"/>
         <location filename="mainwindow.cpp" line="122"/>
-        <location filename="mainwindow.cpp" line="2179"/>
+        <location filename="mainwindow.cpp" line="136"/>
+        <location filename="mainwindow.cpp" line="2192"/>
         <source>Confirm</source>
         <translation>確認</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="109"/>
+        <location filename="mainwindow.cpp" line="123"/>
         <source>There are still tasks running. Stop them and exit?</source>
         <oldsource>There are still tasks running. Stop them now?</oldsource>
         <translation>還有任務正在執行，現在停止他們並退出程式？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="123"/>
+        <location filename="mainwindow.cpp" line="137"/>
         <source>Do you really want to exit?</source>
         <translation>確認退出?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="200"/>
+        <location filename="mainwindow.cpp" line="214"/>
         <source>ready</source>
         <translation>就緒</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="489"/>
-        <location filename="mainwindow.cpp" line="495"/>
-        <location filename="mainwindow.cpp" line="501"/>
-        <location filename="mainwindow.cpp" line="507"/>
-        <location filename="mainwindow.cpp" line="513"/>
-        <location filename="mainwindow.cpp" line="519"/>
-        <location filename="mainwindow.cpp" line="525"/>
-        <location filename="mainwindow.cpp" line="531"/>
-        <location filename="mainwindow.cpp" line="537"/>
-        <location filename="mainwindow.cpp" line="547"/>
+        <location filename="mainwindow.cpp" line="503"/>
+        <location filename="mainwindow.cpp" line="509"/>
+        <location filename="mainwindow.cpp" line="515"/>
+        <location filename="mainwindow.cpp" line="521"/>
+        <location filename="mainwindow.cpp" line="527"/>
+        <location filename="mainwindow.cpp" line="533"/>
+        <location filename="mainwindow.cpp" line="539"/>
+        <location filename="mainwindow.cpp" line="545"/>
+        <location filename="mainwindow.cpp" line="551"/>
+        <location filename="mainwindow.cpp" line="561"/>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="502"/>
+        <location filename="mainwindow.cpp" line="516"/>
         <source>Dir does not exists</source>
         <translation>資料夾不存在</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="508"/>
+        <location filename="mainwindow.cpp" line="522"/>
         <source>File type error, only image support</source>
         <translation>檔案類型錯誤，僅支援圖像</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="520"/>
+        <location filename="mainwindow.cpp" line="534"/>
         <source>Invalid url, please check your input</source>
         <translation>不支援的URL，請檢查輸入</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="526"/>
+        <location filename="mainwindow.cpp" line="540"/>
         <source>Error image format, please check your input</source>
         <translation>錯誤的圖像格式，請檢查您的輸入</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="532"/>
+        <location filename="mainwindow.cpp" line="546"/>
         <source>OpenCL is not supported</source>
         <translation>當前不支持OpenCL</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="538"/>
+        <location filename="mainwindow.cpp" line="552"/>
         <source>CUDA is not supported</source>
         <translation>当前不支持CUDA</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="588"/>
-        <location filename="mainwindow.cpp" line="1967"/>
-        <location filename="mainwindow.cpp" line="1983"/>
-        <location filename="mainwindow.cpp" line="2009"/>
-        <location filename="mainwindow.cpp" line="2092"/>
+        <location filename="mainwindow.cpp" line="602"/>
+        <location filename="mainwindow.cpp" line="1980"/>
+        <location filename="mainwindow.cpp" line="1996"/>
+        <location filename="mainwindow.cpp" line="2022"/>
+        <location filename="mainwindow.cpp" line="2105"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1968"/>
+        <location filename="mainwindow.cpp" line="1981"/>
         <source>Failed to initialize GPU: </source>
         <translation>未能初始化GPU: </translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2068"/>
+        <location filename="mainwindow.cpp" line="2081"/>
         <source>Benchmark test under 8-bit integer input and serial processing</source>
         <translation>8比特整數輸入和串列處理下的基準測試結果</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="588"/>
+        <location filename="mainwindow.cpp" line="602"/>
         <source>FFmpeg not found</source>
         <translation>未找到FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="833"/>
+        <location filename="mainwindow.cpp" line="847"/>
         <source>done</source>
         <translation>完成</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="843"/>
+        <location filename="mainwindow.cpp" line="857"/>
         <source>error</source>
         <translation>出錯</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="858"/>
-        <location filename="mainwindow.cpp" line="1643"/>
-        <location filename="mainwindow.cpp" line="1993"/>
-        <location filename="mainwindow.cpp" line="2099"/>
-        <location filename="mainwindow.cpp" line="2124"/>
+        <location filename="mainwindow.cpp" line="872"/>
+        <location filename="mainwindow.cpp" line="1656"/>
+        <location filename="mainwindow.cpp" line="2006"/>
+        <location filename="mainwindow.cpp" line="2112"/>
+        <location filename="mainwindow.cpp" line="2137"/>
         <source>Notice</source>
         <translation>注意</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="861"/>
+        <location filename="mainwindow.cpp" line="875"/>
         <source>Processing stopped</source>
         <translation>處理已停止</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="936"/>
+        <location filename="mainwindow.cpp" line="950"/>
         <source>Web Video</source>
         <translation>網路視頻輸入</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="937"/>
+        <location filename="mainwindow.cpp" line="951"/>
         <source>Please input the url of web video</source>
         <translation>請輸入網路視頻的URL</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1497"/>
         <location filename="mainwindow.cpp" line="1510"/>
         <location filename="mainwindow.cpp" line="1523"/>
         <location filename="mainwindow.cpp" line="1536"/>
+        <location filename="mainwindow.cpp" line="1549"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation>中文翻譯檔</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1554"/>
-        <location filename="mainwindow.cpp" line="1557"/>
+        <location filename="mainwindow.cpp" line="1567"/>
+        <location filename="mainwindow.cpp" line="1570"/>
         <source>FFmpeg path</source>
         <translation>FFmpeg路徑</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1558"/>
+        <location filename="mainwindow.cpp" line="1571"/>
         <source>Please input the FFmpeg path</source>
         <translation>請輸入FFmpeg路徑</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1644"/>
+        <location filename="mainwindow.cpp" line="1657"/>
         <source>Log has been copied to the clipboard</source>
         <translation>日誌已拷貝至剪切板</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1873"/>
+        <location filename="mainwindow.cpp" line="1886"/>
         <source>please select a folder</source>
         <translation>請選擇一個資料夾</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2180"/>
+        <location filename="mainwindow.cpp" line="2193"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>確認停止所有任務？</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2010"/>
-        <location filename="mainwindow.cpp" line="2093"/>
+        <location filename="mainwindow.cpp" line="2023"/>
+        <location filename="mainwindow.cpp" line="2106"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>本平臺不支援GPU加速</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2125"/>
+        <location filename="mainwindow.cpp" line="2138"/>
         <source>Successfully release GPU</source>
         <translation>成功釋放GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="496"/>
+        <location filename="mainwindow.cpp" line="510"/>
         <source>File does not exists</source>
         <translation>文件不存在</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="514"/>
+        <location filename="mainwindow.cpp" line="528"/>
         <source>File type error, you can add it manually</source>
         <translation>檔案類型錯誤，可手動添加尾碼</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="490"/>
+        <location filename="mainwindow.cpp" line="504"/>
         <source>Processing list empty</source>
         <translation>處理列表為空</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="49"/>
-        <location filename="mainwindow.cpp" line="901"/>
-        <location filename="mainwindow.cpp" line="1208"/>
+        <location filename="mainwindow.cpp" line="915"/>
+        <location filename="mainwindow.cpp" line="1222"/>
         <source>pick files</source>
         <translation>打開文件</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="926"/>
+        <location filename="mainwindow.cpp" line="940"/>
         <source>output directory</source>
         <translation>輸出資料夾</translation>
     </message>

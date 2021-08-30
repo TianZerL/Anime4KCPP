@@ -16,12 +16,21 @@ Anime4KCPP::Video::VideoIO& Anime4KCPP::Video::VideoIO::init(std::function<void(
     return *this;
 }
 
-bool Anime4KCPP::Video::VideoIO::openReader(const std::string& srcFile)
+bool Anime4KCPP::Video::VideoIO::openReader(const std::string& srcFile, bool hw)
 {
-    return reader.open(srcFile);
+#ifdef NEW_OPENCV_API
+    reader.open(srcFile, cv::CAP_FFMPEG,
+        {
+            cv::CAP_PROP_HW_ACCELERATION, hw ? cv::VIDEO_ACCELERATION_ANY : cv::VIDEO_ACCELERATION_NONE,
+        });
+#else
+    reader.open(srcFile);
+#endif // defined(WIN32) && defined(NEW_OPENCV_API)
+
+    return reader.isOpened();
 }
 
-bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Codec codec, const cv::Size& size, const double forceFps)
+bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Codec codec, const cv::Size& size, const double forceFps, bool hw)
 {
     double fps;
 
@@ -30,11 +39,22 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
     else
         fps = forceFps;
 
+#if defined(NEW_OPENCV_API)
+    auto videoAcceleration = hw ? cv::VIDEO_ACCELERATION_ANY : cv::VIDEO_ACCELERATION_NONE;
+#endif
+
     switch (codec)
     {
     case Codec::MP4V:
 #ifndef OLD_OPENCV_API
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
+#endif  // NEW_OPENCV_API
         if (!writer.isOpened())
 #endif // !OLD_OPENCV_API
         {
@@ -46,7 +66,14 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
 
 #if defined(_WIN32) && !defined(OLD_OPENCV_API) //DXVA encoding for windows
     case Codec::DXVA:
-        writer.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), std::ceil(fps), size);
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), std::ceil(fps), size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
+        writer.open(dstFile, cv::CAP_MSMF, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), std::ceil(fps), size);
+#endif
         if (!writer.isOpened())
         {
             writer.open(dstFile, cv::VideoWriter::fourcc('m', 'p', '4', 'v'), fps, size);
@@ -58,7 +85,14 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
 
     case Codec::AVC1:
 #ifndef OLD_OPENCV_API
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', 'c', '1'), fps, size);
+#endif  // NEW_OPENCV_API
         if (!writer.isOpened())
 #endif // !OLD_OPENCV_API
         {
@@ -70,7 +104,14 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
 
     case Codec::VP09:
 #ifndef OLD_OPENCV_API
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('v', 'p', '0', '9'), fps, size);
+#endif  // NEW_OPENCV_API
         if (!writer.isOpened())
 #endif // !OLD_OPENCV_API
         {
@@ -82,7 +123,14 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
 
     case Codec::HEVC:
 #ifndef OLD_OPENCV_API
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('h', 'e', 'v', '1'), fps, size);
+#endif  // NEW_OPENCV_API
         if (!writer.isOpened())
 #endif // !OLD_OPENCV_API
         {
@@ -94,7 +142,14 @@ bool Anime4KCPP::Video::VideoIO::openWriter(const std::string& dstFile, const Co
 
     case Codec::AV01:
 #ifndef OLD_OPENCV_API
+#ifdef NEW_OPENCV_API
+        writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, size,
+            {
+                cv::VIDEOWRITER_PROP_HW_ACCELERATION, videoAcceleration,
+            });
+#else
         writer.open(dstFile, cv::CAP_FFMPEG, cv::VideoWriter::fourcc('a', 'v', '0', '1'), fps, size);
+#endif  // NEW_OPENCV_API
         if (!writer.isOpened())
 #endif // !OLD_OPENCV_API
         {

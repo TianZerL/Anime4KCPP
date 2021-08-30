@@ -30,9 +30,23 @@ MainWindow::MainWindow(QWidget* parent)
     codecSelector["dxva"] = Anime4KCPP::Codec::DXVA;
     codecSelector["avc1"] = Anime4KCPP::Codec::AVC1;
     codecSelector["vp09"] = Anime4KCPP::Codec::VP09;
+#ifndef _WIN32
     codecSelector["hevc"] = Anime4KCPP::Codec::HEVC;
     codecSelector["av01"] = Anime4KCPP::Codec::AV01;
+#endif
     codecSelector["other"] = Anime4KCPP::Codec::OTHER;
+    ui->comboBoxCodec->addItems({
+        "mp4v" ,
+        "dxva" ,
+        "avc1" ,
+        "vp09" ,
+#ifndef _WIN32
+        "hevc" ,
+        "av01" ,
+#endif
+        "other"
+        });
+    ui->comboBoxCodec->setCurrentText("mp4v");
     //initialize textBrowser
     ui->fontComboBox->setFont(QFont("Consolas"));
     ui->fontComboBox->setCurrentFont(ui->fontComboBox->font());
@@ -958,7 +972,7 @@ void MainWindow::on_pushButtonWebVideo_clicked()
 
     if (!addTask(QFileInfo{ url.path() }, path))
         errorHandler(ErrorType::BAD_TYPE);
-  
+
     ui->labelTotalTaskCount->setText(QString("Total: %1 ").arg(totalTaskCount));
 }
 
@@ -1350,14 +1364,14 @@ void MainWindow::on_pushButtonStart_clicked()
             for (const auto& video : videos)
             {
                 totalCount--;
-
+                QString tmpFilePath = video.first.second + "_tmp_out.mp4";
                 try
                 {
-                    videoProcessor.loadVideo(video.first.first.toUtf8().toStdString());
+                    videoProcessor.loadVideo(video.first.first.toUtf8().toStdString(), ui->checkBoxHardwareVideoDecode->isChecked());
                     videoProcessor.setVideoSaveInfo(
-                        video.first.second.toUtf8().toStdString() +
-                        std::string("_tmp_out.mp4"), getCodec(ui->comboBoxCodec->currentText()),
-                        ui->doubleSpinBoxFPS->value());
+                        tmpFilePath.toUtf8().toStdString(),
+                        getCodec(ui->comboBoxCodec->currentText()),
+                        ui->doubleSpinBoxFPS->value(), ui->checkBoxHardwareVideoEncode->isChecked());
                     emit cm.logInfo("Video: " + video.first.first + ", start processing...\n");
                     startTime = std::chrono::steady_clock::now();
                     videoProcessor.processWithProgress(
@@ -1406,7 +1420,6 @@ void MainWindow::on_pushButtonStart_clicked()
 
                 if (foundFFmpegFlag)
                 {
-                    QString tmpFilePath = video.first.second + "_tmp_out.mp4";
                     if (!checkGIF(video.first.second))
                     {
                         if (mergeAudio2Video(video.first.second, video.first.first, tmpFilePath))
@@ -1890,7 +1903,7 @@ void MainWindow::on_pushButtonPickFolder_clicked()
         folderIter.next();
         QFileInfo fileInfo = folderIter.fileInfo();
         QString path = QDir::cleanPath(basePath.absoluteFilePath(
-                getOutputPrefix() + folder.dirName() + '/' + folder.relativeFilePath(fileInfo.absolutePath())));
+            getOutputPrefix() + folder.dirName() + '/' + folder.relativeFilePath(fileInfo.absolutePath())));
 
         success &= addTask(fileInfo, path, false);
     }
@@ -2064,8 +2077,8 @@ void MainWindow::on_actionBenchmark_triggered()
 #endif 
 
     QMessageBox::information(this,
-        tr("Benchmark"), 
-        tr("Benchmark test under 8-bit integer input and serial processing").append("\n\n").append(resultText), 
+        tr("Benchmark"),
+        tr("Benchmark test under 8-bit integer input and serial processing").append("\n\n").append(resultText),
         QMessageBox::Ok);
 }
 

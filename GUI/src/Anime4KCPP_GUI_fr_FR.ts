@@ -11,7 +11,7 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="313"/>
-        <location filename="mainwindow.ui" line="1105"/>
+        <location filename="mainwindow.ui" line="1102"/>
         <source>pick</source>
         <translation>Choisir</translation>
     </message>
@@ -217,8 +217,8 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="368"/>
-        <location filename="mainwindow.cpp" line="902"/>
-        <location filename="mainwindow.cpp" line="1209"/>
+        <location filename="mainwindow.cpp" line="916"/>
+        <location filename="mainwindow.cpp" line="1223"/>
         <source>image</source>
         <translation>image</translation>
     </message>
@@ -240,8 +240,8 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="410"/>
-        <location filename="mainwindow.cpp" line="903"/>
-        <location filename="mainwindow.cpp" line="1210"/>
+        <location filename="mainwindow.cpp" line="917"/>
+        <location filename="mainwindow.cpp" line="1224"/>
         <source>video</source>
         <translation>Vidéo</translation>
     </message>
@@ -428,73 +428,95 @@
         <translation>Réglez le niveau HDN de 1 à 3, plus la réduction du bruit est élevée, mais peut causer du flou et un manque de détails</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="997"/>
+        <location filename="mainwindow.ui" line="965"/>
+        <source>Try to enable hardware video decode</source>
+        <translation>Essayez d&apos;activer le décodage vidéo matériel</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="968"/>
+        <source>hardware video decode</source>
+        <oldsource>hardware decode</oldsource>
+        <translation>décodage vidéo matériel</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="975"/>
+        <source>Try to enable hardware video encode</source>
+        <translation>Essayez d&apos;activer l&apos;encodage vidéo matériel</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="978"/>
+        <source>hardware video encode</source>
+        <oldsource>hardware encode</oldsource>
+        <translation>encodage vidéo matériel</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="994"/>
         <source>number of OpenCL command queue</source>
         <translation>nombre de file d&apos;attente de commandes OpenCL</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1004"/>
+        <location filename="mainwindow.ui" line="1001"/>
         <source>Specify the number of command queues for OpenCL, this may affect performance of video processing for OpenCL</source>
         <translation>Spécifiez le nombre de files d&apos;attente de commandes pour OpenCL, cela peut affecter les performances du traitement vidéo pour OpenCL</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1013"/>
+        <location filename="mainwindow.ui" line="1010"/>
         <source>Use a parallel IO command queue for OpenCL, this may affect performance for OpenCL</source>
         <translation>Utilisez une file d&apos;attente de commandes E / S parallèle pour OpenCL, cela peut affecter les performances d&apos;OpenCL</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1016"/>
+        <location filename="mainwindow.ui" line="1013"/>
         <source>OpenCL parallel IO command queue</source>
         <translation>Queue d &apos;attente de commande ISO parallèle OpenCL</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1180"/>
+        <location filename="mainwindow.ui" line="1177"/>
         <source>Style</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1197"/>
+        <location filename="mainwindow.ui" line="1194"/>
         <source>FFmpeg</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1255"/>
+        <location filename="mainwindow.ui" line="1252"/>
         <source>Traditional Chinese</source>
         <translation>Chinois traditionnel</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1260"/>
+        <location filename="mainwindow.ui" line="1257"/>
         <source>Japanese</source>
         <translation>Japonais</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1265"/>
+        <location filename="mainwindow.ui" line="1262"/>
         <source>French</source>
         <translation>français</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1286"/>
+        <location filename="mainwindow.ui" line="1283"/>
         <source>Default</source>
         <translation>Par défaut</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1291"/>
+        <location filename="mainwindow.ui" line="1288"/>
         <source>Fusion</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1296"/>
+        <location filename="mainwindow.ui" line="1293"/>
         <source>Fusion dark</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1281"/>
+        <location filename="mainwindow.ui" line="1278"/>
         <source>Set FFmpeg path</source>
         <translation>Définir le chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1250"/>
-        <location filename="mainwindow.cpp" line="2067"/>
+        <location filename="mainwindow.ui" line="1247"/>
+        <location filename="mainwindow.cpp" line="2080"/>
         <source>Benchmark</source>
         <translation>Performance Test</translation>
     </message>
@@ -571,79 +593,79 @@
         <translation>Format d’encodage vidéo</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="929"/>
+        <location filename="mainwindow.ui" line="894"/>
         <source>Specify the FPS of output video, 0 for auto</source>
         <translation>Spécifiez la fréquence d’image de la vidéo de sortie, définie sur 0 et définie automatiquement</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="932"/>
+        <location filename="mainwindow.ui" line="897"/>
         <source>FPS</source>
         <translation>fréquence d’image</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="951"/>
+        <location filename="mainwindow.ui" line="918"/>
         <source>Preserve alpha channels for transparent image</source>
         <translation>Conservez des canaux transparents, le cas échéant</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="954"/>
+        <location filename="mainwindow.ui" line="921"/>
         <source>alpha channel</source>
         <translation>canal transparent</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="961"/>
+        <location filename="mainwindow.ui" line="928"/>
         <source>Faster but maybe low quality (Only for CPU)</source>
         <oldsource>Faster but maybe low quality</oldsource>
         <translation>Plus rapide mais de qualité probablement inférieure (prise en charge du processeur uniquement)</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="964"/>
+        <location filename="mainwindow.ui" line="931"/>
         <source>fast mode</source>
         <translation>Mode rapide</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="971"/>
+        <location filename="mainwindow.ui" line="942"/>
         <source>Enable GPU acceleration</source>
         <translation>Activer l’accélération gpu</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="974"/>
+        <location filename="mainwindow.ui" line="945"/>
         <source>GPU acceleration</source>
         <translation>Accélération gpu</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="981"/>
+        <location filename="mainwindow.ui" line="952"/>
         <source>GPGPU model</source>
         <translation>Modèle GPGPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1029"/>
+        <location filename="mainwindow.ui" line="1026"/>
         <source>platform id</source>
         <oldsource>plateform id</oldsource>
         <translation>ID de plate-forme</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1082"/>
+        <location filename="mainwindow.ui" line="1079"/>
         <source>release GPU</source>
         <translation>Communiqué GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1219"/>
+        <location filename="mainwindow.ui" line="1216"/>
         <source>Quit</source>
         <translation>Sortie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1229"/>
+        <location filename="mainwindow.ui" line="1226"/>
         <source>Simplified Chinese</source>
         <translation>Chinois simplifié</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1276"/>
+        <location filename="mainwindow.ui" line="1273"/>
         <source>Check FFmpeg</source>
         <translation>Vérifier FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1050"/>
+        <location filename="mainwindow.ui" line="1047"/>
         <source>device id</source>
         <translation>ID de l&apos;appareil</translation>
     </message>
@@ -654,298 +676,298 @@
         <translation>mp4v est recommandé, Windows prend en charge mp4v, dxva (accélération matérielle, Windows seulement), avc1 (c’est-à-dire H264) et vp09 (très lent), les autres options sont réservées aux tests.</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1039"/>
+        <location filename="mainwindow.ui" line="1036"/>
         <source>Specify platform id</source>
         <translation>Affecter l’ID de plate-forme</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1060"/>
+        <location filename="mainwindow.ui" line="1057"/>
         <source>Specify device id</source>
         <translation>Attribution d&apos;un ID d&apos;appareil</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1069"/>
+        <location filename="mainwindow.ui" line="1066"/>
         <source>List platforms and devices</source>
         <translation>Liste de toutes les plateformes et appareils</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1079"/>
+        <location filename="mainwindow.ui" line="1076"/>
         <source>Release GPU in order to specify anoher GPU</source>
         <translation>Relâchez le GPU actuel pour sélectionner un autre GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1094"/>
+        <location filename="mainwindow.ui" line="1091"/>
         <source>Preview for test</source>
         <oldsource>preview for test</oldsource>
         <translation>aperçu pour le test</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1112"/>
+        <location filename="mainwindow.ui" line="1109"/>
         <source>Quickly preview for testing arguments</source>
         <translation>Aperçu rapide des arguments de test</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1115"/>
+        <location filename="mainwindow.ui" line="1112"/>
         <source>preview</source>
         <translation>Aperçu</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1122"/>
+        <location filename="mainwindow.ui" line="1119"/>
         <source>only resize</source>
         <translation>seulement Redimensionner</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1129"/>
+        <location filename="mainwindow.ui" line="1126"/>
         <source>original image</source>
         <oldsource>orgin image</oldsource>
         <translation>image d&apos;origine</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1155"/>
+        <location filename="mainwindow.ui" line="1152"/>
         <source>Menu</source>
         <translation>Menu</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1162"/>
+        <location filename="mainwindow.ui" line="1159"/>
         <source>Language</source>
         <translation>Langue</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1172"/>
+        <location filename="mainwindow.ui" line="1169"/>
         <source>Option</source>
         <translation>Option</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1176"/>
+        <location filename="mainwindow.ui" line="1173"/>
         <source>GUI</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1191"/>
+        <location filename="mainwindow.ui" line="1188"/>
         <source>GPU</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1214"/>
-        <location filename="mainwindow.cpp" line="1484"/>
+        <location filename="mainwindow.ui" line="1211"/>
+        <location filename="mainwindow.cpp" line="1497"/>
         <source>About</source>
         <translation>À propos de</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1224"/>
+        <location filename="mainwindow.ui" line="1221"/>
         <source>English</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1240"/>
+        <location filename="mainwindow.ui" line="1237"/>
         <source>Quit confirmation</source>
         <translation>Confirmation à la sortie</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1245"/>
+        <location filename="mainwindow.ui" line="1242"/>
         <source>List GPUs</source>
         <translation>Liste des dispositifs GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="1072"/>
+        <location filename="mainwindow.ui" line="1069"/>
         <source>list GPUs</source>
         <translation>Liste des dispositifs GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="108"/>
         <location filename="mainwindow.cpp" line="122"/>
-        <location filename="mainwindow.cpp" line="2179"/>
+        <location filename="mainwindow.cpp" line="136"/>
+        <location filename="mainwindow.cpp" line="2192"/>
         <source>Confirm</source>
         <translation>Confirmer</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="109"/>
+        <location filename="mainwindow.cpp" line="123"/>
         <source>There are still tasks running. Stop them and exit?</source>
         <oldsource>There are still tasks running. Stop them now?</oldsource>
         <translation>Il y a encore des tâches en cours d&apos;exécution, maintenant les arrêter et quitter le programme ?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="123"/>
+        <location filename="mainwindow.cpp" line="137"/>
         <source>Do you really want to exit?</source>
         <translation>Voulez-vous vraiment sortir?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="200"/>
+        <location filename="mainwindow.cpp" line="214"/>
         <source>ready</source>
         <translation>Prêt</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="489"/>
-        <location filename="mainwindow.cpp" line="495"/>
-        <location filename="mainwindow.cpp" line="501"/>
-        <location filename="mainwindow.cpp" line="507"/>
-        <location filename="mainwindow.cpp" line="513"/>
-        <location filename="mainwindow.cpp" line="519"/>
-        <location filename="mainwindow.cpp" line="525"/>
-        <location filename="mainwindow.cpp" line="531"/>
-        <location filename="mainwindow.cpp" line="537"/>
-        <location filename="mainwindow.cpp" line="547"/>
+        <location filename="mainwindow.cpp" line="503"/>
+        <location filename="mainwindow.cpp" line="509"/>
+        <location filename="mainwindow.cpp" line="515"/>
+        <location filename="mainwindow.cpp" line="521"/>
+        <location filename="mainwindow.cpp" line="527"/>
+        <location filename="mainwindow.cpp" line="533"/>
+        <location filename="mainwindow.cpp" line="539"/>
+        <location filename="mainwindow.cpp" line="545"/>
+        <location filename="mainwindow.cpp" line="551"/>
+        <location filename="mainwindow.cpp" line="561"/>
         <source>Error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="502"/>
+        <location filename="mainwindow.cpp" line="516"/>
         <source>Dir does not exists</source>
         <translation>Le dossier n’existe pas</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="508"/>
+        <location filename="mainwindow.cpp" line="522"/>
         <source>File type error, only image support</source>
         <translation>Erreur de type de fichier, prise en charge de l’image uniquement</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="520"/>
+        <location filename="mainwindow.cpp" line="534"/>
         <source>Invalid url, please check your input</source>
         <translation>Pour les URL non prises en charge, veuillez vérifier votre saisie</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="526"/>
+        <location filename="mainwindow.cpp" line="540"/>
         <source>Error image format, please check your input</source>
         <translation>Mauvais format d&apos;image, veuillez vérifier votre saisie</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="532"/>
+        <location filename="mainwindow.cpp" line="546"/>
         <source>OpenCL is not supported</source>
         <translation>OpenCL n&apos;est pas pris en charge</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="538"/>
+        <location filename="mainwindow.cpp" line="552"/>
         <source>CUDA is not supported</source>
         <translation>CUDA n&apos;est pas pris en charge</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="588"/>
-        <location filename="mainwindow.cpp" line="1967"/>
-        <location filename="mainwindow.cpp" line="1983"/>
-        <location filename="mainwindow.cpp" line="2009"/>
-        <location filename="mainwindow.cpp" line="2092"/>
+        <location filename="mainwindow.cpp" line="602"/>
+        <location filename="mainwindow.cpp" line="1980"/>
+        <location filename="mainwindow.cpp" line="1996"/>
+        <location filename="mainwindow.cpp" line="2022"/>
+        <location filename="mainwindow.cpp" line="2105"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1968"/>
+        <location filename="mainwindow.cpp" line="1981"/>
         <source>Failed to initialize GPU: </source>
         <translation>Échec de l&apos;initialisation du GPU : </translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2068"/>
+        <location filename="mainwindow.cpp" line="2081"/>
         <source>Benchmark test under 8-bit integer input and serial processing</source>
         <translation>Test de référence sous entrée d&apos;entiers 8 bits et traitement série</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="588"/>
+        <location filename="mainwindow.cpp" line="602"/>
         <source>FFmpeg not found</source>
         <translation>Aucun FFmpeg trouvé</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="833"/>
+        <location filename="mainwindow.cpp" line="847"/>
         <source>done</source>
         <translation>Fait</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="843"/>
+        <location filename="mainwindow.cpp" line="857"/>
         <source>error</source>
         <translation>Erreur</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="858"/>
-        <location filename="mainwindow.cpp" line="1643"/>
-        <location filename="mainwindow.cpp" line="1993"/>
-        <location filename="mainwindow.cpp" line="2099"/>
-        <location filename="mainwindow.cpp" line="2124"/>
+        <location filename="mainwindow.cpp" line="872"/>
+        <location filename="mainwindow.cpp" line="1656"/>
+        <location filename="mainwindow.cpp" line="2006"/>
+        <location filename="mainwindow.cpp" line="2112"/>
+        <location filename="mainwindow.cpp" line="2137"/>
         <source>Notice</source>
         <translation>Attention</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="861"/>
+        <location filename="mainwindow.cpp" line="875"/>
         <source>Processing stopped</source>
         <translation>Traitement arrêté</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="936"/>
+        <location filename="mainwindow.cpp" line="950"/>
         <source>Web Video</source>
         <translation>Entrée vidéo Web</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="937"/>
+        <location filename="mainwindow.cpp" line="951"/>
         <source>Please input the url of web video</source>
         <translation>Veuillez entrer l&apos;URL de la vidéo web</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1497"/>
         <location filename="mainwindow.cpp" line="1510"/>
         <location filename="mainwindow.cpp" line="1523"/>
         <location filename="mainwindow.cpp" line="1536"/>
+        <location filename="mainwindow.cpp" line="1549"/>
         <source>Translation file</source>
         <oldsource>Chinese translation file</oldsource>
         <translation>fichier de traduction français</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1554"/>
-        <location filename="mainwindow.cpp" line="1557"/>
+        <location filename="mainwindow.cpp" line="1567"/>
+        <location filename="mainwindow.cpp" line="1570"/>
         <source>FFmpeg path</source>
         <translation>Chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1558"/>
+        <location filename="mainwindow.cpp" line="1571"/>
         <source>Please input the FFmpeg path</source>
         <translation>Veuillez saisir le chemin FFmpeg</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1644"/>
+        <location filename="mainwindow.cpp" line="1657"/>
         <source>Log has been copied to the clipboard</source>
         <translation>Journal copié dans le presse-papiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="1873"/>
+        <location filename="mainwindow.cpp" line="1886"/>
         <source>please select a folder</source>
         <translation>Veuillez sélectionner un dossier</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2180"/>
+        <location filename="mainwindow.cpp" line="2193"/>
         <source>Do you really want to stop all tasks?</source>
         <translation>Confirmer que toutes les missions sont suspendues ?</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2010"/>
-        <location filename="mainwindow.cpp" line="2093"/>
+        <location filename="mainwindow.cpp" line="2023"/>
+        <location filename="mainwindow.cpp" line="2106"/>
         <source>Unsupport GPU acceleration in this platform</source>
         <translation>L’accélération GPU n’est pas prise en charge sur cette plate-forme</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="2125"/>
+        <location filename="mainwindow.cpp" line="2138"/>
         <source>Successfully release GPU</source>
         <translation>Sortie réussie du GPU</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="496"/>
+        <location filename="mainwindow.cpp" line="510"/>
         <source>File does not exists</source>
         <translation>Le fichier n’existe pas</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="514"/>
+        <location filename="mainwindow.cpp" line="528"/>
         <source>File type error, you can add it manually</source>
         <translation>Erreur de type de fichier, vous pouvez l&apos;ajouter manuellement</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="490"/>
+        <location filename="mainwindow.cpp" line="504"/>
         <source>Processing list empty</source>
         <translation>La liste de traitement est vide</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="49"/>
-        <location filename="mainwindow.cpp" line="901"/>
-        <location filename="mainwindow.cpp" line="1208"/>
+        <location filename="mainwindow.cpp" line="915"/>
+        <location filename="mainwindow.cpp" line="1222"/>
         <source>pick files</source>
         <translation>sélectionner des fichiers</translation>
     </message>
     <message>
-        <location filename="mainwindow.cpp" line="926"/>
+        <location filename="mainwindow.cpp" line="940"/>
         <source>output directory</source>
         <translation>Dossiers de sortie</translation>
     </message>

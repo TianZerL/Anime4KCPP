@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1042</width>
-    <height>619</height>
+    <height>735</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -681,7 +681,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <layout class="QHBoxLayout" name="horizontalLayout_1">
              <item>
               <widget class="QCheckBox" name="checkBoxACNet">
                <property name="statusTip">
@@ -849,7 +849,7 @@
             </layout>
            </item>
            <item row="7" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutCodec">
                <item>
@@ -880,43 +880,8 @@
                   <string>mp4v is recommended, Windows only support mp4v, dxva(HW, only for Windows), avc1(H264) and vp09(very slow), other is for tesing.</string>
                  </property>
                  <property name="currentText">
-                  <string notr="true">mp4v</string>
+                  <string notr="true"/>
                  </property>
-                 <item>
-                  <property name="text">
-                   <string notr="true" comment="recommended in Windows" extracomment="recommended in Windows">mp4v</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true" comment="only for Windows" extracomment="only for Windows">dxva</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true" comment="H264, recommended in Linux" extracomment="H264, recommended in Linux">avc1</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true" comment="very slow" extracomment="very slow">vp09</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true">hevc</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true">av01</string>
-                  </property>
-                 </item>
-                 <item>
-                  <property name="text">
-                   <string notr="true">other</string>
-                  </property>
-                 </item>
                 </widget>
                </item>
               </layout>
@@ -944,47 +909,79 @@
             </layout>
            </item>
            <item row="8" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout">
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
-              <widget class="QCheckBox" name="checkBoxAlphaChannel">
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <item>
+                <widget class="QCheckBox" name="checkBoxAlphaChannel">
+                 <property name="statusTip">
+                  <string>Preserve alpha channels for transparent image</string>
+                 </property>
+                 <property name="text">
+                  <string>alpha channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkBoxFastMode">
+                 <property name="statusTip">
+                  <string>Faster but maybe low quality (Only for CPU)</string>
+                 </property>
+                 <property name="text">
+                  <string>fast mode</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <item>
+                <widget class="QCheckBox" name="checkBoxGPUMode">
+                 <property name="statusTip">
+                  <string>Enable GPU acceleration</string>
+                 </property>
+                 <property name="text">
+                  <string>GPU acceleration</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="comboBoxGPGPU">
+                 <property name="statusTip">
+                  <string>GPGPU model</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </item>
+           <item row="9" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_9">
+             <item>
+              <widget class="QCheckBox" name="checkBoxHardwareVideoDecode">
                <property name="statusTip">
-                <string>Preserve alpha channels for transparent image</string>
+                <string>Try to enable hardware video decode</string>
                </property>
                <property name="text">
-                <string>alpha channel</string>
+                <string>hardware video decode</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QCheckBox" name="checkBoxFastMode">
+              <widget class="QCheckBox" name="checkBoxHardwareVideoEncode">
                <property name="statusTip">
-                <string>Faster but maybe low quality (Only for CPU)</string>
+                <string>Try to enable hardware video encode</string>
                </property>
                <property name="text">
-                <string>fast mode</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="checkBoxGPUMode">
-               <property name="statusTip">
-                <string>Enable GPU acceleration</string>
-               </property>
-               <property name="text">
-                <string>GPU acceleration</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="comboBoxGPGPU">
-               <property name="statusTip">
-                <string>GPGPU model</string>
+                <string>hardware video encode</string>
                </property>
               </widget>
              </item>
             </layout>
            </item>
-           <item row="9" column="0">
+           <item row="10" column="0">
             <layout class="QHBoxLayout" name="horizontalLayout_8">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -1019,7 +1016,7 @@
              </item>
             </layout>
            </item>
-           <item row="10" column="0">
+           <item row="11" column="0">
             <layout class="QHBoxLayout" name="horizontalLayoutIDs">
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutPlatformID">
@@ -1147,7 +1144,7 @@
      <x>0</x>
      <y>0</y>
      <width>1042</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuMenu">

@@ -328,6 +328,8 @@ int main(int argc, char* argv[])
     opt.add("alpha", 'A', "preserve the Alpha channel for transparent image");
     opt.add("benchmark", 'B', "do benchmarking");
     opt.add("ncnn", 'N', "Open ncnn and ACNet");
+    opt.add("hardwareDecode", 'x', "try to enable hardware video decode");
+    opt.add("hardwareEncode", 'X', "try to enable hardware video encode");
     opt.add<std::string>("GPGPUModel", 'M', "Specify the GPGPU model for processing", false, "opencl");
     opt.add<std::string>("ncnnModelPath", 'Z', "Specify the path for NCNN model and param", false, "./ncnn-models");
     opt.add<std::string>("suffix", 'E', "Mandatory specify the suffix of the output file ", false);
@@ -374,6 +376,8 @@ int main(int argc, char* argv[])
     auto HDN = config.exist("HDN");
     auto disableProgress = config.exist("disableProgress");
     auto alpha = config.exist("alpha");
+    auto hwd = config.exist("hardwareDecode");
+    auto hwe = config.exist("hardwareEncode");
     auto preFilters = config.get<uint8_t>("preFilters");
     auto postFilters = config.get<uint8_t>("postFilters");
     auto pID = config.get<int>("platformID");
@@ -941,8 +945,8 @@ int main(int argc, char* argv[])
                     {
                         try
                         {
-                            videoProcessor.loadVideo(filePaths[i].first);
-                            videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                            videoProcessor.loadVideo(filePaths[i].first, hwd);
+                            videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps, hwe);
                             if (disableProgress)
                                 videoProcessor.process();
                             else
@@ -997,8 +1001,8 @@ int main(int argc, char* argv[])
                     std::string currInputPath = inputPath.string();
                     std::string currOutputPath = outputPath.string();
 
-                    videoProcessor.loadVideo(currInputPath);
-                    videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps);
+                    videoProcessor.loadVideo(currInputPath, hwd);
+                    videoProcessor.setVideoSaveInfo(outputTmpName, string2Codec(codec), forceFps, hwe);
 
                     std::cout << ac->getInfo() << '\n';
                     std::cout << videoProcessor.getInfo() << '\n';

@@ -22,6 +22,10 @@
 #endif
 #if (CV_VERSION_MAJOR == 3) && (CV_VERSION_MINOR <= 2)
 #define OLD_OPENCV_API
+#elif (CV_VERSION_MAJOR > 4) || \
+(CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR > 5) || \
+(CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR == 5 && CV_VERSION_REVISION >= 2)
+#define NEW_OPENCV_API
 #endif
 
 namespace Anime4KCPP::Video
@@ -41,9 +45,9 @@ public:
     //initialize frame process callback function `p` and thread count `t`, it's ready to call process after this
     VideoIO& init(std::function<void()>&& p, std::size_t t) noexcept;
     //initialize VideoCapture
-    bool openReader(const std::string& srcFile);
+    bool openReader(const std::string& srcFile, bool hw);
     //initialize VideoWriter
-    bool openWriter(const std::string& dstFile, Codec codec, const cv::Size& size, double forceFps = 0.0);
+    bool openWriter(const std::string& dstFile, Codec codec, const cv::Size& size, double forceFps, bool hw);
     //get the specifying video property from VideoCapture
     double get(int p);
     double getProgress() noexcept;
@@ -60,6 +64,7 @@ protected:
     void setProgress(double p) noexcept;
 protected:
     std::size_t threads = 0;
+    std::size_t limit = 0;
     std::function<void()> processor;
     cv::VideoCapture reader;
     cv::VideoWriter writer;
@@ -72,7 +77,6 @@ protected:
     std::mutex mtxWrite;
     std::condition_variable cndWrite;
 
-    std::size_t limit;
     std::atomic<double> progress;
     std::unique_ptr<std::promise<void>> pausePromise;
     bool pause = false;
