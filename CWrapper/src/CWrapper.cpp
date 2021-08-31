@@ -813,7 +813,7 @@ extern "C"
     {
         double _CPUScore = Anime4KCPP::benchmark<Anime4KCPP::CPU::ACNet, 1920, 1080>();
 #ifdef ENABLE_OPENCL
-        double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID);
+        double _OpenCLScore = Anime4KCPP::benchmark<Anime4KCPP::OpenCL::ACNet, 1920, 1080>(pID, dID, Anime4KCPP::CNNType::ACNetHDNL0);
 #else
         double _OpenCLScore = 0.0;
 #endif

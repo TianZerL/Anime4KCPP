@@ -27,9 +27,10 @@ inline double Anime4KCPP::benchmark(Types && ...args)
         return 0.0;
 
     cv::Mat testImg = cv::Mat::zeros(cv::Size(W, H), CV_8UC1);
-    cv::randu(testImg, cv::Scalar::all(0.0f), cv::Scalar::all(1.0f));
+    cv::randu(testImg, cv::Scalar::all(0), cv::Scalar::all(255));
 
-    double avg = 0.0;
+    constexpr int times = 3;
+    std::chrono::milliseconds sum(0);
     std::chrono::steady_clock::time_point s;
     std::chrono::steady_clock::time_point e;
 
@@ -37,16 +38,16 @@ inline double Anime4KCPP::benchmark(Types && ...args)
     ac.loadImage(testImg, testImg, testImg); // YUV
     ac.process();
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < times; i++)
     {
         ac.loadImage(testImg, testImg, testImg);
         s = std::chrono::steady_clock::now();
         ac.process();
         e = std::chrono::steady_clock::now();
-        avg += 1000.0 / std::chrono::duration_cast<std::chrono::milliseconds>(e - s).count();
+        sum += std::chrono::duration_cast<std::chrono::milliseconds>(e - s);
     }
 
-    return avg / 3.0;
+    return static_cast<double>(times) * 1000.0 / static_cast<double>(sum.count());
 }
 
 #endif // !ANIME4KCPP_CORE_ANIM4KCPP_HPP
