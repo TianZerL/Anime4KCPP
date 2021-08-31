@@ -249,7 +249,6 @@ namespace Anime4KCPP::CPU::detail
 
             for (std::size_t i = 0; i < 8; i++)
                 outMat[i] = std::max(out[i], 0.0f);
-
 #endif // USE_RYZEN
             }, tmpMat, 8);
     }
@@ -286,7 +285,6 @@ namespace Anime4KCPP::CPU::detail
             for (std::size_t i = 0; i < 8; i++)
                 luma += kptr[i] * inMat[i];
 #endif
-
             * outMat = unnorm<T>(luma);
             }, tmpMat);
     }
@@ -326,6 +324,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const detail::StorageType* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
         const detail::StorageType* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
 
+#ifdef USE_RYZEN
         const __m256 d0 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tl)));
         const __m256 d1 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tc)));
         const __m256 d2 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tr)));
@@ -346,7 +345,6 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const float* const p7 = reinterpret_cast<const float*>(&d7);
         const float* const p8 = reinterpret_cast<const float*>(&d8);
 
-#ifdef USE_RYZEN
         const float* const kptr = kernels;
         const float* const bptr = biases;
 
@@ -492,9 +490,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         for (std::size_t i = 0; i < 8; i++)
             outMat[i] = std::max(out[i], 0.0f);
-
 #endif // USE_RYZEN
-
         }, tmpMat);
 }
 
