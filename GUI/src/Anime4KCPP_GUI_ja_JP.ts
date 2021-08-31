@@ -64,10 +64,6 @@
         <translation>リストをクリア</translation>
     </message>
     <message>
-        <source>delete</source>
-        <translation type="vanished">削除</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="116"/>
         <source>Total: 0 </source>
         <translation>合計： 0 </translation>

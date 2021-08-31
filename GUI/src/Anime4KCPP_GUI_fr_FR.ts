@@ -64,10 +64,6 @@
         <translation>effacer la liste</translation>
     </message>
     <message>
-        <source>delete</source>
-        <translation type="vanished">Supprimer</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="116"/>
         <source>Total: 0 </source>
         <translation>Total: 0 </translation>

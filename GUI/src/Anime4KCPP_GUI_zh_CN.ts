@@ -64,10 +64,6 @@
         <translation>清空列表</translation>
     </message>
     <message>
-        <source>delete</source>
-        <translation type="vanished">删除</translation>
-    </message>
-    <message>
         <location filename="mainwindow.ui" line="116"/>
         <source>Total: 0 </source>
         <translation>总计: 0 </translation>
