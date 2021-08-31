@@ -145,8 +145,6 @@ namespace Anime4KCPP::CPU::detail
             const float* const kptr = kernels;
             const float* const bptr = biases;
 
-            _mm256_zeroall();
-
             __m256 out0 = _mm256_loadu_ps(bptr);
             __m256 out1 = _mm256_setzero_ps();
             __m256 out2 = _mm256_setzero_ps();
@@ -184,7 +182,6 @@ namespace Anime4KCPP::CPU::detail
             out0 = _mm256_max_ps(_mm256_add_ps(out2, _mm256_add_ps(out0, out1)), _mm256_setzero_ps());
 
             _mm_storeu_si128(reinterpret_cast<__m128i*>(outMat), _mm256_cvtps_ph(out0, 0));
-
 #elif defined(USE_EIGEN3)
             float* const kptr = const_cast<float*>(kernels);
             float* const bptr = const_cast<float*>(biases);
