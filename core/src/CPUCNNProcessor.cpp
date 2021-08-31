@@ -210,7 +210,7 @@ namespace Anime4KCPP::CPU::detail
 
             out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
 
-            Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
+            Eigen::Map<Eigen::Array<StorageType, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
             const float* const kptr = kernels;
             const float* const bptr = biases;
@@ -276,7 +276,7 @@ namespace Anime4KCPP::CPU::detail
             float* const kptr = const_cast<float*>(kernels + index * 8);
 
             const float luma =
-                Eigen::Map<Eigen::Matrix<float, 8, 1>>(inMat)
+                Eigen::Map<Eigen::Matrix<StorageType, 8, 1>>(inMat)
                 .dot(Eigen::Map<Eigen::Matrix<float, 8, 1>>(kptr));
 #else
             const float* const kptr = kernels + index * 8;
@@ -448,7 +448,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
             out += (t0 + t1 + t2 + t3 + t4 + t5 + t6 + t7 + t8);
         }
 
-        Eigen::Map<Eigen::Array<float, 8, 1>>(outMat, 8) = out.max(0.0f);
+        Eigen::Map<Eigen::Array<detail::StorageType, 8, 1>>(outMat, 8) = out.max(0.0f);
 #else
         const float* const kptr = kernels;
         const float* const bptr = biases;
