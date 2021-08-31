@@ -14,6 +14,8 @@
 
 namespace Anime4KCPP::CPU::detail
 {
+    using StorageType = float;
+
     template<typename T, typename F>
     static void changEachPixel1ToN(const cv::Mat& src, F&& callBack, cv::Mat& tmpMat, int outChannels)
     {
@@ -28,7 +30,7 @@ namespace Anime4KCPP::CPU::detail
         Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
                 T* lineData = reinterpret_cast<T*>(src.data + static_cast<std::size_t>(i) * srcStep);
-                float* tmpLineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
+                StorageType* tmpLineData = reinterpret_cast<StorageType*>(tmpMat.data + static_cast<std::size_t>(i) * step);
                 for (int j = 0; j < jMAX; j += outChannels)
                     callBack(i, j, tmpLineData + j, lineData);
             });
@@ -47,8 +49,8 @@ namespace Anime4KCPP::CPU::detail
 
         Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i) * step);
-                float* tmpLineData = reinterpret_cast<float*>(tmp.data + static_cast<std::size_t>(i) * step);
+                StorageType* lineData = reinterpret_cast<StorageType*>(tmpMat.data + static_cast<std::size_t>(i) * step);
+                StorageType* tmpLineData = reinterpret_cast<StorageType*>(tmp.data + static_cast<std::size_t>(i) * step);
                 for (int j = 0; j < jMAX; j += channels)
                     callBack(i, j, tmpLineData + j, lineData);
             });
@@ -69,7 +71,7 @@ namespace Anime4KCPP::CPU::detail
 
         Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
-                float* lineData = reinterpret_cast<float*>(tmpMat.data + static_cast<std::size_t>(i >> 1) * step);
+                StorageType* lineData = reinterpret_cast<StorageType*>(tmpMat.data + static_cast<std::size_t>(i >> 1) * step);
                 T* tmpLineData = reinterpret_cast<T*>(img.data + static_cast<std::size_t>(i) * dstStep);
                 for (int j = 0; j < jMAX; j++)
                     callBack(i, j, tmpLineData + j, lineData + static_cast<std::size_t>(j >> 1) * channels);
@@ -110,7 +112,7 @@ namespace Anime4KCPP::CPU::detail
         const int channels = 8;
         const int srcChannels = img.channels();
         const std::size_t lineStep = img.step1();
-        detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, float* outMat, T* curLine) {
+        detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, StorageType* outMat, T* curLine) {
             const int orgJ = j / channels * srcChannels;
             const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
             const int jn = orgJ > srcChannels ? -srcChannels : 0;
@@ -252,7 +254,7 @@ namespace Anime4KCPP::CPU::detail
     template<typename T>
     static void convTranspose8To1Impl(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
     {
-        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, float* inMat) {
+        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, StorageType* inMat) {
             const int index = ((i & 1) << 1) + (j & 1);
 
             //180 degree rotation for kernel
@@ -309,7 +311,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 {
     const int channels = 8;
     const std::size_t lineStep = tmpMat.step1();
-    detail::changEachPixelNToN([&](const int i, const int j, float* outMat, float* curLine) {
+    detail::changEachPixelNToN([&](const int i, const int j, detail::StorageType* outMat, detail::StorageType* curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
 

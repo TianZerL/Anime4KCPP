@@ -41,12 +41,11 @@ void Anime4KCPP::CPU::ACNetHDN::process(const cv::Mat& src, cv::Mat& dst, int sc
     switch (src.depth())
     {
     case CV_8U:
-        detail::processImpl(net, cv::dnn::blobFromImage(tmp, 1.0 / 255.0), scaleTimes, w)
-            .convertTo(dst, CV_8UC1, 255.0);
+        detail::processImpl(net, cv::dnn::blobFromImage(tmp, 1.0 / 255.0), scaleTimes, w).convertTo(dst, CV_8UC1, 255.0);
         break;
     case CV_16U:
-        detail::processImpl(net, cv::dnn::blobFromImage(tmp, 1.0 / 65535.0), scaleTimes, w)
-            .convertTo(dst, CV_16UC1, 65535.0);
+        tmp.convertTo(tmp, CV_32FC1, 1.0 / 65535.0);
+        detail::processImpl(net, cv::dnn::blobFromImage(tmp), scaleTimes, w).convertTo(dst, CV_16UC1, 65535.0);
         break;
     case CV_32F:
         dst = detail::processImpl(net, cv::dnn::blobFromImage(tmp), scaleTimes, w);
