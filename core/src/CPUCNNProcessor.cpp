@@ -264,7 +264,7 @@ namespace Anime4KCPP::CPU::detail
             //2 3      1 0
 
 #ifdef USE_RYZEN    
-            const __m256 in = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<__m128i*>(inMat)));
+            const __m256 in = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(inMat)));
             const __m256 k0 = _mm256_loadu_ps(kernels + index * 8);
             const __m256 r0 = _mm256_dp_ps(in, k0, 0xf1);
             const __m128 r1 = _mm256_extractf128_ps(r0, 0x01);
