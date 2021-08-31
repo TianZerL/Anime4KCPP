@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget* parent)
     ui->spinBoxDeviceID->setMinimum(0);
 
     ui->pushButtonReleaseGPU->setEnabled(false);
-    ui->pushButtonForceStop->setEnabled(false);
+    ui->pushButtonStop->setEnabled(false);
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(false);
     //set to balance
@@ -889,7 +889,7 @@ void MainWindow::solt_allDone_remindUser(quint64 totalTime)
     ui->pushButtonDelete->setEnabled(true);
     ui->pushButtonClear->setEnabled(true);
     ui->pushButtonStart->setEnabled(true);
-    ui->pushButtonForceStop->setEnabled(false);
+    ui->pushButtonStop->setEnabled(false);
     ui->pushButtonPause->setEnabled(false);
     ui->pushButtonContinue->setEnabled(false);
     on_pushButtonClear_clicked();
@@ -1243,7 +1243,7 @@ void MainWindow::on_pushButtonStart_clicked()
     ui->pushButtonWebVideo->setEnabled(false);
     ui->progressBarProcessingList->setEnabled(true);
     ui->tableViewProcessingList->setEnabled(false);
-    ui->pushButtonForceStop->setEnabled(true);
+    ui->pushButtonStop->setEnabled(true);
     ui->pushButtonPause->setEnabled(true);
 
     auto _ = QtConcurrent::run([this, rows]() {
@@ -2182,7 +2182,7 @@ void MainWindow::on_checkBoxACNet_stateChanged(int state)
     }
 }
 
-void MainWindow::on_pushButtonForceStop_clicked()
+void MainWindow::on_pushButtonStop_clicked()
 {
     if (QMessageBox::Yes == QMessageBox::warning(this, tr("Confirm"),
         tr("Do you really want to stop all tasks?"),

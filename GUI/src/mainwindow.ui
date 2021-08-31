@@ -67,14 +67,14 @@
              <item>
               <widget class="QPushButton" name="pushButtonClear">
                <property name="text">
-                <string>clear</string>
+                <string>clear list</string>
                </property>
               </widget>
              </item>
              <item>
               <widget class="QPushButton" name="pushButtonDelete">
                <property name="text">
-                <string>delete</string>
+                <string>remove item</string>
                </property>
               </widget>
              </item>
@@ -207,12 +207,12 @@
             </layout>
            </item>
            <item row="0" column="1">
-            <widget class="QPushButton" name="pushButtonForceStop">
+            <widget class="QPushButton" name="pushButtonStop">
              <property name="statusTip">
               <string>start processing</string>
              </property>
              <property name="text">
-              <string>force stop</string>
+              <string>stop</string>
              </property>
             </widget>
            </item>
@@ -267,7 +267,7 @@
              <string>Clear logs</string>
             </property>
             <property name="text">
-             <string>clear</string>
+             <string>clear log</string>
             </property>
            </widget>
           </item>
@@ -277,7 +277,7 @@
              <string>Copy logs</string>
             </property>
             <property name="text">
-             <string>copy</string>
+             <string>copy log</string>
             </property>
            </widget>
           </item>

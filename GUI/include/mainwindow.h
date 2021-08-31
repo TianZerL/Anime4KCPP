@@ -197,7 +197,7 @@ private slots:
 
     void on_checkBoxACNet_stateChanged(int arg1);
 
-    void on_pushButtonForceStop_clicked();
+    void on_pushButtonStop_clicked();
 
     void on_pushButtonPause_clicked();
 

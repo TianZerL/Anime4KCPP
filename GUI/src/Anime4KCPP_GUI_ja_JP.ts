@@ -59,14 +59,13 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="70"/>
-        <location filename="mainwindow.ui" line="270"/>
-        <source>clear</source>
-        <translation>クリア</translation>
+        <source>clear list</source>
+        <oldsource>clear</oldsource>
+        <translation type="unfinished">クリア</translation>
     </message>
     <message>
-        <location filename="mainwindow.ui" line="77"/>
         <source>delete</source>
-        <translation>削除</translation>
+        <translation type="vanished">削除</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="116"/>
@@ -111,8 +110,9 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="215"/>
-        <source>force stop</source>
-        <translation>強制停止</translation>
+        <source>stop</source>
+        <oldsource>force stop</oldsource>
+        <translation type="unfinished">強制停止</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="173"/>
@@ -123,6 +123,11 @@
         <location filename="mainwindow.ui" line="63"/>
         <source>web video</source>
         <translation>Web動画</translation>
+    </message>
+    <message>
+        <location filename="mainwindow.ui" line="77"/>
+        <source>remove item</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="154"/>
@@ -186,8 +191,9 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="280"/>
-        <source>copy</source>
-        <translation>コピー</translation>
+        <source>copy log</source>
+        <oldsource>copy</oldsource>
+        <translation type="unfinished">コピー</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="297"/>
