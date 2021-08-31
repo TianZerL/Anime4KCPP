@@ -145,15 +145,15 @@ namespace Anime4KCPP::CPU::detail
             __m256 out1 = _mm256_setzero_ps();
             __m256 out2 = _mm256_setzero_ps();
 
-            const __m256 r0 = _mm256_set1_ps(tln);
-            const __m256 r1 = _mm256_set1_ps(tcn);
-            const __m256 r2 = _mm256_set1_ps(trn);
-            const __m256 r3 = _mm256_set1_ps(mln);
-            const __m256 r4 = _mm256_set1_ps(mcn);
-            const __m256 r5 = _mm256_set1_ps(mrn);
-            const __m256 r6 = _mm256_set1_ps(bln);
-            const __m256 r7 = _mm256_set1_ps(bcn);
-            const __m256 r8 = _mm256_set1_ps(brn);
+            const __m256 r0 = _mm256_broadcast_ss(&tln);
+            const __m256 r1 = _mm256_broadcast_ss(&tcn);
+            const __m256 r2 = _mm256_broadcast_ss(&trn);
+            const __m256 r3 = _mm256_broadcast_ss(&mln);
+            const __m256 r4 = _mm256_broadcast_ss(&mcn);
+            const __m256 r5 = _mm256_broadcast_ss(&mrn);
+            const __m256 r6 = _mm256_broadcast_ss(&bln);
+            const __m256 r7 = _mm256_broadcast_ss(&bcn);
+            const __m256 r8 = _mm256_broadcast_ss(&brn);
 
             const __m256 k0 = _mm256_loadu_ps(kptr);
             const __m256 k1 = _mm256_loadu_ps(kptr + 8);
@@ -315,13 +315,13 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
         const int jn = j > channels ? -channels : 0;
 
-        const float* const pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
-        const float* const cLineData = curLine;
-        const float* const nLineData = i > 0 ? curLine - lineStep : curLine;
+        const detail::StorageType* const pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
+        const detail::StorageType* const cLineData = curLine;
+        const detail::StorageType* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
-        const float* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
-        const float* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
-        const float* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
+        const detail::StorageType* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
+        const detail::StorageType* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
+        const detail::StorageType* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
 
 #ifdef USE_RYZEN
         const float* const kptr = kernels;
