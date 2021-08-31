@@ -59,9 +59,9 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="70"/>
-        <source>clear list</source>
-        <oldsource>clear</oldsource>
-        <translation type="unfinished">クリア</translation>
+        <source>clear the list</source>
+        <oldsource>clear list</oldsource>
+        <translation>リストをクリア</translation>
     </message>
     <message>
         <source>delete</source>
@@ -112,7 +112,7 @@
         <location filename="mainwindow.ui" line="215"/>
         <source>stop</source>
         <oldsource>force stop</oldsource>
-        <translation type="unfinished">強制停止</translation>
+        <translation>停止</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="173"/>
@@ -127,7 +127,7 @@
     <message>
         <location filename="mainwindow.ui" line="77"/>
         <source>remove item</source>
-        <translation type="unfinished"></translation>
+        <translation>アイテムを削除</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="154"/>
@@ -185,6 +185,11 @@
         <translation>クリアログ</translation>
     </message>
     <message>
+        <location filename="mainwindow.ui" line="270"/>
+        <source>clear log</source>
+        <translation>ログをクリア</translation>
+    </message>
+    <message>
         <location filename="mainwindow.ui" line="277"/>
         <source>Copy logs</source>
         <translation>ログコピー</translation>
@@ -193,7 +198,7 @@
         <location filename="mainwindow.ui" line="280"/>
         <source>copy log</source>
         <oldsource>copy</oldsource>
-        <translation type="unfinished">コピー</translation>
+        <translation>ログをコピー</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="297"/>

@@ -59,9 +59,9 @@
     </message>
     <message>
         <location filename="mainwindow.ui" line="70"/>
-        <source>clear list</source>
-        <oldsource>clear</oldsource>
-        <translation type="unfinished">Clair</translation>
+        <source>clear the list</source>
+        <oldsource>clear list</oldsource>
+        <translation>effacer la liste</translation>
     </message>
     <message>
         <source>delete</source>
@@ -112,7 +112,7 @@
         <location filename="mainwindow.ui" line="215"/>
         <source>stop</source>
         <oldsource>force stop</oldsource>
-        <translation type="unfinished">suspension forcée</translation>
+        <translation>arrêter</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="173"/>
@@ -127,7 +127,7 @@
     <message>
         <location filename="mainwindow.ui" line="77"/>
         <source>remove item</source>
-        <translation type="unfinished"></translation>
+        <translation>retirer l&apos;objet</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="154"/>
@@ -185,6 +185,11 @@
         <translation>Effacer les journaux</translation>
     </message>
     <message>
+        <location filename="mainwindow.ui" line="270"/>
+        <source>clear log</source>
+        <translation>Effacer le journal</translation>
+    </message>
+    <message>
         <location filename="mainwindow.ui" line="277"/>
         <source>Copy logs</source>
         <translation>Copier les journaux</translation>
@@ -193,7 +198,7 @@
         <location filename="mainwindow.ui" line="280"/>
         <source>copy log</source>
         <oldsource>copy</oldsource>
-        <translation type="unfinished">Copie</translation>
+        <translation>Copier le journal</translation>
     </message>
     <message>
         <location filename="mainwindow.ui" line="297"/>
