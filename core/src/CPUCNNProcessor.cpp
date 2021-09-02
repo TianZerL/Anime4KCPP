@@ -225,7 +225,7 @@ namespace Anime4KCPP::CPU::detail
             const float* const k7 = kptr + 56;
             const float* const k8 = kptr + 64;
 
-            float out[8];
+            alignas(32) float out[8];
             std::copy_n(bptr, 8, out);
 
             for (std::size_t i = 0; i < 8; i++)
@@ -325,28 +325,28 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const detail::StorageType* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
 
 #ifdef USE_RYZEN
-        const __m256 d0 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tl)));
-        const __m256 d1 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tc)));
-        const __m256 d2 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tr)));
-        const __m256 d3 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(ml)));
-        const __m256 d4 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(mc)));
-        const __m256 d5 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(mr)));
-        const __m256 d6 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(bl)));
-        const __m256 d7 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(bc)));
-        const __m256 d8 = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(br)));
-
-        const float* const p0 = reinterpret_cast<const float*>(&d0);
-        const float* const p1 = reinterpret_cast<const float*>(&d1);
-        const float* const p2 = reinterpret_cast<const float*>(&d2);
-        const float* const p3 = reinterpret_cast<const float*>(&d3);
-        const float* const p4 = reinterpret_cast<const float*>(&d4);
-        const float* const p5 = reinterpret_cast<const float*>(&d5);
-        const float* const p6 = reinterpret_cast<const float*>(&d6);
-        const float* const p7 = reinterpret_cast<const float*>(&d7);
-        const float* const p8 = reinterpret_cast<const float*>(&d8);
-
         const float* const kptr = kernels;
         const float* const bptr = biases;
+
+        alignas(32) float d0[8];
+        alignas(32) float d1[8];
+        alignas(32) float d2[8];
+        alignas(32) float d3[8];
+        alignas(32) float d4[8];
+        alignas(32) float d5[8];
+        alignas(32) float d6[8];
+        alignas(32) float d7[8];
+        alignas(32) float d8[8];
+        
+        _mm256_store_ps(d0, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tl))));
+        _mm256_store_ps(d1, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tc))));
+        _mm256_store_ps(d2, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tr))));
+        _mm256_store_ps(d3, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(ml))));
+        _mm256_store_ps(d4, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(mc))));
+        _mm256_store_ps(d5, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(mr))));
+        _mm256_store_ps(d6, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(bl))));
+        _mm256_store_ps(d7, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(bc))));
+        _mm256_store_ps(d8, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(br))));
 
         __m256 out0 = _mm256_loadu_ps(bptr);
         __m256 out1 = _mm256_setzero_ps();
@@ -354,15 +354,15 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         for (std::size_t i = 0; i < 8; i += 2)
         {
-            const __m256 r00 = _mm256_broadcast_ss(p0 + i);
-            const __m256 r01 = _mm256_broadcast_ss(p1 + i);
-            const __m256 r02 = _mm256_broadcast_ss(p2 + i);
-            const __m256 r03 = _mm256_broadcast_ss(p3 + i);
-            const __m256 r04 = _mm256_broadcast_ss(p4 + i);
-            const __m256 r05 = _mm256_broadcast_ss(p5 + i);
-            const __m256 r06 = _mm256_broadcast_ss(p6 + i);
-            const __m256 r07 = _mm256_broadcast_ss(p7 + i);
-            const __m256 r08 = _mm256_broadcast_ss(p8 + i);
+            const __m256 r00 = _mm256_broadcast_ss(d0 + i);
+            const __m256 r01 = _mm256_broadcast_ss(d1 + i);
+            const __m256 r02 = _mm256_broadcast_ss(d2 + i);
+            const __m256 r03 = _mm256_broadcast_ss(d3 + i);
+            const __m256 r04 = _mm256_broadcast_ss(d4 + i);
+            const __m256 r05 = _mm256_broadcast_ss(d5 + i);
+            const __m256 r06 = _mm256_broadcast_ss(d6 + i);
+            const __m256 r07 = _mm256_broadcast_ss(d7 + i);
+            const __m256 r08 = _mm256_broadcast_ss(d8 + i);
 
             const __m256 k00 = _mm256_loadu_ps(kptr + i * 72);
             const __m256 k01 = _mm256_loadu_ps(kptr + i * 72 + 8);
@@ -384,15 +384,15 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
             out1 = _mm256_fmadd_ps(r07, k07, out1);
             out2 = _mm256_fmadd_ps(r08, k08, out2);
 
-            const __m256 r10 = _mm256_broadcast_ss(p0 + i + 1);
-            const __m256 r11 = _mm256_broadcast_ss(p1 + i + 1);
-            const __m256 r12 = _mm256_broadcast_ss(p2 + i + 1);
-            const __m256 r13 = _mm256_broadcast_ss(p3 + i + 1);
-            const __m256 r14 = _mm256_broadcast_ss(p4 + i + 1);
-            const __m256 r15 = _mm256_broadcast_ss(p5 + i + 1);
-            const __m256 r16 = _mm256_broadcast_ss(p6 + i + 1);
-            const __m256 r17 = _mm256_broadcast_ss(p7 + i + 1);
-            const __m256 r18 = _mm256_broadcast_ss(p8 + i + 1);
+            const __m256 r10 = _mm256_broadcast_ss(d0 + i + 1);
+            const __m256 r11 = _mm256_broadcast_ss(d1 + i + 1);
+            const __m256 r12 = _mm256_broadcast_ss(d2 + i + 1);
+            const __m256 r13 = _mm256_broadcast_ss(d3 + i + 1);
+            const __m256 r14 = _mm256_broadcast_ss(d4 + i + 1);
+            const __m256 r15 = _mm256_broadcast_ss(d5 + i + 1);
+            const __m256 r16 = _mm256_broadcast_ss(d6 + i + 1);
+            const __m256 r17 = _mm256_broadcast_ss(d7 + i + 1);
+            const __m256 r18 = _mm256_broadcast_ss(d8 + i + 1);
 
             const __m256 k10 = _mm256_loadu_ps(kptr + (i + 1) * 72);
             const __m256 k11 = _mm256_loadu_ps(kptr + (i + 1) * 72 + 8);
@@ -453,7 +453,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         const float* const kptr = kernels;
         const float* const bptr = biases;
 
-        float out[8];
+        alignas(32) float out[8];
         std::copy_n(bptr, 8, out);
 
         for (std::size_t c = 0; c < 8; c++)
