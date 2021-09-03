@@ -10,13 +10,12 @@ namespace Anime4KCPP::CPU::detail
     template<typename T, typename F>
     static void changEachPixel(cv::Mat& src, F&& callBack)
     {
-        cv::Mat tmp;
-        src.copyTo(tmp);
-
         const int h = src.rows, w = src.cols;
         const int channels = src.channels();
         const int jMAX = w * channels;
         const std::size_t step = src.step;
+
+        cv::Mat tmp(h, w, src.type());
 
         Anime4KCPP::Utils::parallelFor(0, h,
             [&](const int i) {
@@ -47,26 +46,30 @@ namespace Anime4KCPP::CPU::detail
     }
 
     template<typename T>
-    static void getLightest(T* mc, const T* a, const T* b, const T* c, double strength) noexcept
+    static void getLightest(T* out, const T* a, const T* b, const T* c, double strength) noexcept
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
-        for (int i = 0; i <= 3; i++)    //RGBA
-            mc[i] = static_cast<T>(mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset);
+        for (int i = 0; i < 4; i++)
+            out[i] = static_cast<T>(out[i] + strength * (((0.0 + a[i] + b[i] + c[i]) / 3.0) - out[i]) + offset);
     }
 
     template<typename T>
-    static void getAverage(T* mc, const T* a, const T* b, const T* c, double strength) noexcept
+    static void getAverage(T* out, const T* mc, const T* a, const T* b, const T* c, double strength) noexcept
     {
         constexpr double offset = std::is_floating_point<T>::value ? 0.0 : 0.5;
-        for (int i = 0; i <= 2; i++)    //RGB
-            mc[i] = static_cast<T>(mc[i] + strength * (((a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset);
+        for (int i = 0; i < 3; i++)
+            out[i] = static_cast<T>(mc[i] + strength * (((0.0 + a[i] + b[i] + c[i]) / 3.0) - mc[i]) + offset);
     }
 
     template<typename T>
     static void getGray(cv::Mat& img)
     {
-        detail::changEachPixel<T>(img, [](const int i, const int j, T* pixel, T* curLine) {
-            pixel[A] = static_cast<T>(pixel[R] * 0.299 + pixel[G] * 0.587 + pixel[B] * 0.114);
+        detail::changEachPixel<T>(img, [](const int i, const int j, T* out, const T* curLine) {
+            const T* const mc = curLine + j;
+            out[B] = mc[B];
+            out[G] = mc[G];
+            out[R] = mc[R];
+            out[A] = static_cast<T>(mc[R] * 0.299 + mc[G] * 0.587 + mc[B] * 0.114);
             });
     }
 
@@ -75,7 +78,7 @@ namespace Anime4KCPP::CPU::detail
     {
         const int channels = img.channels();
         const std::size_t lineStep = img.step1();
-        detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
+        detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
 
@@ -84,62 +87,66 @@ namespace Anime4KCPP::CPU::detail
             const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
             const T* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
-            const T* const ml = cLineData + j + jn, * const mr = cLineData + j + jp;
+            const T* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
             const T* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
-            T* const mc = pixel;
 
             T maxD, minL;
+
+            out[B] = mc[B];
+            out[G] = mc[G];
+            out[R] = mc[R];
+            out[A] = mc[A];
 
             //top and bottom
             maxD = MAX3(bl[A], bc[A], br[A]);
             minL = MIN3(tl[A], tc[A], tr[A]);
-            if (minL > mc[A] && mc[A] > maxD)
-                getLightest<T>(mc, tl, tc, tr, strength);
+            if (minL > out[A] && out[A] > maxD)
+                getLightest<T>(out, tl, tc, tr, strength);
             else
             {
                 maxD = MAX3(tl[A], tc[A], tr[A]);
                 minL = MIN3(bl[A], bc[A], br[A]);
-                if (minL > mc[A] && mc[A] > maxD)
-                    getLightest<T>(mc, bl, bc, br, strength);
+                if (minL > out[A] && out[A] > maxD)
+                    getLightest<T>(out, bl, bc, br, strength);
             }
 
             //sundiagonal
-            maxD = MAX3(ml[A], mc[A], bc[A]);
+            maxD = MAX3(ml[A], out[A], bc[A]);
             minL = MIN3(tc[A], tr[A], mr[A]);
             if (minL > maxD)
-                getLightest<T>(mc, tc, tr, mr, strength);
+                getLightest<T>(out, tc, tr, mr, strength);
             else
             {
-                maxD = MAX3(tc[A], mc[A], mr[A]);
+                maxD = MAX3(tc[A], out[A], mr[A]);
                 minL = MIN3(ml[A], bl[A], bc[A]);
                 if (minL > maxD)
-                    getLightest<T>(mc, ml, bl, bc, strength);
+                    getLightest<T>(out, ml, bl, bc, strength);
             }
 
             //left and right
             maxD = MAX3(tl[A], ml[A], bl[A]);
             minL = MIN3(tr[A], mr[A], br[A]);
-            if (minL > mc[A] && mc[A] > maxD)
-                getLightest<T>(mc, tr, mr, br, strength);
+            if (minL > out[A] && out[A] > maxD)
+                getLightest<T>(out, tr, mr, br, strength);
             else
             {
                 maxD = MAX3(tr[A], mr[A], br[A]);
                 minL = MIN3(tl[A], ml[A], bl[A]);
-                if (minL > mc[A] && mc[A] > maxD)
-                    getLightest<T>(mc, tl, ml, bl, strength);
+                if (minL > out[A] && out[A] > maxD)
+                    getLightest<T>(out, tl, ml, bl, strength);
             }
 
             //diagonal
-            maxD = MAX3(tc[A], mc[A], ml[A]);
+            maxD = MAX3(tc[A], out[A], ml[A]);
             minL = MIN3(mr[A], br[A], bc[A]);
             if (minL > maxD)
-                getLightest<T>(mc, mr, br, bc, strength);
+                getLightest<T>(out, mr, br, bc, strength);
             else
             {
-                maxD = MAX3(bc[A], mc[A], mr[A]);
+                maxD = MAX3(bc[A], out[A], mr[A]);
                 minL = MIN3(ml[A], tl[A], tc[A]);
                 if (minL > maxD)
-                    getLightest<T>(mc, ml, tl, tc, strength);
+                    getLightest<T>(out, ml, tl, tc, strength);
             }
             });
     }
@@ -149,32 +156,7 @@ namespace Anime4KCPP::CPU::detail
     {
         const int channels = img.channels();
         const std::size_t lineStep = img.step1();
-        detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
-            const int jp = j < (img.cols - 1)* channels ? channels : 0;
-            const int jn = j > channels ? -channels : 0;
-
-            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
-            const T* const cLineData = curLine;
-            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
-
-            double gradX =
-                (pLineData + j + jn)[A] + (pLineData + j)[A] + (pLineData + j)[A] + (pLineData + j + jp)[A] -
-                (nLineData + j + jn)[A] - (nLineData + j)[A] - (nLineData + j)[A] - (nLineData + j + jp)[A];
-            double gradY =
-                (nLineData + j + jn)[A] + (cLineData + j + jn)[A] + (cLineData + j + jn)[A] + (pLineData + j + jn)[A] -
-                (nLineData + j + jp)[A] - (cLineData + j + jp)[A] - (cLineData + j + jp)[A] - (pLineData + j + jp)[A];
-            double grad = std::sqrt(gradX * gradX + gradY * gradY);
-
-            pixel[A] = clampAndInvert<T>(grad);
-            });
-    }
-
-    template<typename T>
-    static void pushGradient(cv::Mat& img, double strength)
-    {
-        const int channels = img.channels();
-        const std::size_t lineStep = img.step1();
-        detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
+        detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
             const int jn = j > channels ? -channels : 0;
 
@@ -183,55 +165,90 @@ namespace Anime4KCPP::CPU::detail
             const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
 
             const T* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
-            const T* const ml = cLineData + j + jn, * const mr = cLineData + j + jp;
+            const T* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
             const T* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
-            T* const mc = pixel;
+
+            double gradX = 0.0 +
+                bl[A] + bc[A] + bc[A] + br[A] -
+                tl[A] - tc[A] - tc[A] - tr[A];
+            double gradY = 0.0 +
+                tl[A] + ml[A] + ml[A] + bl[A] -
+                tr[A] - mr[A] - mr[A] - br[A];
+            double grad = std::sqrt(gradX * gradX + gradY * gradY);
+
+            out[B] = mc[B];
+            out[G] = mc[G];
+            out[R] = mc[R];
+            out[A] = clampAndInvert<T>(grad);
+            });
+    }
+
+    template<typename T>
+    static void pushGradient(cv::Mat& img, double strength)
+    {
+        const int channels = img.channels();
+        const std::size_t lineStep = img.step1();
+        detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
+            const int jp = j < (img.cols - 1)* channels ? channels : 0;
+            const int jn = j > channels ? -channels : 0;
+
+            const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
+            const T* const cLineData = curLine;
+            const T* const nLineData = i > 0 ? curLine - lineStep : curLine;
+
+            const T* const tl = nLineData + j + jn, * const tc = nLineData + j, * const tr = nLineData + j + jp;
+            const T* const ml = cLineData + j + jn, * const mc = cLineData + j, * const mr = cLineData + j + jp;
+            const T* const bl = pLineData + j + jn, * const bc = pLineData + j, * const br = pLineData + j + jp;
 
             T maxD, minL;
+
+            out[B] = mc[B];
+            out[G] = mc[G];
+            out[R] = mc[R];
 
             //top and bottom
             maxD = MAX3(bl[A], bc[A], br[A]);
             minL = MIN3(tl[A], tc[A], tr[A]);
             if (minL > mc[A] && mc[A] > maxD)
-                return getAverage<T>(mc, tl, tc, tr, strength);
+                return getAverage<T>(out, mc, tl, tc, tr, strength);
 
             maxD = MAX3(tl[A], tc[A], tr[A]);
             minL = MIN3(bl[A], bc[A], br[A]);
             if (minL > mc[A] && mc[A] > maxD)
-                return getAverage<T>(mc, bl, bc, br, strength);
+                return getAverage<T>(out, mc, bl, bc, br, strength);
 
             //sundiagonal
             maxD = MAX3(ml[A], mc[A], bc[A]);
             minL = MIN3(tc[A], tr[A], mr[A]);
             if (minL > maxD)
-                return getAverage<T>(mc, tc, tr, mr, strength);
+                return getAverage<T>(out, mc, tc, tr, mr, strength);
 
             maxD = MAX3(tc[A], mc[A], mr[A]);
             minL = MIN3(ml[A], bl[A], bc[A]);
             if (minL > maxD)
-                return getAverage<T>(mc, ml, bl, bc, strength);
+                return getAverage<T>(out, mc, ml, bl, bc, strength);
 
             //left and right
             maxD = MAX3(tl[A], ml[A], bl[A]);
             minL = MIN3(tr[A], mr[A], br[A]);
             if (minL > mc[A] && mc[A] > maxD)
-                return getAverage<T>(mc, tr, mr, br, strength);
+                return getAverage<T>(out, mc, tr, mr, br, strength);
 
             maxD = MAX3(tr[A], mr[A], br[A]);
             minL = MIN3(tl[A], ml[A], bl[A]);
             if (minL > mc[A] && mc[A] > maxD)
-                return getAverage<T>(mc, tl, ml, bl, strength);
+                return getAverage<T>(out, mc, tl, ml, bl, strength);
 
             //diagonal
             maxD = MAX3(tc[A], mc[A], ml[A]);
             minL = MIN3(mr[A], br[A], bc[A]);
             if (minL > maxD)
-                return getAverage<T>(mc, mr, br, bc, strength);
+                return getAverage<T>(out, mc, mr, br, bc, strength);
 
             maxD = MAX3(bc[A], mc[A], mr[A]);
             minL = MIN3(ml[A], tl[A], tc[A]);
             if (minL > maxD)
-                return getAverage<T>(mc, ml, tl, tc, strength);
+                return getAverage<T>(out, mc, ml, tl, tc, strength);
             });
     }
 
@@ -324,7 +341,7 @@ std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
 void Anime4KCPP::CPU::Anime4K09::processYUVImage()
 {
     cv::Mat tmpImg;
-    cv::merge(std::vector<cv::Mat>{ dstImg, orgU, orgV }, tmpImg);
+    cv::merge(std::vector<cv::Mat>{ orgImg, orgU, orgV }, tmpImg);
     cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
 
     if (param.zoomFactor == 2.0)
