@@ -256,14 +256,12 @@ namespace Anime4KCPP::CPU::detail
     template<typename T>
     static void convTranspose8To1Impl(cv::Mat& img, const float* kernels, cv::Mat& tmpMat)
     {
-        detail::changEachPixelNTo1<T>(img, [&](const int i, const int j, T* outMat, StorageType* inMat) {
-            const int index = ((i & 1) << 1) + (j & 1);
-
+        detail::changEachPixelNTo1<T>(img, [&](const std::ptrdiff_t i, const std::ptrdiff_t j, T* outMat, StorageType* inMat) {
             //180 degree rotation for kernel
             //0 1  to  3 2
             //2 3      1 0
-
-#ifdef USE_RYZEN    
+            const std::ptrdiff_t index = ((i & 1) << 1) + (j & 1);
+#ifdef USE_RYZEN
             const __m256 in = _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(inMat)));
             const __m256 k0 = _mm256_loadu_ps(kernels + index * 8);
             const __m256 r0 = _mm256_dp_ps(in, k0, 0xf1);
@@ -337,7 +335,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
         alignas(32) float d6[8];
         alignas(32) float d7[8];
         alignas(32) float d8[8];
-        
+
         _mm256_store_ps(d0, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tl))));
         _mm256_store_ps(d1, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tc))));
         _mm256_store_ps(d2, _mm256_cvtph_ps(_mm_loadu_si128(reinterpret_cast<const __m128i*>(tr))));
@@ -490,7 +488,9 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
 
         for (std::size_t i = 0; i < 8; i++)
             outMat[i] = std::max(out[i], 0.0f);
+
 #endif // USE_RYZEN
+
         }, tmpMat);
 }
 
