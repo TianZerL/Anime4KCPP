@@ -192,16 +192,13 @@ bool MainWindow::addTask(const QFileInfo& fileInfo, const QString& path, bool pe
 
         if (type == FileType::VIDEO)
             outputFile = new QStandardItem(
-                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + getVideoOutputSuffix());
+                (perfix ? (getOutputPrefix() + fileInfo.fileName()) : fileInfo.fileName()) + getVideoOutputSuffix());
         else if (type == FileType::GIF)
             outputFile = new QStandardItem(
-                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + ".gif");
-        else if (getImageOutputSuffix().isEmpty())
-            outputFile = new QStandardItem(
-                (perfix ? (getOutputPrefix() + fileInfo.fileName()) : fileInfo.fileName()));
+                perfix ? (getOutputPrefix() + fileInfo.fileName()) : fileInfo.fileName());
         else
             outputFile = new QStandardItem(
-                (perfix ? (getOutputPrefix() + fileInfo.baseName()) : fileInfo.baseName()) + getImageOutputSuffix());
+                (perfix ? (getOutputPrefix() + fileInfo.fileName()) : fileInfo.fileName()) + getImageOutputSuffix());
 
         state = new QStandardItem(tr("ready"));
 
@@ -749,24 +746,22 @@ FileType MainWindow::fileType(const QFileInfo& file)
 
 QString MainWindow::getOutputPrefix()
 {
-    QString prefix = ui->lineEditOutputPrefix->text();
-    if (prefix.isEmpty())
-        return "output_anime4kcpp_";
-    return prefix;
+    return ui->lineEditOutputPrefix->text();
 }
 
 QString MainWindow::getImageOutputSuffix()
 {
-    if (ui->lineEditImageOutputSuffix->text().isEmpty())
-        return "";
-    return "." + ui->lineEditImageOutputSuffix->text();
+    QString suffix = ui->lineEditImageOutputSuffix->text();
+    if (suffix.isEmpty())
+        return QString{};
+    return "." + suffix;
 }
 
 QString MainWindow::getVideoOutputSuffix()
 {
     QString suffix = ui->lineEditVideoOutputSuffix->text();
     if (suffix.isEmpty())
-        return ".mkv";
+        return QString{};
     return "." + suffix;
 }
 
