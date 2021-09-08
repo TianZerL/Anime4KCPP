@@ -121,7 +121,7 @@ Anime4KCPPFilter::Anime4KCPPFilter(
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-            acCreator.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+            initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
 #endif // ENABLE_CUDA
             break;
         }

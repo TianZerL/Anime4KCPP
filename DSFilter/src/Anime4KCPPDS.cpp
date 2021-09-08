@@ -206,7 +206,7 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
         break;
     case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-        initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
+        initializer.pushManager<Anime4KCPP::Cuda::Manager>(data.dID);
 #endif
         break;
     case GPGPU::CPU:
@@ -517,7 +517,7 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
             break;
         case GPGPU::CUDA:
 #ifdef ENABLE_CUDA
-            if (CNN)
+            if (data.CNN)
                 ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
             else
                 ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
