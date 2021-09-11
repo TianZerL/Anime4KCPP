@@ -130,7 +130,7 @@ static void showGPUList()
 #endif
 
 #ifdef ENABLE_OPENCL
-    std::cout << "OpenCL:\n";
+    std::cout << "\nOpenCL:\n";
     Anime4KCPP::OpenCL::GPUList OpenCLGPUList = Anime4KCPP::OpenCL::listGPUs();
     if (OpenCLGPUList.platforms == 0)
         std::cerr << "Error: No OpenCL GPU found\n";
@@ -139,7 +139,7 @@ static void showGPUList()
 #endif
 
 #ifdef ENABLE_CUDA
-    std::cout << "CUDA:\n";
+    std::cout << "\nCUDA:\n";
     Anime4KCPP::Cuda::GPUList CUDAGPUList = Anime4KCPP::Cuda::listGPUs();
     if (CUDAGPUList.devices == 0)
         std::cerr << "Error: No CUDA GPU found\n";
@@ -148,7 +148,7 @@ static void showGPUList()
 #endif
 
 #ifdef ENABLE_NCNN
-    std::cout << "ncnn:\n";
+    std::cout << "\nncnn:\n";
     Anime4KCPP::NCNN::GPUList NCNNGPUList = Anime4KCPP::NCNN::listGPUs();
     if (NCNNGPUList.devices == 0)
         std::cerr << "Error: No ncnn Vulkan GPU found\n";
