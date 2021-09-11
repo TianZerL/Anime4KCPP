@@ -1,6 +1,7 @@
 #ifdef ENABLE_OPENCL
 
 #include<fstream>
+#include<atomic>
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #ifdef LEGACY_OPENCL_API
@@ -27,8 +28,8 @@ namespace Anime4KCPP::OpenCL::detail
     static cl::Device device;
     static cl::Context context;
     static cl::CommandQueue commandQueueIO;
-    static int commandQueueNum = 4;
-    static int commandQueueCount = 0;
+    static std::size_t commandQueueNum = 4;
+    static std::atomic<std::size_t> commandQueueCount = 0;
     static std::vector<cl::CommandQueue> commandQueueList;
     static bool parallelIO = false;
     static int pID = 0;
@@ -66,9 +67,7 @@ namespace Anime4KCPP::OpenCL::detail
 
         try
         {
-            cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++];
-            if (commandQueueCount >= commandQueueNum)
-                commandQueueCount = 0;
+            cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++ % commandQueueNum];
 
             //kernel for each thread
             cl::Kernel kernelConv1To8L1(program[index], "conv1To8");
@@ -165,9 +164,7 @@ namespace Anime4KCPP::OpenCL::detail
 
         try
         {
-            cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++];
-            if (commandQueueCount >= commandQueueNum)
-                commandQueueCount = 0;
+            cl::CommandQueue& commandQueue = commandQueueList[commandQueueCount++ % commandQueueNum];
 
             //kernel for each thread
             cl::Kernel kernelConv1To8L1(program[index], "conv1To8");
@@ -300,7 +297,7 @@ void Anime4KCPP::OpenCL::ACNet::init(const int platformID, const int deviceID, c
     {
         detail::pID = platformID;
         detail::dID = deviceID;
-        detail::commandQueueNum = OpenCLQueueNum >= 1 ? OpenCLQueueNum : 1;
+        detail::commandQueueNum = OpenCLQueueNum > 1 ? OpenCLQueueNum : 1;
         detail::parallelIO = OpenCLParallelIO;
         initOpenCL(type);
         detail::isInitializedFlag = true;
@@ -485,7 +482,7 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
         detail::context = cl::Context(detail::device);
 
         detail::commandQueueList.resize(detail::commandQueueNum);
-        for (int i = 0; i < detail::commandQueueNum; i++)
+        for (std::size_t i = 0; i < detail::commandQueueNum; i++)
         {
             detail::commandQueueList[i] = cl::CommandQueue(detail::context, detail::device);
         }
