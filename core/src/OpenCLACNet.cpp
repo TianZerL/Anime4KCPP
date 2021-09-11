@@ -229,7 +229,6 @@ namespace Anime4KCPP::OpenCL::detail
             std::vector<cl::Event> waitForReadReadyEvent(1);
             cl::Event& writeFinishedEvent = waitForWriteFinishedEvent.front();
             cl::Event& readReadyEvent = waitForReadReadyEvent.front();
-            cl::Event  readFinishedEvent;
 
             commandQueueIO.enqueueWriteImage(imageBufferOrg, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
             commandQueue.enqueueNDRangeKernel(kernelConv1To8L1, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]), cl::NullRange, &waitForWriteFinishedEvent);
@@ -242,8 +241,7 @@ namespace Anime4KCPP::OpenCL::detail
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L8, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConv8To8L9, cl::NullRange, cl::NDRange(orgSize[0], orgSize[1]));
             commandQueue.enqueueNDRangeKernel(kernelConvTranspose8To1L10, cl::NullRange, cl::NDRange(dstSize[0], dstSize[1]), cl::NullRange, nullptr, &readReadyEvent);
-            commandQueueIO.enqueueReadImage(imageBufferDst, CL_FALSE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
-            readFinishedEvent.wait();
+            commandQueueIO.enqueueReadImage(imageBufferDst, CL_TRUE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent);
         }
         catch (const cl::Error& e)
         {

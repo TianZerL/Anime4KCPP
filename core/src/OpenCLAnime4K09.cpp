@@ -225,7 +225,6 @@ namespace Anime4KCPP::OpenCL::detail
             std::vector<cl::Event> waitForReadReadyEvent(1);
             cl::Event& writeFinishedEvent = waitForWriteFinishedEvent.front();
             cl::Event& readReadyEvent = waitForReadReadyEvent.front();
-            cl::Event  readFinishedEvent;
 
             //enqueue
             commandQueueIO.enqueueWriteImage(imageBuffer0, CL_FALSE, start, orgRegion, orgImg.step, 0, orgImg.data, nullptr, &writeFinishedEvent);
@@ -254,8 +253,7 @@ namespace Anime4KCPP::OpenCL::detail
             }
             //blocking read
             commandQueue.enqueueMarkerWithWaitList(nullptr, &readReadyEvent);
-            commandQueueIO.enqueueReadImage(imageBuffer1, CL_FALSE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent, &readFinishedEvent);
-            readFinishedEvent.wait();
+            commandQueueIO.enqueueReadImage(imageBuffer1, CL_TRUE, start, dstRegion, dstImg.step, 0, dstImg.data, &waitForReadReadyEvent);
         }
         catch (const cl::Error& e)
         {
