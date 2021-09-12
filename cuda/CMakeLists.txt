@@ -43,13 +43,4 @@ if(Enable_CUDA)
         )
     endif()
 
-    install(
-        TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
-        ARCHIVE DESTINATION cuda_module/lib
-        LIBRARY DESTINATION cuda_module/lib
-        RUNTIME DESTINATION cuda_module/lib
-    )
-    
-    install(EXPORT ${PROJECT_NAME} DESTINATION cuda_module/cmake)
-
 endif()
