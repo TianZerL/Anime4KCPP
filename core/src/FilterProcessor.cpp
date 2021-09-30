@@ -54,7 +54,7 @@ namespace Anime4KCPP::Filter::detail
         const std::size_t lineStep = img.step1();
         detail::changEachPixel<T>(img, [&](const int i, const int j, T* pixel, T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
-            const int jn = j > channels ? -channels : 0;
+            const int jn = j > 0 ? -channels : 0;
 
             const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
             const T* const cLineData = curLine;
@@ -76,9 +76,9 @@ namespace Anime4KCPP::Filter::detail
             const double wG = peak * std::sqrt(MIN(minG, 255 - maxG) * REC(maxG));
             const double wB = peak * std::sqrt(MIN(minB, 255 - maxB) * REC(maxB));
 
-            const double r = (wR * (tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
-            const double g = (wG * (tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
-            const double b = (wB * (tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
+            const double r = (wR * (0.0 + tc[R] + ml[R] + mr[R] + bc[R]) + mc[R]) / (1.0 + 4.0 * wR);
+            const double g = (wG * (0.0 + tc[G] + ml[G] + mr[G] + bc[G]) + mc[G]) / (1.0 + 4.0 * wG);
+            const double b = (wB * (0.0 + tc[B] + ml[B] + mr[B] + bc[B]) + mc[B]) / (1.0 + 4.0 * wB);
             pixel[R] = clamp<T>(r);
             pixel[G] = clamp<T>(g);
             pixel[B] = clamp<T>(b);

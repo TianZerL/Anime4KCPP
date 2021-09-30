@@ -121,7 +121,7 @@ namespace Anime4KCPP::CPU::detail
         detail::changEachPixel1ToN<T>(img, [&](const int i, const int j, StorageType* outMat, T* curLine) {
             const int orgJ = j / channels * srcChannels;
             const int jp = orgJ < (img.cols - 1)* srcChannels ? srcChannels : 0;
-            const int jn = orgJ > srcChannels ? -srcChannels : 0;
+            const int jn = orgJ > 0 ? -srcChannels : 0;
 
             const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
             const T* const cLineData = curLine;
@@ -312,7 +312,7 @@ void Anime4KCPP::CPU::CNNProcessor::conv8To8(const float* kernels, const float* 
     const std::size_t lineStep = tmpMat.step1();
     detail::changEachPixelNToN([&](const int i, const int j, detail::StorageType* outMat, detail::StorageType* curLine) {
         const int jp = j < (tmpMat.cols - 1)* channels ? channels : 0;
-        const int jn = j > channels ? -channels : 0;
+        const int jn = j > 0 ? -channels : 0;
 
         const detail::StorageType* const pLineData = i < tmpMat.rows - 1 ? curLine + lineStep : curLine;
         const detail::StorageType* const cLineData = curLine;

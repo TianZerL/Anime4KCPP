@@ -80,7 +80,7 @@ namespace Anime4KCPP::CPU::detail
         const std::size_t lineStep = img.step1();
         detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
-            const int jn = j > channels ? -channels : 0;
+            const int jn = j > 0 ? -channels : 0;
 
             const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
             const T* const cLineData = curLine;
@@ -158,7 +158,7 @@ namespace Anime4KCPP::CPU::detail
         const std::size_t lineStep = img.step1();
         detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
-            const int jn = j > channels ? -channels : 0;
+            const int jn = j > 0 ? -channels : 0;
 
             const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
             const T* const cLineData = curLine;
@@ -190,7 +190,7 @@ namespace Anime4KCPP::CPU::detail
         const std::size_t lineStep = img.step1();
         detail::changEachPixel<T>(img, [&](const int i, const int j, T* out, const T* curLine) {
             const int jp = j < (img.cols - 1)* channels ? channels : 0;
-            const int jn = j > channels ? -channels : 0;
+            const int jn = j > 0 ? -channels : 0;
 
             const T* const pLineData = i < img.rows - 1 ? curLine + lineStep : curLine;
             const T* const cLineData = curLine;
