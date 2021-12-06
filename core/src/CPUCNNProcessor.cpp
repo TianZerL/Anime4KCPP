@@ -1,16 +1,16 @@
 #ifndef ENABLE_OPENCV_DNN
 
-#include<limits>
+#include <limits>
 
 #ifdef USE_RYZEN
-#include<immintrin.h>
+#include <immintrin.h>
 #elif defined(USE_EIGEN3)
 #define EIGEN_DONT_PARALLELIZE
-#include<Eigen/Core>
+#include <Eigen/Core>
 #endif
 
-#include"Parallel.hpp"
-#include"CPUCNNProcessor.hpp"
+#include "Parallel.hpp"
+#include "CPUCNNProcessor.hpp"
 
 namespace Anime4KCPP::CPU::detail
 {

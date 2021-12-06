@@ -3,9 +3,9 @@
 
 #ifdef ENABLE_CUDA
 
-#include"CudaAnime4K09.hpp"
-#include"CudaACNet.hpp"
-#include"ACManager.hpp"
+#include "CudaAnime4K09.hpp"
+#include "CudaACNet.hpp"
+#include "ACManager.hpp"
 
 namespace Anime4KCPP
 {

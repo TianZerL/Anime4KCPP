@@ -1,11 +1,11 @@
 #ifdef ENABLE_NCNN
 
-#include<net.h>
+#include <net.h>
 
-#include"ACNetType.hpp"
-#include"NCNNACNet.hpp"
-#include"NCNNACNetID.hpp"
-#include"NCNNACNetModel.hpp"
+#include "ACNetType.hpp"
+#include "NCNNACNet.hpp"
+#include "NCNNACNetID.hpp"
+#include "NCNNACNetModel.hpp"
 
 namespace Anime4KCPP::NCNN::detail
 {

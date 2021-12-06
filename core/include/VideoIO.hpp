@@ -3,19 +3,19 @@
 
 #ifdef ENABLE_VIDEO
 
-#include<atomic>
-#include<future>
-#include<mutex>
-#include<condition_variable>
-#include<functional>
-#include<memory>
-#include<queue>
-#include<unordered_map>
-#include<cstddef>
+#include <atomic>
+#include <future>
+#include <mutex>
+#include <condition_variable>
+#include <functional>
+#include <memory>
+#include <queue>
+#include <unordered_map>
+#include <cstddef>
 
-#include<opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 
-#include"VideoCodec.hpp"
+#include "VideoCodec.hpp"
 
 #if (CV_VERSION_MAJOR < 3)
 #error OpenCV3 is needed at least!

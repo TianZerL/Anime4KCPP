@@ -1,23 +1,23 @@
 #ifndef ANIME4KCPP_CORE_AC_HPP
 #define ANIME4KCPP_CORE_AC_HPP
 
-#include<algorithm>
-#include<utility>
-#include<string>
-#include<vector>
-#include<chrono>
-#include<memory>
-#include<cmath>
-#include<cstring>
-#include<cstddef>
-#include<cstdint>
+#include <algorithm>
+#include <utility>
+#include <string>
+#include <vector>
+#include <chrono>
+#include <memory>
+#include <cmath>
+#include <cstring>
+#include <cstddef>
+#include <cstdint>
 
-#include<opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 
-#include<ac_export.h>
+#include <ac_export.h>
 
-#include"ACException.hpp"
-#include"ACProcessor.hpp"
+#include "ACException.hpp"
+#include "ACProcessor.hpp"
 
 namespace Anime4KCPP
 {

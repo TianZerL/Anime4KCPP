@@ -1,6 +1,6 @@
-#include"Parallel.hpp"
-#include"FilterProcessor.hpp"
-#include"CPUAnime4K09.hpp"
+#include "Parallel.hpp"
+#include "FilterProcessor.hpp"
+#include "CPUAnime4K09.hpp"
 
 #define MAX3(a, b, c) std::max({a, b, c})
 #define MIN3(a, b, c) std::min({a, b, c})

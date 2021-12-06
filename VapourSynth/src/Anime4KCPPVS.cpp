@@ -4,6 +4,7 @@
 #include <VSHelper.h>
 
 #include "Anime4KCPP.hpp"
+#include "Benchmark.hpp"
 
 enum class GPGPU
 {

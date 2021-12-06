@@ -3,9 +3,9 @@
 
 #ifdef ENABLE_OPENCL
 
-#include"OpenCLAnime4K09.hpp"
-#include"OpenCLACNet.hpp"
-#include"ACManager.hpp"
+#include "OpenCLAnime4K09.hpp"
+#include "OpenCLACNet.hpp"
+#include "ACManager.hpp"
 
 namespace Anime4KCPP
 {

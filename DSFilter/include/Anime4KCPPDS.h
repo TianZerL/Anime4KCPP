@@ -1,11 +1,11 @@
 #pragma once
 
-#include<streams.h>
-#include<Dvdmedia.h>
+#include <streams.h>
+#include <Dvdmedia.h>
 
-#include"ACuids.h"
-#include"ACProp.h"
-#include"Anime4KCPP.hpp"
+#include "ACuids.h"
+#include "ACProp.h"
+#include "Anime4KCPP.hpp"
 
 enum class ColorFormat
 {

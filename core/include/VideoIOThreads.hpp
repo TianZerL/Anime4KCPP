@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_VIDEO
 
-#include"VideoIO.hpp"
+#include "VideoIO.hpp"
 
 namespace Anime4KCPP::Video
 {

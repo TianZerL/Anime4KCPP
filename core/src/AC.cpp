@@ -1,4 +1,4 @@
-#include"AC.hpp"
+#include "AC.hpp"
 
 Anime4KCPP::AC::AC(const Parameters& parameters) :
     height(0), width(0), param(parameters) {}

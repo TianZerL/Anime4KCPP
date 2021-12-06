@@ -1,7 +1,7 @@
 #ifndef ANIME4KCPP_CORE_INFO_HPP
 #define ANIME4KCPP_CORE_INFO_HPP
 
-#include<ac_export.h>
+#include <ac_export.h>
 
 namespace Anime4KCPP
 {

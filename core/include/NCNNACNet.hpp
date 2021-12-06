@@ -3,8 +3,8 @@
 
 #ifdef ENABLE_NCNN
 
-#include"AC.hpp"
-#include"CNN.hpp"
+#include "AC.hpp"
+#include "CNN.hpp"
 
 namespace Anime4KCPP::NCNN
 {

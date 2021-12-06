@@ -1,21 +1,22 @@
-#include<iostream>
-#include<cctype>
+#include <iostream>
+#include <cctype>
 
 #ifdef USE_BOOST_FILESYSTEM
-#include<boost/filesystem.hpp>
+#include <boost/filesystem.hpp>
 namespace filesystem = boost::filesystem;
 #else
-#include<filesystem>
+#include <filesystem>
 namespace filesystem = std::filesystem;
 #endif // USE_BOOST_FILESYSTEM
 
-#include"Anime4KCPP.hpp"
-#include"Parallel.hpp"
+#include "Anime4KCPP.hpp"
+#include "Benchmark.hpp"
+#include "Parallel.hpp"
 
-#include"Config.hpp"
+#include "Config.hpp"
 
 #ifdef ENABLE_LIBCURL
-#include"Downloader.hpp"
+#include "Downloader.hpp"
 #endif // ENABLE_LIBCURL
 
 enum class GPGPU

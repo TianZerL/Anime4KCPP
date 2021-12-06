@@ -1,7 +1,7 @@
 #ifdef ENABLE_CUDA
 
-#include"CudaInterface.hpp"
-#include"ACCuda.hpp"
+#include "CudaInterface.hpp"
+#include "ACCuda.hpp"
 
 Anime4KCPP::Cuda::GPUList Anime4KCPP::Cuda::listGPUs() noexcept
 {

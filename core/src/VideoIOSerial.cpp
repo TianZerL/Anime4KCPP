@@ -1,6 +1,6 @@
 #ifdef ENABLE_VIDEO
 
-#include"VideoIOSerial.hpp"
+#include "VideoIOSerial.hpp"
 
 void Anime4KCPP::Video::VideoIOSerial::process()
 {

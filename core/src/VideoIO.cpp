@@ -1,6 +1,6 @@
 #ifdef ENABLE_VIDEO
 
-#include"VideoIO.hpp"
+#include "VideoIO.hpp"
 
 Anime4KCPP::Video::VideoIO::~VideoIO()
 {

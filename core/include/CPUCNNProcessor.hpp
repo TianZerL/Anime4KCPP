@@ -3,7 +3,7 @@
 
 #ifndef ENABLE_OPENCV_DNN
 
-#include"AC.hpp"
+#include "AC.hpp"
 
 namespace Anime4KCPP::CPU
 {

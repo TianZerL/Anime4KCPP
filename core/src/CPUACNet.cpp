@@ -1,5 +1,5 @@
-#include"CPUACNet.hpp"
-#include"ACNetType.hpp"
+#include "CPUACNet.hpp"
+#include "ACNetType.hpp"
 
 Anime4KCPP::CPU::ACNet::ACNet(const Parameters& parameters) :
     AC(parameters), processor(createACNetProcessor(GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel))) {}

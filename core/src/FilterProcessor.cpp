@@ -1,6 +1,6 @@
-#include"Parallel.hpp"
-#include"AC.hpp"
-#include"FilterProcessor.hpp"
+#include "Parallel.hpp"
+#include "AC.hpp"
+#include "FilterProcessor.hpp"
 
 #define MAX5(a, b, c, d, e) std::max({a, b, c, d, e})
 #define MIN5(a, b, c, d, e) std::min({a, b, c, d, e})

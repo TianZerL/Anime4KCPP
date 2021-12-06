@@ -3,6 +3,7 @@
 #include <avisynth.h>
 
 #include "Anime4KCPP.hpp"
+#include "Benchmark.hpp"
 
 #ifdef _MSC_VER
 #define AC_ASP_STDCALL __stdcall

@@ -1,7 +1,7 @@
 #ifdef ENABLE_VIDEO
 
-#include"VideoIOThreads.hpp"
-#include"ThreadPool.hpp"
+#include "VideoIOThreads.hpp"
+#include "ThreadPool.hpp"
 
 void Anime4KCPP::Video::VideoIOThreads::process()
 {

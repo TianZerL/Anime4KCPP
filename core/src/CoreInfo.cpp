@@ -1,4 +1,4 @@
-#include"CoreInfo.hpp"
+#include "CoreInfo.hpp"
 
 const char* Anime4KCPP::CoreInfo::version()
 {
@@ -31,7 +31,7 @@ const char* Anime4KCPP::CoreInfo::CPUOptimizationMode()
 }
 
 #define AC_ENUM_ITEM
-#include"ACRegister.hpp"
+#include "ACRegister.hpp"
 #undef AC_ENUM_ITEM
 #define PROCESSOR_STRING(...) PROCESSOR_STRING_IMPL(__VA_ARGS__)
 #define PROCESSOR_STRING_IMPL(...) #__VA_ARGS__

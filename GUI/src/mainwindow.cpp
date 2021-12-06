@@ -8,6 +8,7 @@
 #include "ui_mainwindow.h"
 #include "communicator.h"
 
+#include "Benchmark.hpp"
 #include "Parallel.hpp"
 
 MainWindow::MainWindow(QWidget* parent)

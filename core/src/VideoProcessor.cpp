@@ -1,13 +1,13 @@
 #ifdef ENABLE_VIDEO
 
-#include<exception>
-#include<thread>
+#include <exception>
+#include <thread>
 
-#include"ACCreator.hpp"
-#include"VideoProcessor.hpp"
-#include"VideoIOAsync.hpp"
-#include"VideoIOThreads.hpp"
-#include"VideoIOSerial.hpp"
+#include "ACCreator.hpp"
+#include "VideoProcessor.hpp"
+#include "VideoIOAsync.hpp"
+#include "VideoIOThreads.hpp"
+#include "VideoIOSerial.hpp"
 
 Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type, unsigned int threads)
     :fps(0.0), totalFrameCount(0.0), height(0), width(0), threads(threads), param(parameters), type(type)

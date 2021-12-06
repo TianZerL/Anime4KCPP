@@ -1,4 +1,5 @@
 #include "Anime4KCPP.hpp"
+#include "Benchmark.hpp"
 #include "AC.h"
 
 static std::string lastCoreError("No error");

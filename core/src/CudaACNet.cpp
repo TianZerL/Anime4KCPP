@@ -1,8 +1,8 @@
 #ifdef ENABLE_CUDA
 
-#include"CudaInterface.hpp"
-#include"ACNetType.hpp"
-#include"CudaACNet.hpp"
+#include "CudaInterface.hpp"
+#include "ACNetType.hpp"
+#include "CudaACNet.hpp"
 
 namespace Anime4KCPP::Cuda::detail
 {

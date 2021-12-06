@@ -1,8 +1,8 @@
 #ifdef ENABLE_CUDA
 
-#include"CudaInterface.hpp"
-#include"FilterProcessor.hpp"
-#include"CudaAnime4K09.hpp"
+#include "CudaInterface.hpp"
+#include "FilterProcessor.hpp"
+#include "CudaAnime4K09.hpp"
 
 namespace Anime4KCPP::Cuda::detail
 {

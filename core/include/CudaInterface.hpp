@@ -3,7 +3,7 @@
 
 #ifdef ENABLE_CUDA
 
-#include<string>
+#include <string>
 
 namespace Anime4KCPP::Cuda
 {

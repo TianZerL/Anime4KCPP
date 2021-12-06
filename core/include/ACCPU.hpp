@@ -1,9 +1,9 @@
 #ifndef ANIME4KCPP_CORE_AC_CPU_HPP
 #define ANIME4KCPP_CORE_AC_CPU_HPP
 
-#include"CPUAnime4K09.hpp"
-#include"CPUACNet.hpp"
-#include"ACManager.hpp"
+#include "CPUAnime4K09.hpp"
+#include "CPUACNet.hpp"
+#include "ACManager.hpp"
 
 namespace Anime4KCPP
 {

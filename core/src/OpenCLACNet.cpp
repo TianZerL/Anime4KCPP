@@ -1,7 +1,7 @@
 #ifdef ENABLE_OPENCL
 
-#include<fstream>
-#include<atomic>
+#include <fstream>
+#include <atomic>
 
 #define CL_HPP_ENABLE_EXCEPTIONS
 #ifdef LEGACY_OPENCL_API
@@ -10,11 +10,11 @@
 #define CL_HPP_TARGET_OPENCL_VERSION 200
 #endif // LEGACY_OPENCL_API
 #define CL_HPP_MINIMUM_OPENCL_VERSION 110
-#include<CL/opencl.hpp>
+#include <CL/opencl.hpp>
 
-#include"ACNetType.hpp"
-#include"OpenCLACNet.hpp"
-#include"OpenCLACNetKernel.hpp"
+#include "ACNetType.hpp"
+#include "OpenCLACNet.hpp"
+#include "OpenCLACNetKernel.hpp"
 
 #define ALIGN_UP(x, size) (((x) + (size) - 1) & (~((size) - 1)))
 

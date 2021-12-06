@@ -1,9 +1,9 @@
 #ifndef ANIME4KCPP_CORE_AC_EXCEPTION_HPP
 #define ANIME4KCPP_CORE_AC_EXCEPTION_HPP
 
-#include<string>
-#include<string_view>
-#include<stdexcept>
+#include <string>
+#include <string_view>
+#include <stdexcept>
 
 #define TYPE_ITEM(Name)\
 struct Name\

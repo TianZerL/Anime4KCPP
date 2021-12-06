@@ -1,11 +1,11 @@
 #ifndef ANIME4KCPP_CLI_CONFIG_HPP
 #define ANIME4KCPP_CLI_CONFIG_HPP
 
-#include<string>
-#include<string_view>
+#include <string>
+#include <string_view>
 
-#include<cmdline.hpp>
-#include<ini17.hpp>
+#include <cmdline.hpp>
+#include <ini17.hpp>
 
 class Config
 {

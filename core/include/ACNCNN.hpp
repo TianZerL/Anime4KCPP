@@ -3,8 +3,8 @@
 
 #ifdef ENABLE_NCNN
 
-#include"NCNNACNet.hpp"
-#include"ACManager.hpp"
+#include "NCNNACNet.hpp"
+#include "ACManager.hpp"
 
 namespace Anime4KCPP
 {

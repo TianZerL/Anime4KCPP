@@ -1,9 +1,9 @@
 #ifdef ENABLE_NCNN
 
-#include<net.h>
+#include <net.h>
 
-#include"ACNetType.hpp"
-#include"ACNCNN.hpp"
+#include "ACNetType.hpp"
+#include "ACNCNN.hpp"
 
 Anime4KCPP::NCNN::GPUList Anime4KCPP::NCNN::listGPUs() noexcept
 {

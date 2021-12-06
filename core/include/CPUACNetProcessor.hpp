@@ -1,9 +1,9 @@
 #ifndef ANIME4KCPP_CORE_CPU_ACNET_PROCESSOR_HPP
 #define ANIME4KCPP_CORE_CPU_ACNET_PROCESSOR_HPP
 
-#include"AC.hpp"
-#include"CPUCNNProcessor.hpp"
-#include"CNN.hpp"
+#include "AC.hpp"
+#include "CPUCNNProcessor.hpp"
+#include "CNN.hpp"
 
 namespace Anime4KCPP::CPU
 {

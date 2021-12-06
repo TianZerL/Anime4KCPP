@@ -5,7 +5,7 @@
 
 #ifdef BUILT_IN_KERNEL
 
-#include<string>
+#include <string>
 
 namespace Anime4KCPP::OpenCL
 {
