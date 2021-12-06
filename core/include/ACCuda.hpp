@@ -19,7 +19,7 @@ namespace Anime4KCPP
         //return platforms, devices of each platform, all devices information
         AC_EXPORT GPUList listGPUs() noexcept;
         //return result and information
-        AC_EXPORT GPUInfo checkGPUSupport(const int dID) noexcept;
+        AC_EXPORT GPUInfo checkGPUSupport(int dID) noexcept;
     }
 
     namespace Processor
@@ -38,7 +38,7 @@ namespace Anime4KCPP
 class Anime4KCPP::Cuda::Manager : public Anime4KCPP::Processor::Manager
 {
 public:
-    Manager(const int dID = 0) noexcept;
+    Manager(int dID = 0) noexcept;
     void init() override;
     void release() noexcept override;
     bool isInitialized() noexcept override;
