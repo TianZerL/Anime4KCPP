@@ -113,7 +113,13 @@ static void showVersionInfo()
 {
     std::cout
         << "Anime4KCPP CLI" << '\n'
-        << '\n'
+        << "  Web image support: " <<
+#ifdef ENABLE_LIBCURL
+        "YES"
+#else
+        "NO"
+#endif // ENABLE_LIBCURL
+        << "\n\n"
         << "Anime4KCPP core information:\n"
         << "  Version: " << Anime4KCPP::CoreInfo::version() << '\n'
         << "  Parallel library: " << ANIME4KCPP_CORE_PARALLEL_LIBRARY << '\n'
