@@ -1,7 +1,7 @@
-set(CMDLINE_HPP_URL https://github.com/TianZerL/cmdline/raw/master/cmdline.hpp)
+set(CMDLINE_HPP_URL https://github.com/TianZerL/cmdline/raw/095f7129afb7be56e918948076567731a606e1e8/cmdline.hpp)
 set(SHA1_CMDLINE "c2d8d368a097feb6da1ec6d50735b13f2d082388")
 
-set(INI17_HPP_URL https://github.com/TianZerL/ini17/raw/main/src/ini17.hpp)
+set(INI17_HPP_URL https://github.com/TianZerL/ini17/raw/0e6a79fba398e4b9d6312f00bdd52920d1be3c23/src/ini17.hpp)
 set(SHA1_INI17 "82a581102e54dac85a9ef2c7d4b9042428d5240a")
 
 if(EXISTS ${TOP_DIR}/ThirdParty/include/cmdline/cmdline.hpp)
