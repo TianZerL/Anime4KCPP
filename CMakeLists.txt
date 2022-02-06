@@ -16,6 +16,11 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "No build type selected, default to Release")
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build Type" FORCE)
+endif()
+
 string(TIMESTAMP TODAY "%Y-%m-%d")
 
 option(Build_GUI "Build GUI or not" OFF)
@@ -91,7 +96,7 @@ if(Use_Eigen3)
 endif()
 
 if(Maximum_Optimization)
-    set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build Type" FORCE)
     set(Other_Optimization_For_Core ON)
     set(Ryzen_Optimization ON)
     set(Native_Optimization ON)
