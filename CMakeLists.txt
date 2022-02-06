@@ -193,11 +193,7 @@ else()
     option(Use_Boost_filesystem "Use filesystem lib from boost instead of STL" ON)
 endif()
 
-if(WIN32)
-    set(OpenCL_Provider "Intel" CACHE STRING "one of Intel;Nvidia;AMD;Auto")
-else()
-    set(OpenCL_Provider "Auto" CACHE STRING "one of Intel;Nvidia;AMD;Auto")
-endif()
+set(OpenCL_Provider "Auto" CACHE STRING "Intel;Nvidia;AMD;Khronos;Auto")
 
 if(WIN32)
     option(Build_DS_Filter "Build Anime4KCPP for DirectShow or not" OFF)
@@ -276,7 +272,7 @@ elseif(OpenCL_Provider MATCHES "Nvidia")
             WARNING "Can't find Nvidia OpenCL SDK, set OpenCL_Provider to Auto\n"
         )
     endif()
-elseif(NOT OpenCL_Provider MATCHES "Auto")
+elseif(NOT OpenCL_Provider MATCHES "(Auto)|(Khronos)")
     message (
         WARNING "Unkonw value of OpenCL_Provider, set to Auto\n"
     )

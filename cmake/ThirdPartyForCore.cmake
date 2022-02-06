@@ -1,30 +1,3 @@
-set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.15/include/CL/opencl.hpp)
-set(SHA1_OPENCL_HPP "de739352c21ea9bf9b082bb903caec7de9212f97")
-
-if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)
-    file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_SHA1_OPENCL_HPP)
-
-    if(NOT ${LOCAL_SHA1_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
-        message("Warning:")
-        message("   Local SHA1 for opencl.hpp:   ${LOCAL_SHA1_OPENCL_HPP}")
-        message("   Expected SHA1:              ${SHA1_OPENCL_HPP}")
-        message("   Mismatch SHA1 for opencl.hpp, trying to download it...")
-
-        file(
-            DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
-            SHOW_PROGRESS 
-            EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
-        )
-
-    endif()
-else()
-    file(
-        DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
-        SHOW_PROGRESS 
-        EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
-    )
-endif()
-
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} BASE_NAME "AC")
 
@@ -123,7 +96,38 @@ if(Enable_NCNN)
 endif()
 
 if(Enable_OpenCL)
-    find_package(OpenCL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/ThirdParty/include/opencl)
+    if(OpenCL_Provider MATCHES "Khronos")
+        find_package(OpenCL CONFIG REQUIRED)
+    else()
+        set(OPENCL_HPP_URL https://github.com/KhronosGroup/OpenCL-CLHPP/raw/v2.0.15/include/CL/opencl.hpp)
+        set(SHA1_OPENCL_HPP "de739352c21ea9bf9b082bb903caec7de9212f97")
+
+        if(EXISTS ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp)
+            file(SHA1 ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp LOCAL_SHA1_OPENCL_HPP)
+
+            if(NOT ${LOCAL_SHA1_OPENCL_HPP} STREQUAL ${SHA1_OPENCL_HPP})
+                message("Warning:")
+                message("   Local SHA1 for opencl.hpp:   ${LOCAL_SHA1_OPENCL_HPP}")
+                message("   Expected SHA1:              ${SHA1_OPENCL_HPP}")
+                message("   Mismatch SHA1 for opencl.hpp, trying to download it...")
+
+                file(
+                    DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
+                    SHOW_PROGRESS 
+                    EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
+                )
+
+            endif()
+        else()
+            file(
+                DOWNLOAD ${OPENCL_HPP_URL} ${TOP_DIR}/ThirdParty/include/opencl/CL/opencl.hpp 
+                SHOW_PROGRESS 
+                EXPECTED_HASH SHA1=${SHA1_OPENCL_HPP}
+            )
+        endif()
+
+        find_package(OpenCL REQUIRED)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/ThirdParty/include/opencl)
+    endif()
     target_link_libraries(${PROJECT_NAME} PRIVATE OpenCL::OpenCL)
 endif()

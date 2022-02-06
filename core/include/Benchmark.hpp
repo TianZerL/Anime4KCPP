@@ -39,8 +39,12 @@ inline double Anime4KCPP::benchmark(AC& ac, Image&&... image)
     std::chrono::steady_clock::time_point s;
     std::chrono::steady_clock::time_point e;
 
-    ac.loadImage(image...); // YUV or BGR
-    ac.process();
+    // Warm-up
+    for (int i = 0; i < 3; i++)
+    {
+        ac.loadImage(image...); // YUV or BGR
+        ac.process();
+    }
 
     for (int i = 0; i < times; i++)
     {
