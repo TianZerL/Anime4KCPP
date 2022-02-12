@@ -69,7 +69,7 @@ void Anime4KCPP::Cuda::ACNet::setParameters(const Parameters& parameters)
     ACNetTypeIndex = GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel);
 }
 
-std::string Anime4KCPP::Cuda::ACNet::getInfo()
+std::string Anime4KCPP::Cuda::ACNet::getInfo() const
 {
     std::ostringstream oss;
     oss << AC::getInfo()
@@ -82,7 +82,7 @@ std::string Anime4KCPP::Cuda::ACNet::getInfo()
     return oss.str();
 }
 
-std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo()
+std::string Anime4KCPP::Cuda::ACNet::getFiltersInfo() const
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
@@ -209,12 +209,12 @@ void Anime4KCPP::Cuda::ACNet::processGrayscale()
     }
 }
 
-Anime4KCPP::Processor::Type Anime4KCPP::Cuda::ACNet::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::Cuda::ACNet::getProcessorType() const noexcept
 {
     return Processor::Type::Cuda_ACNet;
 }
 
-std::string Anime4KCPP::Cuda::ACNet::getProcessorInfo()
+std::string Anime4KCPP::Cuda::ACNet::getProcessorInfo() const
 {
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << '\n'

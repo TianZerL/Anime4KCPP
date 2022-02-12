@@ -286,7 +286,7 @@ namespace Anime4KCPP::CPU::detail
     }
 }
 
-std::string Anime4KCPP::CPU::Anime4K09::getInfo()
+std::string Anime4KCPP::CPU::Anime4K09::getInfo() const
 {
     std::ostringstream oss;
     oss << AC::getInfo()
@@ -301,7 +301,7 @@ std::string Anime4KCPP::CPU::Anime4K09::getInfo()
     return oss.str();
 }
 
-std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo()
+std::string Anime4KCPP::CPU::Anime4K09::getFiltersInfo() const
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
@@ -400,12 +400,12 @@ void Anime4KCPP::CPU::Anime4K09::processGrayscale()
     cv::cvtColor(dstImg, dstImg, cv::COLOR_BGR2GRAY);
 }
 
-Anime4KCPP::Processor::Type Anime4KCPP::CPU::Anime4K09::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::CPU::Anime4K09::getProcessorType() const noexcept
 {
     return Processor::Type::CPU_Anime4K09;
 }
 
-std::string Anime4KCPP::CPU::Anime4K09::getProcessorInfo()
+std::string Anime4KCPP::CPU::Anime4K09::getProcessorInfo() const
 {
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType();

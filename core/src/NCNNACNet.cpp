@@ -156,7 +156,7 @@ void Anime4KCPP::NCNN::ACNet::setParameters(const Parameters& parameters)
     ACNetTypeIndex = GET_ACNET_TYPE_INDEX(param.HDN, param.HDNLevel);
 }
 
-std::string Anime4KCPP::NCNN::ACNet::getInfo()
+std::string Anime4KCPP::NCNN::ACNet::getInfo() const
 {
     std::ostringstream oss;
     oss << AC::getInfo()
@@ -169,7 +169,7 @@ std::string Anime4KCPP::NCNN::ACNet::getInfo()
     return oss.str();
 }
 
-std::string Anime4KCPP::NCNN::ACNet::getFiltersInfo()
+std::string Anime4KCPP::NCNN::ACNet::getFiltersInfo() const
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
@@ -415,12 +415,12 @@ void Anime4KCPP::NCNN::ACNet::processGrayscale()
     }
 }
 
-Anime4KCPP::Processor::Type Anime4KCPP::NCNN::ACNet::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::NCNN::ACNet::getProcessorType() const noexcept
 {
     return Processor::Type::NCNN_ACNet;
 }
 
-std::string Anime4KCPP::NCNN::ACNet::getProcessorInfo()
+std::string Anime4KCPP::NCNN::ACNet::getProcessorInfo() const
 {
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << '\n'

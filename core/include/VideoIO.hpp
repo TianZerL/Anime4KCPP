@@ -4,13 +4,14 @@
 #ifdef ENABLE_VIDEO
 
 #include <atomic>
-#include <future>
 #include <mutex>
 #include <condition_variable>
+#include <future>
 #include <functional>
 #include <memory>
 #include <queue>
 #include <unordered_map>
+#include <utility>
 #include <cstddef>
 
 #include <opencv2/opencv.hpp>

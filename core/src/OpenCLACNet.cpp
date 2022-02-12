@@ -438,7 +438,7 @@ void Anime4KCPP::OpenCL::ACNet::processGrayscale()
     }
 }
 
-std::string Anime4KCPP::OpenCL::ACNet::getInfo()
+std::string Anime4KCPP::OpenCL::ACNet::getInfo() const
 {
     std::ostringstream oss;
     oss << AC::getInfo()
@@ -454,7 +454,7 @@ std::string Anime4KCPP::OpenCL::ACNet::getInfo()
     return oss.str();
 }
 
-std::string Anime4KCPP::OpenCL::ACNet::getFiltersInfo()
+std::string Anime4KCPP::OpenCL::ACNet::getFiltersInfo() const
 {
     std::ostringstream oss;
     oss << AC::getFiltersInfo()
@@ -552,12 +552,12 @@ void Anime4KCPP::OpenCL::ACNet::initOpenCL(const CNNType type)
     }
 }
 
-Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::ACNet::getProcessorType() const noexcept
 {
     return Processor::Type::OpenCL_ACNet;
 }
 
-std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo()
+std::string Anime4KCPP::OpenCL::ACNet::getProcessorInfo() const
 {
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << '\n'

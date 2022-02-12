@@ -272,9 +272,7 @@ std::mutex SafeLoger::mtx;
 
 int main(int argc, char* argv[])
 {
-    unsigned int currentThreads = std::thread::hardware_concurrency();
-    if (currentThreads < 1)
-        currentThreads = 1;
+    const unsigned int currentThreads = Anime4KCPP::Utils::supportedThreads();
 
     Config config;
     auto& opt = config.getOptParser();

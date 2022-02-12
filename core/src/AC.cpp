@@ -19,7 +19,7 @@ void Anime4KCPP::AC::setParameters(const Parameters& parameters)
     param = parameters;
 }
 
-Anime4KCPP::Parameters Anime4KCPP::AC::getParameters()
+Anime4KCPP::Parameters Anime4KCPP::AC::getParameters() const noexcept
 {
     return param;
 }
@@ -722,33 +722,6 @@ void Anime4KCPP::AC::saveImageShape(int& cols, int& rows, int& channels)
     channels = (inputRGB32 || checkAlphaChannel) ? 4 : 3;
 }
 
-std::string Anime4KCPP::AC::getInfo()
-{
-    std::ostringstream oss;
-    oss << "----------------------------------------------" << '\n'
-        << "Parameter information" << '\n'
-        << "----------------------------------------------" << '\n';
-    if (orgImg.cols && orgImg.rows)
-    {
-        oss << orgImg.cols << "x" << orgImg.rows << " to " << width << "x" << height << '\n'
-            << "----------------------------------------------" << '\n';
-    }
-    oss << "Processor info: \n "
-        << getProcessorInfo() << '\n';
-
-    return oss.str();
-}
-
-std::string Anime4KCPP::AC::getFiltersInfo()
-{
-    std::ostringstream oss;
-    oss << "----------------------------------------------" << '\n'
-        << "Filter information" << '\n'
-        << "----------------------------------------------" << '\n';
-
-    return oss.str();
-}
-
 void Anime4KCPP::AC::showImage(bool R2B)
 {
 #ifdef ENABLE_PREVIEW_GUI
@@ -767,7 +740,7 @@ void Anime4KCPP::AC::showImage(bool R2B)
             cv::resize(dstV, tmpV, dstImg.size(), 0.0, 0.0, cv::INTER_CUBIC);
         cv::merge(std::vector<cv::Mat>{ dstImg, tmpU, tmpV }, tmpImg);
         cv::cvtColor(tmpImg, tmpImg, cv::COLOR_YUV2BGR);
-    } 
+    }
     else if (checkAlphaChannel)
     {
         cv::Mat alpha, out;
@@ -792,6 +765,33 @@ void Anime4KCPP::AC::process()
         processGrayscale();
     else
         processRGBImage();
+}
+
+std::string Anime4KCPP::AC::getInfo() const
+{
+    std::ostringstream oss;
+    oss << "----------------------------------------------" << '\n'
+        << "Parameter information" << '\n'
+        << "----------------------------------------------" << '\n';
+    if (orgImg.cols && orgImg.rows)
+    {
+        oss << orgImg.cols << "x" << orgImg.rows << " to " << width << "x" << height << '\n'
+            << "----------------------------------------------" << '\n';
+    }
+    oss << "Processor info: \n "
+        << getProcessorInfo() << '\n';
+
+    return oss.str();
+}
+
+std::string Anime4KCPP::AC::getFiltersInfo() const
+{
+    std::ostringstream oss;
+    oss << "----------------------------------------------" << '\n'
+        << "Filter information" << '\n'
+        << "----------------------------------------------" << '\n';
+
+    return oss.str();
 }
 
 void Anime4KCPP::Parameters::reset() noexcept

@@ -104,7 +104,7 @@ public:
     virtual ~AC();
 
     virtual void setParameters(const Parameters& parameters);
-    Parameters getParameters();
+    Parameters getParameters() const noexcept;
 
 #ifdef ENABLE_IMAGE_IO
     void loadImage(const std::string& srcFile);
@@ -153,10 +153,10 @@ public:
 
     void process();
 
-    virtual std::string getInfo();
-    virtual std::string getFiltersInfo();
-    virtual Processor::Type getProcessorType() noexcept = 0;
-    virtual std::string getProcessorInfo() = 0;
+    virtual std::string getInfo() const;
+    virtual std::string getFiltersInfo() const;
+    virtual Processor::Type getProcessorType() const noexcept = 0;
+    virtual std::string getProcessorInfo() const = 0;
 protected:
     virtual void processYUVImage() = 0;
     virtual void processRGBImage() = 0;

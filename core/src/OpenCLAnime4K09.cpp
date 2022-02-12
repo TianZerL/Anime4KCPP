@@ -317,7 +317,7 @@ bool Anime4KCPP::OpenCL::Anime4K09::isInitialized() noexcept
     return detail::isInitializedFlag;
 }
 
-std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
+std::string Anime4KCPP::OpenCL::Anime4K09::getInfo() const
 {
     std::ostringstream oss;
     oss << AC::getInfo()
@@ -336,7 +336,7 @@ std::string Anime4KCPP::OpenCL::Anime4K09::getInfo()
     return oss.str();
 }
 
-std::string Anime4KCPP::OpenCL::Anime4K09::getFiltersInfo()
+std::string Anime4KCPP::OpenCL::Anime4K09::getFiltersInfo() const
 {
     std::ostringstream oss;
 
@@ -483,12 +483,12 @@ void Anime4KCPP::OpenCL::Anime4K09::initOpenCL()
     }
 }
 
-Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() noexcept
+Anime4KCPP::Processor::Type Anime4KCPP::OpenCL::Anime4K09::getProcessorType() const noexcept
 {
     return Processor::Type::OpenCL_Anime4K09;
 }
 
-std::string Anime4KCPP::OpenCL::Anime4K09::getProcessorInfo()
+std::string Anime4KCPP::OpenCL::Anime4K09::getProcessorInfo() const
 {
     std::ostringstream oss;
     oss << "Processor type: " << getProcessorType() << '\n'

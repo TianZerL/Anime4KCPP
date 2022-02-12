@@ -15,8 +15,8 @@ class Anime4KCPP::OpenCL::Anime4K09 :public AC
 public:
     using AC::AC;
 
-    std::string getInfo() override;
-    std::string getFiltersInfo() override;
+    std::string getInfo() const override;
+    std::string getFiltersInfo() const override;
 
     static void init(int platformID = 0, int deviceID = 0, int OpenCLQueueNum = 4, bool OpenCLParallelIO = false);
     static void release() noexcept;
@@ -26,8 +26,8 @@ private:
     void processRGBImage() override;
     void processGrayscale() override;
 
-    Processor::Type getProcessorType() noexcept override;
-    std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() const noexcept override;
+    std::string getProcessorInfo() const override;
 
     static void initOpenCL();
 };

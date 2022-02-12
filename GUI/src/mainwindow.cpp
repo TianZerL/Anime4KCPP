@@ -229,9 +229,7 @@ void MainWindow::readConfig(const QSettings* conf)
     QString outputPath = conf->value("/Output/path", QApplication::applicationDirPath() + "/output").toString();
     QString outputPrefix = conf->value("/Output/perfix", "output_anime4kcpp_").toString();
 
-    unsigned int currentThreads = std::thread::hardware_concurrency();
-    if (currentThreads < 1)
-        currentThreads = 1;
+    const unsigned int currentThreads = Anime4KCPP::Utils::supportedThreads();
 
     int passes = conf->value("/Arguments/passes", 2).toInt();
     int pushColorCount = conf->value("/Arguments/pushColorCount", 2).toInt();
@@ -990,8 +988,8 @@ void MainWindow::on_radioButtonFast_clicked()
     ui->checkBoxHDN->setChecked(false);
     ui->spinBoxPasses->setValue(2);
     ui->spinBoxPushColorCount->setValue(2);
-    unsigned int currentThreads = std::thread::hardware_concurrency();
-    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
+    const unsigned int currentThreads = Anime4KCPP::Utils::supportedThreads();
+    ui->spinBoxThreads->setValue(currentThreads);
     ui->doubleSpinBoxPushColorStrength->setValue(0.3);
     ui->doubleSpinBoxPushGradientStrength->setValue(1.0);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
@@ -1022,8 +1020,8 @@ void MainWindow::on_radioButtonBalance_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
     ui->checkBoxHDN->setChecked(false);
-    unsigned int currentThreads = std::thread::hardware_concurrency();
-    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
+    const unsigned int currentThreads = Anime4KCPP::Utils::supportedThreads();
+    ui->spinBoxThreads->setValue(currentThreads);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);
@@ -1036,8 +1034,8 @@ void MainWindow::on_radioButtonQuality_clicked()
 {
     ui->checkBoxACNet->setChecked(true);
     ui->checkBoxHDN->setChecked(false);
-    unsigned int currentThreads = std::thread::hardware_concurrency();
-    ui->spinBoxThreads->setValue((currentThreads < 1) ? 1 : currentThreads);
+    const unsigned int currentThreads = Anime4KCPP::Utils::supportedThreads();
+    ui->spinBoxThreads->setValue(currentThreads);
     ui->doubleSpinBoxZoomFactor->setValue(2.0);
     ui->checkBoxFastMode->setChecked(false);
     ui->checkBoxEnablePreprocessing->setChecked(false);

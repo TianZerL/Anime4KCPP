@@ -1,6 +1,8 @@
 #ifndef ANIME4KCPP_CORE_PARALLEL_HPP
 #define ANIME4KCPP_CORE_PARALLEL_HPP
 
+#include <thread>
+
 #ifndef DISABLE_PARALLEL
 #if defined(USE_PPL)
 #include <ppl.h>
@@ -17,8 +19,16 @@ namespace Parallel = tbb;
 
 namespace Anime4KCPP::Utils
 {
+    unsigned int supportedThreads() noexcept;
+
     template <typename IndexType, typename F>
     void parallelFor(IndexType first, IndexType last, F&& func);
+}
+
+inline unsigned int Anime4KCPP::Utils::supportedThreads() noexcept
+{
+    auto threads = std::thread::hardware_concurrency();
+    return (threads < 1) ? 1 : threads;
 }
 
 template <typename IndexType, typename F>
@@ -34,7 +44,7 @@ inline void Anime4KCPP::Utils::parallelFor(const IndexType first, const IndexTyp
         func(i);
     }
 #else // Built-in parallel library
-    static const std::size_t threadNum = std::thread::hardware_concurrency();
+    static const std::size_t threadNum = supportedThreads();
     if (threadNum > 1)
     {
         std::vector<std::future<void>> taskList;

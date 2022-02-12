@@ -17,8 +17,8 @@ public:
     explicit ACNet(const Parameters& parameters);
     void setParameters(const Parameters& parameters) override;
 
-    std::string getInfo() override;
-    std::string getFiltersInfo() override;
+    std::string getInfo() const override;
+    std::string getFiltersInfo() const override;
 
     static void init(
         const int platformID = 0,
@@ -33,8 +33,8 @@ private:
     void processRGBImage() override;
     void processGrayscale() override;
 
-    Processor::Type getProcessorType() noexcept override;
-    std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() const noexcept override;
+    std::string getProcessorInfo() const override;
 
     static void initOpenCL(const CNNType type);
 private:

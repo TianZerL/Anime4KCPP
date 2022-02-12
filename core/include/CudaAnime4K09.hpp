@@ -15,15 +15,15 @@ class Anime4KCPP::Cuda::Anime4K09 :public AC
 public:
     using AC::AC;
 
-    std::string getInfo() override;
-    std::string getFiltersInfo() override;
+    std::string getInfo() const override;
+    std::string getFiltersInfo() const override;
 private:
     void processYUVImage() override;
     void processRGBImage() override;
     void processGrayscale() override;
 
-    Processor::Type getProcessorType() noexcept override;
-    std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() const noexcept override;
+    std::string getProcessorInfo() const override;
 };
 
 #endif // ENABLE_CUDA

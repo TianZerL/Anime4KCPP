@@ -18,8 +18,8 @@ public:
     ~ACNet() override;
     void setParameters(const Parameters& parameters) override;
 
-    std::string getInfo() override;
-    std::string getFiltersInfo() override;
+    std::string getInfo() const override;
+    std::string getFiltersInfo() const override;
 
     static void init(
         std::string& modelPath, std::string& paramPath, 
@@ -36,8 +36,8 @@ private:
     void processRGBImage() override;
     void processGrayscale() override;
 
-    Processor::Type getProcessorType() noexcept override;
-    std::string getProcessorInfo() override;
+    Processor::Type getProcessorType() const noexcept override;
+    std::string getProcessorInfo() const override;
 private:
     int ACNetTypeIndex;
 

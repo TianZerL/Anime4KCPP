@@ -1,7 +1,6 @@
 #ifdef ENABLE_VIDEO
 
 #include <exception>
-#include <thread>
 
 #include "ACCreator.hpp"
 #include "VideoProcessor.hpp"
@@ -9,7 +8,7 @@
 #include "VideoIOThreads.hpp"
 #include "VideoIOSerial.hpp"
 
-Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type, unsigned int threads)
+Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const Processor::Type type, const unsigned int threads)
     :fps(0.0), totalFrameCount(0.0), height(0), width(0), threads(threads), param(parameters), type(type)
 {
 #ifdef DISABLE_PARALLEL
@@ -24,10 +23,10 @@ Anime4KCPP::VideoProcessor::VideoProcessor(const Parameters& parameters, const P
 #endif
 }
 
-Anime4KCPP::VideoProcessor::VideoProcessor(AC& config, unsigned int threads)
+Anime4KCPP::VideoProcessor::VideoProcessor(const AC& config, const unsigned int threads)
     :VideoProcessor(config.getParameters(), config.getProcessorType(), threads) {}
 
-void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile, bool hw)
+void Anime4KCPP::VideoProcessor::loadVideo(const std::string& srcFile, const bool hw)
 {
     if (!videoIO->openReader(srcFile, hw))
         throw ACException<ExceptionType::IO>("Failed to load file: file doesn't not exist or decoder isn't installed.");
@@ -122,7 +121,7 @@ void Anime4KCPP::VideoProcessor::continueVideoProcess()
     videoIO->continueProcess();
 }
 
-std::string Anime4KCPP::VideoProcessor::getInfo()
+std::string Anime4KCPP::VideoProcessor::getInfo() const
 {
     std::ostringstream oss;
     oss << "----------------------------------------------" << '\n'

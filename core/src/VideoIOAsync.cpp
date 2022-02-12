@@ -1,6 +1,7 @@
 #ifdef ENABLE_VIDEO
 
 #include <forward_list>
+#include <thread>
 
 #include "VideoIOAsync.hpp"
 
