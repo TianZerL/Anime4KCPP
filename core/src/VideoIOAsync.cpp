@@ -1,4 +1,4 @@
-#ifdef ENABLE_VIDEO
+#if defined(ENABLE_VIDEO) && !defined(DISABLE_PARALLEL)
 
 #include <forward_list>
 #include <thread>
