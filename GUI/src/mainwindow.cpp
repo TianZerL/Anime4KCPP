@@ -1460,7 +1460,11 @@ void MainWindow::on_actionAbout_triggered()
 {
     QString processors =
         QString{ Anime4KCPP::CoreInfo::supportedProcessors() }.
+#if (QT_VERSION <= QT_VERSION_CHECK(5,14,0))
+        split(',', QString::SkipEmptyParts).
+#else
         split(',', Qt::SkipEmptyParts).
+#endif
         join("\n      ").
         insert(0, "\n      ");
 
