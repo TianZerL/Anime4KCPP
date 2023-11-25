@@ -3,6 +3,7 @@
 
 #ifdef ENABLE_LIBCURL
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
