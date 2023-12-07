@@ -8,11 +8,13 @@ if(Build_Static_Core)
     add_library(${PROJECT_NAME} STATIC 
         ${INCLUDE} ${SOURCE} 
         $<$<BOOL:${Enable_CUDA}>:$<TARGET_OBJECTS:CUDA_Module>>
+        $<$<BOOL:${Enable_HIP}>:$<TARGET_OBJECTS:HIP_Module>>
     )
 else()
     add_library(${PROJECT_NAME} SHARED 
         ${INCLUDE} ${SOURCE} 
         $<$<BOOL:${Enable_CUDA}>:$<TARGET_OBJECTS:CUDA_Module>>
+        $<$<BOOL:${Enable_HIP}>:$<TARGET_OBJECTS:HIP_Module>>
     )
 endif()
 
@@ -21,6 +23,9 @@ target_compile_definitions(
     PUBLIC 
         $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
         $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
+        $<$<BOOL:${Enable_HIP}>:ENABLE_HIP>
+        # This allows HIP to emulate as CUDA
+        $<$<BOOL:${Enable_HIP}>:ENABLE_CUDA>
         $<$<BOOL:${Enable_NCNN}>:ENABLE_NCNN>
         $<$<BOOL:${Enable_Video}>:ENABLE_VIDEO>
         $<$<BOOL:${Enable_Preview_GUI}>:ENABLE_PREVIEW_GUI>

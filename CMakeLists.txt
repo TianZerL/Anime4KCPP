@@ -39,6 +39,7 @@ option(Other_Optimization_For_Other "Enable other optimizatio flag for other if 
 option(Enable_IPO "Enable link time optimization, may cause unknown bugs even slow performance" OFF)
 option(Maximum_Optimization "Enable maximum optimizations for the current platform" OFF)
 option(Enable_CUDA "Enable CUDA module" OFF)
+option(Enable_HIP "Enable HIP module" OFF)
 option(Enable_OpenCL "Enable OpenCL module" ON)
 option(Enable_NCNN "Enable ncnn module" OFF)
 option(Enable_Fast_Math "Enable fast math" OFF)
@@ -89,6 +90,8 @@ if(Enable_CUDA)
         set(CMAKE_CUDA_ARCHITECTURES ${CUDA_Minimum_CC}-virtual ${CUDA_CC}-real)
     endif()
     enable_language(CUDA)
+elseif(Enable_HIP)
+    enable_language(HIP)
 endif()
 
 if(Use_Eigen3)
@@ -308,6 +311,7 @@ message(STATUS
 "   Enable IPO ${Enable_IPO}\n"
 "   Enable OpenCL ${Enable_OpenCL}\n"
 "   Enable CUDA ${Enable_CUDA}\n"
+"   Enable HIP ${Enable_HIP}\n"
 "   Enable NCNN ${Enable_NCNN}\n"
 "   Enable OpenCV DNN ${Enable_OpenCV_DNN}\n"
 "   Enable video ${Enable_Video}\n"
