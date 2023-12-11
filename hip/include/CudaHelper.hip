@@ -13,7 +13,7 @@
 
 #define CheckCudaErr(err)   \
     if (err != hipSuccess) \
-    throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(hipGetErrorString(err), std::string(__FILE__), __LINE__)
+    throw Anime4KCPP::ACException<Anime4KCPP::ExceptionType::GPU, true>(hipGetErrorString(err), std::string(__FILE__) + ": line " + std::to_string(__LINE__), err)
 
 using uchar = std::uint8_t;
 using ushort = std::uint16_t;

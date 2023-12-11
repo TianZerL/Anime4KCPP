@@ -2,7 +2,7 @@ if(Enable_HIP)
 	project(HIP_Module LANGUAGES CXX HIP)
 	
 	file(GLOB SOURCES src/*.hip)
-	file(GLOB INCLUDE include/*.hpp include/*.hip)
+	file(GLOB INCLUDE include/*.hip)
 	
 	source_group("hip_include" FILES ${INCLUDE}) 
 	source_group("hip_source" FILES ${SOURCE}) 
@@ -13,7 +13,7 @@ if(Enable_HIP)
 	message(STATUS "HIP SOURCES:                ${SOURCES}")
 	message(STATUS "HIP INCLUDE:                ${INCLUDE}")
 	
-	add_library(${PROJECT_NAME} OBJECT ${INCLUDE} ${SOURCES})
+	add_library(${PROJECT_NAME} OBJECT ${SOURCES})
 	
 	target_include_directories(${PROJECT_NAME} PRIVATE ${TOP_DIR}/core/include include)
 	

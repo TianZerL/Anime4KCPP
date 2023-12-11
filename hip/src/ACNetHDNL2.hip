@@ -1649,6 +1649,6 @@ __device__ __constant__ static const float kernelsL10[4 * 8] =
  0.2443f, -0.1259f
 };
 
-#include "ACNetCommon.hpp"
+#include "ACNetCommon.hip"
 
 DECLARE_ACNET_HDN_INTERFACE_FUNCTION(2)
