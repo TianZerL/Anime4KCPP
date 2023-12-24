@@ -35,6 +35,8 @@ extern "C"
         AC_OpenCL_ACNet,
         AC_Cuda_Anime4K09,
         AC_Cuda_ACNet,
+        AC_Hip_Anime4K09,
+        AC_Hip_ACNet,
         //deprecated, use AC_CPU_Anime4K09
         AC_CPU = AC_CPU_Anime4K09,
         //deprecated, use AC_CPU_ACNet

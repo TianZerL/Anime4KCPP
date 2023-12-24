@@ -1,6 +1,6 @@
 #include "hip/hip_runtime.h"
-#include "CudaHelper.hip"
-#include "CudaInterface.hpp"
+#include "HipHelper.hip"
+#include "HipInterface.hpp"
 #include <hip/amd_detail/amd_surface_functions.h>
 
 #define MAX3(a, b, c) fmaxf(fmaxf(a, b), c)
@@ -268,35 +268,35 @@ __global__ static void pushGradient(
 }
 
 template <typename T>
-static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KCPP::Cuda::ACCudaParamAnime4K09 *param)
+static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KCPP::Hip::ACHipParamAnime4K09 *param, hipStream_t& stream)
 {
     hipError_t err = hipSuccess;
-    if (currCudaDeviceID)
+    if (currHipDeviceID)
     {
-        err = hipSetDevice(currCudaDeviceID);
-        CheckCudaErr(err);
+        err = hipSetDevice(currHipDeviceID);
+        CheckHipErr(err);
     }
 
-    hipStream_t stream;
-    hipStreamCreate(&stream);
+    // hipStream_t stream;
+    // hipStreamCreate(&stream);
 
     hipChannelFormatDesc channelDesc = hipCreateChannelDesc<typename Vec4<T>::type>();
 
     hipArray_t cuArray0;
     err = hipMallocArray(&cuArray0, &channelDesc, param->orgW, param->orgH);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuArray1;
     err = hipMallocArray(&cuArray1, &channelDesc, param->W, param->H, hipArrayDefault /* hipArraySurfaceLoadStore */);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuArray2;
     err = hipMallocArray(&cuArray2, &channelDesc, param->W, param->H, hipArrayDefault /* hipArraySurfaceLoadStore */);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuArray3;
     err = hipMallocArray(&cuArray3, &channelDesc, param->W, param->H, hipArrayDefault /* hipArraySurfaceLoadStore */);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     struct hipResourceDesc resDesc;
     struct hipTextureDesc texDesc;
@@ -314,27 +314,27 @@ static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KC
     resDesc.res.array.array = cuArray0;
     hipTextureObject_t tex = 0;
     err = hipCreateTextureObject(&tex, &resDesc, &texDesc, NULL);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     resDesc.res.array.array = cuArray1;
     hipSurfaceObject_t surf1 = 0;
     err = hipCreateSurfaceObject(&surf1, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     resDesc.res.array.array = cuArray2;
     hipSurfaceObject_t surf2 = 0;
     err = hipCreateSurfaceObject(&surf2, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     resDesc.res.array.array = cuArray3;
     hipSurfaceObject_t surf3 = 0;
     err = hipCreateSurfaceObject(&surf3, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipMemcpy2DToArrayAsync(cuArray0, 0, 0, inputData,
                                    param->stride, sizeof(typename Vec4<T>::type) * param->orgW, param->orgH,
                                    hipMemcpyHostToDevice, stream);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     dim3 dimBlock(16, 16);
     dim3 dimGrid(
@@ -358,21 +358,21 @@ static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KC
     }
 
     err = hipHostRegister(outputData, sizeof(typename Vec4<T>::type) * param->W * param->H, hipHostRegisterDefault);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipMemcpy2DFromArrayAsync(outputData, sizeof(typename Vec4<T>::type) * param->W, cuArray1, 0, 0,
                                      sizeof(typename Vec4<T>::type) * param->W, param->H,
                                      hipMemcpyDeviceToHost, stream);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipStreamSynchronize(stream);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipHostUnregister(outputData);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipGetLastError();
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipDestroyTextureObject(tex);
     hipDestroySurfaceObject(surf1);
@@ -384,21 +384,21 @@ static void cuRunKernelAnime4K09Impl(const T *inputData, T *outputData, Anime4KC
     hipFreeArray(cuArray2);
     hipFreeArray(cuArray3);
 
-    hipStreamDestroy(stream);
+    // hipStreamDestroy(stream);
 }
 
-void Anime4KCPP::Cuda::cuRunKernelAnime4K09(const void* inputData, void* outputData, ACCudaDataType type, ACCudaParamAnime4K09* param)
+void Anime4KCPP::Hip::cuRunKernelAnime4K09(const void* inputData, void* outputData, ACHipDataType type, ACHipParamAnime4K09* param, hipStream_t& stream)
 {
     switch (type)
     {
-    case ACCudaDataType::AC_8U:
-        cuRunKernelAnime4K09Impl<uchar>(reinterpret_cast<const uchar *>(inputData), reinterpret_cast<uchar *>(outputData), param);
+    case ACHipDataType::AC_8U:
+        cuRunKernelAnime4K09Impl<uchar>(reinterpret_cast<const uchar *>(inputData), reinterpret_cast<uchar *>(outputData), param, stream);
         break;
-    case ACCudaDataType::AC_16U:
-        cuRunKernelAnime4K09Impl<ushort>(reinterpret_cast<const ushort *>(inputData), reinterpret_cast<ushort *>(outputData), param);
+    case ACHipDataType::AC_16U:
+        cuRunKernelAnime4K09Impl<ushort>(reinterpret_cast<const ushort *>(inputData), reinterpret_cast<ushort *>(outputData), param, stream);
         break;
-    case ACCudaDataType::AC_32F:
-        cuRunKernelAnime4K09Impl<float>(reinterpret_cast<const float *>(inputData), reinterpret_cast<float *>(outputData), param);
+    case ACHipDataType::AC_32F:
+        cuRunKernelAnime4K09Impl<float>(reinterpret_cast<const float *>(inputData), reinterpret_cast<float *>(outputData), param, stream);
         break;
     }
 }

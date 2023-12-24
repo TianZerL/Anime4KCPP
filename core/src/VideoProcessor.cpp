@@ -1,6 +1,16 @@
 #ifdef ENABLE_VIDEO
 
 #include <exception>
+#include <atomic>
+#include <iostream>
+#include <vector>
+#include <mutex>
+// #ifndef DISABLE_PARALLEL
+// 	#include "oneapi/tbb/global_control.h"
+// 	#include "oneapi/tbb/parallel_pipeline.h"
+// 	#include "oneapi/tbb/tbb_allocator.h"
+// 	#include "oneapi/tbb/tick_count.h"
+// #endif
 
 #include "ACCreator.hpp"
 #include "VideoProcessor.hpp"
@@ -53,33 +63,92 @@ void Anime4KCPP::VideoProcessor::process()
     std::once_flag eptrFlag;
     std::exception_ptr eptr;
 
-    videoIO->init(
-        [&]()
-        {
-            Video::Frame frame;
-            videoIO->read(frame);
+	std::queue<AC*> creators;
+	for (int i = 0; i < threads; i++)
+	{
+		creators.push(ACCreator::create(param, type));
+	}
 
-            try
-            { // Reduce memory usage
-                auto ac = ACCreator::createUP(param, type);
-                ac->loadImage(frame.first);
-                ac->process();
-                ac->saveImage(frame.first);
-            }
-            catch (...)
-            {
-                std::call_once(eptrFlag,
-                    [&]()
-                    {
-                        videoIO->stopProcess();
-                        eptr = std::current_exception();
-                    });
-                return;
-            }
+	std::mutex m;
+	videoIO->init(
+	    [&]()
+	    {
+	        Video::Frame frame;
+	        videoIO->read(frame);
+	
+	        try
+	        { // Reduce memory usage
+				m.lock();
+	            auto ac = creators.front(); creators.pop();
+				m.unlock();
+	            ac->loadImage(frame.first);
+	            ac->process();
+	            ac->saveImage(frame.first);
 
-            videoIO->write(frame);
-        }
-    , threads).process();
+				m.lock();
+				creators.push(ac);
+				m.unlock();
+	        }
+	        catch (...)
+	        {
+	            std::call_once(eptrFlag,
+	                [&]()
+	                {
+	                    videoIO->stopProcess();
+	                    eptr = std::current_exception();
+	                });
+	            return;
+	        }
+	
+	        videoIO->write(frame);
+	    }
+	, threads).process();
+
+	// std::vector<Video::Frame> frames(threads);
+	// int startedFrame = 0, finishedFrame = 0;
+	// auto inputFilter = oneapi::tbb::make_filter<void, AC*>(
+	// 	oneapi::tbb::filter_mode::serial_in_order,
+	// 	[&](oneapi::tbb::flow_control& fc) -> AC* {
+	// 		if (startedFrame < totalFrameCount)
+	// 		{
+	// 			assert(!creators.empty());
+	// 			AC* ac = creators.front(); creators.pop();
+	// 			auto& frame = frames.at(startedFrame % threads);
+	// 			videoIO->read(frame);
+	// 			std::cerr << "Frame " << startedFrame << " started" << std::endl;
+	// 			ac->loadImage(frame.first);
+	// 			std::cerr << "Frame " << startedFrame << " started" << std::endl;
+	// 			startedFrame++;
+	// 			// frames.at(startedFrame % threads) = std::move(frame);
+	// 			return ac;
+	// 		}
+	// 		else
+	// 		{
+	// 			fc.stop();
+	// 			return nullptr;
+	// 		}
+	// 	}
+	// );
+	// auto processFilter = oneapi::tbb::make_filter<AC*, AC*>(
+	// 	oneapi::tbb::filter_mode::parallel,
+	// 	[&](AC* ac) -> AC* {
+	// 		std::cerr << "Processing..." << std::endl;
+	// 		ac->process();
+	// 		return ac;
+	// 	}
+	// );
+	// auto outputFilter = oneapi::tbb::make_filter<AC*, void>(
+	// 	oneapi::tbb::filter_mode::serial_in_order,
+	// 	[&](AC* ac) {
+	// 		auto& frame = frames.at(finishedFrame % threads);
+	// 		ac->saveImage(frame.first);
+	// 		videoIO->write(frame);
+	// 		std::cerr << "Frame " << finishedFrame << " finished" << std::endl;
+	// 		finishedFrame++;
+	// 	}
+	// );
+
+	// oneapi::tbb::parallel_pipeline(threads, inputFilter & processFilter & outputFilter);
 
     if (eptr)
         std::rethrow_exception(eptr);

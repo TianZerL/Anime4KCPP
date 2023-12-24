@@ -92,6 +92,7 @@ if(Enable_CUDA)
     enable_language(CUDA)
 elseif(Enable_HIP)
     enable_language(HIP)
+    find_package(hip REQUIRED)
 endif()
 
 if(Use_Eigen3)
@@ -212,7 +213,7 @@ set(VapourSynth_SDK_PATH "VapourSynth SDK path" CACHE PATH "Where to look for Va
 set(AviSynthPlus_SDK_PATH "AviSynthPlus SDK path" CACHE PATH "Where to look for AviSynthPlus SDK")
 
 if(NOT Disable_Parallel)
-    set(Parallel_Library "Auto" CACHE STRING "Auto, PPL, OpenMP, TBB or Built-in")
+    set(Parallel_Library "TBB" CACHE STRING "Auto, PPL, OpenMP, TBB or Built-in")
 
     if(NOT Parallel_Library MATCHES "^(Auto|PPL|OpenMP|TBB|Built-in)$")
         message (

@@ -1,6 +1,6 @@
 #include "hip/hip_runtime.h"
-#ifndef ANIME4KCPP_CUDA_ACNET_COMMON_CUH
-#define ANIME4KCPP_CUDA_ACNET_COMMON_CUH
+#ifndef ANIME4KCPP_HIP_ACNET_COMMON_HIP
+#define ANIME4KCPP_HIP_ACNET_COMMON_HIP
 
 #define RELU(x) fmaxf(x, 0.0f)
 
@@ -36,17 +36,17 @@
     bl2.w *kernelsL[L][n * 72 + 7 * 9 + 6] + bc2.w *kernelsL[L][n * 72 + 7 * 9 + 7] + br2.w *kernelsL[L][n * 72 + 7 * 9 + 8] + biasL[L][n]
 
 #define DECLARE_ACNET_HDN_INTERFACE_FUNCTION(level)                                                                                          \
-    void Anime4KCPP::Cuda::cuRunKernelACNetHDN##level(const void *inputData, void *outputData, ACCudaDataType type, ACCudaParamACNet *param) \
+    void Anime4KCPP::Hip::cuRunKernelACNetHDN##level(const void *inputData, void *outputData, ACHipDataType type, ACHipParamACNet *param) \
     {                                                                                                                                        \
         switch (type)                                                                                                                        \
         {                                                                                                                                    \
-        case ACCudaDataType::AC_8U:                                                                                                          \
+        case ACHipDataType::AC_8U:                                                                                                          \
             cuRunKernelACNetImpl<uchar>(reinterpret_cast<const uchar *>(inputData), reinterpret_cast<uchar *>(outputData), param);           \
             break;                                                                                                                           \
-        case ACCudaDataType::AC_16U:                                                                                                         \
+        case ACHipDataType::AC_16U:                                                                                                         \
             cuRunKernelACNetImpl<ushort>(reinterpret_cast<const ushort *>(inputData), reinterpret_cast<ushort *>(outputData), param);        \
             break;                                                                                                                           \
-        case ACCudaDataType::AC_32F:                                                                                                         \
+        case ACHipDataType::AC_32F:                                                                                                         \
             cuRunKernelACNetImpl<float>(reinterpret_cast<const float *>(inputData), reinterpret_cast<float *>(outputData), param);           \
             break;                                                                                                                           \
         }                                                                                                                                    \
@@ -175,17 +175,17 @@ __global__ static void convTranspose8To1(
 }
 
 template <typename T>
-static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::Cuda::ACCudaParamACNet *param)
+static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::Hip::ACHipParamACNet *param)
 {
     hipError_t err = hipSuccess;
-    if (currCudaDeviceID)
+    if (currHipDeviceID)
     {
-        err = hipSetDevice(currCudaDeviceID);
-        CheckCudaErr(err);
+        err = hipSetDevice(currHipDeviceID);
+        CheckHipErr(err);
     }
 
-    hipStream_t stream;
-    hipStreamCreate(&stream);
+    // hipStream_t stream;
+    // hipStreamCreate(&stream);
 
     hipChannelFormatDesc inoutChannelDesc = hipCreateChannelDesc<T>();
     hipChannelFormatDesc tmpChannelDesc = hipCreateChannelDesc<T>();
@@ -196,22 +196,22 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     hipArray_t cuInputArray;
     err = hipMallocArray(&cuInputArray, &inoutChannelDesc,
                           param->orgW, param->orgH);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuArray1;
     err = hipMalloc3DArray(&cuArray1, &tmpChannelDesc, extent,
                             /* hipArraySurfaceLoadStore | */ hipArrayLayered);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuArray2;
     err = hipMalloc3DArray(&cuArray2, &tmpChannelDesc, extent,
                             /* hipArraySurfaceLoadStore | */ hipArrayLayered);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipArray_t cuOutputArray;
     err = hipMallocArray(&cuOutputArray, &inoutChannelDesc,
                           W, H, hipArrayDefault /* hipArraySurfaceLoadStore */);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     struct hipResourceDesc resDesc;
     struct hipTextureDesc texDesc;
@@ -229,7 +229,7 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     resDesc.res.array.array = cuInputArray;
     hipTextureObject_t inTex = 0;
     err = hipCreateTextureObject(&inTex, &resDesc, &texDesc, NULL);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     if(!std::is_floating_point<T>::value)
         texDesc.readMode = hipReadModeElementType;
@@ -237,30 +237,30 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     resDesc.res.array.array = cuArray1;
     hipSurfaceObject_t surf1 = 0;
     err = hipCreateSurfaceObject(&surf1, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipTextureObject_t tex1 = 0;
     err = hipCreateTextureObject(&tex1, &resDesc, &texDesc, NULL);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     resDesc.res.array.array = cuArray2;
     hipSurfaceObject_t surf2 = 0;
     err = hipCreateSurfaceObject(&surf2, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipTextureObject_t tex2 = 0;
     err = hipCreateTextureObject(&tex2, &resDesc, &texDesc, NULL);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     resDesc.res.array.array = cuOutputArray;
     hipSurfaceObject_t outSurf = 0;
     err = hipCreateSurfaceObject(&outSurf, &resDesc);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
-    err = hipMemcpy2DToArrayAsync(cuInputArray, 0, 0, inputData,
+    err = hipMemcpy2DToArray(cuInputArray, 0, 0, inputData,
                                    param->stride, sizeof(T) * param->orgW, param->orgH,
-                                   hipMemcpyHostToDevice, stream);
-    CheckCudaErr(err);
+                                   hipMemcpyHostToDevice);
+    CheckHipErr(err);
 
     dim3 dimBlock(16, 16);
     dim3 dimGrid(
@@ -270,33 +270,33 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
         (param->orgW * 2 + dimBlock.x - 1) / dimBlock.x,
         (param->orgH * 2 + dimBlock.y - 1) / dimBlock.y);
 
-    conv1To8<<<dimGrid, dimBlock, 0, stream>>>(inTex, surf1, param->orgW, param->orgH);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L2);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L3);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L4);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L5);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L6);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L7);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex1, surf2, param->orgW, param->orgH, L8);
-    conv8To8<<<dimGrid, dimBlock, 0, stream>>>(tex2, surf1, param->orgW, param->orgH, L9);
-    convTranspose8To1<T><<<dimGridout, dimBlock, 0, stream>>>(tex1, outSurf, W, H);
+    conv1To8<<<dimGrid, dimBlock, 0>>>(inTex, surf1, param->orgW, param->orgH);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex1, surf2, param->orgW, param->orgH, L2);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex2, surf1, param->orgW, param->orgH, L3);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex1, surf2, param->orgW, param->orgH, L4);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex2, surf1, param->orgW, param->orgH, L5);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex1, surf2, param->orgW, param->orgH, L6);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex2, surf1, param->orgW, param->orgH, L7);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex1, surf2, param->orgW, param->orgH, L8);
+    conv8To8<<<dimGrid, dimBlock, 0>>>(tex2, surf1, param->orgW, param->orgH, L9);
+    convTranspose8To1<T><<<dimGridout, dimBlock, 0>>>(tex1, outSurf, W, H);
 
     err = hipHostRegister(outputData, sizeof(T) * W * H, hipHostRegisterDefault);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
-    err = hipMemcpy2DFromArrayAsync(outputData, sizeof(T) * W,
+    err = hipMemcpy2DFromArray(outputData, sizeof(T) * W,
                                      cuOutputArray, 0, 0, sizeof(T) * W, H,
-                                     hipMemcpyDeviceToHost, stream);
-    CheckCudaErr(err);
+                                     hipMemcpyDeviceToHost);
+    CheckHipErr(err);
 
-    err = hipStreamSynchronize(stream);
-    CheckCudaErr(err);
+    // err = hipStreamSynchronize(stream);
+    // CheckHipErr(err);
 
     err = hipHostUnregister(outputData);
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     err = hipGetLastError();
-    CheckCudaErr(err);
+    CheckHipErr(err);
 
     hipDestroyTextureObject(inTex);
     hipDestroySurfaceObject(surf1);
@@ -310,7 +310,7 @@ static void cuRunKernelACNetImpl(const T *inputData, T *outputData, Anime4KCPP::
     hipFreeArray(cuArray2);
     hipFreeArray(cuOutputArray);
 
-    hipStreamDestroy(stream);
+    // hipStreamDestroy(stream);
 }
 
-#endif // !ANIME4KCPP_CUDA_ACNET_COMMON_CUH
+#endif // !ANIME4KCPP_HIP_ACNET_COMMON_HIP

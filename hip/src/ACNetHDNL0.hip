@@ -1,5 +1,5 @@
-#include "CudaHelper.hip"
-#include "CudaInterface.hpp"
+#include "HipHelper.hip"
+#include "HipInterface.hpp"
 #include <hip/amd_detail/amd_surface_functions.h>
 
 __device__ __constant__ static const float kernelsL1[9 * 8] =

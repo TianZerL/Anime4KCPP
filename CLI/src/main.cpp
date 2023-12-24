@@ -21,7 +21,7 @@ namespace filesystem = std::filesystem;
 
 enum class GPGPU
 {
-    OpenCL, CUDA, NCNN
+    OpenCL, CUDA, NCNN, HIP
 };
 
 static bool checkFFmpeg()
@@ -132,7 +132,7 @@ static void showVersionInfo()
 
 static void showGPUList()
 {
-#if !defined(ENABLE_OPENCL) && !defined(ENABLE_CUDA) && !defined(ENABLE_NCNN)
+#if !defined(ENABLE_OPENCL) && !defined(ENABLE_CUDA) && !defined(ENABLE_HIP) && !defined(ENABLE_NCNN)
     std::cerr << "Error: No GPU acceleration mode supported\n";
 #endif
 
@@ -152,6 +152,15 @@ static void showGPUList()
         std::cerr << "Error: No CUDA GPU found\n";
     else
         std::cout << CUDAGPUList();
+#endif
+
+#ifdef ENABLE_HIP
+    std::cout << "\nHIP:\n";
+    Anime4KCPP::Hip::GPUList HIPGPUList = Anime4KCPP::Hip::listGPUs();
+    if (HIPGPUList.devices == 0)
+        std::cerr << "Error: No HIP GPU found\n";
+    else
+        std::cout << HIPGPUList();
 #endif
 
 #ifdef ENABLE_NCNN
@@ -184,6 +193,12 @@ static void benchmark(const int pID, const int dID)
     double CudaScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Cuda::ACNet, 1920, 1080>(dID);
 #endif 
 
+#ifdef ENABLE_HIP
+    double HipScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::Hip::ACNet, 720, 480>(dID);
+    double HipScoreHD = Anime4KCPP::benchmark<Anime4KCPP::Hip::ACNet, 1280, 720>(dID);
+    double HipScoreFHD = Anime4KCPP::benchmark<Anime4KCPP::Hip::ACNet, 1920, 1080>(dID);
+#endif 
+
 #ifdef ENABLE_NCNN
     double NCNNCPUScoreDVD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 720, 480>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
     double NCNNCPUScoreHD = Anime4KCPP::benchmark<Anime4KCPP::NCNN::ACNet, 1280, 720>(-1, Anime4KCPP::CNNType::ACNetHDNL0, 4);
@@ -214,6 +229,14 @@ static void benchmark(const int pID, const int dID)
         << " DVD(480P->960P): " << CudaScoreDVD << " FPS\n"
         << " HD(720P->1440P): " << CudaScoreHD << " FPS\n"
         << " FHD(1080P->2160P): " << CudaScoreFHD << " FPS\n" << std::endl;
+#endif 
+
+#ifdef ENABLE_HIP
+    std::cout
+        << "HIP score: (dID = " << dID << ")\n"
+        << " DVD(480P->960P): " << HipScoreDVD << " FPS\n"
+        << " HD(720P->1440P): " << HipScoreHD << " FPS\n"
+        << " FHD(1080P->2160P): " << HipScoreFHD << " FPS\n" << std::endl;
 #endif 
 
 #ifdef ENABLE_NCNN
@@ -443,6 +466,8 @@ int main(int argc, char* argv[])
         GPGPUModel = GPGPU::OpenCL;
 #elif defined(ENABLE_CUDA)
         GPGPUModel = GPGPU::CUDA;
+#elif defined(ENABLE_HIP)
+        GPGPUModel = GPGPU::HIP;
 #elif defined(ENABLE_NCNN)
         GPGPUModel = GPGPU::NCNN;
 #else
@@ -454,11 +479,13 @@ int main(int argc, char* argv[])
     }
     else if (GPGPUModelString == "cuda")
         GPGPUModel = GPGPU::CUDA;
+    else if (GPGPUModelString == "hip")
+        GPGPUModel = GPGPU::HIP;
     else if (GPGPUModelString == "ncnn")
         GPGPUModel = GPGPU::NCNN;
     else
     {
-        logErrorAndExit(R"(Unknown GPGPU model, it must be "ncnn", "cuda" or "opencl")");
+        logErrorAndExit(R"(Unknown GPGPU model, it must be "ncnn", "cuda", "hip" or "opencl")");
     }
 
     if (ncnn)
@@ -576,6 +603,13 @@ int main(int argc, char* argv[])
                 initializer.pushManager<Anime4KCPP::Cuda::Manager>(dID);
 #endif
                 break;
+            case GPGPU::HIP:
+#ifndef ENABLE_HIP
+                logErrorAndExit("HIP is not supported");
+#else
+                initializer.pushManager<Anime4KCPP::Hip::Manager>(dID);
+#endif
+                break;
             case GPGPU::NCNN:
 #ifndef ENABLE_NCNN
                 logErrorAndExit("ncnn is not supported");
@@ -646,6 +680,23 @@ int main(int argc, char* argv[])
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_ACNet);
                 else
                     ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
+#endif
+            }
+            break;
+			case GPGPU::HIP:
+            {
+#ifdef ENABLE_HIP
+                Anime4KCPP::Hip::GPUInfo ret = Anime4KCPP::Hip::checkGPUSupport(dID);
+                if (!ret)
+                {
+                    logErrorAndExit(ret());
+                }
+                else
+                    std::cout << ret() << '\n';
+                if (CNN)
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Hip_ACNet);
+                else
+                    ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Hip_Anime4K09);
 #endif
             }
             break;

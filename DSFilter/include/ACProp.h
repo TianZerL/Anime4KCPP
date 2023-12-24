@@ -9,7 +9,7 @@
 
 namespace GPGPU
 {
-    static constexpr int CPU = 0, OpenCL = 1, CUDA = 2;
+    static constexpr int CPU = 0, OpenCL = 1, CUDA = 2, HIP = 3;
 };
 
 struct ACPropData

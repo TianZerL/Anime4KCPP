@@ -32,6 +32,10 @@ if(Build_CLI)
         endif()
     endif()
 
+    if (Enable_HIP)
+        target_link_libraries(${PROJECT_NAME} PRIVATE hip::host)
+    endif()
+
     include(${TOP_DIR}/cmake/ThirdPartyForCLI.cmake)
 
     install(

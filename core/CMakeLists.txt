@@ -24,8 +24,8 @@ target_compile_definitions(
         $<$<BOOL:${Enable_OpenCL}>:ENABLE_OPENCL>
         $<$<BOOL:${Enable_CUDA}>:ENABLE_CUDA>
         $<$<BOOL:${Enable_HIP}>:ENABLE_HIP>
-        # This allows HIP to emulate as CUDA
-        $<$<BOOL:${Enable_HIP}>:ENABLE_CUDA>
+        # # This allows HIP to emulate as CUDA
+        # $<$<BOOL:${Enable_HIP}>:ENABLE_CUDA>
         $<$<BOOL:${Enable_NCNN}>:ENABLE_NCNN>
         $<$<BOOL:${Enable_Video}>:ENABLE_VIDEO>
         $<$<BOOL:${Enable_Preview_GUI}>:ENABLE_PREVIEW_GUI>
@@ -70,6 +70,10 @@ if(Other_Optimization_For_Core)
         target_compile_options(${PROJECT_NAME} PRIVATE -Ofast)
         target_link_options(${PROJECT_NAME} PRIVATE -Ofast)
     endif()
+endif()
+
+if (Enable_HIP)
+  target_link_libraries(${PROJECT_NAME} PRIVATE hip::host)
 endif()
 
 include(${TOP_DIR}/cmake/ThirdPartyForCore.cmake)
