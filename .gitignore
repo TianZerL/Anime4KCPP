@@ -19,5 +19,6 @@ DetectionSample
 settings.ini
 logo.rc
 *.aps
+.cache
 
 *.json

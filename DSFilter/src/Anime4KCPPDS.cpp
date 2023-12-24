@@ -143,6 +143,8 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"OpenCL", _GPGPUModelString, 10, lpPath);
 #elif defined(ENABLE_CUDA)
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"CUDA", _GPGPUModelString, 10, lpPath);
+#elif defined(ENABLE_HIP)
+    GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"HIP", _GPGPUModelString, 10, lpPath);
 #else
     GetPrivateProfileString(L"Anime4KCPP for DirectShow Config", L"GPGPUModel", L"CPU", _GPGPUModelString, 10, lpPath);
 #endif
@@ -209,6 +211,11 @@ Anime4KCPPDS::Anime4KCPPDS(TCHAR* tszName,
         initializer.pushManager<Anime4KCPP::Cuda::Manager>(data.dID);
 #endif
         break;
+	case GPGPU::HIP:
+#ifdef ENABLE_HIP
+        initializer.pushManager<Anime4KCPP::Hip::Manager>(data.dID);
+#endif
+		break;
     case GPGPU::CPU:
         initializer.pushManager<Anime4KCPP::CPU::Manager>();
         break;
@@ -523,6 +530,14 @@ HRESULT Anime4KCPPDS::Transform(IMediaSample* pIn, IMediaSample* pOut)
                 ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Cuda_Anime4K09);
 #endif
             break;
+		case GPGPU::HIP:
+#ifdef ENABLE_HIP
+            if (data.CNN)
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Hip_ACNet);
+            else
+                ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::Hip_Anime4K09);
+#endif
+			break;
         case GPGPU::CPU:
             if (data.CNN)
                 ac = Anime4KCPP::ACCreator::createUP(parameters, Anime4KCPP::Processor::Type::CPU_ACNet);

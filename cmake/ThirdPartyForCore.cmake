@@ -81,6 +81,24 @@ if(NOT Disable_Parallel)
         target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
     elseif(Parallel_Library_Type STREQUAL TBB)
         find_package(TBB REQUIRED)
+        # if (NOT TBB_FOUND OR TBB_VERSION VERSION_LESS 2021.5)
+        #     message(WARNING "TBB not found or has version lower than 2021.5, fetching external TBB")
+        #     include(FetchContent)
+        #     set (TBB_TEST OFF CACHE INTERNAL "Turn off TBB tests")
+        #     set (TBB_INSTALL OFF CACHE INTERNAL "Turn off TBB install")
+        #     # Store the old value of the 'BUILD_SHARED_LIBS'
+        #     set(BUILD_SHARED_LIBS_OLD ${BUILD_SHARED_LIBS})
+        #     # Make subproject to use 'BUILD_SHARED_LIBS=OFF' setting.
+        #     set(BUILD_SHARED_LIBS OFF CACHE INTERNAL "Build SHARED libraries")
+        #     FetchContent_Declare(TBB 
+        #         URL https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.11.0.tar.gz
+        #         URL_HASH SHA256=782ce0cab62df9ea125cdea253a50534862b563f1d85d4cda7ad4e77550ac363
+        #     )
+        #     FetchContent_MakeAvailable(TBB)
+        #     # Restore the old value of the parameter
+        #     set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_OLD} CACHE BOOL "Type of libraries to build" FORCE)
+        # endif()
+        # # message("TBB version: ${TBB_VERSION}")
         target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
     endif()
 elseif(Enable_Video)

@@ -11,6 +11,10 @@
 #include "ACCuda.hpp"
 #endif
 
+#ifdef ENABLE_HIP
+#include "ACHip.hpp"
+#endif
+
 #ifdef ENABLE_NCNN
 #include "ACNCNN.hpp"
 #endif

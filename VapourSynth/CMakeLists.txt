@@ -3,7 +3,12 @@ if(Build_VapourSynth_Plugin)
 
     aux_source_directory(src SOURCE)
 
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(VAPOURSYNTH REQUIRED IMPORTED_TARGET vapoursynth)
+
     add_library(${PROJECT_NAME} SHARED ${SOURCE})
+    target_link_libraries(${PROJECT_NAME} PRIVATE PkgConfig::VAPOURSYNTH)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${VAPOURSYNTH_INCLUDE_DIRS})
 
     if(Other_Optimization_For_Other)
         if(MSVC)
