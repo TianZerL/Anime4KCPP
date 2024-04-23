@@ -25,6 +25,9 @@ namespace ac::core::cpu
 #ifdef AC_CORE_WITH_AVX
             AVX,
 #endif
+#ifdef AC_CORE_WITH_NEON
+            NEON,
+#endif
             Generic,
             End
         };
@@ -39,6 +42,9 @@ namespace ac::core::cpu
 #endif
 #ifdef AC_CORE_WITH_AVX
             "AVX",
+#endif
+#ifdef AC_CORE_WITH_NEON
+            "NEON",
 #endif
             "Generic",
         };
@@ -61,7 +67,11 @@ namespace ac::core::cpu
     void conv3x3_8to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_avx(const Image& src, Image& dst, const float* kernels);
 #endif
-
+#ifdef AC_CORE_WITH_NEON
+    void conv3x3_1to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels);
+#endif
     template<typename Model>
     class CPUProcessor;
 }
@@ -93,7 +103,11 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
 #ifdef AC_CORE_WITH_SSE
         if (dispatch::supportSSE()) return arch::SSE;
 #endif
-// Generic
+// arm
+#ifdef AC_CORE_WITH_NEON
+        if (dispatch::supportNEON()) return arch::NEON;
+#endif
+// generic
 #ifdef AC_CORE_WITH_EIGEN3
         return arch::Eigen3;
 #else
@@ -123,6 +137,13 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
         conv3x3_1to8 = conv3x3_1to8_avx;
         conv3x3_8to8 = conv3x3_8to8_avx;
         deconv2x2_8to1 = deconv2x2_8to1_avx;
+        break;
+#endif
+#ifdef AC_CORE_WITH_NEON
+    case arch::NEON :
+        conv3x3_1to8 = conv3x3_1to8_neon;
+        conv3x3_8to8 = conv3x3_8to8_neon;
+        deconv2x2_8to1 = deconv2x2_8to1_neon;
         break;
 #endif
     default:

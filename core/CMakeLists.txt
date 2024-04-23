@@ -34,6 +34,7 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:${CORE_SOURCE_DIR}/src/cpu/Eigen3.cpp>
     $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_SOURCE_DIR}/src/cpu/x86/SSE.cpp>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_SOURCE_DIR}/src/cpu/x86/AVX.cpp>
+    $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_SOURCE_DIR}/src/cpu/arm/NEON.cpp>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:${CORE_SOURCE_DIR}/src/opencl/OpenCLProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/CUDAProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/Kernel.cu>
@@ -78,6 +79,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_SSE}>:AC_CORE_WITH_SSE>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:AC_CORE_WITH_AVX>
     $<$<BOOL:${AC_CORE_WITH_FMA}>:AC_CORE_WITH_FMA>
+    $<$<BOOL:${AC_CORE_WITH_NEON}>:AC_CORE_WITH_NEON>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>
     $<$<BOOL:${AC_CORE_ENABLE_IMAGE_IO}>:AC_CORE_ENABLE_IMAGE_IO>

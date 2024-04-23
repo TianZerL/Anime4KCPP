@@ -3,9 +3,12 @@
 
 namespace ac::core::cpu::dispatch
 {
+    // x86
     bool supportSSE() noexcept;
     bool supportAVX() noexcept;
     bool supportFMA() noexcept;
+    // arm
+    bool supportNEON() noexcept;
 }
 
 #endif
