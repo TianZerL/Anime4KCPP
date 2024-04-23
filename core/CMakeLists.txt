@@ -53,6 +53,9 @@ if(NOT MSVC)
     if(AC_CORE_WITH_AVX)
         set_source_files_properties(${CORE_SOURCE_DIR}/src/cpu/x86/AVX.cpp PROPERTIES COMPILE_OPTIONS "-mavx;$<$<BOOL:${AC_CORE_WITH_FMA}>:-mfma>")
     endif()
+    if(AC_CORE_WITH_NEON AND AC_COMPILER_32BIT)
+        set_source_files_properties(${CORE_SOURCE_DIR}/src/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "-mfpu=neon")
+    endif()
 endif()
 
 # parallel lib

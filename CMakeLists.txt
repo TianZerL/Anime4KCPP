@@ -20,12 +20,14 @@ endif()
 string(TIMESTAMP DATE_TODAY "%Y-%m-%d")
 string(TIMESTAMP DATE_YEAR "%Y")
 
+include(${CMAKE_DIR}/CheckCompiler.cmake)
+
 option(AC_SHARED_LIB "build to shared library" OFF)
-option(AC_CORE_WITH_EIGEN3 "build core with eigen3" ON)
-option(AC_CORE_WITH_AVX "build core with x86 avx" OFF)
-option(AC_CORE_WITH_FMA "build core with x86 fma and avx" OFF)
-option(AC_CORE_WITH_SSE "build core with x86 sse" OFF)
-option(AC_CORE_WITH_NEON "build core with neon" OFF)
+option(AC_CORE_WITH_EIGEN3 "build core with eigen3" OFF)
+option(AC_CORE_WITH_SSE "build core with x86 sse" ${AC_COMPILER_SUPPORT_SSE})
+option(AC_CORE_WITH_AVX "build core with x86 avx" ${AC_COMPILER_SUPPORT_AVX})
+option(AC_CORE_WITH_FMA "build core with x86 fma and avx" ${AC_COMPILER_SUPPORT_FMA})
+option(AC_CORE_WITH_NEON "build core with neon" ${AC_COMPILER_SUPPORT_NEON})
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
 option(AC_CORE_ENABLE_IMAGE_IO "enable image file read and write for core" ON)
@@ -49,6 +51,14 @@ endif()
 if(AC_CORE_WITH_FMA)
     set(AC_CORE_WITH_AVX ON)
 endif()
+
+message(STATUS 
+"SIMD support:
+    SSE: ${AC_CORE_WITH_SSE}
+    AVX: ${AC_CORE_WITH_AVX}
+    FMA: ${AC_CORE_WITH_FMA}
+    NEON: ${AC_CORE_WITH_NEON}
+")
 
 macro(ac_check_disable_flags TARGET)
     if(AC_DISABLE_RTTI)

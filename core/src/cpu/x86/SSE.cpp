@@ -1,4 +1,4 @@
-#include <tmmintrin.h>
+#include <pmmintrin.h>
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
