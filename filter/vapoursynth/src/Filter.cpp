@@ -70,7 +70,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* userData, VSCore* co
 
     auto factor = vsapi->mapGetFloat(in, "factor", 0, &err);
     if (err != peSuccess) factor = 2.0;
-    if (factor <= 0.0) SET_ERROR("Anime4KCPP: the factor must be positive");
+    if (factor <= 1.0) SET_ERROR("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
 
     auto processorName = vsapi->mapGetData(in, "processor", 0, &err);
     if (err != peSuccess) processorName = "cpu";
