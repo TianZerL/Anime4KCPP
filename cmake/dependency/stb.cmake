@@ -10,17 +10,9 @@ if(NOT TARGET dep::stb)
     )
     FetchContent_MakeAvailable(stb)
 
-    add_library(dep_stb INTERFACE)
+    add_library(dep_stb INTERFACE IMPORTED)
     target_include_directories(dep_stb INTERFACE
         $<BUILD_INTERFACE:${stb_SOURCE_DIR}>
     )
-
-    install(
-        TARGETS dep_stb EXPORT AC
-        ARCHIVE DESTINATION dep/lib
-        LIBRARY DESTINATION dep/lib
-        RUNTIME DESTINATION dep/bin
-    )
-
     add_library(dep::stb ALIAS dep_stb)
 endif()

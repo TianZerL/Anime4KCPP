@@ -47,26 +47,27 @@ int main(int argc, const char* argv[])
 
     if (options.input.empty()) return 0;
 
-    ac::core::model::ACNet model { [&]() {
-        if(options.model.find('1') != std::string::npos)
-        {
-            options.model = "ACNet HDN1";
-            return ac::core::model::ACNet::Variant::HDN1 ;
-        }
-        if(options.model.find('2') != std::string::npos)
-        {
-            options.model = "ACNet HDN2";
-            return ac::core::model::ACNet::Variant::HDN2 ;
-        }
-        if(options.model.find('3') != std::string::npos)
-        {
-            options.model = "ACNet HDN3";
-            return ac::core::model::ACNet::Variant::HDN3 ;
-        }
-        options.model = "ACNet HDN0";
-        return ac::core::model::ACNet::Variant::HDN0 ;
-    }() };
     auto processor = [&]() {
+        ac::core::model::ACNet model { [&]() {
+            if(options.model.find('1') != std::string::npos)
+            {
+                options.model = "ACNet HDN1";
+                return ac::core::model::ACNet::Variant::HDN1 ;
+            }
+            if(options.model.find('2') != std::string::npos)
+            {
+                options.model = "ACNet HDN2";
+                return ac::core::model::ACNet::Variant::HDN2 ;
+            }
+            if(options.model.find('3') != std::string::npos)
+            {
+                options.model = "ACNet HDN3";
+                return ac::core::model::ACNet::Variant::HDN3 ;
+            }
+            options.model = "ACNet HDN0";
+            return ac::core::model::ACNet::Variant::HDN0 ;
+        }() };
+
         #ifdef AC_CORE_WITH_OPENCL
         if (options.processor == "opencl") return ac::core::Processor::create<ac::core::Processor::OpenCL>(options.device, model);
         #endif

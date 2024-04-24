@@ -23,7 +23,7 @@ if(NOT TARGET dep::opencl)
         target_link_libraries(OpenCL PUBLIC OpenCL::HeadersCpp)
     endif()
 
-    add_library(dep_opencl INTERFACE)
+    add_library(dep_opencl INTERFACE IMPORTED)
     target_link_libraries(dep_opencl INTERFACE OpenCL::OpenCL)
     target_compile_definitions(dep_opencl INTERFACE 
         CL_HPP_TARGET_OPENCL_VERSION=300

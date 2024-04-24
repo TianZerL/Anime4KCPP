@@ -24,6 +24,8 @@ public:
     AC_EXPORT virtual ~Processor();
 
     AC_EXPORT Image process(const Image& src, double factor);
+    // If `dst` is not empty, then we will assume that it has been correctly allocated,
+    // and the data will be guaranteed to be stored in that preallocated buffer
     AC_EXPORT void process(const Image& src, Image& dst, double factor);
 
     AC_EXPORT virtual bool ok() const noexcept;

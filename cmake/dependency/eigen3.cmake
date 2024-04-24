@@ -14,7 +14,7 @@ if(NOT TARGET dep::eigen3)
         FetchContent_MakeAvailable(Eigen3)
     endif()
 
-    add_library(dep_eigen3 INTERFACE)
+    add_library(dep_eigen3 INTERFACE IMPORTED)
     target_link_libraries(dep_eigen3 INTERFACE Eigen3::Eigen)
     add_library(dep::eigen3 ALIAS dep_eigen3)
 endif()

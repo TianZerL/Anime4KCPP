@@ -15,6 +15,9 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
     Image in{}, out{src};
     Image uv{};
 
+    int power = factor > 2.0 ? ceilLog2(factor) : 1;
+    double fxy = factor / (1 << power);
+
     if (src.channels() > 1)
     {   
         Image y{};
@@ -23,24 +26,67 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
         out = y;
     }
 
-    int power = factor > 2.0 ? ceilLog2(factor) : 1;
-    for (int i = 0; i < power; i++)
+    if (!dst.empty())
     {
-        in = out;
-        out.create(in.width() * 2, in.height() * 2, 1, in.type());
-        process(in, out);
+        if (src.channels() == 1) //grey
+        {
+            if (fxy == 1.0)
+            {
+                for (int i = 0; i < power - 1; i++)
+                {
+                    in = out;
+                    out.create(in.width() * 2, in.height() * 2, 1, in.type());
+                    process(in, out);
+                }
+                in = out;
+                process(in, dst);
+            }
+            else
+            {
+                for (int i = 0; i < power; i++)
+                {
+                    in = out;
+                    out.create(in.width() * 2, in.height() * 2, 1, in.type());
+                    process(in, out);
+                }
+                resize(out, dst, fxy, fxy);
+            }
+        }
+        else //rgb[a]
+        {
+            for (int i = 0; i < power; i++)
+            {
+                in = out;
+                out.create(in.width() * 2, in.height() * 2, 1, in.type());
+                process(in, out);
+            }
+
+            if (fxy != 1.0) resize(out, out, fxy, fxy);
+
+            resize(uv, uv, factor, factor);
+            if (src.channels() == 4) yuva2rgba(out, uv, dst);
+            else yuv2rgb(out, uv, dst);
+        }
     }
-
-    double fxy = factor / (1 << power);
-    resize(out, dst, fxy, fxy);
-
-    if (src.channels() > 1)
+    else
     {
-        Image rgb{};
-        resize(uv, uv, factor, factor);
-        if (src.channels() == 4) yuva2rgba(dst, uv, rgb);
-        else yuv2rgb(dst, uv, rgb);      
-        dst = rgb;
+        for (int i = 0; i < power; i++)
+        {
+            in = out;
+            out.create(in.width() * 2, in.height() * 2, 1, in.type());
+            process(in, out);
+        }
+
+        resize(out, dst, fxy, fxy);
+
+        if (src.channels() > 1)
+        {
+            Image rgb{};
+            resize(uv, uv, factor, factor);
+            if (src.channels() == 4) yuva2rgba(dst, uv, rgb);
+            else yuv2rgb(dst, uv, rgb);      
+            dst = rgb;
+        }
     }
 }
 bool ac::core::Processor::ok() const noexcept
