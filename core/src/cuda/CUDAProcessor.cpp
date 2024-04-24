@@ -230,11 +230,11 @@ AC_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::c
 template<>
 AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CUDA>()
 {
-    static auto InfoBuffer = []() -> std::string {
+    static auto infoBuffer = []() -> std::string {
         std::ostringstream buffer{ "CUDA:\n", std::ios_base::ate };
         for (int idx = 0; idx < ContextList.size(); idx++)
             buffer << "  [" << idx << "] " << ContextList[idx].name << " (" << ContextList[idx].vram << "MB)" << '\n';
         return buffer.str();
     }();
-    return InfoBuffer.c_str();
+    return infoBuffer.c_str();
 }

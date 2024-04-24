@@ -261,11 +261,11 @@ AC_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::c
 template<>
 AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::OpenCL>()
 {
-    static auto InfoBuffer = []() -> std::string {
+    static auto infoBuffer = []() -> std::string {
         std::ostringstream buffer{ "OpenCL:\n", std::ios_base::ate };
         for (std::size_t idx = 0; idx < ContextList.size(); idx++)
             buffer << "  [" << idx << "] " << ContextList[idx].name << '\n';
         return buffer.str();
     }();
-    return InfoBuffer.c_str();
+    return infoBuffer.c_str();
 }

@@ -16,36 +16,36 @@ namespace ac::core::cpu
         {
             Begin,
             Auto = Begin,
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
             Eigen3,
-#endif
-#ifdef AC_CORE_WITH_SSE
+#           endif
+#           ifdef AC_CORE_WITH_SSE
             SSE,
-#endif
-#ifdef AC_CORE_WITH_AVX
+#           endif
+#           ifdef AC_CORE_WITH_AVX
             AVX,
-#endif
-#ifdef AC_CORE_WITH_NEON
+#           endif
+#           ifdef AC_CORE_WITH_NEON
             NEON,
-#endif
+#           endif
             Generic,
             End
         };
         constexpr const char* NameList[] = 
         {
             "Auto",
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
             "Eigen3",
-#endif
-#ifdef AC_CORE_WITH_SSE
+#           endif
+#           ifdef AC_CORE_WITH_SSE
             "SSE",
-#endif
-#ifdef AC_CORE_WITH_AVX
+#           endif
+#           ifdef AC_CORE_WITH_AVX
             "AVX",
-#endif
-#ifdef AC_CORE_WITH_NEON
+#           endif
+#           ifdef AC_CORE_WITH_NEON
             "NEON",
-#endif
+#           endif
             "Generic",
         };
     }
@@ -96,56 +96,56 @@ private:
 ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept :
     Processor((arch == arch::Auto) ? 
     []() -> int {
-// x86
-#ifdef AC_CORE_WITH_AVX
+        // x86
+#       ifdef AC_CORE_WITH_AVX
         if (dispatch::supportAVX()) return arch::AVX;
-#endif
-#ifdef AC_CORE_WITH_SSE
+#       endif
+#       ifdef AC_CORE_WITH_SSE
         if (dispatch::supportSSE()) return arch::SSE;
-#endif
-// arm
-#ifdef AC_CORE_WITH_NEON
+#       endif
+        // arm
+#       ifdef AC_CORE_WITH_NEON
         if (dispatch::supportNEON()) return arch::NEON;
-#endif
-// generic
-#ifdef AC_CORE_WITH_EIGEN3
+#       endif
+        // generic
+#       ifdef AC_CORE_WITH_EIGEN3
         return arch::Eigen3;
-#else
+#       else
         return arch::Generic;
-#endif
+#       endif
     }() : arch),
     model(model)
 {
     switch (idx)
     {
-#ifdef AC_CORE_WITH_EIGEN3
+#   ifdef AC_CORE_WITH_EIGEN3
     case arch::Eigen3 :
         conv3x3_1to8 = conv3x3_1to8_eigen3;
         conv3x3_8to8 = conv3x3_8to8_eigen3;
         deconv2x2_8to1 = deconv2x2_8to1_eigen3;
         break;
-#endif
-#ifdef AC_CORE_WITH_SSE
+#   endif
+#   ifdef AC_CORE_WITH_SSE
     case arch::SSE :
         conv3x3_1to8 = conv3x3_1to8_sse;
         conv3x3_8to8 = conv3x3_8to8_sse;
         deconv2x2_8to1 = deconv2x2_8to1_sse;
         break;
-#endif
-#ifdef AC_CORE_WITH_AVX
+#   endif
+#   ifdef AC_CORE_WITH_AVX
     case arch::AVX :
         conv3x3_1to8 = conv3x3_1to8_avx;
         conv3x3_8to8 = conv3x3_8to8_avx;
         deconv2x2_8to1 = deconv2x2_8to1_avx;
         break;
-#endif
-#ifdef AC_CORE_WITH_NEON
+#   endif
+#   ifdef AC_CORE_WITH_NEON
     case arch::NEON :
         conv3x3_1to8 = conv3x3_1to8_neon;
         conv3x3_8to8 = conv3x3_8to8_neon;
         deconv2x2_8to1 = deconv2x2_8to1_neon;
         break;
-#endif
+#   endif
     default:
         conv3x3_1to8 = conv3x3_1to8_generic;
         conv3x3_8to8 = conv3x3_8to8_generic;
@@ -183,7 +183,7 @@ AC_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::c
 template<>
 AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CPU>()
 {
-    static auto InfoBuffer = []() -> std::string {
+    static auto infoBuffer = []() -> std::string {
         std::ostringstream buffer{"CPU:\n", std::ios_base::ate};
         for (int i = cpu::arch::Begin; i < cpu::arch::End; i++)
         {
@@ -191,5 +191,5 @@ AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CPU>()
         }
         return buffer.str();
     }();
-    return InfoBuffer.c_str();
+    return infoBuffer.c_str();
 }
