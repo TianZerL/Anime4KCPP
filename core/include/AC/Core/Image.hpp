@@ -11,62 +11,63 @@ namespace ac::core
     class Image;
 
     // Resize the `src` based on the size of the `dst` if `fx` or `fy` <= 0, otherwise, calculate the size using `fx` and `fy`.
-    // if `dst` is empty and fx or fy <= 0, nothing will be done
-    // `src` and `dst` can be the same image
+    // if `dst` is empty and fx or fy <= 0, nothing will be done.
+    // if target size is same as `src`(eg: `fx` and `fy` == 1), then just make `dst` = `src` and return, no data will be copied.
+    // `src` and `dst` can be the same image.
     AC_EXPORT void resize(const Image& src, Image& dst, double fx, double fy) noexcept;
-    // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`
+    // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
     AC_EXPORT Image resize(const Image& src, double fx, double fy) noexcept;
 
     // convert RGB or RGBA to YUV.
-    // if `yuv` is not an empty image, ensure its shape is correct, which won't be checked
-    // `rgb` and `yuv` can be the same image, which will be converted in place
+    // if `yuv` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `rgb` and `yuv` can be the same image, which will be converted in place.
     AC_EXPORT void rgb2yuv(const Image& rgb, Image& yuv);
     // convert RGB or RGBA to Y and UV.
-    // if `y` and `uv` are not empty images, ensure their shapes are correct, which won't be checked
-    // `rgb`, `y` and `uv` **cannot** be the same image
+    // if `y` and `uv` are not empty images, ensure their shapes are correct, which won't be checked.
+    // `rgb`, `y` and `uv` **cannot** be the same image.
     AC_EXPORT void rgb2yuv(const Image& rgb, Image& y, Image& uv);
     // convert RGB or RGBA to Y, U and V.
-    // if `y`, `u` and `v` are not empty images, ensure their shapes are correct, which won't be checked
-    // `rgb`, `y`, `u` and `v` **cannot** be the same image
+    // if `y`, `u` and `v` are not empty images, ensure their shapes are correct, which won't be checked.
+    // `rgb`, `y`, `u` and `v` **cannot** be the same image.
     AC_EXPORT void rgb2yuv(const Image& rgb, Image& y, Image& u, Image& v);
 
     // convert RGBA to YUVA.
-    // if `yuva` is not an empty image, ensure its shape is correct, which won't be checked
-    // `rgba` and `yuva` can be the same image, which will be converted in place
+    // if `yuva` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `rgba` and `yuva` can be the same image, which will be converted in place.
     AC_EXPORT void rgba2yuva(const Image& rgba, Image& yuva);
     // convert RGBA to Y and UVA.
-    // if `y` and `uva` are not empty images, ensure their shapes are correct, which won't be checked
-    // `rgba`, `y` and `uva` **cannot** be the same image
+    // if `y` and `uva` are not empty images, ensure their shapes are correct, which won't be checked.
+    // `rgba`, `y` and `uva` **cannot** be the same image.
     AC_EXPORT void rgba2yuva(const Image& rgba, Image& y, Image& uva);
     // convert RGBA to Y, U, V and A.
-    // if `y`, `u`, `v` and `a` are not empty images, ensure their shapes are correct, which won't be checked
-    // `rgba`, `y`, `u`, `v` and `a` **cannot** be the same image
+    // if `y`, `u`, `v` and `a` are not empty images, ensure their shapes are correct, which won't be checked.
+    // `rgba`, `y`, `u`, `v` and `a` **cannot** be the same image.
     AC_EXPORT void rgba2yuva(const Image& rgba, Image& y, Image& u, Image& v, Image& a);
 
     // convert YUV to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked
-    // `yuv` and `rgb` can be the same image, which will be converted in place
+    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `yuv` and `rgb` can be the same image, which will be converted in place.
     AC_EXPORT void yuv2rgb(const Image& yuv, Image& rgb);
     // convert Y and UV to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked
-    // `y`, `uv` and `rgb` **cannot** be the same image
+    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `y`, `uv` and `rgb` **cannot** be the same image.
     AC_EXPORT void yuv2rgb(const Image& y, const Image& uv, Image& rgb);
     // convert Y, U and V to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked
-    // `y`, `u`, `v` and `rgb` **cannot** be the same image
+    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `y`, `u`, `v` and `rgb` **cannot** be the same image.
     AC_EXPORT void yuv2rgb(const Image& y, const Image& u, const Image& v, Image& rgb);
 
     // convert YUVA to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked
-    // `yuva` and `rgba` can be the same image, which will be converted in place
+    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `yuva` and `rgba` can be the same image, which will be converted in place.
     AC_EXPORT void yuva2rgba(const Image& yuva, Image& rgba);
     // convert Y and UVA to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked
-    // `y`, `uva` and `rgba` **cannot** be the same image
+    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `y`, `uva` and `rgba` **cannot** be the same image.
     AC_EXPORT void yuva2rgba(const Image& y, const Image& uva, Image& rgba);
     // convert Y, U and V to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked
-    // `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image
+    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
+    // `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image.
     AC_EXPORT void yuva2rgba(const Image& y, const Image& u, const Image& v, const Image& a, Image& rgba);
 
     enum
