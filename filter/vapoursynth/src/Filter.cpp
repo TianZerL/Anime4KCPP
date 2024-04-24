@@ -17,7 +17,7 @@ struct Data
     std::shared_ptr<ac::core::Processor> processor{};
 };
 
-static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** frameData, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi) {
+static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi) {
     auto data = static_cast<Data*>(instanceData);
 
     if (activationReason == arInitial) vsapi->requestFrameFilter(n, data->node, frameCtx);
@@ -44,13 +44,13 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
     return nullptr;
 }
 
-static void VS_CC destory(void* instanceData, VSCore* core, const VSAPI* vsapi) {
+static void VS_CC destory(void* instanceData, VSCore* /*core*/, const VSAPI* vsapi) {
     auto data = static_cast<Data*>(instanceData);
     vsapi->freeNode(data->node);
     delete data;
 }
 
-static void VS_CC create(const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi) {
+static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore* core, const VSAPI* vsapi) {
     int err = peSuccess;
 
     auto node = vsapi->mapGetNode(in, "clip", 0, &err);
@@ -68,14 +68,14 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* userData, VSCore* co
     }();
     if (!type) SET_ERROR("Anime4KCPP: only constant format uint8, uint16 and float32 input supported");
 
-    auto factor = vsapi->mapGetFloat(in, "factor", 0, &err);
+    auto factor = static_cast<double>(vsapi->mapGetFloat(in, "factor", 0, &err));
     if (err != peSuccess) factor = 2.0;
     if (factor <= 1.0) SET_ERROR("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
 
     auto processorName = vsapi->mapGetData(in, "processor", 0, &err);
     if (err != peSuccess) processorName = "cpu";
 
-    auto device = vsapi->mapGetInt(in, "device", 0, &err);
+    auto device = static_cast<int>(vsapi->mapGetInt(in, "device", 0, &err));
     if (err != peSuccess) device = 0;
     if (device < 0) SET_ERROR("Anime4KCPP: the device index cannot be negative");
 
@@ -126,7 +126,7 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
     vspapi->registerFunction("Info",
     "",
     "info:data[];",
-    [](const VSMap* in, VSMap* out, void* userData, VSCore* core, const VSAPI* vsapi) {
+    [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) {
         vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(),-1, dtUtf8, maAppend);
         #ifdef AC_CORE_WITH_OPENCL
         vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
