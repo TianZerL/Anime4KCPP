@@ -10,6 +10,7 @@ if(NOT TARGET dep::eigen3)
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
             TEST_COMMAND ""
+            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(Eigen3)
     endif()

@@ -10,6 +10,7 @@ if(NOT TARGET dep::cli11)
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
             TEST_COMMAND ""
+            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(cli11)
     endif()

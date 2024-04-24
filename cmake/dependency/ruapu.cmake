@@ -7,6 +7,7 @@ if(NOT TARGET dep::ruapu)
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         TEST_COMMAND ""
+        INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(ruapu)
 

@@ -21,12 +21,12 @@ static void version()
 static void list()
 {
     std::cout << ac::core::Processor::info<ac::core::Processor::CPU>();
-    #ifdef AC_CORE_WITH_OPENCL
+#   ifdef AC_CORE_WITH_OPENCL
     std::cout << ac::core::Processor::info<ac::core::Processor::OpenCL>();
-    #endif
-    #ifdef AC_CORE_WITH_CUDA
+#   endif
+#   ifdef AC_CORE_WITH_CUDA
     std::cout << ac::core::Processor::info<ac::core::Processor::CUDA>();
-    #endif
+#   endif
 }
 
 int main(int argc, const char* argv[])
@@ -68,12 +68,12 @@ int main(int argc, const char* argv[])
             return ac::core::model::ACNet::Variant::HDN0 ;
         }() };
 
-        #ifdef AC_CORE_WITH_OPENCL
+#       ifdef AC_CORE_WITH_OPENCL
         if (options.processor == "opencl") return ac::core::Processor::create<ac::core::Processor::OpenCL>(options.device, model);
-        #endif
-        #ifdef AC_CORE_WITH_CUDA
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
         if (options.processor == "cuda") return ac::core::Processor::create<ac::core::Processor::CUDA>(options.device, model);
-        #endif
+#       endif
         options.processor = "cpu";
         return ac::core::Processor::create<ac::core::Processor::CPU>(options.device, model);
     }();

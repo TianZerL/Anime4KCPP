@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstring>
 #include <memory>
 
@@ -27,13 +28,13 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
         auto fi = vsapi->getVideoFrameFormat(src);
         auto dst = vsapi->newVideoFrame(fi, data->vi.width, data->vi.height, src, core);
         //y
-        ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, data->type, const_cast<uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
+        ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
         ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, data->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0))};
         data->processor->process(srcy, dsty, data->factor);
         //uv
         for (int p = 1; p < fi->numPlanes; p++)
         {
-            ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, data->type, const_cast<uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
+            ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
             ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, data->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p))};
             ac::core::resize(srcp, dstp, data->factor, data->factor);
         }
@@ -66,7 +67,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
         }
         return 0;
     }();
-    if (!type) SET_ERROR("Anime4KCPP: only constant format uint8, uint16 and float32 input supported");
+    if (!type) SET_ERROR("Anime4KCPP: only planar YUV uint8, uint16 and float32 input supported");
 
     auto factor = static_cast<double>(vsapi->mapGetFloat(in, "factor", 0, &err));
     if (err != peSuccess) factor = 2.0;
@@ -100,12 +101,12 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
             return ac::core::model::ACNet::Variant::HDN0;
         }() };
 
-        #ifdef AC_CORE_WITH_OPENCL
+#       ifdef AC_CORE_WITH_OPENCL
         if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-        #endif
-        #ifdef AC_CORE_WITH_CUDA
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
         if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-        #endif
+#       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
 
@@ -115,7 +116,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi) {
     vspapi->configPlugin("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VS_MAKE_VERSION(3, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
-    vspapi->registerFunction("Upscale",
+    vspapi->registerFunction("ACUpscale",
         "clip:vnode;"
         "factor:float:opt;"
         "processor:data:opt;"
@@ -123,16 +124,16 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
         "model:data:opt;",
         "clip:vnode;", create, nullptr, plugin);
 
-    vspapi->registerFunction("Info",
-    "",
-    "info:data[];",
-    [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) {
-        vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(),-1, dtUtf8, maAppend);
-        #ifdef AC_CORE_WITH_OPENCL
-        vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
-        #endif
-        #ifdef AC_CORE_WITH_CUDA
-        vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(),-1, dtUtf8, maAppend);
-        #endif
-    }, nullptr, plugin);
+    vspapi->registerFunction("ACInfoList",
+        "",
+        "info:data[];",
+        [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) -> void {
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(),-1, dtUtf8, maAppend);
+#           ifdef AC_CORE_WITH_OPENCL
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
+#           endif
+#           ifdef AC_CORE_WITH_CUDA
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(),-1, dtUtf8, maAppend);
+#           endif
+        }, nullptr, plugin);
 }
