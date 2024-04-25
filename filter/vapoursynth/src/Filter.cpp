@@ -102,10 +102,10 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
         }() };
 
 #       ifdef AC_CORE_WITH_OPENCL
-        if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
-        if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
@@ -130,10 +130,10 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
         [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) -> void {
             vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(),-1, dtUtf8, maAppend);
 #           ifdef AC_CORE_WITH_OPENCL
-            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
+                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
 #           endif
 #           ifdef AC_CORE_WITH_CUDA
-            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(),-1, dtUtf8, maAppend);
+                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(),-1, dtUtf8, maAppend);
 #           endif
         }, nullptr, plugin);
 }

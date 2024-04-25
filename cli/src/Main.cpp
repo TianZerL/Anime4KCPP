@@ -22,10 +22,10 @@ static void list()
 {
     std::cout << ac::core::Processor::info<ac::core::Processor::CPU>();
 #   ifdef AC_CORE_WITH_OPENCL
-    std::cout << ac::core::Processor::info<ac::core::Processor::OpenCL>();
+        std::cout << ac::core::Processor::info<ac::core::Processor::OpenCL>();
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-    std::cout << ac::core::Processor::info<ac::core::Processor::CUDA>();
+        std::cout << ac::core::Processor::info<ac::core::Processor::CUDA>();
 #   endif
 }
 
@@ -69,10 +69,10 @@ int main(int argc, const char* argv[])
         }() };
 
 #       ifdef AC_CORE_WITH_OPENCL
-        if (options.processor == "opencl") return ac::core::Processor::create<ac::core::Processor::OpenCL>(options.device, model);
+            if (options.processor == "opencl") return ac::core::Processor::create<ac::core::Processor::OpenCL>(options.device, model);
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
-        if (options.processor == "cuda") return ac::core::Processor::create<ac::core::Processor::CUDA>(options.device, model);
+            if (options.processor == "cuda") return ac::core::Processor::create<ac::core::Processor::CUDA>(options.device, model);
 #       endif
         options.processor = "cpu";
         return ac::core::Processor::create<ac::core::Processor::CPU>(options.device, model);

@@ -6,7 +6,7 @@
 
 #include "AC/Core.hpp"
 
-#ifdef WIN32
+#ifdef _WIN32
 #   define EXPORT_API extern "C" __declspec(dllexport)
 #   define STDCALL __stdcall
 #   define CDECL __cdecl
@@ -63,10 +63,10 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
         }() };
 
 #       ifdef AC_CORE_WITH_OPENCL
-        if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
-        if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
@@ -113,10 +113,10 @@ EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, cons
             AVSValue info[] = {
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
 #               ifdef AC_CORE_WITH_OPENCL
-                ac::core::Processor::info<ac::core::Processor::OpenCL>(),
+                    ac::core::Processor::info<ac::core::Processor::OpenCL>(),
 #               endif
 #               ifdef AC_CORE_WITH_CUDA
-                ac::core::Processor::info<ac::core::Processor::CUDA>(),
+                    ac::core::Processor::info<ac::core::Processor::CUDA>(),
 #               endif
             };
             return AVSValue{ info, sizeof(info) / sizeof(AVSValue) };
