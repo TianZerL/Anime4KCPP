@@ -69,6 +69,7 @@ else()
 endif()
 
 target_link_libraries(ac PRIVATE
+    ac_util
     dep::ruapu
     dep::stb
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:dep::eigen3>

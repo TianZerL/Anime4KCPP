@@ -1,5 +1,5 @@
-#ifndef AC_CORE_THREADPOOL_HPP
-#define AC_CORE_THREADPOOL_HPP
+#ifndef AC_UTIL_THREADPOOL_HPP
+#define AC_UTIL_THREADPOOL_HPP
 
 #include <algorithm>
 #include <condition_variable>
@@ -13,12 +13,12 @@
 #include <utility>
 #include <vector>
 
-namespace ac::core
+namespace ac::util
 {
     class ThreadPool;
 }
 
-class ac::core::ThreadPool
+class ac::util::ThreadPool
 {
 public:
     explicit ThreadPool(std::size_t size);
@@ -37,7 +37,7 @@ private:
     bool stop;
 };
 
-inline ac::core::ThreadPool::ThreadPool(std::size_t size) :stop(false)
+inline ac::util::ThreadPool::ThreadPool(std::size_t size) :stop(false)
 {
     threads.reserve(size);
 
@@ -56,7 +56,7 @@ inline ac::core::ThreadPool::ThreadPool(std::size_t size) :stop(false)
         });
 }
 
-inline ac::core::ThreadPool::~ThreadPool()
+inline ac::util::ThreadPool::~ThreadPool()
 {
     {
         const std::lock_guard<std::mutex> lock(mtx);
@@ -67,7 +67,7 @@ inline ac::core::ThreadPool::~ThreadPool()
 }
 
 template<typename F>
-inline void ac::core::ThreadPool::exec(F&& f)
+inline void ac::util::ThreadPool::exec(F&& f)
 {
     {
         const std::lock_guard<std::mutex> lock(mtx);
@@ -77,7 +77,7 @@ inline void ac::core::ThreadPool::exec(F&& f)
 }
 
 template<typename F, typename ...Args>
-inline auto ac::core::ThreadPool::exec(F&& f, Args && ...args)
+inline auto ac::util::ThreadPool::exec(F&& f, Args && ...args)
 {
     auto task = std::make_shared<std::packaged_task<decltype(std::declval<F>()(std::declval<Args>()...))()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     auto ret = task->get_future();
@@ -89,7 +89,7 @@ inline auto ac::core::ThreadPool::exec(F&& f, Args && ...args)
     return ret;
 }
 
-inline unsigned int ac::core::ThreadPool::concurrentThreads() noexcept
+inline unsigned int ac::util::ThreadPool::concurrentThreads() noexcept
 {
     auto num = std::thread::hardware_concurrency();
     return num ? num : 1;

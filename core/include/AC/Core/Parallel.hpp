@@ -6,7 +6,7 @@
 #elif defined(AC_CORE_PARALLEL_OPENMP)
 #   include <omp.h>
 #else
-#   include "ThreadPool.hpp"
+#   include "AC/Util/ThreadPool.hpp"
 #endif
 
 namespace ac::core
@@ -24,10 +24,10 @@ inline void ac::core::parallelFor(const IndexType first, const IndexType last, F
 #       pragma omp parallel for
         for (IndexType i = first; i < last; i++) func(i);
 #   else
-        static const std::size_t threads = ac::core::ThreadPool::concurrentThreads();
+        static const std::size_t threads = ac::util::ThreadPool::concurrentThreads();
         if (threads > 1)
         {
-            static ac::core::ThreadPool pool(threads + 1);
+            static ac::util::ThreadPool pool(threads + 1);
             std::vector<std::future<void>> tasks{};
             tasks.reserve(static_cast<std::size_t>(last) - static_cast<std::size_t>(first));
             for (IndexType i = first; i < last; i++) tasks.emplace_back(pool.exec([&](IndexType idx) { func(idx); }, i));
