@@ -5,11 +5,11 @@
 #include <vector>
 
 #if __has_include(<CL/opencl.hpp>)
-#include <CL/opencl.hpp>
+#   include <CL/opencl.hpp>
 #elif __has_include(<CL/cl2.hpp>)
-#include <CL/cl2.hpp>
+#   include <CL/cl2.hpp>
 #else
-#include <CL/cl.hpp>
+#   include <CL/cl.hpp>
 #endif
 
 #include "AC/Core/Processor.hpp"

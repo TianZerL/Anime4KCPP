@@ -2,8 +2,8 @@
 #include <cstring>
 
 #ifndef AC_CORE_ENABLE_IMAGE_IO
-#define STBI_NO_STDIO
-#define STBI_WRITE_NO_STDIO
+#   define STBI_NO_STDIO
+#   define STBI_WRITE_NO_STDIO
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
