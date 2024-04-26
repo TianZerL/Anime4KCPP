@@ -1,8 +1,8 @@
 if(NOT TARGET dep::avisynth)
     add_library(dep_avisynth INTERFACE IMPORTED)
-    find_path(dep_avisynth_INCLUDE 
+    find_path(dep_avisynth_INCLUDE
         NAMES avisynth.h
-        PATHS 
+        PATHS
             "C:/Program Files (x86)/AviSynth+/FilterSDK/include"
             "C:/Program Files/AviSynth+/FilterSDK/include"
     )

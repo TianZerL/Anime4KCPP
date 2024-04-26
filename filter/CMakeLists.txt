@@ -1,8 +1,11 @@
+if(AC_BUILD_FILTER_AVISYNTH)
+    add_subdirectory(avisynth)
+endif()
 if(AC_BUILD_FILTER_VAPOURSYNTH)
     add_subdirectory(vapoursynth)
 endif()
-if(AC_BUILD_FILTER_AVISYNTH)
-    add_subdirectory(avisynth)
+if(AC_BUILD_FILTER_DIRECTSHOW)
+    add_subdirectory(directshow)
 endif()
 
 if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)

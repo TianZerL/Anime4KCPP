@@ -18,7 +18,7 @@ if(NOT TARGET dep::vapoursynth)
             TEST_COMMAND ""
             INSTALL_COMMAND ""
         )
-        FetchContent_MakeAvailable(vapoursynth)   
+        FetchContent_MakeAvailable(vapoursynth)
         target_include_directories(dep_vapoursynth INTERFACE ${vapoursynth_SOURCE_DIR}/include)
     endif()
     add_library(dep::vapoursynth ALIAS dep_vapoursynth)

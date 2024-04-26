@@ -16,7 +16,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
     Image uv{};
 
     int power = factor > 2.0 ? ceilLog2(factor) : 1;
-    double fxy = factor / (1 << power);
+    double fxy = factor / (1LL << power);
 
     if (src.channels() > 1)
     {   
