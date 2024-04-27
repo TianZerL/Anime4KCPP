@@ -170,6 +170,7 @@ const char* ac_processor_info(const int processor_type)
     }
 }
 
+#ifdef AC_CORE_ENABLE_IMAGE_IO
 void ac_imread(const char* const filename, const int flag, ac_image* const image)
 {
     image->object = ac::core::imread(filename, flag);
@@ -178,6 +179,7 @@ int ac_imwrite(const char* const filename, const ac_image* const image)
 {
     return ac::core::imwrite(filename, image->object);
 }
+#endif
 
 void ac_resize(const ac_image* const src, ac_image* const dst, const double fx, const double fy)
 {
