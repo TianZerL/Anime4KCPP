@@ -6,7 +6,7 @@ set(FILTER_DIRECTSHOW_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include(${DEPENDENCY_DIR}/directshow.cmake)
 include(${CMAKE_DIR}/GenDSFilterRC.cmake)
 
-add_library(ac_filter_ds SHARED
+add_library(ac_filter_ds MODULE
     ${FILTER_DIRECTSHOW_SOURCE_DIR}/src/Filter.cpp
     ${FILTER_DIRECTSHOW_BINARY_DIR}/rc/Filter.rc
     ${FILTER_DIRECTSHOW_BINARY_DIR}/rc/Filter.def
@@ -18,5 +18,7 @@ target_link_libraries(ac_filter_ds PRIVATE ac dep::directshow)
 
 install(
     TARGETS ac_filter_ds
+    ARCHIVE DESTINATION filter
+    LIBRARY DESTINATION filter
     RUNTIME DESTINATION filter
 )

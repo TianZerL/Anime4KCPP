@@ -5,7 +5,7 @@ set(FILTER_AVISYNTH_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 include(${DEPENDENCY_DIR}/avisynth.cmake)
 
-add_library(ac_filter_avs SHARED
+add_library(ac_filter_avs MODULE
     ${FILTER_AVISYNTH_SOURCE_DIR}/src/Filter.cpp
 )
 
@@ -13,5 +13,7 @@ target_link_libraries(ac_filter_avs PRIVATE ac dep::avisynth)
 
 install(
     TARGETS ac_filter_avs
+    ARCHIVE DESTINATION filter
+    LIBRARY DESTINATION filter
     RUNTIME DESTINATION filter
 )

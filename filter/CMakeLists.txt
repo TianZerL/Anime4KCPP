@@ -17,7 +17,7 @@ if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)
     include(${DEPENDENCY_DIR}/avisynth.cmake)
     include(${DEPENDENCY_DIR}/vapoursynth.cmake)
 
-    add_library(ac_filter_avs_vs SHARED
+    add_library(ac_filter_avs_vs MODULE
         ${FILTER_SOURCE_DIR}/avisynth/src/Filter.cpp
         ${FILTER_SOURCE_DIR}/vapoursynth/src/Filter.cpp
     )
@@ -26,6 +26,8 @@ if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)
 
     install(
         TARGETS ac_filter_avs_vs
+        ARCHIVE DESTINATION filter
+        LIBRARY DESTINATION filter
         RUNTIME DESTINATION filter
     )
 endif()

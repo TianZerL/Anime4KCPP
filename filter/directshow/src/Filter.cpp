@@ -86,8 +86,8 @@ public:
     static constexpr double FactorDefault = 2.0;
     static constexpr int ProcessorIdDefault = ac::core::Processor::CPU;
     static constexpr int DeviceDefault = 0;
-    static constexpr int LimitWidthDefault = 1080;
-    static constexpr int LimitHeightDefault = 1920;
+    static constexpr int LimitWidthDefault = 1920;
+    static constexpr int LimitHeightDefault = 1080;
     static constexpr TCHAR* ModelNameDefault = TEXT("acnet-hdn0");
 private:
     static constexpr TCHAR* FactorValueName = TEXT("Factor");
