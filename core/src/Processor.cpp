@@ -19,7 +19,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
     double fxy = factor / (1LL << power);
 
     if (src.channels() > 1)
-    {   
+    {
         Image y{};
         if (src.channels() == 4) rgba2yuva(src, y, uv);
         else rgb2yuv(src, y, uv);
@@ -84,7 +84,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
             Image rgb{};
             resize(uv, uv, factor, factor);
             if (src.channels() == 4) yuva2rgba(dst, uv, rgb);
-            else yuv2rgb(dst, uv, rgb);      
+            else yuv2rgb(dst, uv, rgb);
             dst = rgb;
         }
     }
@@ -95,5 +95,5 @@ bool ac::core::Processor::ok() const noexcept
 }
 const char* ac::core::Processor::error() const noexcept
 {
-    return "NO_ERROR";
+    return "NO ERROR";
 }

@@ -112,7 +112,7 @@ public:
     CUDAProcessor(int idx, const model::ACNet& model) noexcept;
     ~CUDAProcessor() noexcept override;
 private:
-    void process(const Image& src, Image& dst) noexcept override;  
+    void process(const Image& src, Image& dst) noexcept override;
 private:
     float* kernels = nullptr;
     float* biases = nullptr;
@@ -202,7 +202,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     deconv2x2_8to1_cuda(tmp1Load, out, dstW, dstH, kernels + model::ACNet::kernelOffset[9], dst.type(), stream);
 
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
-    
+
     cudaStreamSynchronize(stream);
 
     cudaDestroyTextureObject(in);

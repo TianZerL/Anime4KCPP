@@ -74,9 +74,9 @@ namespace ac::core
     {
         IMREAD_UNCHANGED = 0,
         IMREAD_GRAYSCALE = 1,
-        IMREAD_COLOR = 3,
-        IMREAD_RGB = 3,
-        IMREAD_RGBA = 4,
+        IMREAD_COLOR     = 3,
+        IMREAD_RGB       = 3,
+        IMREAD_RGBA      = 4,
     };
 
     AC_EXPORT Image imdecode(const void* buffer, int size, int flag) noexcept;
@@ -120,10 +120,11 @@ public:
     int channelSize() const noexcept { return c * elementSize(); }
     ElementType type() const noexcept { return elementType; }
     std::uint8_t* data() const noexcept { return static_cast<std::uint8_t*>(pixels); }
-    std::uint8_t* line(const int idx) const noexcept { return data() + idx * pitch; }
-    void* ptr(const int y) const noexcept { return line(y); }
-    void* ptr(const int x, const int y) const noexcept { return line(y) + x * channelSize(); }
+    std::uint8_t* line(const int y) const noexcept { return data() + y * pitch; }
+    std::uint8_t* pixel(const int x, const int y) const noexcept { return line(y) + x * channelSize(); }
     void* ptr() const noexcept { return pixels; }
+    void* ptr(const int y) const noexcept { return line(y); }
+    void* ptr(const int x, const int y) const noexcept { return pixel(x, y); }
     bool empty() const noexcept { return pixels == nullptr; }
     bool isUint() const noexcept { return (elementType >> 8) == 0; }
     bool isInt() const noexcept { return (elementType >> 8) == 1; }

@@ -31,7 +31,7 @@ namespace ac::core::cpu
             Generic,
             End
         };
-        constexpr const char* NameList[] = 
+        constexpr const char* NameList[] =
         {
             "Auto",
 #           ifdef AC_CORE_WITH_EIGEN3
@@ -94,7 +94,7 @@ private:
 };
 
 ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept :
-    Processor((arch == arch::Auto) ? 
+    Processor((arch == arch::Auto) ?
     []() -> int {
         // x86
 #       ifdef AC_CORE_WITH_AVX

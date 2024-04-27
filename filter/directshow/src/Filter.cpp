@@ -255,7 +255,7 @@ HRESULT Filter::CheckInputType(const CMediaType* mtIn)
             IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P016)) return SET_PACKED_FORMAT(ac::core::Image::UInt16);
         return 0;
         }();
-    
+
     if (!format) return VFW_E_TYPE_NOT_ACCEPTED;
 
     auto checkVideoInfo = [&](auto vi) -> HRESULT {
@@ -566,7 +566,7 @@ const TCHAR* RegArgument::getModelName()
     {
         modelName[size - 1] = TEXT('\0');
         return modelName;
-    }      
+    }
     else return ModelNameDefault;
 }
 void RegArgument::setFactor(const double v)

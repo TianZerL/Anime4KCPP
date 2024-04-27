@@ -162,7 +162,7 @@ namespace ac::core::cuda
             auto npos = nidx * 4;
             float sum[4] = {};
             for (int i = 0; i < 4; i++)
-            {                        
+            {
                 auto k0 = kernels + (npos + i) * 9 * cin + 0 * cin;
                 auto k1 = kernels + (npos + i) * 9 * cin + 1 * cin;
                 auto k2 = kernels + (npos + i) * 9 * cin + 2 * cin;
@@ -172,7 +172,7 @@ namespace ac::core::cuda
                 auto k6 = kernels + (npos + i) * 9 * cin + 6 * cin;
                 auto k7 = kernels + (npos + i) * 9 * cin + 7 * cin;
                 auto k8 = kernels + (npos + i) * 9 * cin + 8 * cin;
-                          
+
                 for (int cidx = 0; cidx < lin; cidx++)
                 {
                     auto cpos = cidx * 4;
@@ -279,6 +279,6 @@ namespace ac::core::cuda
             return deconv2x2_cuda_cout1<std::uint16_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels);
         case Image::Float32:
             return deconv2x2_cuda_cout1<float, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels);
-        }     
+        }
     }
 }

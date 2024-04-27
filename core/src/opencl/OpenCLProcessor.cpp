@@ -189,15 +189,15 @@ private:
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int idx, const model::ACNet& model) noexcept : OpenCLProcessorBase(idx)
 {
     err = init(idx); if (err != CL_SUCCESS) return;
-    
+
     kernels = cl::Buffer{ ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, model.kernelSize(), nullptr, &err }; if (err != CL_SUCCESS) return;
     biases = cl::Buffer{ ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, model.biasSize(), nullptr, &err }; if (err != CL_SUCCESS) return;
     err = ContextList[idx].cmdq.enqueueWriteBuffer(kernels, CL_FALSE, 0, model.kernelSize(), model.kernels()); if (err != CL_SUCCESS) return;
     err = ContextList[idx].cmdq.enqueueWriteBuffer(biases, CL_TRUE, 0, model.biasSize(), model.biases());
-    /** we can also use:
-     *  kernels = cl::Buffer{ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize(), const_cast<float*>(model.kernels())};
-     *  biases = cl::Buffer{ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases())};
-     **/
+/* we can also use:
+*   kernels = cl::Buffer{ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize(), const_cast<float*>(model.kernels())};
+*   biases = cl::Buffer{ContextList[idx].ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases())};
+*/
 }
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::~OpenCLProcessor() noexcept = default;
 

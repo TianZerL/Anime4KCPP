@@ -13,7 +13,7 @@
 
 #include "AC/Core/Image.hpp"
 
-ac::core::Image ac::core::imdecode(const void* buffer, const int size, const int flag) noexcept
+ac::core::Image ac::core::imdecode(const void* const buffer, const int size, const int flag) noexcept
 {
     Image image{};
     int w = 0, h = 0, c = 0;
@@ -29,7 +29,7 @@ ac::core::Image ac::core::imdecode(const void* buffer, const int size, const int
 }
 
 #ifdef AC_CORE_ENABLE_IMAGE_IO
-ac::core::Image ac::core::imread(const char* filename, const int flag) noexcept
+ac::core::Image ac::core::imread(const char* const filename, const int flag) noexcept
 {
     Image image{};
     int w = 0, h = 0, c = 0;
@@ -43,7 +43,7 @@ ac::core::Image ac::core::imread(const char* filename, const int flag) noexcept
     }
     return image;
 }
-bool ac::core::imwrite(const char* filename, const Image& image) noexcept
+bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
 {
     int idx = -1;
     int count = 0;

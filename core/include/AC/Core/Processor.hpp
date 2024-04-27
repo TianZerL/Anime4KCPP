@@ -38,7 +38,7 @@ private:
 public:
     template<int type, typename Model> static std::shared_ptr<Processor> create(int idx, const Model& model);
     template<int type> static const char* info();
-    
+
 protected:
     const int idx;
 };

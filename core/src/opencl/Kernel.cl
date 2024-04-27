@@ -61,7 +61,7 @@ kernel void conv3x3_8to8(
     float8 r6 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y+1, 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y+1, 1, 0)));
     float8 r7 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y+1, 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y+1, 1, 0)));
     float8 r8 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y+1, 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y+1, 1, 0)));
-    
+
     float s[8] = {};
     for(int n = 0; n < 8; n++)
     {
@@ -86,7 +86,7 @@ kernel void conv3x3_8to8(
         float s6 = dot(r6.lo, k6.lo) + dot(r6.hi, k6.hi);
         float s7 = dot(r7.lo, k7.lo) + dot(r7.hi, k7.hi);
         float s8 = dot(r8.lo, k8.lo) + dot(r8.hi, k8.hi);
-    
+
         s[n] = fmax(s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + bptr[n], 0.0f);
     }
     write_imagef(dst, (int4)(x, y, 0, 0), (float4)(s[0], s[1], s[2], s[3]));

@@ -78,7 +78,7 @@ target_link_libraries(ac PRIVATE
     $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
 )
 
-target_compile_definitions(ac PUBLIC 
+target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:AC_CORE_WITH_EIGEN3>
     $<$<BOOL:${AC_CORE_WITH_SSE}>:AC_CORE_WITH_SSE>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:AC_CORE_WITH_AVX>
