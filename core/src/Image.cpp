@@ -41,7 +41,7 @@ struct ac::core::Image::ImageData
     }
 };
 
-ac::core::Image::Image() : Image(0, 0, 0, UInt8, nullptr, 0) {}
+ac::core::Image::Image() noexcept : Image(0, 0, 0, UInt8, nullptr, 0) {}
 ac::core::Image::Image(const int w, const int h, const int c, const ElementType elementType) : Image(w, h, c, elementType, nullptr, 0) {}
 ac::core::Image::Image(const int w, const int h, const int c, const ElementType elementType, void* const data, const int stride) :
     w(w), h(h), c(c), elementType(elementType),
@@ -57,7 +57,11 @@ ac::core::Image::Image(const int w, const int h, const int c, const ElementType 
         this->pixels = this->dptr->data;
     }
 }
+ac::core::Image::Image(const Image&) noexcept = default;
+ac::core::Image::Image(Image&&) noexcept = default;
 ac::core::Image::~Image() noexcept = default;
+ac::core::Image& ac::core::Image::operator=(const Image&) noexcept = default;
+ac::core::Image& ac::core::Image::operator=(Image&&) noexcept = default;
 
 void ac::core::Image::create(const int w, const int h, const int c, const ElementType elementType)
 {

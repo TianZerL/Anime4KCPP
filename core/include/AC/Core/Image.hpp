@@ -99,10 +99,14 @@ public:
     static constexpr ElementType Float32 = 2 << 8 | 4;
 
 public:
-    AC_EXPORT Image();
+    AC_EXPORT Image() noexcept;
     AC_EXPORT Image(int w, int h, int c, ElementType elementType);
     AC_EXPORT Image(int w, int h, int c, ElementType elementType, void* data, int stride);
+    AC_EXPORT Image(const Image&) noexcept;
+    AC_EXPORT Image(Image&&) noexcept;
     AC_EXPORT ~Image() noexcept;
+    AC_EXPORT Image& operator=(const Image&) noexcept;
+    AC_EXPORT Image& operator=(Image&&) noexcept;
 
     AC_EXPORT void create(int w, int h, int c, ElementType elementType);
 

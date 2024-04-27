@@ -18,14 +18,15 @@
 
 #define gRegArgument (RegArgument::instance())
 
-DEFINE_GUID(CLSID_AC_FILTER_DS, 0x731ae2e9, 0xeeed, 0x4e29, 0xb8, 0x1b, 0x5d, 0xc8, 0xa0, 0xd6, 0xa3, 0x07);
+DEFINE_GUID(CLSID_AC_FILTER, 0x731ae2e9, 0xeeed, 0x4e29, 0xb8, 0x1b, 0x5d, 0xc8, 0xa0, 0xd6, 0xa3, 0x07);
 class Filter : public CTransformFilter, public ISpecifyPropertyPages
 {
 public:
+    static CUnknown* WINAPI CreateInstance(LPUNKNOWN punk, HRESULT* phr);
+public:
     DECLARE_IUNKNOWN;
 
-    static CUnknown* WINAPI CreateInstance(LPUNKNOWN punk, HRESULT* phr);
-    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv);
+    STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
 
     HRESULT CheckInputType(const CMediaType* mtIn) override;
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut) override;
@@ -48,12 +49,11 @@ class PropertyPage : public CBasePropertyPage
 {
 public:
     static CUnknown* WINAPI CreateInstance(LPUNKNOWN punk, HRESULT* phr);
-
 private:
-    virtual INT_PTR OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    virtual HRESULT OnActivate();
-    virtual HRESULT OnDeactivate();
-    virtual HRESULT OnApplyChanges();
+    INT_PTR OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+    HRESULT OnActivate() override;
+    HRESULT OnDeactivate() override;
+    HRESULT OnApplyChanges() override;
 private:
     PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
 private:
@@ -77,7 +77,7 @@ public:
     void setDevice(int v);
     void setLimitWidth(int v);
     void setLimitHeight(int v);
-    void setModelName(TCHAR* v);
+    void setModelName(const TCHAR* v);
 public:
     static RegArgument& instance();
 public:
@@ -99,10 +99,10 @@ private:
 private:
     HKEY key{};
     double factor{};
-    DWORD processorId{};
-    DWORD device{};
-    DWORD limitWidth{};
-    DWORD limitHeight{};
+    int processorId{};
+    int device{};
+    int limitWidth{};
+    int limitHeight{};
     TCHAR modelName[ModelNameMaxSize]{};
 };
 
@@ -156,7 +156,7 @@ const AMOVIESETUP_PIN sudpPins[] =
 };
 const AMOVIESETUP_FILTER sudFilter =
 {
-    &CLSID_AC_FILTER_DS,
+    &CLSID_AC_FILTER,
     L"Anime4KCPP for DirectShow",
     MERIT_DO_NOT_USE,
     2,
@@ -165,7 +165,7 @@ const AMOVIESETUP_FILTER sudFilter =
 CFactoryTemplate g_Templates[] = {
     {
         L"Anime4KCPP for DirectShow",
-        &CLSID_AC_FILTER_DS,
+        &CLSID_AC_FILTER,
         Filter::CreateInstance,
         nullptr,
         &sudFilter
@@ -193,7 +193,13 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
     return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
 
-Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CTransformFilter(name, punk, CLSID_AC_FILTER_DS)
+CUnknown* Filter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
+{
+    auto object = new Filter(NAME("Anime4KCPP for DirectShow"), punk, phr);
+    if (!object && phr) *phr = E_OUTOFMEMORY;
+    return object;
+}
+Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CTransformFilter(name, punk, CLSID_AC_FILTER)
 {
     factor = gRegArgument.getFactor();
     size.limit.width = gRegArgument.getLimitWidth();
@@ -221,12 +227,6 @@ Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CTransformFilter
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
-}
-CUnknown* Filter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
-{
-    auto object = new Filter(NAME("Anime4KCPP for DirectShow"), punk, phr);
-    if (!object && phr) *phr = E_OUTOFMEMORY;
-    return object;
 }
 STDMETHODIMP Filter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
@@ -314,14 +314,14 @@ HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* 
     CheckPointer(alloctor, E_POINTER);
     CheckPointer(request, E_POINTER);
 
-    request->cbBuffer = m_pOutput->CurrentMediaType().GetSampleSize();
+    request->cbBuffer = static_cast<long>(m_pOutput->CurrentMediaType().GetSampleSize());
 
     if (request->cbAlign == 0) request->cbAlign = 1;
     if (request->cBuffers == 0) request->cBuffers = 1;
 
     ALLOCATOR_PROPERTIES actual{};
     auto err = alloctor->SetProperties(request, &actual);
-    if (FAILED(err)) return err;
+    if (err != S_OK) return err;
 
     if (request->cBuffers > actual.cBuffers || request->cbBuffer > actual.cbBuffer)
         return E_FAIL;
@@ -360,13 +360,13 @@ STDMETHODIMP Filter::GetPages(CAUUID* pages)
     return S_OK;
 }
 
-PropertyPage::PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CBasePropertyPage(name, punk, IDD_PROPPAGE, IDS_TITLE) {}
 CUnknown* PropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
 {
     auto object = new PropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), punk, phr);
     if (!object && phr) *phr = E_OUTOFMEMORY;
     return object;
 }
+PropertyPage::PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CBasePropertyPage(name, punk, IDD_PROPPAGE, IDS_TITLE) {}
 INT_PTR PropertyPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -521,7 +521,7 @@ RegArgument::~RegArgument()
 double RegArgument::getFactor()
 {
     DWORD size = sizeof(factor);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&factor);
+    auto data = reinterpret_cast<LPBYTE>(&factor);
     if (ERROR_SUCCESS == RegQueryValueEx(key, FactorValueName, nullptr, nullptr, data, &size))
         return factor;
     else return FactorDefault;
@@ -529,7 +529,7 @@ double RegArgument::getFactor()
 int RegArgument::getProcessorId()
 {
     DWORD size = sizeof(processorId);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&processorId);
+    auto data = reinterpret_cast<LPBYTE>(&processorId);
     if (ERROR_SUCCESS == RegQueryValueEx(key, ProcessorIdValueName, nullptr, nullptr, data, &size))
         return processorId;
     else return ProcessorIdDefault;
@@ -537,7 +537,7 @@ int RegArgument::getProcessorId()
 int RegArgument::getDevice()
 {
     DWORD size = sizeof(device);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&device);
+    auto data = reinterpret_cast<LPBYTE>(&device);
     if (ERROR_SUCCESS == RegQueryValueEx(key, DeviceValueName, nullptr, nullptr, data, &size))
         return device;
     else return DeviceDefault;
@@ -545,7 +545,7 @@ int RegArgument::getDevice()
 int RegArgument::getLimitWidth()
 {
     DWORD size = sizeof(limitWidth);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&limitWidth);
+    auto data = reinterpret_cast<LPBYTE>(&limitWidth);
     if (ERROR_SUCCESS == RegQueryValueEx(key, LimitWidthValueName, nullptr, nullptr, data, &size))
         return limitWidth;
     else return LimitWidthDefault;
@@ -553,7 +553,7 @@ int RegArgument::getLimitWidth()
 int RegArgument::getLimitHeight()
 {
     DWORD size = sizeof(limitHeight);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&limitHeight);
+    auto data = reinterpret_cast<LPBYTE>(&limitHeight);
     if (ERROR_SUCCESS == RegQueryValueEx(key, LimitHeightValueName, nullptr, nullptr, data, &size))
         return limitHeight;
     else return LimitHeightDefault;
@@ -561,7 +561,7 @@ int RegArgument::getLimitHeight()
 const TCHAR* RegArgument::getModelName()
 {
     DWORD size = ModelNameMaxSize;
-    LPBYTE data = reinterpret_cast<LPBYTE>(modelName);
+    auto data = reinterpret_cast<LPBYTE>(modelName);
     if (ERROR_SUCCESS == RegQueryValueEx(key, ModelNameValueName, nullptr, nullptr, data, &size))
     {
         modelName[size - 1] = TEXT('\0');
@@ -569,40 +569,40 @@ const TCHAR* RegArgument::getModelName()
     }      
     else return ModelNameDefault;
 }
-void RegArgument::setFactor(double v)
+void RegArgument::setFactor(const double v)
 {
     DWORD size = sizeof(factor);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&v);
+    auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, FactorValueName, 0, REG_BINARY, data, size);
 }
-void RegArgument::setProcessorId(int v)
+void RegArgument::setProcessorId(const int v)
 {
     DWORD size = sizeof(processorId);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&v);
+    auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, ProcessorIdValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setDevice(int v)
+void RegArgument::setDevice(const int v)
 {
     DWORD size = sizeof(device);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&v);
+    auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, DeviceValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitWidth(int v)
+void RegArgument::setLimitWidth(const int v)
 {
     DWORD size = sizeof(limitWidth);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&v);
+    auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitWidthValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitHeight(int v)
+void RegArgument::setLimitHeight(const int v)
 {
     DWORD size = sizeof(limitHeight);
-    LPBYTE data = reinterpret_cast<LPBYTE>(&v);
+    auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitHeightValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setModelName(TCHAR* v)
+void RegArgument::setModelName(const TCHAR* const v)
 {
     DWORD size = ModelNameMaxSize;
-    LPBYTE data = reinterpret_cast<LPBYTE>(v);
+    auto data = reinterpret_cast<const BYTE*>(v);
     RegSetValueEx(key, ModelNameValueName, 0, REG_SZ, data, size);
 }
 

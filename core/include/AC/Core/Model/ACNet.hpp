@@ -22,8 +22,12 @@ public:
     };
 
 public:
-    AC_EXPORT ACNet(Variant v);
+    AC_EXPORT ACNet(Variant v) noexcept;
+    AC_EXPORT ACNet(const ACNet&) noexcept;
+    AC_EXPORT ACNet(ACNet&&) noexcept;
     AC_EXPORT ~ACNet() noexcept;
+    AC_EXPORT ACNet& operator=(const ACNet&) noexcept;
+    AC_EXPORT ACNet& operator=(ACNet&&) noexcept;
     // data pointer in `idx` layer
     AC_EXPORT const float* kernels(int idx = 0) const noexcept;
     AC_EXPORT const float* biases(int idx = 0) const noexcept;

@@ -5,7 +5,7 @@ namespace ac::core::model::param
 #include "AC/Core/Model/Param/ACNet.p"
 }
 
-ac::core::model::ACNet::ACNet(const Variant v) : kptr(nullptr), bptr(nullptr)
+ac::core::model::ACNet::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr)
 {
     switch (v)
     {
@@ -27,7 +27,11 @@ ac::core::model::ACNet::ACNet(const Variant v) : kptr(nullptr), bptr(nullptr)
         break;
     }
 }
+ac::core::model::ACNet::ACNet(const ACNet&) noexcept = default;
+ac::core::model::ACNet::ACNet(ACNet&&) noexcept = default;
 ac::core::model::ACNet::~ACNet() noexcept = default;
+ac::core::model::ACNet& ac::core::model::ACNet::operator=(const ACNet&) noexcept = default;
+ac::core::model::ACNet& ac::core::model::ACNet::operator=(ACNet&&) noexcept = default;
 
 const float* ac::core::model::ACNet::kernels(const int idx) const noexcept
 {

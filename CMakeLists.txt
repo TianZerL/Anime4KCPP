@@ -60,7 +60,7 @@ if(AC_CORE_WITH_FMA)
     set(AC_CORE_WITH_AVX ON)
 endif()
 
-message(STATUS 
+message(STATUS
 "SIMD support:
     SSE: ${AC_CORE_WITH_SSE}
     AVX: ${AC_CORE_WITH_AVX}
@@ -68,20 +68,20 @@ message(STATUS
     NEON: ${AC_CORE_WITH_NEON}
 ")
 
-macro(ac_check_disable_flags TARGET)
+macro(ac_check_disable_flags TargetToDisable)
     if(AC_DISABLE_RTTI)
         if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
-            target_compile_options(${TARGET} PUBLIC /GR-)
+            target_compile_options(${TargetToDisable} PUBLIC /GR-)
         else()
-            target_compile_options(${TARGET} PUBLIC -fno-rtti)
+            target_compile_options(${TargetToDisable} PUBLIC -fno-rtti)
         endif()
     endif()
 
     if(AC_DISABLE_EXCEPTION)
         if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
-            target_compile_options(${TARGET} PUBLIC /EHsc /D_HAS_EXCEPTIONS=0)
+            target_compile_options(${TargetToDisable} PUBLIC /EHsc /D_HAS_EXCEPTIONS=0)
         else()
-            target_compile_options(${TARGET} PUBLIC -fno-exceptions)
+            target_compile_options(${TargetToDisable} PUBLIC -fno-exceptions)
         endif()
     endif()
 endmacro()
