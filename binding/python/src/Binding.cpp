@@ -5,14 +5,7 @@
 
 namespace py = pybind11;
 
-enum ac_processor_type
-{
-    AC_PROCESSOR_CPU    = ac::core::Processor::CPU,
-    AC_PROCESSOR_OPENCL = ac::core::Processor::OpenCL,
-    AC_PROCESSOR_CUDA   = ac::core::Processor::CUDA
-};
-
-enum ac_model_type
+enum ModelType
 {
     AC_MODEL_ACNET_HDN0,
     AC_MODEL_ACNET_HDN1,
@@ -24,17 +17,15 @@ PYBIND11_MODULE(pyac, m)
 {
     m.doc() = "Anime4KCPP: A high performance anime upscaler.";
 
-    m.attr("AC_PROCESSOR_CPU") = static_cast<int>(AC_PROCESSOR_CPU);
-    m.attr("AC_PROCESSOR_OPENCL") = static_cast<int>(AC_PROCESSOR_OPENCL);
-    m.attr("AC_PROCESSOR_CUDA") = static_cast<int>(AC_PROCESSOR_CUDA);
-
-    m.attr("AC_MODEL_ACNET_HDN0") = static_cast<int>(AC_MODEL_ACNET_HDN0);
-    m.attr("AC_MODEL_ACNET_HDN1") = static_cast<int>(AC_MODEL_ACNET_HDN1);
-    m.attr("AC_MODEL_ACNET_HDN2") = static_cast<int>(AC_MODEL_ACNET_HDN2);
-    m.attr("AC_MODEL_ACNET_HDN3") = static_cast<int>(AC_MODEL_ACNET_HDN3);
+    py::enum_<ModelType>(m, "ModelType")
+        .value("ACNET_HDN0", AC_MODEL_ACNET_HDN0)
+        .value("ACNET_HDN1", AC_MODEL_ACNET_HDN1)
+        .value("ACNET_HDN2", AC_MODEL_ACNET_HDN2)
+        .value("ACNET_HDN3", AC_MODEL_ACNET_HDN3)
+        .export_values();
 
     py::class_<ac::core::Processor, std::shared_ptr<ac::core::Processor>>(m, "Processor")
-        .def(py::init([&](const int processorType, const int device, const int modelType) {
+        .def(py::init([&](const int processorType, const int device, const ModelType modelType) {
             ac::core::model::ACNet model{
                 [&](){
                     switch (modelType)
@@ -58,8 +49,8 @@ PYBIND11_MODULE(pyac, m)
 #           endif
             default: throw py::value_error{ "unsupported processor" };
             }
-        }), py::arg("processor_type"), py::arg("device"), py::arg("model_type"))
-        .def("process", [](ac::core::Processor& object, const py::array in, const double factor) {
+        }), py::arg("processor_type") = ac::core::Processor::CPU, py::arg("device") = 0, py::arg("model_type") = AC_MODEL_ACNET_HDN0)
+        .def("process", [](ac::core::Processor& self, const py::array in, const double factor) {
             auto src = in.request();
             auto type = [&]() -> int {
                 if (src.format == py::format_descriptor<std::uint8_t>::format()) return ac::core::Image::UInt8;
@@ -74,7 +65,7 @@ PYBIND11_MODULE(pyac, m)
             auto dst = out.request();
             ac::core::Image srci{ static_cast<int>(src.shape[1]), static_cast<int>(src.shape[0]), static_cast<int>(src.shape[2]), type, src.ptr, static_cast<int>(src.strides[0]) };
             ac::core::Image dsti{ static_cast<int>(dst.shape[1]), static_cast<int>(dst.shape[0]), static_cast<int>(dst.shape[2]), type, dst.ptr, static_cast<int>(dst.strides[0]) };
-            object.process(srci, dsti, factor);
+            self.process(srci, dsti, factor);
 
             return out;
         }, py::arg("src"), py::arg("factor"))
@@ -93,5 +84,8 @@ PYBIND11_MODULE(pyac, m)
 #           endif
             default: return "unsupported processor";
             }
-        }, py::arg("processor_type"));
+        }, py::arg("processor_type"))
+        .def_readonly_static("CPU", &ac::core::Processor::CPU)
+        .def_readonly_static("OpenCL", &ac::core::Processor::OpenCL)
+        .def_readonly_static("CUDA", &ac::core::Processor::CUDA);
 }
