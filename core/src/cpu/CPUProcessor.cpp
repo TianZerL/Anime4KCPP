@@ -93,29 +93,28 @@ private:
     void (*deconv2x2_8to1)(const Image& src, Image& dst, const float* kernels);
 };
 
-ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept :
-    Processor((arch == arch::Auto) ?
-    []() -> int {
+ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept : model(model)
+{
+    idx = (arch == arch::Auto) ? []() -> int {
         // x86
 #       ifdef AC_CORE_WITH_AVX
-        if (dispatch::supportAVX()) return arch::AVX;
+            if (dispatch::supportAVX()) return arch::AVX;
 #       endif
 #       ifdef AC_CORE_WITH_SSE
-        if (dispatch::supportSSE()) return arch::SSE;
+            if (dispatch::supportSSE()) return arch::SSE;
 #       endif
         // arm
 #       ifdef AC_CORE_WITH_NEON
-        if (dispatch::supportNEON()) return arch::NEON;
+            if (dispatch::supportNEON()) return arch::NEON;
 #       endif
         // generic
 #       ifdef AC_CORE_WITH_EIGEN3
-        return arch::Eigen3;
+            return arch::Eigen3;
 #       else
-        return arch::Generic;
+            return arch::Generic;
 #       endif
-    }() : arch),
-    model(model)
-{
+    }() : arch;
+
     switch (idx)
     {
 #   ifdef AC_CORE_WITH_EIGEN3
@@ -176,9 +175,9 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::process(const Image& s
 }
 
 template<>
-AC_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU ,ac::core::model::ACNet>(const int arch, const model::ACNet& model)
+AC_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU ,ac::core::model::ACNet>(const int idx, const model::ACNet& model)
 {
-    return std::make_shared<cpu::CPUProcessor<model::ACNet>>(arch, model);
+    return std::make_shared<cpu::CPUProcessor<model::ACNet>>(idx, model);
 }
 template<>
 AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CPU>()

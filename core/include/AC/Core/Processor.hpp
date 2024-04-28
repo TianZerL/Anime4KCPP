@@ -20,7 +20,7 @@ public:
     static constexpr int CUDA = 2;
 
 public:
-    AC_EXPORT Processor(int idx) noexcept;
+    AC_EXPORT Processor() noexcept;
     AC_EXPORT virtual ~Processor();
 
     AC_EXPORT Image process(const Image& src, double factor);
@@ -40,7 +40,7 @@ public:
     template<int type> static const char* info();
 
 protected:
-    const int idx;
+    int idx;
 };
 
 #endif

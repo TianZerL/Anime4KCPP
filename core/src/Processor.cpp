@@ -1,7 +1,7 @@
 #include "AC/Core/Processor.hpp"
 #include "AC/Core/Util.hpp"
 
-ac::core::Processor::Processor(const int idx) noexcept : idx(idx) {}
+ac::core::Processor::Processor() noexcept : idx(0) {}
 ac::core::Processor::~Processor() = default;
 
 ac::core::Image ac::core::Processor::process(const Image& src, const double factor)

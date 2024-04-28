@@ -50,17 +50,17 @@ namespace ac::core::cuda
         std::size_t vram;
     };
 
-    //Just like what we do for OpenCL, lazy load for DLL safe
+    //lazy load, god knows if it's safe to call the cuda function during DLL initialization
     inline static std::vector<Context>& getContextList() noexcept
     {
         static auto contextList = []() -> std::vector<Context> {
             std::vector<Context> contexts{};
             int deviceCount = 0;
             cudaGetDeviceCount(&deviceCount);
-            for (int idx = 0; idx < deviceCount; idx++)
+            for (int i = 0; i < deviceCount; i++)
             {
                 cudaDeviceProp deviceProp{};
-                cudaGetDeviceProperties(&deviceProp, idx);
+                cudaGetDeviceProperties(&deviceProp, i);
                 contexts.emplace_back(Context{ deviceProp.name, (deviceProp.totalGlobalMem >> 20) });
             }
             return contexts;
@@ -82,7 +82,11 @@ namespace ac::core::cuda
     class CUDAProcessorBase : public Processor
     {
     public:
-        CUDAProcessorBase(const int idx) noexcept : Processor(idx), err(cudaSuccess) {};
+        CUDAProcessorBase(const int device) noexcept : err(cudaSuccess)
+        {
+            idx = (device >= 0 && device < ContextList.size()) ? device : 0;
+            err = cudaSetDevice(idx);
+        };
         ~CUDAProcessorBase() noexcept override = default;
 
         bool ok() const noexcept override
@@ -109,7 +113,7 @@ template<>
 class ac::core::cuda::CUDAProcessor<ac::core::model::ACNet> : public ac::core::cuda::CUDAProcessorBase
 {
 public:
-    CUDAProcessor(int idx, const model::ACNet& model) noexcept;
+    CUDAProcessor(int device, const model::ACNet& model) noexcept;
     ~CUDAProcessor() noexcept override;
 private:
     void process(const Image& src, Image& dst) noexcept override;
@@ -118,9 +122,9 @@ private:
     float* biases = nullptr;
 };
 
-ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::CUDAProcessor(const int idx, const model::ACNet& model) noexcept : CUDAProcessorBase(idx)
+ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::CUDAProcessor(const int device, const model::ACNet& model) noexcept : CUDAProcessorBase(device)
 {
-    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
+    if (err != cudaSuccess) return; // check if initialization was successful
     err = cudaMalloc(&kernels, model.kernelSize()); if (err != cudaSuccess) return;
     err = cudaMalloc(&biases, model.biasSize()); if (err != cudaSuccess) return;
     err = cudaMemcpy(kernels, model.kernels(), model.kernelSize(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
@@ -232,8 +236,8 @@ AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CUDA>()
 {
     static auto infoBuffer = []() -> std::string {
         std::ostringstream buffer{ "CUDA:\n", std::ios_base::ate };
-        for (int idx = 0; idx < ContextList.size(); idx++)
-            buffer << "  [" << idx << "] " << ContextList[idx].name << " (" << ContextList[idx].vram << "MB)" << '\n';
+        for (int i = 0; i < ContextList.size(); i++)
+            buffer << "  [" << i << "] " << ContextList[i].name << " (" << ContextList[i].vram << "MB)" << '\n';
         return buffer.str();
     }();
     return infoBuffer.c_str();
