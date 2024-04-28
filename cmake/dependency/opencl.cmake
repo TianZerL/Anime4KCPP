@@ -7,18 +7,22 @@ if(NOT TARGET dep::opencl)
             OpenCL
             GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-SDK.git
             GIT_TAG main
+            CONFIGURE_COMMAND ""
+            BUILD_COMMAND ""
+            TEST_COMMAND ""
+            INSTALL_COMMAND ""
         )
-        set(BUILD_DOCS OFF)
-        set(BUILD_EXAMPLES OFF)
-        set(BUILD_TESTING OFF)
-        set(ENABLE_OPENCL_LAYERINFO OFF)
-        set(OPENCL_ICD_LOADER_BUILD_TESTING OFF)
-        set(OPENCL_SDK_BUILD_OPENGL_SAMPLES OFF)
-        set(OPENCL_SDK_BUILD_SAMPLES OFF)
-        set(OPENCL_SDK_BUILD_UTILITY_LIBRARIES OFF)
-        set(OPENCL_CLHPP_BUILD_TESTING OFF)
-        set(OPENCL_HEADERS_BUILD_TESTING OFF)
-        set(OPENCL_HEADERS_BUILD_CXX_TESTS OFF)
+        set(OPENCL_SDK_BUILD_UTILITY_LIBRARIES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_SDK_BUILD_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_SDK_BUILD_OPENGL_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(BUILD_DOCS OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(BUILD_EXAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_CLHPP_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_HEADERS_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_HEADERS_BUILD_CXX_TESTS OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(ENABLE_OPENCL_LAYERINFO OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_ICD_LOADER_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
         FetchContent_MakeAvailable(OpenCL)
         target_link_libraries(OpenCL PUBLIC OpenCL::HeadersCpp)
     endif()
