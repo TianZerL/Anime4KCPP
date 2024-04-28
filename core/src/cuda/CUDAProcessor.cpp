@@ -84,7 +84,7 @@ namespace ac::core::cuda
     public:
         CUDAProcessorBase(const int device) noexcept : err(cudaSuccess)
         {
-            idx = (device >= 0 && device < ContextList.size()) ? device : 0;
+            idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
             err = cudaSetDevice(idx);
         };
         ~CUDAProcessorBase() noexcept override = default;

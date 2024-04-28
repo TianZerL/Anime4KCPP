@@ -292,8 +292,8 @@ HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
     auto setVideoInfo = [&](auto vi) {
         size.src.width = vi->bmiHeader.biWidth;
         size.src.height = vi->bmiHeader.biHeight;
-        size.dst.width = static_cast<LONG>(size.src.width * factor);
-        size.dst.height = static_cast<LONG>(size.src.height * factor);
+        size.dst.width = static_cast<decltype(size.dst.width)>(size.src.width * factor);
+        size.dst.height = static_cast<decltype(size.dst.height)>(size.src.height * factor);
         vi->bmiHeader.biWidth = size.dst.width;
         vi->bmiHeader.biHeight = size.dst.height;
         vi->bmiHeader.biSizeImage = DIBSIZE(vi->bmiHeader);
@@ -314,7 +314,7 @@ HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* 
     CheckPointer(alloctor, E_POINTER);
     CheckPointer(request, E_POINTER);
 
-    request->cbBuffer = static_cast<long>(m_pOutput->CurrentMediaType().GetSampleSize());
+    request->cbBuffer = static_cast<decltype(request->cbBuffer)>(m_pOutput->CurrentMediaType().GetSampleSize());
 
     if (request->cbAlign == 0) request->cbAlign = 1;
     if (request->cBuffers == 0) request->cBuffers = 1;

@@ -86,8 +86,8 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     auto data = new Data{};
     data->node = node;
     data->vi = *vi;
-    data->vi.width = static_cast<int>(vi->width * factor);
-    data->vi.height = static_cast<int>(vi->height * factor);
+    data->vi.width = static_cast<decltype(data->vi.width)>(vi->width * factor);
+    data->vi.height = static_cast<decltype(data->vi.height)>(vi->height * factor);
     data->type = type;
     data->factor = factor;
     data->processor = [&]() {

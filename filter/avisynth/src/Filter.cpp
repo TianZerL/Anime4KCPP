@@ -41,8 +41,8 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
 
     factor = args[1].Defined() ? args[1].AsFloat() : 2.0;
     if (factor <= 1.0) env->ThrowError("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
-    vi.width = static_cast<int>(vi.width * factor);
-    vi.height = static_cast<int>(vi.height * factor);
+    vi.width = static_cast<decltype(vi.width)>(vi.width * factor);
+    vi.height = static_cast<decltype(vi.height)>(vi.height * factor);
 
     auto processorName = args[2].Defined() ? args[2].AsString() : "cpu";
 
@@ -109,7 +109,7 @@ EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, cons
         create, nullptr);
     env->AddFunction("ACInfoList",
         "",
-        [](AVSValue /*args*/, void* /*user_data*/, IScriptEnvironment* env) -> AVSValue {
+        [](AVSValue /*args*/, void* /*user_data*/, IScriptEnvironment* /*env*/) -> AVSValue {
             AVSValue info[] = {
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
 #               ifdef AC_CORE_WITH_OPENCL

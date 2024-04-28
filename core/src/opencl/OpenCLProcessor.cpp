@@ -82,7 +82,7 @@ namespace ac::core::opencl
             if (contextList.empty()) err = CL_DEVICE_NOT_FOUND;
             else
             {
-                idx = (device >= 0 && device < contextList.size()) ? device : 0;
+                idx = (device >= 0 && static_cast<decltype(contextList.size())>(device) < contextList.size()) ? device : 0;
                 context = contextList[idx];
                 err = init(context);
             }
