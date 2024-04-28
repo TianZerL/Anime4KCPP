@@ -17,10 +17,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build Type" FORCE)
 endif()
 
-if(POLICY CMP0135) #for downloading archive file, https://cmake.org/cmake/help/latest/policy/CMP0135.html
-    cmake_policy(SET CMP0135 NEW)
-endif()
-
 string(TIMESTAMP DATE_TODAY "%Y-%m-%d")
 string(TIMESTAMP DATE_YEAR "%Y")
 

@@ -80,7 +80,7 @@ namespace ac::core::opencl
         {
             auto contextList = getContextList();
             if (contextList.empty()) err = CL_DEVICE_NOT_FOUND;
-            else 
+            else
             {
                 idx = (device >= 0 && device < contextList.size()) ? device : 0;
                 context = contextList[idx];
