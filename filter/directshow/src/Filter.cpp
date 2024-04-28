@@ -139,7 +139,7 @@ const AMOVIESETUP_PIN sudpPins[] =
         FALSE,
         &CLSID_NULL,
         NULL,
-        sizeof(sudPinTypes) / sizeof(sudPinTypes[0]),
+        NUMELMS(sudPinTypes),
         sudPinTypes
     },
     {
@@ -150,7 +150,7 @@ const AMOVIESETUP_PIN sudpPins[] =
         FALSE,
         &CLSID_NULL,
         NULL,
-        sizeof(sudPinTypes) / sizeof(sudPinTypes[0]),
+        NUMELMS(sudPinTypes),
         sudPinTypes
     }
 };
@@ -176,7 +176,7 @@ CFactoryTemplate g_Templates[] = {
         PropertyPage::CreateInstance
     }
 };
-int g_cTemplates = sizeof(g_Templates) / sizeof(g_Templates[0]);
+int g_cTemplates = NUMELMS(g_Templates);
 
 STDAPI DllRegisterServer()
 {
@@ -429,14 +429,14 @@ HRESULT PropertyPage::OnActivate()
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_LIMIT_HEIGHT), buffer);
 
     int count = 0;
-    for (auto p = ac::core::Processor::info<ac::core::Processor::CPU>(); *p != '\0' && (count < STR_MAX_LENGTH - 1); p++)
+    for (auto p = ac::core::Processor::info<ac::core::Processor::CPU>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
     {
         TCHAR ch = *p;
         if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
         buffer[count++] = ch;
     }
 #   ifdef AC_CORE_WITH_OPENCL
-        for (auto p = ac::core::Processor::info<ac::core::Processor::OpenCL>(); *p != '\0' && (count < STR_MAX_LENGTH - 1); p++)
+        for (auto p = ac::core::Processor::info<ac::core::Processor::OpenCL>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
         {
             TCHAR ch = *p;
             if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
@@ -444,7 +444,7 @@ HRESULT PropertyPage::OnActivate()
         }
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        for (auto p = ac::core::Processor::info<ac::core::Processor::CUDA>(); *p != '\0' && (count < STR_MAX_LENGTH - 1); p++)
+        for (auto p = ac::core::Processor::info<ac::core::Processor::CUDA>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
         {
             TCHAR ch = *p;
             if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
