@@ -12,7 +12,7 @@ if(NOT TARGET dep::cuda)
     add_library(dep_cuda INTERFACE)
     target_link_libraries(dep_cuda INTERFACE CUDA::cudart_static)
     if(MSVC) #suppress warning
-        target_link_options(dep_cuda INTERFACE /NODEFAULTLIB:LIBCMT)     
+        target_link_options(dep_cuda INTERFACE /NODEFAULTLIB:LIBCMT)
     endif()
     add_library(dep::cuda ALIAS dep_cuda)
 endif()

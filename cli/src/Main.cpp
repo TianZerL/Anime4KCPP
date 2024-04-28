@@ -9,7 +9,7 @@
 
 static void version()
 {
-    std::cout << 
+    std::cout <<
             "Anime4KCPP CLI:\n"
             "  core version: " AC_CORE_VERSION_STR "\n"
             "  build date: " AC_CORE_BUILD_DATE "\n"
@@ -33,7 +33,7 @@ int main(int argc, const char* argv[])
 {
     auto options = parse(argc, argv);
 
-    if (options.version) 
+    if (options.version)
     {
         version();
         return 0;
@@ -87,8 +87,8 @@ int main(int argc, const char* argv[])
     ac::util::Stopwatch stopwatch{};
     auto dst = processor->process(src, options.factor);
     stopwatch.stop();
-    CHECK_ERROR(processor);    
-    std::cout << "Upscaled in: " << stopwatch.elapsed() << "s\n";
+    CHECK_ERROR(processor);
+    std::cout << "Finished in: " << stopwatch.elapsed() << "s\n";
 
     if (ac::core::imwrite(options.output.c_str(), dst)) std::cout << "Save to "<< options.output << '\n';
     else std::cout << "Failed to save file\n";

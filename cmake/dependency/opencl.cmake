@@ -25,7 +25,7 @@ if(NOT TARGET dep::opencl)
 
     add_library(dep_opencl INTERFACE IMPORTED)
     target_link_libraries(dep_opencl INTERFACE OpenCL::OpenCL)
-    target_compile_definitions(dep_opencl INTERFACE 
+    target_compile_definitions(dep_opencl INTERFACE
         CL_HPP_TARGET_OPENCL_VERSION=300
         CL_HPP_MINIMUM_OPENCL_VERSION=110
     )
