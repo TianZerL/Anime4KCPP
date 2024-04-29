@@ -217,10 +217,10 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     cl::Kernel conv3x3_8to8{ context.program, "conv3x3_8to8", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel deconv2x2_8to1{ context.program, "deconv2x2_8to1", &err }; if (err != CL_SUCCESS) return;
 
-    cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
+    cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2DArray tmp2{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2D out{ context.ctx, CL_MEM_WRITE_ONLY, {CL_R, channelType(dst.type())}, dstW, dstH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
+    cl::Image2D out{ context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, {CL_R, channelType(dst.type())}, dstW, dstH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
 
     err = context.cmdq.enqueueWriteImage(in, CL_FALSE, { 0,0,0 }, { srcW,srcH,1 }, src.stride(), 0, src.ptr()); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8.setArg(0, in); if (err != CL_SUCCESS) return;
