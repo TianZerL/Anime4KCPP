@@ -9,17 +9,16 @@ namespace ac::core::cpu
     void conv3x3_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         int w = src.width(), h = src.height();
-        int wstep = src.stride() / src.elementSize();
-        int cstep = src.channelSize() / src.elementSize();
+        int step = src.stride() / src.elementSize();
 
-        filter([=](const int i, const int j, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
+        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            auto sp = i < h - 1 ? +wstep : 0;
-            auto sn = i > 0 ? -wstep : 0;
-            auto cp = j < w - 1 ? +cstep : 0;
-            auto cn = j > 0 ? -cstep : 0;
+            auto sp = i < h - 1 ? +step : 0;
+            auto sn = i > 0 ? -step : 0;
+            auto cp = j < w - 1 ? +cin : 0;
+            auto cn = j > 0 ? -cin : 0;
 
             auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
             auto ml = in + cn, mc = in, mr = in + cp;
@@ -69,8 +68,8 @@ namespace ac::core::cpu
     template <typename IN, typename OUT, int cin, int cout>
     void deconv2x2_eigen3(const Image& src, Image& dst, const float* kernels)
     {
-        filter<2>([=](const int i, const int j, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
+        filter<2>([=](const int i, const int j, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
             const int index = ((i & 1) << 1) + (j & 1);
