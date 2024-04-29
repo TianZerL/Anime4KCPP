@@ -96,6 +96,7 @@ target_compile_definitions(ac PUBLIC
 )
 
 ac_check_disable_flags(ac)
+ac_check_enable_static_crt(ac)
 
 file(WRITE "${CORE_BINARY_DIR}/Kernel.cl.hpp.in" [[
 #ifndef AC_CORE_OPENCL_KERNEL_HPP

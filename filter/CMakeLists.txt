@@ -24,6 +24,8 @@ if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)
 
     target_link_libraries(ac_filter_avs_vs PRIVATE ac dep::avisynth dep::vapoursynth)
 
+    ac_check_enable_static_crt(ac_filter_avs_vs)
+
     install(
         TARGETS ac_filter_avs_vs
         ARCHIVE DESTINATION filter

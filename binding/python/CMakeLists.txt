@@ -11,6 +11,8 @@ pybind11_add_module(pyac MODULE
 
 target_link_libraries(pyac PRIVATE ac)
 
+ac_check_enable_static_crt(pyac)
+
 install(
     TARGETS pyac
     ARCHIVE DESTINATION pyac

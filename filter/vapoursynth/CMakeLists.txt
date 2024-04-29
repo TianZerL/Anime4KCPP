@@ -11,6 +11,8 @@ add_library(ac_filter_vs MODULE
 
 target_link_libraries(ac_filter_vs PRIVATE ac dep::vapoursynth)
 
+ac_check_enable_static_crt(ac_filter_vs)
+
 install(
     TARGETS ac_filter_vs
     ARCHIVE DESTINATION filter

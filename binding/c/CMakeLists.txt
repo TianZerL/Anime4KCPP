@@ -32,6 +32,9 @@ install(
 
 install(DIRECTORY ${BINDING_C_SOURCE_DIR}/include ${BINDING_C_BINARY_DIR}/include DESTINATION cac)
 
+ac_check_disable_flags(cac)
+ac_check_enable_static_crt(cac)
+
 install(
     EXPORT CAC
     FILE CACConfig.cmake

@@ -17,6 +17,8 @@ target_include_directories(ac_cli PRIVATE
 
 target_link_libraries(ac_cli PRIVATE ac ac_util dep::cli11)
 
+ac_check_enable_static_crt(ac_cli)
+
 install(
     TARGETS ac_cli
     RUNTIME DESTINATION bin

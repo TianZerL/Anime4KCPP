@@ -16,6 +16,8 @@ target_include_directories(ac_filter_ds PRIVATE ${FILTER_DIRECTSHOW_BINARY_DIR}/
 
 target_link_libraries(ac_filter_ds PRIVATE ac dep::directshow)
 
+ac_check_enable_static_crt(ac_filter_ds)
+
 install(
     TARGETS ac_filter_ds
     ARCHIVE DESTINATION filter

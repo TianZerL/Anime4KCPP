@@ -11,6 +11,8 @@ add_library(ac_filter_avs MODULE
 
 target_link_libraries(ac_filter_avs PRIVATE ac dep::avisynth)
 
+ac_check_enable_static_crt(ac_filter_avs)
+
 install(
     TARGETS ac_filter_avs
     ARCHIVE DESTINATION filter
