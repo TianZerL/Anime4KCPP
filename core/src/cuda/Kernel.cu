@@ -18,7 +18,7 @@ namespace ac::core::cuda
         return static_cast<Unsigned>(rintf(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max()));
     }
 
-    __device__ inline static float dot(float4 a, const float* b)
+    __device__ inline static float dot(float4 a, const float* __restrict__ b)
     {
         return a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3];
     }
@@ -34,8 +34,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels,
-        const float* biases
+        const float* __restrict__ kernels,
+        const float* __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -61,55 +61,55 @@ namespace ac::core::cuda
         {
             auto npos = nidx * 4;
 
-            auto k0 = kernels + (npos + 0) * 9;
-            auto k1 = kernels + (npos + 1) * 9;
-            auto k2 = kernels + (npos + 2) * 9;
-            auto k3 = kernels + (npos + 3) * 9;
+            auto offset0 = (npos + 0) * 9;
+            auto offset1 = (npos + 1) * 9;
+            auto offset2 = (npos + 2) * 9;
+            auto offset3 = (npos + 3) * 9;
 
             auto layer = make_ushort4(
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * k0[0] +
-                    r[1] * k0[1] +
-                    r[2] * k0[2] +
-                    r[3] * k0[3] +
-                    r[4] * k0[4] +
-                    r[5] * k0[5] +
-                    r[6] * k0[6] +
-                    r[7] * k0[7] +
-                    r[8] * k0[8] + biases[npos + 0], 0.0f
+                    r[0] * kernels[offset0 + 0] +
+                    r[1] * kernels[offset0 + 1] +
+                    r[2] * kernels[offset0 + 2] +
+                    r[3] * kernels[offset0 + 3] +
+                    r[4] * kernels[offset0 + 4] +
+                    r[5] * kernels[offset0 + 5] +
+                    r[6] * kernels[offset0 + 6] +
+                    r[7] * kernels[offset0 + 7] +
+                    r[8] * kernels[offset0 + 8] + biases[npos + 0], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * k1[0] +
-                    r[1] * k1[1] +
-                    r[2] * k1[2] +
-                    r[3] * k1[3] +
-                    r[4] * k1[4] +
-                    r[5] * k1[5] +
-                    r[6] * k1[6] +
-                    r[7] * k1[7] +
-                    r[8] * k1[8] + biases[npos + 1], 0.0f
+                    r[0] * kernels[offset1 + 0] +
+                    r[1] * kernels[offset1 + 1] +
+                    r[2] * kernels[offset1 + 2] +
+                    r[3] * kernels[offset1 + 3] +
+                    r[4] * kernels[offset1 + 4] +
+                    r[5] * kernels[offset1 + 5] +
+                    r[6] * kernels[offset1 + 6] +
+                    r[7] * kernels[offset1 + 7] +
+                    r[8] * kernels[offset1 + 8] + biases[npos + 1], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * k2[0] +
-                    r[1] * k2[1] +
-                    r[2] * k2[2] +
-                    r[3] * k2[3] +
-                    r[4] * k2[4] +
-                    r[5] * k2[5] +
-                    r[6] * k2[6] +
-                    r[7] * k2[7] +
-                    r[8] * k2[8] + biases[npos + 2], 0.0f
+                    r[0] * kernels[offset2 + 0] +
+                    r[1] * kernels[offset2 + 1] +
+                    r[2] * kernels[offset2 + 2] +
+                    r[3] * kernels[offset2 + 3] +
+                    r[4] * kernels[offset2 + 4] +
+                    r[5] * kernels[offset2 + 5] +
+                    r[6] * kernels[offset2 + 6] +
+                    r[7] * kernels[offset2 + 7] +
+                    r[8] * kernels[offset2 + 8] + biases[npos + 2], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * k3[0] +
-                    r[1] * k3[1] +
-                    r[2] * k3[2] +
-                    r[3] * k3[3] +
-                    r[4] * k3[4] +
-                    r[5] * k3[5] +
-                    r[6] * k3[6] +
-                    r[7] * k3[7] +
-                    r[8] * k3[8] + biases[npos + 3], 0.0f
+                    r[0] * kernels[offset3 + 0] +
+                    r[1] * kernels[offset3 + 1] +
+                    r[2] * kernels[offset3 + 2] +
+                    r[3] * kernels[offset3 + 3] +
+                    r[4] * kernels[offset3 + 4] +
+                    r[5] * kernels[offset3 + 5] +
+                    r[6] * kernels[offset3 + 6] +
+                    r[7] * kernels[offset3 + 7] +
+                    r[8] * kernels[offset3 + 8] + biases[npos + 3], 0.0f
                 ))));
             surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
         }
@@ -122,8 +122,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels,
-        const float* biases
+        const float* __restrict__ kernels,
+        const float* __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -163,29 +163,29 @@ namespace ac::core::cuda
             float sum[4] = {};
             for (int i = 0; i < 4; i++)
             {
-                auto k0 = kernels + (npos + i) * 9 * cin + 0 * cin;
-                auto k1 = kernels + (npos + i) * 9 * cin + 1 * cin;
-                auto k2 = kernels + (npos + i) * 9 * cin + 2 * cin;
-                auto k3 = kernels + (npos + i) * 9 * cin + 3 * cin;
-                auto k4 = kernels + (npos + i) * 9 * cin + 4 * cin;
-                auto k5 = kernels + (npos + i) * 9 * cin + 5 * cin;
-                auto k6 = kernels + (npos + i) * 9 * cin + 6 * cin;
-                auto k7 = kernels + (npos + i) * 9 * cin + 7 * cin;
-                auto k8 = kernels + (npos + i) * 9 * cin + 8 * cin;
+                auto offset0 = (npos + i) * 9 * cin + 0 * cin;
+                auto offset1 = (npos + i) * 9 * cin + 1 * cin;
+                auto offset2 = (npos + i) * 9 * cin + 2 * cin;
+                auto offset3 = (npos + i) * 9 * cin + 3 * cin;
+                auto offset4 = (npos + i) * 9 * cin + 4 * cin;
+                auto offset5 = (npos + i) * 9 * cin + 5 * cin;
+                auto offset6 = (npos + i) * 9 * cin + 6 * cin;
+                auto offset7 = (npos + i) * 9 * cin + 7 * cin;
+                auto offset8 = (npos + i) * 9 * cin + 8 * cin;
 
                 for (int cidx = 0; cidx < lin; cidx++)
                 {
                     auto cpos = cidx * 4;
                     sum[i] +=
-                        dot(r0[cidx], k0 + cpos) +
-                        dot(r1[cidx], k1 + cpos) +
-                        dot(r2[cidx], k2 + cpos) +
-                        dot(r3[cidx], k3 + cpos) +
-                        dot(r4[cidx], k4 + cpos) +
-                        dot(r5[cidx], k5 + cpos) +
-                        dot(r6[cidx], k6 + cpos) +
-                        dot(r7[cidx], k7 + cpos) +
-                        dot(r8[cidx], k8 + cpos);
+                        dot(r0[cidx], kernels + offset0 + cpos) +
+                        dot(r1[cidx], kernels + offset1 + cpos) +
+                        dot(r2[cidx], kernels + offset2 + cpos) +
+                        dot(r3[cidx], kernels + offset3 + cpos) +
+                        dot(r4[cidx], kernels + offset4 + cpos) +
+                        dot(r5[cidx], kernels + offset5 + cpos) +
+                        dot(r6[cidx], kernels + offset6 + cpos) +
+                        dot(r7[cidx], kernels + offset7 + cpos) +
+                        dot(r8[cidx], kernels + offset8 + cpos);
                 }
 
                 sum[i] += biases[npos + i];
@@ -208,7 +208,7 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels
+        const float* __restrict__ kernels
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -216,15 +216,19 @@ namespace ac::core::cuda
 
         if (x >= width || y >= height) return;
 
-        const unsigned int index = ((y & 1) << 1) + (x & 1);
-
         constexpr int lin = cin / 4;
+
+        const unsigned int index = ((y & 1) << 1) + (x & 1);
 
         float sum = 0.0f;
         for (int cidx = 0; cidx < lin; cidx++)
         {
-            auto k = kernels + cidx * 4 * 4 + index;
-            sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), make_float4(k[0], k[4], k[8], k[12]));
+            auto offset = cidx * 4 * 4 + index;
+            sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), make_float4(
+                kernels[offset + 0],
+                kernels[offset + 4],
+                kernels[offset + 8],
+                kernels[offset + 12]));
         }
         surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
     }
