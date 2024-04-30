@@ -18,7 +18,7 @@ namespace ac::core::cuda
         return static_cast<Unsigned>(rintf(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max()));
     }
 
-    __device__ inline static float dot(float4 a, const float* b)
+    __device__ inline static float dot(float4 a, const float* __restrict__ b)
     {
         return a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3];
     }
@@ -34,8 +34,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels,
-        const float* biases
+        const float* __restrict__ kernels,
+        const float* __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -61,10 +61,10 @@ namespace ac::core::cuda
         {
             auto npos = nidx * 4;
 
-            auto k0 = kernels + (npos + 0) * 9;
-            auto k1 = kernels + (npos + 1) * 9;
-            auto k2 = kernels + (npos + 2) * 9;
-            auto k3 = kernels + (npos + 3) * 9;
+            const float* __restrict__ k0 = kernels + (npos + 0) * 9;
+            const float* __restrict__ k1 = kernels + (npos + 1) * 9;
+            const float* __restrict__ k2 = kernels + (npos + 2) * 9;
+            const float* __restrict__ k3 = kernels + (npos + 3) * 9;
 
             auto layer = make_ushort4(
                 __half_as_ushort(__float2half(fmaxf(
@@ -122,8 +122,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels,
-        const float* biases
+        const float* __restrict__ kernels,
+        const float* __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -163,15 +163,15 @@ namespace ac::core::cuda
             float sum[4] = {};
             for (int i = 0; i < 4; i++)
             {
-                auto k0 = kernels + (npos + i) * 9 * cin + 0 * cin;
-                auto k1 = kernels + (npos + i) * 9 * cin + 1 * cin;
-                auto k2 = kernels + (npos + i) * 9 * cin + 2 * cin;
-                auto k3 = kernels + (npos + i) * 9 * cin + 3 * cin;
-                auto k4 = kernels + (npos + i) * 9 * cin + 4 * cin;
-                auto k5 = kernels + (npos + i) * 9 * cin + 5 * cin;
-                auto k6 = kernels + (npos + i) * 9 * cin + 6 * cin;
-                auto k7 = kernels + (npos + i) * 9 * cin + 7 * cin;
-                auto k8 = kernels + (npos + i) * 9 * cin + 8 * cin;
+                const float* __restrict__ k0 = kernels + (npos + i) * 9 * cin + 0 * cin;
+                const float* __restrict__ k1 = kernels + (npos + i) * 9 * cin + 1 * cin;
+                const float* __restrict__ k2 = kernels + (npos + i) * 9 * cin + 2 * cin;
+                const float* __restrict__ k3 = kernels + (npos + i) * 9 * cin + 3 * cin;
+                const float* __restrict__ k4 = kernels + (npos + i) * 9 * cin + 4 * cin;
+                const float* __restrict__ k5 = kernels + (npos + i) * 9 * cin + 5 * cin;
+                const float* __restrict__ k6 = kernels + (npos + i) * 9 * cin + 6 * cin;
+                const float* __restrict__ k7 = kernels + (npos + i) * 9 * cin + 7 * cin;
+                const float* __restrict__ k8 = kernels + (npos + i) * 9 * cin + 8 * cin;
 
                 for (int cidx = 0; cidx < lin; cidx++)
                 {
@@ -208,7 +208,7 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* kernels
+        const float* __restrict__ kernels
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -223,7 +223,7 @@ namespace ac::core::cuda
         float sum = 0.0f;
         for (int cidx = 0; cidx < lin; cidx++)
         {
-            auto k = kernels + cidx * 4 * 4 + index;
+            const float* __restrict__ k = kernels + cidx * 4 * 4 + index;
             sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), make_float4(k[0], k[4], k[8], k[12]));
         }
         surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
