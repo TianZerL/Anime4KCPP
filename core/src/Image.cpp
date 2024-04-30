@@ -42,7 +42,7 @@ struct ac::core::Image::ImageData
 };
 
 ac::core::Image::Image() noexcept : Image(0, 0, 0, UInt8, nullptr, 0) {}
-ac::core::Image::Image(const int w, const int h, const int c, const ElementType elementType) : Image(w, h, c, elementType, nullptr, 0) {}
+ac::core::Image::Image(const int w, const int h, const int c, const ElementType elementType, const int stride) : Image(w, h, c, elementType, nullptr, stride) {}
 ac::core::Image::Image(const int w, const int h, const int c, const ElementType elementType, void* const data, const int stride) :
     w(w), h(h), c(c), elementType(elementType),
     pitch(stride > 0 ? stride : w * c * (elementType & 0xff)),
@@ -63,9 +63,9 @@ ac::core::Image::~Image() noexcept = default;
 ac::core::Image& ac::core::Image::operator=(const Image&) noexcept = default;
 ac::core::Image& ac::core::Image::operator=(Image&&) noexcept = default;
 
-void ac::core::Image::create(const int w, const int h, const int c, const ElementType elementType)
+void ac::core::Image::create(const int w, const int h, const int c, const ElementType elementType, const int stride)
 {
-    int pitch = w * c * (elementType & 0xff);
+    int pitch = stride > 0 ? stride : w * c * (elementType & 0xff);
     int size = h * pitch;
     if (!(size > 0)) return;
     this->w = w;

@@ -1,4 +1,5 @@
 #include <cassert>
+#include <type_traits>
 
 #define STB_IMAGE_RESIZE2_IMPLEMENTATION
 #include <stb_image_resize2.h>
@@ -68,9 +69,9 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void rgb2yuv(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -88,10 +89,10 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void rgb2yuv(const Image& src, Image& dsty, Image& dstuv)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const yptr, void* const uvptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto yout = static_cast<IN*>(yptr);
-            auto uvout = static_cast<IN*>(uvptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto yout = static_cast<OUT*>(yptr);
+            auto uvout = static_cast<OUT*>(uvptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -109,11 +110,11 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void rgb2yuv(const Image& src, Image& dsty, Image& dstu, Image& dstv)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const yptr, void* const uptr, void* const vptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto yout = static_cast<IN*>(yptr);
-            auto uout = static_cast<IN*>(uptr);
-            auto vout = static_cast<IN*>(vptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto yout = static_cast<OUT*>(yptr);
+            auto uout = static_cast<OUT*>(uptr);
+            auto vout = static_cast<OUT*>(vptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -132,9 +133,9 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void rgba2yuva(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -147,16 +148,17 @@ namespace ac::core::detail
             out[0] = fromFloat<OUT>(y);
             out[1] = fromFloat<OUT>(u);
             out[2] = fromFloat<OUT>(v);
-            out[3] = in[3];
+            if constexpr (std::is_same_v<IN, OUT>) out[3] = in[3];
+            else out[3] = fromFloat<OUT>(toFloat(in[3]));
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
     inline static void rgba2yuva(const Image& src, Image& dsty, Image& dstuva)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const yptr, void* const uvaptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto yout = static_cast<IN*>(yptr);
-            auto uvaout = static_cast<IN*>(uvaptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvaptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto yout = static_cast<OUT*>(yptr);
+            auto uvaout = static_cast<OUT*>(uvaptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -169,18 +171,19 @@ namespace ac::core::detail
             yout[0] = fromFloat<OUT>(y);
             uvaout[0] = fromFloat<OUT>(u);
             uvaout[1] = fromFloat<OUT>(v);
-            uvaout[2] = in[3];
+            if constexpr (std::is_same_v<IN, OUT>) uvaout[2] = in[3];
+            else uvaout[2] = fromFloat<OUT>(toFloat(in[3]));
         }, src, dsty, dstuva);
     }
     template<typename IN, typename OUT = IN>
     inline static void rgba2yuva(const Image& src, Image& dsty, Image& dstu, Image& dstv, Image& dsta)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const yptr, void* const uptr, void* const vptr, void* const aptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto yout = static_cast<IN*>(yptr);
-            auto uout = static_cast<IN*>(uptr);
-            auto vout = static_cast<IN*>(vptr);
-            auto aout = static_cast<IN*>(aptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr, void* const aptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto yout = static_cast<OUT*>(yptr);
+            auto uout = static_cast<OUT*>(uptr);
+            auto vout = static_cast<OUT*>(vptr);
+            auto aout = static_cast<OUT*>(aptr);
 
             float r = toFloat(in[0]);
             float g = toFloat(in[1]);
@@ -193,16 +196,17 @@ namespace ac::core::detail
             *yout = fromFloat<OUT>(y);
             *uout = fromFloat<OUT>(u);
             *vout = fromFloat<OUT>(v);
-            *aout = in[3];
+            if constexpr (std::is_same_v<IN, OUT>) *aout = in[3];
+            else *aout = fromFloat<OUT>(toFloat(in[3]));
         }, src, dsty, dstu, dstv, dsta);
     }
 
     template<typename IN, typename OUT = IN>
     inline static void yuv2rgb(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(in[0]);
             float u = toFloat(in[1]) - 0.5f;
@@ -220,10 +224,10 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void yuv2rgb(const Image& srcy, const Image& srcuv, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const yptr, void* const uvptr, void* const dptr) {
-            auto yin = static_cast<IN*>(yptr);
-            auto uvin = static_cast<IN*>(uvptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/,const  void* const yptr, const void* const uvptr, void* const dptr) {
+            auto yin = static_cast<const IN*>(yptr);
+            auto uvin = static_cast<const IN*>(uvptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(yin[0]);
             float u = toFloat(uvin[0]) - 0.5f;
@@ -241,11 +245,11 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void yuv2rgb(const Image& srcy, const Image& srcu, const Image& srcv, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const yptr, void* const uptr, void* const vptr, void* const dptr) {
-            auto yin = static_cast<IN*>(yptr);
-            auto uin = static_cast<IN*>(uptr);
-            auto vin = static_cast<IN*>(vptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, void* const dptr) {
+            auto yin = static_cast<const IN*>(yptr);
+            auto uin = static_cast<const IN*>(uptr);
+            auto vin = static_cast<const IN*>(vptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(*yin);
             float u = toFloat(*uin) - 0.5f;
@@ -264,9 +268,9 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void yuva2rgba(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const sptr, void* const dptr) {
-            auto in = static_cast<IN*>(sptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const IN*>(sptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(in[0]);
             float u = toFloat(in[1]) - 0.5f;
@@ -279,16 +283,17 @@ namespace ac::core::detail
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            out[3] = in[3];
+            if constexpr (std::is_same_v<IN, OUT>) out[3] = in[3];
+            else out[3] = fromFloat<OUT>(toFloat(in[3]));
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
     inline static void yuva2rgba(const Image& srcy, const Image& srcuva, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const yptr, void* const uvaptr, void* const dptr) {
-            auto yin = static_cast<IN*>(yptr);
-            auto uvain = static_cast<IN*>(uvaptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvaptr, void* const dptr) {
+            auto yin = static_cast<const IN*>(yptr);
+            auto uvain = static_cast<const IN*>(uvaptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(yin[0]);
             float u = toFloat(uvain[0]) - 0.5f;
@@ -301,18 +306,19 @@ namespace ac::core::detail
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            out[3] = uvain[2];
+            if constexpr (std::is_same_v<IN, OUT>) out[3] = uvain[2];
+            else out[3] = fromFloat<OUT>(toFloat(uvain[2]));
         }, srcy, srcuva, dst);
     }
     template<typename IN, typename OUT = IN>
     inline static void yuva2rgba(const Image& srcy, const Image& srcu, const Image& srcv, const Image& srca, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, void* const yptr, void* const uptr, void* const vptr, void* const aptr, void* const dptr) {
-            auto yin = static_cast<IN*>(yptr);
-            auto uin = static_cast<IN*>(uptr);
-            auto vin = static_cast<IN*>(vptr);
-            auto ain = static_cast<IN*>(aptr);
-            auto out = static_cast<IN*>(dptr);
+        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, const void* const aptr, void* const dptr) {
+            auto yin = static_cast<const IN*>(yptr);
+            auto uin = static_cast<const IN*>(uptr);
+            auto vin = static_cast<const IN*>(vptr);
+            auto ain = static_cast<const IN*>(aptr);
+            auto out = static_cast<OUT*>(dptr);
 
             float y = toFloat(*yin);
             float u = toFloat(*uin) - 0.5f;
@@ -325,8 +331,21 @@ namespace ac::core::detail
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            out[3] = *ain;
+            if constexpr (std::is_same_v<IN, OUT>) out[3] = *ain;
+            else out[3] = fromFloat<OUT>(toFloat(*ain));
         }, srcy, srcu, srcv, srca, dst);
+    }
+
+    template<typename T>
+    inline static void unpadding(const Image& src, Image& dst)
+    {
+        int channels =  src.channels();
+        filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const T*>(sptr);
+            auto out = static_cast<T*>(dptr);
+
+            for (int c = 0; c < channels; c++) out[c] = in[c];
+        }, src, dst);
     }
 }
 
@@ -490,4 +509,18 @@ void ac::core::yuva2rgba(const Image& y, const Image& u, const Image& v, const I
     case Image::UInt16: return detail::yuva2rgba<std::uint16_t>(y, u, v, a, rgba);
     case Image::Float32: return detail::yuva2rgba<float>(y, u, v, a, rgba);
     }
+}
+void ac::core::unpadding(const Image& src, Image& dst)
+{
+    if (src.empty() || (src.stride() == src.width() * src.channelSize())) return;
+    Image tmp{};
+    if (src == dst || dst.empty()) tmp.create(src.width(), src.height(), src.channels(), src.type());
+    else tmp = dst;
+    switch (src.type())
+    {
+    case Image::UInt8: detail::unpadding<std::uint8_t>(src, tmp); break;
+    case Image::UInt16: detail::unpadding<std::uint16_t>(src, tmp); break;
+    case Image::Float32: detail::unpadding<float>(src, tmp); break;
+    }
+    if (dst != tmp) dst = tmp;
 }

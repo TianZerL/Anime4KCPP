@@ -55,10 +55,12 @@ bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
 
     if (idx != -1)
     {
-        if(!std::strcmp(filename + idx + 1, "png")) return stbi_write_png(filename, image.width(), image.height(), image.channels(), image.ptr(), image.stride());
-        if(!std::strcmp(filename + idx + 1, "jpg")) return stbi_write_jpg(filename, image.width(), image.height(), image.channels(), image.ptr(), 95);
-        if(!std::strcmp(filename + idx + 1, "bmp")) return stbi_write_bmp(filename, image.width(), image.height(), image.channels(), image.ptr());
-        if(!std::strcmp(filename + idx + 1, "tga")) return stbi_write_tga(filename, image.width(), image.height(), image.channels(), image.ptr());
+        Image out = image;
+        if(!std::strcmp(filename + idx + 1, "png")) return stbi_write_png(filename, out.width(), out.height(), out.channels(), out.ptr(), out.stride());
+        unpadding(out, out);
+        if(!std::strcmp(filename + idx + 1, "jpg")) return stbi_write_jpg(filename, out.width(), out.height(), out.channels(), out.ptr(), 95);
+        if(!std::strcmp(filename + idx + 1, "bmp")) return stbi_write_bmp(filename, out.width(), out.height(), out.channels(), out.ptr());
+        if(!std::strcmp(filename + idx + 1, "tga")) return stbi_write_tga(filename, out.width(), out.height(), out.channels(), out.ptr());
     }
     else return stbi_write_jpg(filename, image.width(), image.height(), image.channels(), image.ptr(), 95);
 

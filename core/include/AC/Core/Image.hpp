@@ -69,6 +69,9 @@ namespace ac::core
     // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
     // `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image.
     AC_EXPORT void yuva2rgba(const Image& y, const Image& u, const Image& v, const Image& a, Image& rgba);
+    // remove padding in the stride of `src`, if necessary.
+    // `src` and `dst` can be same.
+    AC_EXPORT void unpadding(const Image& src, Image& dst);
 
     enum
     {
@@ -100,7 +103,7 @@ public:
 
 public:
     AC_EXPORT Image() noexcept;
-    AC_EXPORT Image(int w, int h, int c, ElementType elementType);
+    AC_EXPORT Image(int w, int h, int c, ElementType elementType, int stride = 0);
     AC_EXPORT Image(int w, int h, int c, ElementType elementType, void* data, int stride);
     AC_EXPORT Image(const Image&) noexcept;
     AC_EXPORT Image(Image&&) noexcept;
@@ -108,7 +111,7 @@ public:
     AC_EXPORT Image& operator=(const Image&) noexcept;
     AC_EXPORT Image& operator=(Image&&) noexcept;
 
-    AC_EXPORT void create(int w, int h, int c, ElementType elementType);
+    AC_EXPORT void create(int w, int h, int c, ElementType elementType, int stride = 0);
 
 public:
     int width() const noexcept { return w; }
