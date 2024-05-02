@@ -13,6 +13,7 @@ endif()
 
 target_sources(ac_video PRIVATE
     ${VIDEO_SOURCE_DIR}/src/Pipeline.cpp
+    ${VIDEO_SOURCE_DIR}/src/Filter.cpp
 )
 
 target_include_directories(ac_video PUBLIC
@@ -21,7 +22,7 @@ target_include_directories(ac_video PUBLIC
     $<INSTALL_INTERFACE:ac/include>
 )
 
-target_link_libraries(ac_video PRIVATE dep::ffmpeg)
+target_link_libraries(ac_video PRIVATE ac_util dep::ffmpeg)
 
 ac_check_enable_static_crt(ac_video)
 

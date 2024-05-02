@@ -23,10 +23,14 @@ struct ac::video::Frame
     } planar[3];
     // the definition is the same as the `ElementType` of `ac::core:Image`
     int elementType;
-    // number(one based) for decoding, index(zero based) for encoding
+    // one based number
     int number;
     // referencing internal data, do not modify it
     void* ref;
+
+    // for sequential comparison
+    bool operator<(const Frame& other) const noexcept { return number < other.number; }
+    bool operator>(const Frame& other) const noexcept { return number > other.number; }
 };
 
 struct ac::video::Info

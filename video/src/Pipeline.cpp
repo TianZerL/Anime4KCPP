@@ -32,9 +32,9 @@ namespace ac::video::detail
         AVPacket* epacket = nullptr;
         AVCodecContext* decodecCtx = nullptr;
         AVCodecContext* encodecCtx = nullptr;
-        AVStream* evideoStream = nullptr;
         AVStream* dvideoStream = nullptr;
-        int videoIdx = -1;
+        AVStream* evideoStream = nullptr;
+        int videoIdx = 0;
         bool dfmtCtxOpenFlag = false;
         bool writeHaderFlag = false;
     };
@@ -53,14 +53,14 @@ namespace ac::video::detail
         dfmtCtxOpenFlag = true;
 
         ret = avformat_find_stream_info(dfmtCtx, nullptr); if (ret < 0) return false;
-        for(int i = 0; i < dfmtCtx->nb_streams; i++)
+        for(int i = 0; i < static_cast<int>(dfmtCtx->nb_streams); i++)
             if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 dvideoStream = dfmtCtx->streams[i];
                 videoIdx = i;
                 break;
             }
-        if (videoIdx == -1) return false;
+        if (!dvideoStream) return false;
 
         switch (dvideoStream->codecpar->format)
         {
@@ -91,6 +91,7 @@ namespace ac::video::detail
         {
         case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
         case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+        default: break;
         }
         encodecCtx->pix_fmt = decodecCtx->pix_fmt;
         encodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
@@ -110,7 +111,7 @@ namespace ac::video::detail
 
         ret = avcodec_open2(encodecCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
-        for(int i = 0; i < dfmtCtx->nb_streams; i++)
+        for(int i = 0; i < static_cast<int>(dfmtCtx->nb_streams); i++)
         {
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
@@ -139,11 +140,8 @@ namespace ac::video::detail
         {
             ret = avcodec_receive_frame(decodecCtx, frame);
             if(ret == 0) break;
-            else switch (ret)
-            {
-            case AVERROR(EAGAIN): if(fetch()) break;
-            default: release(frame); return false;
-            }
+            else if (ret == AVERROR(EAGAIN) && fetch()) continue;
+            else return false;
         }
         fill(dst, frame);
         dst.number = decodecCtx->frame_num;
@@ -159,8 +157,8 @@ namespace ac::video::detail
             ret = avcodec_receive_packet(encodecCtx, epacket);
             if (ret == AVERROR(EAGAIN)) break;
             else if (ret < 0) return false;
-            epacket->stream_index = evideoStream->index;
             av_packet_rescale_ts(epacket, encodecCtx->time_base, evideoStream->time_base);
+            epacket->stream_index = evideoStream->index;
             ret = av_interleaved_write_frame(efmtCtx, epacket); if (ret < 0) return false;
         }
         release(frame);
@@ -178,7 +176,7 @@ namespace ac::video::detail
         ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
 
         fill(dst, dstFrame);
-        dst.number = encodecCtx->frame_num;
+        dst.number = src.number;
         return true;
     }
     inline void PipelineImpl::release(AVFrame* frame) noexcept
@@ -243,11 +241,12 @@ namespace ac::video::detail
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
         switch (decodecCtx->pix_fmt)
         {
-        case AV_PIX_FMT_YUV444P: wscale = 1;
+        case AV_PIX_FMT_YUV444P: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P: hscale = 1; break;
-        case AV_PIX_FMT_YUV444P16: wscale = 1;
-        case AV_PIX_FMT_YUV422P16: hscale = 1;
+        case AV_PIX_FMT_YUV444P16: wscale = 1; [[fallthrough]];
+        case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t);
+        default: break;
         }
         dst.planar[0].width = src->width;
         dst.planar[0].height = src->height;

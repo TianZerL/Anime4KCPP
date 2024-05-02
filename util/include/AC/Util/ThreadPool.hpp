@@ -1,7 +1,6 @@
 #ifndef AC_UTIL_THREADPOOL_HPP
 #define AC_UTIL_THREADPOOL_HPP
 
-#include <algorithm>
 #include <condition_variable>
 #include <cstddef>
 #include <functional>
@@ -22,12 +21,17 @@ class ac::util::ThreadPool
 {
 public:
     explicit ThreadPool(std::size_t size);
+    ThreadPool(const ThreadPool&) = delete;
+    ThreadPool(ThreadPool&&) = default;
+    ThreadPool& operator=(const ThreadPool&) = delete;
+    ThreadPool& operator=(ThreadPool&&) = delete;
     ~ThreadPool();
 
     template<typename F> void exec(F&& f);
     template<typename F, typename... Args> auto exec(F&& f, Args&&... args);
 
-    static unsigned int concurrentThreads() noexcept;
+public:
+    static unsigned int hardwareThreads() noexcept;
 
 private:
     std::vector<std::thread> threads;
@@ -37,11 +41,11 @@ private:
     bool stop;
 };
 
-inline ac::util::ThreadPool::ThreadPool(std::size_t size) :stop(false)
+inline ac::util::ThreadPool::ThreadPool(const std::size_t size) : stop(false)
 {
     threads.reserve(size);
 
-    for (int i = 0; i < size; i++)
+    for (std::size_t i = 0; i < size; i++)
         threads.emplace_back([this]() {
             for (;;)
             {
@@ -63,7 +67,7 @@ inline ac::util::ThreadPool::~ThreadPool()
         stop = true;
     }
     cnd.notify_all();
-    std::for_each(threads.begin(), threads.end(), std::mem_fn(&std::thread::join));
+    for (auto&& thread : threads) thread.join();
 }
 
 template<typename F>
@@ -89,7 +93,7 @@ inline auto ac::util::ThreadPool::exec(F&& f, Args && ...args)
     return ret;
 }
 
-inline unsigned int ac::util::ThreadPool::concurrentThreads() noexcept
+inline unsigned int ac::util::ThreadPool::hardwareThreads() noexcept
 {
     auto num = std::thread::hardware_concurrency();
     return num ? num : 1;
