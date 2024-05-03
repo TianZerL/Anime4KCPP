@@ -8,7 +8,6 @@
 
 #include "Options.hpp"
 
-#define CHECK_FLAG(O, F, ...) if (O.F) { F(__VA_ARGS__); return 0; }
 #define CHECK_PROCESSOR(P) if (!(P)->ok()) { std::printf("%s\n", (P)->error()); std::exit(0); }
 
 static void version()
@@ -25,12 +24,12 @@ static void version()
 
 static void list()
 {
-    std::printf(ac::core::Processor::info<ac::core::Processor::CPU>());
+    std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
 #   ifdef AC_CORE_WITH_OPENCL
-        std::printf(ac::core::Processor::info<ac::core::Processor::OpenCL>());
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        std::printf(ac::core::Processor::info<ac::core::Processor::CUDA>());
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
 #   endif
 }
 
@@ -117,8 +116,16 @@ int main(int argc, const char* argv[])
 {
     auto options = parse(argc, argv);
 
-    CHECK_FLAG(options, version);
-    CHECK_FLAG(options, list);
+    if (options.version)
+    {
+        version();
+        return 0;
+    }
+    if (options.list)
+    {
+        list();
+        return 0;
+    }
 
     if (options.input.empty()) return 0;
 
@@ -158,9 +165,10 @@ int main(int argc, const char* argv[])
                 "Processor: %s %s\n",
                 options.model.c_str(), options.processor.c_str(), processor->name());
 
-    CHECK_FLAG(options, video, processor, options);
-
-    image(processor, options);
+    if (options.video)
+        video(processor, options);
+    else
+        image(processor, options);
 
     return 0;
 }
