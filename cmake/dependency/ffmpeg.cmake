@@ -30,9 +30,10 @@ if(NOT TARGET dep::ffmpeg)
     else()
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
-            libavcodec
-            libavformat
-            libavutil
+            # ffmpeg 4.0 at least
+            libavcodec >= 58.18.100
+            libavformat >= 58.12.100
+            libavutil >= 56.14.100
         )
         target_link_libraries(dep_ffmpeg INTERFACE PkgConfig::LIBAV)
     endif()

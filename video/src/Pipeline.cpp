@@ -92,8 +92,13 @@ namespace ac::video::detail
 
         switch (codec->id)
         {
-        case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
-        case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+#       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
+            case AV_CODEC_ID_H264: encodecCtx->profile = FF_PROFILE_H264_HIGH; break;
+            case AV_CODEC_ID_HEVC: encodecCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
+#       else
+            case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
+            case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+#       endif
         default: break;
         }
         encodecCtx->pix_fmt = decodecCtx->pix_fmt;
@@ -118,8 +123,10 @@ namespace ac::video::detail
             else
             {   // copy stream info except pointers
                 *stream->codecpar = *dfmtCtx->streams[i]->codecpar;
-                stream->codecpar->coded_side_data = nullptr;
-                stream->codecpar->nb_coded_side_data = 0;
+#               if LIBAVCODEC_VERSION_MAJOR > 60 // ffmpeg 7, libavcodec 61
+                    stream->codecpar->coded_side_data = nullptr;
+                    stream->codecpar->nb_coded_side_data = 0;
+#               endif
                 stream->codecpar->extradata = nullptr;
                 stream->codecpar->extradata_size = 0;
             }
@@ -145,7 +152,11 @@ namespace ac::video::detail
             else return false;
         }
         fill(dst, frame);
-        dst.number = decodecCtx->frame_num;
+#       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
+            dst.number = decodecCtx->frame_number;
+#       else
+            dst.number = decodecCtx->frame_num;
+#       endif
         return true;
     }
     inline bool PipelineImpl::encode(const Frame& src) noexcept
@@ -174,7 +185,9 @@ namespace ac::video::detail
         dstFrame->height = encodecCtx->height;
         dstFrame->format = srcFrame->format;
         dstFrame->pts = srcFrame->pts;
-        dstFrame->duration = srcFrame->duration;
+#       if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
+            dstFrame->duration = srcFrame->duration;
+#       endif
         ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
 
         fill(dst, dstFrame);
