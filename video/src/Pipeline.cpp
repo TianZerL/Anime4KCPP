@@ -78,7 +78,7 @@ namespace ac::video::detail
         ret = avcodec_parameters_to_context(decodecCtx, dvideoStream->codecpar); if (ret < 0) return false;
         decodecCtx->pkt_timebase = dvideoStream->time_base;
         ret = avcodec_open2(decodecCtx, codec, nullptr); if (ret < 0) return false;
-        timeBase = av_inv_q(decodecCtx->framerate);
+        timeBase = av_inv_q(decodecCtx->framerate.num ? decodecCtx->framerate : (dvideoStream->avg_frame_rate.num ? dvideoStream->avg_frame_rate : av_make_q(24000, 1001)));
         return true;
     }
     inline bool PipelineImpl::openEncoder(const char* const filename, const double factor, const EncoderHints& hints) noexcept
@@ -292,7 +292,7 @@ namespace ac::video::detail
         info.length = dfmtCtx->duration / AV_TIME_BASE;
         info.width = decodecCtx->width;
         info.height = decodecCtx->height;
-        info.fps = av_q2d(decodecCtx->framerate);
+        info.fps = av_q2d(av_inv_q(timeBase));
         return info;
     }
 }

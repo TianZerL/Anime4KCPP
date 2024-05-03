@@ -100,7 +100,11 @@ static void video(std::shared_ptr<ac::core::Processor> processor, Options& optio
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
         // progress
-        if (src.number % 32 == 0) std::printf("%.2lf%%\r", 100 * src.number / ctx->frames);
+        if (src.number % 32 == 0)
+        {
+            std::printf("%.2lf%%\r", 100 * src.number / ctx->frames);
+            std::fflush(stdout);
+        }
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
     pipeline.close();
