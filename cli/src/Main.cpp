@@ -1,49 +1,124 @@
-#include <iostream>
+#include <cstdio>
 
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
+#ifdef AC_CLI_ENABLE_VIDEO
+#   include "AC/Video.hpp"
+#endif
 
 #include "Options.hpp"
 
-#define CHECK_ERROR(P) if (!(P)->ok()) { std::cout << (P)->error() << '\n'; return 0; }
+#define CHECK_FLAG(O, F, ...) if (O.F) { F(__VA_ARGS__); return 0; }
+#define CHECK_PROCESSOR(P) if (!(P)->ok()) { std::printf("%s\n", (P)->error()); std::exit(0); }
 
 static void version()
 {
-    std::cout <<
+    std::printf(
             "Anime4KCPP CLI:\n"
             "  core version: " AC_CORE_VERSION_STR "\n"
             "  build date: " AC_CORE_BUILD_DATE "\n"
             "  built by: " AC_CORE_COMPILER_ID " (v" AC_CORE_COMPILER_VERSION ")\n\n"
             "Copyright (c) by TianZerL the Anime4KCPP project 2020-" AC_CORE_BUILD_YEAR "\n"
-            "https://github.com/TianZerL/Anime4KCPP\n";
+            "https://github.com/TianZerL/Anime4KCPP\n"
+    );
 }
 
 static void list()
 {
-    std::cout << ac::core::Processor::info<ac::core::Processor::CPU>();
+    std::printf(ac::core::Processor::info<ac::core::Processor::CPU>());
 #   ifdef AC_CORE_WITH_OPENCL
-        std::cout << ac::core::Processor::info<ac::core::Processor::OpenCL>();
+        std::printf(ac::core::Processor::info<ac::core::Processor::OpenCL>());
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        std::cout << ac::core::Processor::info<ac::core::Processor::CUDA>();
+        std::printf(ac::core::Processor::info<ac::core::Processor::CUDA>());
 #   endif
+}
+
+static void image(std::shared_ptr<ac::core::Processor> processor, Options& options)
+{
+    if (options.output.empty()) options.output = "output.jpg";
+
+    auto src = ac::core::imread(options.input.c_str(), ac::core::IMREAD_UNCHANGED);
+
+    ac::util::Stopwatch stopwatch{};
+    auto dst = processor->process(src, options.factor);
+    stopwatch.stop();
+    CHECK_PROCESSOR(processor);
+    std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+
+    if (ac::core::imwrite(options.output.c_str(), dst))
+        std::printf("Save to %s\n", options.output.c_str());
+    else
+        std::printf("Failed to save file\n");
+}
+
+static void video(std::shared_ptr<ac::core::Processor> processor, Options& options)
+{
+#ifdef AC_CLI_ENABLE_VIDEO
+    if (options.output.empty()) options.output = "output.mp4";
+
+    ac::video::Pipeline pipeline{};
+    ac::video::DecoderHints dhints{};
+    ac::video::EncoderHints ehints{};
+    dhints.decoder = options.video.decoder.c_str();
+    ehints.encoder = options.video.encoder.c_str();
+    ehints.bitrate = options.video.bitrate;
+
+    if(!pipeline.openDecoder(options.input.c_str(), dhints))
+    {
+        std::printf("Failed to open decoder");
+        return;
+    }
+    if(!pipeline.openEncoder(options.output.c_str(), options.factor, ehints))
+    {
+        std::printf("Failed to open encoder");
+        return;
+    }
+
+    auto info = pipeline.getInfo();
+
+    struct {
+        double factor;
+        double frames;
+        std::shared_ptr<ac::core::Processor> processor;
+    } data;
+    data.factor = options.factor;
+    data.frames = info.fps * info.length;
+    data.processor = processor;
+
+    ac::util::Stopwatch stopwatch{};
+    ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
+        auto ctx = static_cast<decltype(data)*>(userdata);
+        // y
+        ac::core::Image srcy{src.planar[0].width, src.planar[0].height, 1, src.elementType, src.planar[0].data, src.planar[0].stride};
+        ac::core::Image dsty{dst.planar[0].width, dst.planar[0].height, 1, dst.elementType, dst.planar[0].data, dst.planar[0].stride};
+        ctx->processor->process(srcy, dsty, ctx->factor);
+        // uv
+        for (int i = 1; i < 3; i++)
+        {
+            ac::core::Image srcp{src.planar[i].width, src.planar[i].height, 1, src.elementType, src.planar[i].data, src.planar[i].stride};
+            ac::core::Image dstp{dst.planar[i].width, dst.planar[i].height, 1, dst.elementType, dst.planar[i].data, dst.planar[i].stride};
+            ac::core::resize(srcp, dstp, 0.0, 0.0);
+        }
+        // progress
+        if (src.number % 32 == 0) std::printf("%.2lf%\r", 100 * src.number / ctx->frames);
+    }, &data, ac::video::FILTER_AUTO);
+    stopwatch.stop();
+    pipeline.close();
+    CHECK_PROCESSOR(processor);
+    std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+    std::printf("Save to %s\n", options.output.c_str());
+#else
+    std::printf("This build does not support video processing");
+#endif
 }
 
 int main(int argc, const char* argv[])
 {
     auto options = parse(argc, argv);
 
-    if (options.version)
-    {
-        version();
-        return 0;
-    }
-
-    if (options.list)
-    {
-        list();
-        return 0;
-    }
+    CHECK_FLAG(options, version);
+    CHECK_FLAG(options, list);
 
     if (options.input.empty()) return 0;
 
@@ -77,21 +152,15 @@ int main(int argc, const char* argv[])
         options.processor = "cpu";
         return ac::core::Processor::create<ac::core::Processor::CPU>(options.device, model);
     }();
-    CHECK_ERROR(processor);
+    CHECK_PROCESSOR(processor);
 
-    std::cout << "Model: " << options.model << '\n';
-    std::cout << "Processor: " << options.processor << ' ' << processor->name() << '\n';
+    std::printf("Model: %s\n"
+                "Processor: %s %s\n",
+                options.model.c_str(), options.processor.c_str(), processor->name());
 
-    auto src = ac::core::imread(options.input.c_str(), ac::core::IMREAD_UNCHANGED);
+    CHECK_FLAG(options, video, processor, options);
 
-    ac::util::Stopwatch stopwatch{};
-    auto dst = processor->process(src, options.factor);
-    stopwatch.stop();
-    CHECK_ERROR(processor);
-    std::cout << "Finished in: " << stopwatch.elapsed() << "s\n";
-
-    if (ac::core::imwrite(options.output.c_str(), dst)) std::cout << "Save to "<< options.output << '\n';
-    else std::cout << "Failed to save file\n";
+    image(processor, options);
 
     return 0;
 }

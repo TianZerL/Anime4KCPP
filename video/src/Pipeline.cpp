@@ -53,7 +53,7 @@ namespace ac::video::detail
         dfmtCtxOpenFlag = true;
 
         ret = avformat_find_stream_info(dfmtCtx, nullptr); if (ret < 0) return false;
-        for(int i = 0; i < static_cast<int>(dfmtCtx->nb_streams); i++)
+        for(unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
             if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 dvideoStream = dfmtCtx->streams[i];
@@ -72,7 +72,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV444P16: break;
         default: return false;
         }
-        auto codec = hints.decoder ? avcodec_find_decoder_by_name(hints.decoder) : avcodec_find_decoder(dvideoStream->codecpar->codec_id); if (!codec) return false;
+        auto codec = (hints.decoder && *hints.decoder) ? avcodec_find_decoder_by_name(hints.decoder) : avcodec_find_decoder(dvideoStream->codecpar->codec_id); if (!codec) return false;
         decodecCtx = avcodec_alloc_context3(codec); if (!decodecCtx) return false;
         ret = avcodec_parameters_to_context(decodecCtx, dvideoStream->codecpar); if (ret < 0) return false;
         ret = avcodec_open2(decodecCtx, codec, nullptr); if (ret < 0) return false;
@@ -84,7 +84,7 @@ namespace ac::video::detail
         dpacket = av_packet_alloc(); if (!dpacket) return false;
         ret = avformat_alloc_output_context2(&efmtCtx, nullptr, nullptr, filename); if (ret < 0) return false;
 
-        auto codec = hints.encoder ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
+        auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
         encodecCtx = avcodec_alloc_context3(codec); if (!encodecCtx) return false;
 
         switch (codec->id)
@@ -111,7 +111,7 @@ namespace ac::video::detail
 
         ret = avcodec_open2(encodecCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
-        for(int i = 0; i < static_cast<int>(dfmtCtx->nb_streams); i++)
+        for(unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
         {
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;

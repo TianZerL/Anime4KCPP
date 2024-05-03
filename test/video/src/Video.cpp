@@ -34,14 +34,14 @@ int main(int argc, const char* argv[])
 
     ac::util::Stopwatch stopwatch{};
     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
-        auto dptr = static_cast<decltype(data)*>(userdata);
+        auto ctx = static_cast<decltype(data)*>(userdata);
         for (int i = 0; i < 3; i++)
         {
             ac::core::Image srcp{src.planar[i].width, src.planar[i].height, 1, src.elementType, src.planar[i].data, src.planar[i].stride};
             ac::core::Image dstp{dst.planar[i].width, dst.planar[i].height, 1, dst.elementType, dst.planar[i].data, dst.planar[i].stride};
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
-        if (src.number % 32 == 0) std::printf("%lf%\r", 100 * src.number / dptr->total); // printf is thread safe
+        if (src.number % 32 == 0) std::printf("%lf%\r", 100 * src.number / ctx->total); // printf is thread safe
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
 

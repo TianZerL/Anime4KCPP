@@ -15,7 +15,16 @@ target_include_directories(ac_cli PRIVATE
     $<BUILD_INTERFACE:${CLI_SOURCE_DIR}/include>
 )
 
-target_link_libraries(ac_cli PRIVATE ac ac_util dep::cli11)
+target_link_libraries(ac_cli PRIVATE
+    ac
+    ac_util
+    $<$<TARGET_EXISTS:ac_video>:ac_video>
+    dep::cli11
+)
+
+target_compile_definitions(ac_cli PRIVATE
+    $<$<TARGET_EXISTS:ac_video>:AC_CLI_ENABLE_VIDEO>
+)
 
 ac_check_enable_static_crt(ac_cli)
 
