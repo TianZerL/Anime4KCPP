@@ -41,7 +41,11 @@ int main(int argc, const char* argv[])
             ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
-        if (src.number % 32 == 0) std::printf("%lf%%\r", 100 * src.number / ctx->total); // printf is thread safe
+        if (src.number % 32 == 0)
+        {
+            std::printf("%lf%%\r", 100 * src.number / ctx->total); // printf is thread safe
+            std::fflush(stdout);
+        }
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
 

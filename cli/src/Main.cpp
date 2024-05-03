@@ -8,6 +8,8 @@
 
 #include "Options.hpp"
 
+#define PROGRESS_BAR_TOKEN "============================================================"
+
 #define CHECK_PROCESSOR(P) if (!(P)->ok()) { std::printf("%s\n", (P)->error()); std::exit(0); }
 
 static void version()
@@ -99,17 +101,21 @@ static void video(std::shared_ptr<ac::core::Processor> processor, Options& optio
             ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
-        // progress
+        // a beautiful progress bar
         if (src.number % 32 == 0)
         {
-            std::printf("%.2lf%%\r", 100 * src.number / ctx->frames);
+            constexpr int width = sizeof(PROGRESS_BAR_TOKEN) - 1;
+            double p = src.number / ctx->frames;
+            int done = static_cast<int>(p * width);
+            int left = width - done;
+            std::printf("\r%6.2lf%% [%.*s%-*s]", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">");
             std::fflush(stdout);
         }
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
     pipeline.close();
     CHECK_PROCESSOR(processor);
-    std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+    std::printf("\r100.00%%\nFinished in: %lfs\n", stopwatch.elapsed());
     std::printf("Save to %s\n", options.output.c_str());
 #else
     std::printf("This build does not support video processing");
