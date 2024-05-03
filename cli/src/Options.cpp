@@ -32,7 +32,7 @@ Options parse(const int argc, const char* argv[]) noexcept
     auto video = app.add_subcommand("video", "video process module");
     video->add_option("--decoder", options.video.decoder, "decoder to use");
     video->add_option("--encoder", options.video.encoder, "decoder to use");
-    video->add_option("--bitrate", options.video.bitrate, "bitrate hints for encoding");
+    video->add_option("--bitrate", options.video.bitrate, "bitrate for encoding, kbit/s");
 
     try { app.parse(argc, argv); } catch(const CLI::ParseError &e) { std::exit(app.exit(e)); }
 

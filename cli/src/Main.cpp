@@ -62,7 +62,7 @@ static void video(std::shared_ptr<ac::core::Processor> processor, Options& optio
     ac::video::EncoderHints ehints{};
     dhints.decoder = options.video.decoder.c_str();
     ehints.encoder = options.video.encoder.c_str();
-    ehints.bitrate = options.video.bitrate;
+    ehints.bitrate = options.video.bitrate * 1000;
 
     if(!pipeline.openDecoder(options.input.c_str(), dhints))
     {
