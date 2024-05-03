@@ -34,6 +34,7 @@ namespace ac::video::detail
         AVCodecContext* encodecCtx = nullptr;
         AVStream* dvideoStream = nullptr;
         AVStream* evideoStream = nullptr;
+        AVRational timeBase{}; // should be 1/fps
         int videoIdx = 0;
         bool dfmtCtxOpenFlag = false;
         bool writeHaderFlag = false;
@@ -75,7 +76,9 @@ namespace ac::video::detail
         auto codec = (hints.decoder && *hints.decoder) ? avcodec_find_decoder_by_name(hints.decoder) : avcodec_find_decoder(dvideoStream->codecpar->codec_id); if (!codec) return false;
         decodecCtx = avcodec_alloc_context3(codec); if (!decodecCtx) return false;
         ret = avcodec_parameters_to_context(decodecCtx, dvideoStream->codecpar); if (ret < 0) return false;
+        decodecCtx->pkt_timebase = dvideoStream->time_base;
         ret = avcodec_open2(decodecCtx, codec, nullptr); if (ret < 0) return false;
+        timeBase = av_inv_q(decodecCtx->framerate);
         return true;
     }
     inline bool PipelineImpl::openEncoder(const char* const filename, const double factor, const EncoderHints& hints) noexcept
@@ -97,17 +100,14 @@ namespace ac::video::detail
         encodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
         encodecCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encodecCtx->bit_rate)>(decodecCtx->bit_rate * factor * factor);
         encodecCtx->framerate = decodecCtx->framerate;
-        encodecCtx->gop_size = 10;
-        encodecCtx->max_b_frames = 5;
-        encodecCtx->time_base = dvideoStream->time_base;
+        encodecCtx->gop_size = 12;
+        encodecCtx->time_base = timeBase;
         encodecCtx->width = static_cast<decltype(encodecCtx->width)>(decodecCtx->width * factor);
         encodecCtx->height = static_cast<decltype(encodecCtx->height)>(decodecCtx->height * factor);
         encodecCtx->sample_aspect_ratio = decodecCtx->sample_aspect_ratio;
-        encodecCtx->color_range = decodecCtx->color_range;
         encodecCtx->color_primaries = decodecCtx->color_primaries;
         encodecCtx->color_trc = decodecCtx->color_trc;
         encodecCtx->colorspace = decodecCtx->colorspace;
-        encodecCtx->chroma_sample_location = decodecCtx->chroma_sample_location;
 
         ret = avcodec_open2(encodecCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
@@ -125,6 +125,7 @@ namespace ac::video::detail
             }
         }
         evideoStream->time_base = dvideoStream->time_base;
+        evideoStream->avg_frame_rate = dvideoStream->avg_frame_rate;
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encodecCtx); if (ret < 0) return false;
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
@@ -171,8 +172,9 @@ namespace ac::video::detail
         auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
         dstFrame->width = encodecCtx->width;
         dstFrame->height = encodecCtx->height;
-        dstFrame->format = encodecCtx->pix_fmt;
+        dstFrame->format = srcFrame->format;
         dstFrame->pts = srcFrame->pts;
+        dstFrame->duration = srcFrame->duration;
         ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
 
         fill(dst, dstFrame);
@@ -229,6 +231,7 @@ namespace ac::video::detail
         {
             if(dpacket->stream_index == videoIdx)
             {
+                av_packet_rescale_ts(dpacket, dvideoStream->time_base, timeBase);
                 int ret = avcodec_send_packet(decodecCtx, dpacket);
                 av_packet_unref(dpacket);
                 return ret == 0;
@@ -239,27 +242,35 @@ namespace ac::video::detail
     inline void PipelineImpl::fill(Frame& dst, AVFrame* const src) noexcept
     {
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
+        bool packed = false;
         switch (decodecCtx->pix_fmt)
-        {
+        {// planar
         case AV_PIX_FMT_YUV444P: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P: hscale = 1; break;
         case AV_PIX_FMT_YUV444P16: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
-        case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t);
+        case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
+         // packed
+        case AV_PIX_FMT_P010:
+        case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); [[fallthrough]];
+        case AV_PIX_FMT_NV12: packed = true; break;
         default: break;
         }
-        dst.planar[0].width = src->width;
-        dst.planar[0].height = src->height;
-        dst.planar[1].width = src->width / wscale;
-        dst.planar[1].height = src->height / hscale;
-        dst.planar[2].width = src->width / wscale;
-        dst.planar[2].height = src->height / hscale;
-        for (int i = 0; i < 3; i++)
+        dst.plane[0].width = src->width;
+        dst.plane[0].height = src->height;
+        dst.plane[1].width = src->width / wscale;
+        dst.plane[1].height = src->height / hscale;
+        dst.plane[2].width = src->width / wscale;
+        dst.plane[2].height = src->height / hscale;
+        dst.planes = packed ? 2 : 3;
+        for (int i = 0; i < dst.planes; i++)
         {
-            dst.planar[i].stride = src->linesize[i];
-            dst.planar[i].data = src->data[i];
+            dst.plane[i].stride = src->linesize[i];
+            dst.plane[i].data = src->data[i];
+            dst.plane[i].channel = 1;
         }
-        dst.elementType = (0 << 8) | elementSize;
+        if (packed) dst.plane[1].channel = 2;
+        dst.elementType = (0 << 8) | elementSize; // same as ac::core::Image
         dst.ref = src;
     }
     inline Info PipelineImpl::getInfo() noexcept

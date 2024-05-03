@@ -90,18 +90,18 @@ static void video(std::shared_ptr<ac::core::Processor> processor, Options& optio
     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
         auto ctx = static_cast<decltype(data)*>(userdata);
         // y
-        ac::core::Image srcy{src.planar[0].width, src.planar[0].height, 1, src.elementType, src.planar[0].data, src.planar[0].stride};
-        ac::core::Image dsty{dst.planar[0].width, dst.planar[0].height, 1, dst.elementType, dst.planar[0].data, dst.planar[0].stride};
+        ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
+        ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
         ctx->processor->process(srcy, dsty, ctx->factor);
         // uv
-        for (int i = 1; i < 3; i++)
+        for (int i = 1; i < src.planes; i++)
         {
-            ac::core::Image srcp{src.planar[i].width, src.planar[i].height, 1, src.elementType, src.planar[i].data, src.planar[i].stride};
-            ac::core::Image dstp{dst.planar[i].width, dst.planar[i].height, 1, dst.elementType, dst.planar[i].data, dst.planar[i].stride};
+            ac::core::Image srcp{src.plane[i].width, src.plane[i].height, src.plane[i].channel, src.elementType, src.plane[i].data, src.plane[i].stride};
+            ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
         // progress
-        if (src.number % 32 == 0) std::printf("%.2lf%\r", 100 * src.number / ctx->frames);
+        if (src.number % 32 == 0) std::printf("%.2lf%%\r", 100 * src.number / ctx->frames);
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
     pipeline.close();

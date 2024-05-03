@@ -18,9 +18,10 @@ namespace ac::video
 struct ac::video::Frame
 {
     struct {
-        int width, height, stride;
+        int width, height, channel, stride;
         std::uint8_t* data;
-    } planar[3];
+    } plane[3];
+    int planes;
     // the definition is the same as the `ElementType` of `ac::core:Image`
     int elementType;
     // one based number
