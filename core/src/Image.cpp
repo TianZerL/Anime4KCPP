@@ -13,12 +13,14 @@ namespace ac::core::detail
     template <typename T>
     static inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
     {
-        return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
+        auto srcIntptr = reinterpret_cast<std::uintptr_t>(ptr);
+        auto dstIntptr = align(srcIntptr, n);
+        return ptr + (dstIntptr - srcIntptr);
     }
 
     static inline void* alignedAlloc(std::size_t size) noexcept
     {
-        std::uint8_t** buffer = (std::uint8_t**)std::malloc(size + sizeof(void*) + AC_MALLOC_ALIGN);
+        auto buffer = static_cast<std::uint8_t**>(std::malloc(size + sizeof(void*) + AC_MALLOC_ALIGN));
         if (!buffer) return nullptr;
         std::uint8_t** ptr = alignPtr(buffer + 1, AC_MALLOC_ALIGN);
         ptr[-1] = reinterpret_cast<std::uint8_t*>(buffer);
@@ -26,7 +28,7 @@ namespace ac::core::detail
     }
     static inline void alignedFree(void* ptr) noexcept
     {
-        if (ptr) std::free(reinterpret_cast<std::uint8_t**>(ptr)[-1]);
+        if (ptr) std::free(static_cast<std::uint8_t**>(ptr)[-1]);
     }
 }
 

@@ -35,7 +35,7 @@ static void list()
 #   endif
 }
 
-static void image(std::shared_ptr<ac::core::Processor> processor, Options& options)
+static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
     if (options.output.empty()) options.output = "output.jpg";
 
@@ -53,7 +53,7 @@ static void image(std::shared_ptr<ac::core::Processor> processor, Options& optio
         std::printf("Failed to save file\n");
 }
 
-static void video(std::shared_ptr<ac::core::Processor> processor, Options& options)
+static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& processor, [[maybe_unused]] Options& options)
 {
 #ifdef AC_CLI_ENABLE_VIDEO
     if (options.output.empty()) options.output = "output.mp4";

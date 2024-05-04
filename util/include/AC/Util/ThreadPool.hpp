@@ -34,14 +34,14 @@ public:
     static unsigned int hardwareThreads() noexcept;
 
 private:
+    bool stop = false;
     std::vector<std::thread> threads;
     std::queue<std::function<void()>> tasks;
     std::condition_variable cnd;
     std::mutex mtx;
-    bool stop;
 };
 
-inline ac::util::ThreadPool::ThreadPool(const std::size_t size) : stop(false)
+inline ac::util::ThreadPool::ThreadPool(const std::size_t size)
 {
     threads.reserve(size);
 

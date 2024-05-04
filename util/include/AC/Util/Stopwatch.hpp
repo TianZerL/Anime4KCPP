@@ -16,7 +16,7 @@ public:
     void stop() noexcept;
     double elapsed() noexcept;
 private:
-    std::chrono::time_point<std::chrono::steady_clock> start{}, end{};
+    std::chrono::time_point<std::chrono::steady_clock> start, end;
 };
 
 inline ac::util::Stopwatch::Stopwatch() noexcept

@@ -43,15 +43,15 @@ public:
     void close();
     bool isClose();
 private:
-    bool stop;
+    bool stop = false;
     const std::size_t capacity;
-    std::mutex mtx{};
-    std::condition_variable consumer{}, producer{};
-    Queue queue{};
+    Queue queue;
+    std::condition_variable consumer, producer;
+    std::mutex mtx;
 };
 
 template<typename T, typename Queue>
-inline ac::util::Channel<T, Queue>::Channel(const std::size_t capacity) : stop(false), capacity(capacity) {}
+inline ac::util::Channel<T, Queue>::Channel(const std::size_t capacity) : capacity(capacity) {}
 template<typename T, typename Queue>
 inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator<<(const T& obj)
 {
