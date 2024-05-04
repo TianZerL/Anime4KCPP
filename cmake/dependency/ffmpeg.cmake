@@ -2,7 +2,7 @@ if(NOT TARGET dep::ffmpeg)
     add_library(dep_ffmpeg INTERFACE IMPORTED)
     if(AC_PATH_FFMPEG)
         find_path(dep_ffmpeg_INCLUDE
-            NAMES avcodec
+            NAMES libavcodec libavformat libavutil
             HINTS ${AC_PATH_FFMPEG}/include
             REQUIRED
         )

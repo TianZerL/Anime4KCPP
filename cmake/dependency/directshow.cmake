@@ -17,6 +17,6 @@ if(NOT TARGET dep::directshow)
     target_sources(dep_directshow PRIVATE ${dep_directshow_baseclasses_src})
     target_include_directories(dep_directshow PUBLIC ${directshow_baseclasses_SOURCE_DIR})
     target_link_libraries(dep_directshow PRIVATE strmiids winmm)
-
+    ac_check_enable_static_crt(dep_directshow)
     add_library(dep::directshow ALIAS dep_directshow)
 endif()
