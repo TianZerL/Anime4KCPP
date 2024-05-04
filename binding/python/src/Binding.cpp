@@ -69,9 +69,9 @@ PYBIND11_MODULE(pyac, m)
 
             return out;
         }, py::arg("src"), py::arg("factor") = 2.0)
-        .def("ok", ac::core::Processor::ok)
-        .def("error", ac::core::Processor::error)
-        .def("name", ac::core::Processor::name)
+        .def("ok", &ac::core::Processor::ok)
+        .def("error", &ac::core::Processor::error)
+        .def("name", &ac::core::Processor::name)
         .def_static("info_list", []() {
             return std::make_tuple(
                 ac::core::Processor::info<ac::core::Processor::CPU>(),

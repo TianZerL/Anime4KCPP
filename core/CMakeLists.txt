@@ -68,6 +68,10 @@ else()
     endif()
 endif()
 
+if (NOT WIN32 AND NOT AC_SHARED_LIB)
+    set_target_properties(ac PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
 target_link_libraries(ac PRIVATE
     ac_util
     dep::ruapu

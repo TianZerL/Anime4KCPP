@@ -22,5 +22,5 @@ static void upscale(const std::string filename, double factor)
 }
 
 EMSCRIPTEN_BINDINGS(ac) {
-    emscripten::function("upscale", upscale);
+    emscripten::function("upscale", &upscale);
 }
