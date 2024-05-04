@@ -82,7 +82,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         double factor;
         double frames;
         std::shared_ptr<ac::core::Processor> processor;
-    } data;
+    } data{};
     data.factor = options.factor;
     data.frames = info.fps * info.length;
     data.processor = processor;
