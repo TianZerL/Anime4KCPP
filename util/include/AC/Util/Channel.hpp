@@ -31,7 +31,7 @@ class ac::util::Channel
 public:
     explicit Channel(std::size_t capacity);
     Channel(const Channel<T, Queue>&) = delete;
-    Channel(Channel<T, Queue>&&) = default;
+    Channel(Channel<T, Queue>&&) = delete;
     Channel<T, Queue>& operator=(const Channel<T, Queue>&) = delete;
     Channel<T, Queue>& operator=(Channel<T, Queue>&&) = delete;
     ~Channel() = default;

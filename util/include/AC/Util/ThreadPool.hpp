@@ -22,7 +22,7 @@ class ac::util::ThreadPool
 public:
     explicit ThreadPool(std::size_t size);
     ThreadPool(const ThreadPool&) = delete;
-    ThreadPool(ThreadPool&&) = default;
+    ThreadPool(ThreadPool&&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
     ThreadPool& operator=(ThreadPool&&) = delete;
     ~ThreadPool();
