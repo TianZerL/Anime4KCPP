@@ -24,7 +24,9 @@ target_include_directories(ac_video PUBLIC
 
 target_link_libraries(ac_video PRIVATE ac_util dep::ffmpeg)
 
+ac_check_disable_flags(ac_video)
 ac_check_enable_static_crt(ac_video)
+ac_check_disable_pic(ac_video)
 
 set_target_properties(ac_video PROPERTIES EXPORT_NAME "Video")
 

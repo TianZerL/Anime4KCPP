@@ -68,10 +68,6 @@ else()
     endif()
 endif()
 
-if (NOT WIN32 AND NOT AC_SHARED_LIB)
-    set_target_properties(ac PROPERTIES POSITION_INDEPENDENT_CODE ON)
-endif()
-
 target_link_libraries(ac PRIVATE
     ac_util
     dep::ruapu
@@ -101,6 +97,7 @@ target_compile_definitions(ac PUBLIC
 
 ac_check_disable_flags(ac)
 ac_check_enable_static_crt(ac)
+ac_check_disable_pic(ac)
 
 file(WRITE "${CORE_BINARY_DIR}/Kernel.cl.hpp.in" [[
 #ifndef AC_CORE_OPENCL_KERNEL_HPP
