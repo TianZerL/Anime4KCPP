@@ -13,9 +13,7 @@ namespace ac::core::detail
     template <typename T>
     static inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
     {
-        auto srcIntptr = reinterpret_cast<std::uintptr_t>(ptr);
-        auto dstIntptr = align(srcIntptr, n);
-        return ptr + (dstIntptr - srcIntptr);
+        return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
     }
 
     static inline void* alignedAlloc(std::size_t size) noexcept
