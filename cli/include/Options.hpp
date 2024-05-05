@@ -17,6 +17,7 @@ struct Options
     struct {
         // decoder hints
         std::string decoder{};
+        std::string format{};
         // encoder hints
         std::string encoder{};
         int bitrate = 0;

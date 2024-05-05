@@ -31,6 +31,7 @@ Options parse(const int argc, const char* argv[]) noexcept
 
     auto video = app.add_subcommand("video", "video processing");
     video->add_option("--decoder", options.video.decoder, "decoder to use");
+    video->add_option("--format", options.video.format, "decode format");
     video->add_option("--encoder", options.video.encoder, "encoder to use");
     video->add_option("--bitrate", options.video.bitrate, "bitrate for encoding, kbit/s");
 

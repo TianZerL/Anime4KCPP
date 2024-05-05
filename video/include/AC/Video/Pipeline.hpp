@@ -45,6 +45,7 @@ struct ac::video::Info
 struct ac::video::DecoderHints
 {
     const char* decoder = nullptr;
+    const char* format = nullptr;
 };
 
 struct ac::video::EncoderHints

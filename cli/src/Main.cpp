@@ -66,6 +66,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
     ac::video::DecoderHints dhints{};
     ac::video::EncoderHints ehints{};
     dhints.decoder = options.video.decoder.c_str();
+    dhints.format = options.video.format.c_str();
     ehints.encoder = options.video.encoder.c_str();
     ehints.bitrate = options.video.bitrate * 1000;
 

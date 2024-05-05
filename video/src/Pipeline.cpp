@@ -1,6 +1,7 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/pixdesc.h>
 }
 
 #include "AC/Video/Pipeline.hpp"
@@ -77,6 +78,7 @@ namespace ac::video::detail
         decodecCtx = avcodec_alloc_context3(codec); if (!decodecCtx) return false;
         ret = avcodec_parameters_to_context(decodecCtx, dvideoStream->codecpar); if (ret < 0) return false;
         decodecCtx->pkt_timebase = dvideoStream->time_base;
+        if (hints.format && *hints.format) decodecCtx->pix_fmt = av_get_pix_fmt(hints.format);
         ret = avcodec_open2(decodecCtx, codec, nullptr); if (ret < 0) return false;
         timeBase = av_inv_q(decodecCtx->framerate.num ? decodecCtx->framerate : (dvideoStream->avg_frame_rate.num ? dvideoStream->avg_frame_rate : av_make_q(24000, 1001)));
         return true;
