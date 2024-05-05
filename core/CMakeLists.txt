@@ -78,6 +78,17 @@ target_link_libraries(ac PRIVATE
     $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
 )
 
+set(AC_CORE_FEATURE_LIST
+    generic
+    $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:eigen3>
+    $<$<BOOL:${AC_CORE_WITH_SSE}>:sse>
+    $<$<BOOL:${AC_CORE_WITH_AVX}>:avx>
+    $<$<BOOL:${AC_CORE_WITH_FMA}>:fma>
+    $<$<BOOL:${AC_CORE_WITH_NEON}>:neon>
+    $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
+    $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
+)
+
 target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:AC_CORE_WITH_EIGEN3>
     $<$<BOOL:${AC_CORE_WITH_SSE}>:AC_CORE_WITH_SSE>
@@ -89,10 +100,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_ENABLE_IMAGE_IO}>:AC_CORE_ENABLE_IMAGE_IO>
 
     AC_CORE_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
-    AC_CORE_COMPILER_ID="${CMAKE_CXX_COMPILER_ID}"
-    AC_CORE_COMPILER_VERSION="${CMAKE_CXX_COMPILER_VERSION}"
-    AC_CORE_BUILD_DATE="${DATE_TODAY}"
-    AC_CORE_BUILD_YEAR="${DATE_YEAR}"
+    AC_CORE_FEATURES="$<JOIN:${AC_CORE_FEATURE_LIST}, >"
 )
 
 ac_check_disable_flags(ac)

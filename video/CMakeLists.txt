@@ -24,6 +24,10 @@ target_include_directories(ac_video PUBLIC
 
 target_link_libraries(ac_video PRIVATE ac_util dep::ffmpeg)
 
+target_compile_definitions(ac_video PUBLIC
+    AC_VIDEO_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+)
+
 ac_check_disable_flags(ac_video)
 ac_check_enable_static_crt(ac_video)
 ac_check_disable_pic(ac_video)

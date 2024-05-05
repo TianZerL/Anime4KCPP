@@ -16,10 +16,13 @@ static void version()
 {
     std::printf(
             "Anime4KCPP CLI:\n"
-            "  core version: " AC_CORE_VERSION_STR "\n"
-            "  build date: " AC_CORE_BUILD_DATE "\n"
-            "  built by: " AC_CORE_COMPILER_ID " (v" AC_CORE_COMPILER_VERSION ")\n\n"
-            "Copyright (c) by TianZerL the Anime4KCPP project 2020-" AC_CORE_BUILD_YEAR "\n"
+            "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
+#           ifdef AC_CLI_ENABLE_VIDEO
+            "  video module version: " AC_VIDEO_VERSION_STR "\n"
+#           endif
+            "  build date: " AC_BUILD_DATE "\n"
+            "  built by: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
+            "Copyright (c) by TianZerL the Anime4KCPP project 2020-" AC_BUILD_YEAR "\n"
             "https://github.com/TianZerL/Anime4KCPP\n"
     );
 }
@@ -199,7 +202,7 @@ int main(int argc, const char* argv[])
         image(processor, options);
     stopwatch.stop();
 
-    std::printf("\nProcessed %d files, took %lfs\n", static_cast<int>(options.inputs.size()), stopwatch.elapsed());
+    std::printf("\nInputs %d files, takes %lfs\n", static_cast<int>(options.inputs.size()), stopwatch.elapsed());
 
     return 0;
 }
