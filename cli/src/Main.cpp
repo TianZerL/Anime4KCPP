@@ -37,88 +37,103 @@ static void list()
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
-    if (options.output.empty()) options.output = "output.jpg";
+    for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
+    {
+        auto& input = options.inputs[i];
+        auto& output = options.outputs[i];
 
-    auto src = ac::core::imread(options.input.c_str(), ac::core::IMREAD_UNCHANGED);
+        if (output.empty()) output = input + ".out.jpg";
 
-    ac::util::Stopwatch stopwatch{};
-    auto dst = processor->process(src, options.factor);
-    stopwatch.stop();
-    CHECK_PROCESSOR(processor);
-    std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+        std::printf("\nLoad from %s\n", input.c_str());
+        auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
 
-    if (ac::core::imwrite(options.output.c_str(), dst))
-        std::printf("Save to %s\n", options.output.c_str());
-    else
-        std::printf("Failed to save file\n");
+        ac::util::Stopwatch stopwatch{};
+        auto dst = processor->process(src, options.factor);
+        stopwatch.stop();
+        CHECK_PROCESSOR(processor);
+        std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+
+        if (ac::core::imwrite(output.c_str(), dst))
+            std::printf("Save to %s\n", output.c_str());
+        else
+            std::printf("Failed to save file\n");
+    }
 }
 
 static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& processor, [[maybe_unused]] Options& options)
 {
 #ifdef AC_CLI_ENABLE_VIDEO
-    if (options.output.empty()) options.output = "output.mp4";
-
-    ac::video::Pipeline pipeline{};
     ac::video::DecoderHints dhints{};
     ac::video::EncoderHints ehints{};
     dhints.decoder = options.video.decoder.c_str();
     ehints.encoder = options.video.encoder.c_str();
     ehints.bitrate = options.video.bitrate * 1000;
 
-    if(!pipeline.openDecoder(options.input.c_str(), dhints))
+    for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
     {
-        std::printf("Failed to open decoder");
-        return;
-    }
-    if(!pipeline.openEncoder(options.output.c_str(), options.factor, ehints))
-    {
-        std::printf("Failed to open encoder");
-        return;
-    }
+        auto& input = options.inputs[i];
+        auto& output = options.outputs[i];
 
-    auto info = pipeline.getInfo();
+        if (output.empty()) output = input + ".out.mp4";
 
-    struct {
-        double factor;
-        double frames;
-        std::shared_ptr<ac::core::Processor> processor;
-    } data{};
-    data.factor = options.factor;
-    data.frames = info.fps * info.length;
-    data.processor = processor;
+        ac::video::Pipeline pipeline{};
 
-    ac::util::Stopwatch stopwatch{};
-    ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
-        auto ctx = static_cast<decltype(data)*>(userdata);
-        // y
-        ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
-        ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
-        ctx->processor->process(srcy, dsty, ctx->factor);
-        // uv
-        for (int i = 1; i < src.planes; i++)
+        std::printf("\nLoad from %s\n", input.c_str());
+        if(!pipeline.openDecoder(input.c_str(), dhints))
         {
-            ac::core::Image srcp{src.plane[i].width, src.plane[i].height, src.plane[i].channel, src.elementType, src.plane[i].data, src.plane[i].stride};
-            ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
-            ac::core::resize(srcp, dstp, 0.0, 0.0);
+            std::printf("Failed to open decoder\n");
+            return;
         }
-        // a beautiful progress bar
-        if (src.number % 32 == 0)
+        if(!pipeline.openEncoder(output.c_str(), options.factor, ehints))
         {
-            constexpr int width = sizeof(PROGRESS_BAR_TOKEN) - 1;
-            double p = src.number / ctx->frames;
-            int done = static_cast<int>(p * width);
-            int left = width - done;
-            std::printf("\r%6.2lf%% [%.*s%-*s]", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">");
-            std::fflush(stdout);
+            std::printf("Failed to open encoder\n");
+            return;
         }
-    }, &data, ac::video::FILTER_AUTO);
-    stopwatch.stop();
-    pipeline.close();
-    CHECK_PROCESSOR(processor);
-    std::printf("\r100.00%%\nFinished in: %lfs\n", stopwatch.elapsed());
-    std::printf("Save to %s\n", options.output.c_str());
+
+        auto info = pipeline.getInfo();
+
+        struct {
+            double factor;
+            double frames;
+            std::shared_ptr<ac::core::Processor> processor;
+        } data{};
+        data.factor = options.factor;
+        data.frames = info.fps * info.length;
+        data.processor = processor;
+
+        ac::util::Stopwatch stopwatch{};
+        ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
+            auto ctx = static_cast<decltype(data)*>(userdata);
+            // y
+            ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
+            ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
+            ctx->processor->process(srcy, dsty, ctx->factor);
+            // uv
+            for (int i = 1; i < src.planes; i++)
+            {
+                ac::core::Image srcp{src.plane[i].width, src.plane[i].height, src.plane[i].channel, src.elementType, src.plane[i].data, src.plane[i].stride};
+                ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
+                ac::core::resize(srcp, dstp, 0.0, 0.0);
+            }
+            // a beautiful progress bar
+            if (src.number % 32 == 0)
+            {
+                constexpr int width = sizeof(PROGRESS_BAR_TOKEN) - 1;
+                double p = src.number / ctx->frames;
+                int done = static_cast<int>(p * width);
+                int left = width - done;
+                std::printf("\r%6.2lf%% [%.*s%-*s]", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">");
+                std::fflush(stdout);
+            }
+        }, &data, ac::video::FILTER_AUTO);
+        stopwatch.stop();
+        pipeline.close();
+        CHECK_PROCESSOR(processor);
+        std::printf("\r100.00%%\nFinished in: %lfs\n", stopwatch.elapsed());
+        std::printf("Save to %s\n", output.c_str());
+    }
 #else
-    std::printf("This build does not support video processing");
+    std::printf("This build does not support video processing\n");
 #endif
 }
 
@@ -137,7 +152,8 @@ int main(int argc, const char* argv[])
         return 0;
     }
 
-    if (options.input.empty()) return 0;
+    if (options.inputs.empty()) return 0;
+    options.outputs.resize(options.inputs.size());
 
     auto processor = [&]() {
         ac::core::model::ACNet model { [&]() {
@@ -175,10 +191,14 @@ int main(int argc, const char* argv[])
                 "Processor: %s %s\n",
                 options.model.c_str(), options.processor.c_str(), processor->name());
 
+    ac::util::Stopwatch stopwatch{};
     if (options.video)
         video(processor, options);
     else
         image(processor, options);
+    stopwatch.stop();
+
+    std::printf("\nProcessed %d files, took %lfs\n", static_cast<int>(options.inputs.size()), stopwatch.elapsed());
 
     return 0;
 }

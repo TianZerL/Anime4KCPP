@@ -11,9 +11,9 @@ Options parse(const int argc, const char* argv[]) noexcept
 
     app.fallthrough();
 
-    app.add_option("-i,--input,input", options.input, "input file.")
+    app.add_option("-i,--input,input", options.inputs, "input files.")
         ->check(CLI::ExistingFile);
-    app.add_option("-o,--output,output", options.output, "output file.");
+    app.add_option("-o,--output", options.outputs, "output files.");
 
     app.add_option("-m,--model", options.model, "acnet[-hdn][-0|1|2|3].")
         ->transform(CLI::detail::to_lower)
@@ -29,9 +29,9 @@ Options parse(const int argc, const char* argv[]) noexcept
     app.add_flag("-l,--list", options.list, "list processor info.");
     app.add_flag("-v,--version", options.version, "show version info.");
 
-    auto video = app.add_subcommand("video", "video process module");
+    auto video = app.add_subcommand("video", "video processing");
     video->add_option("--decoder", options.video.decoder, "decoder to use");
-    video->add_option("--encoder", options.video.encoder, "decoder to use");
+    video->add_option("--encoder", options.video.encoder, "encoder to use");
     video->add_option("--bitrate", options.video.bitrate, "bitrate for encoding, kbit/s");
 
     try { app.parse(argc, argv); } catch(const CLI::ParseError &e) { std::exit(app.exit(e)); }

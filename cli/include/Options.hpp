@@ -2,11 +2,12 @@
 #define AC_CLI_OPTIONS_CPP
 
 #include <string>
+#include <vector>
 
 struct Options
 {
-    std::string input{};
-    std::string output{};
+    std::vector<std::string> inputs{};
+    std::vector<std::string> outputs{};
     std::string model{"acnet"};
     std::string processor{"cpu"};
     double factor = 2.0;
