@@ -454,10 +454,9 @@ HRESULT PropertyPage::OnActivate()
     buffer[count] = TEXT('\0');
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
 
-    Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_VERSION),
-        TEXT(AC_CORE_VERSION_STR));
+    Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_VERSION), TEXT(AC_CORE_VERSION_STR));
     Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_COPYRIGHT),
-        TEXT("Copyright (c) by TianZerL the Anime4KCPP project 2020-") TEXT(AC_CORE_BUILD_YEAR));
+        TEXT("Copyright (c) by TianZerL the Anime4KCPP project 2020-") TEXT(AC_BUILD_YEAR));
 
     isInitialized = true;
     return S_OK;
