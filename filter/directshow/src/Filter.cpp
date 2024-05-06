@@ -386,7 +386,7 @@ INT_PTR PropertyPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 }
 HRESULT PropertyPage::OnActivate()
 {
-    TCHAR buffer[STR_MAX_LENGTH]{};
+    TCHAR buffer[STR_MAX_LENGTH] = {};
 
     auto factor = gRegArgument.getFactor();
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%.2lf"), factor);
@@ -468,7 +468,7 @@ HRESULT PropertyPage::OnDeactivate()
 }
 HRESULT PropertyPage::OnApplyChanges()
 {
-    TCHAR buffer[STR_MAX_LENGTH]{};
+    TCHAR buffer[STR_MAX_LENGTH] = {};
     TCHAR* endptr{};
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_FACTOR), buffer, NUMELMS(buffer));
