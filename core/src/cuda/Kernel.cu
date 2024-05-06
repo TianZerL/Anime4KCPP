@@ -15,7 +15,7 @@ namespace ac::core::cuda
     template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
     __device__ inline static Unsigned fromFloat(const float v)
     {
-        return static_cast<Unsigned>(rintf(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max()));
+        return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
 
     __device__ inline static float dot(float4 a, const float* __restrict__ b)
@@ -111,7 +111,7 @@ namespace ac::core::cuda
                     r[7] * kernels[offset3 + 7] +
                     r[8] * kernels[offset3 + 8] + biases[npos + 3], 0.0f
                 ))));
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
+            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeClamp);
         }
     }
 
@@ -197,7 +197,7 @@ namespace ac::core::cuda
                 __half_as_ushort(__float2half(fmaxf(sum[2], 0.0f))),
                 __half_as_ushort(__float2half(fmaxf(sum[3], 0.0f))));
 
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
+            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeClamp);
         }
     }
 
@@ -230,7 +230,7 @@ namespace ac::core::cuda
                 kernels[offset + 8],
                 kernels[offset + 12]));
         }
-        surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
+        surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeClamp);
     }
 
     void conv3x3_1to8_cuda(
