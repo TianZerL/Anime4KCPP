@@ -238,7 +238,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
         err = conv3x3_8to8.setArg(3, model::ACNet::kernelOffset[i * 2 + 1]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8.setArg(4, biases); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8.setArg(5, model::ACNet::baisOffset[i * 2 + 1]); if (err != CL_SUCCESS) return;
-
         err = context.cmdq.enqueueNDRangeKernel(conv3x3_8to8, cl::NullRange, { srcRangeW, srcRangeH }); if (err != CL_SUCCESS) return;
 
         err = conv3x3_8to8.setArg(0, tmp2); if (err != CL_SUCCESS) return;
@@ -247,7 +246,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
         err = conv3x3_8to8.setArg(3, model::ACNet::kernelOffset[i * 2 + 2]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8.setArg(4, biases); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8.setArg(5, model::ACNet::baisOffset[i * 2 + 2]); if (err != CL_SUCCESS) return;
-
         err = context.cmdq.enqueueNDRangeKernel(conv3x3_8to8, cl::NullRange, { srcRangeW, srcRangeH }); if (err != CL_SUCCESS) return;
     }
     err = deconv2x2_8to1.setArg(0, tmp1); if (err != CL_SUCCESS) return;

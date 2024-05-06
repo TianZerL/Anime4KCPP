@@ -18,15 +18,15 @@ namespace ac::core::detail
 
     static inline void* alignedAlloc(std::size_t size) noexcept
     {
-        auto buffer = static_cast<std::uint8_t**>(std::malloc(size + sizeof(void*) + AC_MALLOC_ALIGN));
+        auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + AC_MALLOC_ALIGN));
         if (!buffer) return nullptr;
-        std::uint8_t** ptr = alignPtr(buffer + 1, AC_MALLOC_ALIGN);
-        ptr[-1] = reinterpret_cast<std::uint8_t*>(buffer);
+        void** ptr = alignPtr(buffer + 1, AC_MALLOC_ALIGN);
+        ptr[-1] = static_cast<void*>(buffer);
         return ptr;
     }
     static inline void alignedFree(void* ptr) noexcept
     {
-        if (ptr) std::free(static_cast<std::uint8_t**>(ptr)[-1]);
+        if (ptr) std::free(static_cast<void**>(ptr)[-1]);
     }
 }
 

@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory>
 
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
