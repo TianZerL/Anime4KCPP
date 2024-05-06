@@ -28,7 +28,7 @@ namespace ac::core::cuda
     }
 
     template<int cout,
-        ::cuda::std::enable_if_t<cout % 4 == 0, bool> = true>
+        ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 < 256 * 4), bool> = true>
     __global__ static void conv3x3_cuda_cin1(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
@@ -40,6 +40,7 @@ namespace ac::core::cuda
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
+        auto tid = threadIdx.y * blockDim.x + threadIdx.x;
 
         if (x >= width || y >= height) return;
 
@@ -57,6 +58,16 @@ namespace ac::core::cuda
             tex2D<float>(src, x + 1, y + 1)
         };
 
+        __shared__ float kptr[cout * 9];
+        if (tid * 4 < cout * 9)
+        {
+            kptr[tid * 4 + 0] = kernels[tid * 4 + 0];
+            kptr[tid * 4 + 1] = kernels[tid * 4 + 1];
+            kptr[tid * 4 + 2] = kernels[tid * 4 + 2];
+            kptr[tid * 4 + 3] = kernels[tid * 4 + 3];
+        }
+        __syncthreads();
+
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
@@ -68,55 +79,55 @@ namespace ac::core::cuda
 
             auto layer = make_ushort4(
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kernels[offset0 + 0] +
-                    r[1] * kernels[offset0 + 1] +
-                    r[2] * kernels[offset0 + 2] +
-                    r[3] * kernels[offset0 + 3] +
-                    r[4] * kernels[offset0 + 4] +
-                    r[5] * kernels[offset0 + 5] +
-                    r[6] * kernels[offset0 + 6] +
-                    r[7] * kernels[offset0 + 7] +
-                    r[8] * kernels[offset0 + 8] + biases[npos + 0], 0.0f
+                    r[0] * kptr[offset0 + 0] +
+                    r[1] * kptr[offset0 + 1] +
+                    r[2] * kptr[offset0 + 2] +
+                    r[3] * kptr[offset0 + 3] +
+                    r[4] * kptr[offset0 + 4] +
+                    r[5] * kptr[offset0 + 5] +
+                    r[6] * kptr[offset0 + 6] +
+                    r[7] * kptr[offset0 + 7] +
+                    r[8] * kptr[offset0 + 8] + biases[npos + 0], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kernels[offset1 + 0] +
-                    r[1] * kernels[offset1 + 1] +
-                    r[2] * kernels[offset1 + 2] +
-                    r[3] * kernels[offset1 + 3] +
-                    r[4] * kernels[offset1 + 4] +
-                    r[5] * kernels[offset1 + 5] +
-                    r[6] * kernels[offset1 + 6] +
-                    r[7] * kernels[offset1 + 7] +
-                    r[8] * kernels[offset1 + 8] + biases[npos + 1], 0.0f
+                    r[0] * kptr[offset1 + 0] +
+                    r[1] * kptr[offset1 + 1] +
+                    r[2] * kptr[offset1 + 2] +
+                    r[3] * kptr[offset1 + 3] +
+                    r[4] * kptr[offset1 + 4] +
+                    r[5] * kptr[offset1 + 5] +
+                    r[6] * kptr[offset1 + 6] +
+                    r[7] * kptr[offset1 + 7] +
+                    r[8] * kptr[offset1 + 8] + biases[npos + 1], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kernels[offset2 + 0] +
-                    r[1] * kernels[offset2 + 1] +
-                    r[2] * kernels[offset2 + 2] +
-                    r[3] * kernels[offset2 + 3] +
-                    r[4] * kernels[offset2 + 4] +
-                    r[5] * kernels[offset2 + 5] +
-                    r[6] * kernels[offset2 + 6] +
-                    r[7] * kernels[offset2 + 7] +
-                    r[8] * kernels[offset2 + 8] + biases[npos + 2], 0.0f
+                    r[0] * kptr[offset2 + 0] +
+                    r[1] * kptr[offset2 + 1] +
+                    r[2] * kptr[offset2 + 2] +
+                    r[3] * kptr[offset2 + 3] +
+                    r[4] * kptr[offset2 + 4] +
+                    r[5] * kptr[offset2 + 5] +
+                    r[6] * kptr[offset2 + 6] +
+                    r[7] * kptr[offset2 + 7] +
+                    r[8] * kptr[offset2 + 8] + biases[npos + 2], 0.0f
                 ))),
                 __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kernels[offset3 + 0] +
-                    r[1] * kernels[offset3 + 1] +
-                    r[2] * kernels[offset3 + 2] +
-                    r[3] * kernels[offset3 + 3] +
-                    r[4] * kernels[offset3 + 4] +
-                    r[5] * kernels[offset3 + 5] +
-                    r[6] * kernels[offset3 + 6] +
-                    r[7] * kernels[offset3 + 7] +
-                    r[8] * kernels[offset3 + 8] + biases[npos + 3], 0.0f
+                    r[0] * kptr[offset3 + 0] +
+                    r[1] * kptr[offset3 + 1] +
+                    r[2] * kptr[offset3 + 2] +
+                    r[3] * kptr[offset3 + 3] +
+                    r[4] * kptr[offset3 + 4] +
+                    r[5] * kptr[offset3 + 5] +
+                    r[6] * kptr[offset3 + 6] +
+                    r[7] * kptr[offset3 + 7] +
+                    r[8] * kptr[offset3 + 8] + biases[npos + 3], 0.0f
                 ))));
             surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeClamp);
         }
     }
 
     template<int cin, int cout,
-        ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0), bool> = true>
+        ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0) && (cout * 9 * cin < 256 * 4), bool> = true>
     __global__ static void conv3x3_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
@@ -128,6 +139,7 @@ namespace ac::core::cuda
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
+        auto tid = threadIdx.y * blockDim.x + threadIdx.x;
 
         if (x >= width || y >= height) return;
 
@@ -157,6 +169,16 @@ namespace ac::core::cuda
             r8[cidx] = tex2DLayered<float4>(src, x + 1, y + 1, cidx);
         };
 
+        __shared__ float kptr[cout * 9 * cin];
+        if (tid * 4 < cout * 9 * cin)
+        {
+            kptr[tid * 4 + 0] = kernels[tid * 4 + 0];
+            kptr[tid * 4 + 1] = kernels[tid * 4 + 1];
+            kptr[tid * 4 + 2] = kernels[tid * 4 + 2];
+            kptr[tid * 4 + 3] = kernels[tid * 4 + 3];
+        }
+        __syncthreads();
+
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
@@ -177,15 +199,15 @@ namespace ac::core::cuda
                 {
                     auto cpos = cidx * 4;
                     sum[i] +=
-                        dot(r0[cidx], kernels + offset0 + cpos) +
-                        dot(r1[cidx], kernels + offset1 + cpos) +
-                        dot(r2[cidx], kernels + offset2 + cpos) +
-                        dot(r3[cidx], kernels + offset3 + cpos) +
-                        dot(r4[cidx], kernels + offset4 + cpos) +
-                        dot(r5[cidx], kernels + offset5 + cpos) +
-                        dot(r6[cidx], kernels + offset6 + cpos) +
-                        dot(r7[cidx], kernels + offset7 + cpos) +
-                        dot(r8[cidx], kernels + offset8 + cpos);
+                        dot(r0[cidx], kptr + offset0 + cpos) +
+                        dot(r1[cidx], kptr + offset1 + cpos) +
+                        dot(r2[cidx], kptr + offset2 + cpos) +
+                        dot(r3[cidx], kptr + offset3 + cpos) +
+                        dot(r4[cidx], kptr + offset4 + cpos) +
+                        dot(r5[cidx], kptr + offset5 + cpos) +
+                        dot(r6[cidx], kptr + offset6 + cpos) +
+                        dot(r7[cidx], kptr + offset7 + cpos) +
+                        dot(r8[cidx], kptr + offset8 + cpos);
                 }
 
                 sum[i] += biases[npos + i];
