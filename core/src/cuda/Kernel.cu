@@ -28,7 +28,7 @@ namespace ac::core::cuda
     }
 
     template<int cout,
-        ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 < 128 * 8), bool> = true>
+        ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 < 128 * 4), bool> = true>
     __global__ static void conv3x3_cuda_cin1(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
@@ -59,16 +59,12 @@ namespace ac::core::cuda
         };
 
         __shared__ float kptr[cout * 9];
-        if (tid * 8 < cout * 9)
+        if (tid * 4 < cout * 9)
         {
-            kptr[tid * 8 + 0] = kernels[tid * 8 + 0];
-            kptr[tid * 8 + 1] = kernels[tid * 8 + 1];
-            kptr[tid * 8 + 2] = kernels[tid * 8 + 2];
-            kptr[tid * 8 + 3] = kernels[tid * 8 + 3];
-            kptr[tid * 8 + 4] = kernels[tid * 8 + 4];
-            kptr[tid * 8 + 5] = kernels[tid * 8 + 5];
-            kptr[tid * 8 + 6] = kernels[tid * 8 + 6];
-            kptr[tid * 8 + 7] = kernels[tid * 8 + 7];
+            kptr[tid * 4 + 0] = kernels[tid * 4 + 0];
+            kptr[tid * 4 + 1] = kernels[tid * 4 + 1];
+            kptr[tid * 4 + 2] = kernels[tid * 4 + 2];
+            kptr[tid * 4 + 3] = kernels[tid * 4 + 3];
         }
         __syncthreads();
 
