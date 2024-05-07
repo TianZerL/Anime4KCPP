@@ -76,7 +76,7 @@ namespace ac::core::opencl
     class OpenCLProcessorBase : public Processor
     {
     public:
-        OpenCLProcessorBase(const int device) noexcept : err(CL_SUCCESS)
+        OpenCLProcessorBase(const int device) noexcept
         {
             auto contextList = getContextList();
             if (contextList.empty()) err = CL_DEVICE_NOT_FOUND;
@@ -171,7 +171,7 @@ namespace ac::core::opencl
             return context.name.c_str();
         }
     protected:
-        cl_int err;
+        cl_int err = CL_SUCCESS;
         Context context;
     };
 

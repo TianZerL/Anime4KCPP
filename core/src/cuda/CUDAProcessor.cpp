@@ -82,7 +82,7 @@ namespace ac::core::cuda
     class CUDAProcessorBase : public Processor
     {
     public:
-        CUDAProcessorBase(const int device) noexcept : err(cudaSuccess)
+        CUDAProcessorBase(const int device) noexcept
         {
             idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
             err = cudaSetDevice(idx);
@@ -102,7 +102,7 @@ namespace ac::core::cuda
             return ContextList[idx].name.c_str();
         }
     protected:
-        cudaError_t err;
+        cudaError_t err = cudaSuccess;
     };
 
     template<typename Model>
