@@ -7,6 +7,7 @@
 
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
+#include "AC/Util/ThreadPool.hpp"
 
 template<int batch>
 static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image (&images)[batch])
@@ -14,7 +15,19 @@ static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, con
     ac::util::Stopwatch stopwatch{};
     for(auto&& src : images) processor->process(src, 2.0);
     stopwatch.stop();
-    std::printf("%s: average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
+    std::printf("%s: serial average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
+}
+
+template<int batch>
+static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image(&images)[batch])
+{
+    ac::util::Stopwatch stopwatch{};
+    {
+        ac::util::ThreadPool pool{ ac::util::ThreadPool::hardwareThreads() + 1 };
+        for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });     
+    }
+    stopwatch.stop();
+    std::printf("%s: parallel average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
 }
 
 int main(int argc, const char* argv[])
@@ -55,6 +68,7 @@ int main(int argc, const char* argv[])
     }
 
     benchmark(processor, images);
+    benchmarkParallel(processor, images);
 
     return 0;
 }

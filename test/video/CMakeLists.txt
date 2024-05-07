@@ -6,3 +6,5 @@ set(TEST_VIDEO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_executable(ac_test_video_resize ${TEST_VIDEO_SOURCE_DIR}/src/Resize.cpp)
 
 target_link_libraries(ac_test_video_resize PRIVATE ac ac_util ac_video)
+
+ac_check_enable_static_crt(ac_test_video_resize)
