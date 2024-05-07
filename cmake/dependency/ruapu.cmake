@@ -12,8 +12,6 @@ if(NOT TARGET dep::ruapu)
         INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(ruapu)
-    target_include_directories(dep_ruapu INTERFACE
-        $<BUILD_INTERFACE:${ruapu_SOURCE_DIR}>
-    )
+    target_include_directories(dep_ruapu INTERFACE $<BUILD_INTERFACE:${ruapu_SOURCE_DIR}>)
     add_library(dep::ruapu ALIAS dep_ruapu)
 endif()

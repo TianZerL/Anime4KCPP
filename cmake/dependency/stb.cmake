@@ -12,8 +12,6 @@ if(NOT TARGET dep::stb)
         INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(stb)
-    target_include_directories(dep_stb INTERFACE
-        $<BUILD_INTERFACE:${stb_SOURCE_DIR}>
-    )
+    target_include_directories(dep_stb INTERFACE $<BUILD_INTERFACE:${stb_SOURCE_DIR}>)
     add_library(dep::stb ALIAS dep_stb)
 endif()

@@ -22,7 +22,7 @@ if(NOT TARGET dep::avisynth)
             INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(avisynth)
-        target_include_directories(dep_avisynth INTERFACE ${avisynth_SOURCE_DIR}/avs_core/include)
+        target_include_directories(dep_avisynth INTERFACE $<BUILD_INTERFACE:${avisynth_SOURCE_DIR}/avs_core/include>)
     endif()
     add_library(dep::avisynth ALIAS dep_avisynth)
 endif()

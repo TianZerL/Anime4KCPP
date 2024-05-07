@@ -21,7 +21,7 @@ if(NOT TARGET dep::ffmpeg)
             HINTS ${AC_PATH_FFMPEG}/lib
             REQUIRED
         )
-        target_include_directories(dep_ffmpeg INTERFACE ${dep_ffmpeg_INCLUDE})
+        target_include_directories(dep_ffmpeg INTERFACE $<BUILD_INTERFACE:${dep_ffmpeg_INCLUDE}>)
         target_link_libraries(dep_ffmpeg INTERFACE
             ${dep_ffmpeg_AVCODEC}
             ${dep_ffmpeg_AVFORMAT}
