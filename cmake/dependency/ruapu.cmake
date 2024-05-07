@@ -1,4 +1,6 @@
 if(NOT TARGET dep::ruapu)
+    add_library(dep_ruapu INTERFACE IMPORTED)
+    message(STATUS "dep: fetch ruapu online.")
     include(FetchContent)
     FetchContent_Declare(
         ruapu
@@ -10,8 +12,6 @@ if(NOT TARGET dep::ruapu)
         INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(ruapu)
-
-    add_library(dep_ruapu INTERFACE IMPORTED)
     target_include_directories(dep_ruapu INTERFACE
         $<BUILD_INTERFACE:${ruapu_SOURCE_DIR}>
     )

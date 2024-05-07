@@ -1,4 +1,6 @@
 if(NOT TARGET dep::stb)
+    add_library(dep_stb INTERFACE IMPORTED)
+    message(STATUS "dep: fetch stb online.")
     include(FetchContent)
     FetchContent_Declare(
         stb
@@ -10,8 +12,6 @@ if(NOT TARGET dep::stb)
         INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(stb)
-
-    add_library(dep_stb INTERFACE IMPORTED)
     target_include_directories(dep_stb INTERFACE
         $<BUILD_INTERFACE:${stb_SOURCE_DIR}>
     )

@@ -1,6 +1,6 @@
 if(NOT TARGET dep::directshow)
     add_library(dep_directshow STATIC)
-
+    message(STATUS "dep: fetch directshow online.")
     include(FetchContent)
     FetchContent_Declare(
         directshow

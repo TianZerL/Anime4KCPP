@@ -8,6 +8,7 @@ if(NOT TARGET dep::vapoursynth)
         endif()
     endif()
     if(NOT PKG_CONFIG_FOUND OR NOT VapourSynth_FOUND)
+        message(STATUS "dep: vapoursynth not found, will be fetched online.")
         include(FetchContent)
         FetchContent_Declare(
             vapoursynth

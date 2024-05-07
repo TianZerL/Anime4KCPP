@@ -9,6 +9,7 @@ if(NOT TARGET dep::avisynth)
     if(dep_avisynth_INCLUDE)
         target_include_directories(dep_avisynth INTERFACE ${dep_avisynth_INCLUDE})
     else()
+        message(STATUS "dep: avisynth not found, will be fetched online.")
         include(FetchContent)
         FetchContent_Declare(
             avisynth
