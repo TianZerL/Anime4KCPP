@@ -28,6 +28,7 @@ option(AC_CORE_WITH_SSE "build core with x86 sse" ${AC_COMPILER_SUPPORT_SSE})
 option(AC_CORE_WITH_AVX "build core with x86 avx" ${AC_COMPILER_SUPPORT_AVX})
 option(AC_CORE_WITH_FMA "build core with x86 fma and avx" ${AC_COMPILER_SUPPORT_FMA})
 option(AC_CORE_WITH_NEON "build core with neon" ${AC_COMPILER_SUPPORT_NEON})
+option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
 option(AC_CORE_ENABLE_IMAGE_IO "enable image file read and write for core" ON)
@@ -75,6 +76,7 @@ message(STATUS
     AVX: ${AC_CORE_WITH_AVX}
     FMA: ${AC_CORE_WITH_FMA}
     NEON: ${AC_CORE_WITH_NEON}
+    WASM_SIMD128: ${AC_CORE_WITH_WASM_SIMD128}
 ")
 
 add_compile_definitions(

@@ -28,6 +28,9 @@ namespace ac::core::cpu
 #           ifdef AC_CORE_WITH_NEON
             NEON,
 #           endif
+#           ifdef AC_CORE_WITH_WASM_SIMD128
+            WASM_SIMD128,
+#           endif
             Generic,
             End
         };
@@ -46,7 +49,10 @@ namespace ac::core::cpu
 #           ifdef AC_CORE_WITH_NEON
             "NEON",
 #           endif
-            "Generic",
+#           ifdef AC_CORE_WITH_WASM_SIMD128
+            "WASM_SIMD128",
+#           endif
+            "Generic"
         };
     }
     void conv3x3_1to8_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -71,6 +77,11 @@ namespace ac::core::cpu
     void conv3x3_1to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels);
+#endif
+#ifdef AC_CORE_WITH_WASM_SIMD128
+    void conv3x3_1to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void deconv2x2_8to1_wasm_simd128(const Image& src, Image& dst, const float* kernels);
 #endif
     template<typename Model>
     class CPUProcessor;
@@ -106,6 +117,10 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
         // arm
 #       ifdef AC_CORE_WITH_NEON
             if (dispatch::supportNEON()) return arch::NEON;
+#       endif
+        // wasm
+#       ifdef AC_CORE_WITH_WASM_SIMD128
+            return arch::WASM_SIMD128;
 #       endif
         // generic
 #       ifdef AC_CORE_WITH_EIGEN3
@@ -143,6 +158,13 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
         conv3x3_1to8 = conv3x3_1to8_neon;
         conv3x3_8to8 = conv3x3_8to8_neon;
         deconv2x2_8to1 = deconv2x2_8to1_neon;
+        break;
+#   endif
+#   ifdef AC_CORE_WITH_WASM_SIMD128
+    case arch::WASM_SIMD128 :
+        conv3x3_1to8 = conv3x3_1to8_wasm_simd128;
+        conv3x3_8to8 = conv3x3_8to8_wasm_simd128;
+        deconv2x2_8to1 = deconv2x2_8to1_wasm_simd128;
         break;
 #   endif
     default:

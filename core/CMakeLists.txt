@@ -35,6 +35,7 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_SOURCE_DIR}/src/cpu/x86/SSE.cpp>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_SOURCE_DIR}/src/cpu/x86/AVX.cpp>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_SOURCE_DIR}/src/cpu/arm/NEON.cpp>
+    $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_SOURCE_DIR}/src/cpu/wasm/SIMD128.cpp>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:${CORE_SOURCE_DIR}/src/opencl/OpenCLProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/CUDAProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/Kernel.cu>
@@ -55,6 +56,9 @@ if(NOT MSVC)
     endif()
     if(AC_CORE_WITH_NEON)
         set_source_files_properties(${CORE_SOURCE_DIR}/src/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${AC_COMPILER_32BIT}>,-mfpu=neon,-march=armv8-a>")
+    endif()
+    if(AC_CORE_WITH_WASM_SIMD128)
+        set_source_files_properties(${CORE_SOURCE_DIR}/src/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
     endif()
 endif()
 
@@ -85,6 +89,7 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_AVX}>:avx>
     $<$<BOOL:${AC_CORE_WITH_FMA}>:fma>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:neon>
+    $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
 )
@@ -95,6 +100,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_AVX}>:AC_CORE_WITH_AVX>
     $<$<BOOL:${AC_CORE_WITH_FMA}>:AC_CORE_WITH_FMA>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:AC_CORE_WITH_NEON>
+    $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>
     $<$<BOOL:${AC_CORE_ENABLE_IMAGE_IO}>:AC_CORE_ENABLE_IMAGE_IO>

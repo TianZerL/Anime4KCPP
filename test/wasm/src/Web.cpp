@@ -11,7 +11,7 @@ static void upscale(const std::string filename, double factor)
     auto processor = ac::core::Processor::create<ac::core::Processor::CPU>(0, ac::core::model::ACNet{ ac::core::model::ACNet::Variant::HDN0 });
     std::printf("Processor: %s\n", processor->name());
 
-    ac::core::Image src = ac::core::imread(filename.c_str(), ac::core::IMREAD_GRAYSCALE);
+    ac::core::Image src = ac::core::imread(filename.c_str(), ac::core::IMREAD_UNCHANGED);
 
     ac::util::Stopwatch stopwatch{};
     ac::core::Image dst = processor->process(src, 2.0);

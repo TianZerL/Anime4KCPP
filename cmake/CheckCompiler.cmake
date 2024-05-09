@@ -30,6 +30,11 @@ if(NOT MSVC)
 endif()
 check_cxx_source_compiles("#include <arm_neon.h>\nint main() { float32x4_t a = vdupq_n_f32(0.0f); return 0; }" AC_COMPILER_SUPPORT_NEON)
 
+if(NOT MSVC)
+    set(CMAKE_REQUIRED_FLAGS "-msimd128")
+endif()
+check_cxx_source_compiles("#include <wasm_simd128.h>\nint main() { v128_t a = wasm_f32x4_make(1.2f, 3.4f, 5.6f, 7.8f); return 0; }" AC_COMPILER_SUPPORT_WASM_SIMD128)
+
 if (NOT MSVC)
     unset(CMAKE_REQUIRED_FLAGS)
 endif()
