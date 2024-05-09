@@ -79,10 +79,9 @@ namespace ac::core::cuda
         }
     }
 
-    struct StreamManager
-    {
-        cudaStream_t stream;
-
+    class StreamManager
+    {  
+    public:
         StreamManager() noexcept
         {
             cudaStreamCreate(&stream);
@@ -96,6 +95,8 @@ namespace ac::core::cuda
         {
             return stream;
         }
+    private:
+        cudaStream_t stream{};
     };
 
     class CUDAProcessorBase : public Processor
