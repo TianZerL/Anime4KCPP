@@ -79,6 +79,25 @@ namespace ac::core::cuda
         }
     }
 
+    struct StreamManager
+    {
+        cudaStream_t stream;
+
+        StreamManager() noexcept
+        {
+            cudaStreamCreate(&stream);
+        }
+        ~StreamManager() noexcept
+        {
+            cudaStreamDestroy(stream);
+        }
+
+        operator cudaStream_t() const noexcept
+        {
+            return stream;
+        }
+    };
+
     class CUDAProcessorBase : public Processor
     {
     public:
@@ -138,13 +157,12 @@ ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::~CUDAProcessor() noexcept
 
 void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst) noexcept
 {
+    thread_local StreamManager stream{};
+
     auto srcW = src.width(), srcH = src.height();
     auto dstW = dst.width(), dstH = dst.height();
     auto srcWBytes = srcW * src.channelSize();
     auto dstWBytes = dstW * dst.channelSize();
-
-    cudaStream_t stream{};
-    cudaStreamCreate(&stream);
 
     auto imgDesc = channelType(src.type());
     auto tmpDesc = cudaCreateChannelDescHalf4();
@@ -220,8 +238,6 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     cudaFreeArray(tmp1Array);
     cudaFreeArray(tmp2Array);
     cudaFreeArray(outArray);
-
-    cudaStreamDestroy(stream);
 
     err = cudaGetLastError();
 }
