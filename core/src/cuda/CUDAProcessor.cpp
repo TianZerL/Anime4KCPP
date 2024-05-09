@@ -105,7 +105,6 @@ namespace ac::core::cuda
         CUDAProcessorBase(const int device) noexcept
         {
             idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
-            err = cudaSetDevice(idx);
         };
         ~CUDAProcessorBase() noexcept override = default;
 
@@ -144,7 +143,7 @@ private:
 
 ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::CUDAProcessor(const int device, const model::ACNet& model) noexcept : CUDAProcessorBase(device)
 {
-    if (err != cudaSuccess) return; // check if initialization was successful
+    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
     err = cudaMalloc(&kernels, model.kernelSize()); if (err != cudaSuccess) return;
     err = cudaMalloc(&biases, model.biasSize()); if (err != cudaSuccess) return;
     err = cudaMemcpy(kernels, model.kernels(), model.kernelSize(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
@@ -152,12 +151,16 @@ ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::CUDAProcessor(const int d
 }
 ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::~CUDAProcessor() noexcept
 {
+    cudaSetDevice(idx);
+
     if (kernels) cudaFree(kernels);
     if (biases) cudaFree(biases);
 }
 
 void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst) noexcept
 {
+    cudaSetDevice(idx);
+
     thread_local StreamManager stream{};
 
     auto srcW = src.width(), srcH = src.height();
