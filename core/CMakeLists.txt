@@ -69,6 +69,8 @@ else()
     find_package(OpenMP COMPONENTS CXX QUIET)
     if(OpenMP_CXX_FOUND)
         target_compile_definitions(ac PRIVATE AC_CORE_PARALLEL_OPENMP)
+    else()
+        message(STATUS "openmp not found, fallback to builtin thread pool")
     endif()
 endif()
 
