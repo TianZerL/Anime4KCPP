@@ -80,7 +80,7 @@ namespace ac::core::cuda
     }
 
     class StreamManager
-    {  
+    {
     public:
         StreamManager() noexcept
         {
@@ -232,9 +232,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
     cudaStreamSynchronize(stream);
-    
-    cudaHostUnregister(src.ptr());
+
     cudaHostUnregister(dst.ptr());
+    cudaHostUnregister(src.ptr());
 
     cudaDestroyTextureObject(in);
     cudaDestroySurfaceObject(tmp1Store);
