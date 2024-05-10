@@ -11,14 +11,15 @@
 
 struct Data
 {
-    VSNode* node{};
-    VSVideoInfo vi{};
-    int type{};
-    double factor{};
-    std::shared_ptr<ac::core::Processor> processor{};
+    VSNode* node;
+    VSVideoInfo vi;
+    int type;
+    double factor;
+    std::shared_ptr<ac::core::Processor> processor;
 };
 
-static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi) {
+static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+{
     auto data = static_cast<Data*>(instanceData);
 
     if (activationReason == arInitial) vsapi->requestFrameFilter(n, data->node, frameCtx);
@@ -31,6 +32,7 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
         ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
         ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, data->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0))};
         data->processor->process(srcy, dsty, data->factor);
+        if (!data->processor->ok()) vsapi->setFilterError(data->processor->error(), frameCtx);
         //uv
         for (int p = 1; p < fi->numPlanes; p++)
         {
@@ -45,13 +47,15 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
     return nullptr;
 }
 
-static void VS_CC destory(void* instanceData, VSCore* /*core*/, const VSAPI* vsapi) {
+static void VS_CC destory(void* instanceData, VSCore* /*core*/, const VSAPI* vsapi)
+{
     auto data = static_cast<Data*>(instanceData);
     vsapi->freeNode(data->node);
     delete data;
 }
 
-static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore* core, const VSAPI* vsapi) {
+static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore* core, const VSAPI* vsapi)
+{
     int err = peSuccess;
 
     auto node = vsapi->mapGetNode(in, "clip", 0, &err);
@@ -109,12 +113,14 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
+    if (!data->processor->ok()) SET_ERROR(data->processor->error());
 
     VSFilterDependency deps[] = {{node, rpGeneral}};
     vsapi->createVideoFilter(out, "Upscale", &data->vi, filter, destory, fmParallel, deps, 1, data, core);
 }
 
-VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi) {
+VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi)
+{
     vspapi->configPlugin("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VS_MAKE_VERSION(3, 0), VAPOURSYNTH_API_VERSION, 0, plugin);
     vspapi->registerFunction("ACUpscale",
         "clip:vnode;"

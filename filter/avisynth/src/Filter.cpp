@@ -16,14 +16,15 @@
 #   define CDECL
 #endif
 
-class Filter : public GenericVideoFilter {
+class Filter : public GenericVideoFilter
+{
 public:
     Filter(PClip child, const AVSValue& args, IScriptEnvironment* env);
     PVideoFrame STDCALL GetFrame(int n, IScriptEnvironment* env);
 private:
-    int type{};
-    double factor{};
-    std::shared_ptr<ac::core::Processor> processor{};
+    int type;
+    double factor;
+    std::shared_ptr<ac::core::Processor> processor;
 };
 
 Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : GenericVideoFilter(child)
@@ -70,35 +71,39 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
+    if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
 }
 
-PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env) {
+PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
+{
+    PVideoFrame src = child->GetFrame(n, env);
+    PVideoFrame dst = env->NewVideoFrameP(vi, &src);
+    // y
+    ac::core::Image srcy{ src->GetRowSize(PLANAR_Y) / vi.ComponentSize(), src->GetHeight(PLANAR_Y), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(PLANAR_Y)), src->GetPitch(PLANAR_Y) };
+    ac::core::Image dsty{ dst->GetRowSize(PLANAR_Y) / vi.ComponentSize(), dst->GetHeight(PLANAR_Y), 1, type, dst->GetWritePtr(PLANAR_Y), dst->GetPitch(PLANAR_Y) };
+    processor->process(srcy, dsty, factor);
+    if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
+    // uv
+    int planes[] = { PLANAR_U, PLANAR_V, PLANAR_A };
+    for (int n = 0; n < vi.NumComponents() - 1; n++)
+    {
+        ac::core::Image srcp{ src->GetRowSize(planes[n]) / vi.ComponentSize(), src->GetHeight(planes[n]), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(planes[n])), src->GetPitch(planes[n]) };
+        ac::core::Image dstp{ dst->GetRowSize(planes[n]) / vi.ComponentSize(), dst->GetHeight(planes[n]), 1, type, dst->GetWritePtr(planes[n]), dst->GetPitch(planes[n]) };
+        ac::core::resize(srcp, dstp, factor, factor);
+    }
 
-   PVideoFrame src = child->GetFrame(n, env);
-   PVideoFrame dst = env->NewVideoFrameP(vi, &src);
-
-   ac::core::Image srcy{ src->GetRowSize(PLANAR_Y) / vi.ComponentSize(), src->GetHeight(PLANAR_Y), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(PLANAR_Y)), src->GetPitch(PLANAR_Y) };
-   ac::core::Image dsty{ dst->GetRowSize(PLANAR_Y) / vi.ComponentSize(), dst->GetHeight(PLANAR_Y), 1, type, dst->GetWritePtr(PLANAR_Y), dst->GetPitch(PLANAR_Y) };
-   processor->process(srcy, dsty, factor);
-
-   int planes[] = { PLANAR_U, PLANAR_V, PLANAR_A };
-   for (int n = 0; n < vi.NumComponents() - 1; n++)
-   {
-       ac::core::Image srcp{ src->GetRowSize(planes[n]) / vi.ComponentSize(), src->GetHeight(planes[n]), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(planes[n])), src->GetPitch(planes[n]) };
-       ac::core::Image dstp{ dst->GetRowSize(planes[n]) / vi.ComponentSize(), dst->GetHeight(planes[n]), 1, type, dst->GetWritePtr(planes[n]), dst->GetPitch(planes[n]) };
-       ac::core::resize(srcp, dstp, factor, factor);
-   }
-
-   return dst;
+    return dst;
 }
 
-AVSValue CDECL create(AVSValue args, void* /*user_data*/, IScriptEnvironment* env) {
-   return new Filter(args[0].AsClip(), args, env);
+AVSValue CDECL create(AVSValue args, void* /*user_data*/, IScriptEnvironment* env)
+{
+    return new Filter(args[0].AsClip(), args, env);
 }
 
 const AVS_Linkage *AVS_linkage = 0;
 
-EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors) {
+EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors)
+{
     AVS_linkage = vectors;
     env->AddFunction("ACUpscale",
         "c"
