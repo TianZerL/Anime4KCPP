@@ -18,7 +18,7 @@ namespace ac::core::detail
             if (fx == 1.0 && fy == 1.0)
             {
                 dst = src;
-                return ;
+                return;
             }
 
             auto dstW = static_cast<int>(src.width() * fx);
@@ -33,7 +33,7 @@ namespace ac::core::detail
             if (dst.width() == src.width() && dst.height() == src.height())
             {
                 dst = src;
-                return ;
+                return;
             }
 
             if (dst.channels() != src.channels())
@@ -43,22 +43,22 @@ namespace ac::core::detail
         stbir_resize(
             src.ptr(), src.width(), src.height(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.stride(),
-            [&]()->stbir_pixel_layout {
+            [&]() -> stbir_pixel_layout {
                 switch (src.channels())
                 {
-                case 1 : return STBIR_1CHANNEL;
-                case 2 : return STBIR_2CHANNEL;
-                case 3 : return STBIR_RGB;
-                case 4 : return STBIR_4CHANNEL;
+                case 1: return STBIR_1CHANNEL;
+                case 2: return STBIR_2CHANNEL;
+                case 3: return STBIR_RGB;
+                case 4: return STBIR_4CHANNEL;
                 default: return assert(src.channels() == 1 || src.channels() == 2 || src.channels() == 3 || src.channels() == 4), STBIR_1CHANNEL;
                 }
             }(),
-            [&]()->stbir_datatype {
+            [&]() -> stbir_datatype {
                 switch (src.type())
                 {
-                case Image::UInt8 : return STBIR_TYPE_UINT8;
-                case Image::UInt16 : return STBIR_TYPE_UINT16;
-                case Image::Float32 : return STBIR_TYPE_FLOAT;
+                case Image::UInt8: return STBIR_TYPE_UINT8;
+                case Image::UInt16: return STBIR_TYPE_UINT16;
+                case Image::Float32: return STBIR_TYPE_FLOAT;
                 default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
                 }
             }(),
@@ -224,7 +224,7 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     inline static void yuv2rgb(const Image& srcy, const Image& srcuv, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/,const  void* const yptr, const void* const uvptr, void* const dptr) {
+        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvptr, void* const dptr) {
             auto yin = static_cast<const IN*>(yptr);
             auto uvin = static_cast<const IN*>(uvptr);
             auto out = static_cast<OUT*>(dptr);
@@ -339,7 +339,7 @@ namespace ac::core::detail
     template<typename T>
     inline static void unpadding(const Image& src, Image& dst)
     {
-        int channels =  src.channels();
+        int channels = src.channels();
         filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
             auto in = static_cast<const T*>(sptr);
             auto out = static_cast<T*>(dptr);

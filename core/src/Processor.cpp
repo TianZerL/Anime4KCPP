@@ -12,7 +12,7 @@ ac::core::Image ac::core::Processor::process(const Image& src, const double fact
 }
 void ac::core::Processor::process(const Image& src, Image& dst, const double factor)
 {
-    Image in{}, out{src};
+    Image in{}, out{ src };
     Image uv{};
 
     int power = factor > 2.0 ? ceilLog2(factor) : 1;

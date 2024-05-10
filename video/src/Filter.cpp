@@ -9,7 +9,7 @@
 
 namespace ac::video::detail
 {
-    inline void filterSerial(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    inline static void filterSerial(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
         Frame src{};
         Frame dst{};
@@ -26,7 +26,7 @@ namespace ac::video::detail
         pipeline.remux();
     }
 
-    inline void filterParallel(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    inline static void filterParallel(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
         std::atomic_size_t threads = util::ThreadPool::hardwareThreads();
         util::Channel<Frame> decodeChan{ threads };

@@ -55,8 +55,8 @@ namespace ac::video::detail
         dfmtCtxOpenFlag = true;
 
         ret = avformat_find_stream_info(dfmtCtx, nullptr); if (ret < 0) return false;
-        for(unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
-            if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
+        for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
+            if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 dvideoStream = dfmtCtx->streams[i];
                 videoIdx = i;
@@ -95,11 +95,11 @@ namespace ac::video::detail
         switch (codec->id)
         {
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-            case AV_CODEC_ID_H264: encodecCtx->profile = FF_PROFILE_H264_HIGH; break;
-            case AV_CODEC_ID_HEVC: encodecCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encodecCtx->profile = FF_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encodecCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
 #       else
-            case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
-            case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
 #       endif
         default: break;
         }
@@ -118,10 +118,10 @@ namespace ac::video::detail
 
         ret = avcodec_open2(encodecCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
-        for(unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
+        for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
         {
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
-            if(dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
+            if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
             else
             {   // copy stream info except pointers
                 *stream->codecpar = *dfmtCtx->streams[i]->codecpar;
@@ -146,10 +146,10 @@ namespace ac::video::detail
     {
         int ret = 0;
         auto frame = av_frame_alloc(); if (!frame) return false;
-        for(;;)
+        for (;;)
         {
             ret = avcodec_receive_frame(decodecCtx, frame);
-            if(ret == 0) break;
+            if (ret == 0) break;
             else if (ret == AVERROR(EAGAIN) && fetch()) continue;
             else return false;
         }
@@ -203,10 +203,10 @@ namespace ac::video::detail
     }
     inline bool PipelineImpl::remux() noexcept
     {
-        if(avformat_seek_file(dfmtCtx, videoIdx, 0, 0, dvideoStream->duration, 0) < 0) return false;
+        if (avformat_seek_file(dfmtCtx, videoIdx, 0, 0, dvideoStream->duration, 0) < 0) return false;
         while (av_read_frame(dfmtCtx, dpacket) >= 0)
-            if(dpacket->stream_index != videoIdx)
-                if(av_interleaved_write_frame(efmtCtx, dpacket) < 0) return false;
+            if (dpacket->stream_index != videoIdx)
+                if (av_interleaved_write_frame(efmtCtx, dpacket) < 0) return false;
         return true;
     }
     inline void PipelineImpl::close() noexcept
@@ -244,7 +244,7 @@ namespace ac::video::detail
     {
         while (av_read_frame(dfmtCtx, dpacket) >= 0)
         {
-            if(dpacket->stream_index == videoIdx)
+            if (dpacket->stream_index == videoIdx)
             {
                 av_packet_rescale_ts(dpacket, dvideoStream->time_base, timeBase);
                 int ret = avcodec_send_packet(decodecCtx, dpacket);
@@ -265,7 +265,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV444P16: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
-         // packed
+            // packed
         case AV_PIX_FMT_P010:
         case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); [[fallthrough]];
         case AV_PIX_FMT_NV12: packed = true; break;

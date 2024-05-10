@@ -100,7 +100,7 @@ AVSValue CDECL create(AVSValue args, void* /*user_data*/, IScriptEnvironment* en
     return new Filter(args[0].AsClip(), args, env);
 }
 
-const AVS_Linkage *AVS_linkage = 0;
+const AVS_Linkage* AVS_linkage = 0;
 
 EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors)
 {

@@ -13,7 +13,7 @@
 static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images)
 {
     ac::util::Stopwatch stopwatch{};
-    for(auto&& src : images) processor->process(src, 2.0);
+    for (auto&& src : images) processor->process(src, 2.0);
     stopwatch.stop();
     std::printf("%s: serial average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
 }
@@ -23,7 +23,7 @@ static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& proces
     ac::util::Stopwatch stopwatch{};
     {
         ac::util::ThreadPool pool{ ac::util::ThreadPool::hardwareThreads() + 1 };
-        for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });     
+        for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });
     }
     stopwatch.stop();
     std::printf("%s: parallel average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
@@ -60,7 +60,7 @@ int main(int argc, const char* argv[])
 
     std::vector<ac::core::Image> images(batch);
 
-    for(auto&& image : images)
+    for (auto&& image : images)
     {
         image.create(w, h, 1, ac::core::Image::UInt8);
         for (int i = 0; i < image.height(); i++)

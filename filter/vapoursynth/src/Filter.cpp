@@ -11,11 +11,11 @@
 
 struct Data
 {
-    VSNode* node;
-    VSVideoInfo vi;
     int type;
     double factor;
     std::shared_ptr<ac::core::Processor> processor;
+    VSNode* node;
+    VSVideoInfo vi;
 };
 
 static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
@@ -30,14 +30,14 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
         auto dst = vsapi->newVideoFrame(fi, data->vi.width, data->vi.height, src, core);
         //y
         ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
-        ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, data->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0))};
+        ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, data->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0)) };
         data->processor->process(srcy, dsty, data->factor);
         if (!data->processor->ok()) vsapi->setFilterError(data->processor->error(), frameCtx);
         //uv
         for (int p = 1; p < fi->numPlanes; p++)
         {
             ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
-            ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, data->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p))};
+            ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, data->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p)) };
             ac::core::resize(srcp, dstp, data->factor, data->factor);
         }
 
@@ -96,11 +96,11 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     data->factor = factor;
     data->processor = [&]() {
         ac::core::model::ACNet model{ [&]() {
-            for(auto p = modelName; *p != '\0'; p++)
+            for (auto p = modelName; *p != '\0'; p++)
             {
-                if(*p == '1') return ac::core::model::ACNet::Variant::HDN1;
-                if(*p == '2') return ac::core::model::ACNet::Variant::HDN2;
-                if(*p == '3') return ac::core::model::ACNet::Variant::HDN3;
+                if (*p == '1') return ac::core::model::ACNet::Variant::HDN1;
+                if (*p == '2') return ac::core::model::ACNet::Variant::HDN2;
+                if (*p == '3') return ac::core::model::ACNet::Variant::HDN3;
             }
             return ac::core::model::ACNet::Variant::HDN0;
         }() };
@@ -115,7 +115,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     }();
     if (!data->processor->ok()) SET_ERROR(data->processor->error());
 
-    VSFilterDependency deps[] = {{node, rpGeneral}};
+    VSFilterDependency deps[] = { {node, rpGeneral} };
     vsapi->createVideoFilter(out, "Upscale", &data->vi, filter, destory, fmParallel, deps, 1, data, core);
 }
 
@@ -134,12 +134,12 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
         "",
         "info:data[];",
         [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) -> void {
-            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(),-1, dtUtf8, maAppend);
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(), -1, dtUtf8, maAppend);
 #           ifdef AC_CORE_WITH_OPENCL
-                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(),-1, dtUtf8, maAppend);
+                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(), -1, dtUtf8, maAppend);
 #           endif
 #           ifdef AC_CORE_WITH_CUDA
-                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(),-1, dtUtf8, maAppend);
+                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(), -1, dtUtf8, maAppend);
 #           endif
         }, nullptr, plugin);
 }

@@ -28,25 +28,25 @@ PYBIND11_MODULE(pyac, m)
 
     py::class_<ac::core::Processor, std::shared_ptr<ac::core::Processor>>(core, "Processor")
         .def(py::init([](const int processorType, const int device, const int modelType) {
-            ac::core::model::ACNet model{ [&](){
+            ac::core::model::ACNet model{ [&]() {
                     switch (modelType)
                     {
-                    case ModelType::ACNetHDN0 : return ac::core::model::ACNet::Variant::HDN0;
-                    case ModelType::ACNetHDN1 : return ac::core::model::ACNet::Variant::HDN1;
-                    case ModelType::ACNetHDN2 : return ac::core::model::ACNet::Variant::HDN2;
-                    case ModelType::ACNetHDN3 : return ac::core::model::ACNet::Variant::HDN3;
+                    case ModelType::ACNetHDN0: return ac::core::model::ACNet::Variant::HDN0;
+                    case ModelType::ACNetHDN1: return ac::core::model::ACNet::Variant::HDN1;
+                    case ModelType::ACNetHDN2: return ac::core::model::ACNet::Variant::HDN2;
+                    case ModelType::ACNetHDN3: return ac::core::model::ACNet::Variant::HDN3;
                     default: throw py::value_error{ "unknown model type" };
                     }
                 }()
             };
             switch (processorType)
             {
-            case ac::core::Processor::CPU : return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
+            case ac::core::Processor::CPU: return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
 #           ifdef AC_CORE_WITH_OPENCL
-                case ac::core::Processor::OpenCL : return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            case ac::core::Processor::OpenCL: return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
 #           endif
 #           ifdef AC_CORE_WITH_CUDA
-                case ac::core::Processor::CUDA : return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            case ac::core::Processor::CUDA: return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #           endif
             default: throw py::value_error{ "unsupported processor" };
             }
@@ -75,16 +75,16 @@ PYBIND11_MODULE(pyac, m)
         .def_static("info_list", []() {
             return std::make_tuple(
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
-#           ifdef AC_CORE_WITH_OPENCL
-                ac::core::Processor::info<ac::core::Processor::OpenCL>(),
-#           else
-                "OpenCL: unsupported processor",
-#           endif
-#           ifdef AC_CORE_WITH_CUDA
-                ac::core::Processor::info<ac::core::Processor::CUDA>()
-#           else
-                "CUDA: unsupported processor"
-#           endif
+#               ifdef AC_CORE_WITH_OPENCL
+                    ac::core::Processor::info<ac::core::Processor::OpenCL>(),
+#               else
+                    "OpenCL: unsupported processor",
+#               endif
+#               ifdef AC_CORE_WITH_CUDA
+                    ac::core::Processor::info<ac::core::Processor::CUDA>()
+#               else
+                    "CUDA: unsupported processor"
+#               endif
             );
         })
         .def_readonly_static("CPU", &ac::core::Processor::CPU)

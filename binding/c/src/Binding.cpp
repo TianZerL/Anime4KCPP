@@ -15,7 +15,7 @@ struct ac_processor
 
 ac_image* ac_image_cteate(const int w, const int h, const int c, const int element_type, void* const data, const int stride)
 {
-    return new ac_image{{ w, h, c, element_type, data, stride }};
+    return new ac_image{ { w, h, c, element_type, data, stride } };
 }
 ac_image* ac_image_cteate_empty(void)
 {
@@ -104,31 +104,31 @@ int ac_image_same(const ac_image* const a, const ac_image* const b)
 
 ac_processor* ac_processor_create(const int processor_type, const int device, const int model_type)
 {
-    ac::core::model::ACNet model{{}};
+    ac::core::model::ACNet model{ {} };
     switch (model_type)
     {
-    case AC_MODEL_ACNET_HDN0 : model = { ac::core::model::ACNet::Variant::HDN0 }; break;
-    case AC_MODEL_ACNET_HDN1 : model = { ac::core::model::ACNet::Variant::HDN1 }; break;
-    case AC_MODEL_ACNET_HDN2 : model = { ac::core::model::ACNet::Variant::HDN2 }; break;
-    case AC_MODEL_ACNET_HDN3 : model = { ac::core::model::ACNet::Variant::HDN3 }; break;
+    case AC_MODEL_ACNET_HDN0: model = { ac::core::model::ACNet::Variant::HDN0 }; break;
+    case AC_MODEL_ACNET_HDN1: model = { ac::core::model::ACNet::Variant::HDN1 }; break;
+    case AC_MODEL_ACNET_HDN2: model = { ac::core::model::ACNet::Variant::HDN2 }; break;
+    case AC_MODEL_ACNET_HDN3: model = { ac::core::model::ACNet::Variant::HDN3 }; break;
     default: return nullptr;
     }
 
     std::shared_ptr<ac::core::Processor> processor{};
     switch (processor_type)
     {
-    case ac::core::Processor::CPU :
+    case ac::core::Processor::CPU:
         processor = ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
         break;
 #   ifdef AC_CORE_WITH_OPENCL
-        case ac::core::Processor::OpenCL :
-            processor = ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-            break;
+    case ac::core::Processor::OpenCL:
+        processor = ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+        break;
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        case ac::core::Processor::CUDA :
-            processor = ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-            break;
+    case ac::core::Processor::CUDA:
+        processor = ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+        break;
 #   endif
     default: return nullptr;
     }
@@ -159,12 +159,12 @@ const char* ac_processor_info(const int processor_type)
 {
     switch (processor_type)
     {
-    case ac::core::Processor::CPU : return ac::core::Processor::info<ac::core::Processor::CPU>();
+    case ac::core::Processor::CPU: return ac::core::Processor::info<ac::core::Processor::CPU>();
 #   ifdef AC_CORE_WITH_OPENCL
-        case ac::core::Processor::OpenCL : return ac::core::Processor::info<ac::core::Processor::OpenCL>();
+    case ac::core::Processor::OpenCL: return ac::core::Processor::info<ac::core::Processor::OpenCL>();
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        case ac::core::Processor::CUDA : return ac::core::Processor::info<ac::core::Processor::CUDA>();
+    case ac::core::Processor::CUDA: return ac::core::Processor::info<ac::core::Processor::CUDA>();
 #   endif
     default: return "unsupported processor";
     }
