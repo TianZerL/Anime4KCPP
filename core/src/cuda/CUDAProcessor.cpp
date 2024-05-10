@@ -79,26 +79,6 @@ namespace ac::core::cuda
         }
     }
 
-    class StreamManager
-    {
-    public:
-        StreamManager() noexcept
-        {
-            cudaStreamCreate(&stream);
-        }
-        ~StreamManager() noexcept
-        {
-            cudaStreamDestroy(stream);
-        }
-
-        operator cudaStream_t() const noexcept
-        {
-            return stream;
-        }
-    private:
-        cudaStream_t stream{};
-    };
-
     class CUDAProcessorBase : public Processor
     {
     public:
@@ -161,7 +141,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
 {
     cudaSetDevice(idx);
 
-    thread_local StreamManager stream{};
+    cudaStream_t stream = cudaStreamPerThread;
 
     auto srcW = src.width(), srcH = src.height();
     auto dstW = dst.width(), dstH = dst.height();
