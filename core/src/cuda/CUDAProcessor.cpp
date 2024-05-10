@@ -214,6 +214,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     resDesc.res.array.array = outArray;
     cudaCreateSurfaceObject(&out, &resDesc);
 
+    cudaHostRegister(src.ptr(), src.size(), cudaHostRegisterDefault);
     cudaMemcpy2DToArrayAsync(inArray, 0, 0, src.ptr(), src.stride(), srcWBytes, srcH, cudaMemcpyHostToDevice, stream);
 
     conv3x3_1to8_cuda(in, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0], stream);
@@ -227,9 +228,13 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     conv3x3_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[8], biases + model::ACNet::baisOffset[8], stream);
     deconv2x2_8to1_cuda(tmp1Load, out, dstW, dstH, kernels + model::ACNet::kernelOffset[9], dst.type(), stream);
 
+    cudaHostRegister(dst.ptr(), dst.size(), cudaHostRegisterDefault);
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
     cudaStreamSynchronize(stream);
+    
+    cudaHostUnregister(src.ptr());
+    cudaHostUnregister(dst.ptr());
 
     cudaDestroyTextureObject(in);
     cudaDestroySurfaceObject(tmp1Store);
