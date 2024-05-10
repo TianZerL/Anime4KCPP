@@ -38,17 +38,17 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
         }
         return 0;
     }();
-    if (!type) env->ThrowError("Anime4KCPP: only planar YUV uint8, uint16 and float32 input supported");
+    if (!type) env->ThrowError("Anime4KCPP: %s", "only planar YUV uint8, uint16 and float32 input supported");
 
     factor = args[1].Defined() ? args[1].AsFloat() : 2.0;
-    if (factor <= 1.0) env->ThrowError("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
+    if (factor <= 1.0) env->ThrowError("Anime4KCPP: %s", "this is a upscaler, so make sure factor > 1.0");
     vi.width = static_cast<decltype(vi.width)>(vi.width * factor);
     vi.height = static_cast<decltype(vi.height)>(vi.height * factor);
 
     auto processorName = args[2].Defined() ? args[2].AsString() : "cpu";
 
     auto device = args[3].Defined() ? args[3].AsInt() : 0;
-    if (device < 0) env->ThrowError("Anime4KCPP: the device index cannot be negative");
+    if (device < 0) env->ThrowError("Anime4KCPP: %s", "the device index cannot be negative");
 
     auto modelName = args[4].Defined() ? args[4].AsString() : "acnet-hdn0";
 
@@ -78,12 +78,12 @@ PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
 {
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
-    // y
+    //y
     ac::core::Image srcy{ src->GetRowSize(PLANAR_Y) / vi.ComponentSize(), src->GetHeight(PLANAR_Y), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(PLANAR_Y)), src->GetPitch(PLANAR_Y) };
     ac::core::Image dsty{ dst->GetRowSize(PLANAR_Y) / vi.ComponentSize(), dst->GetHeight(PLANAR_Y), 1, type, dst->GetWritePtr(PLANAR_Y), dst->GetPitch(PLANAR_Y) };
     processor->process(srcy, dsty, factor);
     if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
-    // uv
+    //uv
     int planes[] = { PLANAR_U, PLANAR_V, PLANAR_A };
     for (int n = 0; n < vi.NumComponents() - 1; n++)
     {

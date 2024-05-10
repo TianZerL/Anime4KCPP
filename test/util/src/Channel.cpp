@@ -9,7 +9,7 @@
 
 int main()
 {
-    std::mutex mtx;
+    std::mutex mtx{};
 
     ac::util::Channel<int> chan{3};
     ac::util::ThreadPool pool{3};

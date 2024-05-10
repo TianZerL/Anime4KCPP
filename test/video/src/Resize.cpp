@@ -28,8 +28,8 @@ int main(int argc, const char* argv[])
     double total = info.fps * info.length;
 
     struct {
-        double total{};
-    } data;
+        double total;
+    } data{};
     data.total = total;
 
     ac::util::Stopwatch stopwatch{};
