@@ -185,9 +185,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     cudaTextureDesc texDesc{};
 
     resDesc.resType = cudaResourceTypeArray;
-    texDesc.addressMode[0] = cudaAddressModeClamp;
-    texDesc.addressMode[1] = cudaAddressModeClamp;
-    texDesc.addressMode[2] = cudaAddressModeClamp;
+    texDesc.addressMode[0] = cudaAddressModeBorder;
+    texDesc.addressMode[1] = cudaAddressModeBorder;
+    texDesc.addressMode[2] = cudaAddressModeBorder;
     texDesc.filterMode = cudaFilterModePoint;
     texDesc.normalizedCoords = false;
     texDesc.readMode = src.isFloat() ? cudaReadModeElementType : cudaReadModeNormalizedFloat;

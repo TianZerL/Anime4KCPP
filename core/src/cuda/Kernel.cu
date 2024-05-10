@@ -122,7 +122,7 @@ namespace ac::core::cuda
                     r[7] * kptr[offset3 + 7] +
                     r[8] * kptr[offset3 + 8] + biases[npos + 3], 0.0f
                 ))));
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeClamp);
+            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
         }
     }
 
@@ -223,7 +223,7 @@ namespace ac::core::cuda
                 __half_as_ushort(__float2half(fmaxf(sum[2], 0.0f))),
                 __half_as_ushort(__float2half(fmaxf(sum[3], 0.0f))));
 
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeClamp);
+            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
         }
     }
 
@@ -256,7 +256,7 @@ namespace ac::core::cuda
                 kernels[offset + 8],
                 kernels[offset + 12]));
         }
-        surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeClamp);
+        surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
     }
 
     void conv3x3_1to8_cuda(
