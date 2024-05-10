@@ -4,22 +4,21 @@
 #include <cstring>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/ThreadPool.hpp"
 
-template<int batch>
-static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image (&images)[batch])
+static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images)
 {
     ac::util::Stopwatch stopwatch{};
     for(auto&& src : images) processor->process(src, 2.0);
     stopwatch.stop();
-    std::printf("%s: serial average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
+    std::printf("%s: serial average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
 }
 
-template<int batch>
-static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image(&images)[batch])
+static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images)
 {
     ac::util::Stopwatch stopwatch{};
     {
@@ -27,12 +26,12 @@ static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& proces
         for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });     
     }
     stopwatch.stop();
-    std::printf("%s: parallel average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
+    std::printf("%s: parallel average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
 }
 
 int main(int argc, const char* argv[])
 {
-    std::printf("usage: [processor] [device] [width] [height]\n");
+    std::printf("usage: [processor] [device] [width] [height] [batch]\n");
 
     std::random_device rd{};
     std::mt19937 gen{ rd() };
@@ -53,11 +52,13 @@ int main(int argc, const char* argv[])
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }(); 
 
-    ac::core::Image images[60] = {};
     int w = argc > 3 ? std::atoi(argv[3]) : 720;
     int h = argc > 4 ? std::atoi(argv[4]) : 480;
+    int batch = argc > 5 ? std::atoi(argv[5]) : 60;
 
-    std::printf("random images: %d x %d x 60\n", w, h);
+    std::printf("random images: %d x %d x %d\n", w, h, batch);
+
+    std::vector<ac::core::Image> images(batch);
 
     for(auto&& image : images)
     {

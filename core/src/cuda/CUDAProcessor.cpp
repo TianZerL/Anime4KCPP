@@ -141,7 +141,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
 {
     cudaSetDevice(idx);
 
-    cudaStream_t stream = cudaStreamPerThread;
+    auto stream = cudaStreamPerThread;
 
     auto srcW = src.width(), srcH = src.height();
     auto dstW = dst.width(), dstH = dst.height();
