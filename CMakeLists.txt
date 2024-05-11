@@ -32,6 +32,7 @@ option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SU
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
 option(AC_CORE_ENABLE_IMAGE_IO "enable image file read and write for core" ON)
+option(AC_CORE_ENABLE_FAST_MATH "enable fast math for core" ON)
 option(AC_BUILD_CLI "build cli" ON)
 option(AC_BUILD_VIDEO "build video module" OFF)
 option(AC_BUILD_FILTER_AVISYNTH "build avisynth filter" OFF)

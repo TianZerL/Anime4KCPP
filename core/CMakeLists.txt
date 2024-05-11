@@ -111,6 +111,14 @@ target_compile_definitions(ac PUBLIC
     AC_CORE_FEATURES="$<JOIN:${AC_CORE_FEATURE_LIST}, >"
 )
 
+if(AC_CORE_ENABLE_FAST_MATH)
+    if(MSVC)
+        target_compile_options(ac PRIVATE /fp:fast)
+    else()
+        target_compile_options(ac PRIVATE -ffast-math)
+    endif()
+endif()
+
 ac_check_disable_flags(ac)
 ac_check_enable_static_crt(ac)
 ac_check_disable_pic(ac)
