@@ -113,9 +113,9 @@ target_compile_definitions(ac PUBLIC
 
 if(AC_CORE_ENABLE_FAST_MATH)
     if(MSVC)
-        target_compile_options(ac PRIVATE /fp:fast)
+        target_compile_options(ac PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/fp:fast>)
     else()
-        target_compile_options(ac PRIVATE -ffast-math)
+        target_compile_options(ac PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-ffast-math>)
     endif()
 endif()
 
