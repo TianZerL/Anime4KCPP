@@ -1,6 +1,5 @@
 #include <QDateTime>
 #include <QDesktopServices>
-#include <QFile>
 #include <QFileDialog>
 #include <QList>
 #include <QMimeData>
@@ -107,14 +106,33 @@ void MainWindow::init()
     QObject::connect(ui->combo_box_model, &QComboBox::textActivated, this,
         [](const QString& value) { gConfig.upscaler.model = value; });
 
-    taskListModel.setHorizontalHeaderLabels({ tr("type"), tr("name"), tr("path"), tr("status") });
+    taskListModel.setHorizontalHeaderLabels({ tr("type"), tr("status"), tr("name"), tr("output name"), tr("path") });
     ui->table_view_task_list->setModel(&taskListModel);
     ui->table_view_task_list->setEditTriggers(QTableView::NoEditTriggers);
+    ui->table_view_task_list->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(ui->table_view_task_list, &QTableView::doubleClicked, this, &MainWindow::openTaskFile);
+    // right click menu
+    auto taskListContextMenu = new QMenu{ui->table_view_task_list};
+    auto taskListActionOpen = new QAction{tr("open"), taskListContextMenu};
+    auto taskListActionRemove = new QAction{tr("remove"), taskListContextMenu};
+    taskListContextMenu->addActions({ taskListActionOpen, taskListActionRemove });
+    QObject::connect(taskListActionOpen, &QAction::triggered, taskListContextMenu, [=]() {
+        auto index = ui->table_view_task_list->currentIndex();
+        if (index.isValid()) openTaskFile(index);
+    });
+    QObject::connect(taskListActionRemove, &QAction::triggered, taskListContextMenu, [=]() {
+        auto index = ui->table_view_task_list->currentIndex();
+        if (index.isValid()) taskListModel.removeRow(index.row());
+    });
+    QObject::connect(ui->table_view_task_list, &QTableView::customContextMenuRequested, taskListContextMenu, [=](const QPoint &pos) {
+        auto index = ui->table_view_task_list->indexAt(pos);
+        if (index.isValid()) taskListContextMenu->popup(QCursor::pos());
+    });
+
     ui->push_button_task_list_stop->setEnabled(false);
     QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, this, &MainWindow::on_action_add_triggered);
-    QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, this, [=]() {
-        taskListModel.removeRows(0, taskListModel.rowCount());
-    });
+    QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, this,
+        [=]() { taskListModel.removeRows(0, taskListModel.rowCount()); });
     QObject::connect(ui->push_button_task_list_start, &QPushButton::clicked, this, &MainWindow::startTasks);
     QObject::connect(ui->push_button_task_list_stop, &QPushButton::clicked, &gUpscaler, &Upscaler::stop);
     QObject::connect(&gUpscaler, &Upscaler::started, ui->push_button_task_list_start,
@@ -138,11 +156,15 @@ void MainWindow::init()
     QObject::connect(&gUpscaler, &Upscaler::progress, ui->progress_bar_video_task, &QProgressBar::setValue);
 
     ui->text_browser_log->setSource(QUrl::fromLocalFile(gLogger.logFilePath()));
-    QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, &QTextBrowser::reload);
+    QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, [=]() {
+        ui->text_browser_log->reload();
+        ui->text_browser_log->moveCursor(QTextCursor::End);
+    });
 
     gLogger.info() << "started";
     gLogger.info() << gUpscaler.info();
 }
+
 void MainWindow::addTask(const QFileInfo& fileInfo)
 {
     auto mimeType = QMimeDatabase{}.mimeTypeForFile(fileInfo);
@@ -151,14 +173,22 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     taskData->path.input = fileInfo.filePath();
     auto prefix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imagePrefix : gConfig.io.videoPrefix;
     auto suffix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageSuffix : gConfig.io.videoSuffix;
-    taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(prefix + fileInfo.completeBaseName() + suffix);
+    auto outputName = prefix + fileInfo.completeBaseName() + suffix;
+    taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
 
-    taskListModel.appendRow({ new QStandardItem{taskData->type == TaskData::TYPE_IMAGE ? "image" : "video"}, new QStandardItem{fileInfo.fileName()}, new QStandardItem{fileInfo.absoluteFilePath()}, new QStandardItem{"ready"} });
+    taskListModel.appendRow({
+        new QStandardItem{taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video")},
+        new QStandardItem{tr("ready")},
+        new QStandardItem{fileInfo.fileName()},
+        new QStandardItem{outputName},
+        new QStandardItem{fileInfo.absoluteFilePath()}
+    });
     auto rowIdx = taskListModel.rowCount() - 1;
     taskListModel.setData(taskListModel.index(rowIdx, 0), QVariant::fromValue(taskData), Qt::UserRole);
+    taskListModel.setData(taskListModel.index(rowIdx, 4), QString("%1: %3\n%2: %4").arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
         auto status = taskListModel.item(rowIdx, 3);
-        status->setText(success ? "successed" : "failed");
+        status->setText(success ? tr("successed") : tr("failed"));
         status->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
         auto count = taskListModel.headerData(0, Qt::Horizontal, Qt::UserRole).toInt() + 1;
         ui->progress_bar_task_list->setValue(100 * count / taskListModel.rowCount());
@@ -170,6 +200,18 @@ void MainWindow::startTasks()
     QList<QSharedPointer<TaskData>> taskList{};
     for (int i = 0; i < taskListModel.rowCount(); i++) taskList << (taskListModel.data(taskListModel.index(i, 0), Qt::UserRole)).value<QSharedPointer<TaskData>>();
     gUpscaler.start(taskList);
+}
+void MainWindow::openTaskFile(const QModelIndex& index)
+{
+    auto variant = taskListModel.data(taskListModel.index(index.row(), 0), Qt::UserRole);
+    if (variant.canConvert<QSharedPointer<TaskData>>())
+    {
+        auto data = variant.value<QSharedPointer<TaskData>>();
+        if (index.column() == 3 && QFileInfo::exists(data->path.output))
+            QDesktopServices::openUrl(QUrl::fromLocalFile(variant.value<QSharedPointer<TaskData>>()->path.output));
+        else
+            QDesktopServices::openUrl(QUrl::fromLocalFile(variant.value<QSharedPointer<TaskData>>()->path.input));
+    }
 }
 
 void MainWindow::closeEvent(QCloseEvent* const event)

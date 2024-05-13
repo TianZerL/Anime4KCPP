@@ -80,7 +80,11 @@
         </widget>
        </item>
        <item row="1" column="7">
-        <widget class="QLineEdit" name="line_edit_label_decode_hints_decoder"/>
+        <widget class="QLineEdit" name="line_edit_label_decode_hints_decoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;h264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_cuvid&lt;/span&gt;` (Nvidia hwaccel), `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;` (Intel hwaccel), etc.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a decoder, the most suitable one will be selected based on the input file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="9" colspan="2">
         <widget class="QLabel" name="label_encode_hints_encoder">
@@ -90,7 +94,11 @@
         </widget>
        </item>
        <item row="1" column="11" colspan="2">
-        <widget class="QLineEdit" name="line_edit_label_encode_hints_encoder"/>
+        <widget class="QLineEdit" name="line_edit_label_encode_hints_encoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;libopenh264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;libx264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_nvenc&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_amf&lt;/span&gt;`, etc.&lt;/p&gt;&lt;p&gt;This will affect output codec, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;libx265&lt;/span&gt;` (hevc), `&lt;span style=&quot; font-weight:700;&quot;&gt;av1_nvenc&lt;/span&gt;` (av1), `&lt;span style=&quot; font-weight:700;&quot;&gt;mpeg4&lt;/span&gt;` (mpeg4), etc. Check FFmpeg docs for more information.&lt;/p&gt;&lt;p&gt;This will also affect hardware acceleration, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_nvenc&lt;/span&gt;` (Nvidia), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_amf&lt;/span&gt;` (AMD), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_qsv&lt;/span&gt;` (Intel), etc.&lt;/p&gt;&lt;p&gt;Leave blank to select the default encoder based on the file suffix.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_suffix_video">
@@ -120,7 +128,11 @@
         </widget>
        </item>
        <item row="2" column="7">
-        <widget class="QLineEdit" name="line_edit_label_decode_hints_format"/>
+        <widget class="QLineEdit" name="line_edit_label_decode_hints_format">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decode format pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a format, but you may need to use `&lt;span style=&quot; font-weight:700;&quot;&gt;nv12&lt;/span&gt;` for qsv encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="2" column="9" colspan="2">
         <widget class="QLabel" name="label_encode_hints_bitrate">
@@ -130,7 +142,11 @@
         </widget>
        </item>
        <item row="2" column="11" colspan="2">
-        <widget class="QSpinBox" name="spin_box_encode_hints_bitrate"/>
+        <widget class="QSpinBox" name="spin_box_encode_hints_bitrate">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;bitrate (&lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;) pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;This will affect the size and quality of the output video.&lt;/p&gt;&lt;p&gt;Leave blank to automatically calculate based on the input video bitrate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="0" colspan="13">
         <widget class="Line" name="line_output_path">
@@ -245,7 +261,11 @@
         </widget>
        </item>
        <item row="0" column="3">
-        <widget class="QSpinBox" name="spin_box_device"/>
+        <widget class="QSpinBox" name="spin_box_device">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For CPU, it represents different acceleration methods.&lt;/p&gt;&lt;p&gt;For GPU, it represents the devices to use.&lt;/p&gt;&lt;p&gt;Check available value in menu: &lt;span style=&quot; font-weight:700;&quot;&gt;Help-&amp;gt;List devices&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_factor">
@@ -255,7 +275,11 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QDoubleSpinBox" name="double_spin_box_factor"/>
+        <widget class="QDoubleSpinBox" name="double_spin_box_factor">
+         <property name="toolTip">
+          <string>Upscaling factor for each dimension.</string>
+         </property>
+        </widget>
        </item>
        <item row="1" column="2">
         <widget class="QLabel" name="label_model">
@@ -265,7 +289,11 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QComboBox" name="combo_box_model"/>
+        <widget class="QComboBox" name="combo_box_model">
+         <property name="toolTip">
+          <string>ACNet: Higher HDN levels mean better denoising, which may compromise details.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -385,11 +413,6 @@
    </property>
    <property name="text">
     <string>Exit confirmation</string>
-   </property>
-  </action>
-  <action name="actiona">
-   <property name="text">
-    <string>a</string>
    </property>
   </action>
  </widget>

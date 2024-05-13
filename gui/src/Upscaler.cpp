@@ -2,6 +2,7 @@
 
 #include "AC/Core.hpp"
 #include "AC/Util/ThreadPool.hpp"
+#include "AC/Util/Stopwatch.hpp"
 #ifdef AC_CLI_ENABLE_VIDEO
 #   include "AC/Video.hpp"
 #endif
@@ -86,6 +87,7 @@ Upscaler::~Upscaler() noexcept = default;
 
 void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 {
+    if (dptr->total) return;
     dptr->device = gConfig.upscaler.device;
     dptr->factor = gConfig.upscaler.factor;
     dptr->stopFlag = false;
@@ -108,14 +110,15 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             videoTaskList << task;
     }
 
-    static ac::util::ThreadPool pool{ac::util::ThreadPool::hardwareThreads() + 1};
+    static unsigned int threads = ac::util::ThreadPool::hardwareThreads();
+    static ac::util::ThreadPool pool{ dptr->processorType == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1 };
 
 #   ifdef AC_CLI_ENABLE_VIDEO
         pool.exec([=](){
             auto decoder =  gConfig.video.decoder.toLocal8Bit();
             auto format =  gConfig.video.format.toLocal8Bit();
             auto encoder =  gConfig.video.encoder.toLocal8Bit();
-            auto bitrate = gConfig.video.bitrate;
+            auto bitrate = gConfig.video.bitrate * 1000;
 
             ac::video::DecoderHints dhints{};
             ac::video::EncoderHints ehints{};
@@ -135,13 +138,13 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     ac::video::Pipeline pipeline{};
 
                     gLogger.info() << "Load video from " << input;
-                    if(!pipeline.openDecoder(input, dhints))
+                    if (!pipeline.openDecoder(input, dhints))
                     {
                         gLogger.error() << input <<": Failed to open decoder";
                         emit task->finished(false);
                         continue;
                     }
-                    if(!pipeline.openEncoder(output, dptr->factor, ehints))
+                    if (!pipeline.openEncoder(output, dptr->factor, ehints))
                     {
                         gLogger.error() << input <<": Failed to open encoder";
                         emit task->finished(false);
@@ -149,21 +152,20 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     }
 
                     auto info = pipeline.getInfo();
-
                     struct {
                         std::atomic_bool& stopFlag;
                         double factor;
                         double frames;
                         Upscaler* upscaler;
                         std::shared_ptr<ac::core::Processor> processor;
-                    } data{
+                    } data {
                         dptr->stopFlag,
                         dptr->factor,
                         info.fps * info.length,
                         this,
                         dptr->processor
                     };
-
+                    ac::util::Stopwatch stopwatch{};
                     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
                         auto ctx = static_cast<decltype(data)*>(userdata);
                         // y
@@ -181,8 +183,10 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
                         return !ctx->stopFlag;
                     }, &data, ac::video::FILTER_AUTO);
+                    stopwatch.stop();
                     pipeline.close();
                     if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
+                    gLogger.info() << input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
                     gLogger.info() << "Save video to " << output;
                 }
                 emit progress(100);
@@ -202,8 +206,13 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 
                 gLogger.info() << "Load image from " << input;
                 auto src = ac::core::imread(input, ac::core::IMREAD_UNCHANGED);
+
+                ac::util::Stopwatch stopwatch{};
                 auto dst = dptr->processor->process(src, dptr->factor);
+                stopwatch.stop();
                 if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
+                gLogger.info() << input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
+
                 if (ac::core::imwrite(output, dst)) gLogger.info() << "Save image to " << output;
                 else
                 {

@@ -8,6 +8,7 @@
 #include <QDropEvent>
 #include <QFileInfo>
 #include <QMainWindow>
+#include <QModelIndex>
 #include <QStandardItemModel>
 #include <QString>
 
@@ -26,6 +27,7 @@ private:
     void init();
     void addTask(const QFileInfo& fileInfo);
     void startTasks();
+    void openTaskFile(const QModelIndex& index);
 private:
     void closeEvent(QCloseEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -34,7 +36,7 @@ private slots:
     void on_action_add_triggered();
     void on_action_list_devices_triggered();
     void on_action_about_triggered();
-public:
+private:
     static QString selectDir();
     static void openDir(const QString& path);
 private:

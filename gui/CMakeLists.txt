@@ -3,11 +3,42 @@ project(ac_gui VERSION 3.0.0.0 LANGUAGES CXX)
 set(GUI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GUI_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# third-party
 include(${DEPENDENCY_DIR}/qt.cmake)
 
+set(AC_GUI_LANGUAGES
+    zh_CN
+)
+
+foreach(AC_GUI_LANGUAGE ${AC_GUI_LANGUAGES})
+    list(APPEND AC_GUI_QRC_LANGUAGE_LIST "<file alias=\"ac_gui_${AC_GUI_LANGUAGE}.qm\">${GUI_BINARY_DIR}/ac_gui_${AC_GUI_LANGUAGE}.qm</file>")
+endforeach()
+list(JOIN AC_GUI_QRC_LANGUAGE_LIST "\n" AC_GUI_QRC_LANGUAGES)
+
+file(WRITE "${GUI_BINARY_DIR}/resources/qresource.qrc.in" [[
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="logo">@TOP_DIR@/images/Logo.ico</file>
+    </qresource>
+    <qresource prefix="/i18n">
+        @AC_GUI_QRC_LANGUAGES@
+    </qresource>
+</RCC>
+]])
+
+configure_file(
+    ${GUI_BINARY_DIR}/resources/qresource.qrc.in
+    ${GUI_BINARY_DIR}/resources/qresource.qrc @ONLY
+)
+
+if (WIN32)
+    file(WRITE "${GUI_BINARY_DIR}/resources/resource.rc" "IDI_ICON1               ICON    \"${TOP_DIR}/images/Logo.ico\"")
+endif()
+
+foreach(AC_GUI_LANGUAGE ${AC_GUI_LANGUAGES})
+    list(APPEND AC_GUI_TS_FILES "${GUI_SOURCE_DIR}/languages/ac_gui_${AC_GUI_LANGUAGE}.ts")
+endforeach()
+
 file(GLOB AC_GUI_UI_FILES ${GUI_SOURCE_DIR}/ui/*.ui)
-file(GLOB AC_GUI_TS_FILES ${GUI_SOURCE_DIR}/languages/*.ts)
 file(GLOB AC_GUI_RC_FILES ${GUI_BINARY_DIR}/resources/*.*rc)
 
 set(AC_GUI_SRC_FILES
