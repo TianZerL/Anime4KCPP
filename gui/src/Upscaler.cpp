@@ -1,0 +1,223 @@
+#include <atomic>
+
+#include "AC/Core.hpp"
+#include "AC/Util/ThreadPool.hpp"
+#ifdef AC_CLI_ENABLE_VIDEO
+#   include "AC/Video.hpp"
+#endif
+
+#include "Config.hpp"
+#include "Logger.hpp"
+
+#include "Upscaler.hpp"
+
+namespace detail
+{
+    int processorType(const QString& processor)
+    {
+#       ifdef AC_CORE_WITH_OPENCL
+            if (processor == "opencl") return ac::core::Processor::OpenCL;
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
+            if (processor == "cuda") return ac::core::Processor::CUDA;
+#       endif
+        return ac::core::Processor::CPU;
+    }
+    std::shared_ptr<ac::core::Processor> createProcessor(int processorType, int device, const QString& modelName)
+    {
+        ac::core::model::ACNet model { [&]() {
+            if(modelName.contains('1')) return ac::core::model::ACNet::Variant::HDN1;
+            if(modelName.contains('2')) return ac::core::model::ACNet::Variant::HDN2;
+            if(modelName.contains('3')) return ac::core::model::ACNet::Variant::HDN3;
+            return ac::core::model::ACNet::Variant::HDN0 ;
+        }() };
+
+        switch (processorType)
+        {
+        case ac::core::Processor::CPU:
+            return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
+            break;
+#       ifdef AC_CORE_WITH_OPENCL
+        case ac::core::Processor::OpenCL:
+            return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            break;
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
+        case ac::core::Processor::CUDA:
+            return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            break;
+#       endif
+        default: return nullptr;
+        }
+    }
+}
+
+struct Upscaler::UpscalerData
+{
+    int processorType;
+    int device;
+    double factor;
+    std::atomic_bool stopFlag;
+    std::atomic_size_t total;
+    std::shared_ptr<ac::core::Processor> processor;
+    QString model;
+};
+
+Upscaler& Upscaler::instance() noexcept
+{
+    static Upscaler upscaler{};
+    return upscaler;
+}
+QString Upscaler::info()
+{
+    QString buffer{};
+    buffer.append(ac::core::Processor::info<ac::core::Processor::CPU>());
+#   ifdef AC_CORE_WITH_OPENCL
+        buffer.append(ac::core::Processor::info<ac::core::Processor::OpenCL>());
+#   endif
+#   ifdef AC_CORE_WITH_CUDA
+        buffer.append(ac::core::Processor::info<ac::core::Processor::CUDA>());
+#   endif
+    return buffer;
+}
+
+Upscaler::Upscaler() : dptr(std::make_unique<UpscalerData>()) {}
+Upscaler::~Upscaler() noexcept = default;
+
+void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
+{
+    dptr->device = gConfig.upscaler.device;
+    dptr->factor = gConfig.upscaler.factor;
+    dptr->stopFlag = false;
+    dptr->total = taskList.size();
+    dptr->model = gConfig.upscaler.model;
+    if (!dptr->total) return;
+
+    emit started();
+
+    int processorType = detail::processorType(gConfig.upscaler.processor);
+    if (!dptr->processor || dptr->processorType != processorType) dptr->processor = detail::createProcessor(dptr->processorType = processorType, dptr->device, dptr->model);
+
+    QList<QSharedPointer<TaskData>> imageTaskList;
+    QList<QSharedPointer<TaskData>> videoTaskList;
+    for(auto&& task : taskList)
+    {
+        if (task->type == TaskData::TYPE_IMAGE)
+            imageTaskList << task;
+        else
+            videoTaskList << task;
+    }
+
+    static ac::util::ThreadPool pool{ac::util::ThreadPool::hardwareThreads() + 1};
+
+#   ifdef AC_CLI_ENABLE_VIDEO
+        pool.exec([=](){
+            auto decoder =  gConfig.video.decoder.toLocal8Bit();
+            auto format =  gConfig.video.format.toLocal8Bit();
+            auto encoder =  gConfig.video.encoder.toLocal8Bit();
+            auto bitrate = gConfig.video.bitrate;
+
+            ac::video::DecoderHints dhints{};
+            ac::video::EncoderHints ehints{};
+            dhints.decoder = decoder;
+            dhints.format = format;
+            ehints.encoder = encoder;
+            ehints.bitrate = bitrate;
+
+            for (auto&& task : videoTaskList)
+            {
+                emit progress(0);
+                if (!dptr->stopFlag)
+                {
+                    auto input = task->path.input.toLocal8Bit();
+                    auto output = task->path.output.toLocal8Bit();
+
+                    ac::video::Pipeline pipeline{};
+
+                    gLogger.info() << "Load video from " << input;
+                    if(!pipeline.openDecoder(input, dhints))
+                    {
+                        gLogger.error() << input <<": Failed to open decoder";
+                        emit task->finished(false);
+                        continue;
+                    }
+                    if(!pipeline.openEncoder(output, dptr->factor, ehints))
+                    {
+                        gLogger.error() << input <<": Failed to open encoder";
+                        emit task->finished(false);
+                        continue;
+                    }
+
+                    auto info = pipeline.getInfo();
+
+                    struct {
+                        std::atomic_bool& stopFlag;
+                        double factor;
+                        double frames;
+                        Upscaler* upscaler;
+                        std::shared_ptr<ac::core::Processor> processor;
+                    } data{
+                        dptr->stopFlag,
+                        dptr->factor,
+                        info.fps * info.length,
+                        this,
+                        dptr->processor
+                    };
+
+                    ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
+                        auto ctx = static_cast<decltype(data)*>(userdata);
+                        // y
+                        ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
+                        ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
+                        ctx->processor->process(srcy, dsty, ctx->factor);
+                        if (!ctx->processor->ok()) return false;
+                        // uv
+                        for (int i = 1; i < src.planes; i++)
+                        {
+                            ac::core::Image srcp{src.plane[i].width, src.plane[i].height, src.plane[i].channel, src.elementType, src.plane[i].data, src.plane[i].stride};
+                            ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
+                            ac::core::resize(srcp, dstp, 0.0, 0.0);
+                        }
+                        emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
+                        return !ctx->stopFlag;
+                    }, &data, ac::video::FILTER_AUTO);
+                    pipeline.close();
+                    if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
+                    gLogger.info() << "Save video to " << output;
+                }
+                emit progress(100);
+                emit task->finished(!dptr->stopFlag && dptr->processor->ok());
+                if (--dptr->total == 0) emit stopped();
+            }
+        });
+#   endif
+
+    for (auto&& task : imageTaskList)
+    {
+        pool.exec([=](){
+            if (!dptr->stopFlag)
+            {
+                auto input = task->path.input.toLocal8Bit();
+                auto output = task->path.output.toLocal8Bit();
+
+                gLogger.info() << "Load image from " << input;
+                auto src = ac::core::imread(input, ac::core::IMREAD_UNCHANGED);
+                auto dst = dptr->processor->process(src, dptr->factor);
+                if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
+                if (ac::core::imwrite(output, dst)) gLogger.info() << "Save image to " << output;
+                else
+                {
+                    gLogger.error() << "Failed to save image to " << output;
+                    emit task->finished(false);
+                    return;
+                }
+            }
+            emit task->finished(!dptr->stopFlag && dptr->processor->ok());
+            if (--dptr->total == 0) emit stopped();
+        });
+    }
+}
+void Upscaler::stop()
+{
+    dptr->stopFlag = true;
+}

@@ -12,7 +12,7 @@ namespace ac::video
         FILTER_SERIAL   = 2
     };
 
-    void filter(Pipeline& pipeline, void (*callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* userdata, int flag);
+    void filter(Pipeline& pipeline, bool (*callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* userdata, int flag);
 }
 
 #endif

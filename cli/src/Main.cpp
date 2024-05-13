@@ -107,12 +107,13 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         data.processor = processor;
 
         ac::util::Stopwatch stopwatch{};
-        ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
+        ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
             auto ctx = static_cast<decltype(data)*>(userdata);
             // y
             ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
             ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
             ctx->processor->process(srcy, dsty, ctx->factor);
+            if (!ctx->processor->ok()) return false;
             // uv
             for (int i = 1; i < src.planes; i++)
             {
@@ -130,6 +131,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
                 std::printf("\r%6.2lf%% [%.*s%-*s]", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">");
                 std::fflush(stdout);
             }
+            return true;
         }, &data, ac::video::FILTER_AUTO);
         stopwatch.stop();
         pipeline.close();

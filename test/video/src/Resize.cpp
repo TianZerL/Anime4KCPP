@@ -33,7 +33,7 @@ int main(int argc, const char* argv[])
     data.total = total;
 
     ac::util::Stopwatch stopwatch{};
-    ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) {
+    ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
         auto ctx = static_cast<decltype(data)*>(userdata);
         for (int i = 0; i < src.planes; i++)
         {
@@ -46,6 +46,7 @@ int main(int argc, const char* argv[])
             std::printf("%lf%%\r", 100 * src.number / ctx->total); // printf is thread safe
             std::fflush(stdout);
         }
+        return true;
     }, &data, ac::video::FILTER_AUTO);
     stopwatch.stop();
 

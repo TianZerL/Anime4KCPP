@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.19)
 project(Anime4KCPP LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -34,6 +34,7 @@ option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
 option(AC_CORE_ENABLE_IMAGE_IO "enable image file read and write for core" ON)
 option(AC_CORE_ENABLE_FAST_MATH "enable fast math for core" ON)
 option(AC_BUILD_CLI "build cli" ON)
+option(AC_BUILD_GUI "build gui" OFF)
 option(AC_BUILD_VIDEO "build video module" OFF)
 option(AC_BUILD_FILTER_AVISYNTH "build avisynth filter" OFF)
 option(AC_BUILD_FILTER_VAPOURSYNTH "build vapoursynth filter" OFF)
@@ -131,6 +132,9 @@ if(AC_BUILD_VIDEO)
 endif()
 if(AC_BUILD_CLI)
     add_subdirectory(cli)
+endif()
+if(AC_BUILD_GUI)
+    add_subdirectory(gui)
 endif()
 
 install(

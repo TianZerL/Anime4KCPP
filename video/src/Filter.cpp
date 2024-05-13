@@ -9,25 +9,27 @@
 
 namespace ac::video::detail
 {
-    inline static void filterSerial(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    inline static void filterSerial(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
+        bool success = true;
         Frame src{};
         Frame dst{};
 
-        while (pipeline >> src)
+        while (success && pipeline >> src)
         {
             pipeline.request(dst, src);
 
-            callback(src, dst, userdata);
+            success = callback(src, dst, userdata);
 
             pipeline.release(src);
             pipeline << dst;
         }
-        pipeline.remux();
+        if (success) pipeline.remux();
     }
 
-    inline static void filterParallel(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    inline static void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
+        std::atomic_bool success = true;
         std::atomic_size_t threads = util::ThreadPool::hardwareThreads();
         util::Channel<Frame> decodeChan{ threads };
         util::AscendingChannel<Frame> encodeChan{ threads };
@@ -60,7 +62,7 @@ namespace ac::video::detail
             };
             while(!encodeChan.isClose()) process();
             while(!encodeChan.empty()) process();
-            pipeline.remux();
+            if(success) pipeline.remux();
         });
 
         for (std::size_t i = 0; i < threads; i++)
@@ -72,7 +74,7 @@ namespace ac::video::detail
                     decodeChan >> src;
                     if (!src.ref) return;
                     pipeline.request(dst, src);
-                    callback(src, dst, userdata);
+                    success = callback(src, dst, userdata);
                     pipeline.release(src);
                     encodeChan << dst;
                 };
@@ -84,12 +86,12 @@ namespace ac::video::detail
         }
 
         Frame src{};
-        while (pipeline >> src) decodeChan << src;
+        while (success && pipeline >> src) decodeChan << src;
         decodeChan.close();
     }
 }
 
-void ac::video::filter(Pipeline& pipeline, void (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata, const int flag)
+void ac::video::filter(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata, const int flag)
 {
     if (!callback) return;
 
