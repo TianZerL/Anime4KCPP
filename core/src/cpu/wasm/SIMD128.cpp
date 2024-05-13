@@ -5,7 +5,8 @@
 
 namespace ac::core::cpu
 {
-    inline static float wasm_simd128_f32x4_hsum(const v128_t v) noexcept {
+    inline static float wasm_simd128_f32x4_hsum(const v128_t& v) noexcept
+    {
         v128_t v64 = wasm_f32x4_add(v, wasm_i32x4_shuffle(v, v, 2, 3, 0, 0));
         v128_t v32 = wasm_f32x4_add(v64, wasm_i32x4_shuffle(v64, v64, 1, 0, 0, 0));
         return wasm_f32x4_extract_lane(v32, 0);
