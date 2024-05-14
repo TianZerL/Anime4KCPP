@@ -378,6 +378,7 @@
     <addaction name="action_list_devices"/>
     <addaction name="separator"/>
     <addaction name="menu_settings"/>
+    <addaction name="action_license"/>
     <addaction name="action_about"/>
    </widget>
    <addaction name="menu_file"/>
@@ -410,6 +411,11 @@
    </property>
    <property name="text">
     <string>Exit confirmation</string>
+   </property>
+  </action>
+  <action name="action_license">
+   <property name="text">
+    <string>License</string>
    </property>
   </action>
  </widget>

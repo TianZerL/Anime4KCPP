@@ -14,6 +14,12 @@ foreach(AC_GUI_LANGUAGE ${AC_GUI_LANGUAGES})
 endforeach()
 list(JOIN AC_GUI_QRC_LANGUAGE_LIST "\n" AC_GUI_QRC_LANGUAGES)
 
+if(TARGET ac_video)
+    set(AC_GUI_LICENSE "${TOP_DIR}/LICENSE-GPLv3")
+else()
+    set(AC_GUI_LICENSE "${TOP_DIR}/LICENSE-MIT")
+endif()
+
 file(WRITE "${GUI_BINARY_DIR}/resources/qresource.qrc.in" [[
 <RCC>
     <qresource prefix="/icon">
@@ -21,6 +27,9 @@ file(WRITE "${GUI_BINARY_DIR}/resources/qresource.qrc.in" [[
     </qresource>
     <qresource prefix="/i18n">
         @AC_GUI_QRC_LANGUAGES@
+    </qresource>
+    <qresource prefix="/license">
+        <file alias="ac">@AC_GUI_LICENSE@</file>
     </qresource>
 </RCC>
 ]])

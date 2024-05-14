@@ -1,4 +1,5 @@
 #include <QDesktopServices>
+#include <QFile>
 #include <QFileDialog>
 #include <QList>
 #include <QMessageBox>
@@ -257,6 +258,37 @@ void MainWindow::on_action_add_triggered()
 void MainWindow::on_action_list_devices_triggered()
 {
     QMessageBox::information(this, "Devices", Upscaler::info());
+}
+void MainWindow::on_action_license_triggered()
+{
+    QFile licenseAC{ ":/license/ac" };
+    if (licenseAC.open(QIODevice::Text | QIODevice::ReadOnly))
+    {
+        auto licenseDialog = new QDialog{ this };
+        licenseDialog->setAttribute(Qt::WA_DeleteOnClose);
+        licenseDialog->setWindowTitle("License");
+        licenseDialog->resize(500, 300);
+
+        auto verticalLayout = new QVBoxLayout{ licenseDialog };
+        auto textBrowser = new QTextBrowser{ licenseDialog };
+        auto buttonBox = new QDialogButtonBox{ licenseDialog };
+        buttonBox->setOrientation(Qt::Orientation::Horizontal);
+        buttonBox->setStandardButtons(QDialogButtonBox::StandardButton::Ok);
+        QObject::connect(buttonBox, &QDialogButtonBox::accepted, licenseDialog, &QDialog::accept);
+
+        verticalLayout->addWidget(textBrowser);
+        verticalLayout->addWidget(buttonBox);
+        textBrowser->setText(
+            QString{
+                "<p style='white-space: pre-wrap;'>"
+                "<h3>Anime4KCPP</h3>"
+                "%1"
+                "</p>"
+            }.arg(licenseAC.readAll())
+        );
+        licenseDialog->setLayout(verticalLayout);
+        licenseDialog->show();
+    }
 }
 void MainWindow::on_action_about_triggered()
 {

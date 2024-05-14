@@ -38,6 +38,7 @@ private:
 private slots:
     void on_action_add_triggered();
     void on_action_list_devices_triggered();
+    void on_action_license_triggered();
     void on_action_about_triggered();
 
 private:
