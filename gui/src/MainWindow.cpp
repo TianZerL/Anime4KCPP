@@ -1,3 +1,4 @@
+#include <QColor>
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
@@ -95,6 +96,7 @@ void MainWindow::init()
     QObject::connect(ui->spin_box_encode_hints_bitrate, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.video.bitrate = value; });
 
+    ui->double_spin_box_factor->setMinimum(1.0);
     ui->combo_box_processor->addItems(gConfig.upscaler.processorList);
     ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
     ui->spin_box_device->setValue(gConfig.upscaler.device);
@@ -191,7 +193,7 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     taskListModel.setData(taskListModel.index(rowIdx, 0), QVariant::fromValue(taskData), Qt::UserRole);
     taskListModel.setData(taskListModel.index(rowIdx, 4), QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
-        auto status = taskListModel.item(rowIdx, 3);
+        auto status = taskListModel.item(rowIdx, 1);
         status->setText(success ? tr("successed") : tr("failed"));
         status->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
         auto count = taskListModel.headerData(0, Qt::Horizontal, Qt::UserRole).toInt() + 1;
