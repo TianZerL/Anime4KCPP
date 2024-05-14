@@ -22,7 +22,7 @@ static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& proces
 {
     ac::util::Stopwatch stopwatch{};
     {
-        ac::util::ThreadPool pool{ ac::util::ThreadPool::hardwareThreads() + 1 };
+        ac::util::ThreadPool pool{ ac::util::ThreadPool::hardwareThreads() };
         for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });
     }
     stopwatch.stop();
@@ -50,7 +50,7 @@ int main(int argc, const char* argv[])
 #       endif
         }
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-    }(); 
+    }();
 
     int w = argc > 3 ? std::atoi(argv[3]) : 720;
     int h = argc > 4 ? std::atoi(argv[4]) : 480;

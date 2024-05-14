@@ -110,7 +110,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             videoTaskList << task;
     }
 
-    static unsigned int threads = ac::util::ThreadPool::hardwareThreads();
+    static auto threads = ac::util::ThreadPool::hardwareThreads();
     static ac::util::ThreadPool pool{ dptr->processorType == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1 };
 
 #   ifdef AC_CLI_ENABLE_VIDEO
