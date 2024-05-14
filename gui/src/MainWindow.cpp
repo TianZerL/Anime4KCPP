@@ -184,7 +184,7 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     });
     auto rowIdx = taskListModel.rowCount() - 1;
     taskListModel.setData(taskListModel.index(rowIdx, 0), QVariant::fromValue(taskData), Qt::UserRole);
-    taskListModel.setData(taskListModel.index(rowIdx, 4), QString("%1: %3\n%2: %4").arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
+    taskListModel.setData(taskListModel.index(rowIdx, 4), QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
         auto status = taskListModel.item(rowIdx, 3);
         status->setText(success ? tr("successed") : tr("failed"));
@@ -261,16 +261,30 @@ void MainWindow::on_action_list_devices_triggered()
 void MainWindow::on_action_about_triggered()
 {
     QMessageBox::about(this, "About",
-        "Anime4KCPP: A high performance anime upscaler.\n\n"
-        "Anime4KCPP GUI:\n"
-        "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
-#       ifdef AC_CLI_ENABLE_VIDEO
-        "  video module version: " AC_VIDEO_VERSION_STR "\n"
-#       endif
-        "  build date: " AC_BUILD_DATE "\n"
-        "  built by: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
-        "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
-        "https://github.com/TianZerL/Anime4KCPP\n"
+        QString{
+            "<p style='white-space: pre-wrap;'>"
+            "%1\n\n"
+            "Anime4KCPP GUI:\n"
+            "  %2: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
+            "  %3: "
+#           ifdef AC_CLI_ENABLE_VIDEO
+                AC_VIDEO_VERSION_STR "\n"
+#           else
+                "${DISABLED}\n"
+#           endif
+            "  %4: " AC_BUILD_DATE "\n"
+            "  %5: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
+            "%6 (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
+            "<a href='https://github.com/TianZerL/Anime4KCPP'>https://github.com/TianZerL/Anime4KCPP</a>\n"
+            "</p>"
+        }.arg(
+            tr("Anime4KCPP: A high performance anime upscaler"),
+            tr("core version"),
+            tr("video module"),
+            tr("build date"),
+            tr("toolchain"),
+            tr("Copyright")
+        ).replace("${DISABLED}", tr("disabled"))
     );
 }
 

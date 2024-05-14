@@ -263,5 +263,40 @@
         <source>failed</source>
         <translation>失败</translation>
     </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="281"/>
+        <source>Anime4KCPP: A high performance anime upscaler</source>
+        <translation>Anime4KCPP：高性能动漫超分工具</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="282"/>
+        <source>core version</source>
+        <translation>核心版本</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="283"/>
+        <source>video module</source>
+        <translation>视频模块</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="284"/>
+        <source>build date</source>
+        <translation>构建日期</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="285"/>
+        <source>toolchain</source>
+        <translation>工具链</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="286"/>
+        <source>Copyright</source>
+        <translation>版权所有</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="287"/>
+        <source>disabled</source>
+        <translation>不可用</translation>
+    </message>
 </context>
 </TS>

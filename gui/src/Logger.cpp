@@ -27,7 +27,7 @@ Logger::Logger() noexcept
             if (type == QtMsgType::QtCriticalMsg) return "Red";
             return "Blue";
         }() };
-        QString buffer = msg.contains('\n') ? QString("\n```\n%1\n```  \n").arg(msg) : QString("<span style='color:%1'>%2</span>  \n").arg(color, msg);
+        QString buffer = msg.contains('\n') ? QString{ "\n```\n%1\n```  \n" }.arg(msg) : QString{ "<span style='color:%1'>%2</span>  \n" }.arg(color, msg);
         {
             const std::lock_guard<std::mutex> lock(mtx);
             log.write(qFormatLogMessage(type, context, buffer).toUtf8());

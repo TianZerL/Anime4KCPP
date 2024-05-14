@@ -16,15 +16,18 @@
 static void version()
 {
     std::printf(
-            "Anime4KCPP CLI:\n"
-            "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
-#           ifdef AC_CLI_ENABLE_VIDEO
-            "  video module version: " AC_VIDEO_VERSION_STR "\n"
-#           endif
-            "  build date: " AC_BUILD_DATE "\n"
-            "  built by: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
-            "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n"
-            "https://github.com/TianZerL/Anime4KCPP\n"
+        "Anime4KCPP CLI:\n"
+        "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
+        "  video module: "
+#       ifdef AC_CLI_ENABLE_VIDEO
+            AC_VIDEO_VERSION_STR "\n"
+#       else
+            "disabled\n"
+#       endif
+        "  build date: " AC_BUILD_DATE "\n"
+        "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
+        "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
+        "https://github.com/TianZerL/Anime4KCPP\n"
     );
 }
 
