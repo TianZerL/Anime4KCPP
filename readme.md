@@ -1,3 +1,7 @@
+<div align="center">
+    <img src="./images/Logo.png">
+</div>
+
 # Anime4KCPP v3
 Anime4KCPP is a high performance anime upscaler.
 
@@ -35,7 +39,7 @@ To build Anime4KCPP v3 you need CMake and a C++17 compiler, and most dependencie
 | [stb](https://github.com/nothings/stb)                                                                                                | N/A                         | core                |
 | [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                     | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) |
 
-## Platform specific
+## Platform
 ### Windows
 Tested with MinGW64 and MSVC.
 
@@ -43,7 +47,7 @@ To setup ffmpeg's libav for building video module on windows, it is recommended 
 
 To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in CMake console.
 
-For windwos, you can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`).
+For windows, you can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`).
 
 **You need MSVC to build directshow filter, and it is only available on Windows**
 
