@@ -210,6 +210,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="418"/>
+        <location filename="../src/MainWindow.cpp" line="275"/>
         <source>License</source>
         <translation>许可证</translation>
     </message>

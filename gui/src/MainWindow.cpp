@@ -272,8 +272,8 @@ void MainWindow::on_action_license_triggered()
     {
         auto licenseDialog = new QDialog{ this };
         licenseDialog->setAttribute(Qt::WA_DeleteOnClose);
-        licenseDialog->setWindowTitle("License");
-        licenseDialog->resize(520, 300);
+        licenseDialog->setWindowTitle(tr("License"));
+        licenseDialog->resize(600, 300);
 
         auto verticalLayout = new QVBoxLayout{ licenseDialog };
         auto textBrowser = new QTextBrowser{ licenseDialog };
