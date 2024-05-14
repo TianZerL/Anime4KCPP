@@ -266,6 +266,7 @@ void MainWindow::on_action_list_devices_triggered()
     auto devicesMessageBox = new QMessageBox{ this };
     devicesMessageBox->setAttribute(Qt::WA_DeleteOnClose);
     devicesMessageBox->setWindowTitle(tr("Devices"));
+    devicesMessageBox->setWindowModality(Qt::NonModal);
     devicesMessageBox->setText(Upscaler::info());
     devicesMessageBox->show();
 }
