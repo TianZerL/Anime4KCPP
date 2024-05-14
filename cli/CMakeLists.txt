@@ -3,7 +3,6 @@ project(ac_cli VERSION 3.0.0.0 LANGUAGES CXX)
 set(CLI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CLI_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-# third-party
 include(${DEPENDENCY_DIR}/cli11.cmake)
 
 add_executable(ac_cli

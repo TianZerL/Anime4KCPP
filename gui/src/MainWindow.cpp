@@ -1,10 +1,9 @@
-#include <QDateTime>
 #include <QDesktopServices>
 #include <QFileDialog>
 #include <QList>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QMimeDatabase>
-#include <QMessageBox>
 #include <QStyleFactory>
 #include <QSharedPointer>
 
@@ -270,7 +269,7 @@ void MainWindow::on_action_about_triggered()
 #       endif
         "  build date: " AC_BUILD_DATE "\n"
         "  built by: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
-        "Copyright (c) by TianZerL the Anime4KCPP project 2020-" AC_BUILD_YEAR "\n\n"
+        "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
         "https://github.com/TianZerL/Anime4KCPP\n"
     );
 }

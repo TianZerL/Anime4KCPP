@@ -194,6 +194,13 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                 if (--dptr->total == 0) emit stopped();
             }
         });
+#   else
+        for (auto&& task : videoTaskList)
+        {
+            gLogger.warning() << "This build does not support video processing";
+            emit task->finished(false);
+            if (--dptr->total == 0) emit stopped();
+        }
 #   endif
 
     for (auto&& task : imageTaskList)

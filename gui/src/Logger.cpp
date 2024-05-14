@@ -1,8 +1,8 @@
 #include <mutex>
 
-#include <QtLogging>
-#include <QMessageLogger>
 #include <QFile>
+#include <QMessageLogger>
+#include <QtLogging>
 
 #include "Config.hpp"
 #include "Logger.hpp"

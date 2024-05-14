@@ -4,8 +4,8 @@
 #include <memory>
 
 #include <QObject>
-#include <QString>
 #include <QList>
+#include <QString>
 
 #define gUpscaler (Upscaler::instance())
 
@@ -15,6 +15,7 @@ class TaskData : public QObject
 
 signals:
     void finished(bool success);
+
 public:
     enum {
         TYPE_IMAGE,
@@ -33,9 +34,11 @@ class Upscaler : public QObject
 
 private:
     struct UpscalerData;
+
 public:
     static Upscaler& instance() noexcept;
     static QString info();
+
 public:
     Upscaler();
     ~Upscaler() noexcept override;
