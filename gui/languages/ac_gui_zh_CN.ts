@@ -185,6 +185,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="390"/>
+        <location filename="../src/MainWindow.cpp" line="306"/>
         <source>About</source>
         <translation>关于</translation>
     </message>

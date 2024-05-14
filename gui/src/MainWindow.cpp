@@ -303,7 +303,7 @@ void MainWindow::on_action_license_triggered()
 }
 void MainWindow::on_action_about_triggered()
 {
-    QMessageBox::about(this, "About",
+    QMessageBox::about(this, tr("About"),
         QString{
             "<p style='white-space: pre-wrap;'>"
             "%1\n\n"
