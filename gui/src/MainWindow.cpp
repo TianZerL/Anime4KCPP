@@ -263,7 +263,11 @@ void MainWindow::on_action_add_triggered()
 }
 void MainWindow::on_action_list_devices_triggered()
 {
-    QMessageBox::information(this, "Devices", Upscaler::info());
+    auto devicesMessageBox = new QMessageBox{ this };
+    devicesMessageBox->setAttribute(Qt::WA_DeleteOnClose);
+    devicesMessageBox->setWindowTitle(tr("Devices"));
+    devicesMessageBox->setText(Upscaler::info());
+    devicesMessageBox->show();
 }
 void MainWindow::on_action_license_triggered()
 {

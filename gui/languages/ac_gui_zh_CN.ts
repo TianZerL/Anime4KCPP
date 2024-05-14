@@ -210,7 +210,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="418"/>
-        <location filename="../src/MainWindow.cpp" line="275"/>
+        <location filename="../src/MainWindow.cpp" line="279"/>
         <source>License</source>
         <translation>许可证</translation>
     </message>
@@ -270,37 +270,42 @@
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="319"/>
+        <location filename="../src/MainWindow.cpp" line="268"/>
+        <source>Devices</source>
+        <translation>设备</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="323"/>
         <source>Anime4KCPP: A high performance anime upscaler</source>
         <translation>Anime4KCPP：高性能动漫超分工具</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="320"/>
+        <location filename="../src/MainWindow.cpp" line="324"/>
         <source>core version</source>
         <translation>核心版本</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="321"/>
+        <location filename="../src/MainWindow.cpp" line="325"/>
         <source>video module</source>
         <translation>视频模块</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="322"/>
+        <location filename="../src/MainWindow.cpp" line="326"/>
         <source>build date</source>
         <translation>构建日期</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="323"/>
+        <location filename="../src/MainWindow.cpp" line="327"/>
         <source>toolchain</source>
         <translation>工具链</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="324"/>
+        <location filename="../src/MainWindow.cpp" line="328"/>
         <source>Copyright</source>
         <translation>版权所有</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="325"/>
+        <location filename="../src/MainWindow.cpp" line="329"/>
         <source>disabled</source>
         <translation>不可用</translation>
     </message>
