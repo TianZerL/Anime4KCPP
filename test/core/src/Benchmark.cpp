@@ -18,11 +18,11 @@ static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, con
     std::printf("%s: serial average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
 }
 
-static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images)
+static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images, std::size_t threads)
 {
     ac::util::Stopwatch stopwatch{};
     {
-        ac::util::ThreadPool pool{ ac::util::ThreadPool::hardwareThreads() };
+        ac::util::ThreadPool pool{ threads };
         for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });
     }
     stopwatch.stop();
@@ -31,7 +31,7 @@ static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& proces
 
 int main(int argc, const char* argv[])
 {
-    std::printf("usage: [processor] [device] [width] [height] [batch]\n");
+    std::printf("usage: [processor] [device] [width] [height] [batch] [threads]\n");
 
     std::random_device rd{};
     std::mt19937 gen{ rd() };
@@ -55,6 +55,7 @@ int main(int argc, const char* argv[])
     int w = argc > 3 ? std::atoi(argv[3]) : 720;
     int h = argc > 4 ? std::atoi(argv[4]) : 480;
     int batch = argc > 5 ? std::atoi(argv[5]) : 60;
+    int threads = argc > 6 ? std::atoi(argv[6]) : 0;
 
     std::printf("random images: %d x %d x %d\n", w, h, batch);
 
@@ -69,7 +70,7 @@ int main(int argc, const char* argv[])
     }
 
     benchmark(processor, images);
-    benchmarkParallel(processor, images);
+    benchmarkParallel(processor, images, threads > 0 ? threads : (ac::util::ThreadPool::hardwareThreads() + 1));
 
     return 0;
 }
