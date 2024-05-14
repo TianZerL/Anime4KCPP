@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>864</width>
+    <height>800</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,14 +24,14 @@
        <item row="0" column="2" rowspan="3">
         <widget class="Line" name="line_prefix">
          <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+          <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>
        <item row="0" column="5" rowspan="3">
         <widget class="Line" name="line_decode_hints">
          <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+          <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>
@@ -45,7 +45,7 @@
        <item row="0" column="8" rowspan="3">
         <widget class="Line" name="line_encode_hints">
          <property name="orientation">
-          <enum>Qt::Orientation::Vertical</enum>
+          <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>
@@ -148,7 +148,7 @@
        <item row="3" column="0" colspan="13">
         <widget class="Line" name="line_output_path">
          <property name="orientation">
-          <enum>Qt::Orientation::Horizontal</enum>
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
