@@ -1,4 +1,6 @@
 #include <QDesktopServices>
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QFile>
 #include <QFileDialog>
 #include <QList>
@@ -7,6 +9,8 @@
 #include <QMimeDatabase>
 #include <QStyleFactory>
 #include <QSharedPointer>
+#include <QTextBrowser>
+#include <QVBoxLayout>
 
 #include "Config.hpp"
 #include "Logger.hpp"
@@ -267,7 +271,7 @@ void MainWindow::on_action_license_triggered()
         auto licenseDialog = new QDialog{ this };
         licenseDialog->setAttribute(Qt::WA_DeleteOnClose);
         licenseDialog->setWindowTitle("License");
-        licenseDialog->resize(500, 300);
+        licenseDialog->resize(520, 300);
 
         auto verticalLayout = new QVBoxLayout{ licenseDialog };
         auto textBrowser = new QTextBrowser{ licenseDialog };
@@ -284,7 +288,7 @@ void MainWindow::on_action_license_triggered()
                 "<h3>Anime4KCPP</h3>"
                 "%1"
                 "</p>"
-            }.arg(licenseAC.readAll())
+            }.arg(QString{ licenseAC.readAll() })
         );
         licenseDialog->setLayout(verticalLayout);
         licenseDialog->show();

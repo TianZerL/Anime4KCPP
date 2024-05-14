@@ -23,7 +23,7 @@
         <location filename="../ui/MainWindow.ui" line="55"/>
         <location filename="../ui/MainWindow.ui" line="65"/>
         <location filename="../ui/MainWindow.ui" line="158"/>
-        <location filename="../src/MainWindow.cpp" line="180"/>
+        <location filename="../src/MainWindow.cpp" line="184"/>
         <source>image</source>
         <translation>图像</translation>
     </message>
@@ -51,7 +51,7 @@
         <location filename="../ui/MainWindow.ui" line="103"/>
         <location filename="../ui/MainWindow.ui" line="113"/>
         <location filename="../ui/MainWindow.ui" line="182"/>
-        <location filename="../src/MainWindow.cpp" line="180"/>
+        <location filename="../src/MainWindow.cpp" line="184"/>
         <source>video</source>
         <translation>视频</translation>
     </message>
@@ -84,7 +84,7 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="175"/>
         <location filename="../ui/MainWindow.ui" line="199"/>
-        <location filename="../src/MainWindow.cpp" line="116"/>
+        <location filename="../src/MainWindow.cpp" line="120"/>
         <source>open</source>
         <translation>打开</translation>
     </message>
@@ -214,92 +214,92 @@
         <translation>许可证</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="109"/>
+        <location filename="../src/MainWindow.cpp" line="113"/>
         <source>type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="109"/>
+        <location filename="../src/MainWindow.cpp" line="113"/>
         <source>status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="109"/>
+        <location filename="../src/MainWindow.cpp" line="113"/>
         <source>name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="109"/>
+        <location filename="../src/MainWindow.cpp" line="113"/>
         <source>output name</source>
         <translation>输出名称</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="109"/>
+        <location filename="../src/MainWindow.cpp" line="113"/>
         <source>path</source>
         <translation>路径</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="117"/>
+        <location filename="../src/MainWindow.cpp" line="121"/>
         <source>remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="181"/>
+        <location filename="../src/MainWindow.cpp" line="185"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="188"/>
+        <location filename="../src/MainWindow.cpp" line="192"/>
         <source>input</source>
         <translation>输入</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="188"/>
+        <location filename="../src/MainWindow.cpp" line="192"/>
         <source>output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="191"/>
+        <location filename="../src/MainWindow.cpp" line="195"/>
         <source>successed</source>
         <translation>成功</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="191"/>
+        <location filename="../src/MainWindow.cpp" line="195"/>
         <source>failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="313"/>
+        <location filename="../src/MainWindow.cpp" line="317"/>
         <source>Anime4KCPP: A high performance anime upscaler</source>
         <translation>Anime4KCPP：高性能动漫超分工具</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="314"/>
+        <location filename="../src/MainWindow.cpp" line="318"/>
         <source>core version</source>
         <translation>核心版本</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="315"/>
+        <location filename="../src/MainWindow.cpp" line="319"/>
         <source>video module</source>
         <translation>视频模块</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="316"/>
+        <location filename="../src/MainWindow.cpp" line="320"/>
         <source>build date</source>
         <translation>构建日期</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="317"/>
+        <location filename="../src/MainWindow.cpp" line="321"/>
         <source>toolchain</source>
         <translation>工具链</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="318"/>
+        <location filename="../src/MainWindow.cpp" line="322"/>
         <source>Copyright</source>
         <translation>版权所有</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="319"/>
+        <location filename="../src/MainWindow.cpp" line="323"/>
         <source>disabled</source>
         <translation>不可用</translation>
     </message>

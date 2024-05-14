@@ -2,7 +2,7 @@
 
 #include <QFile>
 #include <QMessageLogger>
-#include <QtLogging>
+#include <QtGlobal>
 
 #include "Config.hpp"
 #include "Logger.hpp"
