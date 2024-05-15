@@ -203,7 +203,6 @@ namespace ac::core::cpu
                     k[count] = wasm_f32x4_make(kptr[0 * nstep + n], remain > 1 ? kptr[1 * nstep + n] : 0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, 0.0f);
                     sum += wasm_simd128_f32x4_hsum(wasm_f32x4_mul(r[count], k[count]));
                 }
-
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);

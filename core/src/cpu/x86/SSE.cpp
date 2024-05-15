@@ -211,7 +211,6 @@ namespace ac::core::cpu
                     k[count] = _mm_set_ps(0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, remain > 1 ? kptr[1 * nstep + n] : 0.0f, kptr[0 * nstep + n]);
                     sum += sse_hsum_ps(_mm_mul_ps(r[count], k[count]));
                 }
-
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);

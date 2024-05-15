@@ -343,7 +343,6 @@ namespace ac::core::cpu
                     k[count] = _mm256_set_ps(0.0f, remain > 6 ? kptr[6 * nstep + n] : 0.0f, remain > 5 ? kptr[5 * nstep + n] : 0.0f, remain > 4 ? kptr[4 * nstep + n] : 0.0f, remain > 3 ? kptr[3 * nstep + n] : 0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, remain > 1 ? kptr[1 * nstep + n] : 0.0f, kptr[0 * nstep + n]);
                     sum += avx_hsum_ps(_mm256_mul_ps(r[count], k[count]));
                 }
-
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);

@@ -126,7 +126,6 @@ namespace ac::core::cpu
                 }
                 if constexpr (remain)
                 {
-
                     const float d0[vstep] = {(kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f};
                     const float d1[vstep] = {(kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f};
                     const float d2[vstep] = {(kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f};
@@ -242,7 +241,6 @@ namespace ac::core::cpu
                     k[count] = vld1q_f32(d);
                     sum += neon_hsum_f32(vmulq_f32(r[count], k[count]));
                 }
-
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);
