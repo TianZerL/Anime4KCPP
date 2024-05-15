@@ -24,39 +24,25 @@ namespace ac::core::cpu
             auto ml = in + cn, mc = in, mr = in + cp;
             auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
 
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r0(tl);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r1(tc);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r2(tr);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r3(ml);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r4(mc);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r5(mr);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r6(bl);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r7(bc);
-            Eigen::Map<const Eigen::Array<IN, cin, 1>> r8(br);
-
-            Eigen::Array<float, cin, 9> r{};
-            if constexpr (std::is_same_v<IN, float>)
-                r << r0, r1, r2, r3, r4, r5, r6, r7, r8;
-            else if constexpr (std::is_floating_point_v<IN>)
-                r << r0.template cast<float>(),
-                        r1.template cast<float>(),
-                        r2.template cast<float>(),
-                        r3.template cast<float>(),
-                        r4.template cast<float>(),
-                        r5.template cast<float>(),
-                        r6.template cast<float>(),
-                        r7.template cast<float>(),
-                        r8.template cast<float>();
-            else if constexpr (std::is_unsigned_v<IN>)
-                r << r0.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r1.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r2.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r3.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r4.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r5.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r6.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r7.template cast<float>() / std::numeric_limits<IN>::max(),
-                        r8.template cast<float>() / std::numeric_limits<IN>::max();
+            auto r = [&]() -> auto {
+                Eigen::Array<IN, cin, 9> rin{};
+                rin <<
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tl },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tc },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tr },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ ml },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mc },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mr },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bl },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bc },
+                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ br };
+                if constexpr (std::is_same_v<IN, float>)
+                    return rin;
+                else if constexpr (std::is_floating_point_v<IN>)
+                    return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
+                else if constexpr (std::is_unsigned_v<IN>)
+                    return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
+            }();
 
             for (int n = 0; n < cout; n++)
             {
@@ -77,12 +63,13 @@ namespace ac::core::cpu
             constexpr int nstep = 4 * cout;
 
             auto r = [&]() -> auto {
+                Eigen::Map<const Eigen::Array<IN, cin, 1>> rin{ in };
                 if constexpr (std::is_same_v<IN, float>)
-                    return Eigen::Map<const Eigen::Array<float, cin, 1>> {in};
+                    return rin;
                 else if constexpr (std::is_floating_point_v<IN>)
-                    return (Eigen::Map<const Eigen::Array<IN, cin, 1>> {in}).template cast<float>();
+                    return Eigen::Array<float, cin, 1>{ rin.template cast<float>() };
                 else if constexpr (std::is_unsigned_v<IN>)
-                    return (Eigen::Map<const Eigen::Array<IN, cin, 1>> {in}).template cast<float>() / std::numeric_limits<IN>::max();
+                    return Eigen::Array<float, cin, 1>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
             }();
 
             for (int n = 0; n < cout; n++)
