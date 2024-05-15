@@ -86,8 +86,8 @@ Untested. If you do, please provide feedback.
 | AC_CORE_WITH_WASM_SIMD128            | build core with wasm simd128                       | Auto detect |
 | AC_CORE_WITH_OPENCL                  | build core with opencl                             | OFF         |
 | AC_CORE_WITH_CUDA                    | build core with cuda                               | OFF         |
+| AC_CORE_ENABLE_FAST_MATH             | enable fast math for core                          | OFF         |
 | AC_CORE_ENABLE_IMAGE_IO              | enable image file read and write for core          | ON          |
-| AC_CORE_ENABLE_FAST_MATH             | enable fast math for core                          | ON          |
 | AC_BUILD_CLI                         | build cli                                          | ON          |
 | AC_BUILD_GUI                         | build gui                                          | OFF         |
 | AC_BUILD_VIDEO                       | build video module                                 | OFF         |
@@ -97,7 +97,7 @@ Untested. If you do, please provide feedback.
 | AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH | build an avisynth and vapoursynth universal filter | OFF         |
 | AC_BUILD_BINDING_C                   | build c binding for core                           | OFF         |
 | AC_BUILD_BINDING_PYTHON              | build python binding for core                      | OFF         |
-| AC_TEST_CORE                         | build core test                                    | OFF         |
+| AC_TEST_CORE                         | build core test(benchmark)                         | OFF         |
 | AC_TEST_UTIL                         | build util module test                             | OFF         |
 | AC_TEST_VIDEO                        | build video module test                            | OFF         |
 | AC_TEST_WASM                         | build wasm test (Emscripten only)                  | OFF         |
@@ -106,6 +106,19 @@ Untested. If you do, please provide feedback.
 | AC_DISABLE_RTTI                      | disable rtti                                       | OFF         |
 | AC_DISABLE_EXCEPTION                 | disable exception                                  | OFF         |
 | AC_DISABLE_PIC                       | disable pic or pie                                 | OFF         |
+
+There are some convenient presets:
+
+`AC_PRESET_RELEASE`
+- AC_CORE_WITH_OPENCL
+- AC_CORE_WITH_CUDA
+- AC_CORE_ENABLE_FAST_MATH
+- AC_CORE_ENABLE_IMAGE_IO
+- AC_BUILD_CLI
+- AC_BUILD_GUI
+- AC_BUILD_VIDEO
+- AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH
+- AC_BUILD_FILTER_DIRECTSHOW (MSVC only)
 
 # LICENSE
 The [video module](/video/) is under GPLv3, any module built with the video module are also under GPLv3, others under MIT.
