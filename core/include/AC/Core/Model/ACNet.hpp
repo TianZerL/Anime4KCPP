@@ -23,14 +23,11 @@ public:
 
 public:
     AC_EXPORT ACNet(Variant v) noexcept;
-    AC_EXPORT ACNet(const ACNet&) noexcept;
-    AC_EXPORT ACNet(ACNet&&) noexcept;
-    AC_EXPORT ~ACNet() noexcept;
-    AC_EXPORT ACNet& operator=(const ACNet&) noexcept;
-    AC_EXPORT ACNet& operator=(ACNet&&) noexcept;
     // data pointer in `idx` layer
-    AC_EXPORT const float* kernels(int idx = 0) const noexcept;
-    AC_EXPORT const float* biases(int idx = 0) const noexcept;
+    const float* kernels() const noexcept { return kptr; }
+    const float* biases() const noexcept { return bptr; }
+
+public:
     // length in numbers
     static constexpr int kernelLength() noexcept { return 8 * 9 + 8 * 8 * 9 * 8 + 8 * 4; }
     static constexpr int biasLength() noexcept { return 8 * 9; }

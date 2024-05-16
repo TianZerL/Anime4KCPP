@@ -98,13 +98,14 @@ public:
 private:
     void process(const Image& src, Image& dst) override;
 private:
-    model::ACNet model;
+    const float* kernels;
+    const float* biases;
     void (*conv3x3_1to8)(const Image& src, Image& dst, const float* kernels, const float* biases);
     void (*conv3x3_8to8)(const Image& src, Image& dst, const float* kernels, const float* biases);
     void (*deconv2x2_8to1)(const Image& src, Image& dst, const float* kernels);
 };
 
-ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept : model(model)
+ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept : kernels(model.kernels()), biases(model.biases())
 {
     idx = (arch == arch::Auto) ? []() -> int {
         // x86
@@ -184,16 +185,16 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::process(const Image& s
 {
     Image tmp1{src.width(), src.height(), 8, ac::core::Image::Float32};
     Image tmp2{src.width(), src.height(), 8, ac::core::Image::Float32};
-    conv3x3_1to8(src, tmp1, model.kernels(0), model.biases(0));
-    conv3x3_8to8(tmp1, tmp2, model.kernels(1), model.biases(1));
-    conv3x3_8to8(tmp2, tmp1, model.kernels(2), model.biases(2));
-    conv3x3_8to8(tmp1, tmp2, model.kernels(3), model.biases(3));
-    conv3x3_8to8(tmp2, tmp1, model.kernels(4), model.biases(4));
-    conv3x3_8to8(tmp1, tmp2, model.kernels(5), model.biases(5));
-    conv3x3_8to8(tmp2, tmp1, model.kernels(6), model.biases(6));
-    conv3x3_8to8(tmp1, tmp2, model.kernels(7), model.biases(7));
-    conv3x3_8to8(tmp2, tmp1, model.kernels(8), model.biases(8));
-    deconv2x2_8to1(tmp1, dst, model.kernels(9));
+    conv3x3_1to8(src, tmp1, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0]);
+    conv3x3_8to8(tmp1, tmp2, kernels + model::ACNet::kernelOffset[1], biases + model::ACNet::baisOffset[1]);
+    conv3x3_8to8(tmp2, tmp1, kernels + model::ACNet::kernelOffset[2], biases + model::ACNet::baisOffset[2]);
+    conv3x3_8to8(tmp1, tmp2, kernels + model::ACNet::kernelOffset[3], biases + model::ACNet::baisOffset[3]);
+    conv3x3_8to8(tmp2, tmp1, kernels + model::ACNet::kernelOffset[4], biases + model::ACNet::baisOffset[4]);
+    conv3x3_8to8(tmp1, tmp2, kernels + model::ACNet::kernelOffset[5], biases + model::ACNet::baisOffset[5]);
+    conv3x3_8to8(tmp2, tmp1, kernels + model::ACNet::kernelOffset[6], biases + model::ACNet::baisOffset[6]);
+    conv3x3_8to8(tmp1, tmp2, kernels + model::ACNet::kernelOffset[7], biases + model::ACNet::baisOffset[7]);
+    conv3x3_8to8(tmp2, tmp1, kernels + model::ACNet::kernelOffset[8], biases + model::ACNet::baisOffset[8]);
+    deconv2x2_8to1(tmp1, dst, kernels + model::ACNet::kernelOffset[9]);
 }
 
 template<>
