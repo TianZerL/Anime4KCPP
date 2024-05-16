@@ -34,7 +34,9 @@ kernel void conv3x3_1to8(
         half8 k0 = vload8(0, kptr + n * 9 + 0);
         half k8 = *(kptr + n * 9 + 8);
         half8 h8 = r0 * k0;
-        s[n] = fmax(h8.s0 + h8.s1 + h8.s2 + h8.s3 + h8.s4 + h8.s5 + h8.s6 + h8.s7 + r8 * k8 + bptr[n], 0.0h);
+        half4 h4 = h8.lo + h8.hi;
+        half2 h2 = h4.lo + h4.hi;
+        s[n] = fmax(h2.lo + h2.hi + r8 * k8 + bptr[n], 0.0h);
     }
     write_imageh(dst, (int4)(x, y, 0, 0), (half4)(s[0], s[1], s[2], s[3]));
     write_imageh(dst, (int4)(x, y, 1, 0), (half4)(s[4], s[5], s[6], s[7]));
@@ -92,7 +94,9 @@ kernel void conv3x3_8to8(
         s2 = mad(r8, k8, s2);
 
         half8 h8 = s0 + s1 + s2;
-        s[n] = fmax(h8.s0 + h8.s1 + h8.s2 + h8.s3 + h8.s4 + h8.s5 + h8.s6 + h8.s7 + bptr[n], 0.0h);
+        half4 h4 = h8.lo + h8.hi;
+        half2 h2 = h4.lo + h4.hi;
+        s[n] = fmax(h2.lo + h2.hi + bptr[n], 0.0h);
     }
     write_imageh(dst, (int4)(x, y, 0, 0), (half4)(s[0], s[1], s[2], s[3]));
     write_imageh(dst, (int4)(x, y, 1, 0), (half4)(s[4], s[5], s[6], s[7]));
@@ -126,6 +130,8 @@ kernel void deconv2x2_8to1(
         kptr[28 + index]
     );
     half8 h8 = r * k;
-    half4 s = (half4)(clamp(h8.s0 + h8.s1 + h8.s2 + h8.s3 + h8.s4 + h8.s5 + h8.s6 + h8.s7, 0.0h, 1.0h), 0.0h, 0.0h, 1.0h);
+    half4 h4 = h8.lo + h8.hi;
+    half2 h2 = h4.lo + h4.hi;
+    half4 s = (half4)(clamp(h2.lo + h2.hi, 0.0h, 1.0h), 0.0h, 0.0h, 1.0h);
     write_imageh(dst, dst_coord, s);
 }
