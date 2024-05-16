@@ -18,7 +18,7 @@ Logger& Logger::instance() noexcept
 Logger::Logger() noexcept
 {
     static std::mutex mtx{};
-    static QFile log {logFilePath()};
+    static QFile log { logFilePath() };
     if (log.open(QIODevice::Text | QIODevice::WriteOnly))
     {
         qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& context, const QString& msg) {
