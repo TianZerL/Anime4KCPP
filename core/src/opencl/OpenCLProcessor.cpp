@@ -52,14 +52,14 @@ namespace ac::core::opencl
     }
 
     // we can call `init` multiple times
-    inline static cl_int init(Context& context) noexcept {
+    inline static cl_int init(Context& context, const char* const kernel) noexcept {
         if (!context.device()) return CL_DEVICE_NOT_AVAILABLE;
         if (context.ctx() && context.cmdq() && context.program()) return CL_SUCCESS;
 
         cl_int err = CL_SUCCESS;
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
         context.cmdq = cl::CommandQueue{ context.ctx, context.device, 0, &err }; if (err != CL_SUCCESS) return err;
-        context.program = cl::Program{ context.ctx, KernelString /*Kernel.hpp*/, false, &err }; if (err != CL_SUCCESS) return err;
+        context.program = cl::Program{ context.ctx, kernel /*Kernel.hpp*/, false, &err }; if (err != CL_SUCCESS) return err;
         return context.program.build(context.device);
     }
     inline static cl_channel_type channelType(const Image::ElementType elementType) noexcept
@@ -84,7 +84,9 @@ namespace ac::core::opencl
             {
                 idx = (device >= 0 && static_cast<decltype(contextList.size())>(device) < contextList.size()) ? device : 0;
                 context = contextList[idx];
-                err = init(context);
+                auto extensions = context.device.getInfo<CL_DEVICE_EXTENSIONS>(&err); if (err != CL_SUCCESS) return;
+                fp16 = extensions.find("cl_khr_fp16") != std::string::npos;
+                err = init(context, fp16 ? KernelFP16String : KernelString);
             }
         }
         ~OpenCLProcessorBase() noexcept override = default;
@@ -171,6 +173,7 @@ namespace ac::core::opencl
             return context.name.c_str();
         }
     protected:
+        bool fp16 = false;
         cl_int err = CL_SUCCESS;
         Context context;
     };
@@ -195,10 +198,15 @@ private:
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorBase(device)
 {
     if (err != CL_SUCCESS) return; // check if initialization was successful
-    kernels = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, model.kernelSize(), nullptr, &err }; if (err != CL_SUCCESS) return;
-    biases = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, model.biasSize(), nullptr, &err }; if (err != CL_SUCCESS) return;
-    err = context.cmdq.enqueueWriteBuffer(kernels, CL_FALSE, 0, model.kernelSize(), model.kernels()); if (err != CL_SUCCESS) return;
-    err = context.cmdq.enqueueWriteBuffer(biases, CL_TRUE, 0, model.biasSize(), model.biases());
+    auto kernelSize = fp16 ? model.kernelSizeFP16() : model.kernelSize();
+    auto biasSize = fp16 ? model.biasSizeFP16() : model.biasSize();
+    auto kptr = fp16 ? static_cast<const void*>(model.kernelsFP16()) :static_cast<const void*>(model.kernels());
+    auto bptr = fp16 ? static_cast<const void*>(model.biasesFP16()) : static_cast<const void*>(model.biases());
+
+    kernels = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, kernelSize, nullptr, &err }; if (err != CL_SUCCESS) return;
+    biases = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, biasSize, nullptr, &err }; if (err != CL_SUCCESS) return;
+    err = context.cmdq.enqueueWriteBuffer(kernels, CL_FALSE, 0, kernelSize, kptr); if (err != CL_SUCCESS) return;
+    err = context.cmdq.enqueueWriteBuffer(biases, CL_TRUE, 0, biasSize, bptr);
 /* we can also use:
 *   kernels = cl::Buffer{context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize(), const_cast<float*>(model.kernels())};
 *   biases = cl::Buffer{context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases())};
