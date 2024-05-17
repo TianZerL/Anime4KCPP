@@ -183,11 +183,11 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
 
     taskListModel.appendRow({
-        new QStandardItem{taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video")},
-        new QStandardItem{tr("ready")},
-        new QStandardItem{fileInfo.fileName()},
-        new QStandardItem{outputName},
-        new QStandardItem{fileInfo.absoluteFilePath()}
+        new QStandardItem{ taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video") },
+        new QStandardItem{ tr("ready") },
+        new QStandardItem{ fileInfo.fileName() },
+        new QStandardItem{ outputName },
+        new QStandardItem{ fileInfo.absoluteFilePath() }
     });
     auto rowIdx = taskListModel.rowCount() - 1;
     taskListModel.setData(taskListModel.index(rowIdx, 0), QVariant::fromValue(taskData), Qt::UserRole);

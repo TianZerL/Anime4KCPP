@@ -24,7 +24,7 @@ public:
 
 public:
     AC_EXPORT ACNet(Variant v) noexcept;
-    // data pointer in `idx` layer
+
     const float* kernels() const noexcept { return kptr; }
     const float* biases() const noexcept { return bptr; }
 
@@ -57,7 +57,8 @@ public:
         5 * 8 * 8 * 9 + 8 * 9,
         6 * 8 * 8 * 9 + 8 * 9,
         7 * 8 * 8 * 9 + 8 * 9,
-        8 * 8 * 8 * 9 + 8 * 9};
+        8 * 8 * 8 * 9 + 8 * 9
+    };
     static constexpr int baisOffset[]{
         0,
         1 * 8,
@@ -67,7 +68,8 @@ public:
         5 * 8,
         6 * 8,
         7 * 8,
-        8 * 8};
+        8 * 8
+    };
 
 private:
     const float* kptr;

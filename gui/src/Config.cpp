@@ -15,7 +15,7 @@ Config& Config::instance() noexcept
 
 Config::Config() noexcept
 {
-    QDir dir{QCoreApplication::applicationDirPath()};
+    QDir dir{ QCoreApplication::applicationDirPath() };
     dir.mkpath(AC_GUI_USER_DATA_FOLDER);
     dir.mkpath(AC_GUI_DEFAULT_OUTPUT_FOLDER);
     dir.cd(AC_GUI_DEFAULT_OUTPUT_FOLDER);

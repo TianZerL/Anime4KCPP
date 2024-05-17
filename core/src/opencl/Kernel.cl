@@ -15,16 +15,16 @@ kernel void conv3x3_1to8(
     constant float* bptr = baises + boffset;
 
     float8 r0 = (float8)(
-        read_imagef(src, n_sampler, (int2)(x-1, y-1)).s0,
-        read_imagef(src, n_sampler, (int2)(x  , y-1)).s0,
-        read_imagef(src, n_sampler, (int2)(x+1, y-1)).s0,
-        read_imagef(src, n_sampler, (int2)(x-1, y  )).s0,
-        read_imagef(src, n_sampler, (int2)(x  , y  )).s0,
-        read_imagef(src, n_sampler, (int2)(x+1, y  )).s0,
-        read_imagef(src, n_sampler, (int2)(x-1, y+1)).s0,
-        read_imagef(src, n_sampler, (int2)(x  , y+1)).s0
+        read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x  , y  )).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y+1)).x
     );
-    float r8 = read_imagef(src, n_sampler, (int2)(x+1, y+1)).s0;
+    float r8 = read_imagef(src, n_sampler, (int2)(x+1, y+1)).x;
 
     float s[8] = {};
     for(int n = 0; n < 8; n++)

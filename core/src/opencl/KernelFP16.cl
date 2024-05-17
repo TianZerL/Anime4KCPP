@@ -16,16 +16,16 @@ kernel void conv3x3_1to8(
     constant half* bptr = baises + boffset;
 
     half8 r0 = (half8)(
-        read_imageh(src, n_sampler, (int2)(x-1, y-1)).s0,
-        read_imageh(src, n_sampler, (int2)(x  , y-1)).s0,
-        read_imageh(src, n_sampler, (int2)(x+1, y-1)).s0,
-        read_imageh(src, n_sampler, (int2)(x-1, y  )).s0,
-        read_imageh(src, n_sampler, (int2)(x  , y  )).s0,
-        read_imageh(src, n_sampler, (int2)(x+1, y  )).s0,
-        read_imageh(src, n_sampler, (int2)(x-1, y+1)).s0,
-        read_imageh(src, n_sampler, (int2)(x  , y+1)).s0
+        read_imageh(src, n_sampler, (int2)(x-1, y-1)).x,
+        read_imageh(src, n_sampler, (int2)(x  , y-1)).x,
+        read_imageh(src, n_sampler, (int2)(x+1, y-1)).x,
+        read_imageh(src, n_sampler, (int2)(x-1, y  )).x,
+        read_imageh(src, n_sampler, (int2)(x  , y  )).x,
+        read_imageh(src, n_sampler, (int2)(x+1, y  )).x,
+        read_imageh(src, n_sampler, (int2)(x-1, y+1)).x,
+        read_imageh(src, n_sampler, (int2)(x  , y+1)).x
     );
-    half r8 = read_imageh(src, n_sampler, (int2)(x+1, y+1)).s0;
+    half r8 = read_imageh(src, n_sampler, (int2)(x+1, y+1)).x;
 
     half s[8] = {};
     for(int n = 0; n < 8; n++)
