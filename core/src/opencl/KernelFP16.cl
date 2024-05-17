@@ -32,7 +32,7 @@ kernel void conv3x3_1to8(
     for(int n = 0; n < 8; n++)
     {
         half8 k0 = vload8(0, kptr + n * 9 + 0);
-        half k8 = *(kptr + n * 9 + 8);
+        half k8 = kptr[n * 9 + 8];
         s[n] = fmax(dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi) + r8 * k8 + bptr[n], 0.0h);
     }
     write_imageh(dst, (int4)(x, y, 0, 0), (half4)(s[0], s[1], s[2], s[3]));
@@ -66,18 +66,16 @@ kernel void conv3x3_8to8(
     half s[8] = {};
     for(int n = 0; n < 8; n++)
     {
-        constant half* k = kptr + n * 8 * 9;
-
-        half8 k0 = vload8(0, k);
-        half8 k1 = vload8(1, k);
-        half8 k2 = vload8(2, k);
-        half8 k3 = vload8(3, k);
-        half8 k4 = vload8(4, k);
-        half8 k5 = vload8(5, k);
-        half8 k6 = vload8(6, k);
-        half8 k7 = vload8(7, k);
-        half8 k8 = vload8(8, k);
-
+        half8 k0 = vload8(0, kptr);
+        half8 k1 = vload8(1, kptr);
+        half8 k2 = vload8(2, kptr);
+        half8 k3 = vload8(3, kptr);
+        half8 k4 = vload8(4, kptr);
+        half8 k5 = vload8(5, kptr);
+        half8 k6 = vload8(6, kptr);
+        half8 k7 = vload8(7, kptr);
+        half8 k8 = vload8(8, kptr);
+        kptr += 8 * 9;
         half s0 = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi);
         half s1 = dot(r1.lo, k1.lo) + dot(r1.hi, k1.hi);
         half s2 = dot(r2.lo, k2.lo) + dot(r2.hi, k2.hi);
