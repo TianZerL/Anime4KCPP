@@ -132,9 +132,8 @@ namespace ac::core::opencl
 }
 #endif
 ]])
-
-file(READ "${CORE_SOURCE_DIR}/src/opencl/Kernel.cl" AC_CORE_OPENCL_KERNEL_CL)
-
+file(READ "${CORE_SOURCE_DIR}/src/opencl/Kernel.cl" AC_CORE_OPENCL_KERNEL_CL_SRC)
+string(REGEX REPLACE "\n[ \t\r\n]+" "" AC_CORE_OPENCL_KERNEL_CL "${AC_CORE_OPENCL_KERNEL_CL_SRC}")
 configure_file(
     ${CORE_BINARY_DIR}/Kernel.cl.hpp.in
     ${CORE_BINARY_DIR}/include/AC/Core/OpenCL/Kernel.hpp
