@@ -14,18 +14,17 @@ kernel void conv3x3_1to8(
     constant float* kptr = kernels + koffset;
     constant float* bptr = baises + boffset;
 
-    float4 tl = read_imagef(src, n_sampler, (int2)(x-1, y-1));
-    float4 tc = read_imagef(src, n_sampler, (int2)(x  , y-1));
-    float4 tr = read_imagef(src, n_sampler, (int2)(x+1, y-1));
-    float4 ml = read_imagef(src, n_sampler, (int2)(x-1, y  ));
-    float4 mc = read_imagef(src, n_sampler, (int2)(x  , y  ));
-    float4 mr = read_imagef(src, n_sampler, (int2)(x+1, y  ));
-    float4 bl = read_imagef(src, n_sampler, (int2)(x-1, y+1));
-    float4 bc = read_imagef(src, n_sampler, (int2)(x  , y+1));
-    float4 br = read_imagef(src, n_sampler, (int2)(x+1, y+1));
-
-    float8 r0 = (float8)(tl.s0, tc.s0, tr.s0, ml.s0, mc.s0, mr.s0, bl.s0, bc.s0);
-    float r8 = br.s0;
+    float8 r0 = (float8)(
+        read_imagef(src, n_sampler, (int2)(x-1, y-1)).s0,
+        read_imagef(src, n_sampler, (int2)(x  , y-1)).s0,
+        read_imagef(src, n_sampler, (int2)(x+1, y-1)).s0,
+        read_imagef(src, n_sampler, (int2)(x-1, y  )).s0,
+        read_imagef(src, n_sampler, (int2)(x  , y  )).s0,
+        read_imagef(src, n_sampler, (int2)(x+1, y  )).s0,
+        read_imagef(src, n_sampler, (int2)(x-1, y+1)).s0,
+        read_imagef(src, n_sampler, (int2)(x  , y+1)).s0
+    );
+    float r8 = read_imagef(src, n_sampler, (int2)(x+1, y+1)).s0;
 
     float s[8] = {};
     for(int n = 0; n < 8; n++)
