@@ -64,16 +64,18 @@ kernel void conv3x3_8to8(
     float s[8] = {};
     for(int n = 0; n < 8; n++)
     {
-        float8 k0 = vload8(0, kptr);
-        float8 k1 = vload8(1, kptr);
-        float8 k2 = vload8(2, kptr);
-        float8 k3 = vload8(3, kptr);
-        float8 k4 = vload8(4, kptr);
-        float8 k5 = vload8(5, kptr);
-        float8 k6 = vload8(6, kptr);
-        float8 k7 = vload8(7, kptr);
-        float8 k8 = vload8(8, kptr);
-        kptr += 8 * 9;
+        constant float* k = kptr + n * 8 * 9;
+
+        float8 k0 = vload8(0, k);
+        float8 k1 = vload8(1, k);
+        float8 k2 = vload8(2, k);
+        float8 k3 = vload8(3, k);
+        float8 k4 = vload8(4, k);
+        float8 k5 = vload8(5, k);
+        float8 k6 = vload8(6, k);
+        float8 k7 = vload8(7, k);
+        float8 k8 = vload8(8, k);
+
         float s0 = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi);
         float s1 = dot(r1.lo, k1.lo) + dot(r1.hi, k1.hi);
         float s2 = dot(r2.lo, k2.lo) + dot(r2.hi, k2.hi);

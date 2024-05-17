@@ -15,18 +15,17 @@ kernel void conv3x3_1to8(
     constant half* kptr = kernels + koffset;
     constant half* bptr = baises + boffset;
 
-    half4 tl = read_imageh(src, n_sampler, (int2)(x-1, y-1));
-    half4 tc = read_imageh(src, n_sampler, (int2)(x  , y-1));
-    half4 tr = read_imageh(src, n_sampler, (int2)(x+1, y-1));
-    half4 ml = read_imageh(src, n_sampler, (int2)(x-1, y  ));
-    half4 mc = read_imageh(src, n_sampler, (int2)(x  , y  ));
-    half4 mr = read_imageh(src, n_sampler, (int2)(x+1, y  ));
-    half4 bl = read_imageh(src, n_sampler, (int2)(x-1, y+1));
-    half4 bc = read_imageh(src, n_sampler, (int2)(x  , y+1));
-    half4 br = read_imageh(src, n_sampler, (int2)(x+1, y+1));
-
-    half8 r0 = (half8)(tl.s0, tc.s0, tr.s0, ml.s0, mc.s0, mr.s0, bl.s0, bc.s0);
-    half r8 = br.s0;
+    half8 r0 = (half8)(
+        read_imageh(src, n_sampler, (int2)(x-1, y-1)).s0,
+        read_imageh(src, n_sampler, (int2)(x  , y-1)).s0,
+        read_imageh(src, n_sampler, (int2)(x+1, y-1)).s0,
+        read_imageh(src, n_sampler, (int2)(x-1, y  )).s0,
+        read_imageh(src, n_sampler, (int2)(x  , y  )).s0,
+        read_imageh(src, n_sampler, (int2)(x+1, y  )).s0,
+        read_imageh(src, n_sampler, (int2)(x-1, y+1)).s0,
+        read_imageh(src, n_sampler, (int2)(x  , y+1)).s0
+    );
+    half r8 = read_imageh(src, n_sampler, (int2)(x+1, y+1)).s0;
 
     half s[8] = {};
     for(int n = 0; n < 8; n++)
@@ -66,16 +65,18 @@ kernel void conv3x3_8to8(
     half s[8] = {};
     for(int n = 0; n < 8; n++)
     {
-        half8 k0 = vload8(0, kptr);
-        half8 k1 = vload8(1, kptr);
-        half8 k2 = vload8(2, kptr);
-        half8 k3 = vload8(3, kptr);
-        half8 k4 = vload8(4, kptr);
-        half8 k5 = vload8(5, kptr);
-        half8 k6 = vload8(6, kptr);
-        half8 k7 = vload8(7, kptr);
-        half8 k8 = vload8(8, kptr);
-        kptr += 8 * 9;
+        constant half* k = kptr + n * 8 * 9;
+
+        half8 k0 = vload8(0, k);
+        half8 k1 = vload8(1, k);
+        half8 k2 = vload8(2, k);
+        half8 k3 = vload8(3, k);
+        half8 k4 = vload8(4, k);
+        half8 k5 = vload8(5, k);
+        half8 k6 = vload8(6, k);
+        half8 k7 = vload8(7, k);
+        half8 k8 = vload8(8, k);
+
         half s0 = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi);
         half s1 = dot(r1.lo, k1.lo) + dot(r1.hi, k1.hi);
         half s2 = dot(r2.lo, k2.lo) + dot(r2.hi, k2.hi);
