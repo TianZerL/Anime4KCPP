@@ -16,7 +16,7 @@ namespace ac::util
     template<typename Queue>
     constexpr bool HasTopFunction<Queue, std::void_t<decltype(std::declval<Queue>().top())>> = true;
 
-    template <typename T, typename Queue>
+    template <typename T, typename Queue = std::queue<T>>
     class Channel;
 
     template<typename T>
@@ -25,7 +25,7 @@ namespace ac::util
     using DescendingChannel = Channel<T, std::priority_queue<T, std::vector<T>, std::less<T>>>;
 }
 
-template <typename T, typename Queue = std::queue<T>>
+template <typename T, typename Queue>
 class ac::util::Channel
 {
 public:
@@ -55,7 +55,7 @@ inline ac::util::Channel<T, Queue>::Channel(const std::size_t capacity) : capaci
 template<typename T, typename Queue>
 inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator<<(const T& obj)
 {
-    std::unique_lock<std::mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     producer.wait(lock, [&](){ return queue.size() < capacity; });
     queue.emplace(obj);
     lock.unlock();
@@ -66,7 +66,7 @@ inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator<<(cons
 template<typename T, typename Queue>
 inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator>>(T& obj)
 {
-    std::unique_lock<std::mutex> lock(mtx);
+    std::unique_lock lock(mtx);
     consumer.wait(lock, [&](){ return stop || !queue.empty(); });
     if (!queue.empty())
     {
@@ -82,20 +82,20 @@ inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator>>(T& o
 template<typename T, typename Queue>
 inline std::size_t ac::util::Channel<T, Queue>::size()
 {
-    const std::lock_guard<std::mutex> lock(mtx);
+    const std::lock_guard lock(mtx);
     return queue.size();
 }
 template<typename T, typename Queue>
 inline bool ac::util::Channel<T, Queue>::empty()
 {
-    const std::lock_guard<std::mutex> lock(mtx);
+    const std::lock_guard lock(mtx);
     return queue.empty();
 }
 template<typename T, typename Queue>
 inline void ac::util::Channel<T, Queue>::close()
 {
     {
-        const std::lock_guard<std::mutex> lock(mtx);
+        const std::lock_guard lock(mtx);
         stop = true;
     }
     consumer.notify_all();
@@ -103,7 +103,7 @@ inline void ac::util::Channel<T, Queue>::close()
 template<typename T, typename Queue>
 inline bool ac::util::Channel<T, Queue>::isClose()
 {
-    const std::lock_guard<std::mutex> lock(mtx);
+    const std::lock_guard lock(mtx);
     return stop;
 }
 
