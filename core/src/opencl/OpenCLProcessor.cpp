@@ -171,10 +171,10 @@ namespace ac::core::opencl
             return context.name.c_str();
         }
     protected:
-        cl::CommandQueue& queue(cl_int& err)
+        cl::CommandQueue& queue(cl_int* err)
         {
             auto& cmdq = queues.local();
-            if(!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, &err };
+            if (!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, err };
             return cmdq;
         }
     protected:
@@ -217,7 +217,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     cl::size_type dstRangeW = align(dstW, 16), dstRangeH = align(dstH, 8);
 
     auto& err = errors.local();
-    auto& cmdq = queue(err); if (err != CL_SUCCESS) return;
+    auto& cmdq = queue(&err); if (err != CL_SUCCESS) return;
 
     cl::Kernel conv3x3_1to8{ context.program, "conv3x3_1to8", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel conv3x3_8to8{ context.program, "conv3x3_8to8", &err }; if (err != CL_SUCCESS) return;
