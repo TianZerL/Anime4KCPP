@@ -96,7 +96,8 @@ namespace ac::core::opencl
         const char* error() noexcept override
         {
             switch (errors.local())
-            {   // run-time and JIT compiler errors
+            {// run-time and JIT compiler errors
+            case 0: return "CL_SUCCESS";
             case -1: return "CL_DEVICE_NOT_FOUND";
             case -2: return "CL_DEVICE_NOT_AVAILABLE";
             case -3: return "CL_COMPILER_NOT_AVAILABLE";
@@ -116,7 +117,7 @@ namespace ac::core::opencl
             case -17: return "CL_LINK_PROGRAM_FAILURE";
             case -18: return "CL_DEVICE_PARTITION_FAILED";
             case -19: return "CL_KERNEL_ARG_INFO_NOT_AVAILABLE";
-                // compile-time errors
+            // compile-time errors
             case -30: return "CL_INVALID_VALUE";
             case -31: return "CL_INVALID_DEVICE_TYPE";
             case -32: return "CL_INVALID_PLATFORM";
@@ -156,14 +157,13 @@ namespace ac::core::opencl
             case -66: return "CL_INVALID_COMPILER_OPTIONS";
             case -67: return "CL_INVALID_LINKER_OPTIONS";
             case -68: return "CL_INVALID_DEVICE_PARTITION_COUNT";
-                // extension errors
-            case -1000: return "CL_INVALID_GL_SHAREGROUP_REFERENCE_KHR";
+            case -69: return "CL_INVALID_PIPE_SIZE";
+            case -70: return "CL_INVALID_DEVICE_QUEUE";
+            case -71: return "CL_INVALID_SPEC_ID";
+            case -72: return "CL_MAX_SIZE_RESTRICTION_EXCEEDED";
+            // extension errors
             case -1001: return "CL_PLATFORM_NOT_FOUND_KHR";
-            case -1002: return "CL_INVALID_D3D10_DEVICE_KHR";
-            case -1003: return "CL_INVALID_D3D10_RESOURCE_KHR";
-            case -1004: return "CL_D3D10_RESOURCE_ALREADY_ACQUIRED_KHR";
-            case -1005: return "CL_D3D10_RESOURCE_NOT_ACQUIRED_KHR";
-            default: return Processor::error();
+            default: return "CL_UNKNOWN_ERROR";
             }
         }
         const char* name() const noexcept override
