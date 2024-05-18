@@ -28,8 +28,8 @@ public:
     // and the data will be guaranteed to be stored in that preallocated buffer
     AC_EXPORT void process(const Image& src, Image& dst, double factor);
 
-    AC_EXPORT virtual bool ok() const noexcept;
-    AC_EXPORT virtual const char* error() const noexcept;
+    AC_EXPORT virtual bool ok() noexcept;
+    AC_EXPORT virtual const char* error() noexcept;
     AC_EXPORT virtual const char* name() const noexcept = 0;
 
 private:

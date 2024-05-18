@@ -77,6 +77,7 @@ namespace ac::core::opencl
     public:
         OpenCLProcessorBase(const int device) noexcept
         {
+            auto& err = errors.local();
             auto contextList = getContextList();
             if (contextList.empty()) err = CL_DEVICE_NOT_FOUND;
             else
@@ -88,13 +89,13 @@ namespace ac::core::opencl
         }
         ~OpenCLProcessorBase() noexcept override = default;
 
-        bool ok() const noexcept override
+        bool ok() noexcept override
         {
-            return err == CL_SUCCESS;
+            return errors.local() == CL_SUCCESS;
         }
-        const char* error() const noexcept override
+        const char* error() noexcept override
         {
-            switch (err)
+            switch (errors.local())
             {   // run-time and JIT compiler errors
             case -1: return "CL_DEVICE_NOT_FOUND";
             case -2: return "CL_DEVICE_NOT_AVAILABLE";
@@ -170,15 +171,15 @@ namespace ac::core::opencl
             return context.name.c_str();
         }
     protected:
-        cl::CommandQueue& queue()
+        cl::CommandQueue& queue(cl_int& err)
         {
             auto& cmdq = queues.local();
             if(!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, &err };
             return cmdq;
         }
     protected:
-        cl_int err = CL_SUCCESS;
         Context context;
+        util::ThreadLocal<cl_int> errors;
         util::ThreadLocal<cl::CommandQueue> queues;
     };
 
@@ -201,9 +202,10 @@ private:
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorBase(device)
 {
+    auto& err = errors.local();
     if (err != CL_SUCCESS) return; // check if initialization was successful
     kernels = cl::Buffer{context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize(), const_cast<float*>(model.kernels()), &err}; if (err != CL_SUCCESS) return;
-    biases = cl::Buffer{context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases()), &err}; if (err != CL_SUCCESS) return;
+    biases = cl::Buffer{context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases()), &err};
 }
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::~OpenCLProcessor() noexcept = default;
 
@@ -214,6 +216,9 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     cl::size_type srcRangeW = align(srcW, 16), srcRangeH = align(srcH, 8);
     cl::size_type dstRangeW = align(dstW, 16), dstRangeH = align(dstH, 8);
 
+    auto& err = errors.local();
+    auto& cmdq = queue(err); if (err != CL_SUCCESS) return;
+
     cl::Kernel conv3x3_1to8{ context.program, "conv3x3_1to8", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel conv3x3_8to8{ context.program, "conv3x3_8to8", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel deconv2x2_8to1{ context.program, "deconv2x2_8to1", &err }; if (err != CL_SUCCESS) return;
@@ -222,8 +227,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2DArray tmp2{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2D out{ context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, {CL_R, channelType(dst.type())}, dstW, dstH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-
-    auto& cmdq = queue(); if (err != CL_SUCCESS) return;
 
     err = cmdq.enqueueWriteImage(in, CL_FALSE, { 0,0,0 }, { srcW,srcH,1 }, src.stride(), 0, src.ptr()); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8.setArg(0, in); if (err != CL_SUCCESS) return;

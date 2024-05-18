@@ -89,11 +89,11 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
         }
     }
 }
-bool ac::core::Processor::ok() const noexcept
+bool ac::core::Processor::ok() noexcept
 {
     return true;
 }
-const char* ac::core::Processor::error() const noexcept
+const char* ac::core::Processor::error() noexcept
 {
     return "NO ERROR";
 }

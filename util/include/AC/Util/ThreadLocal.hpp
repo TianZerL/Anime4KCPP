@@ -16,6 +16,7 @@ class ac::util::ThreadLocal
 {
 public:
     T& local();
+
 private:
     Map<std::thread::id, T> map;
     std::shared_mutex mtx;
