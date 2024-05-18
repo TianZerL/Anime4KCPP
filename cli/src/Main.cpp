@@ -3,6 +3,7 @@
 
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
+#include "AC/Util/ThreadPool.hpp"
 #ifdef AC_CLI_ENABLE_VIDEO
 #   include "AC/Video.hpp"
 #endif
@@ -44,26 +45,33 @@ static void list()
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
-    for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
+    auto threads = ac::util::ThreadPool::hardwareThreads();
+    auto targetThreads = options.processor == "cpu" ? threads / 4 + 1 : threads / 2 + 1;
+    auto batch = options.inputs.size();
+    ac::util::ThreadPool pool{ batch > targetThreads ? targetThreads : batch };
+
+    for (decltype(batch) i = 0; i < batch; i++)
     {
-        auto& input = options.inputs[i];
-        auto& output = options.outputs[i];
+        pool.exec([i, &processor, &options]() {
+            auto& input = options.inputs[i];
+            auto& output = options.outputs[i];
 
-        if (output.empty()) output = input + ".out.jpg";
+            if (output.empty()) output = input + ".out.jpg";
 
-        std::printf("\nLoad from %s\n", input.c_str());
-        auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
+            std::printf("Load image from %s\n", input.c_str());
+            auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
 
-        ac::util::Stopwatch stopwatch{};
-        auto dst = processor->process(src, options.factor);
-        stopwatch.stop();
-        CHECK_PROCESSOR(processor);
-        std::printf("Finished in: %lfs\n", stopwatch.elapsed());
+            ac::util::Stopwatch stopwatch{};
+            auto dst = processor->process(src, options.factor);
+            stopwatch.stop();
+            CHECK_PROCESSOR(processor);
+            std::printf("%s: Finished in %lfs\n",input.c_str() ,stopwatch.elapsed());
 
-        if (ac::core::imwrite(output.c_str(), dst))
-            std::printf("Save to %s\n", output.c_str());
-        else
-            std::printf("Failed to save file\n");
+            if (ac::core::imwrite(output.c_str(), dst))
+                std::printf("Save image to %s\n", output.c_str());
+            else
+                std::printf("Failed to save image to %s\n", output.c_str());
+        });
     }
 }
 
@@ -86,15 +94,15 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 
         ac::video::Pipeline pipeline{};
 
-        std::printf("\nLoad from %s\n", input.c_str());
+        std::printf("Load video from %s\n", input.c_str());
         if(!pipeline.openDecoder(input.c_str(), dhints))
         {
-            std::printf("Failed to open decoder\n");
+            std::printf("%s: Failed to open decoder\n", input.c_str());
             return;
         }
         if(!pipeline.openEncoder(output.c_str(), options.factor, ehints))
         {
-            std::printf("Failed to open encoder\n");
+            std::printf("%s: Failed to open encoder\n", input.c_str());
             return;
         }
 
@@ -139,8 +147,8 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         stopwatch.stop();
         pipeline.close();
         CHECK_PROCESSOR(processor);
-        std::printf("\r100.00%%\nFinished in: %lfs\n", stopwatch.elapsed());
-        std::printf("Save to %s\n", output.c_str());
+        std::printf("\r100.00%%\n%s: Finished in %lfs\n",input.c_str(), stopwatch.elapsed());
+        std::printf("Save video to %s\n", output.c_str());
     }
 #else
     std::printf("This build does not support video processing\n");
@@ -198,7 +206,7 @@ int main(int argc, const char* argv[])
     CHECK_PROCESSOR(processor);
 
     std::printf("Model: %s\n"
-                "Processor: %s %s\n",
+                "Processor: %s %s\n\n",
                 options.model.c_str(), options.processor.c_str(), processor->name());
 
     ac::util::Stopwatch stopwatch{};
