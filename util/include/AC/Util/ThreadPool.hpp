@@ -49,7 +49,7 @@ inline ac::util::ThreadPool::ThreadPool(const std::size_t size)
         threads.emplace_back([this]() {
             for (;;)
             {
-                std::unique_lock lock(mtx);
+                std::unique_lock lock{ mtx };
                 cnd.wait(lock, [this] { return stop || !tasks.empty(); });
                 if (stop && tasks.empty()) return;
                 auto task = std::move(tasks.front());
@@ -63,7 +63,7 @@ inline ac::util::ThreadPool::ThreadPool(const std::size_t size)
 inline ac::util::ThreadPool::~ThreadPool()
 {
     {
-        const std::lock_guard lock(mtx);
+        const std::lock_guard lock{ mtx };
         stop = true;
     }
     cnd.notify_all();
@@ -74,7 +74,7 @@ template<typename F>
 inline void ac::util::ThreadPool::exec(F&& f)
 {
     {
-        const std::lock_guard lock(mtx);
+        const std::lock_guard lock{ mtx };
         tasks.emplace(std::forward<F>(f));
     }
     cnd.notify_one();
@@ -86,7 +86,7 @@ inline auto ac::util::ThreadPool::exec(F&& f, Args && ...args)
     auto task = std::make_shared<std::packaged_task<decltype(std::declval<F>()(std::declval<Args>()...))()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     auto ret = task->get_future();
     {
-        const std::lock_guard lock(mtx);
+        const std::lock_guard lock{ mtx };
         tasks.emplace([=]() { (*task)(); });
     }
     cnd.notify_one();

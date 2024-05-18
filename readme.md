@@ -97,7 +97,7 @@ Untested. If you do, please provide feedback.
 | AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH | build an avisynth and vapoursynth universal filter | OFF         |
 | AC_BUILD_BINDING_C                   | build c binding for core                           | OFF         |
 | AC_BUILD_BINDING_PYTHON              | build python binding for core                      | OFF         |
-| AC_TEST_CORE                         | build core test(benchmark)                         | OFF         |
+| AC_TOOLS_BENCHMARK                   | build benchmark                                    | OFF         |
 | AC_TEST_UTIL                         | build util module test                             | OFF         |
 | AC_TEST_VIDEO                        | build video module test                            | OFF         |
 | AC_TEST_WASM                         | build wasm test (Emscripten only)                  | OFF         |

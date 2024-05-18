@@ -24,12 +24,12 @@ private:
 template<typename T, template<typename K, typename V> typename Map>
 inline T& ac::util::ThreadLocal<T, Map>::local()
 {
-    std::shared_lock sharedLock(mtx);
+    std::shared_lock sharedLock{ mtx };
     auto it = map.find(std::this_thread::get_id());
     sharedLock.unlock();
     if (it == map.end())
     {
-        const std::lock_guard lock(mtx);
+        const std::lock_guard lock{ mtx };
         return map.emplace(std::this_thread::get_id(), T{}).first->second;
     }
     return it->second;

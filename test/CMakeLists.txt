@@ -1,6 +1,3 @@
-if (AC_TEST_CORE)
-    add_subdirectory(core)
-endif()
 if (AC_TEST_UTIL)
     add_subdirectory(util)
 endif()
