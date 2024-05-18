@@ -115,7 +115,7 @@ public:
     CUDAProcessor(int device, const model::ACNet& model) noexcept;
     ~CUDAProcessor() noexcept override;
 private:
-    void process(const Image& src, Image& dst) noexcept override;
+    void process(const Image& src, Image& dst) override;
 private:
     float* kernels = nullptr;
     float* biases = nullptr;
@@ -137,7 +137,7 @@ ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::~CUDAProcessor() noexcept
     if (biases) cudaFree(biases);
 }
 
-void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst) noexcept
+void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst)
 {
     cudaSetDevice(idx);
 

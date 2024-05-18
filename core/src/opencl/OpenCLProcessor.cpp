@@ -193,7 +193,7 @@ public:
     OpenCLProcessor(int device, const model::ACNet& model) noexcept;
     ~OpenCLProcessor() noexcept override;
 private:
-    void process(const Image& src, Image& dst) noexcept override;
+    void process(const Image& src, Image& dst) override;
 private:
     cl::Buffer kernels;
     cl::Buffer biases;
@@ -207,7 +207,7 @@ ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const
 }
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::~OpenCLProcessor() noexcept = default;
 
-void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst) noexcept
+void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst)
 {
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
