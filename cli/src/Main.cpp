@@ -45,34 +45,36 @@ static void list()
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
+    auto batch = options.inputs.size();
     auto threads = ac::util::ThreadPool::hardwareThreads();
     auto targetThreads = options.processor == "cpu" ? threads / 4 + 1 : threads / 2 + 1;
-    auto batch = options.inputs.size();
-    ac::util::ThreadPool pool{ batch > targetThreads ? targetThreads : batch };
+    auto poolSize = batch > targetThreads ? targetThreads : batch;
+    auto task = [&](const int i) {
+        auto& input = options.inputs[i];
+        auto& output = options.outputs[i];
 
-    for (decltype(batch) i = 0; i < batch; i++)
+        if (output.empty()) output = input + ".out.jpg";
+
+        std::printf("Load image from %s\n", input.c_str());
+        auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
+
+        ac::util::Stopwatch stopwatch{};
+        auto dst = processor->process(src, options.factor);
+        stopwatch.stop();
+        CHECK_PROCESSOR(processor);
+        std::printf("%s: Finished in %lfs\n",input.c_str() ,stopwatch.elapsed());
+
+        if (ac::core::imwrite(output.c_str(), dst))
+            std::printf("Save image to %s\n", output.c_str());
+        else
+            std::printf("Failed to save image to %s\n", output.c_str());
+    };
+    if (poolSize > 1)
     {
-        pool.exec([i, &processor, &options]() {
-            auto& input = options.inputs[i];
-            auto& output = options.outputs[i];
-
-            if (output.empty()) output = input + ".out.jpg";
-
-            std::printf("Load image from %s\n", input.c_str());
-            auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
-
-            ac::util::Stopwatch stopwatch{};
-            auto dst = processor->process(src, options.factor);
-            stopwatch.stop();
-            CHECK_PROCESSOR(processor);
-            std::printf("%s: Finished in %lfs\n",input.c_str() ,stopwatch.elapsed());
-
-            if (ac::core::imwrite(output.c_str(), dst))
-                std::printf("Save image to %s\n", output.c_str());
-            else
-                std::printf("Failed to save image to %s\n", output.c_str());
-        });
+        ac::util::ThreadPool pool{ poolSize };
+        for (decltype(batch) i = 0; i < batch; i++) pool.exec([i, &task]() { task(i); });
     }
+    else for (decltype(batch) i = 0; i < batch; i++) task(i);
 }
 
 static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& processor, [[maybe_unused]] Options& options)

@@ -265,7 +265,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV444P16: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
-            // packed
+        // packed
         case AV_PIX_FMT_P010:
         case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); [[fallthrough]];
         case AV_PIX_FMT_NV12: packed = true; break;

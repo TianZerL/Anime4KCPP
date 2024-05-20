@@ -11,8 +11,7 @@ Options parse(const int argc, const char* argv[]) noexcept
 
     app.fallthrough();
 
-    app.add_option("-i,--input,input", options.inputs, "input files.")
-        ->check(CLI::ExistingFile);
+    app.add_option("-i,--input,input", options.inputs, "input files.");
     app.add_option("-o,--output", options.outputs, "output files.");
 
     app.add_option("-m,--model", options.model, "acnet[-hdn][-0|1|2|3].")
