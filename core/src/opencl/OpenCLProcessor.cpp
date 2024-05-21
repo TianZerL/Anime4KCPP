@@ -171,7 +171,7 @@ namespace ac::core::opencl
             return context.name.c_str();
         }
     protected:
-        cl::CommandQueue& queue(cl_int* err)
+        cl::CommandQueue& queue(cl_int* const err)
         {
             auto& cmdq = queues.local();
             if (!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, err };

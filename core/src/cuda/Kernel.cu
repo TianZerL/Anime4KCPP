@@ -18,11 +18,11 @@ namespace ac::core::cuda
         return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
 
-    __device__ inline static float dot(float4 a, const float* __restrict__ b)
+    __device__ inline static float dot(const float4 a, const float* const __restrict__ b)
     {
         return a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3];
     }
-    __device__ inline static float dot(float4 a, float4 b)
+    __device__ inline static float dot(const float4 a, const float4 b)
     {
         return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
     }
@@ -34,8 +34,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* __restrict__ kernels,
-        const float* __restrict__ biases
+        const float* const __restrict__ kernels,
+        const float* const __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -133,8 +133,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* __restrict__ kernels,
-        const float* __restrict__ biases
+        const float* const __restrict__ kernels,
+        const float* const __restrict__ biases
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -234,7 +234,7 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* __restrict__ kernels
+        const float* const __restrict__ kernels
     )
     {
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -262,8 +262,8 @@ namespace ac::core::cuda
     void conv3x3_1to8_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
@@ -277,8 +277,8 @@ namespace ac::core::cuda
     void conv3x3_8to8_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
@@ -292,8 +292,8 @@ namespace ac::core::cuda
     void deconv2x2_8to1_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         Image::ElementType type,
         cudaStream_t stream

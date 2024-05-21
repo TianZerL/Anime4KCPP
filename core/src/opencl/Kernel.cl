@@ -2,9 +2,9 @@ constant sampler_t n_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_T
 kernel void conv3x3_1to8(
     read_only image2d_t src,
     write_only image2d_array_t dst,
-    constant float* kernels,
+    constant float* const kernels,
     const int koffset,
-    constant float* baises,
+    constant float* const baises,
     const int boffset
 )
 {
@@ -39,9 +39,9 @@ kernel void conv3x3_1to8(
 kernel void conv3x3_8to8(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
-    constant float* kernels,
+    constant float* const kernels,
     const int koffset,
-    constant float* baises,
+    constant float* const baises,
     const int boffset
 )
 {
@@ -94,7 +94,7 @@ kernel void conv3x3_8to8(
 kernel void deconv2x2_8to1(
     read_only image2d_array_t src,
     write_only image2d_t dst,
-    constant float* kernels,
+    constant float* const kernels,
     const int koffset
 )
 {

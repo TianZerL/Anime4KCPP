@@ -20,8 +20,8 @@ namespace ac::core::cuda
     void conv3x3_1to8_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         const float* biases,
         cudaStream_t stream = 0
@@ -29,8 +29,8 @@ namespace ac::core::cuda
     void conv3x3_8to8_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         const float* biases,
         cudaStream_t stream = 0
@@ -38,8 +38,8 @@ namespace ac::core::cuda
     void deconv2x2_8to1_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
-        const unsigned int width,
-        const unsigned int height,
+        unsigned int width,
+        unsigned int height,
         const float* kernels,
         Image::ElementType type,
         cudaStream_t stream = 0
