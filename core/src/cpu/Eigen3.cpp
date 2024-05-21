@@ -6,7 +6,7 @@
 namespace ac::core::cpu
 {
     template <typename IN, typename OUT, int cin, int cout>
-    inline void conv3x3_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
+    inline void conv3x3_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
@@ -52,7 +52,7 @@ namespace ac::core::cpu
         }, src, dst);
     }
     template <typename IN, typename OUT, int cin, int cout>
-    inline void deconv2x2_eigen3(const Image& src, Image& dst, const float* kernels)
+    inline void deconv2x2_eigen3(const Image& src, Image& dst, const float* const kernels)
     {
         filter<2>([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);

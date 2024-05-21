@@ -182,19 +182,18 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     auto outputName = prefix + fileInfo.completeBaseName() + suffix;
     taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
 
-    taskListModel.appendRow({
-        new QStandardItem{ taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video") },
-        new QStandardItem{ tr("ready") },
-        new QStandardItem{ fileInfo.fileName() },
-        new QStandardItem{ outputName },
-        new QStandardItem{ fileInfo.absoluteFilePath() }
-    });
-    taskListModel.setData(taskListModel.index(taskListModel.rowCount() - 1, 0), QVariant::fromValue(taskData), Qt::UserRole);
-    taskListModel.setData(taskListModel.index(taskListModel.rowCount() - 1, 4), QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
+    auto itemType       = new QStandardItem{ taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video") };
+    auto itemStatus     = new QStandardItem{ tr("ready") };
+    auto itemName       = new QStandardItem{ fileInfo.fileName() };
+    auto itemOutputName = new QStandardItem{ outputName };
+    auto itemPath       = new QStandardItem{ fileInfo.absoluteFilePath() };
+    itemType->setData(QVariant::fromValue(taskData), Qt::UserRole);
+    itemPath->setData(QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
+
+    taskListModel.appendRow({ itemType, itemStatus, itemName, itemOutputName, itemPath, });
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
-        auto status = taskListModel.item(taskListModel.rowCount() - 1, 1);
-        status->setText(success ? tr("successed") : tr("failed"));
-        status->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
+        itemStatus->setText(success ? tr("successed") : tr("failed"));
+        itemStatus->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
         auto count = taskListModel.headerData(0, Qt::Horizontal, Qt::UserRole).toInt() + 1;
         ui->progress_bar_task_list->setValue(100 * count / taskListModel.rowCount());
         taskListModel.setHeaderData(0, Qt::Horizontal, count, Qt::UserRole);
