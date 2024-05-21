@@ -138,13 +138,13 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     ac::video::Pipeline pipeline{};
 
                     gLogger.info() << "Load video from " << task->path.input;
-                    if (!pipeline.openDecoder(task->path.input.toLocal8Bit(), dhints))
+                    if (!pipeline.openDecoder(task->path.input.toUtf8(), dhints))
                     {
                         gLogger.error() << task->path.input <<": Failed to open decoder";
                         emit task->finished(false);
                         continue;
                     }
-                    if (!pipeline.openEncoder(task->path.output.toLocal8Bit(), dptr->factor, ehints))
+                    if (!pipeline.openEncoder(task->path.output.toUtf8(), dptr->factor, ehints))
                     {
                         gLogger.error() << task->path.input <<": Failed to open encoder";
                         emit task->finished(false);
