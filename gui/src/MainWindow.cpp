@@ -32,7 +32,7 @@ void MainWindow::init()
     qApp->setStyle(QStyleFactory::create(gConfig.gui.styleName));
     qApp->setPalette(qApp->style()->standardPalette());
 
-    QObject::connect(ui->action_exit, &QAction::triggered, this, &QMainWindow::close);
+    QObject::connect(ui->action_exit, &QAction::triggered, this, &MainWindow::close);
 
     for (auto&& style: QStyleFactory::keys())
     {
