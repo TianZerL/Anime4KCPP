@@ -13,7 +13,7 @@ namespace ac::core::cpu
     }
 
     template <typename OUT, int cin, int cout>
-    void conv3x3_sse_float(const Image& src, Image& dst, const float* kernels, const float* biases)
+    inline void conv3x3_sse_float(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
@@ -137,7 +137,7 @@ namespace ac::core::cpu
         }, src, dst);
     }
     template <typename IN, typename OUT, int cout>
-    void conv3x3_sse_cin1(const Image& src, Image& dst, const float* kernels, const float* biases)
+    inline void conv3x3_sse_cin1(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
@@ -178,7 +178,7 @@ namespace ac::core::cpu
         }, src, dst);
     }
     template <typename OUT, int cin, int cout>
-    void deconv2x2_sse_float(const Image& src, Image& dst, const float* kernels)
+    inline void deconv2x2_sse_float(const Image& src, Image& dst, const float* kernels)
     {
         filter<2>([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const float*>(sptr);

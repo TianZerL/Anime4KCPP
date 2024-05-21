@@ -11,12 +11,12 @@
 namespace ac::core::detail
 {
     template <typename T>
-    static inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
+    inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
     {
         return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
     }
 
-    static inline void* alignedAlloc(std::size_t size) noexcept
+    inline static void* alignedAlloc(const std::size_t size) noexcept
     {
         auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + AC_MALLOC_ALIGN));
         if (!buffer) return nullptr;
@@ -24,7 +24,7 @@ namespace ac::core::detail
         ptr[-1] = static_cast<void*>(buffer);
         return ptr;
     }
-    static inline void alignedFree(void* ptr) noexcept
+    inline static void alignedFree(void* const ptr) noexcept
     {
         if (ptr) std::free(static_cast<void**>(ptr)[-1]);
     }
@@ -34,7 +34,7 @@ struct ac::core::Image::ImageData
 {
     void* data;
 
-    ImageData(int size) noexcept : data(detail::alignedAlloc(size)) {}
+    ImageData(const int size) noexcept : data(detail::alignedAlloc(size)) {}
     ~ImageData() noexcept
     {
         detail::alignedFree(data);

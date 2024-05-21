@@ -67,7 +67,7 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN>
-    inline static void rgb2yuv(const Image& src, Image& dst)
+    inline void rgb2yuv(const Image& src, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -87,7 +87,7 @@ namespace ac::core::detail
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void rgb2yuv(const Image& src, Image& dsty, Image& dstuv)
+    inline void rgb2yuv(const Image& src, Image& dsty, Image& dstuv)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -108,7 +108,7 @@ namespace ac::core::detail
         }, src, dsty, dstuv);
     }
     template<typename IN, typename OUT = IN>
-    inline static void rgb2yuv(const Image& src, Image& dsty, Image& dstu, Image& dstv)
+    inline void rgb2yuv(const Image& src, Image& dsty, Image& dstu, Image& dstv)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -131,7 +131,7 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN>
-    inline static void rgba2yuva(const Image& src, Image& dst)
+    inline void rgba2yuva(const Image& src, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -153,7 +153,7 @@ namespace ac::core::detail
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void rgba2yuva(const Image& src, Image& dsty, Image& dstuva)
+    inline void rgba2yuva(const Image& src, Image& dsty, Image& dstuva)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvaptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -176,7 +176,7 @@ namespace ac::core::detail
         }, src, dsty, dstuva);
     }
     template<typename IN, typename OUT = IN>
-    inline static void rgba2yuva(const Image& src, Image& dsty, Image& dstu, Image& dstv, Image& dsta)
+    inline void rgba2yuva(const Image& src, Image& dsty, Image& dstu, Image& dstv, Image& dsta)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr, void* const aptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -202,7 +202,7 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN>
-    inline static void yuv2rgb(const Image& src, Image& dst)
+    inline void yuv2rgb(const Image& src, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -222,7 +222,7 @@ namespace ac::core::detail
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void yuv2rgb(const Image& srcy, const Image& srcuv, Image& dst)
+    inline void yuv2rgb(const Image& srcy, const Image& srcuv, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvptr, void* const dptr) {
             auto yin = static_cast<const IN*>(yptr);
@@ -243,7 +243,7 @@ namespace ac::core::detail
         }, srcy, srcuv, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void yuv2rgb(const Image& srcy, const Image& srcu, const Image& srcv, Image& dst)
+    inline void yuv2rgb(const Image& srcy, const Image& srcu, const Image& srcv, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, void* const dptr) {
             auto yin = static_cast<const IN*>(yptr);
@@ -266,7 +266,7 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN>
-    inline static void yuva2rgba(const Image& src, Image& dst)
+    inline void yuva2rgba(const Image& src, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
@@ -288,7 +288,7 @@ namespace ac::core::detail
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void yuva2rgba(const Image& srcy, const Image& srcuva, Image& dst)
+    inline void yuva2rgba(const Image& srcy, const Image& srcuva, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvaptr, void* const dptr) {
             auto yin = static_cast<const IN*>(yptr);
@@ -311,7 +311,7 @@ namespace ac::core::detail
         }, srcy, srcuva, dst);
     }
     template<typename IN, typename OUT = IN>
-    inline static void yuva2rgba(const Image& srcy, const Image& srcu, const Image& srcv, const Image& srca, Image& dst)
+    inline void yuva2rgba(const Image& srcy, const Image& srcu, const Image& srcv, const Image& srca, Image& dst)
     {
         filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, const void* const aptr, void* const dptr) {
             auto yin = static_cast<const IN*>(yptr);
@@ -337,7 +337,7 @@ namespace ac::core::detail
     }
 
     template<typename T>
-    inline static void unpadding(const Image& src, Image& dst)
+    inline void unpadding(const Image& src, Image& dst)
     {
         int channels = src.channels();
         filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {

@@ -15,7 +15,7 @@
 
 namespace detail
 {
-    int processorType(const QString& processor)
+    inline static int processorType(const QString& processor)
     {
 #       ifdef AC_CORE_WITH_OPENCL
             if (processor == "opencl") return ac::core::Processor::OpenCL;
@@ -25,7 +25,7 @@ namespace detail
 #       endif
         return ac::core::Processor::CPU;
     }
-    std::shared_ptr<ac::core::Processor> createProcessor(int processorType, int device, const QString& modelName)
+    inline static std::shared_ptr<ac::core::Processor> createProcessor(const int processorType, const int device, const QString& modelName)
     {
         ac::core::model::ACNet model { [&]() {
             if(modelName.contains('1')) return ac::core::model::ACNet::Variant::HDN1;
@@ -56,13 +56,13 @@ namespace detail
 
 struct Upscaler::UpscalerData
 {
-    int processorType;
-    int device;
-    double factor;
-    std::atomic_bool stopFlag;
-    std::atomic_size_t total;
-    std::shared_ptr<ac::core::Processor> processor;
-    QString model;
+    int processorType = ac::core::Processor::CPU;
+    int device = 0;
+    double factor = 2.0;
+    std::atomic_bool stopFlag = false;
+    std::atomic_size_t total = 0;
+    std::shared_ptr<ac::core::Processor> processor{};
+    QString model{};
 };
 
 Upscaler& Upscaler::instance() noexcept
