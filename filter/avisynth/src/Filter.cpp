@@ -20,7 +20,7 @@ class Filter : public GenericVideoFilter
 {
 public:
     Filter(PClip child, const AVSValue& args, IScriptEnvironment* env);
-    PVideoFrame STDCALL GetFrame(int n, IScriptEnvironment* env);
+    PVideoFrame STDCALL GetFrame(int n, IScriptEnvironment* env) override;
 private:
     int type;
     double factor;

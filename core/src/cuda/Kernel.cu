@@ -8,12 +8,12 @@
 namespace ac::core::cuda
 {
     template<typename Float, ::cuda::std::enable_if_t<::cuda::std::is_floating_point_v<Float>, bool> = true>
-    __device__ inline static Float fromFloat(const float v)
+    __device__ inline Float fromFloat(const float v)
     {
         return fminf(fmaxf(v, 0.0f), 1.0f);
     }
     template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
-    __device__ inline static Unsigned fromFloat(const float v)
+    __device__ inline Unsigned fromFloat(const float v)
     {
         return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
@@ -29,7 +29,7 @@ namespace ac::core::cuda
 
     template<int cout,
         ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 < 128 * 4), bool> = true>
-    __global__ static void conv3x3_cuda_cin1(
+    __global__ void conv3x3_cuda_cin1(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
@@ -128,7 +128,7 @@ namespace ac::core::cuda
 
     template<int cin, int cout,
         ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0) && (cout * 9 * cin < 128 * 8), bool> = true>
-    __global__ static void conv3x3_cuda(
+    __global__ void conv3x3_cuda(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
@@ -229,7 +229,7 @@ namespace ac::core::cuda
 
     template<typename OUT, int cin,
         ::cuda::std::enable_if_t<cin % 4 == 0, bool> = true>
-    __global__ static void deconv2x2_cuda_cout1(
+    __global__ void deconv2x2_cuda_cout1(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
