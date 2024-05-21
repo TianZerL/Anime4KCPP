@@ -131,14 +131,13 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             for (auto&& task : videoTaskList)
             {
                 ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
-
                 emit progress(0);
                 if (!dptr->stopFlag)
                 {
                     ac::video::Pipeline pipeline{};
 
                     gLogger.info() << "Load video from " << task->path.input;
-                    if (!pipeline.openDecoder(task->path.input.toUtf8(), dhints))
+                    if (!pipeline.openDecoder(task->path.input.toUtf8(), dhints)) // ffmpeg api uses utf8 for io
                     {
                         gLogger.error() << task->path.input <<": Failed to open decoder";
                         emit task->finished(false);
@@ -205,10 +204,9 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
     for (auto&& task : imageTaskList)
     {
         pool.exec([=](){
+            ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
             if (!dptr->stopFlag)
             {
-                ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
-
                 gLogger.info() << "Load image from " << task->path.input;
                 auto src = ac::core::imread(task->path.input.toLocal8Bit(), ac::core::IMREAD_UNCHANGED);
 
