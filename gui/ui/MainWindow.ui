@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>864</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Anime4KCPP</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_5">
+    <item row="0" column="0" colspan="5">
+     <widget class="QGroupBox" name="group_box_settings">
+      <property name="title">
+       <string>Settings</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="2" rowspan="3">
+        <widget class="Line" name="line_prefix">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5" rowspan="3">
+        <widget class="Line" name="line_decode_hints">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6" colspan="2">
+        <widget class="QLabel" name="label_decode_hints">
+         <property name="text">
+          <string>decode hints</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="8" rowspan="3">
+        <widget class="Line" name="line_encode_hints">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_suffix_image">
+         <property name="text">
+          <string>image</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="line_edit_suffix_image"/>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_prefix_image">
+         <property name="text">
+          <string>image</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLineEdit" name="line_edit_prefix_image"/>
+       </item>
+       <item row="1" column="6">
+        <widget class="QLabel" name="label_decode_hints_decoder">
+         <property name="text">
+          <string>decoder</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="7">
+        <widget class="QLineEdit" name="line_edit_label_decode_hints_decoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;h264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_cuvid&lt;/span&gt;` (Nvidia hwaccel), `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;` (Intel hwaccel), etc.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a decoder, the most suitable one will be selected based on the input file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="9" colspan="2">
+        <widget class="QLabel" name="label_encode_hints_encoder">
+         <property name="text">
+          <string>encoder</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="11" colspan="2">
+        <widget class="QLineEdit" name="line_edit_label_encode_hints_encoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;libopenh264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;libx264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_nvenc&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_amf&lt;/span&gt;`, etc.&lt;/p&gt;&lt;p&gt;This will affect output codec, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;libx265&lt;/span&gt;` (hevc), `&lt;span style=&quot; font-weight:700;&quot;&gt;av1_nvenc&lt;/span&gt;` (av1), `&lt;span style=&quot; font-weight:700;&quot;&gt;mpeg4&lt;/span&gt;` (mpeg4), etc. Check FFmpeg docs for more information.&lt;/p&gt;&lt;p&gt;This will also affect hardware acceleration, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_nvenc&lt;/span&gt;` (Nvidia), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_amf&lt;/span&gt;` (AMD), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_qsv&lt;/span&gt;` (Intel), etc.&lt;/p&gt;&lt;p&gt;Leave blank to select the default encoder based on the file suffix.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_suffix_video">
+         <property name="text">
+          <string>video</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="line_edit_suffix_video"/>
+       </item>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_prefix_video">
+         <property name="text">
+          <string>video</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="4">
+        <widget class="QLineEdit" name="line_edit_prefix_video"/>
+       </item>
+       <item row="2" column="6">
+        <widget class="QLabel" name="label_decode_hints_format">
+         <property name="text">
+          <string>format</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="7">
+        <widget class="QLineEdit" name="line_edit_label_decode_hints_format">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decode format pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a format, but you may need to use `&lt;span style=&quot; font-weight:700;&quot;&gt;nv12&lt;/span&gt;` for qsv encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="9" colspan="2">
+        <widget class="QLabel" name="label_encode_hints_bitrate">
+         <property name="text">
+          <string>bitrate</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="11" colspan="2">
+        <widget class="QSpinBox" name="spin_box_encode_hints_bitrate">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;bitrate (&lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;) pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;This will affect the size and quality of the output video.&lt;/p&gt;&lt;p&gt;Leave blank to automatically calculate based on the input video bitrate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="13">
+        <widget class="Line" name="line_output_path">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_output_path_image">
+         <property name="text">
+          <string>image</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" colspan="9">
+        <widget class="QLineEdit" name="line_edit_output_path_image"/>
+       </item>
+       <item row="5" column="10" colspan="2">
+        <widget class="QPushButton" name="push_button_output_path_image_select">
+         <property name="text">
+          <string>select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="12">
+        <widget class="QPushButton" name="push_button_output_path_image_open">
+         <property name="text">
+          <string>open</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_output_path_video">
+         <property name="text">
+          <string>video</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" colspan="9">
+        <widget class="QLineEdit" name="line_edit_output_path_video"/>
+       </item>
+       <item row="6" column="10" colspan="2">
+        <widget class="QPushButton" name="push_button_output_path_video_select">
+         <property name="text">
+          <string>select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="12">
+        <widget class="QPushButton" name="push_button_output_path_video_open">
+         <property name="text">
+          <string>open</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="9" colspan="3">
+        <widget class="QLabel" name="label_encode_hints">
+         <property name="text">
+          <string>encode hints</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
+        <widget class="QLabel" name="label_prefix">
+         <property name="text">
+          <string>prefix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_suffix">
+         <property name="text">
+          <string>suffix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" colspan="2">
+        <widget class="QLabel" name="label_output_path">
+         <property name="text">
+          <string>output path</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="0" rowspan="2">
+     <widget class="QTableView" name="table_view_task_list"/>
+    </item>
+    <item row="1" column="1" colspan="4">
+     <widget class="QGroupBox" name="group_box_main">
+      <property name="title">
+       <string>Parameters</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_processor">
+         <property name="text">
+          <string>processor</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="combo_box_processor"/>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_device">
+         <property name="text">
+          <string>device</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QSpinBox" name="spin_box_device">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;For CPU, it represents different acceleration methods.&lt;/p&gt;&lt;p&gt;For GPU, it represents the devices to use.&lt;/p&gt;&lt;p&gt;Check available value in menu: &lt;span style=&quot; font-weight:700;&quot;&gt;Help-&amp;gt;List devices&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_factor">
+         <property name="text">
+          <string>factor</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QDoubleSpinBox" name="double_spin_box_factor">
+         <property name="toolTip">
+          <string>Upscaling factor for each dimension.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QLabel" name="label_model">
+         <property name="text">
+          <string>model</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QComboBox" name="combo_box_model">
+         <property name="toolTip">
+          <string>ACNet: Higher HDN levels mean better denoising, which may compromise details.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="1">
+     <widget class="QPushButton" name="push_button_task_list_add">
+      <property name="text">
+       <string>add</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="push_button_task_list_clear">
+      <property name="text">
+       <string>clear</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="3">
+     <widget class="QPushButton" name="push_button_task_list_start">
+      <property name="text">
+       <string>start</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="4">
+     <widget class="QPushButton" name="push_button_task_list_stop">
+      <property name="text">
+       <string>stop</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="0" colspan="5">
+     <widget class="QProgressBar" name="progress_bar_video_task">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0" colspan="5">
+     <widget class="QProgressBar" name="progress_bar_task_list">
+      <property name="value">
+       <number>24</number>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="0" colspan="5">
+     <widget class="QTextBrowser" name="text_browser_log"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu_file">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="action_add"/>
+    <addaction name="separator"/>
+    <addaction name="action_exit"/>
+   </widget>
+   <widget class="QMenu" name="menu_help">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <widget class="QMenu" name="menu_settings">
+     <property name="title">
+      <string>Settings</string>
+     </property>
+     <widget class="QMenu" name="menu_settings_style">
+      <property name="title">
+       <string>Style</string>
+      </property>
+     </widget>
+     <addaction name="action_settings_exit_confirmation"/>
+     <addaction name="menu_settings_style"/>
+    </widget>
+    <addaction name="action_list_devices"/>
+    <addaction name="separator"/>
+    <addaction name="menu_settings"/>
+    <addaction name="action_license"/>
+    <addaction name="action_about"/>
+   </widget>
+   <addaction name="menu_file"/>
+   <addaction name="menu_help"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_about">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="action_add">
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </action>
+  <action name="action_exit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="action_list_devices">
+   <property name="text">
+    <string>List devices</string>
+   </property>
+  </action>
+  <action name="action_settings_exit_confirmation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Exit confirmation</string>
+   </property>
+  </action>
+  <action name="action_license">
+   <property name="text">
+    <string>License</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

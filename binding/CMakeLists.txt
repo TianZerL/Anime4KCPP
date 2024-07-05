@@ -1,0 +1,6 @@
+if(AC_BUILD_BINDING_C)
+    add_subdirectory(c)
+endif()
+if(AC_BUILD_BINDING_PYTHON)
+    add_subdirectory(python)
+endif()
