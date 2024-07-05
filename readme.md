@@ -41,34 +41,50 @@ To build Anime4KCPP v3 you need CMake and a C++17 compiler, and most dependencie
 
 ## Platform
 ### Windows
-Tested with MinGW64 and MSVC.
+Tested with MinGW-w64 and MSVC.
+
+*Build with MinGW-w64:*
+```powershell
+mkdir build; cd build
+cmake -G "MinGW Makefiles" .. -DAC_ENABLE_STATIC_CRT=ON
+cmake --build . --config Release -j8
+cd bin
+./ac_cli -v
+```
 
 To setup ffmpeg's libav for building video module on windows, it is recommended to add an `AC_PATH_FFMPEG` variable to CMake, but you can also use `pkg-config` for windows. `AC_PATH_FFMPEG` should be a path to the ffmpeg's root folder witch contains `lib` and `include`.
 
-To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in CMake console.
+To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in terminal.
 
-For windows, you can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`).
+You can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for windows.
 
-**You need MSVC to build directshow filter, and it is only available on Windows**
+***You need MSVC to build directshow filter, witch is only available on Windows.***
 
 ### Linux
-
 Tested with gcc and clang.
 
-### WASM
-Only tested with Emscripten. See [wasm test](test/wasm/).
+```shell
+mkdir build && cd build
+cmake ..
+cmake --build . --config Release -j8
+cd bin
+./ac_cli -v
+```
 
 ### Termux
 To build with opencl support, you need install `ocl-icd` package, OpenCL SDK from Khronos seems not to be worked with termux.
 
 ```shell
 pkg install cmake clang ocl-icd opencl-clhpp opencl-headers
-mdir build && cd build
+mkdir build && cd build
 cmake .. -DAC_CORE_WITH_OPENCL=ON
-make -j8
+cmake --build . --config Release -j8
 cd bin
 LD_LIBRARY_PATH=/vendor/lib64:$PREFIX/lib ./ac_cli -l
 ```
+
+### WASM
+Only tested with Emscripten. See [wasm test](test/wasm/).
 
 ### Mac OS
 Untested. If you do, please provide feedback.
