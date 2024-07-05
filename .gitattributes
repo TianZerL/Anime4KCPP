@@ -1,3 +1,2 @@
 # Treate parameter files as C++ and exclude them from stats
-*.p linguist-language=C++
-core/include/AC/Core/Model/Param/* linguist-generated
+core/include/AC/Core/Model/Param/*.p linguist-generated

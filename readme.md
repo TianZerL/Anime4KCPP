@@ -22,8 +22,8 @@ To build Anime4KCPP v3 you need CMake and a C++17 compiler, and most dependencie
 | [Qt](https://www.qt.io)                                   | AC_BUILD_GUI      | gui        |
 
 - The minimum tested version of the CUDA Toolkit is 11
-- The minimum version of ffmpeg's libav is from ffmpeg 4
-- Qt5 or Qt6 should be ok
+- The minimum version of libav is ffmpeg 4
+- Both Qt5 and Qt6 should be OK
 
 ***List of dependencies that can be resolved automatically:***
 
@@ -52,11 +52,11 @@ cd bin
 ./ac_cli -v
 ```
 
-To setup ffmpeg's libav for building video module on windows, it is recommended to add an `AC_PATH_FFMPEG` variable to CMake, but you can also use `pkg-config` for windows. `AC_PATH_FFMPEG` should be a path to the ffmpeg's root folder witch contains `lib` and `include`.
+To setup ffmpeg's libav for building video module on Windows, it is recommended to add an `AC_PATH_FFMPEG` variable to CMake, but you can also use `pkg-config` for Windows. `AC_PATH_FFMPEG` should be a path to the ffmpeg's root folder witch contains `lib` and `include`.
 
 To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in terminal.
 
-You can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for windows.
+You can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for Windows.
 
 ***You need MSVC to build directshow filter, witch is only available on Windows.***
 

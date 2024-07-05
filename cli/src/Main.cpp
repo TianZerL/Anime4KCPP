@@ -26,7 +26,13 @@ static void version()
             "disabled\n"
 #       endif
         "  build date: " AC_BUILD_DATE "\n"
-        "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
+        "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n"
+        "  license: "
+#       ifdef AC_CLI_ENABLE_VIDEO
+            "GPLv3\n\n"
+#       else
+            "MIT\n\n"
+#       endif
         "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
         "https://github.com/TianZerL/Anime4KCPP\n"
     );
