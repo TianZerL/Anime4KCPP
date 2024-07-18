@@ -27,6 +27,6 @@ struct Options
     } video;
 };
 
-Options parse(int argc, const char* argv[]) noexcept;
+Options parse(int argc, const char* const* argv) noexcept;
 
 #endif

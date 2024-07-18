@@ -4,7 +4,7 @@
 
 #include "Options.hpp"
 
-Options parse(const int argc, const char* argv[]) noexcept
+Options parse(const int argc, const char* const* argv) noexcept
 {
     Options options{};
     CLI::App app{"Anime4KCPP: A high performance anime upscaler."};

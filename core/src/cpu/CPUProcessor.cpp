@@ -15,7 +15,6 @@ namespace ac::core::cpu
         enum
         {
             Begin,
-            Auto = Begin,
 #           ifdef AC_CORE_WITH_EIGEN3
             Eigen3,
 #           endif
@@ -107,7 +106,7 @@ private:
 
 ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch, const model::ACNet& model) noexcept : kernels(model.kernels()), biases(model.biases())
 {
-    idx = (arch == arch::Auto) ? []() -> int {
+    idx = (arch > arch::Begin && arch < arch::End) ? arch : []() -> int {
         // x86
 #       ifdef AC_CORE_WITH_AVX
             if (dispatch::supportAVX()) return arch::AVX;
@@ -129,7 +128,7 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
 #       else
             return arch::Generic;
 #       endif
-    }() : arch;
+    }();
 
     switch (idx)
     {

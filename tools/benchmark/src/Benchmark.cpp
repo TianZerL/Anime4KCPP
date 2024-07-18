@@ -29,7 +29,7 @@ static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& proces
     std::printf("%s: parallel average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     std::printf("usage: [processor] [device] [width] [height] [batch] [threads]\n");
 

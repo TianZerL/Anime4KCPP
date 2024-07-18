@@ -163,7 +163,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 #endif
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
     auto options = parse(argc, argv);
 
