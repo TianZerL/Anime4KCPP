@@ -5,7 +5,7 @@ if(NOT TARGET dep::stb)
     FetchContent_Declare(
         stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
-        GIT_TAG 013ac3beddff3dbffafd5177e7972067cd2b5083 # temporarily fix mingw compilation issue, see https://github.com/nothings/stb/issues/1663
+        GIT_TAG master
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         TEST_COMMAND ""
