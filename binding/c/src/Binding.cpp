@@ -13,11 +13,11 @@ struct ac_processor
     std::shared_ptr<ac::core::Processor> object{};
 };
 
-ac_image* ac_image_cteate(const int w, const int h, const int c, const int element_type, void* const data, const int stride)
+ac_image* ac_image_create(const int w, const int h, const int c, const int element_type, void* const data, const int stride)
 {
     return new ac_image{ { w, h, c, element_type, data, stride } };
 }
-ac_image* ac_image_cteate_empty(void)
+ac_image* ac_image_create_empty(void)
 {
     return new ac_image{};
 }

@@ -43,8 +43,8 @@ enum ac_imread_flag
     AC_IMREAD_RGBA      = 4,
 };
 
-CAC_API ac_image* ac_image_cteate(int w, int h, int c, int element_type, void* data, int stride);
-CAC_API ac_image* ac_image_cteate_empty(void);
+CAC_API ac_image* ac_image_create(int w, int h, int c, int element_type, void* data, int stride);
+CAC_API ac_image* ac_image_create_empty(void);
 CAC_API void ac_image_destroy(ac_image* image);
 CAC_API int ac_image_width(const ac_image* image);
 CAC_API int ac_image_height(const ac_image* image);
