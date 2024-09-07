@@ -72,12 +72,12 @@ public:
     int getLimitHeight();
     const TCHAR* getModelName();
 
-    void setFactor(double v);
-    void setProcessorId(int v);
-    void setDevice(int v);
-    void setLimitWidth(int v);
-    void setLimitHeight(int v);
-    void setModelName(const TCHAR* v);
+    void setFactor(double v) const;
+    void setProcessorId(int v) const;
+    void setDevice(int v) const;
+    void setLimitWidth(int v) const;
+    void setLimitHeight(int v) const;
+    void setModelName(const TCHAR* v) const;
 public:
     static RegArgument& instance();
 public:
@@ -568,37 +568,37 @@ const TCHAR* RegArgument::getModelName()
     }
     else return ModelNameDefault;
 }
-void RegArgument::setFactor(const double v)
+void RegArgument::setFactor(const double v) const
 {
     DWORD size = sizeof(factor);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, FactorValueName, 0, REG_BINARY, data, size);
 }
-void RegArgument::setProcessorId(const int v)
+void RegArgument::setProcessorId(const int v) const
 {
     DWORD size = sizeof(processorId);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, ProcessorIdValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setDevice(const int v)
+void RegArgument::setDevice(const int v) const
 {
     DWORD size = sizeof(device);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, DeviceValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitWidth(const int v)
+void RegArgument::setLimitWidth(const int v) const
 {
     DWORD size = sizeof(limitWidth);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitWidthValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitHeight(const int v)
+void RegArgument::setLimitHeight(const int v) const
 {
     DWORD size = sizeof(limitHeight);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitHeightValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setModelName(const TCHAR* const v)
+void RegArgument::setModelName(const TCHAR* const v) const
 {
     DWORD size = ModelNameMaxSize;
     auto data = reinterpret_cast<const BYTE*>(v);
