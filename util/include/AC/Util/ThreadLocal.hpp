@@ -7,11 +7,11 @@
 
 namespace ac::util
 {
-    template<typename T, template<typename K, typename V> typename Map = std::unordered_map>
+    template<typename T, template<typename...> typename Map = std::unordered_map>
     class ThreadLocal;
 }
 
-template<typename T, template<typename K, typename V> typename Map>
+template<typename T, template<typename...> typename Map>
 class ac::util::ThreadLocal
 {
 public:
@@ -22,7 +22,7 @@ private:
     std::shared_mutex mtx;
 };
 
-template<typename T, template<typename K, typename V> typename Map>
+template<typename T, template<typename...> typename Map>
 inline T& ac::util::ThreadLocal<T, Map>::local()
 {
     std::shared_lock sharedLock{ mtx };
