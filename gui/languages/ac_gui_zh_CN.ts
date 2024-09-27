@@ -196,6 +196,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="400"/>
+        <location filename="../src/MainWindow.cpp" line="223"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -206,6 +207,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="413"/>
+        <location filename="../src/MainWindow.cpp" line="223"/>
         <source>Exit confirmation</source>
         <translation>退出确认</translation>
     </message>

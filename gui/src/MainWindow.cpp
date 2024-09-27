@@ -220,7 +220,7 @@ void MainWindow::openTaskFile(const QModelIndex& index)
 
 void MainWindow::closeEvent(QCloseEvent* const event)
 {
-    if (!gConfig.gui.exitConfirmation || QMessageBox::Yes == QMessageBox::question(this, "Close Confirmation", "Exit?", QMessageBox::Yes | QMessageBox::No))
+    if (!gConfig.gui.exitConfirmation || QMessageBox::Yes == QMessageBox::question(this, tr("Exit confirmation"), tr("Exit") + '?', QMessageBox::Yes | QMessageBox::No))
         event->accept();
     else
         event->ignore();
