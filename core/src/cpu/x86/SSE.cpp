@@ -1,4 +1,4 @@
-#include <pmmintrin.h>
+#include <xmmintrin.h>
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
@@ -8,7 +8,7 @@ namespace ac::core::cpu
     inline static float sse_hsum_ps(const __m128& v) noexcept
     {
         __m128 v64 = _mm_add_ps(v, _mm_movehl_ps(v, v));
-        __m128 v32 = _mm_add_ss(v64, _mm_movehdup_ps(v64));
+        __m128 v32 = _mm_add_ss(v64, _mm_shuffle_ps(v64, v64, _MM_SHUFFLE(3, 3, 1, 1)));
         return _mm_cvtss_f32(v32);
     }
 
