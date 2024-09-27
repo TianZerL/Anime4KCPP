@@ -48,6 +48,9 @@ int main(int argc, char* argv[])
 #       ifdef AC_CORE_WITH_CUDA
             if (!std::strcmp(argv[1], "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #       endif
+#       ifdef AC_CORE_WITH_HIP
+            if (!std::strcmp(argv[1], "hip")) return ac::core::Processor::create<ac::core::Processor::HIP>(device, model);
+#       endif
         }
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();

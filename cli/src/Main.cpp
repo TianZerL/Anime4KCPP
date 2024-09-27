@@ -47,6 +47,9 @@ static void list()
 #   ifdef AC_CORE_WITH_CUDA
         std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
 #   endif
+#   ifdef AC_CORE_WITH_HIP
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::HIP>());
+#   endif
 }
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
@@ -207,6 +210,9 @@ int main(int argc, char* argv[])
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
             if (options.processor == "cuda") return ac::core::Processor::create<ac::core::Processor::CUDA>(options.device, model);
+#       endif
+#       ifdef AC_CORE_WITH_HIP
+            if (options.processor == "hip") return ac::core::Processor::create<ac::core::Processor::HIP>(options.device, model);
 #       endif
         options.processor = "cpu";
         return ac::core::Processor::create<ac::core::Processor::CPU>(options.device, model);

@@ -18,6 +18,7 @@ public:
     static constexpr int CPU = 0;
     static constexpr int OpenCL = 1;
     static constexpr int CUDA = 2;
+    static constexpr int HIP = 3;
 
 public:
     AC_EXPORT Processor() noexcept;

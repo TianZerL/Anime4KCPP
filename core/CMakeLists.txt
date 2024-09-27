@@ -15,6 +15,9 @@ endif()
 if(AC_CORE_WITH_CUDA)
     include(${DEPENDENCY_DIR}/cuda.cmake)
 endif()
+if(AC_CORE_WITH_HIP)
+    include(${DEPENDENCY_DIR}/hip.cmake)
+endif()
 
 if(AC_SHARED_LIB)
     add_library(ac SHARED)
@@ -39,6 +42,8 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:${CORE_SOURCE_DIR}/src/opencl/OpenCLProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/CUDAProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/cuda/Kernel.cu>
+    $<$<BOOL:${AC_CORE_WITH_HIP}>:${CORE_SOURCE_DIR}/src/hip/HIPProcessor.cpp>
+    $<$<BOOL:${AC_CORE_WITH_HIP}>:${CORE_SOURCE_DIR}/src/hip/Kernel.hip>
 )
 
 target_include_directories(ac PUBLIC
@@ -104,6 +109,7 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
+    $<$<BOOL:${AC_CORE_WITH_HIP}>:hip>
 )
 
 target_compile_definitions(ac PUBLIC
@@ -115,6 +121,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>
+    $<$<BOOL:${AC_CORE_WITH_HIP}>:AC_CORE_WITH_HIP>
     $<$<BOOL:${AC_CORE_ENABLE_IMAGE_IO}>:AC_CORE_ENABLE_IMAGE_IO>
 
     AC_CORE_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"

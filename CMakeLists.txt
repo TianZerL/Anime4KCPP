@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.19)
+cmake_minimum_required(VERSION 3.21)
 
 if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "Set default build type to Release")
@@ -32,6 +32,7 @@ option(AC_CORE_WITH_NEON "build core with arm neon" ${AC_COMPILER_SUPPORT_NEON})
 option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
+option(AC_CORE_WITH_HIP "build core with hip" OFF)
 option(AC_CORE_ENABLE_FAST_MATH "enable fast math for core" OFF)
 option(AC_CORE_ENABLE_IMAGE_IO "enable image file read and write for core" ON)
 option(AC_BUILD_CLI "build cli" ON)
