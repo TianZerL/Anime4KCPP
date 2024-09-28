@@ -46,6 +46,10 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_HIP}>:${CORE_SOURCE_DIR}/src/hip/Kernel.hip>
 )
 
+if(AC_CORE_WITH_HIP)
+    set_source_files_properties(${CORE_SOURCE_DIR}/src/hip/HIPProcessor.cpp PROPERTIES LANGUAGE HIP)
+endif()
+
 target_include_directories(ac PUBLIC
     $<BUILD_INTERFACE:${CORE_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CORE_BINARY_DIR}/include>

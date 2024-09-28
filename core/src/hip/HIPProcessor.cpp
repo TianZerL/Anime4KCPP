@@ -5,9 +5,7 @@
 #include <sstream>
 #include <vector>
 
-#define __HIP_PLATFORM_AMD__
 #include <hip/hip_runtime.h>
-#include <hip/hip_fp16.h>
 
 #include "AC/Core/Processor.hpp"
 #include "AC/Core/Model/ACNet.hpp"
