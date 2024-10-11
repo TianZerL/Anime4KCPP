@@ -10,23 +10,23 @@
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/ThreadPool.hpp"
 
-static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images)
+static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image& image, int batch)
 {
     ac::util::Stopwatch stopwatch{};
-    for (auto&& src : images) processor->process(src, 2.0);
+    for (int i = 0; i < batch; i++) processor->process(image, 2.0);
     stopwatch.stop();
-    std::printf("%s: serial average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
+    std::printf("%s: serial average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
 }
 
-static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const std::vector<ac::core::Image>& images, std::size_t threads)
+static void benchmarkParallel(const std::shared_ptr<ac::core::Processor>& processor, const ac::core::Image& image, int batch, std::size_t threads)
 {
     ac::util::Stopwatch stopwatch{};
     {
         ac::util::ThreadPool pool{ threads };
-        for (auto&& src : images) pool.exec([&]() { processor->process(src, 2.0); });
+        for (int i = 0; i < batch; i++) pool.exec([&]() { processor->process(image, 2.0); });
     }
     stopwatch.stop();
-    std::printf("%s: parallel average FPS %lf\n", processor->name(), images.size() / stopwatch.elapsed());
+    std::printf("%s: parallel average FPS %lf\n", processor->name(), batch / stopwatch.elapsed());
 }
 
 int main(int argc, char* argv[])
@@ -59,18 +59,15 @@ int main(int argc, char* argv[])
 
     std::printf("random images: %d x %d x %d\n", w, h, batch);
 
-    std::vector<ac::core::Image> images(batch);
+    ac::core::Image image{};
 
-    for (auto&& image : images)
-    {
-        image.create(w, h, 1, ac::core::Image::UInt8);
-        for (int i = 0; i < image.height(); i++)
-            for (int j = 0; j < image.width(); j++)
-                *image.pixel(j, i) = static_cast<std::uint8_t>(d(gen));
-    }
+    image.create(w, h, 1, ac::core::Image::UInt8);
+    for (int i = 0; i < image.height(); i++)
+        for (int j = 0; j < image.width(); j++)
+            *image.pixel(j, i) = static_cast<std::uint8_t>(d(gen));
 
-    benchmark(processor, images);
-    benchmarkParallel(processor, images, threads > 0 ? threads : (ac::util::ThreadPool::hardwareThreads() + 1));
+    benchmark(processor, image, batch);
+    benchmarkParallel(processor, image, batch, threads > 0 ? threads : (ac::util::ThreadPool::hardwareThreads() + 1));
 
     return 0;
 }
