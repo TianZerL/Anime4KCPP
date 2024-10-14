@@ -52,7 +52,8 @@ namespace ac::core::opencl
     }
 
     // we can call `init` multiple times
-    inline static cl_int init(Context& context, const char* const kernel) noexcept {
+    inline static cl_int init(Context& context, const char* const kernel) noexcept
+    {
         if (!context.device()) return CL_DEVICE_NOT_AVAILABLE;
         if (context.ctx() && context.program()) return CL_SUCCESS;
 

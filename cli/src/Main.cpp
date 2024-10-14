@@ -61,8 +61,14 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
 
         if (output.empty()) output = input + ".out.jpg";
 
-        std::printf("Load image from %s\n", input.c_str());
         auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
+        if (!src.empty())
+            std::printf("Load image from %s\n", input.c_str());
+        else
+        {
+            std::printf("Failed to load image from %s\n", input.c_str());
+            return;
+        }
 
         ac::util::Stopwatch stopwatch{};
         auto dst = processor->process(src, options.factor);
@@ -73,7 +79,10 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
         if (ac::core::imwrite(output.c_str(), dst))
             std::printf("Save image to %s\n", output.c_str());
         else
+        {
             std::printf("Failed to save image to %s\n", output.c_str());
+            return;
+        }
     };
     if (poolSize > 1)
     {

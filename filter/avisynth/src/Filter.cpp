@@ -89,7 +89,7 @@ PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
     {
         ac::core::Image srcp{ src->GetRowSize(planes[n]) / vi.ComponentSize(), src->GetHeight(planes[n]), 1, type, const_cast<std::uint8_t*>(src->GetReadPtr(planes[n])), src->GetPitch(planes[n]) };
         ac::core::Image dstp{ dst->GetRowSize(planes[n]) / vi.ComponentSize(), dst->GetHeight(planes[n]), 1, type, dst->GetWritePtr(planes[n]), dst->GetPitch(planes[n]) };
-        ac::core::resize(srcp, dstp, factor, factor);
+        ac::core::resize(srcp, dstp, 0.0, 0.0);
     }
 
     return dst;

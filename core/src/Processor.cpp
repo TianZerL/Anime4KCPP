@@ -38,8 +38,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
                     out.create(in.width() * 2, in.height() * 2, 1, in.type());
                     process(in, out);
                 }
-                in = out;
-                process(in, dst);
+                process(out, dst);
             }
             else
             {
@@ -49,7 +48,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
                     out.create(in.width() * 2, in.height() * 2, 1, in.type());
                     process(in, out);
                 }
-                resize(out, dst, fxy, fxy);
+                resize(out, dst, 0.0, 0.0);
             }
         }
         else //rgb[a]

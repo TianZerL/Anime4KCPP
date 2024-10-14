@@ -38,7 +38,7 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
         {
             ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
             ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, data->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p)) };
-            ac::core::resize(srcp, dstp, data->factor, data->factor);
+            ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
 
         vsapi->freeFrame(src);

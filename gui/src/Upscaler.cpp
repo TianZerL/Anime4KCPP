@@ -207,8 +207,15 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
             if (!dptr->stopFlag)
             {
-                gLogger.info() << "Load image from " << task->path.input;
                 auto src = ac::core::imread(task->path.input.toLocal8Bit(), ac::core::IMREAD_UNCHANGED);
+                if (!src.empty())
+                    gLogger.info() << "Load image from " << task->path.input;
+                else
+                {
+                    gLogger.error() << "Failed to load image from " << task->path.input;
+                    emit task->finished(false);
+                    return;
+                }
 
                 ac::util::Stopwatch stopwatch{};
                 auto dst = dptr->processor->process(src, dptr->factor);

@@ -345,7 +345,7 @@ HRESULT Filter::Transform(IMediaSample* in, IMediaSample* out)
     int channels = IS_PLANAR_FORMAT(format) ? 1 : 2;
     ac::core::Image srcuv{ size.src.width / 2, size.src.height / channels, channels, GET_FORMAT_TYPE(format), src + srcy.size(), ((in->GetActualDataLength() * channels) / 3) / size.src.height };
     ac::core::Image dstuv{ size.dst.width / 2, size.dst.height / channels, channels, GET_FORMAT_TYPE(format), dst + dsty.size(), ((out->GetActualDataLength() * channels) / 3) / size.dst.height };
-    ac::core::resize(srcuv, dstuv, factor, factor);
+    ac::core::resize(srcuv, dstuv, 0.0, 0.0);
 
     return S_OK;
 }
