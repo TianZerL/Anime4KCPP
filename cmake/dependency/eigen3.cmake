@@ -8,10 +8,6 @@ if(NOT TARGET dep::eigen3)
             eigen3
             GIT_REPOSITORY https://gitlab.com/libeigen/eigen.git
             GIT_TAG master
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            TEST_COMMAND ""
-            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(eigen3)
     endif()

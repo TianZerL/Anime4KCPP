@@ -14,10 +14,6 @@ if(NOT TARGET dep::vapoursynth)
             vapoursynth
             GIT_REPOSITORY https://github.com/vapoursynth/vapoursynth.git
             GIT_TAG master
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            TEST_COMMAND ""
-            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(vapoursynth)
         target_include_directories(dep_vapoursynth INTERFACE $<BUILD_INTERFACE:${vapoursynth_SOURCE_DIR}/include>)

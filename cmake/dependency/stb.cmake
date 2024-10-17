@@ -6,10 +6,6 @@ if(NOT TARGET dep::stb)
         stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
         GIT_TAG master
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        TEST_COMMAND ""
-        INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(stb)
     target_include_directories(dep_stb INTERFACE $<BUILD_INTERFACE:${stb_SOURCE_DIR}>)

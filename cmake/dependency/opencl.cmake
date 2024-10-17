@@ -8,14 +8,11 @@ if(NOT TARGET dep::opencl)
             opencl
             GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-SDK.git
             GIT_TAG main
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            TEST_COMMAND ""
-            INSTALL_COMMAND ""
         )
         set(OPENCL_SDK_BUILD_UTILITY_LIBRARIES OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_SDK_BUILD_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_SDK_BUILD_OPENGL_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+        set(OPENCL_SDK_BUILD_CLINFO OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(BUILD_DOCS OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(BUILD_EXAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
@@ -37,10 +34,6 @@ if(NOT TARGET dep::opencl)
                 GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-CLHPP.git
                 GIT_TAG main
                 SOURCE_SUBDIR do_not_find_cmake # To make sure CMakeLists.txt won't run
-                CONFIGURE_COMMAND ""
-                BUILD_COMMAND ""
-                TEST_COMMAND ""
-                INSTALL_COMMAND ""
             )
             FetchContent_MakeAvailable(openclhpp)
             target_include_directories(dep_opencl INTERFACE $<BUILD_INTERFACE:${openclhpp_SOURCE_DIR}/include>)

@@ -8,10 +8,6 @@ if(NOT TARGET dep::cli11)
             cli11
             GIT_REPOSITORY https://github.com/CLIUtils/CLI11.git
             GIT_TAG main
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            TEST_COMMAND ""
-            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(cli11)
     endif()

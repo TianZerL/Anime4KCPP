@@ -6,10 +6,6 @@ if(NOT TARGET dep::directshow)
         directshow
         GIT_REPOSITORY https://github.com/microsoft/Windows-classic-samples.git
         GIT_TAG main
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        TEST_COMMAND ""
-        INSTALL_COMMAND ""
     )
     FetchContent_MakeAvailable(directshow)
     set(directshow_baseclasses_SOURCE_DIR ${directshow_SOURCE_DIR}/Samples/Win7Samples/multimedia/directshow/baseclasses)

@@ -16,10 +16,6 @@ if(NOT TARGET dep::avisynth)
             GIT_REPOSITORY https://github.com/AviSynth/AviSynthPlus.git
             GIT_TAG master
             SOURCE_SUBDIR do_not_find_cmake # To make sure CMakeLists.txt won't run
-            CONFIGURE_COMMAND ""
-            BUILD_COMMAND ""
-            TEST_COMMAND ""
-            INSTALL_COMMAND ""
         )
         FetchContent_MakeAvailable(avisynth)
         target_include_directories(dep_avisynth INTERFACE $<BUILD_INTERFACE:${avisynth_SOURCE_DIR}/avs_core/include>)
