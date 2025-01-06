@@ -118,7 +118,7 @@ namespace ac::video::detail
         encoderCtx->color_primaries = decoderCtx->color_primaries;
         encoderCtx->color_trc = decoderCtx->color_trc;
         encoderCtx->colorspace = decoderCtx->colorspace;
-
+        if (efmtCtx->oformat->flags & AVFMT_GLOBALHEADER) encoderCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         ret = avcodec_open2(encoderCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
         for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
@@ -130,8 +130,6 @@ namespace ac::video::detail
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         evideoStream->time_base = dvideoStream->time_base;
         evideoStream->avg_frame_rate = dvideoStream->avg_frame_rate;
-        evideoStream->codecpar->extradata_size = dvideoStream->codecpar->extradata_size;
-        evideoStream->codecpar->extradata = static_cast<decltype(evideoStream->codecpar->extradata)>(av_malloc(static_cast<std::size_t>(evideoStream->codecpar->extradata_size) + AV_INPUT_BUFFER_PADDING_SIZE));
 
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
