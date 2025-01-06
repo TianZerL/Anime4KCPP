@@ -31,14 +31,14 @@ namespace ac::video::detail
         AVFormatContext* efmtCtx = nullptr;
         AVPacket* dpacket = nullptr;
         AVPacket* epacket = nullptr;
-        AVCodecContext* decodecCtx = nullptr;
-        AVCodecContext* encodecCtx = nullptr;
+        AVCodecContext* decoderCtx = nullptr;
+        AVCodecContext* encoderCtx = nullptr;
         AVStream* dvideoStream = nullptr;
         AVStream* evideoStream = nullptr;
         AVRational timeBase{}; // should be 1/fps
         int videoIdx = 0;
         bool dfmtCtxOpenFlag = false;
-        bool writeHaderFlag = false;
+        bool writeHeaderFlag = false;
     };
 
     PipelineImpl::PipelineImpl() noexcept = default;
@@ -49,7 +49,7 @@ namespace ac::video::detail
     inline bool PipelineImpl::openDecoder(const char* const filename, const DecoderHints& hints) noexcept
     {
         int ret = 0;
-        epacket = av_packet_alloc(); if (!epacket) return false;
+        dpacket = av_packet_alloc(); if (!dpacket) return false;
         dfmtCtx = avformat_alloc_context(); if (!dfmtCtx) return false;
         ret = avformat_open_input(&dfmtCtx, filename, nullptr, nullptr); if (ret < 0) return false;
         dfmtCtxOpenFlag = true;
@@ -69,76 +69,73 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV420P:
         case AV_PIX_FMT_YUV422P:
         case AV_PIX_FMT_YUV444P:
+        case AV_PIX_FMT_YUV420P10:
+        case AV_PIX_FMT_YUV422P10:
+        case AV_PIX_FMT_YUV444P10:
         case AV_PIX_FMT_YUV420P16:
         case AV_PIX_FMT_YUV422P16:
         case AV_PIX_FMT_YUV444P16: break;
         default: return false;
         }
         auto codec = (hints.decoder && *hints.decoder) ? avcodec_find_decoder_by_name(hints.decoder) : avcodec_find_decoder(dvideoStream->codecpar->codec_id); if (!codec) return false;
-        decodecCtx = avcodec_alloc_context3(codec); if (!decodecCtx) return false;
-        ret = avcodec_parameters_to_context(decodecCtx, dvideoStream->codecpar); if (ret < 0) return false;
-        decodecCtx->pkt_timebase = dvideoStream->time_base;
-        if (hints.format && *hints.format) decodecCtx->pix_fmt = av_get_pix_fmt(hints.format);
-        ret = avcodec_open2(decodecCtx, codec, nullptr); if (ret < 0) return false;
-        timeBase = av_inv_q(decodecCtx->framerate.num ? decodecCtx->framerate : (dvideoStream->avg_frame_rate.num ? dvideoStream->avg_frame_rate : av_make_q(24000, 1001)));
+        decoderCtx = avcodec_alloc_context3(codec); if (!decoderCtx) return false;
+        ret = avcodec_parameters_to_context(decoderCtx, dvideoStream->codecpar); if (ret < 0) return false;
+        decoderCtx->pkt_timebase = dvideoStream->time_base;
+        if (hints.format && *hints.format) decoderCtx->pix_fmt = av_get_pix_fmt(hints.format);
+        ret = avcodec_open2(decoderCtx, codec, nullptr); if (ret < 0) return false;
+        timeBase = av_inv_q(decoderCtx->framerate.num ? decoderCtx->framerate : (dvideoStream->avg_frame_rate.num ? dvideoStream->avg_frame_rate : av_make_q(24000, 1001)));
         return true;
     }
     inline bool PipelineImpl::openEncoder(const char* const filename, const double factor, const EncoderHints& hints) noexcept
     {
         int ret = 0;
-        dpacket = av_packet_alloc(); if (!dpacket) return false;
+        epacket = av_packet_alloc(); if (!epacket) return false;
         ret = avformat_alloc_output_context2(&efmtCtx, nullptr, nullptr, filename); if (ret < 0) return false;
 
         auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
-        encodecCtx = avcodec_alloc_context3(codec); if (!encodecCtx) return false;
+        encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
         switch (codec->id)
         {
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-        case AV_CODEC_ID_H264: encodecCtx->profile = FF_PROFILE_H264_HIGH; break;
-        case AV_CODEC_ID_HEVC: encodecCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = FF_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encoderCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
 #       else
-        case AV_CODEC_ID_H264: encodecCtx->profile = AV_PROFILE_H264_HIGH; break;
-        case AV_CODEC_ID_HEVC: encodecCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = AV_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encoderCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
 #       endif
         default: break;
         }
-        encodecCtx->pix_fmt = decodecCtx->pix_fmt;
-        encodecCtx->codec_type = AVMEDIA_TYPE_VIDEO;
-        encodecCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encodecCtx->bit_rate)>(decodecCtx->bit_rate * factor * factor);
-        encodecCtx->framerate = decodecCtx->framerate;
-        encodecCtx->gop_size = 12;
-        encodecCtx->time_base = timeBase;
-        encodecCtx->width = static_cast<decltype(encodecCtx->width)>(decodecCtx->width * factor);
-        encodecCtx->height = static_cast<decltype(encodecCtx->height)>(decodecCtx->height * factor);
-        encodecCtx->sample_aspect_ratio = decodecCtx->sample_aspect_ratio;
-        encodecCtx->color_primaries = decodecCtx->color_primaries;
-        encodecCtx->color_trc = decodecCtx->color_trc;
-        encodecCtx->colorspace = decodecCtx->colorspace;
+        encoderCtx->pix_fmt = decoderCtx->pix_fmt;
+        encoderCtx->codec_type = AVMEDIA_TYPE_VIDEO;
+        encoderCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encoderCtx->bit_rate)>(decoderCtx->bit_rate * factor * factor);
+        encoderCtx->framerate = decoderCtx->framerate;
+        encoderCtx->gop_size = 12;
+        encoderCtx->time_base = timeBase;
+        encoderCtx->width = static_cast<decltype(encoderCtx->width)>(decoderCtx->width * factor);
+        encoderCtx->height = static_cast<decltype(encoderCtx->height)>(decoderCtx->height * factor);
+        encoderCtx->sample_aspect_ratio = decoderCtx->sample_aspect_ratio;
+        encoderCtx->color_primaries = decoderCtx->color_primaries;
+        encoderCtx->color_trc = decoderCtx->color_trc;
+        encoderCtx->colorspace = decoderCtx->colorspace;
 
-        ret = avcodec_open2(encodecCtx, codec, nullptr); if (ret < 0) return false;
+        ret = avcodec_open2(encoderCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
         for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
         {
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
-            else
-            {   // copy stream info except pointers
-                *stream->codecpar = *dfmtCtx->streams[i]->codecpar;
-#               if LIBAVCODEC_VERSION_MAJOR > 60 // ffmpeg 7, libavcodec 61
-                    stream->codecpar->coded_side_data = nullptr;
-                    stream->codecpar->nb_coded_side_data = 0;
-#               endif
-                stream->codecpar->extradata = nullptr;
-                stream->codecpar->extradata_size = 0;
-            }
+            else avcodec_parameters_copy(stream->codecpar, dfmtCtx->streams[i]->codecpar); // copy stream info
         }
+        ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         evideoStream->time_base = dvideoStream->time_base;
         evideoStream->avg_frame_rate = dvideoStream->avg_frame_rate;
-        ret = avcodec_parameters_from_context(evideoStream->codecpar, encodecCtx); if (ret < 0) return false;
+        evideoStream->codecpar->extradata_size = dvideoStream->codecpar->extradata_size;
+        evideoStream->codecpar->extradata = static_cast<decltype(evideoStream->codecpar->extradata)>(av_malloc(static_cast<std::size_t>(evideoStream->codecpar->extradata_size) + AV_INPUT_BUFFER_PADDING_SIZE));
+
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
-        writeHaderFlag = true;
+        writeHeaderFlag = true;
 
         return true;
     }
@@ -148,16 +145,16 @@ namespace ac::video::detail
         auto frame = av_frame_alloc(); if (!frame) return false;
         for (;;)
         {
-            ret = avcodec_receive_frame(decodecCtx, frame);
+            ret = avcodec_receive_frame(decoderCtx, frame);
             if (ret == 0) break;
             else if (ret == AVERROR(EAGAIN) && fetch()) continue;
             else return false;
         }
         fill(dst, frame);
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-            dst.number = decodecCtx->frame_number;
+            dst.number = decoderCtx->frame_number;
 #       else
-            dst.number = decodecCtx->frame_num;
+            dst.number = decoderCtx->frame_num;
 #       endif
         return true;
     }
@@ -165,13 +162,13 @@ namespace ac::video::detail
     {
         int ret = 0;
         auto frame = static_cast<AVFrame*>(src.ref);
-        ret = avcodec_send_frame(encodecCtx, frame); if (ret < 0) return false;
+        ret = avcodec_send_frame(encoderCtx, frame); if (ret < 0) return false;
         for (;;)
         {
-            ret = avcodec_receive_packet(encodecCtx, epacket);
+            ret = avcodec_receive_packet(encoderCtx, epacket);
             if (ret == AVERROR(EAGAIN)) break;
             else if (ret < 0) return false;
-            av_packet_rescale_ts(epacket, encodecCtx->time_base, evideoStream->time_base);
+            av_packet_rescale_ts(epacket, encoderCtx->time_base, evideoStream->time_base);
             epacket->stream_index = evideoStream->index;
             ret = av_interleaved_write_frame(efmtCtx, epacket); if (ret < 0) return false;
         }
@@ -183,8 +180,8 @@ namespace ac::video::detail
         int ret = 0;
         auto srcFrame = static_cast<AVFrame*>(src.ref);
         auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
-        dstFrame->width = encodecCtx->width;
-        dstFrame->height = encodecCtx->height;
+        dstFrame->width = encoderCtx->width;
+        dstFrame->height = encoderCtx->height;
         dstFrame->format = srcFrame->format;
         dstFrame->pts = srcFrame->pts;
 #       if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
@@ -211,13 +208,13 @@ namespace ac::video::detail
     }
     inline void PipelineImpl::close() noexcept
     {
-        if (writeHaderFlag)
+        if (writeHeaderFlag)
         {
             av_write_trailer(efmtCtx);
-            writeHaderFlag = false;
+            writeHeaderFlag = false;
         }
-        if (encodecCtx) avcodec_free_context(&encodecCtx);
-        if (decodecCtx) avcodec_free_context(&decodecCtx);
+        if (encoderCtx) avcodec_free_context(&encoderCtx);
+        if (decoderCtx) avcodec_free_context(&decoderCtx);
         if (efmtCtx)
         {
             avio_closep(&efmtCtx->pb);
@@ -247,7 +244,7 @@ namespace ac::video::detail
             if (dpacket->stream_index == videoIdx)
             {
                 av_packet_rescale_ts(dpacket, dvideoStream->time_base, timeBase);
-                int ret = avcodec_send_packet(decodecCtx, dpacket);
+                int ret = avcodec_send_packet(decoderCtx, dpacket);
                 av_packet_unref(dpacket);
                 return ret == 0;
             }
@@ -258,12 +255,15 @@ namespace ac::video::detail
     {
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
         bool packed = false;
-        switch (decodecCtx->pix_fmt)
+        switch (decoderCtx->pix_fmt)
         {// planar
         case AV_PIX_FMT_YUV444P: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P: hscale = 1; break;
+        case AV_PIX_FMT_YUV444P10:
         case AV_PIX_FMT_YUV444P16: wscale = 1; [[fallthrough]];
+        case AV_PIX_FMT_YUV422P10:
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
+        case AV_PIX_FMT_YUV420P10:
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
         // packed
         case AV_PIX_FMT_P010:
@@ -292,8 +292,8 @@ namespace ac::video::detail
     {
         Info info{};
         info.length = dfmtCtx->duration / AV_TIME_BASE;
-        info.width = decodecCtx->width;
-        info.height = decodecCtx->height;
+        info.width = decoderCtx->width;
+        info.height = decoderCtx->height;
         info.fps = av_q2d(av_inv_q(timeBase));
         return info;
     }
