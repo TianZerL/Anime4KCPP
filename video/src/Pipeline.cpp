@@ -14,7 +14,7 @@ namespace ac::video::detail
 {
     struct FrameRefData
     {
-        AVFrame* frame{};
+        AVFrame* frame = nullptr;
         std::queue<AVPacket*> packets{};
     };
 
@@ -93,7 +93,8 @@ namespace ac::video::detail
         decoderCtx->pkt_timebase = dvideoStream->time_base;
         if (hints.format && *hints.format) decoderCtx->pix_fmt = av_get_pix_fmt(hints.format);
         ret = avcodec_open2(decoderCtx, codec, nullptr); if (ret < 0) return false;
-        timeBase = av_inv_q(decoderCtx->framerate.num ? decoderCtx->framerate : (dvideoStream->avg_frame_rate.num ? dvideoStream->avg_frame_rate : av_make_q(24000, 1001)));
+        auto framerate = av_guess_frame_rate(dfmtCtx, dvideoStream, nullptr);
+        timeBase = av_inv_q(framerate.num ? framerate : av_make_q(24000, 1001));
         return true;
     }
     inline bool PipelineImpl::openEncoder(const char* const filename, const double factor, const EncoderHints& hints) noexcept
