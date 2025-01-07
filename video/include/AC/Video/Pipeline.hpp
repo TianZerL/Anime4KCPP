@@ -73,14 +73,12 @@ public:
     AC_VIDEO_EXPORT void close() noexcept;
     // get a decoded frame, which should be released later by `release()`.
     AC_VIDEO_EXPORT bool operator>>(Frame& frame) noexcept;
-    // push a frame to encode, and the frame will be automatically released.
+    // push a frame to encode, which should be released later by `release()`.
     AC_VIDEO_EXPORT bool operator<<(const Frame& frame) noexcept;
     // request a new frame with empty data for encoding later, usually call after `>>`.
     AC_VIDEO_EXPORT bool request(Frame& dst, const Frame& src) noexcept;
     // release a frame.
     AC_VIDEO_EXPORT void release(Frame& frame) noexcept;
-    // remux other streams, such as audio and subtitles. call this function only when video encoding is complete.
-    AC_VIDEO_EXPORT bool remux() noexcept;
     // get decoded video info.
     AC_VIDEO_EXPORT Info getInfo() noexcept;
 

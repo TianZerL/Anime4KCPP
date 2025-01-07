@@ -23,8 +23,8 @@ namespace ac::video::detail
 
             pipeline.release(src);
             pipeline << dst;
+            pipeline.release(dst);
         }
-        if (success) pipeline.remux();
     }
 
     inline static void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
@@ -46,6 +46,7 @@ namespace ac::video::detail
                 else
                 {
                     pipeline << dst;
+                    pipeline.release(dst);
                     idx++;
                     while (!buffer.empty())
                     {
@@ -55,6 +56,7 @@ namespace ac::video::detail
                         {
                             buffer.pop();
                             pipeline << dst;
+                            pipeline.release(dst);
                             idx++;
                         }
                     }
@@ -62,7 +64,6 @@ namespace ac::video::detail
             };
             while(!encodeChan.isClose()) process();
             while(!encodeChan.empty()) process();
-            if(success) pipeline.remux();
         });
 
         for (std::size_t i = 0; i < threads; i++)

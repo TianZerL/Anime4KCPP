@@ -1,3 +1,7 @@
+#include <queue>
+#include <utility>
+#include <vector>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -8,6 +12,12 @@ extern "C" {
 
 namespace ac::video::detail
 {
+    struct FrameRefData
+    {
+        AVFrame* frame{};
+        std::queue<AVPacket*> packets{};
+    };
+
     class PipelineImpl
     {
     public:
@@ -19,13 +29,13 @@ namespace ac::video::detail
         bool decode(Frame& dst) noexcept;
         bool encode(const Frame& src) noexcept;
         bool request(Frame& dst, const Frame& src) noexcept;
-        void release(AVFrame* frame) noexcept;
-        bool remux() noexcept;
+        void release(Frame& frame) noexcept;
         void close() noexcept;
         Info getInfo() noexcept;
     private:
-        bool fetch() noexcept;
-        void fill(Frame& dst, AVFrame* src) noexcept;
+        bool remux(std::queue<AVPacket*>& packets) noexcept;
+        bool fetch(std::queue<AVPacket*>& packets) noexcept;
+        void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) noexcept;
     private:
         AVFormatContext* dfmtCtx = nullptr;
         AVFormatContext* efmtCtx = nullptr;
@@ -36,9 +46,9 @@ namespace ac::video::detail
         AVStream* dvideoStream = nullptr;
         AVStream* evideoStream = nullptr;
         AVRational timeBase{}; // should be 1/fps
-        int videoIdx = 0;
         bool dfmtCtxOpenFlag = false;
         bool writeHeaderFlag = false;
+        std::vector<int> streamIdxMap = {};
     };
 
     PipelineImpl::PipelineImpl() noexcept = default;
@@ -46,6 +56,7 @@ namespace ac::video::detail
     {
         close();
     }
+
     inline bool PipelineImpl::openDecoder(const char* const filename, const DecoderHints& hints) noexcept
     {
         int ret = 0;
@@ -59,7 +70,6 @@ namespace ac::video::detail
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
             {
                 dvideoStream = dfmtCtx->streams[i];
-                videoIdx = i;
                 break;
             }
         if (!dvideoStream) return false;
@@ -121,8 +131,18 @@ namespace ac::video::detail
         if (efmtCtx->oformat->flags & AVFMT_GLOBALHEADER) encoderCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         ret = avcodec_open2(encoderCtx, codec, nullptr); if (ret < 0) return false;
         // copy all streams
+        streamIdxMap.resize(dfmtCtx->nb_streams);
+        int streamIdx = 0;
         for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
         {
+            if (dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
+                dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
+                dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE)
+            {
+                streamIdxMap[i] = -1;
+                continue;
+            }
+            streamIdxMap[i] = streamIdx++;
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
             else avcodec_parameters_copy(stream->codecpar, dfmtCtx->streams[i]->codecpar); // copy stream info
@@ -141,25 +161,28 @@ namespace ac::video::detail
     {
         int ret = 0;
         auto frame = av_frame_alloc(); if (!frame) return false;
+        std::queue<AVPacket*> packets{};
         for (;;)
         {
             ret = avcodec_receive_frame(decoderCtx, frame);
             if (ret == 0) break;
-            else if (ret == AVERROR(EAGAIN) && fetch()) continue;
+            else if (ret == AVERROR(EAGAIN) && fetch(packets)) continue;
             else return false;
         }
-        fill(dst, frame);
+        fill(dst, frame, packets);
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-            dst.number = decoderCtx->frame_number;
+        dst.number = decoderCtx->frame_number;
 #       else
-            dst.number = decoderCtx->frame_num;
+        dst.number = decoderCtx->frame_num;
 #       endif
         return true;
     }
     inline bool PipelineImpl::encode(const Frame& src) noexcept
     {
         int ret = 0;
-        auto frame = static_cast<AVFrame*>(src.ref);
+        if (!remux(static_cast<FrameRefData*>(src.ref)->packets)) return false;
+
+        auto frame = static_cast<FrameRefData*>(src.ref)->frame;
         ret = avcodec_send_frame(encoderCtx, frame); if (ret < 0) return false;
         for (;;)
         {
@@ -170,39 +193,36 @@ namespace ac::video::detail
             epacket->stream_index = evideoStream->index;
             ret = av_interleaved_write_frame(efmtCtx, epacket); if (ret < 0) return false;
         }
-        release(frame);
         return true;
     }
     inline bool PipelineImpl::request(Frame& dst, const Frame& src) noexcept
     {
         int ret = 0;
-        auto srcFrame = static_cast<AVFrame*>(src.ref);
+        auto srcFrame = static_cast<FrameRefData*>(src.ref)->frame;
         auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
         dstFrame->width = encoderCtx->width;
         dstFrame->height = encoderCtx->height;
         dstFrame->format = srcFrame->format;
         dstFrame->pts = srcFrame->pts;
 #       if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
-            dstFrame->duration = srcFrame->duration;
+        dstFrame->duration = srcFrame->duration;
 #       endif
         ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
 
-        fill(dst, dstFrame);
+        fill(dst, dstFrame, static_cast<FrameRefData*>(src.ref)->packets);
         dst.number = src.number;
         return true;
     }
-    inline void PipelineImpl::release(AVFrame* frame) noexcept
+    inline void PipelineImpl::release(Frame& frame) noexcept
     {
-        av_frame_unref(frame);
-        av_frame_free(&frame);
-    }
-    inline bool PipelineImpl::remux() noexcept
-    {
-        if (avformat_seek_file(dfmtCtx, videoIdx, 0, 0, dvideoStream->duration, 0) < 0) return false;
-        while (av_read_frame(dfmtCtx, dpacket) >= 0)
-            if (dpacket->stream_index != videoIdx)
-                if (av_interleaved_write_frame(efmtCtx, dpacket) < 0) return false;
-        return true;
+        if (frame.ref)
+        {
+            auto frameRefData = static_cast<FrameRefData*>(frame.ref);
+            av_frame_unref(frameRefData->frame);
+            av_frame_free(&frameRefData->frame);
+            delete frameRefData;
+            frame.ref = nullptr;
+        }
     }
     inline void PipelineImpl::close() noexcept
     {
@@ -235,21 +255,54 @@ namespace ac::video::detail
         if (epacket) av_packet_free(&epacket);
         if (dpacket) av_packet_free(&dpacket);
     }
-    inline bool PipelineImpl::fetch() noexcept
+    inline Info PipelineImpl::getInfo() noexcept
+    {
+        Info info{};
+        info.length = dfmtCtx->duration / AV_TIME_BASE;
+        info.width = decoderCtx->width;
+        info.height = decoderCtx->height;
+        info.fps = av_q2d(av_inv_q(timeBase));
+        return info;
+    }
+
+    inline bool PipelineImpl::remux(std::queue<AVPacket*>& packets) noexcept
+    {
+        while (!packets.empty())
+        {
+            AVPacket* packet = packets.front();
+            packets.pop();
+            if (streamIdxMap[packet->stream_index] >= 0)
+            {
+                av_packet_rescale_ts(packet, dfmtCtx->streams[packet->stream_index]->time_base, efmtCtx->streams[streamIdxMap[packet->stream_index]]->time_base);
+                packet->stream_index = streamIdxMap[packet->stream_index];
+                if (av_interleaved_write_frame(efmtCtx, packet) < 0) return false;
+            }
+            av_packet_unref(packet);
+            av_packet_free(&packet);
+        }
+        return true;
+    }
+    inline bool PipelineImpl::fetch(std::queue<AVPacket*>& packets) noexcept
     {
         while (av_read_frame(dfmtCtx, dpacket) >= 0)
         {
-            if (dpacket->stream_index == videoIdx)
+            if (dpacket->stream_index == dvideoStream->index)
             {
                 av_packet_rescale_ts(dpacket, dvideoStream->time_base, timeBase);
                 int ret = avcodec_send_packet(decoderCtx, dpacket);
                 av_packet_unref(dpacket);
                 return ret == 0;
             }
+            else
+            {
+                packets.emplace(av_packet_clone(dpacket));
+                continue;
+            }
+            av_packet_unref(dpacket);
         }
         return false;
     }
-    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src) noexcept
+    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::queue<AVPacket*>& packets) noexcept
     {
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
         bool packed = false;
@@ -263,7 +316,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV420P10:
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
-        // packed
+            // packed
         case AV_PIX_FMT_P010:
         case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); [[fallthrough]];
         case AV_PIX_FMT_NV12: packed = true; break;
@@ -284,16 +337,7 @@ namespace ac::video::detail
         }
         if (packed) dst.plane[1].channel = 2;
         dst.elementType = (0 << 8) | elementSize; // same as ac::core::Image
-        dst.ref = src;
-    }
-    inline Info PipelineImpl::getInfo() noexcept
-    {
-        Info info{};
-        info.length = dfmtCtx->duration / AV_TIME_BASE;
-        info.width = decoderCtx->width;
-        info.height = decoderCtx->height;
-        info.fps = av_q2d(av_inv_q(timeBase));
-        return info;
+        dst.ref = new FrameRefData{ src, std::move(packets) };
     }
 }
 
@@ -331,11 +375,7 @@ bool ac::video::Pipeline::request(Frame& dst, const Frame& src) noexcept
 }
 void ac::video::Pipeline::release(Frame& frame) noexcept
 {
-    dptr->impl.release(static_cast<AVFrame*>(frame.ref));
-}
-bool ac::video::Pipeline::remux() noexcept
-{
-    return dptr->impl.remux();
+    dptr->impl.release(frame);
 }
 ac::video::Info ac::video::Pipeline::getInfo() noexcept
 {
