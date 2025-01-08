@@ -72,6 +72,18 @@ namespace ac::core
     // remove padding in the stride of `src`, if necessary.
     // `src` and `dst` can be same.
     AC_EXPORT void unpadding(const Image& src, Image& dst);
+    // left shift pixel
+    // modify in place
+    AC_EXPORT void shl(Image& image, int n);
+    // left shift pixel
+    // `src` and `dst` can be same.
+    AC_EXPORT void shl(const Image& src, Image& dst, int n);
+    // right shift pixel
+    // modify in place
+    AC_EXPORT void shr(Image& image, int n);
+    // right shift pixel
+    // `src` and `dst` can be same.
+    AC_EXPORT void shr(const Image& src, Image& dst, int n);
 
     enum
     {
