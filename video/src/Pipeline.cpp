@@ -109,10 +109,10 @@ namespace ac::video::detail
         switch (codec->id)
         {
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-        case AV_CODEC_ID_H264: encoderCtx->profile = FF_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = FF_PROFILE_H264_HIGH_10; break;
         case AV_CODEC_ID_HEVC: encoderCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
 #       else
-        case AV_CODEC_ID_H264: encoderCtx->profile = AV_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = AV_PROFILE_H264_HIGH_10; break;
         case AV_CODEC_ID_HEVC: encoderCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
 #       endif
         default: break;
