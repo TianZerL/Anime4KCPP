@@ -134,7 +134,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         data.shift = ((info.bitDepth - 1) / 8 + 1) * 8 - info.bitDepth; // bytes * 8 - bits
         if (data.shift && (info.bitDepthMask >> info.bitDepth)) data.shift = 0;
         data.factor = options.factor;
-        data.frames = info.fps * info.length;
+        data.frames = info.fps * info.duration;
         data.processor = processor;
 
         ac::util::Stopwatch stopwatch{};

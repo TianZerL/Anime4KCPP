@@ -36,11 +36,11 @@ struct ac::video::Frame
 
 struct ac::video::Info
 {
-    int length;
     int width;
     int height;
     int bitDepth;
     int bitDepthMask;
+    double duration;
     double fps;
 };
 

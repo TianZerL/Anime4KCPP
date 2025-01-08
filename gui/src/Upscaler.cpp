@@ -162,7 +162,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         dptr->stopFlag,
                         ((info.bitDepth - 1) / 8 + 1) * 8 - info.bitDepth, // bytes * 8 - bits
                         dptr->factor,
-                        info.fps * info.length,
+                        info.fps * info.duration,
                         this,
                         dptr->processor
                     };

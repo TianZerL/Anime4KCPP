@@ -221,6 +221,12 @@ namespace ac::video::detail
             auto frameRefData = static_cast<FrameRefData*>(frame.ref);
             av_frame_unref(frameRefData->frame);
             av_frame_free(&frameRefData->frame);
+            while (!frameRefData->packets.empty())
+            {
+                av_packet_unref(frameRefData->packets.front());
+                av_packet_free(&frameRefData->packets.front());
+                frameRefData->packets.pop();
+            }
             delete frameRefData;
             frame.ref = nullptr;
         }
@@ -259,7 +265,6 @@ namespace ac::video::detail
     inline Info PipelineImpl::getInfo() noexcept
     {
         Info info{};
-        info.length = dfmtCtx->duration / AV_TIME_BASE;
         info.width = decoderCtx->width;
         info.height = decoderCtx->height;
         switch (encoderCtx->pix_fmt)
@@ -277,12 +282,14 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV444P16:
         case AV_PIX_FMT_P016: info.bitDepth = 16; info.bitDepthMask = 0xffff; break;
         }
+        info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
         info.fps = av_q2d(av_inv_q(timeBase));
         return info;
     }
 
     inline bool PipelineImpl::remux(std::queue<AVPacket*>& packets) noexcept
     {
+        int ret = 0;
         while (!packets.empty())
         {
             AVPacket* packet = packets.front();
@@ -291,10 +298,11 @@ namespace ac::video::detail
             {
                 av_packet_rescale_ts(packet, dfmtCtx->streams[packet->stream_index]->time_base, efmtCtx->streams[streamIdxMap[packet->stream_index]]->time_base);
                 packet->stream_index = streamIdxMap[packet->stream_index];
-                if (av_interleaved_write_frame(efmtCtx, packet) < 0) return false;
+                ret = av_interleaved_write_frame(efmtCtx, packet);           
             }
             av_packet_unref(packet);
             av_packet_free(&packet);
+            if (ret < 0) return false;
         }
         return true;
     }
@@ -309,14 +317,10 @@ namespace ac::video::detail
                 av_packet_unref(dpacket);
                 return ret == 0;
             }
-            else
-            {
-                packets.emplace(av_packet_clone(dpacket));
-                continue;
-            }
+            else packets.emplace(av_packet_clone(dpacket));
             av_packet_unref(dpacket);
         }
-        return false;
+        return avcodec_send_packet(decoderCtx, nullptr) == 0;
     }
     inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::queue<AVPacket*>& packets) noexcept
     {
@@ -332,7 +336,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV422P16: hscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV420P10:
         case AV_PIX_FMT_YUV420P16: elementSize = sizeof(std::uint16_t); break;
-            // packed
+         // packed
         case AV_PIX_FMT_P010:
         case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); [[fallthrough]];
         case AV_PIX_FMT_NV12: packed = true; break;
