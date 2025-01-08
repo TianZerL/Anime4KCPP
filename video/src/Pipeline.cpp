@@ -262,6 +262,21 @@ namespace ac::video::detail
         info.length = dfmtCtx->duration / AV_TIME_BASE;
         info.width = decoderCtx->width;
         info.height = decoderCtx->height;
+        switch (encoderCtx->pix_fmt)
+        {
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUV422P:
+        case AV_PIX_FMT_YUV444P:
+        case AV_PIX_FMT_NV12: info.bitDepth = 8; info.bitDepthMask = 0x00ff; break;
+        case AV_PIX_FMT_YUV420P10:
+        case AV_PIX_FMT_YUV422P10:
+        case AV_PIX_FMT_YUV444P10: info.bitDepth = 10; info.bitDepthMask = 0x03ff; break;
+        case AV_PIX_FMT_P010: info.bitDepth = 10; info.bitDepthMask = 0xffc0; break;
+        case AV_PIX_FMT_YUV420P16:
+        case AV_PIX_FMT_YUV422P16:
+        case AV_PIX_FMT_YUV444P16:
+        case AV_PIX_FMT_P016: info.bitDepth = 16; info.bitDepthMask = 0xffff; break;
+        }
         info.fps = av_q2d(av_inv_q(timeBase));
         return info;
     }

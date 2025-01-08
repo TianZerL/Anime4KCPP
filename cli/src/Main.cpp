@@ -126,10 +126,13 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         auto info = pipeline.getInfo();
 
         struct {
+            int shift;
             double factor;
             double frames;
             std::shared_ptr<ac::core::Processor> processor;
         } data{};
+        data.shift = ((info.bitDepth - 1) / 8 + 1) * 8 - info.bitDepth; // bytes * 8 - bits
+        if (data.shift && (info.bitDepthMask >> info.bitDepth)) data.shift = 0;
         data.factor = options.factor;
         data.frames = info.fps * info.length;
         data.processor = processor;
@@ -140,8 +143,10 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             // y
             ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
             ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
+            if (ctx->shift) ac::core::shl(srcy, srcy, ctx->shift); // the src frame is decoded from ffmpeg and cannot be directly modified
             ctx->processor->process(srcy, dsty, ctx->factor);
             if (!ctx->processor->ok()) return false;
+            if (ctx->shift) ac::core::shr(dsty, ctx->shift);
             // uv
             for (int i = 1; i < src.planes; i++)
             {

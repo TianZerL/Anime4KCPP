@@ -153,25 +153,30 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     auto info = pipeline.getInfo();
                     struct {
                         std::atomic_bool& stopFlag;
+                        int shift;
                         double factor;
                         double frames;
                         Upscaler* upscaler;
                         std::shared_ptr<ac::core::Processor> processor;
                     } data {
                         dptr->stopFlag,
+                        ((info.bitDepth - 1) / 8 + 1) * 8 - info.bitDepth, // bytes * 8 - bits
                         dptr->factor,
                         info.fps * info.length,
                         this,
                         dptr->processor
                     };
+                    if (data.shift && (info.bitDepthMask >> info.bitDepth)) data.shift = 0;
                     ac::util::Stopwatch stopwatch{};
                     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
                         auto ctx = static_cast<decltype(data)*>(userdata);
                         // y
                         ac::core::Image srcy{src.plane[0].width, src.plane[0].height, 1, src.elementType, src.plane[0].data, src.plane[0].stride};
                         ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
+                        if (ctx->shift) ac::core::shl(srcy, srcy, ctx->shift); // the src frame is decoded from ffmpeg and cannot be directly modified
                         ctx->processor->process(srcy, dsty, ctx->factor);
                         if (!ctx->processor->ok()) return false;
+                        if (ctx->shift) ac::core::shr(dsty, ctx->shift);
                         // uv
                         for (int i = 1; i < src.planes; i++)
                         {
