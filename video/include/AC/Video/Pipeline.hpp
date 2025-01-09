@@ -79,7 +79,7 @@ public:
     AC_VIDEO_EXPORT bool operator<<(const Frame& frame) noexcept;
     // request a new frame with empty data for encoding later, usually call after `>>`.
     AC_VIDEO_EXPORT bool request(Frame& dst, const Frame& src) noexcept;
-    // release a frame.
+    // release a frame. Multiple calls are safe.
     AC_VIDEO_EXPORT void release(Frame& frame) noexcept;
     // get decoded video info.
     AC_VIDEO_EXPORT Info getInfo() noexcept;

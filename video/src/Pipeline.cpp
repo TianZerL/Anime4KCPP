@@ -48,7 +48,7 @@ namespace ac::video::detail
         AVRational timeBase{}; // should be 1/fps
         bool dfmtCtxOpenFlag = false;
         bool writeHeaderFlag = false;
-        std::vector<int> streamIdxMap = {};
+        std::vector<int> streamIdxMap{};
     };
 
     PipelineImpl::PipelineImpl() noexcept = default;
@@ -185,10 +185,11 @@ namespace ac::video::detail
     inline bool PipelineImpl::encode(const Frame& src) noexcept
     {
         int ret = 0;
-        if (!remux(static_cast<FrameRefData*>(src.ref)->packets)) return false;
+        if (!src.ref)  return false;
 
-        auto frame = static_cast<FrameRefData*>(src.ref)->frame;
-        ret = avcodec_send_frame(encoderCtx, frame); if (ret < 0) return false;
+        auto frameRefData = static_cast<FrameRefData*>(src.ref);
+        if (!remux(frameRefData->packets)) return false;
+        ret = avcodec_send_frame(encoderCtx, frameRefData->frame); if (ret < 0) return false;
         for (;;)
         {
             ret = avcodec_receive_packet(encoderCtx, epacket);
@@ -202,7 +203,10 @@ namespace ac::video::detail
     }
     inline bool PipelineImpl::request(Frame& dst, const Frame& src) noexcept
     {
-        auto srcFrame = static_cast<FrameRefData*>(src.ref)->frame;
+        if (!src.ref)  return false;
+
+        auto srcFrameRefData = static_cast<FrameRefData*>(src.ref);
+        auto srcFrame = srcFrameRefData->frame;
         auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
         dstFrame->width = encoderCtx->width;
         dstFrame->height = encoderCtx->height;
@@ -217,7 +221,7 @@ namespace ac::video::detail
             return false;
         }
 
-        fill(dst, dstFrame, static_cast<FrameRefData*>(src.ref)->packets);
+        fill(dst, dstFrame, srcFrameRefData->packets);
         dst.number = src.number;
         return true;
     }
@@ -303,7 +307,7 @@ namespace ac::video::detail
             {
                 av_packet_rescale_ts(packet, dfmtCtx->streams[packet->stream_index]->time_base, efmtCtx->streams[streamIdxMap[packet->stream_index]]->time_base);
                 packet->stream_index = streamIdxMap[packet->stream_index];
-                ret = av_interleaved_write_frame(efmtCtx, packet);           
+                ret = av_interleaved_write_frame(efmtCtx, packet);
             }
             av_packet_unref(packet);
             av_packet_free(&packet);

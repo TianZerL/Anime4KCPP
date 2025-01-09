@@ -11,20 +11,23 @@ namespace ac::video::detail
 {
     inline static void filterSerial(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
-        bool success = true;
         Frame src{};
         Frame dst{};
 
-        while (success && pipeline >> src)
+        while (pipeline >> src)
         {
-            pipeline.request(dst, src);
+            bool ret = true;
+            ret = pipeline.request(dst, src); if (!ret) break;
 
-            success = callback(src, dst, userdata);
+            ret = callback(src, dst, userdata); if (!ret) break;
 
             pipeline.release(src);
-            pipeline << dst;
+            ret = pipeline << dst; if (!ret) break;
             pipeline.release(dst);
         }
+        // make sure that we have released all frames
+        pipeline.release(src);
+        pipeline.release(dst);
     }
 
     inline static void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
@@ -45,7 +48,7 @@ namespace ac::video::detail
                 if (dst.number != idx) buffer.emplace(dst);
                 else
                 {
-                    pipeline << dst;
+                    success = success && pipeline << dst;
                     pipeline.release(dst);
                     idx++;
                     while (!buffer.empty())
@@ -55,7 +58,7 @@ namespace ac::video::detail
                         else
                         {
                             buffer.pop();
-                            pipeline << dst;
+                            success = success && pipeline << dst;
                             pipeline.release(dst);
                             idx++;
                         }
@@ -70,14 +73,21 @@ namespace ac::video::detail
         {
             pool.exec([&](){
                 auto process = [&](){
+                    bool ret = true;
                     Frame src{};
                     Frame dst{};
                     decodeChan >> src;
                     if (!src.ref) return;
-                    pipeline.request(dst, src);
-                    success = callback(src, dst, userdata);
-                    pipeline.release(src);
-                    encodeChan << dst;
+                    ret = pipeline.request(dst, src);
+                    if (ret)
+                    {
+                        ret = callback(src, dst, userdata);
+                        pipeline.release(src);
+                        if (ret) encodeChan << dst;
+                        else pipeline.release(dst);
+                    }
+                    else pipeline.release(src);
+                    success = success && ret;
                 };
                 while (!decodeChan.isClose()) process();
                 while (!decodeChan.empty()) process();
