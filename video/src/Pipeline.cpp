@@ -168,7 +168,11 @@ namespace ac::video::detail
             ret = avcodec_receive_frame(decoderCtx, frame);
             if (ret == 0) break;
             else if (ret == AVERROR(EAGAIN) && fetch(packets)) continue;
-            else return false;
+            else
+            {
+                av_frame_free(&frame);
+                return false;
+            }
         }
         fill(dst, frame, packets);
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
@@ -198,7 +202,6 @@ namespace ac::video::detail
     }
     inline bool PipelineImpl::request(Frame& dst, const Frame& src) noexcept
     {
-        int ret = 0;
         auto srcFrame = static_cast<FrameRefData*>(src.ref)->frame;
         auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
         dstFrame->width = encoderCtx->width;
@@ -208,7 +211,11 @@ namespace ac::video::detail
 #       if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
         dstFrame->duration = srcFrame->duration;
 #       endif
-        ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
+        if (av_frame_get_buffer(dstFrame, 0) < 0)
+        {
+            av_frame_free(&dstFrame);
+            return false;
+        }
 
         fill(dst, dstFrame, static_cast<FrameRefData*>(src.ref)->packets);
         dst.number = src.number;
@@ -219,11 +226,9 @@ namespace ac::video::detail
         if (frame.ref)
         {
             auto frameRefData = static_cast<FrameRefData*>(frame.ref);
-            av_frame_unref(frameRefData->frame);
             av_frame_free(&frameRefData->frame);
             while (!frameRefData->packets.empty())
             {
-                av_packet_unref(frameRefData->packets.front());
                 av_packet_free(&frameRefData->packets.front());
                 frameRefData->packets.pop();
             }
