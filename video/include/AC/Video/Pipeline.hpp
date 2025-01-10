@@ -36,10 +36,12 @@ struct ac::video::Frame
 
 struct ac::video::Info
 {
+    struct BitDepth {
+        bool lsb; // is the layout based on the least significant bit?
+        int bits;
+    } bitDepth;
     int width;
     int height;
-    int bitDepth;
-    int bitDepthMask;
     double duration;
     double fps;
 };
@@ -78,11 +80,11 @@ public:
     // push a frame to encode, which should be released later by `release()`.
     AC_VIDEO_EXPORT bool operator<<(const Frame& frame) noexcept;
     // request a new frame with empty data for encoding later, usually call after `>>`.
-    AC_VIDEO_EXPORT bool request(Frame& dst, const Frame& src) noexcept;
+    AC_VIDEO_EXPORT bool request(Frame& dst, const Frame& src) const noexcept;
     // release a frame. Multiple calls are safe.
     AC_VIDEO_EXPORT void release(Frame& frame) noexcept;
     // get decoded video info.
-    AC_VIDEO_EXPORT Info getInfo() noexcept;
+    AC_VIDEO_EXPORT Info getInfo() const noexcept;
 
 private:
     const std::unique_ptr<PipelineData> dptr;

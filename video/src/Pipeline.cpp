@@ -28,14 +28,15 @@ namespace ac::video::detail
         bool openEncoder(const char* filename, double factor, const EncoderHints& hints) noexcept;
         bool decode(Frame& dst) noexcept;
         bool encode(const Frame& src) noexcept;
-        bool request(Frame& dst, const Frame& src) noexcept;
+        bool request(Frame& dst, const Frame& src) const noexcept;
         void release(Frame& frame) noexcept;
         void close() noexcept;
-        Info getInfo() noexcept;
+        Info getInfo() const noexcept;
     private:
-        bool remux(std::queue<AVPacket*>& packets) noexcept;
+        bool remux(std::queue<AVPacket*>& packets) const noexcept;
         bool fetch(std::queue<AVPacket*>& packets) noexcept;
-        void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) noexcept;
+        void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) const noexcept;
+        Info::BitDepth getBitDepth(AVPixelFormat format) const noexcept;
     private:
         AVFormatContext* dfmtCtx = nullptr;
         AVFormatContext* efmtCtx = nullptr;
@@ -106,18 +107,19 @@ namespace ac::video::detail
         auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
         encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
+        encoderCtx->pix_fmt = decoderCtx->pix_fmt;
+        auto bitDepth = getBitDepth(encoderCtx->pix_fmt);
         switch (codec->id)
         {
 #       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
-        case AV_CODEC_ID_H264: encoderCtx->profile = FF_PROFILE_H264_HIGH_10; break;
-        case AV_CODEC_ID_HEVC: encoderCtx->profile = FF_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = bitDepth.bits > 8 ? FF_PROFILE_H264_HIGH_10 : FF_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encoderCtx->profile = bitDepth.bits > 8 ? FF_PROFILE_HEVC_MAIN_10 : FF_PROFILE_HEVC_MAIN; break;
 #       else
-        case AV_CODEC_ID_H264: encoderCtx->profile = AV_PROFILE_H264_HIGH_10; break;
-        case AV_CODEC_ID_HEVC: encoderCtx->profile = AV_PROFILE_HEVC_MAIN_10; break;
+        case AV_CODEC_ID_H264: encoderCtx->profile = bitDepth.bits > 8 ? AV_PROFILE_H264_HIGH_10 : AV_PROFILE_H264_HIGH; break;
+        case AV_CODEC_ID_HEVC: encoderCtx->profile = bitDepth.bits > 8 ? AV_PROFILE_HEVC_MAIN_10 : AV_PROFILE_HEVC_MAIN; break;
 #       endif
         default: break;
         }
-        encoderCtx->pix_fmt = decoderCtx->pix_fmt;
         encoderCtx->codec_type = AVMEDIA_TYPE_VIDEO;
         encoderCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encoderCtx->bit_rate)>(decoderCtx->bit_rate * factor * factor);
         encoderCtx->framerate = decoderCtx->framerate;
@@ -201,7 +203,7 @@ namespace ac::video::detail
         }
         return true;
     }
-    inline bool PipelineImpl::request(Frame& dst, const Frame& src) noexcept
+    inline bool PipelineImpl::request(Frame& dst, const Frame& src) const noexcept
     {
         if (!src.ref)  return false;
 
@@ -271,32 +273,18 @@ namespace ac::video::detail
         if (epacket) av_packet_free(&epacket);
         if (dpacket) av_packet_free(&dpacket);
     }
-    inline Info PipelineImpl::getInfo() noexcept
+    inline Info PipelineImpl::getInfo() const noexcept
     {
         Info info{};
         info.width = decoderCtx->width;
         info.height = decoderCtx->height;
-        switch (encoderCtx->pix_fmt)
-        {
-        case AV_PIX_FMT_YUV420P:
-        case AV_PIX_FMT_YUV422P:
-        case AV_PIX_FMT_YUV444P:
-        case AV_PIX_FMT_NV12: info.bitDepth = 8; info.bitDepthMask = 0x00ff; break;
-        case AV_PIX_FMT_YUV420P10:
-        case AV_PIX_FMT_YUV422P10:
-        case AV_PIX_FMT_YUV444P10: info.bitDepth = 10; info.bitDepthMask = 0x03ff; break;
-        case AV_PIX_FMT_P010: info.bitDepth = 10; info.bitDepthMask = 0xffc0; break;
-        case AV_PIX_FMT_YUV420P16:
-        case AV_PIX_FMT_YUV422P16:
-        case AV_PIX_FMT_YUV444P16:
-        case AV_PIX_FMT_P016: info.bitDepth = 16; info.bitDepthMask = 0xffff; break;
-        }
+        info.bitDepth = getBitDepth(encoderCtx->pix_fmt);
         info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
         info.fps = av_q2d(av_inv_q(timeBase));
         return info;
     }
 
-    inline bool PipelineImpl::remux(std::queue<AVPacket*>& packets) noexcept
+    inline bool PipelineImpl::remux(std::queue<AVPacket*>& packets) const noexcept
     {
         int ret = 0;
         while (!packets.empty())
@@ -331,11 +319,11 @@ namespace ac::video::detail
         }
         return avcodec_send_packet(decoderCtx, nullptr) == 0;
     }
-    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::queue<AVPacket*>& packets) noexcept
+    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::queue<AVPacket*>& packets) const noexcept
     {
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
         bool packed = false;
-        switch (decoderCtx->pix_fmt)
+        switch (src->format)
         {// planar
         case AV_PIX_FMT_YUV444P: wscale = 1; [[fallthrough]];
         case AV_PIX_FMT_YUV422P: hscale = 1; break;
@@ -368,6 +356,22 @@ namespace ac::video::detail
         dst.elementType = (0 << 8) | elementSize; // same as ac::core::Image
         dst.ref = new FrameRefData{ src, std::move(packets) };
     }
+    inline Info::BitDepth PipelineImpl::getBitDepth(AVPixelFormat format) const noexcept
+    {
+        Info::BitDepth bitDepth{false, 8};
+        switch (format)
+        {
+        case AV_PIX_FMT_YUV420P10:
+        case AV_PIX_FMT_YUV422P10:
+        case AV_PIX_FMT_YUV444P10: bitDepth.lsb = true;
+        case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
+        case AV_PIX_FMT_YUV420P16:
+        case AV_PIX_FMT_YUV422P16:
+        case AV_PIX_FMT_YUV444P16:
+        case AV_PIX_FMT_P016: bitDepth.bits = 16; break;
+        }
+        return bitDepth;
+    }
 }
 
 struct ac::video::Pipeline::PipelineData
@@ -398,7 +402,7 @@ bool ac::video::Pipeline::operator<<(const Frame& frame) noexcept
 {
     return dptr->impl.encode(frame);
 }
-bool ac::video::Pipeline::request(Frame& dst, const Frame& src) noexcept
+bool ac::video::Pipeline::request(Frame& dst, const Frame& src) const noexcept
 {
     return dptr->impl.request(dst, src);
 }
@@ -406,7 +410,7 @@ void ac::video::Pipeline::release(Frame& frame) noexcept
 {
     dptr->impl.release(frame);
 }
-ac::video::Info ac::video::Pipeline::getInfo() noexcept
+ac::video::Info ac::video::Pipeline::getInfo() const noexcept
 {
     return dptr->impl.getInfo();
 }

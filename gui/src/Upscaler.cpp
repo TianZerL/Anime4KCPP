@@ -160,13 +160,12 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         std::shared_ptr<ac::core::Processor> processor;
                     } data {
                         dptr->stopFlag,
-                        ((info.bitDepth - 1) / 8 + 1) * 8 - info.bitDepth, // bytes * 8 - bits
+                        info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0, // bytes * 8 - bits
                         dptr->factor,
                         info.fps * info.duration,
                         this,
                         dptr->processor
                     };
-                    if (data.shift && (info.bitDepthMask >> info.bitDepth)) data.shift = 0;
                     ac::util::Stopwatch stopwatch{};
                     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
                         auto ctx = static_cast<decltype(data)*>(userdata);
