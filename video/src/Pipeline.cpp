@@ -150,13 +150,13 @@ namespace ac::video::detail
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
             else avcodec_parameters_copy(stream->codecpar, dfmtCtx->streams[i]->codecpar); // copy stream info
             stream->codecpar->codec_tag = 0; // avoid conducting additional codec tag checks for MKV
+            stream->time_base = dfmtCtx->streams[i]->time_base;
+            stream->duration = dfmtCtx->streams[i]->duration;
             stream->disposition = dfmtCtx->streams[i]->disposition; // a series of flags that tells a player or media player how to handle a stream.
             stream->sample_aspect_ratio = dfmtCtx->streams[i]->sample_aspect_ratio; // for mkv to keep DAR
+            stream->avg_frame_rate = dfmtCtx->streams[i]->avg_frame_rate;
         }
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
-        evideoStream->time_base = dvideoStream->time_base;
-        evideoStream->avg_frame_rate = dvideoStream->avg_frame_rate;
-
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
         writeHeaderFlag = true;
@@ -366,7 +366,7 @@ namespace ac::video::detail
         {
         case AV_PIX_FMT_YUV420P10:
         case AV_PIX_FMT_YUV422P10:
-        case AV_PIX_FMT_YUV444P10: bitDepth.lsb = true;
+        case AV_PIX_FMT_YUV444P10: bitDepth.lsb = true; [[fallthrough]];
         case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
         case AV_PIX_FMT_YUV420P16:
         case AV_PIX_FMT_YUV422P16:
