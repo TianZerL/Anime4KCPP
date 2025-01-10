@@ -149,6 +149,9 @@ namespace ac::video::detail
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
             else avcodec_parameters_copy(stream->codecpar, dfmtCtx->streams[i]->codecpar); // copy stream info
+            stream->codecpar->codec_tag = 0; // avoid conducting additional codec tag checks for MKV
+            stream->disposition = dfmtCtx->streams[i]->disposition; // a series of flags that tells a player or media player how to handle a stream.
+            stream->sample_aspect_ratio = dfmtCtx->streams[i]->sample_aspect_ratio; // for mkv to keep DAR
         }
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         evideoStream->time_base = dvideoStream->time_base;
