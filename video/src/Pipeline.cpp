@@ -6,6 +6,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/pixdesc.h>
+#include <libswscale/swscale.h>
 }
 
 #include "AC/Video/Pipeline.hpp"
@@ -38,6 +39,10 @@ namespace ac::video::detail
         void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) const noexcept;
         Info::BitDepth getBitDepth(AVPixelFormat format) const noexcept;
     private:
+        bool dfmtCtxOpenFlag = false;
+        bool writeHeaderFlag = false;
+        AVPixelFormat targetPixFmt = AV_PIX_FMT_NONE;
+        SwsContext* swsCtx = nullptr;
         AVFormatContext* dfmtCtx = nullptr;
         AVFormatContext* efmtCtx = nullptr;
         AVPacket* dpacket = nullptr;
@@ -47,8 +52,6 @@ namespace ac::video::detail
         AVStream* dvideoStream = nullptr;
         AVStream* evideoStream = nullptr;
         AVRational timeBase{}; // should be 1/fps
-        bool dfmtCtxOpenFlag = false;
-        bool writeHeaderFlag = false;
         std::vector<int> streamIdxMap{};
     };
 
@@ -92,7 +95,7 @@ namespace ac::video::detail
         decoderCtx = avcodec_alloc_context3(codec); if (!decoderCtx) return false;
         ret = avcodec_parameters_to_context(decoderCtx, dvideoStream->codecpar); if (ret < 0) return false;
         decoderCtx->pkt_timebase = dvideoStream->time_base;
-        if (hints.format && *hints.format) decoderCtx->pix_fmt = av_get_pix_fmt(hints.format);
+        if (hints.format && *hints.format) decoderCtx->pix_fmt = targetPixFmt = av_get_pix_fmt(hints.format);
         ret = avcodec_open2(decoderCtx, codec, nullptr); if (ret < 0) return false;
         auto framerate = av_guess_frame_rate(dfmtCtx, dvideoStream, nullptr);
         timeBase = av_inv_q(framerate.num ? framerate : av_make_q(24000, 1001));
@@ -107,7 +110,7 @@ namespace ac::video::detail
         auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
         encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
-        encoderCtx->pix_fmt = decoderCtx->pix_fmt;
+        encoderCtx->pix_fmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
         auto bitDepth = getBitDepth(encoderCtx->pix_fmt);
         switch (codec->id)
         {
@@ -149,13 +152,14 @@ namespace ac::video::detail
             auto stream = avformat_new_stream(efmtCtx, nullptr); if (!stream) return false;
             if (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) evideoStream = stream;
             else avcodec_parameters_copy(stream->codecpar, dfmtCtx->streams[i]->codecpar); // copy stream info
-            stream->codecpar->codec_tag = 0; // avoid conducting additional codec tag checks for MKV
+            stream->codecpar->codec_tag = 0; // avoid unnecessary additional codec tag checks for MKV
             stream->time_base = dfmtCtx->streams[i]->time_base;
             stream->duration = dfmtCtx->streams[i]->duration;
             stream->disposition = dfmtCtx->streams[i]->disposition; // a series of flags that tells a player or media player how to handle a stream.
             stream->sample_aspect_ratio = dfmtCtx->streams[i]->sample_aspect_ratio; // for mkv to keep DAR
             stream->avg_frame_rate = dfmtCtx->streams[i]->avg_frame_rate;
         }
+        if (encoderCtx->pix_fmt != decoderCtx->pix_fmt) swsCtx = sws_getContext(decoderCtx->width, decoderCtx->height, decoderCtx->pix_fmt, decoderCtx->width, decoderCtx->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
@@ -175,6 +179,21 @@ namespace ac::video::detail
             else if (ret == AVERROR(EAGAIN) && fetch(packets)) continue;
             else
             {
+                av_frame_free(&frame);
+                return false;
+            }
+        }
+        if (swsCtx)
+        {
+            auto* dstFrame = av_frame_alloc(); if (!dstFrame) return false;
+            if ((av_frame_copy_props(dstFrame, frame) >= 0) && (sws_scale_frame(swsCtx, dstFrame, frame) >= 0))
+            {
+                av_frame_free(&frame);
+                frame = dstFrame;
+            }
+            else
+            {
+                av_frame_free(&dstFrame);
                 av_frame_free(&frame);
                 return false;
             }
@@ -252,6 +271,11 @@ namespace ac::video::detail
             av_write_trailer(efmtCtx);
             writeHeaderFlag = false;
         }
+        if (swsCtx)
+        {
+            sws_freeContext(swsCtx);
+            swsCtx = nullptr;
+        }
         if (encoderCtx) avcodec_free_context(&encoderCtx);
         if (decoderCtx) avcodec_free_context(&decoderCtx);
         if (efmtCtx)
@@ -275,6 +299,12 @@ namespace ac::video::detail
         }
         if (epacket) av_packet_free(&epacket);
         if (dpacket) av_packet_free(&dpacket);
+
+        streamIdxMap.clear();
+        timeBase = {};
+        evideoStream = nullptr;
+        dvideoStream = nullptr;
+        targetPixFmt = AV_PIX_FMT_NONE;
     }
     inline Info PipelineImpl::getInfo() const noexcept
     {
@@ -359,7 +389,7 @@ namespace ac::video::detail
         dst.elementType = (0 << 8) | elementSize; // same as ac::core::Image
         dst.ref = new FrameRefData{ src, std::move(packets) };
     }
-    inline Info::BitDepth PipelineImpl::getBitDepth(AVPixelFormat format) const noexcept
+    inline Info::BitDepth PipelineImpl::getBitDepth(const AVPixelFormat format) const noexcept
     {
         Info::BitDepth bitDepth{false, 8};
         switch (format)
