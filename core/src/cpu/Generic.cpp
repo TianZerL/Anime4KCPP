@@ -56,7 +56,7 @@ namespace ac::core::cpu
     template <typename IN, typename OUT, int cin, int cout>
     inline void deconv2x2_generic(const Image& src, Image& dst, const float* const kernels)
     {
-        filter<2>([=](const int i, const int j, const void* const sptr, void* const dptr) {
+        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 

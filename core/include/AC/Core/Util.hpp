@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <tuple>
 #include <type_traits>
 
 #include "AC/Core/Image.hpp"
@@ -41,8 +42,13 @@ namespace ac::core
     int ceilLog2(double v) noexcept;
 
     // filter images
-    template<int scale = 1, typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, Images> && ...), bool> = true>
-    void filter(F&& f, const Image& src, const Images& ...dst);
+    // source images should be passed by `const Image&` and destination images by `Image&`.
+    // all source images should have the same width and height, and so should all destination images.
+    // the width and height of the destination images will be used for the filtering process.
+    // the scale ratio from source images to destination images will be computed as `dst.width() / src.width()` and this ratio will be applied to both the width and height.
+    // the scale ratio is assumed to be an integer.
+    template<typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...), bool> = true>
+    void filter(F&& f, Images& ...images);
 }
 
 template <typename Integer>
@@ -95,14 +101,18 @@ inline int ac::core::ceilLog2(const double v) noexcept
     else return static_cast<int>(std::ceil(std::log2(v)));
 }
 
-template<int scale, typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, Images> && ...), bool>>
-inline void ac::core::filter(F&& f, const Image& src, const Images& ...dst)
+template<typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...), bool>>
+inline void ac::core::filter(F&& f, Images& ...images)
 {
-    int w = src.width() * scale, h = src.height() * scale;
+    const auto& src = std::get<0>(std::forward_as_tuple(images...));
+    const auto& dst = std::get<sizeof...(Images) - 1>(std::forward_as_tuple(images...));
+
+    const int w = dst.width(), h = dst.height();
+    const int scale = w / src.width();
 
     parallelFor(0, h,
         [&](const int i) {
-            for (int j = 0; j < w; j++) f(i, j, src.ptr(j / scale, i / scale), (dst.ptr(j, i))...);
+            for (int j = 0; j < w; j++) f(i, j, (std::is_const_v<Images> ? images.ptr(j / scale, i / scale) : images.ptr(j, i))...);
         });
 }
 

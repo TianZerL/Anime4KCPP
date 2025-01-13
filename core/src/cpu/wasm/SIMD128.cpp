@@ -172,7 +172,7 @@ namespace ac::core::cpu
     template <typename OUT, int cin, int cout>
     inline void deconv2x2_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels)
     {
-        filter<2>([=](const int i, const int j, const void* const sptr, void* const dptr) {
+        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const float*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
