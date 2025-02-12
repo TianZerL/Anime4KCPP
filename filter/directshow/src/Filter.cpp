@@ -258,15 +258,15 @@ HRESULT Filter::CheckInputType(const CMediaType* mtIn)
 
     if (!format) return VFW_E_TYPE_NOT_ACCEPTED;
 
-    auto checkVideoInfo = [&](auto vi) -> HRESULT {
+    auto checkVideoInfo = [&](auto* vi) -> HRESULT {
         if (vi->bmiHeader.biWidth > size.limit.width || vi->bmiHeader.biHeight > size.limit.height)
             return VFW_E_TYPE_NOT_ACCEPTED;
         return S_OK;
     };
     if (IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2))
-        return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mtIn->pbFormat));
+        return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mtIn->Format()));
     else
-        return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mtIn->pbFormat));
+        return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mtIn->Format()));
 }
 HRESULT Filter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
 {
@@ -287,9 +287,10 @@ HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
     if (pos > 0) return VFW_S_NO_MORE_ITEMS;
 
     CheckPointer(mt, E_POINTER);
-    *mt = m_pInput->CurrentMediaType();
+    auto hr = m_pInput->ConnectionMediaType(mt);
+    if (FAILED(hr)) return hr;
 
-    auto setVideoInfo = [&](auto vi) {
+    auto setVideoInfo = [&](auto* vi) {
         size.src.width = vi->bmiHeader.biWidth;
         size.src.height = vi->bmiHeader.biHeight;
         size.dst.width = static_cast<decltype(size.dst.width)>(size.src.width * factor);
@@ -302,9 +303,9 @@ HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
         SetRect(&vi->rcTarget, 0, 0, size.dst.width, size.dst.height);
     };
     if (IsEqualGUID(*mt->FormatType(), FORMAT_VideoInfo2))
-        setVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mt->pbFormat));
+        setVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mt->Format()));
     else
-        setVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mt->pbFormat));
+        setVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mt->Format()));
 
     return S_OK;
 }
@@ -320,8 +321,8 @@ HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* 
     if (request->cBuffers == 0) request->cBuffers = 1;
 
     ALLOCATOR_PROPERTIES actual{};
-    auto err = alloctor->SetProperties(request, &actual);
-    if (err != S_OK) return err;
+    auto hr = alloctor->SetProperties(request, &actual);
+    if (FAILED(hr)) return hr;
 
     if (request->cBuffers > actual.cBuffers || request->cbBuffer > actual.cbBuffer)
         return E_FAIL;
