@@ -77,8 +77,8 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     if (err != peSuccess) factor = 2.0;
     if (factor <= 1.0) SET_ERROR("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
 
-    auto processorName = vsapi->mapGetData(in, "processor", 0, &err);
-    if (err != peSuccess) processorName = "cpu";
+    auto processorType = vsapi->mapGetData(in, "processor", 0, &err);
+    if (err != peSuccess) processorType = "cpu";
 
     auto device = static_cast<int>(vsapi->mapGetInt(in, "device", 0, &err));
     if (err != peSuccess) device = 0;
@@ -106,10 +106,10 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
         }() };
 
 #       ifdef AC_CORE_WITH_OPENCL
-            if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            if (!std::strcmp(processorType, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
-            if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            if (!std::strcmp(processorType, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();

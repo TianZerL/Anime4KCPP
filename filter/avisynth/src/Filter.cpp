@@ -45,7 +45,7 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
     vi.width = static_cast<decltype(vi.width)>(vi.width * factor);
     vi.height = static_cast<decltype(vi.height)>(vi.height * factor);
 
-    auto processorName = args[2].Defined() ? args[2].AsString() : "cpu";
+    auto processorType = args[2].Defined() ? args[2].AsString() : "cpu";
 
     auto device = args[3].Defined() ? args[3].AsInt() : 0;
     if (device < 0) env->ThrowError("Anime4KCPP: %s", "the device index cannot be negative");
@@ -64,10 +64,10 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
         }() };
 
 #       ifdef AC_CORE_WITH_OPENCL
-            if (!std::strcmp(processorName, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+            if (!std::strcmp(processorType, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
 #       endif
 #       ifdef AC_CORE_WITH_CUDA
-            if (!std::strcmp(processorName, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+            if (!std::strcmp(processorType, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #       endif
         return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
     }();
