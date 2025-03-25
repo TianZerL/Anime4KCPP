@@ -36,6 +36,10 @@ private:
     AC_EXPORT virtual void process(const Image& src, Image& dst) = 0;
 
 public:
+    AC_EXPORT static int type(const char* str) noexcept;
+    AC_EXPORT static const char* type(int id) noexcept;
+    AC_EXPORT static std::shared_ptr<Processor> create(int type, int device, const char* model);
+
     template<int type, typename Model> static std::shared_ptr<Processor> create(int idx, const Model& model);
     template<int type> static const char* info();
 

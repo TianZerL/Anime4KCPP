@@ -50,27 +50,9 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
     auto device = args[3].Defined() ? args[3].AsInt() : 0;
     if (device < 0) env->ThrowError("Anime4KCPP: %s", "the device index cannot be negative");
 
-    auto modelName = args[4].Defined() ? args[4].AsString() : "acnet-hdn0";
+    auto model = args[4].Defined() ? args[4].AsString() : "acnet-hdn0";
 
-    processor = [&]() {
-        ac::core::model::ACNet model{ [&]() {
-            for (auto p = modelName; *p != '\0'; p++)
-            {
-                if (*p == '1') return ac::core::model::ACNet::Variant::HDN1;
-                if (*p == '2') return ac::core::model::ACNet::Variant::HDN2;
-                if (*p == '3') return ac::core::model::ACNet::Variant::HDN3;
-            }
-            return ac::core::model::ACNet::Variant::HDN0;
-        }() };
-
-#       ifdef AC_CORE_WITH_OPENCL
-            if (!std::strcmp(processorType, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            if (!std::strcmp(processorType, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-#       endif
-        return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-    }();
+    processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
     if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
 }
 

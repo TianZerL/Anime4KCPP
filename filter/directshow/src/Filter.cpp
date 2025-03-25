@@ -1,4 +1,5 @@
 #include <memory>
+#include <string>
 
 #include <windows.h>
 #include <streams.h>
@@ -199,7 +200,7 @@ CUnknown* Filter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
     if (!object && phr) *phr = E_OUTOFMEMORY;
     return object;
 }
-Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CTransformFilter(name, punk, CLSID_AC_FILTER)
+Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) : CTransformFilter(name, punk, CLSID_AC_FILTER)
 {
     factor = gRegArgument.getFactor();
     size.limit.width = gRegArgument.getLimitWidth();
@@ -208,25 +209,8 @@ Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CTransformFilter
     auto device = gRegArgument.getDevice();
     auto modelName = gRegArgument.getModelName();
 
-    processor = [&]() {
-        ac::core::model::ACNet model{ [&]() {
-            for (auto p = modelName; *p != TEXT('\0'); p++)
-            {
-                if (*p == TEXT('1')) return ac::core::model::ACNet::Variant::HDN1;
-                if (*p == TEXT('2')) return ac::core::model::ACNet::Variant::HDN2;
-                if (*p == TEXT('3')) return ac::core::model::ACNet::Variant::HDN3;
-            }
-            return ac::core::model::ACNet::Variant::HDN0;
-        }() };
-
-#       ifdef AC_CORE_WITH_OPENCL
-            if (processorId == ac::core::Processor::OpenCL) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            if (processorId == ac::core::Processor::CUDA) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-#       endif
-        return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-    }();
+    processor = ac::core::Processor::create(processorId, device, std::string{ modelName, modelName + _tcslen(modelName) }.c_str());
+    if (!processor->ok() && phr) *phr = E_UNEXPECTED;
 }
 STDMETHODIMP Filter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
 {
@@ -342,6 +326,7 @@ HRESULT Filter::Transform(IMediaSample* in, IMediaSample* out)
     ac::core::Image srcy{ size.src.width, size.src.height, 1, GET_FORMAT_TYPE(format), src, ((in->GetActualDataLength() * 2) / 3) / size.src.height };
     ac::core::Image dsty{ size.dst.width, size.dst.height, 1, GET_FORMAT_TYPE(format), dst, ((out->GetActualDataLength() * 2) / 3) / size.dst.height };
     processor->process(srcy, dsty, factor);
+    if (!processor->ok()) return E_FAIL;
 
     int channels = IS_PLANAR_FORMAT(format) ? 1 : 2;
     ac::core::Image srcuv{ size.src.width / 2, size.src.height / channels, channels, GET_FORMAT_TYPE(format), src + srcy.size(), ((in->GetActualDataLength() * channels) / 3) / size.src.height };

@@ -27,13 +27,6 @@ enum ac_processor_type {
     AC_PROCESSOR_CUDA   = 2
 };
 
-enum ac_model_type {
-    AC_MODEL_ACNET_HDN0,
-    AC_MODEL_ACNET_HDN1,
-    AC_MODEL_ACNET_HDN2,
-    AC_MODEL_ACNET_HDN3
-};
-
 enum ac_imread_flag
 {
     AC_IMREAD_UNCHANGED = 0,
@@ -66,13 +59,15 @@ CAC_API int ac_image_is_int(const ac_image* image);
 CAC_API int ac_image_is_float(const ac_image* image);
 CAC_API int ac_image_same(const ac_image* a, const ac_image* b);
 
-CAC_API ac_processor* ac_processor_create(int processor_type, int device, int model_type);
+CAC_API ac_processor* ac_processor_create(int processor_type, int device, const char* model);
 CAC_API void ac_processor_destroy(ac_processor* processor);
 CAC_API void ac_processor_process(ac_processor* processor, const ac_image* src, ac_image* dst, double factor);
 CAC_API int ac_processor_ok(const ac_processor* processor);
 CAC_API const char* ac_processor_error(const ac_processor* processor);
 CAC_API const char* ac_processor_name(const ac_processor* processor);
 CAC_API const char* ac_processor_info(int processor_type);
+CAC_API int ac_processor_type(const char* processor_type_string);
+CAC_API const char* ac_processor_type_string(int processor_type);
 
 CAC_API void ac_imread(const char* filename, int flag, ac_image* image);
 CAC_API int ac_imwrite(const char* filename, const ac_image* image);

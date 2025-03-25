@@ -84,8 +84,8 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     if (err != peSuccess) device = 0;
     if (device < 0) SET_ERROR("Anime4KCPP: the device index cannot be negative");
 
-    auto modelName = vsapi->mapGetData(in, "model", 0, &err);
-    if (err != peSuccess) modelName = "acnet-hdn0";
+    auto model = vsapi->mapGetData(in, "model", 0, &err);
+    if (err != peSuccess) model = "acnet-hdn0";
 
     auto data = new Data{};
     data->node = node;
@@ -94,25 +94,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     data->vi.height = static_cast<decltype(data->vi.height)>(vi->height * factor);
     data->type = type;
     data->factor = factor;
-    data->processor = [&]() {
-        ac::core::model::ACNet model{ [&]() {
-            for (auto p = modelName; *p != '\0'; p++)
-            {
-                if (*p == '1') return ac::core::model::ACNet::Variant::HDN1;
-                if (*p == '2') return ac::core::model::ACNet::Variant::HDN2;
-                if (*p == '3') return ac::core::model::ACNet::Variant::HDN3;
-            }
-            return ac::core::model::ACNet::Variant::HDN0;
-        }() };
-
-#       ifdef AC_CORE_WITH_OPENCL
-            if (!std::strcmp(processorType, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            if (!std::strcmp(processorType, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-#       endif
-        return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-    }();
+    data->processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
     if (!data->processor->ok()) SET_ERROR(data->processor->error());
 
     VSFilterDependency deps[] = { {node, rpGeneral} };

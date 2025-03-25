@@ -77,26 +77,19 @@ int main(int argc, char* argv[])
     std::mt19937 gen{ rd() };
     std::uniform_int_distribution<unsigned short> d{ 0, 255 };
 
-    auto processorType = argc > 1 ? argv[1] : "cpu";
-
-    auto processor = [&]() {
-        ac::core::model::ACNet model{ ac::core::model::ACNet::Variant::HDN0 };
-        int device = argc > 2 ? std::atoi(argv[2]) : 0;
-#       ifdef AC_CORE_WITH_OPENCL
-        if (!std::strcmp(processorType, "opencl")) return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-        if (!std::strcmp(processorType, "cuda")) return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-#       endif
-        return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-    }();
-
+    auto processorType = ac::core::Processor::type(argc > 1 ? argv[1] : "cpu");
+    auto processor = ac::core::Processor::create(processorType, argc > 2 ? std::atoi(argv[2]) : 0, "acnet-hdn0");
+    if (!processor->ok())
+    {
+        std::printf("%s\n", processor->error());
+        return 0;
+    }
     int w = argc > 3 ? std::max(std::atoi(argv[3]), 3) : 720;
     int h = argc > 4 ? std::max(std::atoi(argv[4]), 3) : 480;
-    int batch = argc > 5 ? std::max(std::atoi(argv[5]), 1) : !std::strcmp(processorType, "cpu") ? 60 : 600;
+    int batch = argc > 5 ? std::max(std::atoi(argv[5]), 1) : processorType == ac::core::Processor::CPU ? 60 : 600;
     int threads = argc > 6 ? std::max(std::atoi(argv[6]), 1) : ac::util::ThreadPool::hardwareThreads();
 
-    std::printf("processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", processorType, processor->name(), w, h, batch, threads);
+    std::printf("processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", ac::core::Processor::type(processorType), processor->name(), w, h, batch, threads);
 
     // max image pool size: 128m
     ImagePool images{ w, h, batch, std::min(128 * 1024 * 1024 / (w * h), batch) };

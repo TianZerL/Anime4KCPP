@@ -1,3 +1,6 @@
+#include <string>
+
+#include "AC/Core/Model/ACNet.hpp"
 #include "AC/Core/Processor.hpp"
 #include "AC/Core/Util.hpp"
 
@@ -95,4 +98,68 @@ bool ac::core::Processor::ok() noexcept
 const char* ac::core::Processor::error() noexcept
 {
     return "NO ERROR";
+}
+
+int ac::core::Processor::type(const char* const str) noexcept
+{
+    if (str)
+    {
+        std::string typeString = str;
+
+        for (char& ch : typeString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+        if (typeString == "opencl") return OpenCL;
+        if (typeString == "cuda") return CUDA;
+    }
+    return CPU;
+}
+const char* ac::core::Processor::type(const int id) noexcept
+{
+    switch (id)
+    {
+    case OpenCL:
+        return "OpenCL";
+    case CUDA:
+        return "CUDA";
+    default:
+        return "CPU";
+    }
+}
+std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type, const int device, const char* const model)
+{
+    auto createImpl = [](int type, int device, auto&& model) {
+        switch (type)
+        {
+#   ifdef AC_CORE_WITH_OPENCL
+        case ac::core::Processor::OpenCL:
+            return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
+#   endif
+#   ifdef AC_CORE_WITH_CUDA
+        case ac::core::Processor::CUDA:
+            return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
+#   endif
+        default:
+            return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
+        }
+    };
+
+	if (model)
+	{
+		std::string modelString = model;
+
+		for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+		if (modelString.find("acnet") != std::string::npos)
+		{
+			auto variant = ac::core::model::ACNet::Variant::HDN0;
+			for (char ch : modelString)
+			{
+				if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
+				if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
+				if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
+			}
+			return createImpl(type, device, ac::core::model::ACNet{ variant });
+		}
+	}
+	return createImpl(type, device, ac::core::model::ACNet{ ac::core::model::ACNet::Variant::HDN0 });
 }

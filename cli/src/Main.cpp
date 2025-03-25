@@ -12,8 +12,6 @@
 
 #define PROGRESS_BAR_TOKEN "============================================================"
 
-#define CHECK_PROCESSOR(P) if (!(P)->ok()) { std::printf("%s\n", (P)->error()); std::exit(0); }
-
 static void version()
 {
     std::printf(
@@ -73,7 +71,11 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
         ac::util::Stopwatch stopwatch{};
         auto dst = processor->process(src, options.factor);
         stopwatch.stop();
-        CHECK_PROCESSOR(processor);
+        if (!processor->ok())
+        {
+            std::printf("%s: Failed due to %s\n", input.c_str(), processor->error());
+            return;
+        }
         std::printf("%s: Finished in %lfs\n",input.c_str() ,stopwatch.elapsed());
 
         if (ac::core::imwrite(output.c_str(), dst))
@@ -167,8 +169,8 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         }, &data, ac::video::FILTER_AUTO);
         stopwatch.stop();
         pipeline.close();
-        CHECK_PROCESSOR(processor);
-        std::printf("\r100.00%%\n%s: Finished in %lfs\n",input.c_str(), stopwatch.elapsed());
+        if (!processor->ok()) std::printf("\r100.00%%\n%s: Failed due to %s\n", input.c_str(), processor->error());
+        else std::printf("\r100.00%%\n%s: Finished in %lfs\n",input.c_str(), stopwatch.elapsed());
         std::printf("Save video to %s\n", output.c_str());
     }
 #else
@@ -194,37 +196,12 @@ int main(int argc, char* argv[])
     if (options.inputs.empty()) return 0;
     options.outputs.resize(options.inputs.size());
 
-    auto processor = [&]() {
-        ac::core::model::ACNet model { [&]() {
-            if(options.model.find('1') != std::string::npos)
-            {
-                options.model = "ACNet HDN1";
-                return ac::core::model::ACNet::Variant::HDN1;
-            }
-            if(options.model.find('2') != std::string::npos)
-            {
-                options.model = "ACNet HDN2";
-                return ac::core::model::ACNet::Variant::HDN2;
-            }
-            if(options.model.find('3') != std::string::npos)
-            {
-                options.model = "ACNet HDN3";
-                return ac::core::model::ACNet::Variant::HDN3;
-            }
-            options.model = "ACNet HDN0";
-            return ac::core::model::ACNet::Variant::HDN0;
-        }() };
-
-#       ifdef AC_CORE_WITH_OPENCL
-            if (options.processor == "opencl") return ac::core::Processor::create<ac::core::Processor::OpenCL>(options.device, model);
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            if (options.processor == "cuda") return ac::core::Processor::create<ac::core::Processor::CUDA>(options.device, model);
-#       endif
-        options.processor = "cpu";
-        return ac::core::Processor::create<ac::core::Processor::CPU>(options.device, model);
-    }();
-    CHECK_PROCESSOR(processor);
+    auto processor = ac::core::Processor::create(ac::core::Processor::type(options.processor.c_str()), options.device, options.model.c_str());
+    if (!processor->ok())
+    { 
+        std::printf("%s\n", processor->error());
+        return 0;
+    }
 
     std::printf("Model: %s\n"
                 "Processor: %s %s\n\n",

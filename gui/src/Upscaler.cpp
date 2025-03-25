@@ -13,47 +13,6 @@
 
 #include "Upscaler.hpp"
 
-namespace detail
-{
-    inline static int processorType(const QString& processor)
-    {
-#       ifdef AC_CORE_WITH_OPENCL
-            if (processor == "opencl") return ac::core::Processor::OpenCL;
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            if (processor == "cuda") return ac::core::Processor::CUDA;
-#       endif
-        return ac::core::Processor::CPU;
-    }
-    inline static std::shared_ptr<ac::core::Processor> createProcessor(const int processorType, const int device, const QString& modelName)
-    {
-        ac::core::model::ACNet model { [&]() {
-            if(modelName.contains('1')) return ac::core::model::ACNet::Variant::HDN1;
-            if(modelName.contains('2')) return ac::core::model::ACNet::Variant::HDN2;
-            if(modelName.contains('3')) return ac::core::model::ACNet::Variant::HDN3;
-            return ac::core::model::ACNet::Variant::HDN0 ;
-        }() };
-
-        switch (processorType)
-        {
-        case ac::core::Processor::CPU:
-            return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
-            break;
-#       ifdef AC_CORE_WITH_OPENCL
-        case ac::core::Processor::OpenCL:
-            return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
-            break;
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-        case ac::core::Processor::CUDA:
-            return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
-            break;
-#       endif
-        default: return nullptr;
-        }
-    }
-}
-
 struct Upscaler::UpscalerData
 {
     int processorType = ac::core::Processor::CPU;
@@ -96,10 +55,14 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
     dptr->model = gConfig.upscaler.model;
     if (!dptr->total) return;
 
+    int processorType = ac::core::Processor::type(gConfig.upscaler.processor.toLocal8Bit());
+    if (!dptr->processor || dptr->processorType != processorType) dptr->processor = ac::core::Processor::create(dptr->processorType = processorType, dptr->device, dptr->model.toLocal8Bit());
+    if (!dptr->processor->ok())
+    {
+        gLogger.error() << dptr->processor->error();
+        return;
+    }
     emit started();
-
-    int processorType = detail::processorType(gConfig.upscaler.processor);
-    if (!dptr->processor || dptr->processorType != processorType) dptr->processor = detail::createProcessor(dptr->processorType = processorType, dptr->device, dptr->model);
 
     QList<QSharedPointer<TaskData>> imageTaskList;
     QList<QSharedPointer<TaskData>> videoTaskList;
@@ -188,8 +151,8 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     }, &data, ac::video::FILTER_AUTO);
                     stopwatch.stop();
                     pipeline.close();
-                    if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
-                    gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
+                    if (!dptr->processor->ok()) gLogger.error() << task->path.input << ": Failed due to " << dptr->processor->error();
+                    else gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
                     gLogger.info() << "Save video to " << task->path.output;
                 }
                 emit progress(100);
@@ -224,7 +187,12 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                 ac::util::Stopwatch stopwatch{};
                 auto dst = dptr->processor->process(src, dptr->factor);
                 stopwatch.stop();
-                if (!dptr->processor->ok()) gLogger.error() << dptr->processor->error();
+                if (!dptr->processor->ok())
+                {
+                    gLogger.error() << task->path.input << ": Failed due to " << dptr->processor->error();
+                    emit task->finished(false);
+                    return;
+                }
                 gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
 
                 if (ac::core::imwrite(task->path.output.toLocal8Bit(), dst)) gLogger.info() << "Save image to " << task->path.output;
@@ -235,7 +203,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     return;
                 }
             }
-            emit task->finished(!dptr->stopFlag && dptr->processor->ok());
+            emit task->finished(!dptr->stopFlag);
         });
     }
 }
