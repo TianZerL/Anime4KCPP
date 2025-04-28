@@ -25,7 +25,7 @@ struct ac::video::Frame
     // the definition is the same as the `ElementType` of `ac::core:Image`
     int elementType;
     // one based number
-    int number;
+    std::int64_t number;
     // referencing internal data, do not modify it
     void* ref;
 

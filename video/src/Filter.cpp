@@ -39,12 +39,11 @@ namespace ac::video::detail
         util::ThreadPool pool{ threads + 1 };
 
         pool.exec([&](){
-            int idx = 1;
+            decltype(Frame::number) idx = 1;
             std::priority_queue<Frame, std::vector<Frame>, std::greater<Frame>> buffer{};
             auto process = [&](){
                 Frame dst{};
-                encodeChan >> dst;
-                if (!dst.ref) return;
+                if (!(encodeChan >> dst)) return;
                 if (dst.number != idx) buffer.emplace(dst);
                 else
                 {
@@ -76,8 +75,7 @@ namespace ac::video::detail
                     bool ret = true;
                     Frame src{};
                     Frame dst{};
-                    decodeChan >> src;
-                    if (!src.ref) return;
+                    if (!(decodeChan >> src)) return;
                     ret = pipeline.request(dst, src);
                     if (ret)
                     {

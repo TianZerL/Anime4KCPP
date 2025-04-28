@@ -36,8 +36,8 @@ public:
     Channel<T, Queue>& operator=(Channel<T, Queue>&&) = delete;
     ~Channel() = default;
 
-    Channel<T, Queue>& operator<<(const T& obj);
-    Channel<T, Queue>& operator>>(T& obj);
+    bool operator<<(const T& obj);
+    bool operator>>(T& obj);
     std::size_t size();
     bool empty();
     void close();
@@ -53,31 +53,33 @@ private:
 template<typename T, typename Queue>
 inline ac::util::Channel<T, Queue>::Channel(const std::size_t capacity) : capacity(capacity) {}
 template<typename T, typename Queue>
-inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator<<(const T& obj)
+inline bool ac::util::Channel<T, Queue>::operator<<(const T& obj)
 {
     std::unique_lock lock{ mtx };
-    producer.wait(lock, [&](){ return queue.size() < capacity; });
+    producer.wait(lock, [&](){ return stop || queue.size() < capacity; });
+    if (stop) return false;
+
     queue.emplace(obj);
     lock.unlock();
     consumer.notify_one();
 
-    return *this;
+    return true;
 }
 template<typename T, typename Queue>
-inline ac::util::Channel<T, Queue>& ac::util::Channel<T, Queue>::operator>>(T& obj)
+inline bool ac::util::Channel<T, Queue>::operator>>(T& obj)
 {
     std::unique_lock lock{ mtx };
     consumer.wait(lock, [&](){ return stop || !queue.empty(); });
-    if (!queue.empty())
-    {
-        if constexpr (HasTopFunction<Queue>) obj = queue.top();
-        else obj = std::move(queue.front());
-        queue.pop();
-    }
+    if (queue.empty()) return false;
+
+    if constexpr (HasTopFunction<Queue>) obj = queue.top();
+    else obj = std::move(queue.front());
+    queue.pop();
+
     lock.unlock();
     producer.notify_one();
 
-    return *this;
+    return true;
 }
 template<typename T, typename Queue>
 inline std::size_t ac::util::Channel<T, Queue>::size()
@@ -99,6 +101,7 @@ inline void ac::util::Channel<T, Queue>::close()
         stop = true;
     }
     consumer.notify_all();
+    producer.notify_all();
 }
 template<typename T, typename Queue>
 inline bool ac::util::Channel<T, Queue>::isClose()
