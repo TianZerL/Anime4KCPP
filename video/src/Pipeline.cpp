@@ -1,4 +1,4 @@
-#include <queue>
+#include <memory>
 #include <sstream>
 #include <utility>
 #include <vector>
@@ -17,7 +17,7 @@ namespace ac::video::detail
     struct FrameRefData
     {
         AVFrame* frame = nullptr;
-        std::queue<AVPacket*> packets{};
+        std::unique_ptr<std::vector<AVPacket*>> packets{};
     };
 
     class PipelineImpl
@@ -35,9 +35,9 @@ namespace ac::video::detail
         void close() noexcept;
         Info getInfo() const noexcept;
     private:
-        bool remux(std::queue<AVPacket*>& packets) const noexcept;
-        bool fetch(std::queue<AVPacket*>& packets) noexcept;
-        void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) const noexcept;
+        bool remux(const std::vector<AVPacket*>& packets) const noexcept;
+        bool fetch(std::vector<AVPacket*>& packets) noexcept;
+        void fill(Frame& dst, AVFrame* src, std::unique_ptr<std::vector<AVPacket*>>& packets) const noexcept;
         Info::BitDepth getBitDepth(AVPixelFormat format) const noexcept;
     private:
         bool writeHeaderFlag = false;
@@ -53,7 +53,7 @@ namespace ac::video::detail
         AVStream* evideoStream = nullptr;
         AVRational timeBase{}; // should be 1/fps
         std::vector<int> streamIdxMap{};
-        std::queue<AVPacket*> remainingPackets{};
+        std::unique_ptr<std::vector<AVPacket*>> remainingPackets{};
     };
 
     PipelineImpl::PipelineImpl() noexcept = default;
@@ -170,12 +170,12 @@ namespace ac::video::detail
     {
         int ret = 0;
         auto frame = av_frame_alloc(); if (!frame) return false;
-        std::queue<AVPacket*> packets{};
+        auto packets = std::make_unique<std::vector<AVPacket*>>();
         for (;;)
         {
             ret = avcodec_receive_frame(decoderCtx, frame);
             if (ret == 0) break;
-            else if (ret == AVERROR(EAGAIN) && fetch(packets)) continue;
+            else if (ret == AVERROR(EAGAIN) && fetch(*packets)) continue;
             else
             {
                 remainingPackets = std::move(packets);
@@ -212,7 +212,7 @@ namespace ac::video::detail
         if (!src.ref)  return false;
 
         auto frameRefData = static_cast<FrameRefData*>(src.ref);
-        if (!remux(frameRefData->packets)) return false;
+        if (frameRefData->packets && !remux(*frameRefData->packets)) return false;
         ret = avcodec_send_frame(encoderCtx, frameRefData->frame); if (ret < 0) return false;
         for (;;)
         {
@@ -255,11 +255,7 @@ namespace ac::video::detail
         {
             auto frameRefData = static_cast<FrameRefData*>(frame.ref);
             av_frame_free(&frameRefData->frame);
-            while (!frameRefData->packets.empty())
-            {
-                av_packet_free(&frameRefData->packets.front());
-                frameRefData->packets.pop();
-            }
+            if (frameRefData->packets) for (auto packet : *frameRefData->packets) av_packet_free(&packet);
             delete frameRefData;
             frame.ref = nullptr;
         }
@@ -268,7 +264,11 @@ namespace ac::video::detail
     {
         if (writeHeaderFlag)
         {
-            remux(remainingPackets);
+            if (remainingPackets)
+            {
+                remux(*remainingPackets);
+                for (auto packet : *remainingPackets) av_packet_free(&packet);
+            }
             av_write_trailer(efmtCtx);
             writeHeaderFlag = false;
         }
@@ -323,26 +323,19 @@ namespace ac::video::detail
         return info;
     }
 
-    inline bool PipelineImpl::remux(std::queue<AVPacket*>& packets) const noexcept
+    inline bool PipelineImpl::remux(const std::vector<AVPacket*>& packets) const noexcept
     {
-        int ret = 0;
-        while (!packets.empty())
+        for (auto packet : packets)
         {
-            AVPacket* packet = packets.front();
-            packets.pop();
-            if (streamIdxMap[packet->stream_index] >= 0)
-            {
-                av_packet_rescale_ts(packet, dfmtCtx->streams[packet->stream_index]->time_base, efmtCtx->streams[streamIdxMap[packet->stream_index]]->time_base);
-                packet->stream_index = streamIdxMap[packet->stream_index];
-                ret = av_interleaved_write_frame(efmtCtx, packet);
-            }
-            av_packet_unref(packet);
-            av_packet_free(&packet);
-            if (ret < 0) return false;
+            if (streamIdxMap[packet->stream_index] < 0) continue;
+
+            av_packet_rescale_ts(packet, dfmtCtx->streams[packet->stream_index]->time_base, efmtCtx->streams[streamIdxMap[packet->stream_index]]->time_base);
+            packet->stream_index = streamIdxMap[packet->stream_index];
+            if (av_interleaved_write_frame(efmtCtx, packet) < 0) return false;
         }
         return true;
     }
-    inline bool PipelineImpl::fetch(std::queue<AVPacket*>& packets) noexcept
+    inline bool PipelineImpl::fetch(std::vector<AVPacket*>& packets) noexcept
     {
         while (av_read_frame(dfmtCtx, dpacket) >= 0)
         {
@@ -353,12 +346,12 @@ namespace ac::video::detail
                 av_packet_unref(dpacket);
                 return ret == 0;
             }
-            else packets.emplace(av_packet_clone(dpacket));
+            else packets.emplace_back(av_packet_clone(dpacket));
             av_packet_unref(dpacket);
         }
         return avcodec_send_packet(decoderCtx, nullptr) == 0;
     }
-    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::queue<AVPacket*>& packets) const noexcept
+    inline void PipelineImpl::fill(Frame& dst, AVFrame* const src, std::unique_ptr<std::vector<AVPacket*>>& packets) const noexcept
     {
         int wscale = 2, hscale = 2, elementSize = sizeof(std::uint8_t);
         bool packed = false;
