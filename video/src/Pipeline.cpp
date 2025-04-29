@@ -1,4 +1,5 @@
 #include <queue>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -39,7 +40,6 @@ namespace ac::video::detail
         void fill(Frame& dst, AVFrame* src, std::queue<AVPacket*>& packets) const noexcept;
         Info::BitDepth getBitDepth(AVPixelFormat format) const noexcept;
     private:
-        bool dfmtCtxOpenFlag = false;
         bool writeHeaderFlag = false;
         AVPixelFormat targetPixFmt = AV_PIX_FMT_NONE;
         SwsContext* swsCtx = nullptr;
@@ -53,6 +53,7 @@ namespace ac::video::detail
         AVStream* evideoStream = nullptr;
         AVRational timeBase{}; // should be 1/fps
         std::vector<int> streamIdxMap{};
+        std::queue<AVPacket*> remainingPackets{};
     };
 
     PipelineImpl::PipelineImpl() noexcept = default;
@@ -65,9 +66,7 @@ namespace ac::video::detail
     {
         int ret = 0;
         dpacket = av_packet_alloc(); if (!dpacket) return false;
-        dfmtCtx = avformat_alloc_context(); if (!dfmtCtx) return false;
         ret = avformat_open_input(&dfmtCtx, filename, nullptr, nullptr); if (ret < 0) return false;
-        dfmtCtxOpenFlag = true;
 
         ret = avformat_find_stream_info(dfmtCtx, nullptr); if (ret < 0) return false;
         for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
@@ -179,6 +178,7 @@ namespace ac::video::detail
             else if (ret == AVERROR(EAGAIN) && fetch(packets)) continue;
             else
             {
+                remainingPackets = std::move(packets);
                 av_frame_free(&frame);
                 return false;
             }
@@ -268,6 +268,7 @@ namespace ac::video::detail
     {
         if (writeHeaderFlag)
         {
+            remux(remainingPackets);
             av_write_trailer(efmtCtx);
             writeHeaderFlag = false;
         }
@@ -284,19 +285,7 @@ namespace ac::video::detail
             avformat_free_context(efmtCtx);
             efmtCtx = nullptr;
         }
-        if (dfmtCtx)
-        {
-            if (dfmtCtxOpenFlag)
-            {
-                avformat_close_input(&dfmtCtx);
-                dfmtCtxOpenFlag = false;
-            }
-            else
-            {
-                avformat_free_context(dfmtCtx);
-                dfmtCtx = nullptr;
-            }
-        }
+        if (dfmtCtx) avformat_close_input(&dfmtCtx);
         if (epacket) av_packet_free(&epacket);
         if (dpacket) av_packet_free(&dpacket);
 
@@ -312,8 +301,25 @@ namespace ac::video::detail
         info.width = decoderCtx->width;
         info.height = decoderCtx->height;
         info.bitDepth = getBitDepth(encoderCtx->pix_fmt);
-        info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
         info.fps = av_q2d(av_inv_q(timeBase));
+
+        if (dvideoStream->duration != AV_NOPTS_VALUE) info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
+        else if (auto duration = av_dict_get(dvideoStream->metadata, "DURATION", nullptr, AV_DICT_IGNORE_SUFFIX); duration != nullptr)
+        {
+            int hours = 0, minutes = 0;
+            double secones = 0.0;
+
+            std::istringstream iss{ duration->value };
+            iss >> hours;
+            iss.ignore();
+            iss >> minutes;
+            iss.ignore();
+            iss >> secones;
+
+            info.duration = hours * 3600 + minutes * 60 + secones;
+        }
+        else info.duration = dfmtCtx->duration * av_q2d(AV_TIME_BASE_Q);
+
         return info;
     }
 
