@@ -127,18 +127,22 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 
         auto info = pipeline.getInfo();
 
+        ac::util::Stopwatch stopwatch{};
+
         struct {
             int shift;
             double factor;
             double frames;
             std::shared_ptr<ac::core::Processor> processor;
+            ac::util::Stopwatch* stopwatch;
         } data{};
         data.shift = info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0; // bytes * 8 - bits
         data.factor = options.factor;
         data.frames = info.fps * info.duration;
         data.processor = processor;
+        data.stopwatch = &stopwatch;
 
-        ac::util::Stopwatch stopwatch{};
+        stopwatch.reset();
         ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
             auto ctx = static_cast<decltype(data)*>(userdata);
             // y
@@ -162,7 +166,9 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
                 double p = src.number / ctx->frames;
                 int done = static_cast<int>(p * width);
                 int left = width - done;
-                std::printf("\r%6.2lf%% [%.*s%-*s]", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">");
+                double elapsed = ctx->stopwatch->elapsed();
+                double remaining = elapsed / p - elapsed;
+                std::printf("\r%6.2lf%% [%.*s%-*s] %.2lfs<%.2lfs%*s", p * 100.0, done, PROGRESS_BAR_TOKEN, left, ">", elapsed, remaining, 3, "");
                 std::fflush(stdout);
             }
             return true;

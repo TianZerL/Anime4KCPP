@@ -16,6 +16,7 @@ public:
     void stop() noexcept;
     double elapsed() noexcept;
 private:
+    bool stopFlag;
     std::chrono::time_point<std::chrono::steady_clock> start, end;
 };
 
@@ -26,14 +27,16 @@ inline ac::util::Stopwatch::Stopwatch() noexcept
 
 inline void ac::util::Stopwatch::reset() noexcept
 {
-    start = std::chrono::steady_clock::now();
+    stopFlag = false;
+    end = start = std::chrono::steady_clock::now();
 }
 inline void ac::util::Stopwatch::stop() noexcept
 {
     end = std::chrono::steady_clock::now();
+    stopFlag = true;
 }
 inline double ac::util::Stopwatch::elapsed() noexcept
 {
-    return std::chrono::duration<double>{ end - start }.count();
+    return std::chrono::duration<double>{ (stopFlag ? end : std::chrono::steady_clock::now()) - start }.count();
 }
 #endif
