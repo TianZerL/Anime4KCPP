@@ -8,6 +8,7 @@ include(${DEPENDENCY_DIR}/cli11.cmake)
 add_executable(ac_cli
     ${CLI_SOURCE_DIR}/src/Main.cpp
     ${CLI_SOURCE_DIR}/src/Options.cpp
+    ${CLI_SOURCE_DIR}/src/ProgressBar.cpp
 )
 
 target_include_directories(ac_cli PRIVATE
