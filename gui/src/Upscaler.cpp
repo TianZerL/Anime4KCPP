@@ -154,7 +154,12 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                             ac::core::resize(srcp, dstp, 0.0, 0.0);
                         }
                         if (src.number % 32 == 0) emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
-                        return !ctx->stopFlag;
+                        if (ctx->stopFlag)
+                        {
+                            ctx->error = "cancelled";
+                            return false;
+                        }
+                        return true;
                     }, &data, ac::video::FILTER_AUTO);
                     stopwatch.stop();
                     pipeline.close();

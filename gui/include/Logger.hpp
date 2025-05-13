@@ -24,7 +24,7 @@ public:
     QDebug error() const noexcept;
 
 signals:
-    void logged();
+    void logged(const QString& msg);
 
 public:
     static QString logFilePath();

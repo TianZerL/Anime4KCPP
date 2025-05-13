@@ -7,7 +7,7 @@
 #include "Config.hpp"
 #include "Logger.hpp"
 
-#define AC_GUI_SETTINGS_FILE "ac_gui.log.md"
+#define AC_GUI_SETTINGS_FILE "ac_gui.log"
 
 Logger& Logger::instance() noexcept
 {
@@ -28,18 +28,14 @@ Logger::Logger() noexcept
                 if (type == QtMsgType::QtCriticalMsg) return "Red";
                 return "Blue";
             }() };
-            QString buffer = msg.contains('\n') ? QString{ "\n```\n%1\n```  \n" }.arg(msg) : QString{ "<span style='color:%1'>%2</span>  \n" }.arg(color, msg);
             {
                 const std::lock_guard<std::mutex> lock(mtx);
-                log.write(qFormatLogMessage(type, context, buffer).toUtf8());
+                log.write(qFormatLogMessage(type, context, msg + '\n').toUtf8());
                 log.flush();
             }
-            emit gLogger.logged();
+            emit gLogger.logged(qFormatLogMessage(type, context, QString{ "<span style='color:%1;white-space: pre'>%2</span>\n" }.arg(color, msg)));
         });
         qSetMessagePattern("[%{time yyyy-MM-dd h:mm:ss} %{if-debug}D%{endif}%{if-info}I%{endif}%{if-warning}W%{endif}%{if-critical}C%{endif}%{if-fatal}F%{endif}] - %{message}");
-
-        log.write("### Anime4KCPP GUI v" AC_CORE_VERSION_STR "\n\n");
-        log.flush();
     }
 }
 

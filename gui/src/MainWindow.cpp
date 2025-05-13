@@ -159,6 +159,7 @@ void MainWindow::init()
         ui->progress_bar_task_list->reset();
     });
     QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
+    QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, ui->progress_bar_video_task, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_video_task, &QProgressBar::reset);
     QObject::connect(&gUpscaler, &Upscaler::progress, ui->progress_bar_video_task, [this, stopwatchVideoTask = QSharedPointer<ac::util::Stopwatch>::create()](const int value) {
@@ -174,14 +175,10 @@ void MainWindow::init()
         }
     });
 
-    ui->text_browser_log->setSource(QUrl::fromLocalFile(gLogger.logFilePath()));
-    QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, [=]() {
-        ui->text_browser_log->reload();
-        ui->text_browser_log->moveCursor(QTextCursor::End);
-    });
+    QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, &QTextBrowser::append);
 
-    gLogger.info() << "started";
-    gLogger.info() << gUpscaler.info();
+    gLogger.info() << "Anime4KCPP GUI v" AC_CORE_VERSION_STR " started";
+    gLogger.info() << '\n' << gUpscaler.info();
 }
 
 void MainWindow::addTask(const QFileInfo& fileInfo)
