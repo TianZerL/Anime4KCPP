@@ -13,6 +13,8 @@
 #include <QTextBrowser>
 #include <QVBoxLayout>
 
+#include "AC/Util/Stopwatch.hpp"
+
 #include "Config.hpp"
 #include "Logger.hpp"
 #include "Upscaler.hpp"
@@ -159,7 +161,18 @@ void MainWindow::init()
     QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_video_task, &QProgressBar::reset);
-    QObject::connect(&gUpscaler, &Upscaler::progress, ui->progress_bar_video_task, &QProgressBar::setValue);
+    QObject::connect(&gUpscaler, &Upscaler::progress, ui->progress_bar_video_task, [this, stopwatchVideoTask = QSharedPointer<ac::util::Stopwatch>::create()](const int value) {
+        ui->progress_bar_video_task->setValue(value);
+
+        if (value == 0) stopwatchVideoTask->reset();
+        else
+        {
+            double elapsed = stopwatchVideoTask->elapsed();
+            double remaining = elapsed / (value / 100.0) - elapsed;
+            ac::util::Stopwatch::FormatBuffer elapsedBuffer{}, remainingBuffer{};
+            ui->progress_bar_video_task->setFormat(QString{ "%p% (%1 < %2)" }.arg(ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed), ac::util::Stopwatch::formatDuration(remainingBuffer, remaining)));
+        }
+    });
 
     ui->text_browser_log->setSource(QUrl::fromLocalFile(gLogger.logFilePath()));
     QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, [=]() {

@@ -4,14 +4,15 @@
 #include "AC/Util/ThreadPool.hpp"
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/Defer.hpp"
-#ifdef AC_CLI_ENABLE_VIDEO
-#   include "AC/Video.hpp"
-#endif
 
 #include "Config.hpp"
 #include "Logger.hpp"
 
 #include "Upscaler.hpp"
+
+#ifdef AC_CLI_ENABLE_VIDEO
+#   include "AC/Video.hpp"
+#endif
 
 struct Upscaler::UpscalerData
 {
@@ -115,19 +116,21 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 
                     auto info = pipeline.getInfo();
                     struct {
-                        std::atomic_bool& stopFlag;
+                        const std::atomic_bool& stopFlag;
                         int shift;
                         double factor;
                         double frames;
                         Upscaler* upscaler;
                         std::shared_ptr<ac::core::Processor> processor;
+                        std::atomic<const char*> error;
                     } data {
                         dptr->stopFlag,
                         info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0, // bytes * 8 - bits
                         dptr->factor,
                         info.fps * info.duration,
                         this,
-                        dptr->processor
+                        dptr->processor,
+                        nullptr
                     };
                     ac::util::Stopwatch stopwatch{};
                     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
@@ -137,7 +140,11 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         ac::core::Image dsty{dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride};
                         if (ctx->shift) ac::core::shl(srcy, srcy, ctx->shift); // the src frame is decoded from ffmpeg and cannot be directly modified
                         ctx->processor->process(srcy, dsty, ctx->factor);
-                        if (!ctx->processor->ok()) return false;
+                        if (!ctx->processor->ok())
+                        {
+                            ctx->error = ctx->processor->error();
+                            return false;
+                        }
                         if (ctx->shift) ac::core::shr(dsty, ctx->shift);
                         // uv
                         for (int i = 1; i < src.planes; i++)
@@ -146,12 +153,12 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                             ac::core::Image dstp{dst.plane[i].width, dst.plane[i].height, dst.plane[i].channel, dst.elementType, dst.plane[i].data, dst.plane[i].stride};
                             ac::core::resize(srcp, dstp, 0.0, 0.0);
                         }
-                        emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
+                        if (src.number % 32 == 0) emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
                         return !ctx->stopFlag;
                     }, &data, ac::video::FILTER_AUTO);
                     stopwatch.stop();
                     pipeline.close();
-                    if (!dptr->processor->ok()) gLogger.error() << task->path.input << ": Failed due to " << dptr->processor->error();
+                    if (data.error) gLogger.error() << task->path.input << ": Failed due to " << data.error.load();
                     else gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
                     gLogger.info() << "Save video to " << task->path.output;
                 }

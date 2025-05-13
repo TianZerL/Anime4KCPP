@@ -4,12 +4,14 @@
 #include "AC/Core.hpp"
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/ThreadPool.hpp"
-#ifdef AC_CLI_ENABLE_VIDEO
-#   include "AC/Video.hpp"
-#endif
 
 #include "Options.hpp"
-#include "ProgressBar.hpp"
+
+#ifdef AC_CLI_ENABLE_VIDEO
+#	include <atomic>
+#   include "AC/Video.hpp"
+#	include "ProgressBar.hpp"
+#endif
 
 static void version()
 {
@@ -137,12 +139,14 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 			double frames;
 			std::shared_ptr<ac::core::Processor> processor;
 			ProgressBar* progressBar;
+			std::atomic<const char*> error;
 		} data{};
 		data.shift = info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0; // bytes * 8 - bits
 		data.factor = options.factor;
 		data.frames = info.fps * info.duration;
 		data.processor = processor;
 		data.progressBar = &progressBar;
+		data.error = nullptr;
 
 		progressBar.reset();
 		stopwatch.reset();
@@ -153,7 +157,11 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 			ac::core::Image dsty{ dst.plane[0].width, dst.plane[0].height, 1, dst.elementType, dst.plane[0].data, dst.plane[0].stride };
 			if (ctx->shift) ac::core::shl(srcy, srcy, ctx->shift); // the src frame is decoded from ffmpeg and cannot be directly modified
 			ctx->processor->process(srcy, dsty, ctx->factor);
-			if (!ctx->processor->ok()) return false;
+			if (!ctx->processor->ok())
+			{
+				ctx->error = ctx->processor->error();
+				return false;
+			}
 			if (ctx->shift) ac::core::shr(dsty, ctx->shift);
 			// uv
 			for (int i = 1; i < src.planes; i++)
@@ -169,7 +177,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 		stopwatch.stop();
 		progressBar.finish();
 		pipeline.close();
-		if (!processor->ok()) std::printf("%s: Failed due to %s\n", input.c_str(), processor->error());
+		if (data.error) std::printf("%s: Failed due to %s\n", input.c_str(), data.error.load());
 		else
 		{
 			auto elapsed = stopwatch.elapsed();

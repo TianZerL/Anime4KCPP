@@ -94,7 +94,7 @@ namespace ac::video::detail
         decoderCtx = avcodec_alloc_context3(codec); if (!decoderCtx) return false;
         ret = avcodec_parameters_to_context(decoderCtx, dvideoStream->codecpar); if (ret < 0) return false;
         decoderCtx->pkt_timebase = dvideoStream->time_base;
-        if (hints.format && *hints.format) decoderCtx->pix_fmt = targetPixFmt = av_get_pix_fmt(hints.format);
+        if (hints.format && *hints.format) targetPixFmt = av_get_pix_fmt(hints.format);
         ret = avcodec_open2(decoderCtx, codec, nullptr); if (ret < 0) return false;
         auto framerate = av_guess_frame_rate(dfmtCtx, dvideoStream, nullptr);
         timeBase = av_inv_q(framerate.num ? framerate : av_make_q(24000, 1001));
