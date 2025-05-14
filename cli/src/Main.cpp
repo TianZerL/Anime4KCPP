@@ -112,7 +112,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         auto& input = options.inputs[i];
         auto& output = options.outputs[i];
 
-        if (output.empty()) output = input + ".out.mp4";
+        if (output.empty()) output = input + ".out.mkv";
 
         ac::video::Pipeline pipeline{};
 

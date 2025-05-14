@@ -17,7 +17,7 @@ public:
 
     struct {
         QString imageSuffix{".jpg"};
-        QString videoSuffix{".mp4"};
+        QString videoSuffix{".mkv"};
         QString imagePrefix{"ac_"};
         QString videoPrefix{"ac_"};
         QString imageOutputPath{};

@@ -12,6 +12,7 @@
 #include <QSharedPointer>
 #include <QTextBrowser>
 #include <QVBoxLayout>
+#include <QWeakPointer>
 
 #include "AC/Util/Stopwatch.hpp"
 
@@ -286,7 +287,7 @@ void MainWindow::on_action_add_triggered()
 {
     QFileDialog fileDialog{};
     fileDialog.setFileMode(QFileDialog::ExistingFiles);
-    fileDialog.setNameFilters({ "Image (*.jpg *.jpeg *.png *.bmp)", "Video (*.mp4 *.m4v *.mkv)", "Any files (*)" });
+    fileDialog.setNameFilters({ "Image (*.jpg *.jpeg *.png *.bmp)", "Video (*.mp4 *.m4v *.mkv *.webm)", "Any files (*)" });
     if (fileDialog.exec())
     {
         auto urls = fileDialog.selectedUrls();

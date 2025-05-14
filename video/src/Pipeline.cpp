@@ -140,9 +140,9 @@ namespace ac::video::detail
         int streamIdx = 0;
         for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
         {
-            if (dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
-                dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_AUDIO &&
-                dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_SUBTITLE)
+            bool isOtherStream = (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) || (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_DATA);
+            if ((isOtherStream && (strcmp(efmtCtx->oformat->name, "matroska") != 0)) || // check if mkv
+                (!isOtherStream && (avformat_query_codec(efmtCtx->oformat, dfmtCtx->streams[i]->codecpar->codec_id, FF_COMPLIANCE_NORMAL) < 1))) //check if the given container can store a codec
             {
                 streamIdxMap[i] = -1;
                 continue;
@@ -154,9 +154,10 @@ namespace ac::video::detail
             stream->codecpar->codec_tag = 0; // avoid unnecessary additional codec tag checks for MKV
             stream->time_base = dfmtCtx->streams[i]->time_base;
             stream->duration = dfmtCtx->streams[i]->duration;
-            stream->disposition = dfmtCtx->streams[i]->disposition; // a series of flags that tells a player or media player how to handle a stream.
+            stream->disposition = dfmtCtx->streams[i]->disposition; // a series of flags that tells a player or media player how to handle a stream
             stream->sample_aspect_ratio = dfmtCtx->streams[i]->sample_aspect_ratio; // for mkv to keep DAR
             stream->avg_frame_rate = dfmtCtx->streams[i]->avg_frame_rate;
+            av_dict_copy(&stream->metadata, dfmtCtx->streams[i]->metadata, 0); // keep metadata
         }
         if (encoderCtx->pix_fmt != decoderCtx->pix_fmt) swsCtx = sws_getContext(decoderCtx->width, decoderCtx->height, decoderCtx->pix_fmt, decoderCtx->width, decoderCtx->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
@@ -303,7 +304,7 @@ namespace ac::video::detail
         info.fps = av_q2d(av_inv_q(timeBase));
 
         if (dvideoStream->duration != AV_NOPTS_VALUE) info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
-        else if (auto duration = av_dict_get(dvideoStream->metadata, "DURATION", nullptr, AV_DICT_IGNORE_SUFFIX); duration != nullptr)
+        else if (auto duration = av_dict_get(dvideoStream->metadata, "DURATION", nullptr, 0); duration != nullptr)
         {
             int hours = 0, minutes = 0;
             double secones = 0.0;
