@@ -159,6 +159,25 @@ namespace ac::video::detail
             stream->avg_frame_rate = dfmtCtx->streams[i]->avg_frame_rate;
             av_dict_copy(&stream->metadata, dfmtCtx->streams[i]->metadata, 0); // keep metadata
         }
+        // copy chapters
+        if (dfmtCtx->nb_chapters > 0)
+        {
+            efmtCtx->chapters = static_cast<AVChapter**>(av_malloc_array(dfmtCtx->nb_chapters, sizeof(AVChapter*)));
+            if (efmtCtx->chapters)
+            {
+                unsigned int idx{};
+                for (idx = 0; idx < dfmtCtx->nb_chapters; idx++)
+                {
+                    efmtCtx->chapters[idx] = static_cast<AVChapter*>(av_mallocz(sizeof(AVChapter)));
+                    if (!efmtCtx->chapters[idx]) break;
+                    *efmtCtx->chapters[idx] = *dfmtCtx->chapters[idx];
+                    efmtCtx->chapters[idx]->metadata = nullptr;
+                    av_dict_copy(&efmtCtx->chapters[idx]->metadata, dfmtCtx->chapters[idx]->metadata, 0);
+                }
+                efmtCtx->nb_chapters = idx;
+            }
+        }
+
         if (encoderCtx->pix_fmt != decoderCtx->pix_fmt) swsCtx = sws_getContext(decoderCtx->width, decoderCtx->height, decoderCtx->pix_fmt, decoderCtx->width, decoderCtx->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
