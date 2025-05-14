@@ -117,11 +117,11 @@ VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI
         "info:data[];",
         [](const VSMap* /*in*/, VSMap* out, void* /*userData*/, VSCore* /*core*/, const VSAPI* vsapi) -> void {
             vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CPU>(), -1, dtUtf8, maAppend);
-#           ifdef AC_CORE_WITH_OPENCL
-                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(), -1, dtUtf8, maAppend);
-#           endif
-#           ifdef AC_CORE_WITH_CUDA
-                vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(), -1, dtUtf8, maAppend);
-#           endif
+#       ifdef AC_CORE_WITH_OPENCL
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::OpenCL>(), -1, dtUtf8, maAppend);
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
+            vsapi->mapSetData(out, "info", ac::core::Processor::info<ac::core::Processor::CUDA>(), -1, dtUtf8, maAppend);
+#       endif
         }, nullptr, plugin);
 }

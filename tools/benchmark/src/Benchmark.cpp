@@ -65,12 +65,12 @@ int main(int argc, char* argv[])
     std::printf("usage: [processor] [device] [width] [height] [batch] [threads]\n");
     std::printf("\n");
     std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
-#   ifdef AC_CORE_WITH_OPENCL
+#ifdef AC_CORE_WITH_OPENCL
     std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
+#endif
+#ifdef AC_CORE_WITH_CUDA
     std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
-#   endif
+#endif
     std::printf("\n");
 
     std::random_device rd{};

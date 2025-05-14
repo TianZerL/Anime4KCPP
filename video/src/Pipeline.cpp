@@ -113,13 +113,13 @@ namespace ac::video::detail
         auto bitDepth = getBitDepth(encoderCtx->pix_fmt);
         switch (codec->id)
         {
-#       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
+#   if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
         case AV_CODEC_ID_H264: encoderCtx->profile = bitDepth.bits > 8 ? FF_PROFILE_H264_HIGH_10 : FF_PROFILE_H264_HIGH; break;
         case AV_CODEC_ID_HEVC: encoderCtx->profile = bitDepth.bits > 8 ? FF_PROFILE_HEVC_MAIN_10 : FF_PROFILE_HEVC_MAIN; break;
-#       else
+#   else
         case AV_CODEC_ID_H264: encoderCtx->profile = bitDepth.bits > 8 ? AV_PROFILE_H264_HIGH_10 : AV_PROFILE_H264_HIGH; break;
         case AV_CODEC_ID_HEVC: encoderCtx->profile = bitDepth.bits > 8 ? AV_PROFILE_HEVC_MAIN_10 : AV_PROFILE_HEVC_MAIN; break;
-#       endif
+#   endif
         default: break;
         }
         encoderCtx->codec_type = AVMEDIA_TYPE_VIDEO;
@@ -197,11 +197,11 @@ namespace ac::video::detail
             }
         }
         fill(dst, frame, packets);
-#       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
+#   if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
         dst.number = decoderCtx->frame_number;
-#       else
+#   else
         dst.number = decoderCtx->frame_num;
-#       endif
+#   endif
         return true;
     }
     inline bool PipelineImpl::encode(const Frame& src) noexcept
@@ -234,9 +234,9 @@ namespace ac::video::detail
         dstFrame->height = encoderCtx->height;
         dstFrame->format = srcFrame->format;
         dstFrame->pts = srcFrame->pts;
-#       if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
+#   if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
         dstFrame->duration = srcFrame->duration;
-#       endif
+#   endif
         if (av_frame_get_buffer(dstFrame, 0) < 0)
         {
             av_frame_free(&dstFrame);

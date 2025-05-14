@@ -99,12 +99,12 @@ EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, cons
         [](AVSValue /*args*/, void* /*user_data*/, IScriptEnvironment* /*env*/) -> AVSValue {
             AVSValue info[] = {
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
-#               ifdef AC_CORE_WITH_OPENCL
-                    ac::core::Processor::info<ac::core::Processor::OpenCL>(),
-#               endif
-#               ifdef AC_CORE_WITH_CUDA
-                    ac::core::Processor::info<ac::core::Processor::CUDA>(),
-#               endif
+#           ifdef AC_CORE_WITH_OPENCL
+                ac::core::Processor::info<ac::core::Processor::OpenCL>(),
+#           endif
+#           ifdef AC_CORE_WITH_CUDA
+                ac::core::Processor::info<ac::core::Processor::CUDA>(),
+#           endif
             };
             return AVSValue{ info, sizeof(info) / sizeof(AVSValue) };
         }, nullptr);

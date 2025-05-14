@@ -15,42 +15,42 @@ namespace ac::core::cpu
         enum
         {
             Begin,
-#           ifdef AC_CORE_WITH_EIGEN3
+#       ifdef AC_CORE_WITH_EIGEN3
             Eigen3,
-#           endif
-#           ifdef AC_CORE_WITH_SSE
+#       endif
+#       ifdef AC_CORE_WITH_SSE
             SSE,
-#           endif
-#           ifdef AC_CORE_WITH_AVX
+#       endif
+#       ifdef AC_CORE_WITH_AVX
             AVX,
-#           endif
-#           ifdef AC_CORE_WITH_NEON
+#       endif
+#       ifdef AC_CORE_WITH_NEON
             NEON,
-#           endif
-#           ifdef AC_CORE_WITH_WASM_SIMD128
+#       endif
+#       ifdef AC_CORE_WITH_WASM_SIMD128
             WASM_SIMD128,
-#           endif
+#       endif
             Generic,
             End
         };
         constexpr const char* NameList[] =
         {
             "Auto",
-#           ifdef AC_CORE_WITH_EIGEN3
+#       ifdef AC_CORE_WITH_EIGEN3
             "Eigen3",
-#           endif
-#           ifdef AC_CORE_WITH_SSE
+#       endif
+#       ifdef AC_CORE_WITH_SSE
             "SSE",
-#           endif
-#           ifdef AC_CORE_WITH_AVX
+#       endif
+#       ifdef AC_CORE_WITH_AVX
             "AVX",
-#           endif
-#           ifdef AC_CORE_WITH_NEON
+#       endif
+#       ifdef AC_CORE_WITH_NEON
             "NEON",
-#           endif
-#           ifdef AC_CORE_WITH_WASM_SIMD128
+#       endif
+#       ifdef AC_CORE_WITH_WASM_SIMD128
             "WASM_SIMD128",
-#           endif
+#       endif
             "Generic"
         };
     }
@@ -108,65 +108,65 @@ ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::CPUProcessor(const int arch
 {
     idx = (arch > arch::Begin && arch < arch::End) ? arch : []() -> int {
         // x86
-#       ifdef AC_CORE_WITH_AVX
-            if (dispatch::supportAVX()) return arch::AVX;
-#       endif
-#       ifdef AC_CORE_WITH_SSE
-            if (dispatch::supportSSE()) return arch::SSE;
-#       endif
-        // arm
-#       ifdef AC_CORE_WITH_NEON
-            if (dispatch::supportNEON()) return arch::NEON;
-#       endif
-        // wasm
-#       ifdef AC_CORE_WITH_WASM_SIMD128
-            return arch::WASM_SIMD128;
-#       endif
-        // generic
-#       ifdef AC_CORE_WITH_EIGEN3
-            return arch::Eigen3;
-#       else
-            return arch::Generic;
-#       endif
+#   ifdef AC_CORE_WITH_AVX
+        if (dispatch::supportAVX()) return arch::AVX;
+#   endif
+#   ifdef AC_CORE_WITH_SSE
+        if (dispatch::supportSSE()) return arch::SSE;
+#   endif
+    // arm
+#   ifdef AC_CORE_WITH_NEON
+        if (dispatch::supportNEON()) return arch::NEON;
+#   endif
+    // wasm
+#   ifdef AC_CORE_WITH_WASM_SIMD128
+        return arch::WASM_SIMD128;
+#   endif
+    // generic
+#   ifdef AC_CORE_WITH_EIGEN3
+        return arch::Eigen3;
+#   else
+        return arch::Generic;
+#   endif
     }();
 
     switch (idx)
     {
-#   ifdef AC_CORE_WITH_EIGEN3
+#ifdef AC_CORE_WITH_EIGEN3
     case arch::Eigen3 :
         conv3x3_1to8 = conv3x3_1to8_eigen3;
         conv3x3_8to8 = conv3x3_8to8_eigen3;
         deconv2x2_8to1 = deconv2x2_8to1_eigen3;
         break;
-#   endif
-#   ifdef AC_CORE_WITH_SSE
+#endif
+#ifdef AC_CORE_WITH_SSE
     case arch::SSE :
         conv3x3_1to8 = conv3x3_1to8_sse;
         conv3x3_8to8 = conv3x3_8to8_sse;
         deconv2x2_8to1 = deconv2x2_8to1_sse;
         break;
-#   endif
-#   ifdef AC_CORE_WITH_AVX
+#endif
+#ifdef AC_CORE_WITH_AVX
     case arch::AVX :
         conv3x3_1to8 = conv3x3_1to8_avx;
         conv3x3_8to8 = conv3x3_8to8_avx;
         deconv2x2_8to1 = deconv2x2_8to1_avx;
         break;
-#   endif
-#   ifdef AC_CORE_WITH_NEON
+#endif
+#ifdef AC_CORE_WITH_NEON
     case arch::NEON :
         conv3x3_1to8 = conv3x3_1to8_neon;
         conv3x3_8to8 = conv3x3_8to8_neon;
         deconv2x2_8to1 = deconv2x2_8to1_neon;
         break;
-#   endif
-#   ifdef AC_CORE_WITH_WASM_SIMD128
+#endif
+#ifdef AC_CORE_WITH_WASM_SIMD128
     case arch::WASM_SIMD128 :
         conv3x3_1to8 = conv3x3_1to8_wasm_simd128;
         conv3x3_8to8 = conv3x3_8to8_wasm_simd128;
         deconv2x2_8to1 = deconv2x2_8to1_wasm_simd128;
         break;
-#   endif
+#endif
     default:
         conv3x3_1to8 = conv3x3_1to8_generic;
         conv3x3_8to8 = conv3x3_8to8_generic;

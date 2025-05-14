@@ -187,18 +187,13 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
     auto taskData = QSharedPointer<TaskData>::create();
     taskData->type = mimeType.inherits("image/jpeg") || mimeType.inherits("image/png") || mimeType.inherits("image/bmp")? TaskData::TYPE_IMAGE : TaskData::TYPE_VIDEO;
     taskData->path.input = fileInfo.filePath();
-    auto prefix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imagePrefix : gConfig.io.videoPrefix;
-    auto suffix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageSuffix : gConfig.io.videoSuffix;
-    auto outputName = prefix + fileInfo.completeBaseName() + suffix;
-    taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
 
     auto itemType       = new QStandardItem{ taskData->type == TaskData::TYPE_IMAGE ? tr("image") : tr("video") };
     auto itemStatus     = new QStandardItem{ tr("ready") };
     auto itemName       = new QStandardItem{ fileInfo.fileName() };
-    auto itemOutputName = new QStandardItem{ outputName };
+    auto itemOutputName = new QStandardItem{};
     auto itemPath       = new QStandardItem{ fileInfo.absoluteFilePath() };
     itemType->setData(QVariant::fromValue(taskData), Qt::UserRole);
-    itemPath->setData(QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
 
     taskListModel.appendRow({ itemType, itemStatus, itemName, itemOutputName, itemPath, });
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
@@ -208,6 +203,35 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
         ui->progress_bar_task_list->setValue(100 * count / taskListModel.rowCount());
         taskListModel.setHeaderData(0, Qt::Horizontal, count, Qt::UserRole);
     });
+
+    auto updateOutputInfo = [taskDataWeakPointer = QWeakPointer<TaskData>(taskData), baseName = fileInfo.completeBaseName(), itemOutputName, itemPath]()
+        {
+            if (auto taskData = taskDataWeakPointer.toStrongRef())
+            {
+                auto& prefix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imagePrefix : gConfig.io.videoPrefix;
+                auto& suffix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageSuffix : gConfig.io.videoSuffix;
+                auto outputName = prefix + baseName + suffix;
+                taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
+
+                itemOutputName->setText(outputName);
+                itemPath->setData(QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
+            }
+        };
+
+    updateOutputInfo();
+
+    if (taskData->type == TaskData::TYPE_IMAGE)
+    {
+        QObject::connect(ui->line_edit_prefix_image, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+        QObject::connect(ui->line_edit_suffix_image, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+        QObject::connect(ui->line_edit_output_path_image, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+    }
+    else
+    {
+        QObject::connect(ui->line_edit_prefix_video, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+        QObject::connect(ui->line_edit_suffix_video, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+        QObject::connect(ui->line_edit_output_path_video, &QLineEdit::textChanged, taskData.data(), updateOutputInfo);
+    }
 }
 void MainWindow::startTasks()
 {

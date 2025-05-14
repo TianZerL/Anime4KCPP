@@ -378,17 +378,18 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%.2lf"), factor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_FACTOR), buffer);
 
-    const TCHAR* processorList[] = { TEXT("cpu"),
-#       ifdef AC_CORE_WITH_OPENCL
-            TEXT("opencl"),
-#       else
-            nullptr,
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            TEXT("cuda"),
-#       else
-            nullptr,
-#       endif
+    const TCHAR* processorList[] = {
+        TEXT("cpu"),
+#   ifdef AC_CORE_WITH_OPENCL
+        TEXT("opencl"),
+#   else
+        nullptr,
+#   endif
+#   ifdef AC_CORE_WITH_CUDA
+        TEXT("cuda"),
+#   else
+        nullptr,
+#   endif
     };
     for (int i = 0; i < NUMELMS(processorList); i++)
         if (processorList[i])
@@ -421,22 +422,22 @@ HRESULT PropertyPage::OnActivate()
         if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
         buffer[count++] = ch;
     }
-#   ifdef AC_CORE_WITH_OPENCL
-        for (auto p = ac::core::Processor::info<ac::core::Processor::OpenCL>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
-        {
-            TCHAR ch = *p;
-            if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
-            buffer[count++] = ch;
-        }
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
-        for (auto p = ac::core::Processor::info<ac::core::Processor::CUDA>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
-        {
-            TCHAR ch = *p;
-            if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
-            buffer[count++] = ch;
-        }
-#   endif
+#ifdef AC_CORE_WITH_OPENCL
+    for (auto p = ac::core::Processor::info<ac::core::Processor::OpenCL>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
+    {
+        TCHAR ch = *p;
+        if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
+        buffer[count++] = ch;
+    }
+#endif
+#ifdef AC_CORE_WITH_CUDA
+    for (auto p = ac::core::Processor::info<ac::core::Processor::CUDA>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
+    {
+        TCHAR ch = *p;
+        if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
+        buffer[count++] = ch;
+    }
+#endif
     buffer[count] = TEXT('\0');
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
 
@@ -463,14 +464,14 @@ HRESULT PropertyPage::OnApplyChanges()
     gRegArgument.setFactor(factor);
 
     ComboBox_GetText(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), buffer, NUMELMS(buffer));
-#   ifdef AC_CORE_WITH_OPENCL
-        if (!_tcscmp(buffer, TEXT("opencl"))) gRegArgument.setProcessorId(ac::core::Processor::OpenCL);
-        else
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
-        if (!_tcscmp(buffer, TEXT("cuda"))) gRegArgument.setProcessorId(ac::core::Processor::CUDA);
-        else
-#   endif
+#ifdef AC_CORE_WITH_OPENCL
+    if (!_tcscmp(buffer, TEXT("opencl"))) gRegArgument.setProcessorId(ac::core::Processor::OpenCL);
+    else
+#endif
+#ifdef AC_CORE_WITH_CUDA
+    if (!_tcscmp(buffer, TEXT("cuda"))) gRegArgument.setProcessorId(ac::core::Processor::CUDA);
+    else
+#endif
     gRegArgument.setProcessorId(ac::core::Processor::CPU);
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_DEVICE), buffer, NUMELMS(buffer));

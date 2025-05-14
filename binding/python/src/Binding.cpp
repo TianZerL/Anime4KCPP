@@ -41,16 +41,16 @@ PYBIND11_MODULE(pyac, m)
         .def_static("info_list", []() {
             return std::make_tuple(
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
-#               ifdef AC_CORE_WITH_OPENCL
-                    ac::core::Processor::info<ac::core::Processor::OpenCL>(),
-#               else
-                    "OpenCL: unsupported processor",
-#               endif
-#               ifdef AC_CORE_WITH_CUDA
-                    ac::core::Processor::info<ac::core::Processor::CUDA>()
-#               else
-                    "CUDA: unsupported processor"
-#               endif
+#           ifdef AC_CORE_WITH_OPENCL
+                ac::core::Processor::info<ac::core::Processor::OpenCL>(),
+#           else
+                "OpenCL: unsupported processor",
+#           endif
+#           ifdef AC_CORE_WITH_CUDA
+                ac::core::Processor::info<ac::core::Processor::CUDA>()
+#           else
+                "CUDA: unsupported processor"
+#           endif
             );
         })
         .def_readonly_static("CPU", &ac::core::Processor::CPU)

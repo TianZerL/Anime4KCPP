@@ -6,13 +6,13 @@
 class ProgressBar
 {
 public:
-	ProgressBar(const ac::util::Stopwatch& stopwatch = {}) noexcept;
+    ProgressBar(const ac::util::Stopwatch& stopwatch = {}) noexcept;
 
-	void reset() noexcept;
-	void print(double p) noexcept;
-	void finish() noexcept;
+    void reset() noexcept;
+    void print(double p) noexcept;
+    void finish() noexcept;
 private:
-	ac::util::Stopwatch stopwatch;
+    ac::util::Stopwatch stopwatch;
 };
 
 #endif

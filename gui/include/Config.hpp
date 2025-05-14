@@ -28,12 +28,12 @@ public:
         const QStringList modelList{ "acnet-hdn0", "acnet-hdn1", "acnet-hdn2", "acnet-hdn3" };
         const QStringList processorList{
             "cpu",
-#           ifdef AC_CORE_WITH_OPENCL
+#       ifdef AC_CORE_WITH_OPENCL
             "opencl",
-#           endif
-#           ifdef AC_CORE_WITH_CUDA
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
             "cuda",
-#           endif
+#       endif
         };
 
         int device = 0;
