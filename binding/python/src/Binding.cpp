@@ -16,7 +16,7 @@ PYBIND11_MODULE(pyac, m)
     py::class_<ac::core::Processor, std::shared_ptr<ac::core::Processor>>(core, "Processor")
         .def(py::init([](const int processorType, const int device, const char* model) {
             return ac::core::Processor::create(processorType, device, model);
-        }), py::arg("processor_type") = ac::core::Processor::CPU, py::arg("device") = 0, py::arg("model_type") = "cpu")
+        }), py::arg("processor_type") = ac::core::Processor::CPU, py::arg("device") = 0, py::arg("model") = "acnet-hdn0")
         .def("process", [](ac::core::Processor& self, const py::array in, const double factor) {
             auto src = in.request();
             if (src.ndim != 3) throw py::buffer_error{ "Incompatible dimension: expected 3." };

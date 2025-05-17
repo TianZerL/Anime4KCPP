@@ -25,7 +25,7 @@ public:
     } io{};
 
     struct {
-        const QStringList modelList{ "acnet-hdn0", "acnet-hdn1", "acnet-hdn2", "acnet-hdn3" };
+        const QStringList modelList{ "acnet-gan0", "acnet-hdn0", "acnet-hdn1", "acnet-hdn2", "acnet-hdn3" };
         const QStringList processorList{
             "cpu",
 #       ifdef AC_CORE_WITH_OPENCL
