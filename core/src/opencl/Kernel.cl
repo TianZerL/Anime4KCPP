@@ -109,16 +109,7 @@ kernel void deconv2x2_8to1(
     int index = pos.y * 2 + pos.x;
 
     float8 r = (float8)(read_imagef(src, n_sampler, (int4)(src_coord, 0, 0)), read_imagef(src, n_sampler, (int4)(src_coord, 1, 0)));
-    float8 k = (float8)(
-        kptr[ 0 + index],
-        kptr[ 4 + index],
-        kptr[ 8 + index],
-        kptr[12 + index],
-        kptr[16 + index],
-        kptr[20 + index],
-        kptr[24 + index],
-        kptr[28 + index]
-    );
+    float8 k = vload8(0, kptr + 8 * index);
     float4 s = (float4)(clamp(dot(r.lo, k.lo) + dot(r.hi, k.hi), 0.0f, 1.0f), 0.0f, 0.0f, 1.0f);
     write_imagef(dst, dst_coord, s);
 }

@@ -64,12 +64,9 @@ namespace ac::core::cpu
             // regarded as CHWN
             for (int n = 0; n < cout; n++)
             {
+                auto k = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
-                for (int c = 0; c < cin; c++)
-                {
-                    auto k = kernels + c * cout * 4 + cout * index;
-                    sum += toFloat<IN>(in[c]) * k[n];
-                }
+                for (int c = 0; c < cin; c++) sum += toFloat<IN>(in[c]) * k[c];
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);

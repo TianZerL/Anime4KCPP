@@ -22,10 +22,6 @@ namespace ac::core::cuda
     {
         return a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3];
     }
-    __device__ inline static float dot(const float4 a, const float4 b)
-    {
-        return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
-    }
 
     template<int cout,
         ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 < 128 * 4), bool> = true>
@@ -247,15 +243,7 @@ namespace ac::core::cuda
         const unsigned int index = ((y & 1) << 1) + (x & 1);
 
         float sum = 0.0f;
-        for (int cidx = 0; cidx < lin; cidx++)
-        {
-            auto offset = cidx * 4 * 4 + index;
-            sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), make_float4(
-                kernels[offset + 0],
-                kernels[offset + 4],
-                kernels[offset + 8],
-                kernels[offset + 12]));
-        }
+        for (int cidx = 0; cidx < lin; cidx++) sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), kernels + cin * index + cidx * 4);
         surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
     }
 

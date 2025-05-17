@@ -182,8 +182,8 @@ const char* ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::name() const no
 }
 void ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst)
 {
-    Image tmp1{src.width(), src.height(), 8, ac::core::Image::Float32};
-    Image tmp2{src.width(), src.height(), 8, ac::core::Image::Float32};
+    Image tmp1{ src.width(), src.height(), 8, ac::core::Image::Float32 };
+    Image tmp2{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     conv3x3_1to8(src, tmp1, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0]);
     conv3x3_8to8(tmp1, tmp2, kernels + model::ACNet::kernelOffset[1], biases + model::ACNet::baisOffset[1]);
     conv3x3_8to8(tmp2, tmp1, kernels + model::ACNet::kernelOffset[2], biases + model::ACNet::baisOffset[2]);
@@ -205,7 +205,7 @@ template<>
 AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CPU>()
 {
     static auto infoBuffer = []() -> std::string {
-        std::ostringstream buffer{"CPU:\n", std::ios_base::ate};
+        std::ostringstream buffer{ "CPU:\n", std::ios_base::ate };
         for (int i = cpu::arch::Begin; i < cpu::arch::End; i++)
         {
             buffer << "  [" << i << "] " << cpu::arch::NameList[i] << '\n';

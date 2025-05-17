@@ -213,7 +213,6 @@ namespace ac::core::cpu
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
-            constexpr int nstep = 4 * cout;
 
             float32x4_t  r[count + (remain ? 1 : 0)] = {};
             for (int idx = 0; idx < count; idx++) r[idx] = vld1q_f32(in + idx * vstep);
@@ -225,19 +224,17 @@ namespace ac::core::cpu
             }
             for (int n = 0; n < cout; n++)
             {
+                auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
                 float32x4_t k[count + (remain ? 1 : 0)] = {};
                 for (int idx = 0; idx < count; idx++)
                 {
-                    auto kptr = kernels + idx * vstep * cout * 4 + cout * index;
-                    const float d[vstep] = {kptr[0 * nstep + n], kptr[1 * nstep + n], kptr[2 * nstep + n], kptr[3 * nstep + n]};
-                    k[idx] = vld1q_f32(d);
+                    k[idx] = vld1q_f32(kptr + idx * vstep);
                     sum += neon_hsum_f32(vmulq_f32(r[idx], k[idx]));
                 }
                 if constexpr (remain)
                 {
-                    auto kptr = kernels + count * vstep * cout * 4 + cout * index;
-                    const float d[vstep] = {kptr[0 * nstep + n], remain > 1 ? kptr[1 * nstep + n] : 0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, 0.0f};
+                    const float d[vstep] = {(kptr + count * vstep)[0], remain > 1 ? (kptr + count * vstep)[1] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, 0.0f};
                     k[count] = vld1q_f32(d);
                     sum += neon_hsum_f32(vmulq_f32(r[count], k[count]));
                 }

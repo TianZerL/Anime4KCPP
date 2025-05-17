@@ -60,8 +60,6 @@ namespace ac::core::cpu
 
             const int index = ((i & 1) << 1) + (j & 1);
 
-            constexpr int nstep = 4 * cout;
-
             auto r = [&]() -> auto {
                 Eigen::Map<const Eigen::Array<IN, cin, 1>> rin{ in };
                 if constexpr (std::is_same_v<IN, float>)
@@ -74,7 +72,7 @@ namespace ac::core::cpu
 
             for (int n = 0; n < cout; n++)
             {
-                Eigen::Map<const Eigen::Array<float, cin, 1>, 0, Eigen::InnerStride<nstep>> k(kernels + cout * index);
+                Eigen::Map<const Eigen::Array<float, cin, 1>> k(kernels + n * cin * 4 + cin * index);
                 out[n] = fromFloat<OUT>((k * r).sum());
             }
         }, src, dst);

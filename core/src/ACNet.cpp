@@ -9,6 +9,10 @@ ac::core::model::ACNet::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
 {
     switch (v)
     {
+    case Variant::GAN0:
+        kptr = param::ACNet_GAN0_NHWC_Kernels;
+        bptr = param::ACNet_GAN0_NHWC_Biases;
+        break;
     case Variant::HDN0:
         kptr = param::ACNet_HDN0_NHWC_Kernels;
         bptr = param::ACNet_HDN0_NHWC_Biases;

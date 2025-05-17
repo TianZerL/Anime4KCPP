@@ -149,14 +149,22 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type,
 
         for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
-        if (modelString.find("acnet") != std::string::npos)
+        if (modelString.find("acnet") != std::string::npos) // ACNet
         {
-            auto variant = ac::core::model::ACNet::Variant::HDN0;
-            for (char ch : modelString)
+            auto variant = ac::core::model::ACNet::Variant::GAN0;
+            if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
             {
-                if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
-                if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
-                if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
+                variant = ac::core::model::ACNet::Variant::HDN0;
+                for (char ch : modelString)
+                {
+                    if (ch == '0') variant = ac::core::model::ACNet::Variant::HDN0;
+                    else if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
+                    else if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
+                    else if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
+                    else continue;
+
+                    break;
+                }
             }
             return createImpl(type, device, ac::core::model::ACNet{ variant });
         }

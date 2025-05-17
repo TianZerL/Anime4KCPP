@@ -15,6 +15,7 @@ class ac::core::model::ACNet
 public:
     enum class Variant
     {
+        GAN0,
         HDN0,
         HDN1,
         HDN2,

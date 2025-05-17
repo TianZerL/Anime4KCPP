@@ -189,7 +189,6 @@ namespace ac::core::cpu
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
-            constexpr int nstep = 4 * cout;
 
             __m128 r[count + (remain ? 1 : 0)] = {};
             for (int idx = 0; idx < count; idx++) r[idx] = _mm_loadu_ps(in + idx * vstep);
@@ -197,18 +196,17 @@ namespace ac::core::cpu
             if constexpr (remain) r[count] = _mm_set_ps(0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, remain > 1 ? (in + count * vstep)[1] : 0.0f, (in + count * vstep)[0]);
             for (int n = 0; n < cout; n++)
             {
+                auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
                 __m128 k[count + (remain ? 1 : 0)] = {};
                 for (int idx = 0; idx < count; idx++)
                 {
-                    auto kptr = kernels + idx * vstep * cout * 4 + cout * index;
-                    k[idx] = _mm_set_ps(kptr[3 * nstep + n], kptr[2 * nstep + n], kptr[1 * nstep + n], kptr[0 * nstep + n]);
+                    k[idx] = _mm_loadu_ps(kptr + idx * vstep);
                     sum += sse_hsum_ps(_mm_mul_ps(r[idx], k[idx]));
                 }
                 if constexpr (remain)
                 {
-                    auto kptr = kernels + count * vstep * cout * 4 + cout * index;
-                    k[count] = _mm_set_ps(0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, remain > 1 ? kptr[1 * nstep + n] : 0.0f, kptr[0 * nstep + n]);
+                    k[count] = _mm_set_ps(0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, remain > 1 ? (kptr + count * vstep)[1] : 0.0f, (kptr + count * vstep)[0]);
                     sum += sse_hsum_ps(_mm_mul_ps(r[count], k[count]));
                 }
                 out[n] = fromFloat<OUT>(sum);

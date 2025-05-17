@@ -181,7 +181,6 @@ namespace ac::core::cpu
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
-            constexpr int nstep = 4 * cout;
 
             v128_t r[count + (remain ? 1 : 0)] = {};
             for (int idx = 0; idx < count; idx++) r[idx] = wasm_v128_load(in + idx * vstep);
@@ -189,18 +188,17 @@ namespace ac::core::cpu
             if constexpr (remain) r[count] = wasm_f32x4_make((in + count * vstep)[0], remain > 1 ? (in + count * vstep)[1] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, 0.0f);
             for (int n = 0; n < cout; n++)
             {
+                auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
                 v128_t k[count + (remain ? 1 : 0)] = {};
                 for (int idx = 0; idx < count; idx++)
                 {
-                    auto kptr = kernels + idx * vstep * cout * 4 + cout * index;
-                    k[idx] = wasm_f32x4_make(kptr[0 * nstep + n], kptr[1 * nstep + n], kptr[2 * nstep + n], kptr[3 * nstep + n]);
+                    k[idx] = wasm_v128_load(kptr + idx * vstep);
                     sum += wasm_simd128_f32x4_hsum(wasm_f32x4_mul(r[idx], k[idx]));
                 }
                 if constexpr (remain)
                 {
-                    auto kptr = kernels + count * vstep * cout * 4 + cout * index;
-                    k[count] = wasm_f32x4_make(kptr[0 * nstep + n], remain > 1 ? kptr[1 * nstep + n] : 0.0f, remain > 2 ? kptr[2 * nstep + n] : 0.0f, 0.0f);
+                    k[count] = wasm_f32x4_make((kptr + count * vstep)[0], remain > 1 ? (kptr + count * vstep)[1] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, 0.0f);
                     sum += wasm_simd128_f32x4_hsum(wasm_f32x4_mul(r[count], k[count]));
                 }
                 out[n] = fromFloat<OUT>(sum);
