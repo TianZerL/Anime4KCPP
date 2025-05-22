@@ -62,7 +62,7 @@ static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, con
 
 int main(int argc, char* argv[])
 {
-    std::printf("usage: [processor] [device] [width] [height] [batch] [threads]\n");
+    std::printf("usage: [model] [processor] [device] [width] [height] [batch] [threads]\n");
     std::printf("\n");
     std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
 #ifdef AC_CORE_WITH_OPENCL
@@ -73,23 +73,20 @@ int main(int argc, char* argv[])
 #endif
     std::printf("\n");
 
-    std::random_device rd{};
-    std::mt19937 gen{ rd() };
-    std::uniform_int_distribution<unsigned short> d{ 0, 255 };
-
-    auto processorType = ac::core::Processor::type(argc > 1 ? argv[1] : "cpu");
-    auto processor = ac::core::Processor::create(processorType, argc > 2 ? std::atoi(argv[2]) : 0, "acnet-hdn0");
+    auto model = argc > 1 ? argv[1] : "acnet";
+    auto processorType = ac::core::Processor::type(argc > 2 ? argv[2] : "cpu");
+    auto processor = ac::core::Processor::create(processorType, argc > 3 ? std::atoi(argv[3]) : 0, model);
     if (!processor->ok())
     {
         std::printf("%s\n", processor->error());
         return 0;
     }
-    int w = argc > 3 ? std::max(std::atoi(argv[3]), 3) : 720;
-    int h = argc > 4 ? std::max(std::atoi(argv[4]), 3) : 480;
-    int batch = argc > 5 ? std::max(std::atoi(argv[5]), 1) : processorType == ac::core::Processor::CPU ? 60 : 600;
-    int threads = argc > 6 ? std::max(std::atoi(argv[6]), 1) : ac::util::ThreadPool::hardwareThreads();
+    int w = argc > 4 ? std::max(std::atoi(argv[4]), 3) : 720;
+    int h = argc > 5 ? std::max(std::atoi(argv[5]), 3) : 480;
+    int batch = argc > 6 ? std::max(std::atoi(argv[6]), 1) : processorType == ac::core::Processor::CPU ? 60 : 600;
+    int threads = argc > 7 ? std::max(std::atoi(argv[7]), 1) : ac::util::ThreadPool::hardwareThreads();
 
-    std::printf("processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", ac::core::Processor::type(processorType), processor->name(), w, h, batch, threads);
+    std::printf("model: %s processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", model, ac::core::Processor::type(processorType), processor->name(), w, h, batch, threads);
 
     // max image pool size: 128m
     ImagePool images{ w, h, batch, std::min(128 * 1024 * 1024 / (w * h), batch) };

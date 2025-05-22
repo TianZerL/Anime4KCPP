@@ -119,11 +119,11 @@ const char* ac::core::Processor::type(const int id) noexcept
     switch (id)
     {
     case OpenCL:
-        return "OpenCL";
+        return "opencl";
     case CUDA:
-        return "CUDA";
+        return "cuda";
     default:
-        return "CPU";
+        return "cpu";
     }
 }
 std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type, const int device, const char* const model)
