@@ -88,8 +88,8 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
         ac::video::DecoderHints dhints{};
         ac::video::EncoderHints ehints{};
         dhints.decoder = decoder;
-        dhints.format = format;
         ehints.encoder = encoder;
+        ehints.format = format;
         ehints.bitrate = bitrate;
 
         for (auto&& task : videoTaskList)

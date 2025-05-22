@@ -12,34 +12,23 @@ class Config
 public:
     struct {
         bool exitConfirmation = false;
-        QString styleName{"Fusion"};
+        QString styleName{ "Fusion" };
     } gui{};
 
     struct {
-        QString imageSuffix{".jpg"};
-        QString videoSuffix{".mkv"};
-        QString imagePrefix{"ac_"};
-        QString videoPrefix{"ac_"};
+        QString imageSuffix{ ".jpg" };
+        QString videoSuffix{ ".mkv" };
+        QString imagePrefix{ "ac_" };
+        QString videoPrefix{ "ac_" };
         QString imageOutputPath{};
         QString videoOutputPath{};
     } io{};
 
     struct {
-        const QStringList modelList{ "acnet-gan0", "acnet-hdn0", "acnet-hdn1", "acnet-hdn2", "acnet-hdn3" };
-        const QStringList processorList{
-            "cpu",
-#       ifdef AC_CORE_WITH_OPENCL
-            "opencl",
-#       endif
-#       ifdef AC_CORE_WITH_CUDA
-            "cuda",
-#       endif
-        };
-
         int device = 0;
         double factor = 2.0;
-        QString processor{processorList[0]};
-        QString model{modelList[0]};
+        QString processor{};
+        QString model{};
     } upscaler{};
 
     struct {

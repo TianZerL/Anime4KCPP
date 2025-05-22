@@ -5,7 +5,7 @@
 
 namespace ac::core::cpu
 {
-    template <typename IN, typename OUT, int cin, int cout>
+    template <typename IN, typename OUT, int cin, int cout, bool residual = false>
     inline void conv3x3_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases)
     {
         int w = src.width(), h = src.height();
@@ -47,7 +47,9 @@ namespace ac::core::cpu
             for (int n = 0; n < cout; n++)
             {
                 Eigen::Map<const Eigen::Array<float, cin, 9>> k(kernels + n * cin * 9);
-                out[n] = relu<OUT>((k * r).sum() + biases[n]);
+                float sum = (k * r).sum();
+                if constexpr (residual) sum += out[n];
+                out[n] = relu<OUT>(sum + biases[n]);
             }
         }, src, dst);
     }
@@ -96,6 +98,10 @@ namespace ac::core::cpu
     void conv3x3_8to8_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         conv3x3_eigen3<float, float, 8, 8>(src, dst, kernels, biases);
+    }
+    void conv3x3_residual_8to8_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_eigen3<float, float, 8, 8, true>(src, dst, kernels, biases);
     }
     void deconv2x2_8to1_eigen3(const Image& src, Image& dst, const float* kernels)
     {

@@ -1,3 +1,6 @@
+#include <cstddef>
+#include <iterator>
+
 #include <QColor>
 #include <QDesktopServices>
 #include <QDialog>
@@ -14,6 +17,7 @@
 #include <QVBoxLayout>
 #include <QWeakPointer>
 
+#include "AC/Specs.hpp"
 #include "AC/Util/Stopwatch.hpp"
 
 #include "Config.hpp"
@@ -85,33 +89,34 @@ void MainWindow::init()
     QObject::connect(ui->push_button_output_path_video_open, &QPushButton::clicked, this,
         []() { MainWindow::openDir(gConfig.io.videoOutputPath); });
 
-    ui->line_edit_label_decode_hints_decoder->setText(gConfig.video.decoder);
-    ui->line_edit_label_decode_hints_format->setText(gConfig.video.format);
-    QObject::connect(ui->line_edit_label_decode_hints_decoder, &QLineEdit::textChanged, this,
+    ui->line_edit_codec_hints_decoder->setText(gConfig.video.decoder);
+    ui->line_edit_codec_hints_format->setText(gConfig.video.format);
+    ui->line_edit_codec_hints_encoder->setText(gConfig.video.encoder);
+    ui->spin_box_codec_hints_bitrate->setValue(gConfig.video.bitrate);
+    QObject::connect(ui->line_edit_codec_hints_decoder, &QLineEdit::textChanged, this,
         [](const QString& value) { gConfig.video.decoder = value; });
-    QObject::connect(ui->line_edit_label_decode_hints_format, &QLineEdit::textChanged, this,
+    QObject::connect(ui->line_edit_codec_hints_format, &QLineEdit::textChanged, this,
         [](const QString& value) { gConfig.video.format = value; });
-
-    ui->line_edit_label_encode_hints_encoder->setText(gConfig.video.encoder);
-    ui->spin_box_encode_hints_bitrate->setValue(gConfig.video.bitrate);
-    QObject::connect(ui->line_edit_label_encode_hints_encoder, &QLineEdit::textChanged, this,
+    QObject::connect(ui->line_edit_codec_hints_encoder, &QLineEdit::textChanged, this,
         [](const QString& value) { gConfig.video.encoder = value; });
-    QObject::connect(ui->spin_box_encode_hints_bitrate, qOverload<int>(&QSpinBox::valueChanged), this,
+    QObject::connect(ui->spin_box_codec_hints_bitrate, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.video.bitrate = value; });
 
-    ui->double_spin_box_factor->setMinimum(1.0);
-    ui->combo_box_processor->addItems(gConfig.upscaler.processorList);
-    ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
     ui->spin_box_device->setValue(gConfig.upscaler.device);
+    ui->double_spin_box_factor->setMinimum(1.0);
     ui->double_spin_box_factor->setValue(gConfig.upscaler.factor);
-    ui->combo_box_model->addItems(gConfig.upscaler.modelList);
+    ui->combo_box_processor->addItems({ std::begin(ac::specs::ProcessorNameList), std::end(ac::specs::ProcessorNameList) });
+    for (std::size_t i = 0; i < std::size(ac::specs::ProcessorDescriptionList); i++) ui->combo_box_processor->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ProcessorDescriptionList[i]), Qt::ToolTipRole);
+    ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
+    ui->combo_box_model->addItems({ std::begin(ac::specs::ModelNameList), std::end(ac::specs::ModelNameList) });
+    for (std::size_t i = 0; i < std::size(ac::specs::ModelDescriptionList); i++) ui->combo_box_model->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ModelDescriptionList[i]), Qt::ToolTipRole);
     ui->combo_box_model->setCurrentText(gConfig.upscaler.model);
-    QObject::connect(ui->combo_box_processor, &QComboBox::textActivated, this,
-        [](const QString& value) { gConfig.upscaler.processor = value; });
     QObject::connect(ui->spin_box_device, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.upscaler.device = value; });
     QObject::connect(ui->double_spin_box_factor, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
         [](const double value) { gConfig.upscaler.factor = value; });
+    QObject::connect(ui->combo_box_processor, &QComboBox::textActivated, this,
+        [](const QString& value) { gConfig.upscaler.processor = value; });
     QObject::connect(ui->combo_box_model, &QComboBox::textActivated, this,
         [](const QString& value) { gConfig.upscaler.model = value; });
 
@@ -198,7 +203,7 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
 
     taskListModel.appendRow({ itemType, itemStatus, itemName, itemOutputName, itemPath, });
     QObject::connect(taskData.data(), &TaskData::finished, &taskListModel, [=](const bool success) {
-        itemStatus->setText(success ? tr("successed") : tr("failed"));
+        itemStatus->setText(success ? tr("succeeded") : tr("failed"));
         itemStatus->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
         auto count = taskListModel.headerData(0, Qt::Horizontal, Qt::UserRole).toInt() + 1;
         ui->progress_bar_task_list->setValue(100 * count / taskListModel.rowCount());

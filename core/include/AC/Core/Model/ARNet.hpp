@@ -1,5 +1,5 @@
-#ifndef AC_CORE_MODEL_ACNET_HPP
-#define AC_CORE_MODEL_ACNET_HPP
+#ifndef AC_CORE_MODEL_ARNET_HPP
+#define AC_CORE_MODEL_ARNET_HPP
 
 #include <cstddef>
 
@@ -9,25 +9,21 @@
 
 namespace ac::core::model
 {
-    class ACNet;
+    class ARNet;
 }
 
-class ac::core::model::ACNet
+class ac::core::model::ARNet
 {
-    AC_CORE_SEQ_CNN_MODEL(ACNet)
+    AC_CORE_SEQ_CNN_MODEL(ARNet)
 
 public:
     enum class Variant
     {
-        GAN,
-        HDN0,
-        HDN1,
-        HDN2,
-        HDN3
+        HDN
     };
 
 public:
-    AC_EXPORT ACNet(Variant v) noexcept;
+    AC_EXPORT ARNet(Variant v) noexcept;
 
 public:
     // length in numbers
@@ -35,6 +31,7 @@ public:
     static constexpr int biasLength() noexcept { return 8 * 9; }
     static constexpr int kernelLength(const int idx) { return (idx == 0) ? 8 * 9 : ((idx > 0 && idx < 9) ? 8 * 8 * 9 : ((idx == 9) ? 8 * 4 : 0)); }
     static constexpr int biasLength(const int idx) { return (idx >= 0 && idx < 9) ? 8 : 0; }
+
     // size in bytes
     static constexpr std::size_t kernelSize() noexcept { return kernelLength() * sizeof(float); }
     static constexpr std::size_t biasSize() noexcept { return biasLength() * sizeof(float); }

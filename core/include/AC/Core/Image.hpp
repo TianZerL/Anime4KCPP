@@ -71,7 +71,7 @@ namespace ac::core
     AC_EXPORT void yuva2rgba(const Image& y, const Image& u, const Image& v, const Image& a, Image& rgba);
     // remove padding in the stride of `src`, if necessary.
     // `src` and `dst` can be same.
-    AC_EXPORT void unpadding(const Image& src, Image& dst);
+    AC_EXPORT void unpadding(const Image& src, Image& dst) noexcept;
     // left shift pixel
     // modify in place
     AC_EXPORT void shl(Image& image, int n);
@@ -132,11 +132,11 @@ public:
     int stride() const noexcept { return pitch; }
     int size() const noexcept { return pitch * h; }
     int elementSize() const noexcept { return elementType & 0xff; }
-    int channelSize() const noexcept { return c * elementSize(); }
+    int pixelSize() const noexcept { return c * elementSize(); }
     ElementType type() const noexcept { return elementType; }
     std::uint8_t* data() const noexcept { return static_cast<std::uint8_t*>(pixels); }
     std::uint8_t* line(const int y) const noexcept { return data() + y * pitch; }
-    std::uint8_t* pixel(const int x, const int y) const noexcept { return line(y) + x * channelSize(); }
+    std::uint8_t* pixel(const int x, const int y) const noexcept { return line(y) + x * pixelSize(); }
     void* ptr() const noexcept { return pixels; }
     void* ptr(const int y) const noexcept { return line(y); }
     void* ptr(const int x, const int y) const noexcept { return pixel(x, y); }

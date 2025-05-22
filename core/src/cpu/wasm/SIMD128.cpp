@@ -12,7 +12,7 @@ namespace ac::core::cpu
         return wasm_f32x4_extract_lane(v32, 0);
     }
 
-    template <typename OUT, int cin, int cout>
+    template <typename OUT, int cin, int cout, bool residual = false>
     inline void conv3x3_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases)
     {
         int w = src.width(), h = src.height();
@@ -132,6 +132,7 @@ namespace ac::core::cpu
 
                     sum += wasm_simd128_f32x4_hsum(wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
                 }
+                if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }
         }, src, dst);
@@ -224,6 +225,10 @@ namespace ac::core::cpu
     void conv3x3_8to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         conv3x3_wasm_simd128_float<float, 8, 8>(src, dst, kernels, biases);
+    }
+    void conv3x3_residual_8to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_wasm_simd128_float<float, 8, 8, true>(src, dst, kernels, biases);
     }
     void deconv2x2_8to1_wasm_simd128(const Image& src, Image& dst, const float* kernels)
     {

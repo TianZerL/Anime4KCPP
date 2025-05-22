@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Anime4KCPP</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <widget class="QWidget" name="widget_main">
    <layout class="QGridLayout" name="gridLayout_5">
     <item row="0" column="0" colspan="5">
      <widget class="QGroupBox" name="group_box_settings">
@@ -21,31 +21,38 @@
        <string>Settings</string>
       </property>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="2" rowspan="3">
-        <widget class="Line" name="line_prefix">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="2" column="3">
+        <widget class="QLabel" name="label_prefix_video">
+         <property name="text">
+          <string>video</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="5" rowspan="3">
-        <widget class="Line" name="line_decode_hints">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="2" column="8" colspan="2">
+        <widget class="QLabel" name="label_codec_hints_bitrate">
+         <property name="text">
+          <string>bitrate</string>
          </property>
         </widget>
        </item>
        <item row="0" column="6" colspan="2">
-        <widget class="QLabel" name="label_decode_hints">
+        <widget class="QLabel" name="label_codec_hints">
          <property name="text">
-          <string>decode hints</string>
+          <string>codec hints</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="8" rowspan="3">
-        <widget class="Line" name="line_encode_hints">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+       <item row="1" column="7">
+        <widget class="QLineEdit" name="line_edit_codec_hints_decoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The decoder name passed to FFmpeg's library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting specifies the decoder (typically no manual configuration required). Available values depend on the library version. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the decoder based on the input file.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: h264, hevc, h264_qsv, h264_amf, h264_cuvid, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="10" colspan="2">
+        <widget class="QLineEdit" name="line_edit_codec_hints_encoder">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The encoder name passed to FFmpeg's library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting determines the output codec, and controls hardware acceleration support. Available values depend on the version of the library. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the encoder based on the file extension.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: libopenh264, libx264, libx265, h264_qsv, hevc_qsv, h264_nvenc, hevc_nvenc, h264_amf, hevc_amf, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -59,165 +66,17 @@
        <item row="1" column="1">
         <widget class="QLineEdit" name="line_edit_suffix_image"/>
        </item>
-       <item row="1" column="3">
-        <widget class="QLabel" name="label_prefix_image">
-         <property name="text">
-          <string>image</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="4">
-        <widget class="QLineEdit" name="line_edit_prefix_image"/>
-       </item>
-       <item row="1" column="6">
-        <widget class="QLabel" name="label_decode_hints_decoder">
-         <property name="text">
-          <string>decoder</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="7">
-        <widget class="QLineEdit" name="line_edit_label_decode_hints_decoder">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;h264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_cuvid&lt;/span&gt;` (Nvidia hwaccel), `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;` (Intel hwaccel), etc.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a decoder, the most suitable one will be selected based on the input file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="9" colspan="2">
-        <widget class="QLabel" name="label_encode_hints_encoder">
-         <property name="text">
-          <string>encoder</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="11" colspan="2">
-        <widget class="QLineEdit" name="line_edit_label_encode_hints_encoder">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Encoder name pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;The available values depend on the version of the libav.&lt;/p&gt;&lt;p&gt;Typically including `&lt;span style=&quot; font-weight:700;&quot;&gt;libopenh264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;libx264&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_qsv&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_nvenc&lt;/span&gt;`, `&lt;span style=&quot; font-weight:700;&quot;&gt;h264_amf&lt;/span&gt;`, etc.&lt;/p&gt;&lt;p&gt;This will affect output codec, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;libx265&lt;/span&gt;` (hevc), `&lt;span style=&quot; font-weight:700;&quot;&gt;av1_nvenc&lt;/span&gt;` (av1), `&lt;span style=&quot; font-weight:700;&quot;&gt;mpeg4&lt;/span&gt;` (mpeg4), etc. Check FFmpeg docs for more information.&lt;/p&gt;&lt;p&gt;This will also affect hardware acceleration, such as `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_nvenc&lt;/span&gt;` (Nvidia), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_amf&lt;/span&gt;` (AMD), `&lt;span style=&quot; font-weight:700;&quot;&gt;hevc_qsv&lt;/span&gt;` (Intel), etc.&lt;/p&gt;&lt;p&gt;Leave blank to select the default encoder based on the file suffix.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_suffix_video">
-         <property name="text">
-          <string>video</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="line_edit_suffix_video"/>
-       </item>
-       <item row="2" column="3">
-        <widget class="QLabel" name="label_prefix_video">
-         <property name="text">
-          <string>video</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="4">
-        <widget class="QLineEdit" name="line_edit_prefix_video"/>
-       </item>
-       <item row="2" column="6">
-        <widget class="QLabel" name="label_decode_hints_format">
-         <property name="text">
-          <string>format</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="7">
-        <widget class="QLineEdit" name="line_edit_label_decode_hints_format">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Decode format pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;Normally, there is no need to specify a format, but you may need to use `&lt;span style=&quot; font-weight:700;&quot;&gt;nv12&lt;/span&gt;` for qsv encoder.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="9" colspan="2">
-        <widget class="QLabel" name="label_encode_hints_bitrate">
-         <property name="text">
-          <string>bitrate</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="11" colspan="2">
-        <widget class="QSpinBox" name="spin_box_encode_hints_bitrate">
-         <property name="toolTip">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;bitrate (&lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;) pass to ffmpeg's libav.&lt;/p&gt;&lt;p&gt;This will affect the size and quality of the output video.&lt;/p&gt;&lt;p&gt;Leave blank to automatically calculate based on the input video bitrate.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0" colspan="13">
-        <widget class="Line" name="line_output_path">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_output_path_image">
-         <property name="text">
-          <string>image</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" colspan="9">
-        <widget class="QLineEdit" name="line_edit_output_path_image"/>
-       </item>
-       <item row="5" column="10" colspan="2">
-        <widget class="QPushButton" name="push_button_output_path_image_select">
-         <property name="text">
-          <string>select</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="12">
-        <widget class="QPushButton" name="push_button_output_path_image_open">
-         <property name="text">
-          <string>open</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
-        <widget class="QLabel" name="label_output_path_video">
-         <property name="text">
-          <string>video</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="1" colspan="9">
-        <widget class="QLineEdit" name="line_edit_output_path_video"/>
-       </item>
-       <item row="6" column="10" colspan="2">
+       <item row="6" column="9" colspan="2">
         <widget class="QPushButton" name="push_button_output_path_video_select">
          <property name="text">
           <string>select</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="12">
-        <widget class="QPushButton" name="push_button_output_path_video_open">
-         <property name="text">
-          <string>open</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="9" colspan="3">
-        <widget class="QLabel" name="label_encode_hints">
-         <property name="text">
-          <string>encode hints</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3" colspan="2">
-        <widget class="QLabel" name="label_prefix">
-         <property name="text">
-          <string>prefix</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" colspan="2">
-        <widget class="QLabel" name="label_suffix">
-         <property name="text">
-          <string>suffix</string>
+       <item row="2" column="10" colspan="2">
+        <widget class="QSpinBox" name="spin_box_codec_hints_bitrate">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The bitrate passed to FFmpeg's library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This affects the output video's file size and quality. The unit is &lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: auto-select the bitrate based on the input file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -228,6 +87,133 @@
          </property>
         </widget>
        </item>
+       <item row="6" column="0">
+        <widget class="QLabel" name="label_output_path_video">
+         <property name="text">
+          <string>video</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="line_edit_suffix_video"/>
+       </item>
+       <item row="0" column="5" rowspan="3">
+        <widget class="Line" name="line_decode_hints">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="12">
+        <widget class="Line" name="line_output_path">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="6">
+        <widget class="QLabel" name="label_codec_hints_format">
+         <property name="text">
+          <string>format</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="11">
+        <widget class="QPushButton" name="push_button_output_path_video_open">
+         <property name="text">
+          <string>open</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="7">
+        <widget class="QLineEdit" name="line_edit_codec_hints_format">
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;the pixel format passed to FFmpeg's library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting defines the pixel format for the encoder. Note that some encoders require specific formats. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Troubleshooting&lt;/span&gt;: If some hardware acceleration encoders initialization fails, try setting this field to p010 (10bit) or nv12 (8bit).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the pixel format based on the decoder.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: yuv420p, yuv420p10, nv12, p010, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="1" colspan="8">
+        <widget class="QLineEdit" name="line_edit_output_path_image"/>
+       </item>
+       <item row="2" column="4">
+        <widget class="QLineEdit" name="line_edit_prefix_video"/>
+       </item>
+       <item row="5" column="0">
+        <widget class="QLabel" name="label_output_path_image">
+         <property name="text">
+          <string>image</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="11">
+        <widget class="QPushButton" name="push_button_output_path_image_open">
+         <property name="text">
+          <string>open</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="8" colspan="2">
+        <widget class="QLabel" name="label_codec_hints_encoder">
+         <property name="text">
+          <string>encoder</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4">
+        <widget class="QLineEdit" name="line_edit_prefix_image"/>
+       </item>
+       <item row="1" column="3">
+        <widget class="QLabel" name="label_prefix_image">
+         <property name="text">
+          <string>image</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2" rowspan="3">
+        <widget class="Line" name="line_prefix">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" colspan="8">
+        <widget class="QLineEdit" name="line_edit_output_path_video"/>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_suffix_video">
+         <property name="text">
+          <string>video</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2">
+        <widget class="QLabel" name="label_suffix">
+         <property name="text">
+          <string>suffix</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="6">
+        <widget class="QLabel" name="label_codec_hints_decoder">
+         <property name="text">
+          <string>decoder</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="9" colspan="2">
+        <widget class="QPushButton" name="push_button_output_path_image_select">
+         <property name="text">
+          <string>select</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" colspan="2">
+        <widget class="QLabel" name="label_prefix">
+         <property name="text">
+          <string>prefix</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -235,7 +221,7 @@
      <widget class="QTableView" name="table_view_task_list"/>
     </item>
     <item row="1" column="1" colspan="4">
-     <widget class="QGroupBox" name="group_box_main">
+     <widget class="QGroupBox" name="group_box_parameters">
       <property name="title">
        <string>Parameters</string>
       </property>
@@ -286,11 +272,7 @@
         </widget>
        </item>
        <item row="1" column="3">
-        <widget class="QComboBox" name="combo_box_model">
-         <property name="toolTip">
-          <string>ACNet: Higher HDN levels mean better denoising, which may compromise details.</string>
-         </property>
-        </widget>
+        <widget class="QComboBox" name="combo_box_model"/>
        </item>
       </layout>
      </widget>
@@ -347,7 +329,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>864</width>
      <height>33</height>
     </rect>
    </property>

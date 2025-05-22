@@ -41,7 +41,6 @@ namespace ac::video::detail
         Info::BitDepth getBitDepth(AVPixelFormat format) const noexcept;
     private:
         bool writeHeaderFlag = false;
-        AVPixelFormat targetPixFmt = AV_PIX_FMT_NONE;
         SwsContext* swsCtx = nullptr;
         AVFormatContext* dfmtCtx = nullptr;
         AVFormatContext* efmtCtx = nullptr;
@@ -94,7 +93,6 @@ namespace ac::video::detail
         decoderCtx = avcodec_alloc_context3(codec); if (!decoderCtx) return false;
         ret = avcodec_parameters_to_context(decoderCtx, dvideoStream->codecpar); if (ret < 0) return false;
         decoderCtx->pkt_timebase = dvideoStream->time_base;
-        if (hints.format && *hints.format) targetPixFmt = av_get_pix_fmt(hints.format);
         ret = avcodec_open2(decoderCtx, codec, nullptr); if (ret < 0) return false;
         auto framerate = av_guess_frame_rate(dfmtCtx, dvideoStream, nullptr);
         timeBase = av_inv_q(framerate.num ? framerate : av_make_q(24000, 1001));
@@ -106,6 +104,8 @@ namespace ac::video::detail
         epacket = av_packet_alloc(); if (!epacket) return false;
         ret = avformat_alloc_output_context2(&efmtCtx, nullptr, nullptr, filename); if (ret < 0) return false;
 
+        AVPixelFormat targetPixFmt = AV_PIX_FMT_NONE;
+        if (hints.format && *hints.format) targetPixFmt = av_get_pix_fmt(hints.format);
         auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
         encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
@@ -312,7 +312,6 @@ namespace ac::video::detail
         timeBase = {};
         evideoStream = nullptr;
         dvideoStream = nullptr;
-        targetPixFmt = AV_PIX_FMT_NONE;
     }
     inline Info PipelineImpl::getInfo() const noexcept
     {

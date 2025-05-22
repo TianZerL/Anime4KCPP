@@ -1,7 +1,9 @@
 #include <cstdio>
+#include <iterator>
 #include <memory>
 
 #include "AC/Core.hpp"
+#include "AC/Specs.hpp"
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/ThreadPool.hpp"
 
@@ -13,46 +15,63 @@
 #   include "ProgressBar.hpp"
 #endif
 
-static void version()
+static bool list(const Options& options)
 {
-    std::printf(
-        "Anime4KCPP CLI:\n"
-        "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
-        "  video module: "
-#       ifdef AC_CLI_ENABLE_VIDEO
-            AC_VIDEO_VERSION_STR "\n"
-#       else
-            "disabled\n"
-#       endif
-        "  build date: " AC_BUILD_DATE "\n"
-        "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n"
-        "  license: "
-#       ifdef AC_CLI_ENABLE_VIDEO
-            "GPLv3\n\n"
-#       else
-            "MIT\n\n"
-#       endif
-        "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
-        "https://github.com/TianZerL/Anime4KCPP\n"
-    );
-}
-
-static void list()
-{
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
-#ifdef AC_CORE_WITH_OPENCL
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
-#endif
-#ifdef AC_CORE_WITH_CUDA
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
-#endif
+    if (options.list.version)
+    {
+        std::printf(
+            "Anime4KCPP CLI:\n"
+            "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
+            "  video module: "
+#           ifdef AC_CLI_ENABLE_VIDEO
+                AC_VIDEO_VERSION_STR "\n"
+#           else
+                "disabled\n"
+#           endif
+            "  build date: " AC_BUILD_DATE "\n"
+            "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n"
+            "  license: "
+#           ifdef AC_CLI_ENABLE_VIDEO
+                "GPLv3\n\n"
+#           else
+                "MIT\n\n"
+#           endif
+            "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
+            "https://github.com/TianZerL/Anime4KCPP\n"
+        );
+        return true;
+    }
+    if (options.list.devices)
+    {
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
+#   ifdef AC_CORE_WITH_OPENCL
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
+#   endif
+#   ifdef AC_CORE_WITH_CUDA
+        std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
+#   endif
+        return true;
+    }
+    if (options.list.processors)
+    {
+        printf("Processors:\n");
+        for (std::size_t i = 0; i < std::size(ac::specs::ProcessorNameList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorNameList[i], ac::specs::ProcessorDescriptionList[i]);
+        return true;
+    }
+    if (options.list.models)
+    {
+        printf("Models:\n");
+        for (std::size_t i = 0; i < std::size(ac::specs::ModelNameList); i++) printf("  %-16s  %s\n", ac::specs::ModelNameList[i], ac::specs::ModelDescriptionList[i]);
+        return true;
+    }
+    return false;
 }
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
     auto batch = options.inputs.size();
     auto threads = ac::util::ThreadPool::hardwareThreads();
-    auto targetThreads = options.processor == "cpu" ? threads / 4 + 1 : threads / 2 + 1;
+    auto targetThreads = ac::core::Processor::type(options.processor.c_str()) == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1;
     auto poolSize = batch > targetThreads ? targetThreads : batch;
     auto task = [&](const int i) {
         auto& input = options.inputs[i];
@@ -103,8 +122,8 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
     ac::video::DecoderHints dhints{};
     ac::video::EncoderHints ehints{};
     dhints.decoder = options.video.decoder.c_str();
-    dhints.format = options.video.format.c_str();
     ehints.encoder = options.video.encoder.c_str();
+    ehints.format = options.video.format.c_str();
     ehints.bitrate = options.video.bitrate * 1000;
 
     for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
@@ -195,16 +214,7 @@ int main(int argc, char* argv[])
 {
     auto options = parse(argc, argv);
 
-    if (options.version)
-    {
-        version();
-        return 0;
-    }
-    if (options.list)
-    {
-        list();
-        return 0;
-    }
+    if (list(options)) return 0;
 
     if (options.inputs.empty()) return 0;
     options.outputs.resize(options.inputs.size());

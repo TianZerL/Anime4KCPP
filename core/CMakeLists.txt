@@ -8,6 +8,7 @@ include(${DEPENDENCY_DIR}/ruapu.cmake)
 include(${DEPENDENCY_DIR}/stb.cmake)
 if(AC_CORE_WITH_OPENCL)
     include(${DEPENDENCY_DIR}/opencl.cmake)
+    include(${CMAKE_DIR}/MinifierOpenCLKernel.cmake)
 endif()
 if(AC_CORE_WITH_EIGEN3)
     include(${DEPENDENCY_DIR}/eigen3.cmake)
@@ -26,7 +27,7 @@ target_sources(ac PRIVATE
     ${CORE_SOURCE_DIR}/src/Image.cpp
     ${CORE_SOURCE_DIR}/src/ImageProcess.cpp
     ${CORE_SOURCE_DIR}/src/ImageIO.cpp
-    ${CORE_SOURCE_DIR}/src/ACNet.cpp
+    ${CORE_SOURCE_DIR}/src/Model.cpp
     ${CORE_SOURCE_DIR}/src/Processor.cpp
     ${CORE_SOURCE_DIR}/src/cpu/Dispatch.cpp
     ${CORE_SOURCE_DIR}/src/cpu/CPUProcessor.cpp
@@ -134,21 +135,20 @@ ac_check_enable_static_crt(ac)
 ac_check_disable_pic(ac)
 
 if(AC_CORE_WITH_OPENCL)
-    file(WRITE "${CORE_BINARY_DIR}/Kernel.cl.hpp.in" [[
+    file(WRITE "${CORE_BINARY_DIR}/filegen/include/AC/Core/OpenCL/Kernel.cl.hpp.in" [[
 #ifndef AC_CORE_OPENCL_KERNEL_HPP
 #define AC_CORE_OPENCL_KERNEL_HPP
 namespace ac::core::opencl
 {
-    constexpr const char* KernelString = R"(@AC_CORE_OPENCL_KERNEL_CL@)";
+    constexpr const char* KernelString = R"(@AC_CORE_OPENCL_KERNEL_CL_CONTENT_MINIFIED@)";
 }
-#endif
-    ]])
+#endif]])
 
-    file(READ "${CORE_SOURCE_DIR}/src/opencl/Kernel.cl" AC_CORE_OPENCL_KERNEL_CL_SRC)
-    string(REGEX REPLACE "\n[ \t\r\n]+" "" AC_CORE_OPENCL_KERNEL_CL "${AC_CORE_OPENCL_KERNEL_CL_SRC}")
+    file(READ "${CORE_SOURCE_DIR}/src/opencl/Kernel.cl" AC_CORE_OPENCL_KERNEL_CL_CONTENT)
+    minifier_opencl_kernel(AC_CORE_OPENCL_KERNEL_CL_CONTENT AC_CORE_OPENCL_KERNEL_CL_CONTENT_MINIFIED)
 
     configure_file(
-        ${CORE_BINARY_DIR}/Kernel.cl.hpp.in
+        ${CORE_BINARY_DIR}/filegen/include/AC/Core/OpenCL/Kernel.cl.hpp.in
         ${CORE_BINARY_DIR}/include/AC/Core/OpenCL/Kernel.hpp
         @ONLY
     )

@@ -15,7 +15,7 @@ namespace ac::core::cpu
     #endif
     }
 
-    template <typename OUT, int cin, int cout>
+    template <typename OUT, int cin, int cout, bool residual = false>
     inline void conv3x3_neon_float(const Image& src, Image& dst, const float* const kernels, const float* const biases)
     {
         int w = src.width(), h = src.height();
@@ -161,6 +161,7 @@ namespace ac::core::cpu
 
                     sum += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
                 }
+                if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }
         }, src, dst);
@@ -261,6 +262,10 @@ namespace ac::core::cpu
     void conv3x3_8to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         conv3x3_neon_float<float, 8, 8>(src, dst, kernels, biases);
+    }
+    void conv3x3_residual_8to8_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_neon_float<float, 8, 8, true>(src, dst, kernels, biases);
     }
     void deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels)
     {

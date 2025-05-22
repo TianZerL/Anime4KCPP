@@ -49,9 +49,9 @@ int ac_image_element_size(const ac_image* const image)
 {
     return image->object.elementSize();
 }
-int ac_image_channel_size(const ac_image* const image)
+int ac_image_pixel_size(const ac_image* const image)
 {
-    return image->object.channelSize();
+    return image->object.pixelSize();
 }
 int ac_image_type(const ac_image* const image)
 {
@@ -140,11 +140,11 @@ const char* ac_processor_info(const int processor_type)
     default: return "unsupported processor";
     }
 }
-int ac_processor_type(const char* const processor_type_string)
+int ac_processor_type(const char* const processor_type_name)
 {
-    return ac::core::Processor::type(processor_type_string);
+    return ac::core::Processor::type(processor_type_name);
 }
-const char* ac_processor_type_string(const int processor_type)
+const char* ac_processor_type_name(const int processor_type)
 {
     return ac::core::Processor::type(processor_type);
 }

@@ -20,7 +20,7 @@ else()
     set(AC_GUI_LICENSE "${TOP_DIR}/LICENSE-MIT")
 endif()
 
-file(WRITE "${GUI_BINARY_DIR}/resources/qresource.qrc.in" [[
+file(WRITE "${GUI_BINARY_DIR}/filegen/resources/qresource.qrc.in" [[
 <RCC>
     <qresource prefix="/icon">
         <file alias="logo">@TOP_DIR@/images/Logo.ico</file>
@@ -35,7 +35,7 @@ file(WRITE "${GUI_BINARY_DIR}/resources/qresource.qrc.in" [[
 ]])
 
 configure_file(
-    ${GUI_BINARY_DIR}/resources/qresource.qrc.in
+    ${GUI_BINARY_DIR}/filegen/resources/qresource.qrc.in
     ${GUI_BINARY_DIR}/resources/qresource.qrc @ONLY
 )
 
@@ -43,12 +43,32 @@ if (WIN32)
     file(WRITE "${GUI_BINARY_DIR}/resources/resource.rc" "IDI_ICON1               ICON    \"${TOP_DIR}/images/Logo.ico\"")
 endif()
 
+file(READ ${TOP_DIR}/core/include/AC/Specs.hpp AC_SPECS_HPP_CONTENT)
+string(REGEX MATCHALL "constexpr[ \t]+const[ \t]+char[ \t]*\\*[ \t]*[a-zA-Z_]+DescriptionList\\[\\][ \t]*=[ \t]*\\{[^\\}]+\\}" AC_SPECS_HPP_CONTENT_MATCHED_LIST "${AC_SPECS_HPP_CONTENT}")
+list(JOIN AC_SPECS_HPP_CONTENT_MATCHED_LIST ";\n    " AC_SPECS_HPP_CONTENT_MATCHED)
+string(REGEX REPLACE "\"([^\"]+)\"" "QT_TRANSLATE_NOOP(\"ExternI18N\", \"\\1\")" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MATCHED}")
+string(REGEX REPLACE "#[^\n]+\n" "" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+file(WRITE "${GUI_BINARY_DIR}/filegen/i18n/i18n_marker_ac_specs_hpp.cpp.in" [[
+// Auto-generated i18n marker
+#include <QTranslator>
+
+namespace i18n::ac::specs
+{
+    @AC_SPECS_HPP_CONTENT_MODIFIED@;
+}
+]])
+configure_file(
+    ${GUI_BINARY_DIR}/filegen/i18n/i18n_marker_ac_specs_hpp.cpp.in
+    ${GUI_BINARY_DIR}/i18n/i18n_marker_ac_specs_hpp.cpp @ONLY
+)
+
 foreach(AC_GUI_LANGUAGE ${AC_GUI_LANGUAGES})
     list(APPEND AC_GUI_TS_FILES "${GUI_SOURCE_DIR}/languages/ac_gui_${AC_GUI_LANGUAGE}.ts")
 endforeach()
 
 file(GLOB AC_GUI_UI_FILES ${GUI_SOURCE_DIR}/ui/*.ui)
 file(GLOB AC_GUI_RC_FILES ${GUI_BINARY_DIR}/resources/*.*rc)
+file(GLOB AC_GUI_EXTERN_I18N_FILES ${GUI_BINARY_DIR}/i18n/*.cpp)
 
 set(AC_GUI_SRC_FILES
     ${GUI_SOURCE_DIR}/src/QtMain.cpp
@@ -62,6 +82,7 @@ set(AC_GUI_SRC_FILES
     ${GUI_SOURCE_DIR}/src/Logger.cpp
     ${AC_GUI_UI_FILES}
     ${AC_GUI_RC_FILES}
+    ${AC_GUI_EXTERN_I18N_FILES}
 )
 
 dep_qt_add_executable(ac_gui "${AC_GUI_SRC_FILES}" "${AC_GUI_TS_FILES}" "${GUI_SOURCE_DIR}/include")

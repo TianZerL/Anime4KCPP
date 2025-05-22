@@ -24,7 +24,7 @@ namespace ac::core::detail
             auto dstW = static_cast<int>(src.width() * fx);
             auto dstH = static_cast<int>(src.height() * fy);
 
-            if ((dst.width() != dstW) || (dst.height() != dstH) || (dst.channels() != src.channels()))
+            if ((dst.width() != dstW) || (dst.height() != dstH) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
                 dst.create(dstW, dstH, src.channels(), src.type());
         }
         else
@@ -36,7 +36,7 @@ namespace ac::core::detail
                 return;
             }
 
-            if (dst.channels() != src.channels())
+            if ((dst.channels() != src.channels()) || (dst.type() != src.type()))
                 dst.create(dst.width(), dst.height(), src.channels(), src.type());
         }
 
@@ -336,39 +336,25 @@ namespace ac::core::detail
         }, srcy, srcu, srcv, srca, dst);
     }
 
-    template<typename T>
-    inline void unpadding(const Image& src, Image& dst)
-    {
-        int channels = src.channels();
-        filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const T*>(sptr);
-            auto out = static_cast<T*>(dptr);
-
-            for (int c = 0; c < channels; c++) out[c] = in[c];
-        }, src, dst);
-    }
-
     template<typename IN, typename OUT = IN>
     inline void shl(const Image& src, Image& dst, const int n)
     {
-        int channels = src.channels();
-        filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            for (int c = 0; c < channels; c++) out[c] = in[c] << n;
-            }, src, dst);
+        for (int i = 0; i < src.height(); i++)
+        {
+            auto in = static_cast<const IN*>(src.ptr(i));
+            auto out = static_cast<OUT*>(dst.ptr(i));
+            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ << n;
+        }
     }
     template<typename IN, typename OUT = IN>
     inline void shr(const Image& src, Image& dst, const int n)
     {
-        int channels = src.channels();
-        filter([=](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            for (int c = 0; c < channels; c++) out[c] = in[c] >> n;
-            }, src, dst);
+        for (int i = 0; i < src.height(); i++)
+        {
+            auto in = static_cast<const IN*>(src.ptr(i));
+            auto out = static_cast<OUT*>(dst.ptr(i));
+            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ >> n;
+        }
     }
 }
 
@@ -533,18 +519,20 @@ void ac::core::yuva2rgba(const Image& y, const Image& u, const Image& v, const I
     case Image::Float32: return detail::yuva2rgba<float>(y, u, v, a, rgba);
     }
 }
-void ac::core::unpadding(const Image& src, Image& dst)
+void ac::core::unpadding(const Image& src, Image& dst) noexcept
 {
-    if (src.empty() || (src.stride() == src.width() * src.channelSize())) return;
-    Image tmp{};
-    if (src == dst || dst.empty()) tmp.create(src.width(), src.height(), src.channels(), src.type());
-    else tmp = dst;
-    switch (src.type())
+    if (src.empty()) return;
+    auto lineSize = src.width() * src.pixelSize();
+    if (src.stride() == lineSize)
     {
-    case Image::UInt8: detail::unpadding<std::uint8_t>(src, tmp); break;
-    case Image::UInt16: detail::unpadding<std::uint16_t>(src, tmp); break;
-    case Image::Float32: detail::unpadding<float>(src, tmp); break;
+        if (dst != src) dst = src;
+        return;
     }
+    Image tmp{};
+    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
+        tmp.create(src.width(), src.height(), src.channels(), src.type());
+    else tmp = dst;
+    for (int i = 0; i < src.height(); i++) std::memcpy(tmp.ptr(i), src.ptr(i), lineSize);
     if (dst != tmp) dst = tmp;
 }
 void ac::core::shl(Image& image, const int n)
@@ -560,24 +548,13 @@ void ac::core::shl(const Image& src, Image& dst, const int n)
 {
     if (src.empty() || !src.isUint() || n <= 0) return;
     Image tmp{};
-    if (src == dst || dst.empty()) tmp.create(src.width(), src.height(), src.channels(), src.type());
+    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
+        tmp.create(src.width(), src.height(), src.channels(), src.type());
     else tmp = dst;
     switch (src.type())
     {
-    case Image::UInt8: 
-        switch (dst.type())
-        {
-        case Image::UInt8: detail::shl<std::uint8_t, std::uint8_t>(src, tmp, n); break;
-        case Image::UInt16: detail::shl<std::uint8_t, std::uint16_t>(src, tmp, n); break;
-        }
-        break;
-    case Image::UInt16:
-        switch (dst.type())
-        {
-        case Image::UInt8: detail::shl<std::uint16_t, std::uint8_t>(src, tmp, n); break;
-        case Image::UInt16: detail::shl<std::uint16_t, std::uint16_t>(src, tmp, n); break;
-        }
-        break;
+    case Image::UInt8: detail::shl<std::uint8_t>(src, tmp, n); break;
+    case Image::UInt16: detail::shl<std::uint16_t>(src, tmp, n); break;
     }
     if (dst != tmp) dst = tmp;
 }
@@ -594,24 +571,13 @@ void ac::core::shr(const Image& src, Image& dst, const int n)
 {
     if (src.empty() || !src.isUint() || n <= 0) return;
     Image tmp{};
-    if (src == dst || dst.empty()) tmp.create(src.width(), src.height(), src.channels(), src.type());
+    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
+        tmp.create(src.width(), src.height(), src.channels(), src.type());
     else tmp = dst;
     switch (src.type())
     {
-    case Image::UInt8:
-        switch (dst.type())
-        {
-        case Image::UInt8: detail::shr<std::uint8_t, std::uint8_t>(src, tmp, n); break;
-        case Image::UInt16: detail::shr<std::uint8_t, std::uint16_t>(src, tmp, n); break;
-        }
-        break;
-    case Image::UInt16:
-        switch (dst.type())
-        {
-        case Image::UInt8: detail::shr<std::uint16_t, std::uint8_t>(src, tmp, n); break;
-        case Image::UInt16: detail::shr<std::uint16_t, std::uint16_t>(src, tmp, n); break;
-        }
-        break;
+    case Image::UInt8: detail::shr<std::uint8_t>(src, tmp, n); break;
+    case Image::UInt16: detail::shr<std::uint16_t>(src, tmp, n); break;
     }
     if (dst != tmp) dst = tmp;
 }

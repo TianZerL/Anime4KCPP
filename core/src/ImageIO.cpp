@@ -1,3 +1,4 @@
+#include <cctype>
 #include <cstdint>
 #include <cstring>
 
@@ -18,7 +19,6 @@ ac::core::Image ac::core::imdecode(const void* const buffer, const int size, con
     Image image{};
     int w = 0, h = 0, c = 0;
     std::uint8_t* data = stbi_load_from_memory(static_cast<const std::uint8_t*>(buffer), size, &w, &h, &c, flag);
-    if (flag != IMREAD_UNCHANGED) c = flag;
     if (data)
     {
         image.create(w, h, c, ac::core::Image::UInt8);
@@ -34,7 +34,6 @@ ac::core::Image ac::core::imread(const char* const filename, const int flag) noe
     Image image{};
     int w = 0, h = 0, c = 0;
     std::uint8_t* data = stbi_load(filename, &w, &h, &c, flag);
-    if (flag != IMREAD_UNCHANGED) c = flag;
     if (data)
     {
         image.create(w, h, c, ac::core::Image::UInt8);
@@ -53,16 +52,31 @@ bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
         count++;
     }
 
-    if (idx != -1)
+    if ((idx != -1) && (idx + 1 < count))
     {
+        char ext[5] = "";
+        for (int i = 0; i < 4 && idx + 1 + i < count; i++) ext[i] = static_cast<char>(std::tolower(static_cast<unsigned char>((filename + idx + 1)[i])));
+
         Image out = image;
-        if (!std::strcmp(filename + idx + 1, "png")) return stbi_write_png(filename, out.width(), out.height(), out.channels(), out.ptr(), out.stride());
-        unpadding(out, out);
-        if (!std::strcmp(filename + idx + 1, "jpg")) return stbi_write_jpg(filename, out.width(), out.height(), out.channels(), out.ptr(), 95);
-        if (!std::strcmp(filename + idx + 1, "bmp")) return stbi_write_bmp(filename, out.width(), out.height(), out.channels(), out.ptr());
-        if (!std::strcmp(filename + idx + 1, "tga")) return stbi_write_tga(filename, out.width(), out.height(), out.channels(), out.ptr());
+        if (!std::strcmp(ext, "png"))
+            return stbi_write_png(filename, out.width(), out.height(), out.channels(), out.ptr(), out.stride());
+        if (!std::strcmp(ext, "jpg") || !std::strcmp(ext, "jpeg"))
+        {
+            unpadding(out, out);
+            return stbi_write_jpg(filename, out.width(), out.height(), out.channels(), out.ptr(), 95);
+        }
+        if (!std::strcmp(ext, "bmp"))
+        {
+            unpadding(out, out);
+            return stbi_write_bmp(filename, out.width(), out.height(), out.channels(), out.ptr());
+        }
+        if (!std::strcmp(ext, "tga"))
+        {
+            unpadding(out, out);
+            return stbi_write_tga(filename, out.width(), out.height(), out.channels(), out.ptr());
+        }
     }
-    else return stbi_write_jpg(filename, image.width(), image.height(), image.channels(), image.ptr(), 95);
+    else return stbi_write_png(filename, image.width(), image.height(), image.channels(), image.ptr(), image.stride());
 
     return false;
 }

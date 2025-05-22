@@ -1,6 +1,7 @@
+#include <cctype>
 #include <string>
 
-#include "AC/Core/Model/ACNet.hpp"
+#include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
 #include "AC/Core/Util.hpp"
 
@@ -149,9 +150,15 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type,
 
         for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
-        if (modelString.find("acnet") != std::string::npos) // ACNet
+        if (modelString.find("arnet") != std::string::npos) // ARNet
         {
-            auto variant = ac::core::model::ACNet::Variant::GAN0;
+            auto variant = ac::core::model::ARNet::Variant::HDN;
+            if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::HDN;
+            return createImpl(type, device, ac::core::model::ARNet{ variant });
+        }
+        else // ACNet
+        {
+            auto variant = ac::core::model::ACNet::Variant::GAN;
             if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
             {
                 variant = ac::core::model::ACNet::Variant::HDN0;

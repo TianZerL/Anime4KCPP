@@ -1,6 +1,8 @@
 #include <QCoreApplication>
 #include <QSettings>
 
+#include "AC/Specs.hpp"
+
 #include "Config.hpp"
 
 #define AC_GUI_USER_DATA_FOLDER "user"
@@ -21,6 +23,9 @@ Config::Config() noexcept
     dir.cd(AC_GUI_DEFAULT_OUTPUT_FOLDER);
     io.imageOutputPath = dir.canonicalPath();
     io.videoOutputPath = dir.canonicalPath();
+
+    upscaler.model = ac::specs::ModelNameList[0];
+    upscaler.processor = ac::specs::ProcessorNameList[0];
 
     load();
 }
