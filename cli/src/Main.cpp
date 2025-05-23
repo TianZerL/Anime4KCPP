@@ -107,7 +107,7 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
             std::printf("Failed to save image to %s\n", output.c_str());
             return;
         }
-        };
+    };
     if (poolSize > 1)
     {
         ac::util::ThreadPool pool{ poolSize };
@@ -192,7 +192,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             // a beautiful progress bar
             if (src.number % 32 == 0) ctx->progressBar->print(src.number / ctx->frames);
             return true;
-            }, &data, ac::video::FILTER_AUTO);
+        }, &data, ac::video::FILTER_AUTO);
         stopwatch.stop();
         progressBar.finish();
         pipeline.close();

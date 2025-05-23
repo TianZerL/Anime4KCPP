@@ -13,12 +13,26 @@
 #include "AC/Core.hpp"
 #include "AC/Specs.hpp"
 
+#define A2T(s) (sizeof(TCHAR) == sizeof(char) ? (LPCTSTR)(s) : (util::asciiStringCast<TCHAR>(s).c_str()))
+#define T2A(s) (sizeof(TCHAR) == sizeof(char) ? (LPCSTR)(s) : (util::asciiStringCast<char>(s).c_str()))
+
 #define SET_PLANAR_FORMAT(t) (((t) << 8) | 0)
 #define SET_PACKED_FORMAT(t) (((t) << 8) | 1)
 #define IS_PLANAR_FORMAT(f) (((f) & 0xff) == 0)
 #define GET_FORMAT_TYPE(f) ((f) >> 8)
 
 #define gRegArgument (RegArgument::instance())
+
+namespace util
+{
+    template<typename CharOut, typename CharIn>
+    inline static std::basic_string<CharOut> asciiStringCast(const CharIn* str)
+    {
+        std::basic_string<CharOut> buffer{};
+        for (auto p = str; *p; p++) buffer.push_back(static_cast<CharOut>(*p));
+        return buffer;
+    }
+}
 
 DEFINE_GUID(CLSID_AC_FILTER, 0x731ae2e9, 0xeeed, 0x4e29, 0xb8, 0x1b, 0x5d, 0xc8, 0xa0, 0xd6, 0xa3, 0x07);
 class Filter : public CTransformFilter, public ISpecifyPropertyPages
@@ -211,7 +225,7 @@ Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) : CTransformFilter(nam
     auto device = gRegArgument.getDevice();
     auto modelName = gRegArgument.getModelName();
 
-    processor = ac::core::Processor::create(ac::core::Processor::type(std::string{ processorName, processorName + _tcslen(processorName) }.c_str()), device, std::string{ modelName, modelName + _tcslen(modelName) }.c_str());
+    processor = ac::core::Processor::create(ac::core::Processor::type(T2A(processorName)), device, T2A(modelName));
     if (!processor->ok() && phr) *phr = E_UNEXPECTED;
 }
 STDMETHODIMP Filter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -380,7 +394,7 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%.2lf"), factor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_FACTOR), buffer);
 
-    for (int i = 0; i < NUMELMS(ac::specs::ProcessorNameList); i++) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), ac::specs::ProcessorNameList[i]);
+    for (auto name : ac::specs::ProcessorNameList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), A2T(name));
     auto processorName = gRegArgument.getProcessorName();
     ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), -1, processorName);
 
@@ -388,7 +402,7 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%d"), device);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_DEVICE), buffer);
 
-    for (int i = 0; i < NUMELMS(ac::specs::ModelNameList); i++) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), ac::specs::ModelNameList[i]);
+    for (auto name : ac::specs::ModelNameList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), A2T(name));
     auto modelName = gRegArgument.getModelName();
     ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), -1, modelName);
 
@@ -474,7 +488,7 @@ HRESULT PropertyPage::OnApplyChanges()
 
 RegArgument::RegArgument()
 {
-    RegCreateKeyEx(HKEY_CURRENT_USER, "Software\\Anime4KCPP\\DSFilter", 0, nullptr,
+    RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Anime4KCPP\\DSFilter"), 0, nullptr,
         REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, nullptr, &key, nullptr);
 }
 RegArgument::~RegArgument()
