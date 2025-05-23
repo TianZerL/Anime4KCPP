@@ -1,4 +1,5 @@
 if(NOT TARGET pybind11::module)
+    set(PYBIND11_FINDPYTHON ON)
     find_package(pybind11 QUIET)
     if(NOT pybind11_FOUND)
         message(STATUS "dep: pybind11 not found, will be fetched online.")
