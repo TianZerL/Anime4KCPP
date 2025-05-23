@@ -13,8 +13,8 @@
 #include "AC/Core.hpp"
 #include "AC/Specs.hpp"
 
-#define A2T(s) (sizeof(TCHAR) == sizeof(char) ? (LPCTSTR)(s) : (util::asciiStringCast<TCHAR>(s).c_str()))
-#define T2A(s) (sizeof(TCHAR) == sizeof(char) ? (LPCSTR)(s) : (util::asciiStringCast<char>(s).c_str()))
+#define A2T(s) (sizeof(TCHAR) == sizeof(char) ? (LPCTSTR)(s) : (util::asciiToString<TCHAR>(s).c_str()))
+#define T2A(s) (sizeof(TCHAR) == sizeof(char) ? (LPCSTR)(s) : (util::asciiToString<char>(s).c_str()))
 
 #define SET_PLANAR_FORMAT(t) (((t) << 8) | 0)
 #define SET_PACKED_FORMAT(t) (((t) << 8) | 1)
@@ -26,11 +26,25 @@
 namespace util
 {
     template<typename CharOut, typename CharIn>
-    inline static std::basic_string<CharOut> asciiStringCast(const CharIn* str)
+    inline static std::basic_string<CharOut> asciiToString(const CharIn* const str)
     {
         std::basic_string<CharOut> buffer{};
         for (auto p = str; *p; p++) buffer.push_back(static_cast<CharOut>(*p));
         return buffer;
+    }
+
+    template<typename CharOut, typename CharIn, typename SizeType>
+    inline static SizeType asciiToWindowsAscii(const CharIn* const str, CharOut* const buffer, const SizeType size)
+    {
+        SizeType count = 0;
+        for (auto p = str; *p && (count < size - 1); p++)
+        {
+            CharOut ch = static_cast<CharOut>(*p);
+            if (ch == static_cast<CharOut>('\n')) buffer[count++] = static_cast<CharOut>('\r');
+            buffer[count++] = ch;
+        }
+        buffer[count] = static_cast<CharOut>('\0');
+        return count;
     }
 }
 
@@ -414,35 +428,18 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%d"), limitHeight);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_LIMIT_HEIGHT), buffer);
 
-    int count = 0;
-    for (auto p = ac::core::Processor::info<ac::core::Processor::CPU>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
-    {
-        TCHAR ch = *p;
-        if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
-        buffer[count++] = ch;
-    }
+    decltype(NUMELMS(buffer)) count = 0;
+    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::CPU>(), buffer + count, NUMELMS(buffer) - count);
 #ifdef AC_CORE_WITH_OPENCL
-    for (auto p = ac::core::Processor::info<ac::core::Processor::OpenCL>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
-    {
-        TCHAR ch = *p;
-        if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
-        buffer[count++] = ch;
-    }
+    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::OpenCL>(), buffer + count, NUMELMS(buffer) - count);
 #endif
 #ifdef AC_CORE_WITH_CUDA
-    for (auto p = ac::core::Processor::info<ac::core::Processor::CUDA>(); *p != '\0' && (count < NUMELMS(buffer) - 1); p++)
-    {
-        TCHAR ch = *p;
-        if (ch == TEXT('\n')) buffer[count++] = TEXT('\r');
-        buffer[count++] = ch;
-    }
+    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::CUDA>(), buffer + count, NUMELMS(buffer) - count);
 #endif
-    buffer[count] = TEXT('\0');
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
 
     Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_VERSION), TEXT(AC_CORE_VERSION_STR));
-    Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_COPYRIGHT),
-        TEXT("Copyright (c) 2020-") TEXT(AC_BUILD_YEAR) TEXT(" the Anime4KCPP project"));
+    Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_COPYRIGHT), TEXT("Copyright (c) 2020-") TEXT(AC_BUILD_YEAR) TEXT(" the Anime4KCPP project"));
 
     isInitialized = true;
     return S_OK;
