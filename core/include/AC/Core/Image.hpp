@@ -85,7 +85,7 @@ namespace ac::core
     // `src` and `dst` can be same.
     AC_EXPORT void shr(const Image& src, Image& dst, int n);
 
-    enum
+    enum ImreadModes
     {
         IMREAD_UNCHANGED = 0,
         IMREAD_GRAYSCALE = 1,

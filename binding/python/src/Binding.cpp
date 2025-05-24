@@ -40,7 +40,7 @@ PYBIND11_MODULE(pyac, m)
         .def("ok", &ac::core::Processor::ok)
         .def("error", &ac::core::Processor::error)
         .def("name", &ac::core::Processor::name)
-        .def_static("info_list", []() {
+        .def_property_readonly_static("InfoList", [](py::object /* self */) {
             return std::tuple{
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
 #           ifdef AC_CORE_WITH_OPENCL
@@ -54,6 +54,31 @@ PYBIND11_MODULE(pyac, m)
         .def_readonly_static("CPU", &ac::core::Processor::CPU)
         .def_readonly_static("OpenCL", &ac::core::Processor::OpenCL)
         .def_readonly_static("CUDA", &ac::core::Processor::CUDA);
+
+    py::enum_<ac::core::ImreadModes>(core, "ImreadModes")
+        .value("IMREAD_UNCHANGED", ac::core::IMREAD_UNCHANGED)
+        .value("IMREAD_GRAYSCALE", ac::core::IMREAD_GRAYSCALE)
+        .value("IMREAD_COLOR", ac::core::IMREAD_COLOR)
+        .value("IMREAD_RGB", ac::core::IMREAD_RGB)
+        .value("IMREAD_RGBA", ac::core::IMREAD_RGBA)
+        .export_values();
+
+    core.def("imread", [](const char* filename, ac::core::ImreadModes flag) {
+        auto img = ac::core::imread(filename, flag);
+        return py::array_t<std::uint8_t>{
+            { img.height(), img.width(), img.channels() },
+            { img.stride(), img.pixelSize(), img.elementSize() },
+            img.data(),
+            py::capsule{ new ac::core::Image{ img }, [](void* v) { delete static_cast<ac::core::Image*>(v); } }
+        };
+    }, py::arg("filename"), py::arg("flag"));
+
+    core.def("imwrite", [](const char* filename, const py::array_t<std::uint8_t> in) {
+        auto src = in.request();
+        if (src.ndim != 3) throw py::buffer_error{ "Incompatible dimension: expected 3." };
+
+        return ac::core::imwrite(filename, { static_cast<int>(src.shape[1]), static_cast<int>(src.shape[0]), static_cast<int>(src.shape[2]), ac::core::Image::UInt8, src.ptr, static_cast<int>(src.strides[0]) });
+    }, py::arg("filename"), py::arg("image"));
 
     auto specs = m.def_submodule("specs");
 
