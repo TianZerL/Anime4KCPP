@@ -35,18 +35,18 @@
     </message>
     <message>
         <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
-        <source>General-purpose CPU processing with optional SIMD acceleration</source>
-        <translation>通用CPU计算，支持SIMD加速</translation>
+        <source>General-purpose CPU processing with optional SIMD acceleration.</source>
+        <translation>通用CPU计算，支持SIMD加速。</translation>
     </message>
     <message>
         <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="16"/>
-        <source>Cross-platform acceleration requiring OpenCL 1.2+ compliant devices</source>
-        <translation>跨平台异构计算加速，需要支持OpenCL1.2+标准的设备</translation>
+        <source>Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.</source>
+        <translation>跨平台异构计算加速，需要支持OpenCL1.2+标准的设备。</translation>
     </message>
     <message>
         <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="17"/>
-        <source>NVIDIA GPU acceleration requiring Compute Capability 5.0+</source>
-        <translation>NVIDIA GPU加速，需CUDA计算能力5.0+的设备</translation>
+        <source>NVIDIA GPU acceleration requiring Compute Capability 5.0+.</source>
+        <translation>NVIDIA GPU加速，需CUDA计算能力5.0+的设备。</translation>
     </message>
 </context>
 <context>

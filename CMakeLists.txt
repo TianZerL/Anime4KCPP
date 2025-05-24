@@ -5,6 +5,11 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build Type" FORCE)
 endif()
 
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    message(STATUS "Set default install path ${TOP_DIR}/install")
+    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${TOP_DIR}/install")
+endif()
+
 project(Anime4KCPP LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -16,7 +21,6 @@ set(CMAKE_DIR ${TOP_DIR}/cmake)
 set(DEPENDENCY_DIR ${CMAKE_DIR}/dependency)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
-set(CMAKE_INSTALL_PREFIX ${TOP_DIR}/install)
 
 string(TIMESTAMP DATE_TODAY "%Y-%m-%d")
 string(TIMESTAMP DATE_YEAR "%Y")

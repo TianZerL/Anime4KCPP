@@ -32,12 +32,12 @@ namespace ac::specs
     };
 
     constexpr const char* ProcessorDescriptionList[] = {
-        "General-purpose CPU processing with optional SIMD acceleration",      // cpu
+        "General-purpose CPU processing with optional SIMD acceleration.",      // cpu
 #   ifdef AC_CORE_WITH_OPENCL
-        "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices", // opencl
+        "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.", // opencl
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        "NVIDIA GPU acceleration requiring Compute Capability 5.0+",           // cuda
+        "NVIDIA GPU acceleration requiring Compute Capability 5.0+.",           // cuda
 #   endif
     };
 }
