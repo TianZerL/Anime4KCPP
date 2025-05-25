@@ -61,7 +61,7 @@ namespace ac::core::opencl
         cl_int err = CL_SUCCESS;
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
         context.program = cl::Program{ context.ctx, kernel, false, &err }; if (err != CL_SUCCESS) return err;
-        return context.program.build(context.device, options);
+        return context.program.build({ context.device }, options);
     }
     inline static cl_channel_type channelType(const Image::ElementType elementType) noexcept
     {
