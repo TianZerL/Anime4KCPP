@@ -529,8 +529,8 @@ void ac::core::unpadding(const Image& src, Image& dst) noexcept
         return;
     }
     Image tmp{};
-    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
-        tmp.create(src.width(), src.height(), src.channels(), src.type());
+    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()) || (dst.stride() != lineSize))
+        tmp.create(src.width(), src.height(), src.channels(), src.type(), lineSize);
     else tmp = dst;
     for (int i = 0; i < src.height(); i++) std::memcpy(tmp.ptr(i), src.ptr(i), lineSize);
     if (dst != tmp) dst = tmp;

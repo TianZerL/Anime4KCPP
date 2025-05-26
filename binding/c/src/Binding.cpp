@@ -21,9 +21,35 @@ ac_image* ac_image_create_empty(void)
 {
     return new ac_image{};
 }
+ac_image* ac_image_from(const int w, const int h, const int c, const int element_type, const void* const data, const int stride)
+{
+    auto image = new ac_image{};
+    image->object.from(w, h, c, element_type, data, stride);
+    return image;
+}
+ac_image* ac_image_clone(const ac_image* const image)
+{
+    return new ac_image{ image->object.clone() };
+}
 void ac_image_destroy(ac_image* const image)
 {
     delete image;
+}
+void ac_image_data_create(ac_image* image, int w, int h, int c, int element_type, int stride)
+{
+    image->object.create(w, h, c, element_type, stride);
+}
+void ac_image_map(ac_image* image, int w, int h, int c, int element_type, void* data, int stride)
+{
+    image->object.map(w, h, c, element_type, data, stride);
+}
+void ac_image_data_from(ac_image* image, int w, int h, int c, int element_type, const void* data, int stride)
+{
+    image->object.from(w, h, c, element_type, data, stride);
+}
+void ac_image_to(const ac_image* const image, void* const data, const int stride)
+{
+    image->object.to(data, stride);
 }
 int ac_image_width(const ac_image* const image)
 {

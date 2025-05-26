@@ -21,8 +21,7 @@ ac::core::Image ac::core::imdecode(const void* const buffer, const int size, con
     std::uint8_t* data = stbi_load_from_memory(static_cast<const std::uint8_t*>(buffer), size, &w, &h, &c, flag);
     if (data)
     {
-        image.create(w, h, c, ac::core::Image::UInt8);
-        std::memcpy(image.ptr(), data, image.size());
+        image.from(w, h, c, ac::core::Image::UInt8, data);
         stbi_image_free(data);
     }
     return image;
@@ -36,8 +35,7 @@ ac::core::Image ac::core::imread(const char* const filename, const int flag) noe
     std::uint8_t* data = stbi_load(filename, &w, &h, &c, flag);
     if (data)
     {
-        image.create(w, h, c, ac::core::Image::UInt8);
-        std::memcpy(image.ptr(), data, image.size());
+        image.from(w, h, c, ac::core::Image::UInt8, data);
         stbi_image_free(data);
     }
     return image;

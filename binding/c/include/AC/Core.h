@@ -38,7 +38,13 @@ enum ac_imread_flag
 
 CAC_API ac_image* ac_image_create(int w, int h, int c, int element_type, void* data, int stride);
 CAC_API ac_image* ac_image_create_empty(void);
+CAC_API ac_image* ac_image_from(int w, int h, int c, int element_type, const void* data, int stride);
+CAC_API ac_image* ac_image_clone(const ac_image* image);
 CAC_API void ac_image_destroy(ac_image* image);
+CAC_API void ac_image_data_create(ac_image* image, int w, int h, int c, int element_type, int stride);
+CAC_API void ac_image_map(ac_image* image, int w, int h, int c, int element_type, void* data, int stride);
+CAC_API void ac_image_data_from(ac_image* image, int w, int h, int c, int element_type, const void* data, int stride);
+CAC_API void ac_image_to(const ac_image* image, void* data, int stride);
 CAC_API int ac_image_width(const ac_image* image);
 CAC_API int ac_image_height(const ac_image* image);
 CAC_API int ac_image_channels(const ac_image* image);

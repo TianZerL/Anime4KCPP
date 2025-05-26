@@ -116,7 +116,7 @@ public:
 public:
     AC_EXPORT Image() noexcept;
     AC_EXPORT Image(int w, int h, int c, ElementType elementType, int stride = 0);
-    AC_EXPORT Image(int w, int h, int c, ElementType elementType, void* data, int stride);
+    AC_EXPORT Image(int w, int h, int c, ElementType elementType, void* data, int stride = 0);
     AC_EXPORT Image(const Image&) noexcept;
     AC_EXPORT Image(Image&&) noexcept;
     AC_EXPORT ~Image() noexcept;
@@ -124,6 +124,10 @@ public:
     AC_EXPORT Image& operator=(Image&&) noexcept;
 
     AC_EXPORT void create(int w, int h, int c, ElementType elementType, int stride = 0);
+    AC_EXPORT void map(int w, int h, int c, ElementType elementType, void* data, int stride = 0) noexcept;
+    AC_EXPORT void from(int w, int h, int c, ElementType elementType, const void* data, int stride = 0);
+    AC_EXPORT void to(void* data, int stride = 0) const noexcept;
+    AC_EXPORT Image clone() const;
 
 public:
     int width() const noexcept { return w; }
