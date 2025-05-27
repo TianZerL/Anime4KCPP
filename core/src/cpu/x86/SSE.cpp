@@ -72,7 +72,6 @@ namespace ac::core::cpu
 
             for (int n = 0; n < cout; n++)
             {
-                float sum = 0.0f;
                 const float* kptr[] = {
                     kernels + n * cin * 9 + cin * 0,
                     kernels + n * cin * 9 + cin * 1,
@@ -84,6 +83,7 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
+                __m128 s = _mm_setzero_ps();
                 for (int idx = 0; idx < count; idx++)
                 {
                     __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
@@ -106,7 +106,7 @@ namespace ac::core::cpu
                     __m128 s7 = _mm_mul_ps(r7[idx], k7);
                     __m128 s8 = _mm_mul_ps(r8[idx], k8);
 
-                    sum += sse_hsum_ps(_mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                    s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
                 }
                 if constexpr (remain)
                 {
@@ -130,8 +130,9 @@ namespace ac::core::cpu
                     __m128 s7 = _mm_mul_ps(r7[count], k7);
                     __m128 s8 = _mm_mul_ps(r8[count], k8);
 
-                    sum += sse_hsum_ps(_mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                    s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
                 }
+                float sum = sse_hsum_ps(s);
                 if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }

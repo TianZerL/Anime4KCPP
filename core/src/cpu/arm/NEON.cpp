@@ -84,7 +84,6 @@ namespace ac::core::cpu
 
             for (int n = 0; n < cout; n++)
             {
-                float sum = 0.0f;
                 const float* kptr[] = {
                     kernels + n * cin * 9 + cin * 0,
                     kernels + n * cin * 9 + cin * 1,
@@ -96,6 +95,7 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
+                float32x4_t s0 = vdupq_n_f32(0.0f);
                 for (int idx = 0; idx < count; idx++)
                 {
                     float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
@@ -108,7 +108,6 @@ namespace ac::core::cpu
                     float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
                     float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
 
-                    float32x4_t s0 = vdupq_n_f32(0.0f);
                     float32x4_t s1 = vdupq_n_f32(0.0f);
                     float32x4_t s2 = vdupq_n_f32(0.0f);
 
@@ -122,7 +121,7 @@ namespace ac::core::cpu
                     s1 = vmlaq_f32(s1, r7[idx], k7);
                     s2 = vmlaq_f32(s2, r8[idx], k8);
 
-                    sum += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
+                    s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
                 }
                 if constexpr (remain)
                 {
@@ -145,7 +144,6 @@ namespace ac::core::cpu
                     float32x4_t k7 = vld1q_f32(d7);
                     float32x4_t k8 = vld1q_f32(d8);
 
-                    float32x4_t s0 = vdupq_n_f32(0.0f);
                     float32x4_t s1 = vdupq_n_f32(0.0f);
                     float32x4_t s2 = vdupq_n_f32(0.0f);
 
@@ -159,8 +157,9 @@ namespace ac::core::cpu
                     s1 = vmlaq_f32(s1, r7[count], k7);
                     s2 = vmlaq_f32(s2, r8[count], k8);
 
-                    sum += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
+                    s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
                 }
+                float sum = neon_hsum_f32(s0);
                 if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }

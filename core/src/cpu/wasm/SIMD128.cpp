@@ -72,7 +72,6 @@ namespace ac::core::cpu
 
             for (int n = 0; n < cout; n++)
             {
-                float sum = 0.0f;
                 const float* kptr[] = {
                     kernels + n * cin * 9 + cin * 0,
                     kernels + n * cin * 9 + cin * 1,
@@ -84,6 +83,7 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
+                v128_t s = wasm_f32x4_const_splat(0.0f);
                 for (int idx = 0; idx < count; idx++)
                 {
                     v128_t k0 = wasm_v128_load(kptr[0] + idx * vstep);
@@ -106,7 +106,7 @@ namespace ac::core::cpu
                     v128_t s7 = wasm_f32x4_mul(r7[idx], k7);
                     v128_t s8 = wasm_f32x4_mul(r8[idx], k8);
 
-                    sum += wasm_simd128_f32x4_hsum(wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
+                    s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
                 }
                 if constexpr (remain)
                 {
@@ -130,8 +130,9 @@ namespace ac::core::cpu
                     v128_t s7 = wasm_f32x4_mul(r7[count], k7);
                     v128_t s8 = wasm_f32x4_mul(r8[count], k8);
 
-                    sum += wasm_simd128_f32x4_hsum(wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
+                    s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
                 }
+                float sum = wasm_simd128_f32x4_hsum(s);
                 if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }

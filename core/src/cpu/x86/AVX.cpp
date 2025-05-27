@@ -74,7 +74,6 @@ namespace ac::core::cpu
 
             for (int n = 0; n < cout; n++)
             {
-                float sum = 0.0f;
                 const float* kptr[] = {
                     kernels + n * cin * 9 + cin * 0,
                     kernels + n * cin * 9 + cin * 1,
@@ -86,6 +85,7 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
+                __m256 s = _mm256_setzero_ps();
                 for (int idx = 0; idx < count; idx++)
                 {
                     __m256 k0 = _mm256_loadu_ps(kptr[0] + idx * vstep);
@@ -100,7 +100,8 @@ namespace ac::core::cpu
 
                     if constexpr (fma)
                     {
-                        __m256 s0 = _mm256_setzero_ps();
+#                   ifdef AC_CORE_WITH_FMA
+                        __m256& s0 = s;
                         __m256 s1 = _mm256_setzero_ps();
                         __m256 s2 = _mm256_setzero_ps();
 
@@ -114,7 +115,8 @@ namespace ac::core::cpu
                         s1 = _mm256_fmadd_ps(r7[idx], k7, s1);
                         s2 = _mm256_fmadd_ps(r8[idx], k8, s2);
 
-                        sum += avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2)));
+                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
+#                   endif
                     }
                     else
                     {
@@ -128,7 +130,7 @@ namespace ac::core::cpu
                         __m256 s7 = _mm256_mul_ps(r7[idx], k7);
                         __m256 s8 = _mm256_mul_ps(r8[idx], k8);
 
-                        sum += avx_hsum_ps(_mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
+                        s = _mm256_add_ps(s, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
                     }
 
                 }
@@ -146,7 +148,8 @@ namespace ac::core::cpu
 
                     if constexpr (fma)
                     {
-                        __m256 s0 = _mm256_setzero_ps();
+#                   ifdef AC_CORE_WITH_FMA
+                        __m256& s0 = s;
                         __m256 s1 = _mm256_setzero_ps();
                         __m256 s2 = _mm256_setzero_ps();
 
@@ -160,7 +163,8 @@ namespace ac::core::cpu
                         s1 = _mm256_fmadd_ps(r7[count], k7, s1);
                         s2 = _mm256_fmadd_ps(r8[count], k8, s2);
 
-                        sum += avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2)));
+                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
+#                   endif
                     }
                     else
                     {
@@ -174,9 +178,10 @@ namespace ac::core::cpu
                         __m256 s7 = _mm256_mul_ps(r7[count], k7);
                         __m256 s8 = _mm256_mul_ps(r8[count], k8);
 
-                        sum += avx_hsum_ps(_mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
+                        s = _mm256_add_ps(s, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
                     }
                 }
+                float sum = avx_hsum_ps(s);
                 if constexpr (residual) sum += out[n];
                 out[n] = relu<OUT>(sum + biases[n]);
             }
