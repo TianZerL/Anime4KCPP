@@ -26,6 +26,10 @@ target_compile_definitions(ac_cli PRIVATE
     $<$<TARGET_EXISTS:ac_video>:AC_CLI_ENABLE_VIDEO>
 )
 
+if(EMSCRIPTEN)
+    target_link_options(ac_cli PRIVATE -sNODERAWFS=1) # allow access to files on disk in NodeJS
+endif()
+
 ac_check_enable_static_crt(ac_cli)
 
 install(

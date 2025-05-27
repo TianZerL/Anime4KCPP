@@ -132,6 +132,10 @@ if(AC_CORE_ENABLE_FAST_MATH)
     endif()
 endif()
 
+if(EMSCRIPTEN)
+    target_link_options(ac PUBLIC -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB)
+endif()
+
 ac_check_disable_flags(ac)
 ac_check_enable_static_crt(ac)
 ac_check_disable_pic(ac)
