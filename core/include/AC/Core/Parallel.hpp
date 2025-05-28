@@ -1,10 +1,8 @@
 #ifndef AC_CORE_PARALLEL_HPP
 #define AC_CORE_PARALLEL_HPP
 
-#if defined(AC_CORE_PARALLEL_PPL)
+#ifdef AC_CORE_PARALLEL_PPL
 #   include <ppl.h>
-#elif defined(AC_CORE_PARALLEL_OPENMP)
-#   include <omp.h>
 #else
 #   include "AC/Util/ThreadPool.hpp"
 #endif
