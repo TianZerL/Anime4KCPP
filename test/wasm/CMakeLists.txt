@@ -6,4 +6,4 @@ set(TEST_WASM_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_executable(ac_test_wasm ${TEST_WASM_SOURCE_DIR}/src/Web.cpp)
 
 target_link_libraries(ac_test_wasm PRIVATE ac ac_util)
-target_link_options(ac_test_wasm PRIVATE -lembind -sINITIAL_MEMORY=256MB -sMODULARIZE -sNODERAWFS=1)
+target_link_options(ac_test_wasm PRIVATE -lembind -sMODULARIZE -sNODERAWFS=1)
