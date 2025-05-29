@@ -137,9 +137,10 @@ namespace ac::core::detail
             auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+            float a = toFloat(in[3]);
+            float r = toFloat(in[0]) * a;
+            float g = toFloat(in[1]) * a;
+            float b = toFloat(in[2]) * a;
 
             float y = 0.299f * r + 0.587f * g + 0.114f * b;
             float u = 0.564f * (b - y) + 0.5f;
@@ -148,8 +149,7 @@ namespace ac::core::detail
             out[0] = fromFloat<OUT>(y);
             out[1] = fromFloat<OUT>(u);
             out[2] = fromFloat<OUT>(v);
-            if constexpr (std::is_same_v<IN, OUT>) out[3] = in[3];
-            else out[3] = fromFloat<OUT>(toFloat(in[3]));
+            out[3] = fromFloat<OUT>(a);
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
@@ -160,9 +160,10 @@ namespace ac::core::detail
             auto yout = static_cast<OUT*>(yptr);
             auto uvaout = static_cast<OUT*>(uvaptr);
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+            float a = toFloat(in[3]);
+            float r = toFloat(in[0]) * a;
+            float g = toFloat(in[1]) * a;
+            float b = toFloat(in[2]) * a;
 
             float y = 0.299f * r + 0.587f * g + 0.114f * b;
             float u = 0.564f * (b - y) + 0.5f;
@@ -171,8 +172,7 @@ namespace ac::core::detail
             yout[0] = fromFloat<OUT>(y);
             uvaout[0] = fromFloat<OUT>(u);
             uvaout[1] = fromFloat<OUT>(v);
-            if constexpr (std::is_same_v<IN, OUT>) uvaout[2] = in[3];
-            else uvaout[2] = fromFloat<OUT>(toFloat(in[3]));
+            uvaout[2] = fromFloat<OUT>(a);
         }, src, dsty, dstuva);
     }
     template<typename IN, typename OUT = IN>
@@ -185,9 +185,10 @@ namespace ac::core::detail
             auto vout = static_cast<OUT*>(vptr);
             auto aout = static_cast<OUT*>(aptr);
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+            float a = toFloat(in[3]);
+            float r = toFloat(in[0]) * a;
+            float g = toFloat(in[1]) * a;
+            float b = toFloat(in[2]) * a;
 
             float y = 0.299f * r + 0.587f * g + 0.114f * b;
             float u = 0.564f * (b - y) + 0.5f;
@@ -196,8 +197,7 @@ namespace ac::core::detail
             *yout = fromFloat<OUT>(y);
             *uout = fromFloat<OUT>(u);
             *vout = fromFloat<OUT>(v);
-            if constexpr (std::is_same_v<IN, OUT>) *aout = in[3];
-            else *aout = fromFloat<OUT>(toFloat(in[3]));
+            *aout = fromFloat<OUT>(a);
         }, src, dsty, dstu, dstv, dsta);
     }
 
@@ -275,16 +275,24 @@ namespace ac::core::detail
             float y = toFloat(in[0]);
             float u = toFloat(in[1]) - 0.5f;
             float v = toFloat(in[2]) - 0.5f;
+            float a = toFloat(in[3]);
 
             float r = y + 1.403f * v;
             float g = y - 0.344f * u - 0.714f * v;
             float b = y + 1.773f * u;
 
+            if (a > 1e-6f) // 1/65535 ~ 1e-5
+            {
+                r /= a;
+                g /= a;
+                b /= a;
+            }
+            else r = g = b = 0.0f;
+
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            if constexpr (std::is_same_v<IN, OUT>) out[3] = in[3];
-            else out[3] = fromFloat<OUT>(toFloat(in[3]));
+            out[3] = fromFloat<OUT>(a);
         }, src, dst);
     }
     template<typename IN, typename OUT = IN>
@@ -298,16 +306,24 @@ namespace ac::core::detail
             float y = toFloat(yin[0]);
             float u = toFloat(uvain[0]) - 0.5f;
             float v = toFloat(uvain[1]) - 0.5f;
+            float a = toFloat(uvain[2]);
 
             float r = y + 1.403f * v;
             float g = y - 0.344f * u - 0.714f * v;
             float b = y + 1.773f * u;
 
+            if (a > 1e-6f)
+            {
+                r /= a;
+                g /= a;
+                b /= a;
+            }
+            else r = g = b = 0.0f;
+
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            if constexpr (std::is_same_v<IN, OUT>) out[3] = uvain[2];
-            else out[3] = fromFloat<OUT>(toFloat(uvain[2]));
+            out[3] = fromFloat<OUT>(a);
         }, srcy, srcuva, dst);
     }
     template<typename IN, typename OUT = IN>
@@ -323,16 +339,24 @@ namespace ac::core::detail
             float y = toFloat(*yin);
             float u = toFloat(*uin) - 0.5f;
             float v = toFloat(*vin) - 0.5f;
+            float a = toFloat(*ain);
 
             float r = y + 1.403f * v;
             float g = y - 0.344f * u - 0.714f * v;
             float b = y + 1.773f * u;
 
+            if (a > 1e-6f)
+            {
+                r /= a;
+                g /= a;
+                b /= a;
+            }
+            else r = g = b = 0.0f;
+
             out[0] = fromFloat<OUT>(r);
             out[1] = fromFloat<OUT>(g);
             out[2] = fromFloat<OUT>(b);
-            if constexpr (std::is_same_v<IN, OUT>) out[3] = *ain;
-            else out[3] = fromFloat<OUT>(toFloat(*ain));
+            out[3] = fromFloat<OUT>(a);
         }, srcy, srcu, srcv, srca, dst);
     }
 
