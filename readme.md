@@ -103,7 +103,7 @@ Untested. If you do, please provide feedback.
 | AC_CORE_WITH_OPENCL                  | build core with opencl                             | OFF         |
 | AC_CORE_WITH_CUDA                    | build core with cuda                               | OFF         |
 | AC_CORE_ENABLE_FAST_MATH             | enable fast math for core                          | OFF         |
-| AC_CORE_ENABLE_IMAGE_IO              | enable image file read and write for core          | ON          |
+| AC_CORE_DISABLE_IMAGE_IO             | disable image file read and write for core         | OFF         |
 | AC_BUILD_CLI                         | build cli                                          | ON          |
 | AC_BUILD_GUI                         | build gui                                          | OFF         |
 | AC_BUILD_VIDEO                       | build video module                                 | OFF         |
@@ -129,7 +129,6 @@ There are some convenient presets:
 - AC_CORE_WITH_OPENCL
 - AC_CORE_WITH_CUDA
 - AC_CORE_ENABLE_FAST_MATH
-- AC_CORE_ENABLE_IMAGE_IO
 - AC_BUILD_CLI
 - AC_BUILD_GUI
 - AC_BUILD_VIDEO

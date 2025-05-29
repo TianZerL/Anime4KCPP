@@ -175,10 +175,10 @@ const char* ac_processor_type_name(const int processor_type)
     return ac::core::Processor::type(processor_type);
 }
 
-#ifdef AC_CORE_ENABLE_IMAGE_IO
-void ac_imread(const char* const filename, const int flag, ac_image* const image)
+#ifndef AC_CORE_DISABLE_IMAGE_IO
+ac_image* ac_imread(const char* const filename, const int flag)
 {
-    image->object = ac::core::imread(filename, flag);
+    return new ac_image{ ac::core::imread(filename, flag) };
 }
 int ac_imwrite(const char* const filename, const ac_image* const image)
 {

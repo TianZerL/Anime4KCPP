@@ -95,7 +95,7 @@ namespace ac::core
     };
 
     AC_EXPORT Image imdecode(const void* buffer, int size, int flag) noexcept;
-#ifdef AC_CORE_ENABLE_IMAGE_IO
+#ifndef AC_CORE_DISABLE_IMAGE_IO
     AC_EXPORT Image imread(const char* filename, int flag) noexcept;
     AC_EXPORT bool imwrite(const char* filename, const Image& image) noexcept;
 #endif

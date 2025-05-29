@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstring>
 
-#ifndef AC_CORE_ENABLE_IMAGE_IO
+#ifdef AC_CORE_DISABLE_IMAGE_IO
 #   define STBI_NO_STDIO
 #   define STBI_WRITE_NO_STDIO
 #endif
@@ -27,7 +27,7 @@ ac::core::Image ac::core::imdecode(const void* const buffer, const int size, con
     return image;
 }
 
-#ifdef AC_CORE_ENABLE_IMAGE_IO
+#ifndef AC_CORE_DISABLE_IMAGE_IO
 ac::core::Image ac::core::imread(const char* const filename, const int flag) noexcept
 {
     Image image{};

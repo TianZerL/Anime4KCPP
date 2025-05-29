@@ -75,8 +75,10 @@ CAC_API const char* ac_processor_info(int processor_type);
 CAC_API int ac_processor_type(const char* processor_type_name);
 CAC_API const char* ac_processor_type_name(int processor_type);
 
-CAC_API void ac_imread(const char* filename, int flag, ac_image* image);
+#ifndef AC_CORE_DISABLE_IMAGE_IO
+CAC_API ac_image* ac_imread(const char* filename, int flag);
 CAC_API int ac_imwrite(const char* filename, const ac_image* image);
+#endif
 
 CAC_API void ac_resize(const ac_image* src, ac_image* dst, double fx, double fy);
 CAC_API void ac_rgb2yuv(const ac_image* rgb, ac_image* yuv);
