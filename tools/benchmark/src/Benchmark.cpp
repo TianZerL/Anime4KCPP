@@ -28,9 +28,7 @@ struct ImagePool
 
         for (int idx = 0; idx < size; idx++)
         {
-            ac::core::Image image{};
-
-            image.create(w, h, 1, ac::core::Image::UInt8);
+            ac::core::Image image{ w, h, 1, ac::core::Image::UInt8 };
             for (int i = 0; i < image.height(); i++)
                 for (int j = 0; j < image.width(); j++)
                     *image.pixel(j, i) = static_cast<std::uint8_t>(pixel(gen));
@@ -40,7 +38,7 @@ struct ImagePool
 
         for (int idx = 0; idx < batch; idx++) indices.emplace_back(indice(gen));
     }
-    
+
     const ac::core::Image& select(const int idx) const
     {
         return images[indices[idx]];
