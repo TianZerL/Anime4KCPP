@@ -48,7 +48,7 @@ if(NOT TARGET dep::opencl)
     message(STATUS "dep: opencl target version ${dep_opencl_TARGET_VERSION}.")
     target_compile_definitions(dep_opencl INTERFACE
         CL_HPP_TARGET_OPENCL_VERSION=${dep_opencl_TARGET_VERSION}
-        CL_HPP_MINIMUM_OPENCL_VERSION=110
+        CL_HPP_MINIMUM_OPENCL_VERSION=120
     )
     add_library(dep::opencl ALIAS dep_opencl)
 endif()

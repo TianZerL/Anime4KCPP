@@ -31,6 +31,13 @@ namespace ac::core::opencl
         cl::Program program;
     };
 
+    inline static bool checkVersion(const std::string& version)
+    {
+        if (version.size() < 10) return false;
+        if (auto pos = version.find("."); pos != std::string::npos && (pos > 8 || version[7] > '1' || (version[10] != '\0' && version[10] != ' ') || version[9] > '1')) return true;
+        return false;
+    }
+
     // we cannot make ContextList as static like cuda.
     // it will crash while unload the DLL(if build this into a DLL), god knows why.
     inline static std::vector<Context> getContextList() noexcept
@@ -40,13 +47,18 @@ namespace ac::core::opencl
         cl::Platform::get(&platforms);
         for (auto&& platform : platforms)
         {
+            std::string version{};
+            platform.getInfo(CL_PLATFORM_VERSION, &version);
+            if (!checkVersion(version)) continue;
+            std::string platformName{};
+            platform.getInfo(CL_PLATFORM_NAME, &platformName);
             std::vector<cl::Device> devices{};
             platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
             for (auto&& device : devices)
             {
                 std::string name{};
                 device.getInfo(CL_DEVICE_NAME, &name);
-                contexts.emplace_back(Context{ name, device, {}, {} });
+                contexts.emplace_back(Context{ name.append(" (").append(platformName).append(")"), device, {}, {} });
             }
         }
         return contexts;
