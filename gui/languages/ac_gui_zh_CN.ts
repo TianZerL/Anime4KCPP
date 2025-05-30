@@ -4,47 +4,47 @@
 <context>
     <name>ExternI18N</name>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="7"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="7"/>
         <source>Lightweight CNN, detail enhancement.</source>
         <translation>轻量CNN，细节增强。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="8"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="8"/>
         <source>Lightweight CNN, mild denoising.</source>
         <translation>轻量CNN，轻度降噪。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="9"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="9"/>
         <source>Lightweight CNN, moderate denoising.</source>
         <translation>轻量CNN，中度降噪。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="10"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="10"/>
         <source>Lightweight CNN, heavy denoising.</source>
         <translation>轻量CNN，强力降噪。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="11"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="11"/>
         <source>Lightweight CNN, extreme denoising.</source>
         <translation>轻量CNN，极致降噪。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="12"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="12"/>
         <source>Lightweight ResNet, mild denoising.</source>
         <translation>轻量ResNet，轻度降噪。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
         <source>General-purpose CPU processing with optional SIMD acceleration.</source>
         <translation>通用CPU计算，支持SIMD加速。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="16"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="16"/>
         <source>Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.</source>
         <translation>跨平台异构计算加速，需要支持OpenCL1.2+标准的设备。</translation>
     </message>
     <message>
-        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="17"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="17"/>
         <source>NVIDIA GPU acceleration requiring Compute Capability 5.0+.</source>
         <translation>NVIDIA GPU加速，需CUDA计算能力5.0+的设备。</translation>
     </message>

@@ -1,5 +1,8 @@
 <div align="center">
-    <img src="./images/Logo.png">
+    <img src="./images/Logo.png" alt="Logo"> <br>
+    <a href="https://deepwiki.com/TianZerL/Anime4KCPP">
+        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki">
+    </a>
 </div>
 
 # Anime4KCPP v3
@@ -64,8 +67,17 @@ You can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Buil
 Tested with gcc and clang.
 
 ```shell
+# For video module:
+sudo apt install pkg-config libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+# For GUI:
+sudo apt-get install qt6-base-dev qt6-tools-dev
+# For python binding:
+sudo apt install python3-dev
+```
+
+```shell
 mkdir build && cd build
-cmake ..
+cmake .. -DAC_CORE_WITH_OPENCL=ON #-DAC_BUILD_VIDEO=ON -DAC_BUILD_GUI=ON
 cmake --build . --config Release -j8
 cd bin
 ./ac_cli -v
