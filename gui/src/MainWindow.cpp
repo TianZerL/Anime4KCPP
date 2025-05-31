@@ -183,6 +183,8 @@ void MainWindow::init()
 
     QObject::connect(&gLogger, &Logger::logged, ui->text_browser_log, &QTextBrowser::append);
 
+    setAcceptDrops(true);
+
     gLogger.info() << "Anime4KCPP GUI v" AC_CORE_VERSION_STR " started";
     gLogger.info() << '\n' << gUpscaler.info();
 }
