@@ -31,11 +31,15 @@ namespace ac::core::opencl
         cl::Program program;
     };
 
-    inline static bool checkVersion(const std::string& version)
+    // we need the device with image array support
+    inline static bool checkDevice(const cl::Device& device)
     {
-        if (version.size() < 10) return false;
-        if (auto pos = version.find("."); pos != std::string::npos && (pos > 8 || version[7] > '1' || (version[10] != '\0' && version[10] != ' ') || version[9] > '1')) return true;
-        return false;
+        cl_int err = CL_SUCCESS;
+        auto imageSupport = device.getInfo<CL_DEVICE_IMAGE_SUPPORT>(&err);
+        if (err != CL_SUCCESS || imageSupport != CL_TRUE) return false;
+        auto imageArraySize = device.getInfo<CL_DEVICE_IMAGE_MAX_ARRAY_SIZE>(&err);
+        if (err != CL_SUCCESS || imageArraySize < 2) return false;
+        return true;
     }
 
     // we cannot make ContextList as static like cuda.
@@ -47,16 +51,14 @@ namespace ac::core::opencl
         cl::Platform::get(&platforms);
         for (auto&& platform : platforms)
         {
-            std::string version{};
-            platform.getInfo(CL_PLATFORM_VERSION, &version);
-            if (!checkVersion(version)) continue;
-            std::string platformName{};
+            std::string platformName{ "Unknown" };
             platform.getInfo(CL_PLATFORM_NAME, &platformName);
             std::vector<cl::Device> devices{};
             platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
             for (auto&& device : devices)
             {
-                std::string name{};
+                if (!checkDevice(device)) continue;
+                std::string name{ "Unknown" };
                 device.getInfo(CL_DEVICE_NAME, &name);
                 contexts.emplace_back(Context{ name.append(" (").append(platformName).append(")"), device, {}, {} });
             }
