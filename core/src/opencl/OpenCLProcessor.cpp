@@ -31,14 +31,12 @@ namespace ac::core::opencl
         cl::Program program;
     };
 
-    // we need the device with image array support
+    // we need the device with image support
     inline static bool checkDevice(const cl::Device& device)
     {
         cl_int err = CL_SUCCESS;
         auto imageSupport = device.getInfo<CL_DEVICE_IMAGE_SUPPORT>(&err);
         if (err != CL_SUCCESS || imageSupport != CL_TRUE) return false;
-        auto imageArraySize = device.getInfo<CL_DEVICE_IMAGE_MAX_ARRAY_SIZE>(&err);
-        if (err != CL_SUCCESS || imageArraySize < 2) return false;
         return true;
     }
 
