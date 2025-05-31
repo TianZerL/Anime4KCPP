@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <memory>
 #include <random>
 #include <vector>

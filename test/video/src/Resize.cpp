@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
     if (argc < 3)
     {
-        std::printf("usage: input output [encoder]\n");
+        std::printf("usage: input output [encoder] [format]\n");
         return 0;
     }
 
@@ -18,19 +18,18 @@ int main(int argc, char* argv[])
         std::printf("Failed to open decoder");
         return 0;
     }
-    if (!pipeline.openEncoder(argv[2], 2.0, { argc >= 3 ? argv[3] : nullptr, 0 }))
+    if (!pipeline.openEncoder(argv[2], 2.0, { argc >= 3 ? argv[3] : nullptr, argc >= 4 ? argv[4] : nullptr, 0 }))
     {
         std::printf("Failed to open encoder");
         return 0;
     }
 
     auto info = pipeline.getInfo();
-    double total = info.fps * info.length;
 
     struct {
-        double total;
+        double frames;
     } data{};
-    data.total = total;
+    data.frames = info.fps * info.duration;
 
     ac::util::Stopwatch stopwatch{};
     ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
@@ -43,7 +42,7 @@ int main(int argc, char* argv[])
         }
         if (src.number % 32 == 0)
         {
-            std::printf("%lf%%\r", 100 * src.number / ctx->total); // printf is thread safe
+            std::printf("%lf%%\r", 100 * src.number / ctx->frames); // printf is thread safe
             std::fflush(stdout);
         }
         return true;
