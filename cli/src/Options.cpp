@@ -7,7 +7,7 @@
 Options parse(const int argc, const char* const* argv) noexcept
 {
     Options options{};
-    CLI::App app{"Anime4KCPP: A high performance anime upscaler."};
+    CLI::App app{ "Anime4KCPP: A high performance anime upscaler." };
 
     app.fallthrough();
 
@@ -36,7 +36,8 @@ Options parse(const int argc, const char* const* argv) noexcept
     video->add_option("--ve,--encoder", options.video.encoder, "encoder to use");
     video->add_option("--vb,--bitrate", options.video.bitrate, "bitrate for encoding, kbit/s");
 
-    try { app.parse(argc, argv); } catch(const CLI::ParseError &e) { std::exit(app.exit(e)); }
+    try { app.parse(argc, argv); }
+    catch (const CLI::ParseError& e) { std::exit(app.exit(e)); }
 
     options.video.enable = video->parsed();
 
