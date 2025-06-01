@@ -6,6 +6,7 @@ set(BINDING_C_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 add_library(cac SHARED
     ${BINDING_C_SOURCE_DIR}/src/Binding.cpp
 )
+add_library(CAC::Core ALIAS cac)
 
 target_include_directories(cac PUBLIC
     $<BUILD_INTERFACE:${BINDING_C_SOURCE_DIR}/include>

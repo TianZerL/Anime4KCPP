@@ -3,8 +3,16 @@ enable_language(CUDA)
 set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_EXTENSIONS OFF)
-# 61-real for tesla p4, p40
-set(CMAKE_CUDA_ARCHITECTURES 50-virtual 61-real CACHE STRING "CUDA architectures" FORCE)
+set(CMAKE_CUDA_ARCHITECTURES
+    50-real # GTX 750Ti
+    52-real # Maxwell
+    60-real # Tesla P100
+    61 # Pascal
+    75-real # Turing
+    86-real # Ampere
+    89 # Ada Lovelace
+    CACHE STRING "CUDA architectures" FORCE
+)
 
 if(NOT TARGET dep::cuda)
     find_package(CUDAToolkit REQUIRED)

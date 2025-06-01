@@ -22,26 +22,32 @@ if(NOT TARGET dep::opencl)
         set(ENABLE_OPENCL_LAYERINFO OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_ICD_LOADER_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
         FetchContent_MakeAvailable(opencl)
-        target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp)
+        target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp OpenCL::OpenCL)
     else()
         include(${CMAKE_DIR}/CheckOpenCLHPP.cmake)
         if(NOT dep_opencl_SUPPORT_HPP)
             message(STATUS "dep: opencl hpp headers not found or no supported, will be fetched online.")
             include(FetchContent)
             FetchContent_Declare(
+                openclheaders
+                GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-Headers.git
+                GIT_TAG main
+            )
+            FetchContent_MakeAvailable(openclheaders)
+            FetchContent_Declare(
                 openclhpp
                 GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-CLHPP.git
                 GIT_TAG main
-                SOURCE_SUBDIR do_not_find_cmake # To make sure CMakeLists.txt won't run
             )
             FetchContent_MakeAvailable(openclhpp)
-            target_include_directories(dep_opencl INTERFACE $<BUILD_INTERFACE:${openclhpp_SOURCE_DIR}/include>)
+            target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp ${OpenCL_LIBRARIES})
+        else()
+            target_link_libraries(dep_opencl INTERFACE OpenCL::OpenCL)
         endif()
         if(OpenCL_VERSION_STRING)
             set(dep_opencl_TARGET_VERSION "${OpenCL_VERSION_MAJOR}${OpenCL_VERSION_MINOR}0")
         endif()
     endif()
-    target_link_libraries(dep_opencl INTERFACE OpenCL::OpenCL)
     if(NOT dep_opencl_TARGET_VERSION)
         set(dep_opencl_TARGET_VERSION 300)
     endif()

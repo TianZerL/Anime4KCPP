@@ -4,6 +4,7 @@ set(UTIL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(UTIL_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 add_library(ac_util INTERFACE)
+add_library(AC::Util ALIAS ac_util)
 
 target_include_directories(ac_util INTERFACE
     $<BUILD_INTERFACE:${UTIL_SOURCE_DIR}/include>

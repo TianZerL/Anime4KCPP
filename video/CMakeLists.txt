@@ -10,6 +10,7 @@ if(AC_SHARED_LIB)
 else()
     add_library(ac_video STATIC)
 endif()
+add_library(AC::Video ALIAS ac_video)
 
 target_sources(ac_video PRIVATE
     ${VIDEO_SOURCE_DIR}/src/Pipeline.cpp

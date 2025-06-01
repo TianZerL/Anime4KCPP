@@ -22,6 +22,7 @@ if(AC_SHARED_LIB)
 else()
     add_library(ac STATIC)
 endif()
+add_library(AC::Core ALIAS ac)
 
 target_sources(ac PRIVATE
     ${CORE_SOURCE_DIR}/src/Image.cpp
