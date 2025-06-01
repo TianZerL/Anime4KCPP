@@ -2,18 +2,24 @@
 #include <iterator>
 
 #include <QColor>
+#include <QCursor>
 #include <QDesktopServices>
 #include <QDialog>
 #include <QDialogButtonBox>
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
+#include <QGridLayout>
+#include <QIODevice>
 #include <QList>
 #include <QMessageBox>
 #include <QMimeData>
 #include <QMimeDatabase>
-#include <QStyleFactory>
 #include <QSharedPointer>
+#include <QSpacerItem>
+#include <QStyleFactory>
 #include <QTextBrowser>
+#include <QVariant>
 #include <QVBoxLayout>
 #include <QWeakPointer>
 
@@ -294,7 +300,7 @@ void MainWindow::on_action_add_triggered()
 {
     QFileDialog fileDialog{};
     fileDialog.setFileMode(QFileDialog::ExistingFiles);
-    fileDialog.setNameFilters({ "Image (*.jpg *.jpeg *.png *.bmp)", "Video (*.mp4 *.m4v *.mkv *.webm)", "Any files (*)" });
+    fileDialog.setNameFilters({ "Media (*.jpg *.jpeg *.png *.bmp *.mp4 *.m4v *.mkv *.webm)", "Image (*.jpg *.jpeg *.png *.bmp)", "Video (*.mp4 *.m4v *.mkv *.webm)", "Any files (*)" });
     if (fileDialog.exec())
     {
         auto urls = fileDialog.selectedUrls();
@@ -308,6 +314,8 @@ void MainWindow::on_action_list_devices_triggered()
     devicesMessageBox->setWindowTitle(tr("Devices"));
     devicesMessageBox->setWindowModality(Qt::NonModal);
     devicesMessageBox->setText(Upscaler::info());
+    if (auto layout = dynamic_cast<QGridLayout*>(devicesMessageBox->layout()))
+        layout->addItem(new QSpacerItem{ 250, 0, QSizePolicy::Minimum, QSizePolicy::Expanding }, layout->rowCount(), 0, 1, layout->columnCount());
     devicesMessageBox->show();
 }
 void MainWindow::on_action_license_triggered()
