@@ -1,15 +1,21 @@
 if(NOT TARGET dep::avisynth)
     add_library(dep_avisynth INTERFACE IMPORTED)
-    find_path(dep_avisynth_INCLUDE
-        NAMES avisynth.h
-        PATHS
+    if(AC_PATH_AVISYNTH_SDK)
+        set(dep_avisynth_PATH ${AC_PATH_AVISYNTH_SDK}/include)
+    else()
+        set(dep_avisynth_PATH
             "C:/Program Files (x86)/AviSynth+/FilterSDK/include"
             "C:/Program Files/AviSynth+/FilterSDK/include"
+        )
+    endif()
+    find_path(dep_avisynth_INCLUDE
+        NAMES avisynth.h
+        PATHS ${dep_avisynth_PATH}
     )
     if(dep_avisynth_INCLUDE)
-        target_include_directories(dep_avisynth INTERFACE ${dep_avisynth_INCLUDE})
+        target_include_directories(dep_avisynth INTERFACE $<BUILD_INTERFACE:${dep_avisynth_INCLUDE}>)
     else()
-        message(STATUS "dep: avisynth not found, will be fetched online.")
+        message(STATUS "dep: avisynth sdk not found, will be fetched online.")
         include(FetchContent)
         FetchContent_Declare(
             avisynth

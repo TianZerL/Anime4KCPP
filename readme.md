@@ -12,35 +12,45 @@ Anime4KCPP v3 uses CNN based algorithm, and aims to be simple and efficient.
 
 # Build
 ## Dependency
-To build Anime4KCPP v3 you need CMake and a C++17 compiler, and most dependencies will be resolved automatically by CMake if you have internet.
+Build tools:
+- CMake
+- A C++17 compatible compiler
 
-***List of dependencies that need to be prepared by yourself:***
+Dependency handling:
+- If you have internet access, CMake will automatically download and configure most required dependencies.
+- You can also manually download dependencies.
 
-| Dependency                                                | CMake option      | Module     |
-| --------------------------------------------------------- | ----------------- | ---------- |
-| [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit) | AC_CORE_WITH_CUDA | core(CUDA) |
-| [libavcodec](https://ffmpeg.org)                          | AC_BUILD_VIDEO    | video      |
-| [libavformat](https://ffmpeg.org)                         | AC_BUILD_VIDEO    | video      |
-| [libavutil](https://ffmpeg.org)                           | AC_BUILD_VIDEO    | video      |
-| [Qt](https://www.qt.io)                                   | AC_BUILD_GUI      | gui        |
+Manual configuration (optional):
+- Most dependencies are located via `find_package`. Others may use `pkg-config` or require explicit path specification via CMake variables.
+- For certain dependencies, dedicated CMake variables (e.g., `AC_PATH_XXX`) are provided. 
+- Setting these variables will:
+    1. Direct CMake to search in your specified paths first
+    2. Override default search locations
+
+***List of dependencies***
+
+| Dependency                                                                                                                            | CMake option                | Module              | Acquisition | Manual Configuration                 |
+| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------- | ----------- | ------------------------------------ |
+| [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)                                                                             | AC_CORE_WITH_CUDA           | core(CUDA)          | Manual      | find_package                         |
+| [libavcodec](https://ffmpeg.org)                                                                                                      | AC_BUILD_VIDEO              | video               | Manual      | pkg-config / AC_PATH_FFMPEG          |
+| [libavformat](https://ffmpeg.org)                                                                                                     | AC_BUILD_VIDEO              | video               | Manual      | pkg-config / AC_PATH_FFMPEG          |
+| [libavutil](https://ffmpeg.org)                                                                                                       | AC_BUILD_VIDEO              | video               | Manual      | pkg-config / AC_PATH_FFMPEG          |
+| [libswscale](https://ffmpeg.org)                                                                                                      | AC_BUILD_VIDEO              | video               | Manual      | pkg-config / AC_PATH_FFMPEG          |
+| [Qt](https://www.qt.io)                                                                                                               | AC_BUILD_GUI                | gui                 | Manual      | find_package                         |
+| [Avisynth SDK](https://github.com/AviSynth/AviSynthPlus/tree/master/avs_core/include)                                                 | AC_BUILD_FILTER_AVISYNTH    | filter(avisynth)    | Automatic   | AC_PATH_AVISYNTH_SDK                 |
+| [CLI11](https://github.com/CLIUtils/CLI11)                                                                                            | AC_BUILD_CLI                | cli                 | Automatic   | find_package                         |
+| [DirectShow base classes](https://github.com/microsoft/Windows-classic-samples/Samples/Win7Samples/multimedia/directshow/baseclasses) | AC_BUILD_FILTER_DIRECTSHOW  | filter(directshow)  | Automatic   | AC_PATH_DIRECTSHOW_BASECLASSES       |
+| [Eigen3](https://gitlab.com/libeigen/eigen)                                                                                           | AC_CORE_WITH_EIGEN3         | core(eigen3)        | Automatic   | find_package                         |
+| [OpenCL SDK](https://github.com/KhronosGroup/OpenCL-SDK)                                                                              | AC_CORE_WITH_OPENCL         | core(opencl)        | Automatic   | find_package                         |
+| [pybind11](https://github.com/pybind/pybind11)                                                                                        | AC_BUILD_BINDING_PYTHON     | binding(python)     | Automatic   | find_package                         |
+| [ruapu](https://github.com/nihui/ruapu)                                                                                               | N/A                         | core                | Automatic   | AC_PATH_RUAPU                        |
+| [stb](https://github.com/nothings/stb)                                                                                                | N/A                         | core                | Automatic   | AC_PATH_STB                          |
+| [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                     | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) | Automatic   | pkg-config / AC_PATH_VAPOURSYNTH_SDK |
 
 - The minimum tested version of the CUDA Toolkit is 11
-- The minimum version of libav is ffmpeg 4
+- The minimum version of FFmpeg libraries is FFmpeg 4
 - Both Qt5 and Qt6 should be OK
-
-***List of dependencies that can be resolved automatically:***
-
-| Dependency                                                                                                                            | CMake option                | Module              |
-| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------- |
-| [Avisynth SDK](https://github.com/AviSynth/AviSynthPlus/tree/master/avs_core/include)                                                 | AC_BUILD_FILTER_AVISYNTH    | filter(avisynth)    |
-| [CLI11](https://github.com/CLIUtils/CLI11)                                                                                            | AC_BUILD_CLI                | cli                 |
-| [DirectShow base classes](https://github.com/microsoft/Windows-classic-samples/Samples/Win7Samples/multimedia/directshow/baseclasses) | AC_BUILD_FILTER_DIRECTSHOW  | filter(directshow)  |
-| [Eigen3](https://gitlab.com/libeigen/eigen)                                                                                           | AC_CORE_WITH_EIGEN3         | core(eigen3)        |
-| [OpenCL SDK](https://github.com/KhronosGroup/OpenCL-SDK)                                                                              | AC_CORE_WITH_OPENCL         | core(opencl)        |
-| [pybind11](https://github.com/pybind/pybind11)                                                                                        | AC_BUILD_BINDING_PYTHON     | binding(python)     |
-| [ruapu](https://github.com/nihui/ruapu)                                                                                               | N/A                         | core                |
-| [stb](https://github.com/nothings/stb)                                                                                                | N/A                         | core                |
-| [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                     | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) |
+- VapourSynth SDK 4 is required
 
 ## Platform
 ### Windows
@@ -49,17 +59,26 @@ Tested with MinGW-w64 and MSVC.
 *Build with MinGW-w64:*
 ```powershell
 mkdir build; cd build
-cmake -G "MinGW Makefiles" .. -DAC_ENABLE_STATIC_CRT=ON
+cmake -G "MinGW Makefiles" .. -DAC_CORE_WITH_OPENCL=ON -DAC_ENABLE_STATIC_CRT=ON
 cmake --build . --config Release -j8
 cd bin
 ./ac_cli -v
 ```
 
-To setup ffmpeg's libav for building video module on Windows, it is recommended to add an `AC_PATH_FFMPEG` variable to CMake, but you can also use `pkg-config` for Windows. `AC_PATH_FFMPEG` should be a path to the ffmpeg's root folder witch contains `lib` and `include`.
+*Build with MSVC:*
+```powershell
+mkdir build; cd build
+cmake -G "Visual Studio 17 2022" .. -DAC_CORE_WITH_OPENCL=ON
+cmake --build . --config Release -j8
+cd bin/Release/
+./ac_cli -v
+```
+
+To setup FFmpeg libraries for building video module on Windows, it is recommended to add an `AC_PATH_FFMPEG` variable to CMake, but you can also use `pkg-config` for Windows. `AC_PATH_FFMPEG` should be a path to the FFmpeg's root folder witch contains `lib` and `include`.
 
 To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in terminal.
 
-You can download ffmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for Windows.
+You can download FFmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for Windows.
 
 ***You need MSVC to build directshow filter, witch is only available on Windows.***
 
@@ -84,7 +103,7 @@ cd bin
 ```
 
 ### Termux
-To build with opencl support, you need install `ocl-icd` package, OpenCL SDK from Khronos seems not to be worked with termux.
+To build with OpenCL support, you need install `ocl-icd` package, OpenCL SDK from Khronos seems not to be worked with termux.
 
 ```shell
 pkg install cmake clang ocl-icd opencl-clhpp opencl-headers
@@ -96,10 +115,10 @@ LD_LIBRARY_PATH=/vendor/lib64:$PREFIX/lib ./ac_cli -l
 ```
 
 ### WASM
-Only tested with Emscripten. See [wasm test](test/wasm/).
+Tested with Emscripten.
 
 ### Mac OS
-Untested. If you do, please provide feedback.
+Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 is required.
 
 ## CMake options
 
