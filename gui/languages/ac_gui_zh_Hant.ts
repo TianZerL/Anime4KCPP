@@ -101,22 +101,22 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="48"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The decoder name passed to FFmpeg&apos;s library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting specifies the decoder (typically no manual configuration required). Available values depend on the library version. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the decoder based on the input file.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: h264, hevc, h264_qsv, h264_amf, h264_cuvid, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;解碼器名稱，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定解碼器（通常無需手動配置）。可用選項取決於FFmpeg庫的版本，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 根據輸入文件自動選擇解碼器。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: h264, hevc, h264_qsv, h264_amf, h264_cuvid 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;解碼器名稱，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定解碼器（通常無需手動配置）。可用選項取決於FFmpeg庫的版本，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 依輸入檔案自動選用解碼器。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: h264, hevc, h264_qsv, h264_amf, h264_cuvid 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="55"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The encoder name passed to FFmpeg&apos;s library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting determines the output codec, and controls hardware acceleration support. Available values depend on the version of the library. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the encoder based on the file extension.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: libopenh264, libx264, libx265, h264_qsv, hevc_qsv, h264_nvenc, hevc_nvenc, h264_amf, hevc_amf, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;編碼器名稱，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定輸出編碼，並控制硬體加速功能。可用選項取決於FFmpeg庫的版本，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 根據輸出文件副檔名自動選擇編碼器。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: libopenh264, libx264, libx265, h264_qsv, hevc_qsv, h264_nvenc, hevc_nvenc, h264_amf, hevc_amf 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;編碼器名稱，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定輸出編碼，並控制硬體加速功能。可用選項取決於FFmpeg庫的版本，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 依輸出檔案副檔名自動選用編碼器。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: libopenh264, libx264, libx265, h264_qsv, hevc_qsv, h264_nvenc, hevc_nvenc, h264_amf, hevc_amf 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="131"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;the pixel format passed to FFmpeg&apos;s library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This setting defines the pixel format for the encoder. Note that some encoders require specific formats. Refer to FFmpeg documentation for details.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Troubleshooting&lt;/span&gt;: If some hardware acceleration encoders initialization fails, try setting this field to p010 (10bit) or nv12 (8bit).&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: Auto-select the pixel format based on the decoder.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Typical options&lt;/span&gt;: yuv420p, yuv420p10, nv12, p010, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;像素格式，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定編碼器的像素格式。請注意部分編碼器需特定格式，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;故障排查&lt;/span&gt;: 若硬體編碼器初始化失敗，可嘗試將此欄位設為p010 (10bit)或nv12 (8bit)。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 根據解碼器自動選擇像素格式。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: yuv420p, yuv420p10, nv12, p010 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;像素格式，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;此設定用於指定編碼器的像素格式。請注意部分編碼器需特定格式，詳情請參考FFmpeg文件。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;故障排查&lt;/span&gt;: 若硬體編碼器初始化失敗，可嘗試將此欄位設為p010 (10bit)或nv12 (8bit)。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 依解碼器自動選用像素格式。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;範例&lt;/span&gt;: yuv420p, yuv420p10, nv12, p010 等。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="79"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;The bitrate passed to FFmpeg&apos;s library.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;This affects the output video&apos;s file size and quality. The unit is &lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;Leave blank&lt;/span&gt;: auto-select the bitrate based on the input file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;位元率，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;設定將影響輸出影片的檔案大小與畫質。單位為&lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 根據輸入文件自動選擇位元率。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;位元率，傳遞給FFmpeg庫。&lt;/span&gt;&lt;/p&gt;&lt;p&gt;設定將影響輸出影片的檔案大小與畫質。單位為&lt;span style=&quot; font-weight:700;&quot;&gt;kb/s&lt;/span&gt;。&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700;&quot;&gt;留空&lt;/span&gt;: 依輸入檔案自動選用位元率。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="72"/>
@@ -129,7 +129,7 @@
         <location filename="../ui/MainWindow.ui" line="151"/>
         <location filename="../src/MainWindow.cpp" line="136"/>
         <source>open</source>
-        <translation>打開</translation>
+        <translation>開啟</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="213"/>
@@ -209,7 +209,7 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="338"/>
         <source>File</source>
-        <translation>文件</translation>
+        <translation>檔案</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="346"/>
