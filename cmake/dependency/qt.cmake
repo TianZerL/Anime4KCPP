@@ -21,8 +21,6 @@ if(NOT TARGET dep::qt)
             if(${QT_VERSION_MINOR} GREATER_EQUAL 2)
                 qt6_add_executable(${ARG_TARGET} ${ARG_SRC_FILES})
                 qt6_add_translations(${ARG_TARGET} TS_FILES ${ARG_TS_FILES} QM_FILES_OUTPUT_VARIABLE dep_qt_QM_FILES) # set QM_FILES_OUTPUT_VARIABLE to disable automatic resource embedding
-                add_dependencies(release_translations update_translations)
-                add_dependencies(${ARG_TARGET} release_translations)
             else()
                 qt6_create_translation(dep_qt_QM_FILES ${ARG_SRC_FILES} ${ARG_TS_FILES} OPTIONS -I ${ARG_INCLUDE_DIRECTORY})
                 qt6_add_executable(${ARG_TARGET} ${ARG_SRC_FILES} ${dep_qt_QM_FILES})
