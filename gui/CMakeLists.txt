@@ -6,7 +6,7 @@ set(GUI_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include(${DEPENDENCY_DIR}/qt.cmake)
 
 set(AC_GUI_LANGUAGES
-    zh_CN
+    zh_Hans zh_Hant
 )
 
 foreach(AC_GUI_LANGUAGE ${AC_GUI_LANGUAGES})
