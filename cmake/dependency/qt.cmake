@@ -8,23 +8,38 @@ if(NOT TARGET dep::qt)
     set(CMAKE_AUTOMOC ON)
     set(CMAKE_AUTORCC ON)
 
-    macro(dep_qt_add_executable PARAM_TARGET PARAM_SRC_FILES PARAM_TS_FILES PARAM_INCLUDE_DIRECTORY)
+    function(dep_qt_add_executable ARG_TARGET)
+        cmake_parse_arguments(
+            ARG
+            ""
+            ""
+            "SRC_FILES;TS_FILES;INCLUDE_DIRECTORY"
+            ${ARGN}
+        )
+
         if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-            qt_create_translation(dep_qt_QM_FILES ${PARAM_SRC_FILES} ${PARAM_TS_FILES} OPTIONS -I ${PARAM_INCLUDE_DIRECTORY})
-            qt_add_executable(${PARAM_TARGET} ${PARAM_SRC_FILES} ${dep_qt_QM_FILES})
+            if(${QT_VERSION_MINOR} GREATER_EQUAL 2)
+                qt6_add_executable(${ARG_TARGET} ${ARG_SRC_FILES})
+                qt6_add_translations(${ARG_TARGET} TS_FILES ${ARG_TS_FILES} QM_FILES_OUTPUT_VARIABLE dep_qt_QM_FILES) # set QM_FILES_OUTPUT_VARIABLE to disable automatic resource embedding
+                add_dependencies(release_translations update_translations)
+                add_dependencies(${ARG_TARGET} release_translations)
+            else()
+                qt6_create_translation(dep_qt_QM_FILES ${ARG_SRC_FILES} ${ARG_TS_FILES} OPTIONS -I ${ARG_INCLUDE_DIRECTORY})
+                qt6_add_executable(${ARG_TARGET} ${ARG_SRC_FILES} ${dep_qt_QM_FILES})
+            endif()
         else()
-            qt5_create_translation(dep_qt_QM_FILES ${PARAM_SRC_FILES} ${PARAM_TS_FILES} OPTIONS -I ${PARAM_INCLUDE_DIRECTORY})
-            add_executable(${PARAM_TARGET} ${PARAM_SRC_FILES} ${dep_qt_QM_FILES})
+            qt5_create_translation(dep_qt_QM_FILES ${ARG_SRC_FILES} ${ARG_TS_FILES} OPTIONS -I ${ARG_INCLUDE_DIRECTORY})
+            add_executable(${ARG_TARGET} ${ARG_SRC_FILES} ${dep_qt_QM_FILES})
         endif()
 
-        set_target_properties(${PARAM_TARGET} PROPERTIES
+        set_target_properties(${ARG_TARGET} PROPERTIES
             MACOSX_BUNDLE_GUI_IDENTIFIER tianzerl.anime4kcpp.gui
             MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
             MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
             MACOSX_BUNDLE TRUE
             WIN32_EXECUTABLE TRUE
         )
-    endmacro()
+    endfunction()
 
     target_link_libraries(dep_qt INTERFACE Qt${QT_VERSION_MAJOR}::Widgets)
     add_library(dep::qt ALIAS dep_qt)

@@ -1,2 +1,4 @@
 # Treate parameter files as C++ and exclude them from stats
 core/include/AC/Core/Model/Param/*.p linguist-generated
+gui/languages/*.ts linguist-generated
+gui/ui/*.ui linguist-generated

@@ -85,7 +85,11 @@ set(AC_GUI_SRC_FILES
     ${AC_GUI_EXTERN_I18N_FILES}
 )
 
-dep_qt_add_executable(ac_gui "${AC_GUI_SRC_FILES}" "${AC_GUI_TS_FILES}" "${GUI_SOURCE_DIR}/include")
+dep_qt_add_executable(ac_gui
+    SRC_FILES ${AC_GUI_SRC_FILES}
+    TS_FILES ${AC_GUI_TS_FILES}
+    INCLUDE_DIRECTORY ${GUI_SOURCE_DIR}/include
+)
 
 target_include_directories(ac_gui PRIVATE
     $<BUILD_INTERFACE:${GUI_SOURCE_DIR}/include>
