@@ -10,6 +10,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include "AC/Util/Defer.hpp"
 #include "AC/Video/Pipeline.hpp"
 
 namespace ac::video::detail
@@ -110,6 +111,7 @@ namespace ac::video::detail
         encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
         encoderCtx->pix_fmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
+        if (av_pix_fmt_desc_get(encoderCtx->pix_fmt)->flags & AV_PIX_FMT_FLAG_RGB) return false; // YUV only.
         auto bitDepth = getBitDepth(encoderCtx->pix_fmt);
         switch (codec->id)
         {
@@ -122,10 +124,9 @@ namespace ac::video::detail
 #   endif
         default: break;
         }
-        encoderCtx->codec_type = AVMEDIA_TYPE_VIDEO;
         encoderCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encoderCtx->bit_rate)>(decoderCtx->bit_rate * factor * factor);
         encoderCtx->framerate = decoderCtx->framerate;
-        encoderCtx->gop_size = 12;
+        encoderCtx->gop_size = static_cast<decltype(encoderCtx->gop_size)>(10 * av_q2d(decoderCtx->framerate) + 0.5); // 10s gop size, maybe we should use dynamic gop size.
         encoderCtx->time_base = timeBase;
         encoderCtx->width = static_cast<decltype(encoderCtx->width)>(decoderCtx->width * factor);
         encoderCtx->height = static_cast<decltype(encoderCtx->height)>(decoderCtx->height * factor);
@@ -142,7 +143,7 @@ namespace ac::video::detail
         {
             bool isOtherStream = (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) || (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_DATA);
             if ((isOtherStream && (strcmp(efmtCtx->oformat->name, "matroska") != 0)) || // check if mkv
-                (!isOtherStream && (avformat_query_codec(efmtCtx->oformat, dfmtCtx->streams[i]->codecpar->codec_id, FF_COMPLIANCE_NORMAL) < 1))) //check if the given container can store a codec
+                (!isOtherStream && (avformat_query_codec(efmtCtx->oformat, dfmtCtx->streams[i]->codecpar->codec_id, FF_COMPLIANCE_NORMAL) < 1))) // check if the given container can store a codec
             {
                 streamIdxMap[i] = -1;
                 continue;
@@ -178,7 +179,6 @@ namespace ac::video::detail
             }
         }
 
-        if (encoderCtx->pix_fmt != decoderCtx->pix_fmt) swsCtx = sws_getContext(decoderCtx->width, decoderCtx->height, decoderCtx->pix_fmt, decoderCtx->width, decoderCtx->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
         ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
         ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
         ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
@@ -190,33 +190,48 @@ namespace ac::video::detail
     {
         int ret = 0;
         auto frame = av_frame_alloc(); if (!frame) return false;
+        bool finishFrame = false;
+        util::Defer deferFreeFrame { [&]() { if (!finishFrame) av_frame_free(&frame); } };
         for (;;)
         {
             ret = avcodec_receive_frame(decoderCtx, frame);
             if (ret == 0) break;
             else if (ret == AVERROR(EAGAIN) && fetch()) continue;
-            else
-            {
-                av_frame_free(&frame);
-                return false;
-            }
+            else return false;
+        }
+
+        if ((!swsCtx && frame->format != encoderCtx->pix_fmt) || (swsCtx && frame->format != swsCtx->src_format))
+        {
+            if (swsCtx) sws_freeContext(swsCtx);
+            swsCtx = sws_getContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
+            if (!swsCtx) return false;
         }
         if (swsCtx)
         {
-            auto* dstFrame = av_frame_alloc(); if (!dstFrame) return false;
-            if ((av_frame_copy_props(dstFrame, frame) >= 0) && (sws_scale_frame(swsCtx, dstFrame, frame) >= 0))
+            auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
+            bool finishDstFrame = false;
+            util::Defer deferFreeDstFrame{ [&]() { if (!finishDstFrame) av_frame_free(&dstFrame); } };
+            ret = av_frame_copy_props(dstFrame, frame); if (ret < 0) return false;
+            dstFrame->width = frame->width;
+            dstFrame->height = frame->height;
+            dstFrame->format = encoderCtx->pix_fmt;
+#   if LIBAVUTIL_VERSION_MAJOR < 57 // ffmpeg 5, libavutil 57
+            ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
+            if (sws_scale(swsCtx, frame->data, frame->linesize, 0, frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
+#   else
+            if (sws_scale_frame(swsCtx, dstFrame, frame) >= 0)
+#   endif
             {
                 av_frame_free(&frame);
                 frame = dstFrame;
+                finishDstFrame = true;
             }
-            else
-            {
-                av_frame_free(&dstFrame);
-                av_frame_free(&frame);
-                return false;
-            }
+            else return false;
         }
+
+        finishFrame = true;
         fill(dst, frame, packets);
+
 #   if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
         dst.number = decoderCtx->frame_number;
 #   else

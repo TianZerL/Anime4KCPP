@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cctype>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #if __has_include(<CL/opencl.hpp>)

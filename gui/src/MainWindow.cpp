@@ -28,9 +28,9 @@
 
 #include "Config.hpp"
 #include "Logger.hpp"
-#include "Upscaler.hpp"
 #include "MainWindow.hpp"
 #include "ui_MainWindow.h"
+#include "Upscaler.hpp"
 
 MainWindow::MainWindow() : QMainWindow(nullptr), ui(std::make_unique<Ui::MainWindow>())
 {

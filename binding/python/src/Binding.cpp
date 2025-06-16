@@ -1,8 +1,8 @@
 #include <iterator>
 #include <tuple>
 
-#include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
 
 #include "AC/Core.hpp"
 #include "AC/Specs.hpp"
