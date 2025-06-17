@@ -200,7 +200,7 @@ namespace ac::video::detail
             else return false;
         }
 
-        if ((!swsCtx && frame->format != encoderCtx->pix_fmt) || (swsCtx && frame->format != swsCtx->src_format))
+        if (!swsCtx && (frame->format != encoderCtx->pix_fmt))// I think it can be assumed that the frame format will not change during decoding.
         {
             if (swsCtx) sws_freeContext(swsCtx);
             swsCtx = sws_getContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
