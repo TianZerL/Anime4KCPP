@@ -65,13 +65,17 @@ void ac::core::Image::create(const int w, const int h, const int c, const Elemen
     if (!(h > 0 && lineSize > 0)) return;
     int pitch = stride >= lineSize ? stride : align(lineSize, AC_CORE_STRIDE_ALIGN);
     int size = h * pitch;
+    bool needAlloc = !dptr || size != this->size();
     this->w = w;
     this->h = h;
     this->c = c;
     this->elementType = elementType;
     this->pitch = pitch;
-    this->dptr = std::make_shared<ImageData>(size);
-    this->pixels = this->dptr->data;
+    if (needAlloc)
+    {
+        this->dptr = std::make_shared<ImageData>(size);
+        this->pixels = this->dptr->data;
+    }
 }
 void ac::core::Image::map(const int w, const int h, const int c, const ElementType elementType, void* const data, const int stride) noexcept
 {
