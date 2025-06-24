@@ -125,8 +125,8 @@ namespace ac::video::detail
         default: break;
         }
         encoderCtx->bit_rate = hints.bitrate > 0 ? hints.bitrate : static_cast<decltype(encoderCtx->bit_rate)>(decoderCtx->bit_rate * factor * factor);
-        encoderCtx->rc_max_rate = encoderCtx->bit_rate / 4 * 5;
-        encoderCtx->framerate = decoderCtx->framerate;
+        encoderCtx->rc_max_rate = encoderCtx->bit_rate * 2; // is this too big?
+        encoderCtx->rc_buffer_size = encoderCtx->rc_max_rate * 5; // 10s
         encoderCtx->gop_size = static_cast<decltype(encoderCtx->gop_size)>(10 * av_q2d(decoderCtx->framerate) + 0.5); // 10s gop size, maybe we should use dynamic gop size.
         encoderCtx->time_base = timeBase;
         encoderCtx->width = static_cast<decltype(encoderCtx->width)>(decoderCtx->width * factor);
