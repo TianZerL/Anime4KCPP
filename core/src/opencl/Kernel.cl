@@ -79,20 +79,17 @@ kernel void conv3x3_8to8(
         float8 k7 = vload8(7, k);
         float8 k8 = vload8(8, k);
 
-        float8 s0 = (float8)(0.0f);
-        float8 s1 = (float8)(0.0f);
-        float8 s2 = (float8)(0.0f);
-        s0 = mad(r0, k0, s0);
-        s1 = mad(r1, k1, s1);
-        s2 = mad(r2, k2, s2);
-        s0 = mad(r3, k3, s0);
-        s1 = mad(r4, k4, s1);
-        s2 = mad(r5, k5, s2);
-        s0 = mad(r6, k6, s0);
-        s1 = mad(r7, k7, s1);
-        s2 = mad(r8, k8, s2);
+        float8 s0 = r0 * k0 + 
+                    r1 * k1 + 
+                    r2 * k2 + 
+                    r3 * k3 + 
+                    r4 * k4 + 
+                    r5 * k5 + 
+                    r6 * k6 + 
+                    r7 * k7 + 
+                    r8 * k8 ;
 
-        s[n] = fmax(dot(s0.lo + s0.hi + s1.lo + s1.hi + s2.lo + s2.hi, (float4)(1.0f)) + bptr[n], 0.0f);
+        s[n] = fmax(dot(s0.lo + s0.hi, (float4)(1.0f)) + bptr[n], 0.0f);
     }
     write_imagef(dst, (int4)(x, y, 0, 0), (float4)(s[0], s[1], s[2], s[3]));
     write_imagef(dst, (int4)(x, y, 1, 0), (float4)(s[4], s[5], s[6], s[7]));
@@ -141,20 +138,17 @@ kernel void conv3x3_residual_8to8(
         float8 k7 = vload8(7, k);
         float8 k8 = vload8(8, k);
 
-        float8 s0 = (float8)(0.0f);
-        float8 s1 = (float8)(0.0f);
-        float8 s2 = (float8)(0.0f);
-        s0 = mad(r0, k0, s0);
-        s1 = mad(r1, k1, s1);
-        s2 = mad(r2, k2, s2);
-        s0 = mad(r3, k3, s0);
-        s1 = mad(r4, k4, s1);
-        s2 = mad(r5, k5, s2);
-        s0 = mad(r6, k6, s0);
-        s1 = mad(r7, k7, s1);
-        s2 = mad(r8, k8, s2);
+        float8 s0 = r0 * k0 +
+                    r1 * k1 +
+                    r2 * k2 +
+                    r3 * k3 +
+                    r4 * k4 +
+                    r5 * k5 +
+                    r6 * k6 +
+                    r7 * k7 +
+                    r8 * k8 ;
 
-        s[n] = fmax(dot(s0.lo + s0.hi + s1.lo + s1.hi + s2.lo + s2.hi, (float4)(1.0f)) + bptr[n] + s[n], 0.0f);
+        s[n] = fmax(dot(s0.lo + s0.hi, (float4)(1.0f)) + bptr[n] + s[n], 0.0f);
     }
     write_imagef(dst, (int4)(x, y, 0, 0), (float4)(s[0], s[1], s[2], s[3]));
     write_imagef(dst, (int4)(x, y, 1, 0), (float4)(s[4], s[5], s[6], s[7]));
