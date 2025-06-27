@@ -34,14 +34,21 @@ namespace ac::core::opencl
 
     inline static void setArch(Context& context)
     {
+        if (context.name.find("rusticl") != std::string::npos)
+        {
+            context.arch = "MESA";
+            return;
+        }
+
         cl_int err = CL_SUCCESS;
-        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err);
+        context.arch = "OTHER";
+        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err); if (err != CL_SUCCESS) return;
         switch (vendorId)
         {
         case 0x1002: // AMD
             if (!context.name[6] || context.name[6] == ' ') // gfx9xx
                 context.arch = "AMD_GCN";
-            else 
+            else
                 context.arch = "AMD_RDNA";
             break;
         case 0x8086: // Intel
@@ -50,9 +57,7 @@ namespace ac::core::opencl
         case 0x10DE: // Nvidia
             context.arch = "NVIDIA";
             break;
-        default:
-            context.arch = "OTHER";
-            break;
+        default: break;
         }
     }
 

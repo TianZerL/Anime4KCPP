@@ -79,15 +79,15 @@ kernel void conv3x3_8to8(
         float8 k7 = vload8(7, k);
         float8 k8 = vload8(8, k);
 
-#   if defined (ARCH_AMD_RDNA)
-        float8 s0 = r0 * k0 + 
-                    r1 * k1 + 
-                    r2 * k2 + 
-                    r3 * k3 + 
-                    r4 * k4 + 
-                    r5 * k5 + 
-                    r6 * k6 + 
-                    r7 * k7 + 
+#   if defined (ARCH_MESA) || defined (ARCH_AMD_RDNA)
+        float8 s0 = r0 * k0 +
+                    r1 * k1 +
+                    r2 * k2 +
+                    r3 * k3 +
+                    r4 * k4 +
+                    r5 * k5 +
+                    r6 * k6 +
+                    r7 * k7 +
                     r8 * k8 ;
 
         s[n] = fmax(dot(s0.lo + s0.hi, (float4)(1.0f)) + bptr[n], 0.0f);
@@ -165,7 +165,7 @@ kernel void conv3x3_residual_8to8(
         float8 k7 = vload8(7, k);
         float8 k8 = vload8(8, k);
 
-#   if defined (ARCH_AMD_RDNA)
+#   if defined (ARCH_MESA) || defined (ARCH_AMD_RDNA)
         float8 s0 = r0 * k0 +
                     r1 * k1 +
                     r2 * k2 +
