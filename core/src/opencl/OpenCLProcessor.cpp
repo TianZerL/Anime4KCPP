@@ -29,35 +29,29 @@ namespace ac::core::opencl
         cl::Device device{};
         cl::Context ctx{};
         cl::Program program{};
-        const char* arch{};
     };
 
-    inline static void setArch(Context& context)
+    inline static const char* getArch(Context& context)
     {
-        if (context.name.find("rusticl") != std::string::npos)
-        {
-            context.arch = "MESA";
-            return;
-        }
+        if (context.name.find("rusticl") != std::string::npos) return "MESA";
 
         cl_int err = CL_SUCCESS;
-        context.arch = "OTHER";
-        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err); if (err != CL_SUCCESS) return;
+
+        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err); if (err != CL_SUCCESS) return "OTHER";
         switch (vendorId)
         {
         case 0x1002: // AMD
-            if (!context.name[6] || context.name[6] == ' ') // gfx9xx
-                context.arch = "AMD_GCN";
-            else
-                context.arch = "AMD_RDNA";
-            break;
+            if (context.name.rfind("gfx", 0) == 0 && (!context.name[6] || context.name[6] == ' ')) // gfx9xx
+                return "AMD_GCN";
+            return "AMD_RDNA";
         case 0x8086: // Intel
-            context.arch = "INTEL";
-            break;
+            return "INTEL";
         case 0x10DE: // Nvidia
-            context.arch = "NVIDIA";
-            break;
-        default: break;
+            return "NVIDIA";
+        case 0x5143: // Qualcomm
+            return "ADRENO";
+        default:
+            return "OTHER";
         }
     }
 
@@ -103,10 +97,9 @@ namespace ac::core::opencl
         cl_int err = CL_SUCCESS;
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
         context.program = cl::Program{ context.ctx, kernel, false, &err }; if (err != CL_SUCCESS) return err;
-        setArch(context);
         std::string options{};
         options.append("-DMODEL_").append(model).push_back(' ');
-        options.append("-DARCH_").append(context.arch).push_back(' ');
+        options.append("-DARCH_").append(getArch(context)).push_back(' ');
         return context.program.build({ context.device }, options.c_str());
     }
     inline static cl_channel_type channelType(const Image::ElementType elementType) noexcept

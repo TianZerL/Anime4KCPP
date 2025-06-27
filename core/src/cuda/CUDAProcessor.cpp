@@ -56,8 +56,8 @@ namespace ac::core::cuda
 
     struct Context
     {
-        std::string name;
-        std::size_t vram;
+        std::string name{};
+        std::size_t vram{};
     };
 
     //lazy load, god knows if it's safe to call the cuda function during DLL initialization

@@ -8,12 +8,12 @@
 namespace ac::core::cuda
 {
     template<typename Float, ::cuda::std::enable_if_t<::cuda::std::is_floating_point_v<Float>, bool> = true>
-    __device__ inline Float fromFloat(const float v)
+    __device__ inline static Float fromFloat(const float v)
     {
         return fminf(fmaxf(v, 0.0f), 1.0f);
     }
     template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
-    __device__ inline Unsigned fromFloat(const float v)
+    __device__ inline static Unsigned fromFloat(const float v)
     {
         return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
@@ -156,15 +156,15 @@ namespace ac::core::cuda
         constexpr int lin = cin / 4;
         constexpr int lout = cout / 4;
 
-        float4 r0[lin] = {};
-        float4 r1[lin] = {};
-        float4 r2[lin] = {};
-        float4 r3[lin] = {};
-        float4 r4[lin] = {};
-        float4 r5[lin] = {};
-        float4 r6[lin] = {};
-        float4 r7[lin] = {};
-        float4 r8[lin] = {};
+        float4 r0[lin]{};
+        float4 r1[lin]{};
+        float4 r2[lin]{};
+        float4 r3[lin]{};
+        float4 r4[lin]{};
+        float4 r5[lin]{};
+        float4 r6[lin]{};
+        float4 r7[lin]{};
+        float4 r8[lin]{};
 
         for (int cidx = 0; cidx < lin; cidx++)
         {
@@ -182,7 +182,7 @@ namespace ac::core::cuda
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
-            float sum[4] = {};
+            float sum[4]{};
             for (int i = 0; i < 4; i++)
             {
                 auto offset0 = (npos + i) * 9 * cin + 0 * cin;
