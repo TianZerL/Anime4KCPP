@@ -29,7 +29,32 @@ namespace ac::core::opencl
         cl::Device device;
         cl::Context ctx;
         cl::Program program;
+        const char* arch;
     };
+
+    inline static void setArch(Context& context)
+    {
+        cl_int err = CL_SUCCESS;
+        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err);
+        switch (vendorId)
+        {
+        case 0x1002: // AMD
+            if (!context.name[6] || context.name[6] == ' ') // gfx9xx
+                context.arch = "AMD_GCN";
+            else 
+                context.arch = "AMD_RDNA";
+            break;
+        case 0x8086: // Intel
+            context.arch = "INTEL";
+            break;
+        case 0x10DE: // Nvidia
+            context.arch = "NVIDIA";
+            break;
+        default:
+            context.arch = "OTHER";
+            break;
+        }
+    }
 
     // we need the device with image support
     inline static bool checkDevice(const cl::Device& device)
@@ -65,7 +90,7 @@ namespace ac::core::opencl
     }
 
     // we can call `init` multiple times
-    inline static cl_int init(Context& context, const char* const kernel, const char* const options) noexcept
+    inline static cl_int init(Context& context, const char* const kernel, const std::string& model) noexcept
     {
         if (!context.device()) return CL_DEVICE_NOT_AVAILABLE;
         if (context.ctx() && context.program()) return CL_SUCCESS;
@@ -73,7 +98,11 @@ namespace ac::core::opencl
         cl_int err = CL_SUCCESS;
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
         context.program = cl::Program{ context.ctx, kernel, false, &err }; if (err != CL_SUCCESS) return err;
-        return context.program.build({ context.device }, options);
+        setArch(context);
+        std::string options{};
+        options.append("-DMODEL_").append(model).push_back(' ');
+        options.append("-DARCH_").append(context.arch).push_back(' ');
+        return context.program.build({ context.device }, options.c_str());
     }
     inline static cl_channel_type channelType(const Image::ElementType elementType) noexcept
     {
@@ -99,7 +128,7 @@ namespace ac::core::opencl
                 idx = (device >= 0 && static_cast<decltype(contextList.size())>(device) < contextList.size()) ? device : 0;
                 context = contextList[idx];
                 for (char& ch : model) ch = static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
-                err = init(context, KernelString/*from Kernel.hpp*/, model.insert(0, "-DMODEL_").c_str());
+                err = init(context, KernelString/*from Kernel.hpp*/, model);
             }
         }
         ~OpenCLProcessorBase() noexcept override = default;
