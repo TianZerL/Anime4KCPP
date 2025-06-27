@@ -2,6 +2,7 @@
 #define AC_CORE_UTIL_HPP
 
 #include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -49,6 +50,9 @@ namespace ac::core
     // the scale ratio is assumed to be an integer.
     template<typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...), bool> = true>
     void filter(F&& f, Images& ...images);
+
+    void* fastMalloc(std::size_t size) noexcept;
+    void fastFree(void* ptr) noexcept;
 }
 
 template <typename Integer>

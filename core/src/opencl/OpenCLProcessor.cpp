@@ -25,11 +25,11 @@ namespace ac::core::opencl
 {
     struct Context
     {
-        std::string name;
-        cl::Device device;
-        cl::Context ctx;
-        cl::Program program;
-        const char* arch;
+        std::string name{};
+        cl::Device device{};
+        cl::Context ctx{};
+        cl::Program program{};
+        const char* arch{};
     };
 
     inline static void setArch(Context& context)

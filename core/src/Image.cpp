@@ -1,47 +1,21 @@
-#include <cstddef>
-#include <cstdlib>
 #include <cstring>
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
-#ifndef AC_CORE_MALLOC_ALIGN
-#   define AC_CORE_MALLOC_ALIGN 32
-#endif
 #ifndef AC_CORE_STRIDE_ALIGN
 #   define AC_CORE_STRIDE_ALIGN 4
 #endif
-
-namespace ac::core::detail
-{
-    template <typename T>
-    inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
-    {
-        return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
-    }
-
-    inline static void* alignedAlloc(const std::size_t size) noexcept
-    {
-        auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + AC_CORE_MALLOC_ALIGN));
-        if (!buffer) return nullptr;
-        void** ptr = alignPtr(buffer + 1, AC_CORE_MALLOC_ALIGN);
-        ptr[-1] = static_cast<void*>(buffer);
-        return ptr;
-    }
-    inline static void alignedFree(void* const ptr) noexcept
-    {
-        if (ptr) std::free(static_cast<void**>(ptr)[-1]);
-    }
-}
 
 struct ac::core::Image::ImageData
 {
     void* data;
 
-    ImageData(const int size) noexcept : data(detail::alignedAlloc(size)) {}
+    ImageData(const int size) noexcept : data(fastMalloc(size)) {}
     ~ImageData() noexcept
     {
-        detail::alignedFree(data);
+        fastFree(data);
+        data = nullptr;
     }
 };
 
@@ -65,17 +39,13 @@ void ac::core::Image::create(const int w, const int h, const int c, const Elemen
     if (!(h > 0 && lineSize > 0)) return;
     int pitch = stride >= lineSize ? stride : align(lineSize, AC_CORE_STRIDE_ALIGN);
     int size = h * pitch;
-    bool needAlloc = !dptr || size != this->size();
     this->w = w;
     this->h = h;
     this->c = c;
     this->elementType = elementType;
     this->pitch = pitch;
-    if (needAlloc)
-    {
-        this->dptr = std::make_shared<ImageData>(size);
-        this->pixels = this->dptr->data;
-    }
+    this->dptr = std::make_shared<ImageData>(size);
+    this->pixels = this->dptr->data;
 }
 void ac::core::Image::map(const int w, const int h, const int c, const ElementType elementType, void* const data, const int stride) noexcept
 {
