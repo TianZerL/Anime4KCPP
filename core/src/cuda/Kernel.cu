@@ -37,15 +37,26 @@ namespace ac::core::cuda
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
-        
-        __shared__ float kptr[cout * 9];
-        if (tid * 4 < cout * 9)
+        auto threads = blockDim.x * blockDim.y;
+        constexpr auto elements = cout * 9;
+
+        __shared__ __align__(16) float kptr[elements];
+        if (threads < elements)
         {
-            kptr[tid * 4 + 0] = kernels[tid * 4 + 0];
-            kptr[tid * 4 + 1] = kernels[tid * 4 + 1];
-            kptr[tid * 4 + 2] = kernels[tid * 4 + 2];
-            kptr[tid * 4 + 3] = kernels[tid * 4 + 3];
+            auto line = elements / threads;
+            auto remain = elements % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                kptr[idx] = kernels[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                kptr[idx] = kernels[idx];
+            }
         }
+        else if (tid < elements) kptr[tid] = kernels[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -136,19 +147,26 @@ namespace ac::core::cuda
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
+        auto threads = blockDim.x * blockDim.y;
+        constexpr auto elements = cout * 9 * cin;
 
-        __shared__ float kptr[cout * 9 * cin];
-        if (tid * 8 < cout * 9 * cin)
+        __shared__ __align__(16) float kptr[elements];
+        if (threads < elements)
         {
-            kptr[tid * 8 + 0] = kernels[tid * 8 + 0];
-            kptr[tid * 8 + 1] = kernels[tid * 8 + 1];
-            kptr[tid * 8 + 2] = kernels[tid * 8 + 2];
-            kptr[tid * 8 + 3] = kernels[tid * 8 + 3];
-            kptr[tid * 8 + 4] = kernels[tid * 8 + 4];
-            kptr[tid * 8 + 5] = kernels[tid * 8 + 5];
-            kptr[tid * 8 + 6] = kernels[tid * 8 + 6];
-            kptr[tid * 8 + 7] = kernels[tid * 8 + 7];
+            auto line = elements / threads;
+            auto remain = elements % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                kptr[idx] = kernels[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                kptr[idx] = kernels[idx];
+            }
         }
+        else if (tid < elements) kptr[tid] = kernels[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
