@@ -1,31 +1,153 @@
-#include <cuda_fp16.h>
-
-#include <cuda/std/type_traits>
 #include <cuda/std/limits>
+#include <cuda/std/type_traits>
+#include <cuda_fp16.h>
 
 #include "AC/Core/Image.hpp"
 
 namespace ac::core::cuda
 {
     template<typename Float, ::cuda::std::enable_if_t<::cuda::std::is_floating_point_v<Float>, bool> = true>
-    __device__ inline static Float fromFloat(const float v)
+    static __inline__ __device__ Float fromFloat(const float v) noexcept
     {
-        return fminf(fmaxf(v, 0.0f), 1.0f);
+        return __saturatef(v);
     }
     template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
-    __device__ inline static Unsigned fromFloat(const float v)
+    static __inline__ __device__ Unsigned fromFloat(const float v) noexcept
     {
         return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
-
-    __device__ inline static float dot(const float4 a, const float* const __restrict__ b)
+    template<typename T>
+    static __inline__ __device__ void writeImage(const T val, const cudaSurfaceObject_t dst, const int x, const int y) noexcept
     {
-        return a.x * b[0] + a.y * b[1] + a.z * b[2] + a.w * b[3];
+        surf2Dwrite<T>(val, dst, sizeof(T) * x, y, cudaBoundaryModeZero);
     }
+    static __inline__ __device__ float dot(const float4 a, const float4 b) noexcept
+    {
+        return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
+    }
+    static __inline__ __device__ float dot(const float4 a, const float* const __restrict__ b) noexcept
+    {
+        return dot(a, make_float4(b[0], b[1], b[2], b[3]));
+    }
+    static __inline__ __device__ ushort4 readImageh(const cudaSurfaceObject_t src, const int x, const int y, const int layer) noexcept
+    {
+        return surf2DLayeredread<ushort4>(src, sizeof(ushort4) * x, y, layer, cudaBoundaryModeZero);
+    }
+    static __inline__ __device__ void writeImageh(const ushort4 val, const cudaSurfaceObject_t dst, const int x, const int y, const int layer) noexcept
+    {
+        surf2DLayeredwrite<ushort4>(val, dst, sizeof(ushort4) * x, y, layer, cudaBoundaryModeZero);
+    }
+    static __inline__ __device__ float4 half2Float(const ushort4 a) noexcept
+    {
+        return make_float4(__ushort_as_half(a.x), __ushort_as_half(a.y), __ushort_as_half(a.z), __ushort_as_half(a.w));
+    }
+    static __inline__ __device__ float4 readImagef(const cudaSurfaceObject_t src, const int x, const int y, const int layer) noexcept
+    {
+        return half2Float(readImageh(src, x, y, layer));
+    }
+#if __CUDA_ARCH__ < 700
+    static __inline__ __device__ ushort4 float2Half(const float4 a) noexcept
+    {
+        return make_ushort4(__half_as_ushort(a.x), __half_as_ushort(a.y), __half_as_ushort(a.z), __half_as_ushort(a.w));
+    }
+    static __inline__ __device__ void writeImagef(const float4 val, const cudaSurfaceObject_t dst, const int x, const int y, const int layer) noexcept
+    {
+        writeImageh(float2Half(val), dst, x, y, layer);
+    }
+    static __inline__ __device__ float relu(const float a) noexcept
+    {
+        return fmaxf(a, 0.0f);
+    }
+    static __inline__ __device__ float4 relu(const float4 a) noexcept
+    {
+        return make_float4(relu(a.x), relu(a.y), relu(a.z), relu(a.w));
+    }
+#else
+
+    struct __align__(8) Half4
+    {
+        half2 v0, v1;
+
+        Half4() noexcept = default;
+        __inline__ __device__ Half4(const half d) noexcept
+        {
+            make(d);
+        }
+        __inline__ __device__ Half4(const half d0, const half d1, const half d2, const half d3) noexcept
+        {
+            make(d0, d1, d2, d3);
+        }
+        __inline__ __device__ Half4(const half2 d0, const half2 d1) noexcept
+        {
+            make(d0, d1);
+        }
+        __inline__ __device__ Half4(const ushort4 d) noexcept
+        {
+            make(d);
+        }
+        __inline__ __device__ Half4(const float4 d) noexcept
+        {
+            make(d);
+        }
+
+        __inline__ __device__ void make(const half d) noexcept
+        {
+            v0 = make_half2(d, d);
+            v1 = make_half2(d, d);
+        }
+        __inline__ __device__ void make(const half d0, const half d1, const half d2, const half d3) noexcept
+        {
+            v0 = make_half2(d0, d1);
+            v1 = make_half2(d2, d3);
+        }
+        __inline__ __device__ void make(const half2 d0, const half2 d1) noexcept
+        {
+            v0 = d0;
+            v1 = d1;
+        }
+        __inline__ __device__ void make(const ushort4 d) noexcept
+        {
+            v0 = make_half2(__ushort_as_half(d.x), __ushort_as_half(d.y));
+            v1 = make_half2(__ushort_as_half(d.z), __ushort_as_half(d.w));
+        }
+        __inline__ __device__ void make(const float4 d) noexcept
+        {
+            v0 = __floats2half2_rn(d.x, d.y);
+            v1 = __floats2half2_rn(d.z, d.w);
+        }
+        __inline__ __device__ Half4& operator=(const ushort4 d) noexcept
+        {
+            make(d);
+            return *this;
+        }
+        __inline__ __device__ operator ushort4() const noexcept
+        {
+            return make_ushort4(__half_as_ushort(v0.x), __half_as_ushort(v0.y), __half_as_ushort(v1.x), __half_as_ushort(v1.y));
+        }
+        __inline__ __device__ half dot(const half* const __restrict__ d) const noexcept
+        {
+            return dot(Half4{ make_half2(d[0], d[1]), make_half2(d[2], d[3]) });
+        }
+        __inline__ __device__ half dot(const Half4& d) const noexcept
+        {
+            auto s = __hfma2(v0, d.v0, __hmul2(v1, d.v1));
+            return s.x + s.y;
+        }
+    };
+
+    static __inline__ __device__ half2 relu(const half2 a) noexcept
+    {
+        return __hmax2(a, make_half2(0, 0));
+    }
+    static __inline__ __device__ Half4 relu(const Half4& a) noexcept
+    {
+        return Half4{ relu(a.v0), relu(a.v1) };
+    }
+#endif
 
     template<int cout,
-        ::cuda::std::enable_if_t<cout % 4 == 0 && (cout * 9 <= 128 * 4), bool> = true>
-    __global__ void conv3x3_cuda_cin1(
+        ::cuda::std::enable_if_t<cout % 4 == 0, bool> = true>
+    __global__ void conv3x3_cuda_cin1_float(
         cudaTextureObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
@@ -34,6 +156,7 @@ namespace ac::core::cuda
         const float* const __restrict__ biases
     )
     {
+#   if __CUDA_ARCH__ < 700
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
@@ -84,59 +207,52 @@ namespace ac::core::cuda
             auto offset2 = (npos + 2) * 9;
             auto offset3 = (npos + 3) * 9;
 
-            auto layer = make_ushort4(
-                __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kptr[offset0 + 0] +
-                    r[1] * kptr[offset0 + 1] +
-                    r[2] * kptr[offset0 + 2] +
-                    r[3] * kptr[offset0 + 3] +
-                    r[4] * kptr[offset0 + 4] +
-                    r[5] * kptr[offset0 + 5] +
-                    r[6] * kptr[offset0 + 6] +
-                    r[7] * kptr[offset0 + 7] +
-                    r[8] * kptr[offset0 + 8] + biases[npos + 0], 0.0f
-                ))),
-                __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kptr[offset1 + 0] +
-                    r[1] * kptr[offset1 + 1] +
-                    r[2] * kptr[offset1 + 2] +
-                    r[3] * kptr[offset1 + 3] +
-                    r[4] * kptr[offset1 + 4] +
-                    r[5] * kptr[offset1 + 5] +
-                    r[6] * kptr[offset1 + 6] +
-                    r[7] * kptr[offset1 + 7] +
-                    r[8] * kptr[offset1 + 8] + biases[npos + 1], 0.0f
-                ))),
-                __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kptr[offset2 + 0] +
-                    r[1] * kptr[offset2 + 1] +
-                    r[2] * kptr[offset2 + 2] +
-                    r[3] * kptr[offset2 + 3] +
-                    r[4] * kptr[offset2 + 4] +
-                    r[5] * kptr[offset2 + 5] +
-                    r[6] * kptr[offset2 + 6] +
-                    r[7] * kptr[offset2 + 7] +
-                    r[8] * kptr[offset2 + 8] + biases[npos + 2], 0.0f
-                ))),
-                __half_as_ushort(__float2half(fmaxf(
-                    r[0] * kptr[offset3 + 0] +
-                    r[1] * kptr[offset3 + 1] +
-                    r[2] * kptr[offset3 + 2] +
-                    r[3] * kptr[offset3 + 3] +
-                    r[4] * kptr[offset3 + 4] +
-                    r[5] * kptr[offset3 + 5] +
-                    r[6] * kptr[offset3 + 6] +
-                    r[7] * kptr[offset3 + 7] +
-                    r[8] * kptr[offset3 + 8] + biases[npos + 3], 0.0f
-                ))));
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
+            writeImagef(relu(make_float4(
+                r[0] * kptr[offset0 + 0] +
+                r[1] * kptr[offset0 + 1] +
+                r[2] * kptr[offset0 + 2] +
+                r[3] * kptr[offset0 + 3] +
+                r[4] * kptr[offset0 + 4] +
+                r[5] * kptr[offset0 + 5] +
+                r[6] * kptr[offset0 + 6] +
+                r[7] * kptr[offset0 + 7] +
+                r[8] * kptr[offset0 + 8] + biases[npos + 0],
+                r[0] * kptr[offset1 + 0] +
+                r[1] * kptr[offset1 + 1] +
+                r[2] * kptr[offset1 + 2] +
+                r[3] * kptr[offset1 + 3] +
+                r[4] * kptr[offset1 + 4] +
+                r[5] * kptr[offset1 + 5] +
+                r[6] * kptr[offset1 + 6] +
+                r[7] * kptr[offset1 + 7] +
+                r[8] * kptr[offset1 + 8] + biases[npos + 1],
+                r[0] * kptr[offset2 + 0] +
+                r[1] * kptr[offset2 + 1] +
+                r[2] * kptr[offset2 + 2] +
+                r[3] * kptr[offset2 + 3] +
+                r[4] * kptr[offset2 + 4] +
+                r[5] * kptr[offset2 + 5] +
+                r[6] * kptr[offset2 + 6] +
+                r[7] * kptr[offset2 + 7] +
+                r[8] * kptr[offset2 + 8] + biases[npos + 2],
+                r[0] * kptr[offset3 + 0] +
+                r[1] * kptr[offset3 + 1] +
+                r[2] * kptr[offset3 + 2] +
+                r[3] * kptr[offset3 + 3] +
+                r[4] * kptr[offset3 + 4] +
+                r[5] * kptr[offset3 + 5] +
+                r[6] * kptr[offset3 + 6] +
+                r[7] * kptr[offset3 + 7] +
+                r[8] * kptr[offset3 + 8] + biases[npos + 3]
+            )), dst, x, y, nidx);
         }
+#   endif
     }
 
     template<int cin, int cout, bool residual = false,
-        ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0) && (cout * 9 * cin <= 128 * 8), bool> = true>
-    __global__ void conv3x3_cuda(
-        cudaTextureObject_t src,
+        ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0), bool> = true>
+    __global__ void conv3x3_cuda_float(
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
@@ -144,6 +260,7 @@ namespace ac::core::cuda
         const float* const __restrict__ biases
     )
     {
+#   if __CUDA_ARCH__ < 700
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
@@ -186,21 +303,29 @@ namespace ac::core::cuda
 
         for (int cidx = 0; cidx < lin; cidx++)
         {
-            r0[cidx] = tex2DLayered<float4>(src, x - 1, y - 1, cidx);
-            r1[cidx] = tex2DLayered<float4>(src, x    , y - 1, cidx);
-            r2[cidx] = tex2DLayered<float4>(src, x + 1, y - 1, cidx);
-            r3[cidx] = tex2DLayered<float4>(src, x - 1, y    , cidx);
-            r4[cidx] = tex2DLayered<float4>(src, x    , y    , cidx);
-            r5[cidx] = tex2DLayered<float4>(src, x + 1, y    , cidx);
-            r6[cidx] = tex2DLayered<float4>(src, x - 1, y + 1, cidx);
-            r7[cidx] = tex2DLayered<float4>(src, x    , y + 1, cidx);
-            r8[cidx] = tex2DLayered<float4>(src, x + 1, y + 1, cidx);
+            r0[cidx] = readImagef(src, x - 1, y - 1, cidx);
+            r1[cidx] = readImagef(src, x    , y - 1, cidx);
+            r2[cidx] = readImagef(src, x + 1, y - 1, cidx);
+            r3[cidx] = readImagef(src, x - 1, y    , cidx);
+            r4[cidx] = readImagef(src, x    , y    , cidx);
+            r5[cidx] = readImagef(src, x + 1, y    , cidx);
+            r6[cidx] = readImagef(src, x - 1, y + 1, cidx);
+            r7[cidx] = readImagef(src, x    , y + 1, cidx);
+            r8[cidx] = readImagef(src, x + 1, y + 1, cidx);
         };
 
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
-            float sum[4]{};
+            __align__(16) float sum[4]{ 0.0f,0.0f,0.0f,0.0f };
+            if constexpr (residual)
+            {
+                auto res = readImagef(dst, x, y, nidx);
+                sum[0] += res.x;
+                sum[1] += res.y;
+                sum[2] += res.z;
+                sum[3] += res.w;
+            }
             for (int i = 0; i < 4; i++)
             {
                 auto offset0 = (npos + i) * 9 * cin + 0 * cin;
@@ -230,28 +355,230 @@ namespace ac::core::cuda
 
                 sum[i] += biases[npos + i];
             }
+            writeImagef(relu(make_float4(sum[0], sum[1], sum[2], sum[3])), dst, x, y, nidx);
+        }
+#   endif
+    }
+
+    template<int cout,
+        ::cuda::std::enable_if_t<cout % 4 == 0, bool> = true>
+    __global__ void conv3x3_cuda_cin1_half(
+        cudaTextureObject_t src,
+        cudaSurfaceObject_t dst,
+        const unsigned int width,
+        const unsigned int height,
+        const float* const __restrict__ kernels,
+        const float* const __restrict__ biases
+    )
+    {
+#   if __CUDA_ARCH__ >= 700
+        auto x = blockIdx.x * blockDim.x + threadIdx.x;
+        auto y = blockIdx.y * blockDim.y + threadIdx.y;
+        auto tid = threadIdx.y * blockDim.x + threadIdx.x;
+        auto threads = blockDim.x * blockDim.y;
+        constexpr auto elements = cout * 9;
+
+        __shared__ __align__(16) half kptr[elements];
+        if (threads < elements)
+        {
+            auto line = elements / threads;
+            auto remain = elements % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                kptr[idx] = kernels[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                kptr[idx] = kernels[idx];
+            }
+        }
+        else if (tid < elements) kptr[tid] = kernels[tid];
+        __syncthreads();
+
+        if (x >= width || y >= height) return;
+
+        constexpr int lout = cout / 4;
+
+        const half r[] = {
+            tex2D<float>(src, x - 1, y - 1),
+            tex2D<float>(src, x    , y - 1),
+            tex2D<float>(src, x + 1, y - 1),
+            tex2D<float>(src, x - 1, y    ),
+            tex2D<float>(src, x    , y    ),
+            tex2D<float>(src, x + 1, y    ),
+            tex2D<float>(src, x - 1, y + 1),
+            tex2D<float>(src, x    , y + 1),
+            tex2D<float>(src, x + 1, y + 1)
+        };
+
+        for (int nidx = 0; nidx < lout; nidx++)
+        {
+            auto npos = nidx * 4;
+
+            auto offset0 = (npos + 0) * 9;
+            auto offset1 = (npos + 1) * 9;
+            auto offset2 = (npos + 2) * 9;
+            auto offset3 = (npos + 3) * 9;
+
+            writeImageh(relu(Half4{
+                r[0] * kptr[offset0 + 0] +
+                r[1] * kptr[offset0 + 1] +
+                r[2] * kptr[offset0 + 2] +
+                r[3] * kptr[offset0 + 3] +
+                r[4] * kptr[offset0 + 4] +
+                r[5] * kptr[offset0 + 5] +
+                r[6] * kptr[offset0 + 6] +
+                r[7] * kptr[offset0 + 7] +
+                r[8] * kptr[offset0 + 8] + __float2half(biases[npos + 0]),
+                r[0] * kptr[offset1 + 0] +
+                r[1] * kptr[offset1 + 1] +
+                r[2] * kptr[offset1 + 2] +
+                r[3] * kptr[offset1 + 3] +
+                r[4] * kptr[offset1 + 4] +
+                r[5] * kptr[offset1 + 5] +
+                r[6] * kptr[offset1 + 6] +
+                r[7] * kptr[offset1 + 7] +
+                r[8] * kptr[offset1 + 8] + __float2half(biases[npos + 1]),
+                r[0] * kptr[offset2 + 0] +
+                r[1] * kptr[offset2 + 1] +
+                r[2] * kptr[offset2 + 2] +
+                r[3] * kptr[offset2 + 3] +
+                r[4] * kptr[offset2 + 4] +
+                r[5] * kptr[offset2 + 5] +
+                r[6] * kptr[offset2 + 6] +
+                r[7] * kptr[offset2 + 7] +
+                r[8] * kptr[offset2 + 8] + __float2half(biases[npos + 2]),
+                r[0] * kptr[offset3 + 0] +
+                r[1] * kptr[offset3 + 1] +
+                r[2] * kptr[offset3 + 2] +
+                r[3] * kptr[offset3 + 3] +
+                r[4] * kptr[offset3 + 4] +
+                r[5] * kptr[offset3 + 5] +
+                r[6] * kptr[offset3 + 6] +
+                r[7] * kptr[offset3 + 7] +
+                r[8] * kptr[offset3 + 8] + __float2half(biases[npos + 3])
+            }), dst, x, y, nidx);
+        }
+#   endif
+    }
+
+    template<int cin, int cout, bool residual = false,
+        ::cuda::std::enable_if_t<(cin % 4 == 0) && (cout % 4 == 0), bool> = true>
+    __global__ void conv3x3_cuda_half(
+        cudaSurfaceObject_t src,
+        cudaSurfaceObject_t dst,
+        const unsigned int width,
+        const unsigned int height,
+        const float* const __restrict__ kernels,
+        const float* const __restrict__ biases
+    )
+    {
+#   if __CUDA_ARCH__ >= 700
+        auto x = blockIdx.x * blockDim.x + threadIdx.x;
+        auto y = blockIdx.y * blockDim.y + threadIdx.y;
+        auto tid = threadIdx.y * blockDim.x + threadIdx.x;
+        auto threads = blockDim.x * blockDim.y;
+        constexpr auto elements = cout * 9 * cin;
+
+        __shared__ __align__(8) half kptr[elements];
+        if (threads < elements)
+        {
+            auto line = elements / threads;
+            auto remain = elements % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                kptr[idx] = kernels[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                kptr[idx] = kernels[idx];
+            }
+        }
+        else if (tid < elements) kptr[tid] = kernels[tid];
+        __syncthreads();
+
+        if (x >= width || y >= height) return;
+
+        constexpr int lin = cin / 4;
+        constexpr int lout = cout / 4;
+
+        Half4 r0[lin]{};
+        Half4 r1[lin]{};
+        Half4 r2[lin]{};
+        Half4 r3[lin]{};
+        Half4 r4[lin]{};
+        Half4 r5[lin]{};
+        Half4 r6[lin]{};
+        Half4 r7[lin]{};
+        Half4 r8[lin]{};
+
+        for (int cidx = 0; cidx < lin; cidx++)
+        {
+            r0[cidx] = readImageh(src, x - 1, y - 1, cidx);
+            r1[cidx] = readImageh(src, x    , y - 1, cidx);
+            r2[cidx] = readImageh(src, x + 1, y - 1, cidx);
+            r3[cidx] = readImageh(src, x - 1, y    , cidx);
+            r4[cidx] = readImageh(src, x    , y    , cidx);
+            r5[cidx] = readImageh(src, x + 1, y    , cidx);
+            r6[cidx] = readImageh(src, x - 1, y + 1, cidx);
+            r7[cidx] = readImageh(src, x    , y + 1, cidx);
+            r8[cidx] = readImageh(src, x + 1, y + 1, cidx);
+        };
+
+        for (int nidx = 0; nidx < lout; nidx++)
+        {
+            auto npos = nidx * 4;
+            __align__(8) half sum[4]{ 0,0,0,0 };
             if constexpr (residual)
             {
-                auto res = surf2DLayeredread<ushort4>(dst, sizeof(ushort4) * x, y, nidx, cudaBoundaryModeZero);
-                sum[0] += __half2float(__ushort_as_half(res.x));
-                sum[1] += __half2float(__ushort_as_half(res.y));
-                sum[2] += __half2float(__ushort_as_half(res.z));
-                sum[3] += __half2float(__ushort_as_half(res.w));
+                Half4 res = readImageh(dst, x, y, nidx);
+                sum[0] += res.v0.x;
+                sum[1] += res.v0.y;
+                sum[2] += res.v1.x;
+                sum[3] += res.v1.y;
             }
-            auto layer = make_ushort4(
-                __half_as_ushort(__float2half(fmaxf(sum[0], 0.0f))),
-                __half_as_ushort(__float2half(fmaxf(sum[1], 0.0f))),
-                __half_as_ushort(__float2half(fmaxf(sum[2], 0.0f))),
-                __half_as_ushort(__float2half(fmaxf(sum[3], 0.0f))));
+            for (int i = 0; i < 4; i++)
+            {
+                auto offset0 = (npos + i) * 9 * cin + 0 * cin;
+                auto offset1 = (npos + i) * 9 * cin + 1 * cin;
+                auto offset2 = (npos + i) * 9 * cin + 2 * cin;
+                auto offset3 = (npos + i) * 9 * cin + 3 * cin;
+                auto offset4 = (npos + i) * 9 * cin + 4 * cin;
+                auto offset5 = (npos + i) * 9 * cin + 5 * cin;
+                auto offset6 = (npos + i) * 9 * cin + 6 * cin;
+                auto offset7 = (npos + i) * 9 * cin + 7 * cin;
+                auto offset8 = (npos + i) * 9 * cin + 8 * cin;
 
-            surf2DLayeredwrite(layer, dst, sizeof(layer) * x, y, nidx, cudaBoundaryModeZero);
+                for (int cidx = 0; cidx < lin; cidx++)
+                {
+                    auto cpos = cidx * 4;
+                    sum[i] +=
+                        r0[cidx].dot(kptr + offset0 + cpos) +
+                        r1[cidx].dot(kptr + offset1 + cpos) +
+                        r2[cidx].dot(kptr + offset2 + cpos) +
+                        r3[cidx].dot(kptr + offset3 + cpos) +
+                        r4[cidx].dot(kptr + offset4 + cpos) +
+                        r5[cidx].dot(kptr + offset5 + cpos) +
+                        r6[cidx].dot(kptr + offset6 + cpos) +
+                        r7[cidx].dot(kptr + offset7 + cpos) +
+                        r8[cidx].dot(kptr + offset8 + cpos);
+                }
+
+                sum[i] += __float2half(biases[npos + i]);
+            }
+            writeImageh(relu(Half4{ sum[0], sum[1], sum[2], sum[3] }), dst, x, y, nidx);
         }
+#   endif
     }
 
     template<typename OUT, int cin,
         ::cuda::std::enable_if_t<cin % 4 == 0, bool> = true>
     __global__ void deconv2x2_cuda_cout1(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
@@ -268,8 +595,8 @@ namespace ac::core::cuda
         const unsigned int index = ((y & 1) << 1) + (x & 1);
 
         float sum = 0.0f;
-        for (int cidx = 0; cidx < lin; cidx++) sum += dot(tex2DLayered<float4>(src, x / 2, y / 2, cidx), kernels + cin * index + cidx * 4);
-        surf2Dwrite(fromFloat<OUT>(sum), dst, sizeof(OUT) * x, y, cudaBoundaryModeZero);
+        for (int cidx = 0; cidx < lin; cidx++) sum += dot(readImagef(src, x / 2, y / 2, cidx), kernels + cin * index + cidx * 4);
+        writeImage(fromFloat<OUT>(sum), dst, x, y);
     }
 
     void conv3x3_1to8_cuda(
@@ -279,51 +606,64 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
+        const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
-        conv3x3_cuda_cin1<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        if (computeCapability >= 70)
+            conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        else
+            conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
     }
 
     void conv3x3_8to8_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         const float* biases,
+        [[maybe_unused]] const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
-        conv3x3_cuda<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        if (computeCapability >= 70)
+            conv3x3_cuda_half<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        else
+            conv3x3_cuda_float<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
     }
 
     void conv3x3_residual_8to8_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         const float* biases,
+        [[maybe_unused]] const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
-        conv3x3_cuda<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        if (computeCapability >= 70)
+            conv3x3_cuda_half<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+        else
+            conv3x3_cuda_float<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
     }
 
     void deconv2x2_8to1_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         Image::ElementType type,
+        [[maybe_unused]] const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {

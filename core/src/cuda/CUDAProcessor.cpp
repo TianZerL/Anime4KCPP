@@ -24,33 +24,37 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
+        int computeCapability,
         cudaStream_t stream = 0
     ) noexcept;
     void conv3x3_8to8_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         const float* biases,
+        int computeCapability,
         cudaStream_t stream = 0
     ) noexcept;
     void conv3x3_residual_8to8_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         const float* biases,
+        int computeCapability,
         cudaStream_t stream = 0
     ) noexcept;
     void deconv2x2_8to1_cuda(
-        cudaTextureObject_t src,
+        cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
         const float* kernels,
         Image::ElementType type,
+        int computeCapability,
         cudaStream_t stream = 0
     ) noexcept;
 
@@ -58,6 +62,7 @@ namespace ac::core::cuda
     {
         std::string name{};
         std::size_t vram{};
+        int computeCapability{};
     };
 
     //lazy load, god knows if it's safe to call the cuda function during DLL initialization
@@ -71,7 +76,8 @@ namespace ac::core::cuda
             {
                 cudaDeviceProp deviceProp{};
                 cudaGetDeviceProperties(&deviceProp, i);
-                contexts.emplace_back(Context{ deviceProp.name, (deviceProp.totalGlobalMem >> 20) });
+                int computeCapability = deviceProp.major * 10 + deviceProp.minor;
+                contexts.emplace_back(Context{ deviceProp.name, (deviceProp.totalGlobalMem >> 20), computeCapability });
             }
             return contexts;
         }();
@@ -95,6 +101,7 @@ namespace ac::core::cuda
         CUDAProcessorBase(const int device) noexcept
         {
             idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
+            computeCapability = ContextList[idx].computeCapability;
         };
         ~CUDAProcessorBase() noexcept override = default;
 
@@ -111,7 +118,8 @@ namespace ac::core::cuda
             return ContextList[idx].name.c_str();
         }
     protected:
-        util::ThreadLocal<cudaError_t> errors;
+        int computeCapability{};
+        util::ThreadLocal<cudaError_t> errors{};
     };
 
     template<typename Model>
@@ -199,17 +207,13 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
 
     texDesc.readMode = cudaReadModeElementType;
 
-    cudaSurfaceObject_t tmp1Store{};
-    cudaTextureObject_t tmp1Load{};
+    cudaSurfaceObject_t tmp1{};
     resDesc.res.array.array = tmp1Array;
-    cudaCreateSurfaceObject(&tmp1Store, &resDesc);
-    cudaCreateTextureObject(&tmp1Load, &resDesc, &texDesc, nullptr);
+    cudaCreateSurfaceObject(&tmp1, &resDesc);
 
-    cudaSurfaceObject_t tmp2Store{};
-    cudaTextureObject_t tmp2Load{};
+    cudaSurfaceObject_t tmp2{};
     resDesc.res.array.array = tmp2Array;
-    cudaCreateSurfaceObject(&tmp2Store, &resDesc);
-    cudaCreateTextureObject(&tmp2Load, &resDesc, &texDesc, nullptr);
+    cudaCreateSurfaceObject(&tmp2, &resDesc);
 
     cudaSurfaceObject_t out{};
     resDesc.res.array.array = outArray;
@@ -217,26 +221,24 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
 
     cudaMemcpy2DToArrayAsync(inArray, 0, 0, src.ptr(), src.stride(), srcWBytes, srcH, cudaMemcpyHostToDevice, stream);
 
-    conv3x3_1to8_cuda(in, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ACNet::kernelOffset[1], biases + model::ACNet::baisOffset[1], stream);
-    conv3x3_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[2], biases + model::ACNet::baisOffset[2], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ACNet::kernelOffset[3], biases + model::ACNet::baisOffset[3], stream);
-    conv3x3_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[4], biases + model::ACNet::baisOffset[4], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ACNet::kernelOffset[5], biases + model::ACNet::baisOffset[5], stream);
-    conv3x3_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[6], biases + model::ACNet::baisOffset[6], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ACNet::kernelOffset[7], biases + model::ACNet::baisOffset[7], stream);
-    conv3x3_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ACNet::kernelOffset[8], biases + model::ACNet::baisOffset[8], stream);
-    deconv2x2_8to1_cuda(tmp1Load, out, dstW, dstH, kernels + model::ACNet::kernelOffset[9], dst.type(), stream);
+    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[1], biases + model::ACNet::baisOffset[1], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[2], biases + model::ACNet::baisOffset[2], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[3], biases + model::ACNet::baisOffset[3], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[4], biases + model::ACNet::baisOffset[4], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[5], biases + model::ACNet::baisOffset[5], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[6], biases + model::ACNet::baisOffset[6], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[7], biases + model::ACNet::baisOffset[7], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[8], biases + model::ACNet::baisOffset[8], computeCapability, stream);
+    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels + model::ACNet::kernelOffset[9], dst.type(), computeCapability, stream);
 
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
     cudaStreamSynchronize(stream);
 
     cudaDestroyTextureObject(in);
-    cudaDestroySurfaceObject(tmp1Store);
-    cudaDestroyTextureObject(tmp1Load);
-    cudaDestroySurfaceObject(tmp2Store);
-    cudaDestroyTextureObject(tmp2Load);
+    cudaDestroySurfaceObject(tmp1);
+    cudaDestroySurfaceObject(tmp2);
     cudaDestroySurfaceObject(out);
 
     cudaFreeArray(inArray);
@@ -309,17 +311,13 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
 
     texDesc.readMode = cudaReadModeElementType;
 
-    cudaSurfaceObject_t tmp1Store{};
-    cudaTextureObject_t tmp1Load{};
+    cudaSurfaceObject_t tmp1{};
     resDesc.res.array.array = tmp1Array;
-    cudaCreateSurfaceObject(&tmp1Store, &resDesc);
-    cudaCreateTextureObject(&tmp1Load, &resDesc, &texDesc, nullptr);
+    cudaCreateSurfaceObject(&tmp1, &resDesc);
 
-    cudaSurfaceObject_t tmp2Store{};
-    cudaTextureObject_t tmp2Load{};
+    cudaSurfaceObject_t tmp2{};
     resDesc.res.array.array = tmp2Array;
-    cudaCreateSurfaceObject(&tmp2Store, &resDesc);
-    cudaCreateTextureObject(&tmp2Load, &resDesc, &texDesc, nullptr);
+    cudaCreateSurfaceObject(&tmp2, &resDesc);
 
     cudaSurfaceObject_t out{};
     resDesc.res.array.array = outArray;
@@ -327,26 +325,24 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
 
     cudaMemcpy2DToArrayAsync(inArray, 0, 0, src.ptr(), src.stride(), srcWBytes, srcH, cudaMemcpyHostToDevice, stream);
 
-    conv3x3_1to8_cuda(in, tmp1Store, srcW, srcH, kernels + model::ARNet::kernelOffset[0], biases + model::ARNet::baisOffset[0], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ARNet::kernelOffset[1], biases + model::ARNet::baisOffset[1], stream);
-    conv3x3_residual_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ARNet::kernelOffset[2], biases + model::ARNet::baisOffset[2], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ARNet::kernelOffset[3], biases + model::ARNet::baisOffset[3], stream);
-    conv3x3_residual_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ARNet::kernelOffset[4], biases + model::ARNet::baisOffset[4], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ARNet::kernelOffset[5], biases + model::ARNet::baisOffset[5], stream);
-    conv3x3_residual_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ARNet::kernelOffset[6], biases + model::ARNet::baisOffset[6], stream);
-    conv3x3_8to8_cuda(tmp1Load, tmp2Store, srcW, srcH, kernels + model::ARNet::kernelOffset[7], biases + model::ARNet::baisOffset[7], stream);
-    conv3x3_residual_8to8_cuda(tmp2Load, tmp1Store, srcW, srcH, kernels + model::ARNet::kernelOffset[8], biases + model::ARNet::baisOffset[8], stream);
-    deconv2x2_8to1_cuda(tmp1Load, out, dstW, dstH, kernels + model::ARNet::kernelOffset[9], dst.type(), stream);
+    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[0], biases + model::ARNet::baisOffset[0], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[1], biases + model::ARNet::baisOffset[1], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[2], biases + model::ARNet::baisOffset[2], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[3], biases + model::ARNet::baisOffset[3], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[4], biases + model::ARNet::baisOffset[4], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[5], biases + model::ARNet::baisOffset[5], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[6], biases + model::ARNet::baisOffset[6], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[7], biases + model::ARNet::baisOffset[7], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[8], biases + model::ARNet::baisOffset[8], computeCapability, stream);
+    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels + model::ARNet::kernelOffset[9], dst.type(), computeCapability, stream);
 
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
     cudaStreamSynchronize(stream);
 
     cudaDestroyTextureObject(in);
-    cudaDestroySurfaceObject(tmp1Store);
-    cudaDestroyTextureObject(tmp1Load);
-    cudaDestroySurfaceObject(tmp2Store);
-    cudaDestroyTextureObject(tmp2Load);
+    cudaDestroySurfaceObject(tmp1);
+    cudaDestroySurfaceObject(tmp2);
     cudaDestroySurfaceObject(out);
 
     cudaFreeArray(inArray);
@@ -370,7 +366,7 @@ AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CUDA>()
     static auto infoBuffer = []() -> std::string {
         std::ostringstream buffer{ "CUDA:\n", std::ios_base::ate };
         for (int i = 0; i < ContextList.size(); i++)
-            buffer << "  [" << i << "] " << ContextList[i].name << " (" << ContextList[i].vram << "MB)" << '\n';
+            buffer << "  [" << i << "] " << ContextList[i].name << " (" << ContextList[i].vram << "MB, CC " << ContextList[i].computeCapability / 10.0 << ")" << '\n';
         return buffer.str();
     }();
     return infoBuffer.c_str();
