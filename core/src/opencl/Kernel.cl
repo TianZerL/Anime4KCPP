@@ -5,7 +5,7 @@ kernel void conv3x3_1to8(
     write_only image2d_array_t dst,
     constant float* const kernels,
     const int koffset,
-    constant float* const baises,
+    constant float* const biases,
     const int boffset
 )
 {
@@ -13,7 +13,7 @@ kernel void conv3x3_1to8(
     if(x >= get_image_width(src) || y >= get_image_height(src)) return;
 
     constant float* kptr = kernels + koffset;
-    constant float* bptr = baises + boffset;
+    constant float* bptr = biases + boffset;
 
     float8 r0 = (float8)(
         read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
@@ -44,7 +44,7 @@ kernel void conv3x3_8to8(
     write_only image2d_array_t dst,
     constant float* const kernels,
     const int koffset,
-    constant float* const baises,
+    constant float* const biases,
     const int boffset
 )
 {
@@ -52,7 +52,7 @@ kernel void conv3x3_8to8(
     if(x >= get_image_width(src) || y >= get_image_height(src)) return;
 
     constant float* kptr = kernels + koffset;
-    constant float* bptr = baises + boffset;
+    constant float* bptr = biases + boffset;
 
     float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, 1, 0)));
     float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, 1, 0)));
@@ -129,7 +129,7 @@ kernel void conv3x3_residual_8to8(
     write_only image2d_array_t dst,
     constant float* const kernels,
     const int koffset,
-    constant float* const baises,
+    constant float* const biases,
     const int boffset
 )
 {
@@ -137,7 +137,7 @@ kernel void conv3x3_residual_8to8(
     if(x >= get_image_width(src) || y >= get_image_height(src)) return;
 
     constant float* kptr = kernels + koffset;
-    constant float* bptr = baises + boffset;
+    constant float* bptr = biases + boffset;
 
     float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, 1, 0)));
     float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, 1, 0)));
