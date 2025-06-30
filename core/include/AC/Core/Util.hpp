@@ -48,8 +48,14 @@ namespace ac::core
     // the width and height of the destination images will be used for the filtering process.
     // the scale ratio from source images to destination images will be computed as `dst.width() / src.width()` and this ratio will be applied to both the width and height.
     // the scale ratio is assumed to be an integer.
-    template<typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...), bool> = true>
-    void filter(F&& f, Images& ...images);
+    template<typename F, typename ...Images>
+    auto filter(F&& f, Images& ...images) -> 
+        std::enable_if_t<(
+            (sizeof...(Images) > 1) && 
+            (std::is_const_v<std::tuple_element_t<0, std::tuple<Images...>>>) &&
+            (!std::is_const_v<std::tuple_element_t<sizeof...(Images) - 1, std::tuple<Images...>>>) &&
+            (std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...)),
+        void>;
 
     void* fastMalloc(std::size_t size) noexcept;
     void fastFree(void* ptr) noexcept;
@@ -105,8 +111,14 @@ inline int ac::core::ceilLog2(const double v) noexcept
     else return static_cast<int>(std::ceil(std::log2(v)));
 }
 
-template<typename F, typename ...Images, std::enable_if_t<(std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...), bool>>
-inline void ac::core::filter(F&& f, Images& ...images)
+template<typename F, typename ...Images>
+inline auto ac::core::filter(F&& f, Images& ...images) ->
+    std::enable_if_t<(
+        (sizeof...(Images) > 1) &&
+        (std::is_const_v<std::tuple_element_t<0, std::tuple<Images...>>>) &&
+        (!std::is_const_v<std::tuple_element_t<sizeof...(Images) - 1, std::tuple<Images...>>>) &&
+        (std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...)),
+    void>
 {
     const auto& src = std::get<0>(std::forward_as_tuple(images...));
     const auto& dst = std::get<sizeof...(Images) - 1>(std::forward_as_tuple(images...));

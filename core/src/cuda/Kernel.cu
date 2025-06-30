@@ -578,7 +578,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
-        [[maybe_unused]] const int computeCapability,
+        const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
@@ -597,7 +597,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
-        [[maybe_unused]] const int computeCapability,
+        const int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
