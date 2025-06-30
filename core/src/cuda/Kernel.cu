@@ -54,6 +54,11 @@ namespace ac::core::cuda
     {
         writeImageh(float2Half(val), dst, x, y, layer);
     }
+    static __inline__ __device__ float4& operator+=(float4& a, const float4& b) noexcept
+    {
+        a.x += b.x; a.y += b.y; a.z += b.z; a.w += b.w;
+        return a;
+    }
     static __inline__ __device__ float relu(const float a) noexcept
     {
         return fmaxf(a, 0.0f);
@@ -63,7 +68,6 @@ namespace ac::core::cuda
         return make_float4(relu(a.x), relu(a.y), relu(a.z), relu(a.w));
     }
 #else
-
     struct __align__(8) Half4
     {
         half2 v0, v1;
@@ -120,17 +124,31 @@ namespace ac::core::cuda
             make(d);
             return *this;
         }
+        __inline__ __device__ Half4& operator+=(const Half4& d) noexcept
+        {
+            v0 = __hadd2(v0, d.v0);
+            v1 = __hadd2(v1, d.v1);
+            return *this;
+        }
         __inline__ __device__ operator ushort4() const noexcept
         {
             return make_ushort4(__half_as_ushort(v0.x), __half_as_ushort(v0.y), __half_as_ushort(v1.x), __half_as_ushort(v1.y));
         }
         __inline__ __device__ half dot(const half* const __restrict__ d) const noexcept
         {
-            return dot(Half4{ make_half2(d[0], d[1]), make_half2(d[2], d[3]) });
+            return dot(make_half2(d[0], d[1]), make_half2(d[0], d[1]));
+        }
+        __inline__ __device__ half dot(const half2* const __restrict__ d) const noexcept
+        {
+            return dot(d[0], d[1]);
         }
         __inline__ __device__ half dot(const Half4& d) const noexcept
         {
-            auto s = __hfma2(v0, d.v0, __hmul2(v1, d.v1));
+            return dot(d.v0, d.v1);
+        }
+        __inline__ __device__ half dot(const half2 d0, const half2 d1) const noexcept
+        {
+            auto s = __hfma2(v0, d0, __hmul2(v1, d1));
             return s.x + s.y;
         }
     };
@@ -161,13 +179,14 @@ namespace ac::core::cuda
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
         auto threads = blockDim.x * blockDim.y;
-        constexpr auto elements = cout * 9;
 
-        __shared__ __align__(16) float kptr[elements];
-        if (threads < elements)
+        constexpr auto knum = cout * 9;
+        constexpr auto bnum = cout;
+        __shared__ __align__(16) float kptr[knum];
+        if (threads < knum)
         {
-            auto line = elements / threads;
-            auto remain = elements % threads;
+            auto line = knum / threads;
+            auto remain = knum % threads;
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
@@ -179,7 +198,24 @@ namespace ac::core::cuda
                 kptr[idx] = kernels[idx];
             }
         }
-        else if (tid < elements) kptr[tid] = kernels[tid];
+        else if (tid < knum) kptr[tid] = kernels[tid];
+        __shared__ __align__(16) float bptr[bnum];
+        if (threads < bnum)
+        {
+            auto line = bnum / threads;
+            auto remain = bnum % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                bptr[idx] = biases[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                bptr[idx] = biases[idx];
+            }
+        }
+        else if (tid < bnum) bptr[tid] = biases[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -201,50 +237,16 @@ namespace ac::core::cuda
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
+            float4 s = make_float4(bptr[npos + 0], bptr[npos + 1], bptr[npos + 2], bptr[npos + 3]);
+            for (int i = 0; i < 9; i++)
+            {
+                s.x += r[i] * kptr[(npos + 0) * 9 + i];
+                s.y += r[i] * kptr[(npos + 1) * 9 + i];
+                s.z += r[i] * kptr[(npos + 2) * 9 + i];
+                s.w += r[i] * kptr[(npos + 3) * 9 + i];
+            }
 
-            auto offset0 = (npos + 0) * 9;
-            auto offset1 = (npos + 1) * 9;
-            auto offset2 = (npos + 2) * 9;
-            auto offset3 = (npos + 3) * 9;
-
-            writeImagef(relu(make_float4(
-                r[0] * kptr[offset0 + 0] +
-                r[1] * kptr[offset0 + 1] +
-                r[2] * kptr[offset0 + 2] +
-                r[3] * kptr[offset0 + 3] +
-                r[4] * kptr[offset0 + 4] +
-                r[5] * kptr[offset0 + 5] +
-                r[6] * kptr[offset0 + 6] +
-                r[7] * kptr[offset0 + 7] +
-                r[8] * kptr[offset0 + 8] + biases[npos + 0],
-                r[0] * kptr[offset1 + 0] +
-                r[1] * kptr[offset1 + 1] +
-                r[2] * kptr[offset1 + 2] +
-                r[3] * kptr[offset1 + 3] +
-                r[4] * kptr[offset1 + 4] +
-                r[5] * kptr[offset1 + 5] +
-                r[6] * kptr[offset1 + 6] +
-                r[7] * kptr[offset1 + 7] +
-                r[8] * kptr[offset1 + 8] + biases[npos + 1],
-                r[0] * kptr[offset2 + 0] +
-                r[1] * kptr[offset2 + 1] +
-                r[2] * kptr[offset2 + 2] +
-                r[3] * kptr[offset2 + 3] +
-                r[4] * kptr[offset2 + 4] +
-                r[5] * kptr[offset2 + 5] +
-                r[6] * kptr[offset2 + 6] +
-                r[7] * kptr[offset2 + 7] +
-                r[8] * kptr[offset2 + 8] + biases[npos + 2],
-                r[0] * kptr[offset3 + 0] +
-                r[1] * kptr[offset3 + 1] +
-                r[2] * kptr[offset3 + 2] +
-                r[3] * kptr[offset3 + 3] +
-                r[4] * kptr[offset3 + 4] +
-                r[5] * kptr[offset3 + 5] +
-                r[6] * kptr[offset3 + 6] +
-                r[7] * kptr[offset3 + 7] +
-                r[8] * kptr[offset3 + 8] + biases[npos + 3]
-            )), dst, x, y, nidx);
+            writeImagef(relu(s), dst, x, y, nidx);
         }
 #   endif
     }
@@ -265,13 +267,14 @@ namespace ac::core::cuda
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
         auto threads = blockDim.x * blockDim.y;
-        constexpr auto elements = cout * 9 * cin;
 
-        __shared__ __align__(16) float kptr[elements];
-        if (threads < elements)
+        constexpr auto knum = cout * 9 * cin;
+        constexpr auto bnum = cout;
+        __shared__ __align__(16) float kptr[knum];
+        if (threads < knum)
         {
-            auto line = elements / threads;
-            auto remain = elements % threads;
+            auto line = knum / threads;
+            auto remain = knum % threads;
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
@@ -283,7 +286,24 @@ namespace ac::core::cuda
                 kptr[idx] = kernels[idx];
             }
         }
-        else if (tid < elements) kptr[tid] = kernels[tid];
+        else if (tid < knum) kptr[tid] = kernels[tid];
+        __shared__ __align__(16) float bptr[bnum];
+        if (threads < bnum)
+        {
+            auto line = bnum / threads;
+            auto remain = bnum % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                bptr[idx] = biases[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                bptr[idx] = biases[idx];
+            }
+        }
+        else if (tid < bnum) bptr[tid] = biases[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -291,71 +311,37 @@ namespace ac::core::cuda
         constexpr int lin = cin / 4;
         constexpr int lout = cout / 4;
 
-        float4 r0[lin]{};
-        float4 r1[lin]{};
-        float4 r2[lin]{};
-        float4 r3[lin]{};
-        float4 r4[lin]{};
-        float4 r5[lin]{};
-        float4 r6[lin]{};
-        float4 r7[lin]{};
-        float4 r8[lin]{};
+        float4 r[9][lin]{};
 
         for (int cidx = 0; cidx < lin; cidx++)
         {
-            r0[cidx] = readImagef(src, x - 1, y - 1, cidx);
-            r1[cidx] = readImagef(src, x    , y - 1, cidx);
-            r2[cidx] = readImagef(src, x + 1, y - 1, cidx);
-            r3[cidx] = readImagef(src, x - 1, y    , cidx);
-            r4[cidx] = readImagef(src, x    , y    , cidx);
-            r5[cidx] = readImagef(src, x + 1, y    , cidx);
-            r6[cidx] = readImagef(src, x - 1, y + 1, cidx);
-            r7[cidx] = readImagef(src, x    , y + 1, cidx);
-            r8[cidx] = readImagef(src, x + 1, y + 1, cidx);
+            r[0][cidx] = readImagef(src, x - 1, y - 1, cidx);
+            r[1][cidx] = readImagef(src, x    , y - 1, cidx);
+            r[2][cidx] = readImagef(src, x + 1, y - 1, cidx);
+            r[3][cidx] = readImagef(src, x - 1, y    , cidx);
+            r[4][cidx] = readImagef(src, x    , y    , cidx);
+            r[5][cidx] = readImagef(src, x + 1, y    , cidx);
+            r[6][cidx] = readImagef(src, x - 1, y + 1, cidx);
+            r[7][cidx] = readImagef(src, x    , y + 1, cidx);
+            r[8][cidx] = readImagef(src, x + 1, y + 1, cidx);
         };
 
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
-            __align__(16) float sum[4]{ 0.0f,0.0f,0.0f,0.0f };
-            if constexpr (residual)
-            {
-                auto res = readImagef(dst, x, y, nidx);
-                sum[0] += res.x;
-                sum[1] += res.y;
-                sum[2] += res.z;
-                sum[3] += res.w;
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                auto offset0 = (npos + i) * 9 * cin + 0 * cin;
-                auto offset1 = (npos + i) * 9 * cin + 1 * cin;
-                auto offset2 = (npos + i) * 9 * cin + 2 * cin;
-                auto offset3 = (npos + i) * 9 * cin + 3 * cin;
-                auto offset4 = (npos + i) * 9 * cin + 4 * cin;
-                auto offset5 = (npos + i) * 9 * cin + 5 * cin;
-                auto offset6 = (npos + i) * 9 * cin + 6 * cin;
-                auto offset7 = (npos + i) * 9 * cin + 7 * cin;
-                auto offset8 = (npos + i) * 9 * cin + 8 * cin;
+            float4 s = make_float4(bptr[npos + 0], bptr[npos + 1], bptr[npos + 2], bptr[npos + 3]);
+            if constexpr (residual) s += readImagef(dst, x, y, nidx);
 
+            for (int i = 0; i < 9; i++)
                 for (int cidx = 0; cidx < lin; cidx++)
                 {
-                    auto cpos = cidx * 4;
-                    sum[i] +=
-                        dot(r0[cidx], kptr + offset0 + cpos) +
-                        dot(r1[cidx], kptr + offset1 + cpos) +
-                        dot(r2[cidx], kptr + offset2 + cpos) +
-                        dot(r3[cidx], kptr + offset3 + cpos) +
-                        dot(r4[cidx], kptr + offset4 + cpos) +
-                        dot(r5[cidx], kptr + offset5 + cpos) +
-                        dot(r6[cidx], kptr + offset6 + cpos) +
-                        dot(r7[cidx], kptr + offset7 + cpos) +
-                        dot(r8[cidx], kptr + offset8 + cpos);
+                    s.x += dot(r[i][cidx], kptr + (npos + 0) * 9 * cin + i * cin + cidx * 4);
+                    s.y += dot(r[i][cidx], kptr + (npos + 1) * 9 * cin + i * cin + cidx * 4);
+                    s.z += dot(r[i][cidx], kptr + (npos + 2) * 9 * cin + i * cin + cidx * 4);
+                    s.w += dot(r[i][cidx], kptr + (npos + 3) * 9 * cin + i * cin + cidx * 4);
                 }
 
-                sum[i] += biases[npos + i];
-            }
-            writeImagef(relu(make_float4(sum[0], sum[1], sum[2], sum[3])), dst, x, y, nidx);
+            writeImagef(relu(s), dst, x, y, nidx);
         }
 #   endif
     }
@@ -376,13 +362,14 @@ namespace ac::core::cuda
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
         auto threads = blockDim.x * blockDim.y;
-        constexpr auto elements = cout * 9;
 
-        __shared__ __align__(16) half kptr[elements];
-        if (threads < elements)
+        constexpr auto knum = cout * 9 ;
+        constexpr auto bnum = cout;
+        __shared__ __align__(8) half kptr[knum];
+        if (threads < knum)
         {
-            auto line = elements / threads;
-            auto remain = elements % threads;
+            auto line = knum / threads;
+            auto remain = knum % threads;
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
@@ -394,7 +381,24 @@ namespace ac::core::cuda
                 kptr[idx] = kernels[idx];
             }
         }
-        else if (tid < elements) kptr[tid] = kernels[tid];
+        else if (tid < knum) kptr[tid] = kernels[tid];
+        __shared__ __align__(8) half bptr[bnum];
+        if (threads < bnum)
+        {
+            auto line = bnum / threads;
+            auto remain = bnum % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                bptr[idx] = biases[idx];
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                bptr[idx] = biases[idx];
+            }
+        }
+        else if (tid < bnum) bptr[tid] = biases[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -416,50 +420,16 @@ namespace ac::core::cuda
         for (int nidx = 0; nidx < lout; nidx++)
         {
             auto npos = nidx * 4;
+            Half4 s{ bptr[npos + 0], bptr[npos + 1], bptr[npos + 2], bptr[npos + 3] };
+            for (int i = 0; i < 9; i++)
+            {
+                s.v0.x += r[i] * kptr[(npos + 0) * 9 + i];
+                s.v0.y += r[i] * kptr[(npos + 1) * 9 + i];
+                s.v1.x += r[i] * kptr[(npos + 2) * 9 + i];
+                s.v1.y += r[i] * kptr[(npos + 3) * 9 + i];
+            }
 
-            auto offset0 = (npos + 0) * 9;
-            auto offset1 = (npos + 1) * 9;
-            auto offset2 = (npos + 2) * 9;
-            auto offset3 = (npos + 3) * 9;
-
-            writeImageh(relu(Half4{
-                r[0] * kptr[offset0 + 0] +
-                r[1] * kptr[offset0 + 1] +
-                r[2] * kptr[offset0 + 2] +
-                r[3] * kptr[offset0 + 3] +
-                r[4] * kptr[offset0 + 4] +
-                r[5] * kptr[offset0 + 5] +
-                r[6] * kptr[offset0 + 6] +
-                r[7] * kptr[offset0 + 7] +
-                r[8] * kptr[offset0 + 8] + __float2half(biases[npos + 0]),
-                r[0] * kptr[offset1 + 0] +
-                r[1] * kptr[offset1 + 1] +
-                r[2] * kptr[offset1 + 2] +
-                r[3] * kptr[offset1 + 3] +
-                r[4] * kptr[offset1 + 4] +
-                r[5] * kptr[offset1 + 5] +
-                r[6] * kptr[offset1 + 6] +
-                r[7] * kptr[offset1 + 7] +
-                r[8] * kptr[offset1 + 8] + __float2half(biases[npos + 1]),
-                r[0] * kptr[offset2 + 0] +
-                r[1] * kptr[offset2 + 1] +
-                r[2] * kptr[offset2 + 2] +
-                r[3] * kptr[offset2 + 3] +
-                r[4] * kptr[offset2 + 4] +
-                r[5] * kptr[offset2 + 5] +
-                r[6] * kptr[offset2 + 6] +
-                r[7] * kptr[offset2 + 7] +
-                r[8] * kptr[offset2 + 8] + __float2half(biases[npos + 2]),
-                r[0] * kptr[offset3 + 0] +
-                r[1] * kptr[offset3 + 1] +
-                r[2] * kptr[offset3 + 2] +
-                r[3] * kptr[offset3 + 3] +
-                r[4] * kptr[offset3 + 4] +
-                r[5] * kptr[offset3 + 5] +
-                r[6] * kptr[offset3 + 6] +
-                r[7] * kptr[offset3 + 7] +
-                r[8] * kptr[offset3 + 8] + __float2half(biases[npos + 3])
-            }), dst, x, y, nidx);
+            writeImageh(relu(s), dst, x, y, nidx);
         }
 #   endif
     }
@@ -480,25 +450,43 @@ namespace ac::core::cuda
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
         auto tid = threadIdx.y * blockDim.x + threadIdx.x;
         auto threads = blockDim.x * blockDim.y;
-        constexpr auto elements = cout * 9 * cin;
 
-        __shared__ __align__(8) half kptr[elements];
-        if (threads < elements)
+        constexpr auto knum = cout * 9 * cin / 2;
+        constexpr auto bnum = cout / 2;
+        __shared__ __align__(8) half2 kptr[knum];
+        if (threads < knum)
         {
-            auto line = elements / threads;
-            auto remain = elements % threads;
+            auto line = knum / threads;
+            auto remain = knum % threads;
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
-                kptr[idx] = kernels[idx];
+                kptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[idx]);
             }
             if (tid < remain)
             {
                 auto idx = tid + line * threads;
-                kptr[idx] = kernels[idx];
+                kptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[idx]);
             }
         }
-        else if (tid < elements) kptr[tid] = kernels[tid];
+        else if (tid < knum) kptr[tid] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[tid]);
+        __shared__ __align__(8) half2 bptr[bnum];
+        if (threads < bnum)
+        {
+            auto line = bnum / threads;
+            auto remain = bnum % threads;
+            for (int i = 0; i < line; i++)
+            {
+                auto idx = tid + i * threads;
+                bptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[idx]);
+            }
+            if (tid < remain)
+            {
+                auto idx = tid + line * threads;
+                bptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[idx]);
+            }
+        }
+        else if (tid < bnum) bptr[tid] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[tid]);
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -506,71 +494,36 @@ namespace ac::core::cuda
         constexpr int lin = cin / 4;
         constexpr int lout = cout / 4;
 
-        Half4 r0[lin]{};
-        Half4 r1[lin]{};
-        Half4 r2[lin]{};
-        Half4 r3[lin]{};
-        Half4 r4[lin]{};
-        Half4 r5[lin]{};
-        Half4 r6[lin]{};
-        Half4 r7[lin]{};
-        Half4 r8[lin]{};
+        Half4 r[9][lin]{};
 
         for (int cidx = 0; cidx < lin; cidx++)
         {
-            r0[cidx] = readImageh(src, x - 1, y - 1, cidx);
-            r1[cidx] = readImageh(src, x    , y - 1, cidx);
-            r2[cidx] = readImageh(src, x + 1, y - 1, cidx);
-            r3[cidx] = readImageh(src, x - 1, y    , cidx);
-            r4[cidx] = readImageh(src, x    , y    , cidx);
-            r5[cidx] = readImageh(src, x + 1, y    , cidx);
-            r6[cidx] = readImageh(src, x - 1, y + 1, cidx);
-            r7[cidx] = readImageh(src, x    , y + 1, cidx);
-            r8[cidx] = readImageh(src, x + 1, y + 1, cidx);
+            r[0][cidx] = readImageh(src, x - 1, y - 1, cidx);
+            r[1][cidx] = readImageh(src, x    , y - 1, cidx);
+            r[2][cidx] = readImageh(src, x + 1, y - 1, cidx);
+            r[3][cidx] = readImageh(src, x - 1, y    , cidx);
+            r[4][cidx] = readImageh(src, x    , y    , cidx);
+            r[5][cidx] = readImageh(src, x + 1, y    , cidx);
+            r[6][cidx] = readImageh(src, x - 1, y + 1, cidx);
+            r[7][cidx] = readImageh(src, x    , y + 1, cidx);
+            r[8][cidx] = readImageh(src, x + 1, y + 1, cidx);
         };
 
         for (int nidx = 0; nidx < lout; nidx++)
         {
-            auto npos = nidx * 4;
-            __align__(8) half sum[4]{ 0,0,0,0 };
-            if constexpr (residual)
-            {
-                Half4 res = readImageh(dst, x, y, nidx);
-                sum[0] += res.v0.x;
-                sum[1] += res.v0.y;
-                sum[2] += res.v1.x;
-                sum[3] += res.v1.y;
-            }
-            for (int i = 0; i < 4; i++)
-            {
-                auto offset0 = (npos + i) * 9 * cin + 0 * cin;
-                auto offset1 = (npos + i) * 9 * cin + 1 * cin;
-                auto offset2 = (npos + i) * 9 * cin + 2 * cin;
-                auto offset3 = (npos + i) * 9 * cin + 3 * cin;
-                auto offset4 = (npos + i) * 9 * cin + 4 * cin;
-                auto offset5 = (npos + i) * 9 * cin + 5 * cin;
-                auto offset6 = (npos + i) * 9 * cin + 6 * cin;
-                auto offset7 = (npos + i) * 9 * cin + 7 * cin;
-                auto offset8 = (npos + i) * 9 * cin + 8 * cin;
+            Half4 s { bptr[nidx * 2 + 0], bptr[nidx * 2 + 1] };
+            if constexpr (residual) s += readImageh(dst, x, y, nidx);
 
+            for (int i = 0; i < 9; i++)
                 for (int cidx = 0; cidx < lin; cidx++)
                 {
-                    auto cpos = cidx * 4;
-                    sum[i] +=
-                        r0[cidx].dot(kptr + offset0 + cpos) +
-                        r1[cidx].dot(kptr + offset1 + cpos) +
-                        r2[cidx].dot(kptr + offset2 + cpos) +
-                        r3[cidx].dot(kptr + offset3 + cpos) +
-                        r4[cidx].dot(kptr + offset4 + cpos) +
-                        r5[cidx].dot(kptr + offset5 + cpos) +
-                        r6[cidx].dot(kptr + offset6 + cpos) +
-                        r7[cidx].dot(kptr + offset7 + cpos) +
-                        r8[cidx].dot(kptr + offset8 + cpos);
+                    s.v0.x += r[i][cidx].dot(kptr + ((nidx * 4 + 0) * 9 * cin + i * cin + cidx * 4) / 2);
+                    s.v0.y += r[i][cidx].dot(kptr + ((nidx * 4 + 1) * 9 * cin + i * cin + cidx * 4) / 2);
+                    s.v1.x += r[i][cidx].dot(kptr + ((nidx * 4 + 2) * 9 * cin + i * cin + cidx * 4) / 2);
+                    s.v1.y += r[i][cidx].dot(kptr + ((nidx * 4 + 3) * 9 * cin + i * cin + cidx * 4) / 2);
                 }
 
-                sum[i] += __float2half(biases[npos + i]);
-            }
-            writeImageh(relu(Half4{ sum[0], sum[1], sum[2], sum[3] }), dst, x, y, nidx);
+            writeImageh(relu(s), dst, x, y, nidx);
         }
 #   endif
     }
@@ -615,7 +568,7 @@ namespace ac::core::cuda
         if (computeCapability >= 70)
             conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
         else
-            conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_cin1_float<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
     }
 
     void conv3x3_8to8_cuda(
