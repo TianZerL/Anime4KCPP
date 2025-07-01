@@ -136,7 +136,7 @@ namespace ac::core::cuda
         }
         __inline__ __device__ half dot(const half* const __restrict__ d) const noexcept
         {
-            return dot(make_half2(d[0], d[1]), make_half2(d[0], d[1]));
+            return dot(make_half2(d[0], d[1]), make_half2(d[2], d[3]));
         }
         __inline__ __device__ half dot(const half2* const __restrict__ d) const noexcept
         {
@@ -559,7 +559,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
-        const int computeCapability,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
@@ -578,7 +578,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
-        const int computeCapability,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
@@ -597,7 +597,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         const float* biases,
-        const int computeCapability,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
@@ -616,7 +616,7 @@ namespace ac::core::cuda
         unsigned int height,
         const float* kernels,
         Image::ElementType type,
-        [[maybe_unused]] const int computeCapability,
+        [[maybe_unused]] int computeCapability,
         cudaStream_t stream
     ) noexcept
     {

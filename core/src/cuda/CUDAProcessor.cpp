@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include <cuda_runtime.h>
@@ -91,7 +91,7 @@ namespace ac::core::cuda
         case Image::UInt8: return cudaCreateChannelDesc<std::uint8_t>();
         case Image::UInt16: return cudaCreateChannelDesc<std::uint16_t>();
         case Image::Float32: return cudaCreateChannelDesc<float>();
-        default: return assert(elementType == Image::UInt8 || elementType == Image::UInt16 || elementType == Image::Float32), cudaChannelFormatDesc{};
+        default: return assert(elementType == Image::UInt8 || elementType == Image::UInt16 || elementType == Image::Float32), cudaCreateChannelDesc<std::uint8_t>();
         }
     }
 

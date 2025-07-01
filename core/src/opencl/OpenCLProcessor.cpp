@@ -109,7 +109,7 @@ namespace ac::core::opencl
         case Image::UInt8: return CL_UNORM_INT8;
         case Image::UInt16: return CL_UNORM_INT16;
         case Image::Float32: return CL_FLOAT;
-        default: return assert(elementType == Image::UInt8 || elementType == Image::UInt16 || elementType == Image::Float32), 0;
+        default: return assert(elementType == Image::UInt8 || elementType == Image::UInt16 || elementType == Image::Float32), CL_UNORM_INT8;
         }
     }
 
