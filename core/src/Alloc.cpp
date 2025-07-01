@@ -19,11 +19,11 @@ namespace ac::core::detail
         return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
     }
 
-    inline static void* alignedAlloc(const std::size_t size) noexcept
+    inline static void* alignedAlloc(const std::size_t size, const int alignment) noexcept
     {
-        auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + AC_CORE_MALLOC_ALIGN));
+        auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + alignment));
         if (!buffer) return nullptr;
-        void** ptr = alignPtr(buffer + 1, AC_CORE_MALLOC_ALIGN);
+        void** ptr = alignPtr(buffer + 1, alignment);
         ptr[-1] = static_cast<void*>(buffer);
         return ptr;
     }
@@ -36,12 +36,13 @@ namespace ac::core::detail
 
 void* ac::core::fastMalloc(const std::size_t size) noexcept
 {
+    auto alignedSize = align(size, AC_CORE_MALLOC_ALIGN); // size must be an integral multiple of alignment.
 #if defined(AC_CORE_HAVE_WIN32_ALIGNED_MALLOC)
-    return _aligned_malloc(size, AC_CORE_MALLOC_ALIGN);
+    return _aligned_malloc(alignedSize, AC_CORE_MALLOC_ALIGN);
 #elif defined(AC_CORE_HAVE_STD_ALIGNED_ALLOC)
-    return std::aligned_alloc(AC_CORE_MALLOC_ALIGN, size);
+    return std::aligned_alloc(AC_CORE_MALLOC_ALIGN, alignedSize);
 #else
-    return detail::alignedAlloc(size);
+    return detail::alignedAlloc(alignedSize, AC_CORE_MALLOC_ALIGN);
 #endif
 }
 
