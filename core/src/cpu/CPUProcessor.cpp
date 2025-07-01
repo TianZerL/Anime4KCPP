@@ -187,8 +187,8 @@ namespace ac::core::cpu
     public:
         CPUProcessorSeqCNN(const int arch, const Model& model) noexcept : CPUProcessorBase(arch)
         {
-            kernels = model.kernels();
-            biases = model.biases();
+            kernels = model.kptr<float>();
+            biases = model.bptr<float>();
         }
         ~CPUProcessorSeqCNN() noexcept override = default;
 

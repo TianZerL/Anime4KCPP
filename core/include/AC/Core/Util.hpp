@@ -104,7 +104,7 @@ inline int ac::core::ceilLog2(const double v) noexcept
 {
     if constexpr (std::numeric_limits<double>::is_iec559 && (sizeof(double) == sizeof(std::uint64_t)))
     {
-        std::uint64_t data = 0;
+        std::uint64_t data{};
         std::memcpy(&data, &v, sizeof(double));
         return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) != 0));
     }

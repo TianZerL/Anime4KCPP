@@ -136,7 +136,7 @@ namespace ac::core::cuda
         }
         __inline__ __device__ half dot(const half* const __restrict__ d) const noexcept
         {
-            return dot(make_half2(d[0], d[1]), make_half2(d[0], d[1]));
+            return dot(make_half2(d[0], d[1]), make_half2(d[2], d[3]));
         }
         __inline__ __device__ half dot(const half2* const __restrict__ d) const noexcept
         {
@@ -346,6 +346,32 @@ namespace ac::core::cuda
 #   endif
     }
 
+    template<typename OUT, int cin,
+        ::cuda::std::enable_if_t<cin % 4 == 0, bool> = true>
+    __global__ void deconv2x2_cuda_cout1_float(
+        cudaSurfaceObject_t src,
+        cudaSurfaceObject_t dst,
+        const unsigned int width,
+        const unsigned int height,
+        const float* const __restrict__ kernels
+    )
+    {
+#   if __CUDA_ARCH__ < 700
+        auto x = blockIdx.x * blockDim.x + threadIdx.x;
+        auto y = blockIdx.y * blockDim.y + threadIdx.y;
+
+        if (x >= width || y >= height) return;
+
+        constexpr int lin = cin / 4;
+
+        const unsigned int index = ((y & 1) << 1) + (x & 1);
+
+        float sum = 0.0f;
+        for (int cidx = 0; cidx < lin; cidx++) sum += dot(readImagef(src, x / 2, y / 2, cidx), kernels + cin * index + cidx * 4);
+        writeImage(fromFloat<OUT>(sum), dst, x, y);
+#   endif
+    }
+
     template<int cout,
         ::cuda::std::enable_if_t<cout % 4 == 0, bool> = true>
     __global__ void conv3x3_cuda_cin1_half(
@@ -353,8 +379,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* const __restrict__ kernels,
-        const float* const __restrict__ biases
+        const half* const __restrict__ kernels,
+        const half* const __restrict__ biases
     )
     {
 #   if __CUDA_ARCH__ >= 700
@@ -441,8 +467,8 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* const __restrict__ kernels,
-        const float* const __restrict__ biases
+        const half* const __restrict__ kernels,
+        const half* const __restrict__ biases
     )
     {
 #   if __CUDA_ARCH__ >= 700
@@ -461,15 +487,15 @@ namespace ac::core::cuda
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
-                kptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[idx]);
+                kptr[idx] = reinterpret_cast<const half2*>(kernels)[idx];
             }
             if (tid < remain)
             {
                 auto idx = tid + line * threads;
-                kptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[idx]);
+                kptr[idx] = reinterpret_cast<const half2*>(kernels)[idx];
             }
         }
-        else if (tid < knum) kptr[tid] = __float22half2_rn(reinterpret_cast<const float2*>(kernels)[tid]);
+        else if (tid < knum) kptr[tid] = reinterpret_cast<const half2*>(kernels)[tid];
         __shared__ __align__(8) half2 bptr[bnum];
         if (threads < bnum)
         {
@@ -478,15 +504,15 @@ namespace ac::core::cuda
             for (int i = 0; i < line; i++)
             {
                 auto idx = tid + i * threads;
-                bptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[idx]);
+                bptr[idx] = reinterpret_cast<const half2*>(biases)[idx];
             }
             if (tid < remain)
             {
                 auto idx = tid + line * threads;
-                bptr[idx] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[idx]);
+                bptr[idx] = reinterpret_cast<const half2*>(biases)[idx];
             }
         }
-        else if (tid < bnum) bptr[tid] = __float22half2_rn(reinterpret_cast<const float2*>(biases)[tid]);
+        else if (tid < bnum) bptr[tid] = reinterpret_cast<const half2*>(biases)[tid];
         __syncthreads();
 
         if (x >= width || y >= height) return;
@@ -530,14 +556,15 @@ namespace ac::core::cuda
 
     template<typename OUT, int cin,
         ::cuda::std::enable_if_t<cin % 4 == 0, bool> = true>
-    __global__ void deconv2x2_cuda_cout1(
+    __global__ void deconv2x2_cuda_cout1_half(
         cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         const unsigned int width,
         const unsigned int height,
-        const float* const __restrict__ kernels
+        const half* const __restrict__ kernels
     )
     {
+#   if __CUDA_ARCH__ >= 700
         auto x = blockIdx.x * blockDim.x + threadIdx.x;
         auto y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -547,9 +574,10 @@ namespace ac::core::cuda
 
         const unsigned int index = ((y & 1) << 1) + (x & 1);
 
-        float sum = 0.0f;
-        for (int cidx = 0; cidx < lin; cidx++) sum += dot(readImagef(src, x / 2, y / 2, cidx), kernels + cin * index + cidx * 4);
+        half sum = 0;
+        for (int cidx = 0; cidx < lin; cidx++) sum += Half4{ readImageh(src, x / 2, y / 2, cidx) }.dot(kernels + cin * index + cidx * 4);
         writeImage(fromFloat<OUT>(sum), dst, x, y);
+#   endif
     }
 
     void conv3x3_1to8_cuda(
@@ -557,18 +585,20 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
-        const int computeCapability,
+        const void* kernels,
+        std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
         if (computeCapability >= 70)
-            conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_cin1_half<8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset, static_cast<const half*>(biases) + boffset);
         else
-            conv3x3_cuda_cin1_float<8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_cin1_float<8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset, static_cast<const float*>(biases) + boffset);
     }
 
     void conv3x3_8to8_cuda(
@@ -576,18 +606,20 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
-        const int computeCapability,
+        const void* kernels,
+         std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
         if (computeCapability >= 70)
-            conv3x3_cuda_half<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_half<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset, static_cast<const half*>(biases) + boffset);
         else
-            conv3x3_cuda_float<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_float<8, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset, static_cast<const float*>(biases) + boffset);
     }
 
     void conv3x3_residual_8to8_cuda(
@@ -595,18 +627,20 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
-        const int computeCapability,
+        const void* kernels,
+        std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ 16, 8 };
         dim3 grid{ (width + block.x - 1) / block.x, (height + block.y - 1) / block.y };
         if (computeCapability >= 70)
-            conv3x3_cuda_half<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_half<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset, static_cast<const half*>(biases) + boffset);
         else
-            conv3x3_cuda_float<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels, biases);
+            conv3x3_cuda_float<8, 8, true> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset, static_cast<const float*>(biases) + boffset);
     }
 
     void deconv2x2_8to1_cuda(
@@ -614,9 +648,10 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
+        const void* kernels,
+        std::size_t koffset,
         Image::ElementType type,
-        [[maybe_unused]] const int computeCapability,
+        int computeCapability,
         cudaStream_t stream
     ) noexcept
     {
@@ -625,11 +660,23 @@ namespace ac::core::cuda
         switch (type)
         {
         case Image::UInt8:
-            return deconv2x2_cuda_cout1<std::uint8_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels);
+            if (computeCapability >= 70)
+                deconv2x2_cuda_cout1_half<std::uint8_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset);
+            else
+                deconv2x2_cuda_cout1_float<std::uint8_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset);
+            break;
         case Image::UInt16:
-            return deconv2x2_cuda_cout1<std::uint16_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels);
+            if (computeCapability >= 70)
+                deconv2x2_cuda_cout1_half<std::uint16_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset);
+            else
+                deconv2x2_cuda_cout1_float<std::uint16_t, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset);
+            break;
         case Image::Float32:
-            return deconv2x2_cuda_cout1<float, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, kernels);
+            if (computeCapability >= 70)
+                deconv2x2_cuda_cout1_half<float, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const half*>(kernels) + koffset);
+            else
+                deconv2x2_cuda_cout1_float<float, 8> <<< grid, block, 0, stream >>> (src, dst, width, height, static_cast<const float*>(kernels) + koffset);
+            break;
         }
     }
 }

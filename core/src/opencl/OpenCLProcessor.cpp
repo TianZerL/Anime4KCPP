@@ -233,8 +233,8 @@ namespace ac::core::opencl
         {
             auto& err = errors.local();
             if (err != CL_SUCCESS) return; // check if initialization was successful
-            kernels = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize(), const_cast<float*>(model.kernels()), &err }; if (err != CL_SUCCESS) return;
-            biases = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize(), const_cast<float*>(model.biases()), &err };
+            kernels = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.kernelSize<float>(), const_cast<float*>(model.kptr<float>()), &err }; if (err != CL_SUCCESS) return;
+            biases = cl::Buffer{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR, model.biasSize<float>(), const_cast<float*>(model.bptr<float>()), &err };
         }
         ~OpenCLProcessorSeqCNN() noexcept override = default;
 

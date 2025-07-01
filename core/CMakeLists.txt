@@ -154,6 +154,34 @@ ac_check_disable_flags(ac)
 ac_check_enable_static_crt(ac)
 ac_check_disable_pic(ac)
 
+set(AC_CORE_DST_MODEL_PARAM_PATH "${CORE_BINARY_DIR}/include/AC/Core/Model/Param")
+set(AC_CORE_SRC_MODEL_PARAM_PATH "${CORE_SOURCE_DIR}/include/AC/Core/Model/Param")
+add_custom_command(
+    OUTPUT
+        ${AC_CORE_DST_MODEL_PARAM_PATH}/ACNet.half.p
+        ${AC_CORE_DST_MODEL_PARAM_PATH}/ARNet.half.p
+    WORKING_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    COMMAND ac_float2half "${AC_CORE_DST_MODEL_PARAM_PATH}"
+    DEPENDS
+        ac_float2half
+        ${AC_CORE_SRC_MODEL_PARAM_PATH}/ACNet.p
+        ${AC_CORE_SRC_MODEL_PARAM_PATH}/ARNet.p
+    COMMENT "Converting float32 to float16 and generating param files..."
+    VERBATIM
+)
+
+configure_file(${AC_CORE_SRC_MODEL_PARAM_PATH}/ACNet.p ${AC_CORE_DST_MODEL_PARAM_PATH}/ACNet.float.p COPYONLY)
+configure_file(${AC_CORE_SRC_MODEL_PARAM_PATH}/ARNet.p ${AC_CORE_DST_MODEL_PARAM_PATH}/ARNet.float.p COPYONLY)
+
+add_custom_target(ac_core_model_param DEPENDS 
+    ${AC_CORE_DST_MODEL_PARAM_PATH}/ACNet.half.p
+    ${AC_CORE_DST_MODEL_PARAM_PATH}/ARNet.half.p
+    ${AC_CORE_DST_MODEL_PARAM_PATH}/ACNet.float.p
+    ${AC_CORE_DST_MODEL_PARAM_PATH}/ARNet.float.p
+)
+
+add_dependencies(ac ac_core_model_param)
+
 if(AC_CORE_WITH_OPENCL)
     file(WRITE "${CORE_BINARY_DIR}/filegen/include/AC/Core/OpenCL/Kernel.cl.hpp.in" [[
 #ifndef AC_CORE_OPENCL_KERNEL_HPP

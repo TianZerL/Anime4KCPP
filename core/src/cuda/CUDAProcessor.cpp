@@ -1,12 +1,13 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
-#include <string>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #include <cuda_runtime.h>
 
+#include "AC/Core/Half.hpp"
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
 #include "AC/Util/ThreadLocal.hpp"
@@ -22,40 +23,47 @@ namespace ac::core::cuda
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
+        const void* kernels,
+        std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
         int computeCapability,
-        cudaStream_t stream = 0
+        cudaStream_t stream
     ) noexcept;
     void conv3x3_8to8_cuda(
         cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
+        const void* kernels,
+        std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
         int computeCapability,
-        cudaStream_t stream = 0
+        cudaStream_t stream
     ) noexcept;
     void conv3x3_residual_8to8_cuda(
         cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
-        const float* biases,
+        const void* kernels,
+        std::size_t koffset,
+        const void* biases,
+        std::size_t boffset,
         int computeCapability,
-        cudaStream_t stream = 0
+        cudaStream_t stream
     ) noexcept;
     void deconv2x2_8to1_cuda(
         cudaSurfaceObject_t src,
         cudaSurfaceObject_t dst,
         unsigned int width,
         unsigned int height,
-        const float* kernels,
+        const void* kernels,
+        std::size_t koffset,
         Image::ElementType type,
         int computeCapability,
-        cudaStream_t stream = 0
+        cudaStream_t stream
     ) noexcept;
 
     struct Context
@@ -130,10 +138,20 @@ namespace ac::core::cuda
         {
             auto& err = errors.local();
             err = cudaSetDevice(idx); if (err != cudaSuccess) return;
-            err = cudaMalloc(&kernels, model.kernelSize()); if (err != cudaSuccess) return;
-            err = cudaMalloc(&biases, model.biasSize()); if (err != cudaSuccess) return;
-            err = cudaMemcpy(kernels, model.kernels(), model.kernelSize(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
-            err = cudaMemcpy(biases, model.biases(), model.biasSize(), cudaMemcpyHostToDevice);
+            if (computeCapability >= 70)
+            {
+                err = cudaMalloc(&kernels, model.kernelSize<ac::core::Half>()); if (err != cudaSuccess) return;
+                err = cudaMalloc(&biases, model.biasSize<ac::core::Half>()); if (err != cudaSuccess) return;
+                err = cudaMemcpy(kernels, model.kernels<ac::core::Half>(), model.kernelSize<ac::core::Half>(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
+                err = cudaMemcpy(biases, model.biases<ac::core::Half>(), model.biasSize<ac::core::Half>(), cudaMemcpyHostToDevice);
+            }
+            else
+            {
+                err = cudaMalloc(&kernels, model.kernelSize<float>()); if (err != cudaSuccess) return;
+                err = cudaMalloc(&biases, model.biasSize<float>()); if (err != cudaSuccess) return;
+                err = cudaMemcpy(kernels, model.kernels<float>(), model.kernelSize<float>(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
+                err = cudaMemcpy(biases, model.biases<float>(), model.biasSize<float>(), cudaMemcpyHostToDevice);
+            }
         }
         ~CUDAProcessorSeqCNN() noexcept override
         {
@@ -144,8 +162,8 @@ namespace ac::core::cuda
         }
 
     protected:
-        float* kernels = nullptr;
-        float* biases = nullptr;
+        void* kernels = nullptr;
+        void* biases = nullptr;
     };
 
     template<typename Model>
@@ -221,16 +239,16 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
 
     cudaMemcpy2DToArrayAsync(inArray, 0, 0, src.ptr(), src.stride(), srcWBytes, srcH, cudaMemcpyHostToDevice, stream);
 
-    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[0], biases + model::ACNet::baisOffset[0], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[1], biases + model::ACNet::baisOffset[1], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[2], biases + model::ACNet::baisOffset[2], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[3], biases + model::ACNet::baisOffset[3], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[4], biases + model::ACNet::baisOffset[4], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[5], biases + model::ACNet::baisOffset[5], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[6], biases + model::ACNet::baisOffset[6], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ACNet::kernelOffset[7], biases + model::ACNet::baisOffset[7], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ACNet::kernelOffset[8], biases + model::ACNet::baisOffset[8], computeCapability, stream);
-    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels + model::ACNet::kernelOffset[9], dst.type(), computeCapability, stream);
+    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels, model::ACNet::kernelOffset[0], biases, model::ACNet::baisOffset[0], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ACNet::kernelOffset[1], biases, model::ACNet::baisOffset[1], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ACNet::kernelOffset[2], biases, model::ACNet::baisOffset[2], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ACNet::kernelOffset[3], biases, model::ACNet::baisOffset[3], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ACNet::kernelOffset[4], biases, model::ACNet::baisOffset[4], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ACNet::kernelOffset[5], biases, model::ACNet::baisOffset[5], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ACNet::kernelOffset[6], biases, model::ACNet::baisOffset[6], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ACNet::kernelOffset[7], biases, model::ACNet::baisOffset[7], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ACNet::kernelOffset[8], biases, model::ACNet::baisOffset[8], computeCapability, stream);
+    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels, model::ACNet::kernelOffset[9], dst.type(), computeCapability, stream);
 
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
@@ -325,16 +343,16 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
 
     cudaMemcpy2DToArrayAsync(inArray, 0, 0, src.ptr(), src.stride(), srcWBytes, srcH, cudaMemcpyHostToDevice, stream);
 
-    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[0], biases + model::ARNet::baisOffset[0], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[1], biases + model::ARNet::baisOffset[1], computeCapability, stream);
-    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[2], biases + model::ARNet::baisOffset[2], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[3], biases + model::ARNet::baisOffset[3], computeCapability, stream);
-    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[4], biases + model::ARNet::baisOffset[4], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[5], biases + model::ARNet::baisOffset[5], computeCapability, stream);
-    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[6], biases + model::ARNet::baisOffset[6], computeCapability, stream);
-    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels + model::ARNet::kernelOffset[7], biases + model::ARNet::baisOffset[7], computeCapability, stream);
-    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels + model::ARNet::kernelOffset[8], biases + model::ARNet::baisOffset[8], computeCapability, stream);
-    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels + model::ARNet::kernelOffset[9], dst.type(), computeCapability, stream);
+    conv3x3_1to8_cuda(in, tmp1, srcW, srcH, kernels, model::ARNet::kernelOffset[0], biases, model::ARNet::baisOffset[0], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ARNet::kernelOffset[1], biases, model::ARNet::baisOffset[1], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ARNet::kernelOffset[2], biases, model::ARNet::baisOffset[2], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ARNet::kernelOffset[3], biases, model::ARNet::baisOffset[3], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ARNet::kernelOffset[4], biases, model::ARNet::baisOffset[4], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels,+ model::ARNet::kernelOffset[5], biases, model::ARNet::baisOffset[5], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ARNet::kernelOffset[6], biases, model::ARNet::baisOffset[6], computeCapability, stream);
+    conv3x3_8to8_cuda(tmp1, tmp2, srcW, srcH, kernels, model::ARNet::kernelOffset[7], biases, model::ARNet::baisOffset[7], computeCapability, stream);
+    conv3x3_residual_8to8_cuda(tmp2, tmp1, srcW, srcH, kernels, model::ARNet::kernelOffset[8], biases, model::ARNet::baisOffset[8], computeCapability, stream);
+    deconv2x2_8to1_cuda(tmp1, out, dstW, dstH, kernels, model::ARNet::kernelOffset[9], dst.type(), computeCapability, stream);
 
     cudaMemcpy2DFromArrayAsync(dst.ptr(), dst.stride(), outArray, 0, 0, dstWBytes, dstH, cudaMemcpyDeviceToHost, stream);
 
