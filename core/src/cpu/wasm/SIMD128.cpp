@@ -35,15 +35,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            v128_t r0[count + (remain ? 1 : 0)] = {};
-            v128_t r1[count + (remain ? 1 : 0)] = {};
-            v128_t r2[count + (remain ? 1 : 0)] = {};
-            v128_t r3[count + (remain ? 1 : 0)] = {};
-            v128_t r4[count + (remain ? 1 : 0)] = {};
-            v128_t r5[count + (remain ? 1 : 0)] = {};
-            v128_t r6[count + (remain ? 1 : 0)] = {};
-            v128_t r7[count + (remain ? 1 : 0)] = {};
-            v128_t r8[count + (remain ? 1 : 0)] = {};
+            v128_t r0[count + (remain ? 1 : 0)]{};
+            v128_t r1[count + (remain ? 1 : 0)]{};
+            v128_t r2[count + (remain ? 1 : 0)]{};
+            v128_t r3[count + (remain ? 1 : 0)]{};
+            v128_t r4[count + (remain ? 1 : 0)]{};
+            v128_t r5[count + (remain ? 1 : 0)]{};
+            v128_t r6[count + (remain ? 1 : 0)]{};
+            v128_t r7[count + (remain ? 1 : 0)]{};
+            v128_t r8[count + (remain ? 1 : 0)]{};
 
             for (int idx = 0; idx < count; idx++)
             {
@@ -184,15 +184,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            v128_t r[count + (remain ? 1 : 0)] = {};
+            v128_t r[count + (remain ? 1 : 0)]{};
             for (int idx = 0; idx < count; idx++) r[idx] = wasm_v128_load(in + idx * vstep);
-
             if constexpr (remain) r[count] = wasm_f32x4_make((in + count * vstep)[0], remain > 1 ? (in + count * vstep)[1] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, 0.0f);
+
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
-                v128_t k[count + (remain ? 1 : 0)] = {};
+                v128_t k[count + (remain ? 1 : 0)]{};
                 for (int idx = 0; idx < count; idx++)
                 {
                     k[idx] = wasm_v128_load(kptr + idx * vstep);

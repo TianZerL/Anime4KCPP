@@ -33,12 +33,17 @@ if(NOT TARGET dep::opencl)
                 GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-Headers.git
                 GIT_TAG main
             )
+            set(OPENCL_HEADERS_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
+            set(OPENCL_HEADERS_BUILD_CXX_TESTS OFF CACHE BOOL "OpenCL SDK option" FORCE)
             FetchContent_MakeAvailable(openclheaders)
             FetchContent_Declare(
                 openclhpp
                 GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-CLHPP.git
                 GIT_TAG main
             )
+            set(BUILD_DOCS OFF CACHE BOOL "OpenCL SDK option" FORCE)
+            set(BUILD_EXAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
+            set(OPENCL_CLHPP_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
             FetchContent_MakeAvailable(openclhpp)
             target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp ${OpenCL_LIBRARIES})
         else()

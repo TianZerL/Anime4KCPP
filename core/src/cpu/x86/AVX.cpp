@@ -37,15 +37,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            __m256 r0[count + (remain ? 1 : 0)] = {};
-            __m256 r1[count + (remain ? 1 : 0)] = {};
-            __m256 r2[count + (remain ? 1 : 0)] = {};
-            __m256 r3[count + (remain ? 1 : 0)] = {};
-            __m256 r4[count + (remain ? 1 : 0)] = {};
-            __m256 r5[count + (remain ? 1 : 0)] = {};
-            __m256 r6[count + (remain ? 1 : 0)] = {};
-            __m256 r7[count + (remain ? 1 : 0)] = {};
-            __m256 r8[count + (remain ? 1 : 0)] = {};
+            __m256 r0[count + (remain ? 1 : 0)]{};
+            __m256 r1[count + (remain ? 1 : 0)]{};
+            __m256 r2[count + (remain ? 1 : 0)]{};
+            __m256 r3[count + (remain ? 1 : 0)]{};
+            __m256 r4[count + (remain ? 1 : 0)]{};
+            __m256 r5[count + (remain ? 1 : 0)]{};
+            __m256 r6[count + (remain ? 1 : 0)]{};
+            __m256 r7[count + (remain ? 1 : 0)]{};
+            __m256 r8[count + (remain ? 1 : 0)]{};
 
             for (int idx = 0; idx < count; idx++)
             {
@@ -239,15 +239,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            __m256 r[count + (remain ? 1 : 0)] = {};
+            __m256 r[count + (remain ? 1 : 0)]{};
             for (int idx = 0; idx < count; idx++)  r[idx] = _mm256_loadu_ps(in + idx * vstep);
-
             if constexpr (remain) r[count] = _mm256_set_ps(0.0f, remain > 6 ? (in + count * vstep)[6] : 0.0f, remain > 5 ? (in + count * vstep)[5] : 0.0f, remain > 4 ? (in + count * vstep)[4] : 0.0f, remain > 3 ? (in + count * vstep)[3] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, remain > 1 ? (in + count * vstep)[1] : 0.0f, (in + count * vstep)[0]);
+
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
-                __m256 k[count + (remain ? 1 : 0)] = {};
+                __m256 k[count + (remain ? 1 : 0)]{};
                 for (int idx = 0; idx < count; idx++)
                 {
                     k[idx] = _mm256_loadu_ps(kptr + idx * vstep);

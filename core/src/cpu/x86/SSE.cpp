@@ -35,15 +35,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            __m128 r0[count + (remain ? 1 : 0)] = {};
-            __m128 r1[count + (remain ? 1 : 0)] = {};
-            __m128 r2[count + (remain ? 1 : 0)] = {};
-            __m128 r3[count + (remain ? 1 : 0)] = {};
-            __m128 r4[count + (remain ? 1 : 0)] = {};
-            __m128 r5[count + (remain ? 1 : 0)] = {};
-            __m128 r6[count + (remain ? 1 : 0)] = {};
-            __m128 r7[count + (remain ? 1 : 0)] = {};
-            __m128 r8[count + (remain ? 1 : 0)] = {};
+            __m128 r0[count + (remain ? 1 : 0)]{};
+            __m128 r1[count + (remain ? 1 : 0)]{};
+            __m128 r2[count + (remain ? 1 : 0)]{};
+            __m128 r3[count + (remain ? 1 : 0)]{};
+            __m128 r4[count + (remain ? 1 : 0)]{};
+            __m128 r5[count + (remain ? 1 : 0)]{};
+            __m128 r6[count + (remain ? 1 : 0)]{};
+            __m128 r7[count + (remain ? 1 : 0)]{};
+            __m128 r8[count + (remain ? 1 : 0)]{};
 
             for (int idx = 0; idx < count; idx++)
             {
@@ -192,15 +192,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            __m128 r[count + (remain ? 1 : 0)] = {};
+            __m128 r[count + (remain ? 1 : 0)]{};
             for (int idx = 0; idx < count; idx++) r[idx] = _mm_loadu_ps(in + idx * vstep);
-
             if constexpr (remain) r[count] = _mm_set_ps(0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, remain > 1 ? (in + count * vstep)[1] : 0.0f, (in + count * vstep)[0]);
+
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
-                __m128 k[count + (remain ? 1 : 0)] = {};
+                __m128 k[count + (remain ? 1 : 0)]{};
                 for (int idx = 0; idx < count; idx++)
                 {
                     k[idx] = _mm_loadu_ps(kptr + idx * vstep);

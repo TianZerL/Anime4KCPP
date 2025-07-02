@@ -38,15 +38,15 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            float32x4_t r0[count + (remain ? 1 : 0)] = {};
-            float32x4_t r1[count + (remain ? 1 : 0)] = {};
-            float32x4_t r2[count + (remain ? 1 : 0)] = {};
-            float32x4_t r3[count + (remain ? 1 : 0)] = {};
-            float32x4_t r4[count + (remain ? 1 : 0)] = {};
-            float32x4_t r5[count + (remain ? 1 : 0)] = {};
-            float32x4_t r6[count + (remain ? 1 : 0)] = {};
-            float32x4_t r7[count + (remain ? 1 : 0)] = {};
-            float32x4_t r8[count + (remain ? 1 : 0)] = {};
+            float32x4_t r0[count + (remain ? 1 : 0)]{};
+            float32x4_t r1[count + (remain ? 1 : 0)]{};
+            float32x4_t r2[count + (remain ? 1 : 0)]{};
+            float32x4_t r3[count + (remain ? 1 : 0)]{};
+            float32x4_t r4[count + (remain ? 1 : 0)]{};
+            float32x4_t r5[count + (remain ? 1 : 0)]{};
+            float32x4_t r6[count + (remain ? 1 : 0)]{};
+            float32x4_t r7[count + (remain ? 1 : 0)]{};
+            float32x4_t r8[count + (remain ? 1 : 0)]{};
 
             for (int idx = 0; idx < count; idx++)
             {
@@ -214,19 +214,19 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            float32x4_t  r[count + (remain ? 1 : 0)] = {};
+            float32x4_t  r[count + (remain ? 1 : 0)]{};
             for (int idx = 0; idx < count; idx++) r[idx] = vld1q_f32(in + idx * vstep);
-
             if constexpr (remain)
             {
                 const float d[vstep] = {(in + count * vstep)[0], remain > 1 ? (in + count * vstep)[1] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, 0.0f};
                 r[count] = vld1q_f32(d);
             }
+
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cin * 4 + cin * index;
                 float sum = 0.0f;
-                float32x4_t k[count + (remain ? 1 : 0)] = {};
+                float32x4_t k[count + (remain ? 1 : 0)]{};
                 for (int idx = 0; idx < count; idx++)
                 {
                     k[idx] = vld1q_f32(kptr + idx * vstep);
