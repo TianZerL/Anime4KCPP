@@ -1,0 +1,8 @@
+if(NOT TARGET dep::threads)
+    add_library(dep_threads INTERFACE IMPORTED)
+    set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+    find_package(Threads REQUIRED)
+    message(STATUS "dep: threads ${CMAKE_THREAD_LIBS_INIT}")
+    target_link_libraries(dep_threads INTERFACE Threads::Threads)
+    add_library(dep::threads ALIAS dep_threads)
+endif()

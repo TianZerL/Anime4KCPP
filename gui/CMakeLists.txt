@@ -97,7 +97,7 @@ target_include_directories(ac_gui PRIVATE
 
 target_link_libraries(ac_gui PRIVATE
     ac
-    ac_util
+    ac_util_misc ac_util_threads
     $<$<TARGET_EXISTS:ac_video>:ac_video>
     dep::qt
 )

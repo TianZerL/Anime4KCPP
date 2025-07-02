@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "AC/Core/Image.hpp"
-#include "AC/Core/Parallel.hpp"
+#include "AC/Util/Parallel.hpp"
 
 namespace ac::core
 {
@@ -49,9 +49,9 @@ namespace ac::core
     // the scale ratio from source images to destination images will be computed as `dst.width() / src.width()` and this ratio will be applied to both the width and height.
     // the scale ratio is assumed to be an integer.
     template<typename F, typename ...Images>
-    auto filter(F&& f, Images& ...images) -> 
+    auto filter(F&& f, Images& ...images) ->
         std::enable_if_t<(
-            (sizeof...(Images) > 1) && 
+            (sizeof...(Images) > 1) &&
             (std::is_const_v<std::tuple_element_t<0, std::tuple<Images...>>>) &&
             (!std::is_const_v<std::tuple_element_t<sizeof...(Images) - 1, std::tuple<Images...>>>) &&
             (std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...)),
@@ -126,7 +126,7 @@ inline auto ac::core::filter(F&& f, Images& ...images) ->
     const int w = dst.width(), h = dst.height();
     const int scale = w / src.width();
 
-    parallelFor(0, h,
+    util::parallelFor(0, h,
         [&](const int i) {
             for (int j = 0; j < w; j++) f(i, j, (std::is_const_v<Images> ? images.ptr(j / scale, i / scale) : images.ptr(j, i))...);
         });

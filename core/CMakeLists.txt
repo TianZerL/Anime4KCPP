@@ -87,26 +87,13 @@ endif()
 check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLOC)
 check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
 
-# parallel lib
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC") # MSVC ABI
-    target_compile_definitions(ac PRIVATE AC_CORE_PARALLEL_PPL)
-else()
-    find_package(OpenMP COMPONENTS CXX QUIET)
-    if(OpenMP_CXX_FOUND)
-        target_compile_definitions(ac PRIVATE AC_CORE_PARALLEL_OPENMP)
-    else()
-        message(STATUS "openmp not found, fallback to builtin thread pool")
-    endif()
-endif()
-
 target_link_libraries(ac PRIVATE
-    ac_util
+    ac_util_misc ac_util_threads ac_util_parallel
     dep::ruapu
     dep::stb
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:dep::eigen3>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:dep::opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:dep::cuda>
-    $<$<BOOL:${OpenMP_CXX_FOUND}>:OpenMP::OpenMP_CXX>
 )
 
 set(AC_CORE_FEATURE_LIST

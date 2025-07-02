@@ -17,7 +17,7 @@ target_include_directories(ac_cli PRIVATE
 
 target_link_libraries(ac_cli PRIVATE
     ac
-    ac_util
+    ac_util_misc ac_util_threads
     $<$<TARGET_EXISTS:ac_video>:ac_video>
     dep::cli11
 )

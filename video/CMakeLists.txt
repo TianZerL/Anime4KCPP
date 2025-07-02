@@ -23,7 +23,7 @@ target_include_directories(ac_video PUBLIC
     $<INSTALL_INTERFACE:ac/include>
 )
 
-target_link_libraries(ac_video PRIVATE ac_util dep::ffmpeg)
+target_link_libraries(ac_video PRIVATE ac_util_misc ac_util_threads dep::ffmpeg)
 
 target_compile_definitions(ac_video PUBLIC
     AC_VIDEO_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
