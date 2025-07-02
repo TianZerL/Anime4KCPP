@@ -37,7 +37,7 @@ void ac::core::Image::create(const int w, const int h, const int c, const Elemen
 {
     int lineSize = w * c * (elementType & 0xff);
     if (!(h > 0 && lineSize > 0)) return;
-    int pitch = stride >= lineSize ? stride : align(lineSize, AC_CORE_STRIDE_ALIGN);
+    int pitch = (stride >= lineSize) ? stride : align(lineSize, AC_CORE_STRIDE_ALIGN);
     int size = h * pitch;
     this->w = w;
     this->h = h;
@@ -51,7 +51,7 @@ void ac::core::Image::map(const int w, const int h, const int c, const ElementTy
 {
     int lineSize = w * c * (elementType & 0xff);
     if (!(h > 0 && lineSize > 0) || !data) return;
-    int pitch = stride >= lineSize ? stride : lineSize;
+    int pitch = (stride >= lineSize) ? stride : lineSize;
     this->w = w;
     this->h = h;
     this->c = c;
@@ -64,7 +64,7 @@ void ac::core::Image::from(const int w, const int h, const int c, const ElementT
 {
     int lineSize = w * c * (elementType & 0xff);
     if (!(h > 0 && lineSize > 0) || !data) return;
-    int pitch = stride >= lineSize ? stride : lineSize;
+    int pitch = (stride >= lineSize) ? stride : lineSize;
     create(w, h, c, elementType);
     auto src = static_cast<const std::uint8_t*>(data);
     for (int i = 0; i < h; i++) std::memcpy(line(i), src + i * pitch, lineSize);
@@ -73,7 +73,7 @@ void ac::core::Image::to(void* const data, const int stride) const noexcept
 {
     int lineSize = width() * pixelSize();
     if (!(height() > 0 && lineSize > 0) || !data) return;
-    int pitch = stride >= lineSize ? stride : lineSize;
+    int pitch = (stride >= lineSize) ? stride : lineSize;
     auto dst = static_cast<std::uint8_t*>(data);
     for (int i = 0; i < height(); i++) std::memcpy(dst + i * pitch, line(i), lineSize);
 }

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <random>
 #include <vector>
@@ -19,7 +20,6 @@ struct ImagePool
     {
         std::random_device rd{};
         std::mt19937 gen{ rd() };
-        std::uniform_int_distribution<unsigned short> pixel{ 0, 255 };
         std::uniform_int_distribution<int> indice{ 0, size - 1 };
 
         images.reserve(size);
@@ -28,9 +28,12 @@ struct ImagePool
         for (int idx = 0; idx < size; idx++)
         {
             ac::core::Image image{ w, h, 1, ac::core::Image::UInt8 };
-            for (int i = 0; i < image.height(); i++)
-                for (int j = 0; j < image.width(); j++)
-                    *image.pixel(j, i) = static_cast<std::uint8_t>(pixel(gen));
+            auto length = image.size() & -4;
+            for (int i = 0; i < length; i += 4)
+            {
+                auto pixels = gen();
+                std::memcpy(image.data() + i, &pixels, 4);
+            }
 
             images.emplace_back(image);
         }

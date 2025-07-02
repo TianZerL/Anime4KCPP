@@ -26,7 +26,7 @@ inline void ac::util::parallelFor(const IndexType first, const IndexType last, F
     static const std::size_t threads = ThreadPool::hardwareThreads();
     if (threads > 1)
     {
-        static ThreadPool pool(threads + 1);
+        static ThreadPool pool{ threads + 1 };
         std::vector<std::future<void>> tasks{};
         tasks.reserve(static_cast<decltype(tasks.size())>(last) - static_cast<decltype(tasks.size())>(first));
         for (IndexType i = first; i < last; i++) tasks.emplace_back(pool.exec([&](IndexType idx) { func(idx); }, i));
