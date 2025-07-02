@@ -34,7 +34,8 @@ namespace ac::core::cpu
                 auto k7 = kernels + n * cin * 9 + cin * 7;
                 auto k8 = kernels + n * cin * 9 + cin * 8;
 
-                float sum = 0.0f;
+                float sum = biases[n];
+                if constexpr (residual) sum += out[n];
 
                 for (int c = 0; c < cin; c++)
                 {
@@ -49,8 +50,7 @@ namespace ac::core::cpu
                         toFloat<IN>(bc[c]) * k7[c] +
                         toFloat<IN>(br[c]) * k8[c];
                 }
-                if constexpr (residual) sum += out[n];
-                out[n] = relu<OUT>(sum + biases[n]);
+                out[n] = relu<OUT>(sum);
             }
         }, src, dst);
     }
@@ -62,7 +62,7 @@ namespace ac::core::cpu
             auto out = static_cast<OUT*>(dptr);
 
             const int index = ((i & 1) << 1) + (j & 1);
-            // regarded as CHWN
+
             for (int n = 0; n < cout; n++)
             {
                 auto k = kernels + n * cin * 4 + cin * index;

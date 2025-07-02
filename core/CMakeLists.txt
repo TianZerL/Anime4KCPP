@@ -82,8 +82,10 @@ check_include_file_cxx(malloc.h AC_CORE_HAVE_MALLOC_H)
 if (AC_CORE_HAVE_MALLOC_H)
     check_cxx_symbol_exists(_aligned_malloc malloc.h AC_CORE_HAVE_WIN32_ALIGNED_MALLOC)
     check_cxx_symbol_exists(_aligned_free malloc.h AC_CORE_HAVE_WIN32_ALIGNED_FREE)
+    check_cxx_symbol_exists(memalign malloc.h AC_CORE_HAVE_BSD_MEMALIGN)
 endif()
 check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLOC)
+check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
 
 # parallel lib
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_SIMULATE_ID MATCHES "MSVC") # MSVC ABI
@@ -131,6 +133,8 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_DISABLE_IMAGE_IO}>:AC_CORE_DISABLE_IMAGE_IO>
     $<$<AND:$<BOOL:${AC_CORE_HAVE_WIN32_ALIGNED_MALLOC}>,$<BOOL:${AC_CORE_HAVE_WIN32_ALIGNED_FREE}>>:AC_CORE_HAVE_WIN32_ALIGNED_MALLOC>
     $<$<BOOL:${AC_CORE_HAVE_STD_ALIGNED_ALLOC}>:AC_CORE_HAVE_STD_ALIGNED_ALLOC>
+    $<$<BOOL:${AC_CORE_HAVE_POSIX_MEMALIGN}>:AC_CORE_HAVE_POSIX_MEMALIGN>
+    $<$<BOOL:${AC_CORE_HAVE_BSD_MEMALIGN}>:AC_CORE_HAVE_BSD_MEMALIGN>
 
     AC_CORE_MALLOC_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>
 
