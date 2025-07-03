@@ -66,7 +66,7 @@ namespace ac::core::cuda
     };
 
     //lazy load, god knows if it's safe to call the cuda function during DLL initialization
-    inline static std::vector<Context>& getContextList() noexcept
+    static inline std::vector<Context>& getContextList() noexcept
     {
         static auto contextList = []() -> std::vector<Context> {
             std::vector<Context> contexts{};
@@ -84,7 +84,7 @@ namespace ac::core::cuda
         return contextList;
     }
 
-    inline static cudaChannelFormatDesc channelType(const Image::ElementType elementType) noexcept
+    static inline cudaChannelFormatDesc channelType(const Image::ElementType elementType) noexcept
     {
         switch (elementType)
         {

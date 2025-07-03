@@ -19,10 +19,10 @@ struct Upscaler::UpscalerData
     int processorType = ac::core::Processor::CPU;
     int device = 0;
     double factor = 2.0;
+    QString model{};
+    std::shared_ptr<ac::core::Processor> processor{};
     std::atomic_bool stopFlag = false;
     std::atomic_size_t total = 0;
-    std::shared_ptr<ac::core::Processor> processor{};
-    QString model{};
 };
 
 Upscaler& Upscaler::instance() noexcept
@@ -48,13 +48,10 @@ Upscaler::~Upscaler() noexcept = default;
 
 void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 {
-    if (dptr->total) return;
+    if (dptr->total.load(std::memory_order_relaxed)) return;
     dptr->device = gConfig.upscaler.device;
     dptr->factor = gConfig.upscaler.factor;
-    dptr->stopFlag = false;
-    dptr->total = taskList.size();
     dptr->model = gConfig.upscaler.model;
-    if (!dptr->total) return;
 
     int processorType = ac::core::Processor::type(gConfig.upscaler.processor.toLocal8Bit());
     if (!dptr->processor || dptr->processorType != processorType) dptr->processor = ac::core::Processor::create(dptr->processorType = processorType, dptr->device, dptr->model.toLocal8Bit());
@@ -63,6 +60,11 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
         gLogger.error() << dptr->processor->error();
         return;
     }
+
+    dptr->stopFlag.store(false, std::memory_order_relaxed);
+    dptr->total.store(taskList.size(), std::memory_order_relaxed);
+    if (!dptr->total.load(std::memory_order_relaxed)) return;
+
     emit started();
 
     QList<QSharedPointer<TaskData>> imageTaskList;
@@ -94,9 +96,9 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 
         for (auto&& task : videoTaskList)
         {
-            ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
+            ac::util::Defer defer([this]() { if (dptr->total.fetch_sub(1, std::memory_order_relaxed) == 1) emit stopped(); });
             emit progress(0);
-            if (!dptr->stopFlag)
+            if (!dptr->stopFlag.load(std::memory_order_relaxed))
             {
                 ac::video::Pipeline pipeline{};
 
@@ -142,7 +144,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     ctx->processor->process(srcy, dsty, ctx->factor);
                     if (!ctx->processor->ok())
                     {
-                        ctx->error = ctx->processor->error();
+                        ctx->error.store(ctx->processor->error(), std::memory_order_relaxed);
                         return false;
                     }
                     if (ctx->shift) ac::core::shr(dsty, ctx->shift);
@@ -154,21 +156,21 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         ac::core::resize(srcp, dstp, 0.0, 0.0);
                     }
                     if (src.number % 32 == 0) emit ctx->upscaler->progress(static_cast<int>(100 * src.number / ctx->frames));
-                    if (ctx->stopFlag)
+                    if (ctx->stopFlag.load(std::memory_order_relaxed))
                     {
-                        ctx->error = "cancelled";
+                        ctx->error.store("cancelled", std::memory_order_relaxed);
                         return false;
                     }
                     return true;
                 }, &data, ac::video::FILTER_AUTO);
                 stopwatch.stop();
                 pipeline.close();
-                if (data.error) gLogger.error() << task->path.input << ": Failed due to " << data.error.load();
+                if (data.error.load(std::memory_order_relaxed)) gLogger.error() << task->path.input << ": Failed due to " << data.error.load(std::memory_order_relaxed);
                 else gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
                 gLogger.info() << "Save video to " << task->path.output;
             }
             emit progress(100);
-            emit task->finished(!dptr->stopFlag && dptr->processor->ok());
+            emit task->finished(!dptr->stopFlag.load(std::memory_order_relaxed) && dptr->processor->ok());
         }
     });
 #else
@@ -176,15 +178,15 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
     {
         gLogger.warning() << "This build does not support video processing";
         emit task->finished(false);
-        if (--dptr->total == 0) emit stopped();
+        if (dptr->total.fetch_sub(1, std::memory_order_relaxed) == 1) emit stopped();
     }
 #endif
 
     for (auto&& task : imageTaskList)
     {
         pool.exec([=](){
-            ac::util::Defer defer([&]() { if (--dptr->total == 0) emit stopped(); });
-            if (!dptr->stopFlag)
+            ac::util::Defer defer([this]() { if (dptr->total.fetch_sub(1, std::memory_order_relaxed) == 1) emit stopped(); });
+            if (!dptr->stopFlag.load(std::memory_order_relaxed))
             {
                 auto src = ac::core::imread(task->path.input.toLocal8Bit(), ac::core::IMREAD_UNCHANGED);
                 if (!src.empty())
@@ -215,11 +217,11 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     return;
                 }
             }
-            emit task->finished(!dptr->stopFlag);
+            emit task->finished(!dptr->stopFlag.load(std::memory_order_relaxed));
         });
     }
 }
 void Upscaler::stop()
 {
-    dptr->stopFlag = true;
+    dptr->stopFlag.store(true, std::memory_order_relaxed);
 }

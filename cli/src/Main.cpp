@@ -178,7 +178,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             ctx->processor->process(srcy, dsty, ctx->factor);
             if (!ctx->processor->ok())
             {
-                ctx->error = ctx->processor->error();
+                ctx->error.store(ctx->processor->error(), std::memory_order_relaxed);
                 return false;
             }
             if (ctx->shift) ac::core::shr(dsty, ctx->shift);
@@ -196,7 +196,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         stopwatch.stop();
         progressBar.finish();
         pipeline.close();
-        if (data.error) std::printf("%s: Failed due to %s\n", input.c_str(), data.error.load());
+        if (data.error.load(std::memory_order_relaxed)) std::printf("%s: Failed due to %s\n", input.c_str(), data.error.load(std::memory_order_relaxed));
         else
         {
             auto elapsed = stopwatch.elapsed();

@@ -9,7 +9,7 @@
 
 namespace ac::video::detail
 {
-    inline static void filterSerial(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    static inline void filterSerial(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
         Frame src{};
         Frame dst{};
@@ -30,13 +30,14 @@ namespace ac::video::detail
         pipeline.release(dst);
     }
 
-    inline static void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    static inline void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
     {
-        std::atomic_bool success = true;
-        std::atomic_size_t threads = util::ThreadPool::hardwareThreads();
+        auto threads = util::ThreadPool::hardwareThreads();
         util::Channel<Frame> decodeChan{ threads };
         util::AscendingChannel<Frame> encodeChan{ threads };
         util::ThreadPool pool{ threads + 1 };
+        std::atomic_bool success = true;
+        std::atomic_size_t remainingThreads = threads;
 
         pool.exec([&](){
             decltype(Frame::number) idx = 1;
@@ -47,7 +48,15 @@ namespace ac::video::detail
                 if (dst.number != idx) buffer.emplace(dst);
                 else
                 {
-                    success = success && pipeline << dst;
+                    if (success.load(std::memory_order_relaxed))
+                    {
+                        bool ret = pipeline << dst;
+                        if (!ret)
+                        {
+                            bool expected = true;
+                            success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
+                        }
+                    }
                     pipeline.release(dst);
                     idx++;
                     while (!buffer.empty())
@@ -57,7 +66,15 @@ namespace ac::video::detail
                         else
                         {
                             buffer.pop();
-                            success = success && pipeline << dst;
+                            if (success.load(std::memory_order_relaxed))
+                            {
+                                bool ret = pipeline << dst;
+                                if (!ret)
+                                {
+                                    bool expected = true;
+                                    success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
+                                }
+                            }
                             pipeline.release(dst);
                             idx++;
                         }
@@ -72,11 +89,10 @@ namespace ac::video::detail
         {
             pool.exec([&](){
                 auto process = [&](){
-                    bool ret = true;
                     Frame src{};
                     Frame dst{};
                     if (!(decodeChan >> src)) return;
-                    ret = pipeline.request(dst, src);
+                    bool ret = pipeline.request(dst, src);
                     if (ret)
                     {
                         ret = callback(src, dst, userdata);
@@ -85,17 +101,22 @@ namespace ac::video::detail
                         else pipeline.release(dst);
                     }
                     else pipeline.release(src);
-                    success = success && ret;
+                    if (!success.load(std::memory_order_relaxed)) return;
+                    if (!ret)
+                    {
+                        bool expected = true;
+                        success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
+                    }
                 };
                 while (!decodeChan.isClose()) process();
                 while (!decodeChan.empty()) process();
                 // last one close the door
-                if(--threads == 0) encodeChan.close();
+                if(remainingThreads.fetch_sub(1, std::memory_order_relaxed) == 1) encodeChan.close();
             });
         }
 
         Frame src{};
-        while (success && pipeline >> src) decodeChan << src;
+        while (success.load(std::memory_order_relaxed) && pipeline >> src) decodeChan << src;
         decodeChan.close();
     }
 }

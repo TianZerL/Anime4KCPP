@@ -47,7 +47,7 @@ namespace ac::core
     // all source images should have the same width and height, and so should all destination images.
     // the width and height of the destination images will be used for the filtering process.
     // the scale ratio from source images to destination images will be computed as `dst.width() / src.width()` and this ratio will be applied to both the width and height.
-    // the scale ratio is assumed to be an integer.
+    // the scale ratio is assumed to be an integer, so size of destination image should an integral multiple of source image, ohterwise it's an undefined behavior.
     template<typename F, typename ...Images>
     auto filter(F&& f, Images& ...images) ->
         std::enable_if_t<(
@@ -124,7 +124,7 @@ inline auto ac::core::filter(F&& f, Images& ...images) ->
     const auto& dst = std::get<sizeof...(Images) - 1>(std::forward_as_tuple(images...));
 
     const int w = dst.width(), h = dst.height();
-    const int scale = w / src.width();
+    const int scale = dst.width() / src.width();
 
     util::parallelFor(0, h,
         [&](const int i) {

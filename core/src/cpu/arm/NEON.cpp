@@ -5,7 +5,7 @@
 
 namespace ac::core::cpu
 {
-    inline static float neon_hsum_f32(const float32x4_t& v) noexcept
+    static inline float neon_hsum_f32(const float32x4_t& v) noexcept
     {
     #if defined(__aarch64__) || defined(_M_ARM64)
         return vaddvq_f32(v);

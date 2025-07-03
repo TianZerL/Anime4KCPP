@@ -26,7 +26,7 @@
 namespace util
 {
     template<typename CharOut, typename CharIn>
-    inline static std::basic_string<CharOut> asciiToString(const CharIn* const str)
+    static inline std::basic_string<CharOut> asciiToString(const CharIn* const str)
     {
         std::basic_string<CharOut> buffer{};
         for (auto p = str; *p; p++) buffer.push_back(static_cast<CharOut>(*p));
@@ -34,7 +34,7 @@ namespace util
     }
 
     template<typename CharOut, typename CharIn, typename SizeType>
-    inline static SizeType asciiToWindowsAscii(const CharIn* const str, CharOut* const buffer, const SizeType size)
+    static inline SizeType asciiToWindowsAscii(const CharIn* const str, CharOut* const buffer, const SizeType size)
     {
         SizeType count = 0;
         for (auto p = str; *p && (count < size - 1); p++)

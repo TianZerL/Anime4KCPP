@@ -23,12 +23,12 @@
 namespace ac::core::detail
 {
     template <typename T>
-    inline static constexpr T* alignPtr(T* const ptr, const int n) noexcept
+    static inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
     {
         return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
     }
 
-    inline static void* alignedAlloc(const std::size_t size, const int alignment) noexcept
+    static inline void* alignedAlloc(const std::size_t size, const int alignment) noexcept
     {
         auto buffer = static_cast<void**>(std::malloc(size + sizeof(void*) + alignment));
         if (!buffer) return nullptr;
@@ -36,7 +36,7 @@ namespace ac::core::detail
         ptr[-1] = static_cast<void*>(buffer);
         return ptr;
     }
-    inline static void alignedFree(void* const ptr) noexcept
+    static inline void alignedFree(void* const ptr) noexcept
     {
         if (ptr) std::free(static_cast<void**>(ptr)[-1]);
     }

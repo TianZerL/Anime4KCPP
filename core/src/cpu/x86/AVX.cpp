@@ -6,7 +6,7 @@
 
 namespace ac::core::cpu
 {
-    inline static float avx_hsum_ps(const __m256& v) noexcept
+    static inline float avx_hsum_ps(const __m256& v) noexcept
     {
         __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
         __m128 v64 = _mm_add_ps(v128, _mm_movehl_ps(v128, v128));

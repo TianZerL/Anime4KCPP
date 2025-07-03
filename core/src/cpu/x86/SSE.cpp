@@ -5,7 +5,7 @@
 
 namespace ac::core::cpu
 {
-    inline static float sse_hsum_ps(const __m128& v) noexcept
+    static inline float sse_hsum_ps(const __m128& v) noexcept
     {
         __m128 v64 = _mm_add_ps(v, _mm_movehl_ps(v, v));
         __m128 v32 = _mm_add_ss(v64, _mm_shuffle_ps(v64, v64, _MM_SHUFFLE(3, 3, 1, 1)));

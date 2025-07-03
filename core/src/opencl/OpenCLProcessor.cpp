@@ -31,7 +31,7 @@ namespace ac::core::opencl
         cl::Program program{};
     };
 
-    inline static const char* getArch(Context& context)
+    static inline const char* getArch(Context& context)
     {
         if (context.name.find("rusticl") != std::string::npos) return "MESA";
 
@@ -56,7 +56,7 @@ namespace ac::core::opencl
     }
 
     // we need the device with image support
-    inline static bool checkDevice(const cl::Device& device)
+    static inline bool checkDevice(const cl::Device& device)
     {
         cl_int err = CL_SUCCESS;
         auto imageSupport = device.getInfo<CL_DEVICE_IMAGE_SUPPORT>(&err);
@@ -66,7 +66,7 @@ namespace ac::core::opencl
 
     // we cannot make ContextList as static like cuda.
     // it will crash while unload the DLL(if build this into a DLL), god knows why.
-    inline static std::vector<Context> getContextList() noexcept
+    static inline std::vector<Context> getContextList() noexcept
     {
         std::vector<Context> contexts{};
         std::vector<cl::Platform> platforms{};
@@ -89,7 +89,7 @@ namespace ac::core::opencl
     }
 
     // we can call `init` multiple times
-    inline static cl_int init(Context& context, const char* const kernel, const std::string& model) noexcept
+    static inline cl_int init(Context& context, const char* const kernel, const std::string& model) noexcept
     {
         if (!context.device()) return CL_DEVICE_NOT_AVAILABLE;
         if (context.ctx() && context.program()) return CL_SUCCESS;
@@ -102,7 +102,7 @@ namespace ac::core::opencl
         options.append("-DARCH_").append(getArch(context)).push_back(' ');
         return context.program.build({ context.device }, options.c_str());
     }
-    inline static cl_channel_type channelType(const Image::ElementType elementType) noexcept
+    static inline cl_channel_type channelType(const Image::ElementType elementType) noexcept
     {
         switch (elementType)
         {
