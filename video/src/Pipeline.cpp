@@ -425,7 +425,7 @@ namespace ac::video::detail
     }
     inline Info::BitDepth PipelineImpl::getBitDepth(const AVPixelFormat format) const noexcept
     {
-        Info::BitDepth bitDepth{false, 8};
+        Info::BitDepth bitDepth{ false, 8 };
         switch (format)
         {
         case AV_PIX_FMT_YUV420P10:
@@ -436,6 +436,7 @@ namespace ac::video::detail
         case AV_PIX_FMT_YUV422P16:
         case AV_PIX_FMT_YUV444P16:
         case AV_PIX_FMT_P016: bitDepth.bits = 16; break;
+        default: break;
         }
         return bitDepth;
     }
