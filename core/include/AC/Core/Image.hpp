@@ -134,7 +134,7 @@ public:
     int height() const noexcept { return h; }
     int channels() const noexcept { return c; }
     int stride() const noexcept { return pitch; }
-    int size() const noexcept { return pitch * h; }
+    int size() const noexcept { return h * pitch; }
     int elementSize() const noexcept { return elementType & 0xff; }
     int pixelSize() const noexcept { return c * elementSize(); }
     ElementType type() const noexcept { return elementType; }

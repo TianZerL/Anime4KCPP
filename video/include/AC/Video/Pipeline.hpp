@@ -27,7 +27,7 @@ struct ac::video::Frame
     // one based number
     std::int64_t number;
     // referencing internal data, do not modify it
-    void* ref;
+    std::shared_ptr<struct FrameData> dptr;
 
     // for sequential comparison
     bool operator<(const Frame& other) const noexcept { return number < other.number; }
