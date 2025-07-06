@@ -48,7 +48,7 @@ int ac_image_create(ac_image* image)
     if (!image) return AC_ERROR(EINVAL);
     if (!image->hptr) image->hptr = new ac_image_handle{};
     image->hptr->object.create(image->width, image->height, image->channels, image->element_type, image->stride);
-    image->ptr = image->hptr->object.ptr();
+    detail::copyProp(image->hptr->object, image);
     return AC_SUCCESS;
 }
 int ac_image_map(ac_image* image)
@@ -56,6 +56,7 @@ int ac_image_map(ac_image* image)
     if (!image) return AC_ERROR(EINVAL);
     if (!image->hptr) image->hptr = new ac_image_handle{};
     image->hptr->object.map(image->width, image->height, image->channels, image->element_type, image->ptr, image->stride);
+    detail::copyProp(image->hptr->object, image);
     return AC_SUCCESS;
 }
 int ac_image_from(ac_image* image, const void* data)
@@ -63,7 +64,7 @@ int ac_image_from(ac_image* image, const void* data)
     if (!image) return AC_ERROR(EINVAL);
     if (!image->hptr) image->hptr = new ac_image_handle{};
     image->hptr->object.from(image->width, image->height, image->channels, image->element_type, data, image->stride);
-    image->ptr = image->hptr->object.ptr();
+    detail::copyProp(image->hptr->object, image);
     return AC_SUCCESS;
 }
 int ac_image_clone(const ac_image* const src, ac_image* const dst)
@@ -161,6 +162,7 @@ int ac_processor_process(ac_processor* const processor, const ac_image* const sr
 {
     if (!(processor && processor->hptr && src && src->hptr && dst && dst->hptr)) return AC_ERROR(EINVAL);
     processor->hptr->object->process(src->hptr->object, dst->hptr->object, factor);
+    detail::copyProp(dst->hptr->object, dst);
     return ac_processor_ok(processor);
 }
 int ac_processor_ok(const ac_processor* const processor)
