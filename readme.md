@@ -86,10 +86,12 @@ You can download FFmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Buil
 Tested with gcc and clang.
 
 ```shell
+# Toolchain
+sudo apt install cmake build-essential
 # For video module:
 sudo apt install pkg-config libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
 # For GUI:
-sudo apt-get install qt6-base-dev qt6-tools-dev
+sudo apt install qt6-base-dev qt6-tools-dev
 # For python binding:
 sudo apt install python3-dev
 ```
