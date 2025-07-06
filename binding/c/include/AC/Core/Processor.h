@@ -22,7 +22,7 @@ enum ac_processor_type
 
 typedef struct ac_processor
 {
-    int processor_type;
+    int type;
     int device;
     const char* model;
     struct ac_processor_handle* hptr;

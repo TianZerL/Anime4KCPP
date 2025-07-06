@@ -139,7 +139,7 @@ int ac_processor_ref(const ac_processor* const src, ac_processor* const dst)
     if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
     if (dst->hptr) dst->hptr->object = src->hptr->object;
     else dst->hptr = new ac_processor_handle{ src->hptr->object };
-    dst->processor_type = src->processor_type;
+    dst->type = src->type;
     dst->device = src->device;
     dst->model = src->model;
     return AC_SUCCESS;
@@ -154,7 +154,7 @@ int ac_processor_create(ac_processor* const processor)
 {
     if (!processor) return AC_ERROR(EINVAL);
     if (!processor->hptr) processor->hptr = new ac_processor_handle{};
-    processor->hptr->object = ac::core::Processor::create(processor->processor_type, processor->device, processor->model);
+    processor->hptr->object = ac::core::Processor::create(processor->type, processor->device, processor->model);
     return ac_processor_ok(processor);
 }
 int ac_processor_process(ac_processor* const processor, const ac_image* const src, ac_image* const dst, const double factor)
@@ -165,14 +165,17 @@ int ac_processor_process(ac_processor* const processor, const ac_image* const sr
 }
 int ac_processor_ok(const ac_processor* const processor)
 {
+    if (!(processor && processor->hptr)) return AC_ERROR(EINVAL);
     return processor->hptr->object->ok() ? AC_SUCCESS : AC_ERROR(EINTR);
 }
 const char* ac_processor_error(const ac_processor* const processor)
 {
+    if (!(processor && processor->hptr)) return nullptr;
     return processor->hptr->object->error();
 }
 const char* ac_processor_name(const ac_processor* const processor)
 {
+    if (!(processor && processor->hptr)) return nullptr;
     return processor->hptr->object->name();
 }
 
