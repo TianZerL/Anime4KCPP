@@ -2,156 +2,180 @@
 
 #include "AC/Core.hpp"
 
-#include "AC/Core.h"
+#include "AC/Core/Image.h"
+#include "AC/Core/Processor.h"
+#include "AC/Error.h"
 
-struct ac_image
+struct ac_image_handle
 {
     ac::core::Image object{};
 };
-struct ac_processor
+struct ac_processor_handle
 {
     std::shared_ptr<ac::core::Processor> object{};
 };
 
-ac_image* ac_image_create(const int w, const int h, const int c, const int element_type, void* const data, const int stride)
+namespace detail
 {
-    return new ac_image{ { w, h, c, element_type, data, stride } };
-}
-ac_image* ac_image_create_empty(void)
-{
-    return new ac_image{};
-}
-ac_image* ac_image_from(const int w, const int h, const int c, const int element_type, const void* const data, const int stride)
-{
-    auto image = new ac_image{};
-    image->object.from(w, h, c, element_type, data, stride);
-    return image;
-}
-ac_image* ac_image_clone(const ac_image* const image)
-{
-    return new ac_image{ image->object.clone() };
-}
-void ac_image_destroy(ac_image* const image)
-{
-    delete image;
-}
-void ac_image_data_create(ac_image* image, int w, int h, int c, int element_type, int stride)
-{
-    image->object.create(w, h, c, element_type, stride);
-}
-void ac_image_map(ac_image* image, int w, int h, int c, int element_type, void* data, int stride)
-{
-    image->object.map(w, h, c, element_type, data, stride);
-}
-void ac_image_data_from(ac_image* image, int w, int h, int c, int element_type, const void* data, int stride)
-{
-    image->object.from(w, h, c, element_type, data, stride);
-}
-void ac_image_to(const ac_image* const image, void* const data, const int stride)
-{
-    image->object.to(data, stride);
-}
-int ac_image_width(const ac_image* const image)
-{
-    return image->object.width();
-}
-int ac_image_height(const ac_image* const image)
-{
-    return image->object.height();
-}
-int ac_image_channels(const ac_image* const image)
-{
-    return image->object.channels();
-}
-int ac_image_stride(const ac_image* const image)
-{
-    return image->object.stride();
-}
-int ac_image_size(const ac_image* const image)
-{
-    return image->object.size();
-}
-int ac_image_element_size(const ac_image* const image)
-{
-    return image->object.elementSize();
-}
-int ac_image_pixel_size(const ac_image* const image)
-{
-    return image->object.pixelSize();
-}
-int ac_image_type(const ac_image* const image)
-{
-    return image->object.type();
-}
-uint8_t* ac_image_data(const ac_image* const image)
-{
-    return image->object.data();
-}
-uint8_t* ac_image_line(const ac_image* const image, const int idx)
-{
-    return image->object.line(idx);
-}
-uint8_t* ac_image_pixel(const ac_image* const image, const int x, const int y)
-{
-    return image->object.pixel(x, y);
-}
-void* ac_image_ptr(const ac_image* const image)
-{
-    return image->object.ptr();
-}
-void* ac_image_line_ptr(const ac_image* const image, const int idx)
-{
-    return image->object.ptr(idx);
-}
-void* ac_image_pixel_ptr(const ac_image* const image, const int x, const int y)
-{
-    return image->object.ptr(x, y);
-}
-int ac_image_empty(const ac_image* const image)
-{
-    return image->object.empty();
-}
-int ac_image_is_uint(const ac_image* const image)
-{
-    return image->object.isUint();
-}
-int ac_image_is_int(const ac_image* const image)
-{
-    return image->object.isInt();
-}
-int ac_image_is_float(const ac_image* const image)
-{
-    return image->object.isFloat();
-}
-int ac_image_same(const ac_image* const a, const ac_image* const b)
-{
-    return a->object == b->object;
+    void copyProp(const ac::core::Image& src, ac_image* dst)
+    {
+        dst->width = src.width();
+        dst->height = src.height();
+        dst->channels = src.channels();
+        dst->stride = src.stride();
+        dst->element_type = src.type();
+        dst->ptr = src.ptr();
+    }
 }
 
-ac_processor* ac_processor_create(const int processor_type, const int device, const char* const model)
+int ac_image_ref(const ac_image* const src, ac_image* const dst)
 {
-    return new ac_processor{ ac::core::Processor::create(processor_type, device, model) };
+    if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
+    if (dst->hptr) dst->hptr->object = src->hptr->object;
+    else dst->hptr = new ac_image_handle{ src->hptr->object };
+    detail::copyProp(dst->hptr->object, dst);
+    return AC_SUCCESS;
 }
-void ac_processor_destroy(ac_processor* const processor)
+void ac_image_unref(ac_image* const image)
 {
-    delete processor;
+    if (!(image && image->hptr)) return;
+    delete image->hptr;
+    image->hptr = nullptr;
+    image->ptr = nullptr;
 }
-void ac_processor_process(ac_processor* const processor, const ac_image* const src, ac_image* const dst, const double factor)
+int ac_image_create(ac_image* image)
 {
-    processor->object->process(src->object, dst->object, factor);
+    if (!image) return AC_ERROR(EINVAL);
+    if (!image->hptr) image->hptr = new ac_image_handle{};
+    image->hptr->object.create(image->width, image->height, image->channels, image->element_type, image->stride);
+    image->ptr = image->hptr->object.ptr();
+    return AC_SUCCESS;
+}
+int ac_image_map(ac_image* image)
+{
+    if (!image) return AC_ERROR(EINVAL);
+    if (!image->hptr) image->hptr = new ac_image_handle{};
+    image->hptr->object.map(image->width, image->height, image->channels, image->element_type, image->ptr, image->stride);
+    return AC_SUCCESS;
+}
+int ac_image_from(ac_image* image, const void* data)
+{
+    if (!image) return AC_ERROR(EINVAL);
+    if (!image->hptr) image->hptr = new ac_image_handle{};
+    image->hptr->object.from(image->width, image->height, image->channels, image->element_type, data, image->stride);
+    image->ptr = image->hptr->object.ptr();
+    return AC_SUCCESS;
+}
+int ac_image_clone(const ac_image* const src, ac_image* const dst)
+{
+    if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
+    if (dst->hptr) dst->hptr->object = src->hptr->object.clone();
+    else dst->hptr = new ac_image_handle{ src->hptr->object.clone() };
+    detail::copyProp(dst->hptr->object, dst);
+    return AC_SUCCESS;
+}
+int ac_image_to(const ac_image* const image, void* const data, const int stride)
+{
+    if (!(image && image->hptr && data)) return AC_ERROR(EINVAL);
+    image->hptr->object.to(data, stride);
+    return AC_SUCCESS;
+}
+
+#ifndef AC_CORE_DISABLE_IMAGE_IO
+int ac_imread(const char* const filename, const int flag, ac_image* const image)
+{
+    if (!(image && image->hptr)) return AC_ERROR(EINVAL);
+    auto object = ac::core::imread(filename, flag);
+    if (object.empty()) return AC_ERROR(EIO);
+    image->hptr->object = object;
+    detail::copyProp(image->hptr->object, image);
+    return AC_SUCCESS;
+}
+int ac_imwrite(const char* const filename, const ac_image* const image)
+{
+    if (!(image && image->hptr)) return AC_ERROR(EINVAL);
+    return ac::core::imwrite(filename, image->hptr->object) ? AC_SUCCESS : AC_ERROR(EIO);
+}
+#endif
+
+int ac_resize(const ac_image* const src, ac_image* const dst, const double fx, const double fy)
+{
+    if (!(src && src->hptr && dst && dst->hptr)) return AC_ERROR(EINVAL);
+    ac::core::resize(src->hptr->object, dst->hptr->object, fx, fy);
+    detail::copyProp(dst->hptr->object, dst);
+    return AC_SUCCESS;
+}
+int ac_rgb2yuv(const ac_image* const rgb, ac_image* const yuv)
+{
+    if (!(rgb && rgb->hptr && yuv && yuv->hptr)) return AC_ERROR(EINVAL);
+    ac::core::rgb2yuv(rgb->hptr->object, yuv->hptr->object);
+    detail::copyProp(yuv->hptr->object, yuv);
+    return AC_SUCCESS;
+}
+int ac_rgba2yuva(const ac_image* const rgba, ac_image* const yuva)
+{
+    if (!(rgba && rgba->hptr && yuva && yuva->hptr)) return AC_ERROR(EINVAL);
+    ac::core::rgba2yuva(rgba->hptr->object, yuva->hptr->object);
+    detail::copyProp(yuva->hptr->object, yuva);
+    return AC_SUCCESS;
+}
+int ac_yuv2rgb(const ac_image* const yuv, ac_image* const rgb)
+{
+    if (!(yuv && yuv->hptr && rgb && rgb->hptr)) return AC_ERROR(EINVAL);
+    ac::core::yuv2rgb(yuv->hptr->object, rgb->hptr->object);
+    detail::copyProp(rgb->hptr->object, rgb);
+    return AC_SUCCESS;
+}
+int ac_yuva2rgba(const ac_image* const yuva, ac_image* const rgba)
+{
+    if (!(yuva && yuva->hptr && rgba && rgba->hptr)) return AC_ERROR(EINVAL);
+    ac::core::yuva2rgba(yuva->hptr->object, rgba->hptr->object);
+    detail::copyProp(rgba->hptr->object, rgba);
+    return AC_SUCCESS;
+}
+
+int ac_processor_ref(const ac_processor* const src, ac_processor* const dst)
+{
+    if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
+    if (dst->hptr) dst->hptr->object = src->hptr->object;
+    else dst->hptr = new ac_processor_handle{ src->hptr->object };
+    dst->processor_type = src->processor_type;
+    dst->device = src->device;
+    dst->model = src->model;
+    return AC_SUCCESS;
+}
+void ac_processor_unref(ac_processor* const processor)
+{
+    if (!(processor && processor->hptr)) return;
+    delete processor->hptr;
+    processor->hptr = nullptr;
+}
+int ac_processor_create(ac_processor* const processor)
+{
+    if (!processor) return AC_ERROR(EINVAL);
+    if (!processor->hptr) processor->hptr = new ac_processor_handle{};
+    processor->hptr->object = ac::core::Processor::create(processor->processor_type, processor->device, processor->model);
+    return ac_processor_ok(processor);
+}
+int ac_processor_process(ac_processor* const processor, const ac_image* const src, ac_image* const dst, const double factor)
+{
+    if (!(processor && processor->hptr && src && src->hptr && dst && dst->hptr)) return AC_ERROR(EINVAL);
+    processor->hptr->object->process(src->hptr->object, dst->hptr->object, factor);
+    return ac_processor_ok(processor);
 }
 int ac_processor_ok(const ac_processor* const processor)
 {
-    return processor->object->ok();
+    return processor->hptr->object->ok() ? AC_SUCCESS : AC_ERROR(EINTR);
 }
 const char* ac_processor_error(const ac_processor* const processor)
 {
-    return processor->object->error();
+    return processor->hptr->object->error();
 }
 const char* ac_processor_name(const ac_processor* const processor)
 {
-    return processor->object->name();
+    return processor->hptr->object->name();
 }
+
 const char* ac_processor_info(const int processor_type)
 {
     switch (processor_type)
@@ -173,36 +197,4 @@ int ac_processor_type(const char* const processor_type_name)
 const char* ac_processor_type_name(const int processor_type)
 {
     return ac::core::Processor::type(processor_type);
-}
-
-#ifndef AC_CORE_DISABLE_IMAGE_IO
-ac_image* ac_imread(const char* const filename, const int flag)
-{
-    return new ac_image{ ac::core::imread(filename, flag) };
-}
-int ac_imwrite(const char* const filename, const ac_image* const image)
-{
-    return ac::core::imwrite(filename, image->object);
-}
-#endif
-
-void ac_resize(const ac_image* const src, ac_image* const dst, const double fx, const double fy)
-{
-    ac::core::resize(src->object, dst->object, fx, fy);
-}
-void ac_rgb2yuv(const ac_image* const rgb, ac_image* const yuv)
-{
-    ac::core::rgb2yuv(rgb->object, yuv->object);
-}
-void ac_rgba2yuva(const ac_image* const rgba, ac_image* const yuva)
-{
-    ac::core::rgba2yuva(rgba->object, yuva->object);
-}
-void ac_yuv2rgb(const ac_image* const yuv, ac_image* const rgb)
-{
-    ac::core::yuv2rgb(yuv->object, rgb->object);
-}
-void ac_yuva2rgba(const ac_image* const yuva, ac_image* const rgba)
-{
-    ac::core::yuva2rgba(yuva->object, rgba->object);
 }
