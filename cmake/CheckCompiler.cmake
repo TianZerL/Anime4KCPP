@@ -1,9 +1,3 @@
-if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(AC_COMPILER_32BIT 1)
-else()
-    set(AC_COMPILER_32BIT 0)
-endif()
-
 include(CheckCXXCompilerFlag)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
@@ -30,7 +24,7 @@ check_cxx_source_compiles("#include <immintrin.h>\nint main() { __m256 a = _mm25
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     set(CMAKE_REQUIRED_FLAGS "/arch:armv8.0")
 elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    if(AC_COMPILER_32BIT)
+    if(BUILD_ARCH_32BIT)
         set(CMAKE_REQUIRED_FLAGS "-mfpu=neon")
     else()
         set(CMAKE_REQUIRED_FLAGS "-march=armv8-a")

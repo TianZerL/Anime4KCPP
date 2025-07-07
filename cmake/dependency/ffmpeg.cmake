@@ -1,29 +1,31 @@
 if(NOT TARGET dep::ffmpeg)
     add_library(dep_ffmpeg INTERFACE IMPORTED)
     if(AC_PATH_FFMPEG)
+        set(dep_ffmeg_PATH ${AC_PATH_FFMPEG})
+
         find_path(dep_ffmpeg_INCLUDE
             NAMES libavcodec libavformat libavutil libswscale
-            HINTS ${AC_PATH_FFMPEG}/include
+            PATHS ${dep_ffmeg_PATH}/include
             REQUIRED
         )
         find_library(dep_ffmpeg_AVCODEC
             NAMES avcodec
-            HINTS ${AC_PATH_FFMPEG}/lib
+            PATHS ${dep_ffmeg_PATH}/lib
             REQUIRED
         )
         find_library(dep_ffmpeg_AVFORMAT
             NAMES avformat
-            HINTS ${AC_PATH_FFMPEG}/lib
+            PATHS ${dep_ffmeg_PATH}/lib
             REQUIRED
         )
         find_library(dep_ffmpeg_AVUTIL
             NAMES avutil
-            HINTS ${AC_PATH_FFMPEG}/lib
+            PATHS ${dep_ffmeg_PATH}/lib
             REQUIRED
         )
         find_library(dep_ffmpeg_SWSCALE
             NAMES swscale
-            HINTS ${AC_PATH_FFMPEG}/lib
+            PATHS ${dep_ffmeg_PATH}/lib
             REQUIRED
         )
         target_include_directories(dep_ffmpeg INTERFACE $<BUILD_INTERFACE:${dep_ffmpeg_INCLUDE}>)

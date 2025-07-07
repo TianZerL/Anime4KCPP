@@ -53,6 +53,7 @@ class Filter : public CTransformFilter, public ISpecifyPropertyPages
 {
 public:
     static CUnknown* WINAPI CreateInstance(LPUNKNOWN punk, HRESULT* phr);
+
 public:
     DECLARE_IUNKNOWN;
 
@@ -65,8 +66,10 @@ public:
     HRESULT Transform(IMediaSample* in, IMediaSample* out) override;
 
     STDMETHODIMP GetPages(CAUUID* pages) override;
+
 private:
     Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
+
 private:
     struct { struct { LONG width, height; } src, dst, limit; } size{};
 private:
@@ -79,13 +82,16 @@ class PropertyPage : public CBasePropertyPage
 {
 public:
     static CUnknown* WINAPI CreateInstance(LPUNKNOWN punk, HRESULT* phr);
+
 private:
     INT_PTR OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
     HRESULT OnActivate() override;
     HRESULT OnDeactivate() override;
     HRESULT OnApplyChanges() override;
+
 private:
     PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
+
 private:
     bool isInitialized = false;
 };
@@ -94,6 +100,7 @@ class RegArgument
 private:
     RegArgument();
     ~RegArgument();
+
 public:
     double getFactor();
     int getDevice();
@@ -108,8 +115,10 @@ public:
     void setLimitHeight(int v) const;
     void setProcessorName(const TCHAR* v) const;
     void setModelName(const TCHAR* v) const;
+
 public:
     static RegArgument& instance();
+
 public:
     static constexpr int ProcessorNameMaxSize = 32;
     static constexpr int ModelNameMaxSize = 32;
@@ -118,15 +127,15 @@ public:
     static constexpr int DeviceDefault = 0;
     static constexpr int LimitWidthDefault = 1280;
     static constexpr int LimitHeightDefault = 720;
-    static constexpr TCHAR* ProcessorNameDefault = TEXT("cpu");
-    static constexpr TCHAR* ModelNameDefault = TEXT("acnet-hdn0");
 private:
-    static constexpr TCHAR* FactorValueName = TEXT("Factor");
-    static constexpr TCHAR* DeviceValueName = TEXT("Device");
-    static constexpr TCHAR* LimitWidthValueName = TEXT("LimitWidth");
-    static constexpr TCHAR* LimitHeightValueName = TEXT("LimitHeight");
-    static constexpr TCHAR* ProcessorNameValueName = TEXT("ProcessorName");
-    static constexpr TCHAR* ModelNameValueName = TEXT("ModelName");
+    static constexpr const TCHAR* ProcessorNameDefault = TEXT("cpu");
+    static constexpr const TCHAR* ModelNameDefault = TEXT("acnet-hdn0");
+    static constexpr const TCHAR* FactorValueName = TEXT("Factor");
+    static constexpr const TCHAR* DeviceValueName = TEXT("Device");
+    static constexpr const TCHAR* LimitWidthValueName = TEXT("LimitWidth");
+    static constexpr const TCHAR* LimitHeightValueName = TEXT("LimitHeight");
+    static constexpr const TCHAR* ProcessorNameValueName = TEXT("ProcessorName");
+    static constexpr const TCHAR* ModelNameValueName = TEXT("ModelName");
 private:
     HKEY key{};
     double factor{};
@@ -160,27 +169,27 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
         &MEDIASUBTYPE_P016
     }
 };
-const AMOVIESETUP_PIN sudpPins[] =
+const AMOVIESETUP_PIN sudPins[] =
 {
     {
-        L"Input",
+        nullptr,
         FALSE,
         FALSE,
         FALSE,
         FALSE,
         &CLSID_NULL,
-        NULL,
+        nullptr,
         NUMELMS(sudPinTypes),
         sudPinTypes
     },
     {
-        L"Output",
+        nullptr,
         FALSE,
         TRUE,
         FALSE,
         FALSE,
         &CLSID_NULL,
-        NULL,
+        nullptr,
         NUMELMS(sudPinTypes),
         sudPinTypes
     }
@@ -191,7 +200,7 @@ const AMOVIESETUP_FILTER sudFilter =
     L"Anime4KCPP for DirectShow",
     MERIT_DO_NOT_USE,
     2,
-    sudpPins
+    sudPins
 };
 CFactoryTemplate g_Templates[] = {
     {
@@ -204,7 +213,9 @@ CFactoryTemplate g_Templates[] = {
     {
         L"Anime4KCPP Settings",
         &CLSID_AC_PROPERTY_PAGE,
-        PropertyPage::CreateInstance
+        PropertyPage::CreateInstance,
+        nullptr,
+        nullptr
     }
 };
 int g_cTemplates = NUMELMS(g_Templates);

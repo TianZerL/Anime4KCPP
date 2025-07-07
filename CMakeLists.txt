@@ -25,6 +25,12 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 string(TIMESTAMP DATE_TODAY "%Y-%m-%d")
 string(TIMESTAMP DATE_YEAR "%Y")
 
+if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(BUILD_ARCH_32BIT TRUE)
+else()
+    set(BUILD_ARCH_32BIT FALSE)
+endif()
+
 include(${CMAKE_DIR}/CheckCompiler.cmake)
 
 option(AC_SHARED_LIB "build as a shared library" OFF)
