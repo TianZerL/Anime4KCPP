@@ -41,14 +41,24 @@ if(NOT TARGET dep::directshow)
     if(dep_directshow_baseclasses_FETCH)
         message(STATUS "dep: directshow baseclasses not found, will be fetched online.")
         include(FetchContent)
-        FetchContent_Declare(
-            directshow
-            GIT_REPOSITORY https://github.com/microsoft/Windows-classic-samples.git
-            GIT_TAG main
-        )
-        FetchContent_MakeAvailable(directshow)
-        set(directshow_baseclasses_SOURCE_DIR ${directshow_SOURCE_DIR}/Samples/Win7Samples/multimedia/directshow/baseclasses)
-        set(dep_directshow_baseclasses_BUILD TRUE)
+        if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            FetchContent_Declare(
+                directshow
+                GIT_REPOSITORY https://github.com/microsoft/Windows-classic-samples.git
+                GIT_TAG main
+            )
+            FetchContent_MakeAvailable(directshow)
+            set(directshow_baseclasses_SOURCE_DIR ${directshow_SOURCE_DIR}/Samples/Win7Samples/multimedia/directshow/baseclasses)
+            set(dep_directshow_baseclasses_BUILD TRUE)
+        else() # For non MSVC compilers
+            FetchContent_Declare(
+                directshow
+                GIT_REPOSITORY https://github.com/TianZerL/DirectShow-BaseClasses-MultiCompiler.git
+                GIT_TAG main
+            )
+            FetchContent_MakeAvailable(directshow)
+            target_link_libraries(dep_directshow INTERFACE strmbase)
+        endif()
         unset(dep_directshow_baseclasses_FETCH)
     endif()
 

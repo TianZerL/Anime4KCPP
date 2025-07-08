@@ -5,11 +5,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build Type" FORCE)
 endif()
 
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    message(STATUS "Set default install path ${TOP_DIR}/install")
-    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${TOP_DIR}/install")
-endif()
-
 project(Anime4KCPP LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -29,6 +24,11 @@ if (CMAKE_SIZEOF_VOID_P EQUAL 4)
     set(BUILD_ARCH_32BIT TRUE)
 else()
     set(BUILD_ARCH_32BIT FALSE)
+endif()
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    message(STATUS "Set default install path ${TOP_DIR}/install")
+    set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${TOP_DIR}/install")
 endif()
 
 include(${CMAKE_DIR}/CheckCompiler.cmake)
