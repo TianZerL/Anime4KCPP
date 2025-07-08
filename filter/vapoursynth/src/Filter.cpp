@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <cstring>
 #include <memory>
 
 #include <VapourSynth4.h>
@@ -9,7 +8,7 @@
 
 #define SET_ERROR(msg) { vsapi->mapSetError(out, (msg)); if (node) vsapi->freeNode(node); return; }
 
-struct Data
+struct Context
 {
     int type;
     double factor;
@@ -18,26 +17,26 @@ struct Data
     VSVideoInfo vi;
 };
 
-static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceData, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
+static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceCtx, void** /*frameData*/, VSFrameContext* frameCtx, VSCore* core, const VSAPI* vsapi)
 {
-    auto data = static_cast<Data*>(instanceData);
+    auto ctx = static_cast<Context*>(instanceCtx);
 
-    if (activationReason == arInitial) vsapi->requestFrameFilter(n, data->node, frameCtx);
+    if (activationReason == arInitial) vsapi->requestFrameFilter(n, ctx->node, frameCtx);
     else if (activationReason == arAllFramesReady)
     {
-        auto src = vsapi->getFrameFilter(n, data->node, frameCtx);
+        auto src = vsapi->getFrameFilter(n, ctx->node, frameCtx);
         auto fi = vsapi->getVideoFrameFormat(src);
-        auto dst = vsapi->newVideoFrame(fi, data->vi.width, data->vi.height, src, core);
+        auto dst = vsapi->newVideoFrame(fi, ctx->vi.width, ctx->vi.height, src, core);
         //y
-        ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
-        ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, data->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0)) };
-        data->processor->process(srcy, dsty, data->factor);
-        if (!data->processor->ok()) vsapi->setFilterError(data->processor->error(), frameCtx);
+        ac::core::Image srcy{ vsapi->getFrameWidth(src, 0), vsapi->getFrameHeight(src, 0), 1, ctx->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, 0)), static_cast<int>(vsapi->getStride(src, 0)) };
+        ac::core::Image dsty{ vsapi->getFrameWidth(dst, 0), vsapi->getFrameHeight(dst, 0), 1, ctx->type, vsapi->getWritePtr(dst, 0), static_cast<int>(vsapi->getStride(dst, 0)) };
+        ctx->processor->process(srcy, dsty, ctx->factor);
+        if (!ctx->processor->ok()) vsapi->setFilterError(ctx->processor->error(), frameCtx);
         //uv
         for (int p = 1; p < fi->numPlanes; p++)
         {
-            ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, data->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
-            ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, data->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p)) };
+            ac::core::Image srcp{ vsapi->getFrameWidth(src, p), vsapi->getFrameHeight(src, p), 1, ctx->type, const_cast<std::uint8_t*>(vsapi->getReadPtr(src, p)), static_cast<int>(vsapi->getStride(src, p)) };
+            ac::core::Image dstp{ vsapi->getFrameWidth(dst, p), vsapi->getFrameHeight(dst, p), 1, ctx->type, vsapi->getWritePtr(dst, p), static_cast<int>(vsapi->getStride(dst, p)) };
             ac::core::resize(srcp, dstp, 0.0, 0.0);
         }
 
@@ -47,11 +46,11 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceDa
     return nullptr;
 }
 
-static void VS_CC destory(void* instanceData, VSCore* /*core*/, const VSAPI* vsapi)
+static void VS_CC destory(void* instanceCtx, VSCore* /*core*/, const VSAPI* vsapi)
 {
-    auto data = static_cast<Data*>(instanceData);
-    vsapi->freeNode(data->node);
-    delete data;
+    auto ctx = static_cast<Context*>(instanceCtx);
+    vsapi->freeNode(ctx->node);
+    delete ctx;
 }
 
 static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore* core, const VSAPI* vsapi)
@@ -87,18 +86,18 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     auto model = vsapi->mapGetData(in, "model", 0, &err);
     if (err != peSuccess) model = "acnet-hdn0";
 
-    auto data = new Data{};
-    data->node = node;
-    data->vi = *vi;
-    data->vi.width = static_cast<decltype(data->vi.width)>(vi->width * factor);
-    data->vi.height = static_cast<decltype(data->vi.height)>(vi->height * factor);
-    data->type = type;
-    data->factor = factor;
-    data->processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
-    if (!data->processor->ok()) SET_ERROR(data->processor->error());
+    auto ctx = new Context{};
+    ctx->node = node;
+    ctx->vi = *vi;
+    ctx->vi.width = static_cast<decltype(ctx->vi.width)>(vi->width * factor);
+    ctx->vi.height = static_cast<decltype(ctx->vi.height)>(vi->height * factor);
+    ctx->type = type;
+    ctx->factor = factor;
+    ctx->processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
+    if (!ctx->processor->ok()) SET_ERROR(ctx->processor->error());
 
     VSFilterDependency deps[] = { {node, rpGeneral} };
-    vsapi->createVideoFilter(out, "Upscale", &data->vi, filter, destory, fmParallel, deps, 1, data, core);
+    vsapi->createVideoFilter(out, "Upscale", &ctx->vi, filter, destory, fmParallel, deps, 1, ctx, core);
 }
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi)

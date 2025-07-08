@@ -50,8 +50,10 @@ target_include_directories(ac PUBLIC
     $<INSTALL_INTERFACE:ac/include>
 )
 
+# We don't need setting any cpu arch flag for MSVC, setting it may actually degrade performance.
+# But we must set cpu arch flag for ClangCL.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
-    if(AC_CORE_WITH_SSE)
+    if(AC_CORE_WITH_SSE AND BUILD_ARCH_32BIT)
         set_source_files_properties(${CORE_SOURCE_DIR}/src/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "/arch:SSE")
     endif()
     if(AC_CORE_WITH_AVX)

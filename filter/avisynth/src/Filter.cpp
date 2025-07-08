@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <cstring>
 #include <memory>
 
 #include <avisynth.h>
@@ -77,7 +76,7 @@ PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
     return dst;
 }
 
-AVSValue CDECL create(AVSValue args, void* /*user_data*/, IScriptEnvironment* env)
+AVSValue CDECL create(AVSValue args, void* /*userdata*/, IScriptEnvironment* env)
 {
     return new Filter(args[0].AsClip(), args, env);
 }
@@ -96,7 +95,7 @@ EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, cons
         create, nullptr);
     env->AddFunction("ACInfoList",
         "",
-        [](AVSValue /*args*/, void* /*user_data*/, IScriptEnvironment* /*env*/) -> AVSValue {
+        [] (AVSValue /*args*/, void* /*userdata*/, IScriptEnvironment* /*env*/) -> AVSValue {
             AVSValue info[] = {
                 ac::core::Processor::info<ac::core::Processor::CPU>(),
 #           ifdef AC_CORE_WITH_OPENCL

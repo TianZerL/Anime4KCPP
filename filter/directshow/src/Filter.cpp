@@ -1,10 +1,8 @@
 #include <memory>
 #include <string>
 
-#include <windows.h>
 #include <streams.h>
 #include <dvdmedia.h>
-#include <commctrl.h>
 #include <tchar.h>
 #include <initguid.h>
 
