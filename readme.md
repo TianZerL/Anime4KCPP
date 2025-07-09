@@ -47,17 +47,17 @@ Manual configuration (optional):
 | [stb](https://github.com/nothings/stb)                                                                                               | N/A                         | core                | Automatic   | AC_PATH_STB                          |
 | [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                    | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) | Automatic   | pkg-config / AC_PATH_VAPOURSYNTH_SDK |
 
-- The minimum tested version of the CUDA Toolkit is 11
-- The minimum version of FFmpeg libraries is FFmpeg 4
-- Both Qt5 and Qt6 should be OK
-- VapourSynth SDK 4 is required
+- The minimum tested version of the CUDA Toolkit is 11.
+- The minimum version of FFmpeg libraries is FFmpeg 4.
+- Both Qt5 and Qt6 should be OK.
+- VapourSynth SDK 4 is required.
 - For non MSVC compilers, [a modified version of the DirectShow BaseClasses](https://github.com/TianZerL/DirectShow-BaseClasses-MultiCompiler) will be used.
 
 ## Platform
 ### Windows
 Tested with MinGW-w64, Clang and MSVC.
 
-For DirectShow BaseClasses, tested compilers include MinGW-w64, ClangCL and MSVC.
+**DirectShow filter is only available on Windows, tested compilers include MinGW-w64, ClangCL and MSVC.**
 
 *Build with MinGW-w64:*
 ```powershell
@@ -82,8 +82,6 @@ To setup FFmpeg libraries for building video module on Windows, it is recommende
 To add `AC_PATH_FFMPEG` to CMake, click `Add Entry` button in `cmake-gui` or use `-DAC_PATH_FFMPEG="path/to/ffmpeg/root"` in terminal.
 
 You can download FFmpeg with sdk from [BtBN](https://github.com/BtbN/FFmpeg-Builds/releases) (`ffmpeg-master-latest-win64-gpl-shared.zip` or `ffmpeg-master-latest-win64-lgpl-shared.zip`) or [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (`ffmpeg-release-full-shared.7z`) for Windows.
-
-***You need MSVC to build directshow filter, witch is only available on Windows.***
 
 ### Linux
 Tested with gcc and Clang.
