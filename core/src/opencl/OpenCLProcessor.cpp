@@ -41,9 +41,9 @@ namespace ac::core::opencl
         switch (vendorId)
         {
         case 0x1002: // AMD
-            if (context.name.rfind("gfx", 0) == 0 && (!context.name[6] || context.name[6] == ' ')) // gfx9xx
-                return "AMD_GCN";
-            return "AMD_RDNA";
+            if (context.name.rfind("gfx", 0) == 0 && std::isdigit(static_cast<unsigned char>(context.name[6]))) // gfx10000 or newer
+                return "AMD_RDNA";
+            return "AMD_GCN";
         case 0x8086: // Intel
             return "INTEL";
         case 0x10DE: // Nvidia
