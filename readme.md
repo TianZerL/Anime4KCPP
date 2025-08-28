@@ -128,10 +128,12 @@ These instructions are specifically modified to address campatibility issues wit
 - Homebrew
 
 **1. Install Required Libraries via Homebrew**
+
 ```shell
 brew install cmake qt ffmpeg llvm
 ```
 **2. Configure Environment Variables**
+
 Homebrew on Apple silicon uses the path ```/opt/homebrew/```. This can cause ```cmake``` to fail when looking for libraries. Following environmental variables need to be set to ensure the **Qt** library is found.
 
 ```shell
@@ -141,6 +143,7 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/qt/lib/pkgconfig"
 ```
 
 **3. Patch the OpenCL Source Code**
+
 The Anime4KCPP project uses a modern OpenCL function,(```clCreateCommandQueueWithProperties```) that is not present in macOS's outdated OpenCL 1.2 library. This will cause a linker error during compilation. The source code must be patched to use an older, compatible function(```clCreateCommandQueue```).
 
 1. Clone the repository.
@@ -155,7 +158,7 @@ cd Anime4KCPP/core/src/opencl/
 
 3. Open the file ```OpenCLProcessor.cpp``` and find the ```queue``` function.
    It looks similar to this.
-```c++
+```shell
 protected:
     cl::CommandQueue& queue(cl_int* const err)
     {
@@ -166,7 +169,7 @@ protected:
 ```
    
 4. Replace the function body with the following code to correctly initialize the **OpenCL** command queue.
-```c++
+```shell
 protected:
     cl::CommandQueue& queue(cl_int* const err)
     {
