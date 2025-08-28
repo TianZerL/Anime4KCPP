@@ -120,8 +120,32 @@ LD_LIBRARY_PATH=/vendor/lib64:$PREFIX/lib ./ac_cli -l
 ### WASM
 Tested with Emscripten.
 
-### Mac OS
-Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 is required.
+### Mac OS (Apple Silicon (M1/M2/M3) chip)
+These instructions are specifically modified to address campatibility issues with Homebrew's file paths and Apple's deprecated OpenCL framework.
+
+***Prerequisities***
+- Xcode Command Line Tools
+- Homebrew
+
+**1. Install Required Libraries via Homebrew**
+
+```shell
+brew install cmake qt ffmpeg llvm
+```
+**2. Configure Environment Variables**
+
+Homebrew on Apple silicon uses the path ```/opt/homebrew```. This can cause ```cmake``` to fail when looking for libraries. Following environmental variables need to be set to ensure the **Qt** library is found.
+
+```shell
+export LDFLAGS="-L/opt/homebrew/opt/qt/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/qt/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/qt/lib/pkgconfig"
+```
+
+**
+
+
+
 
 ## CMake options
 
