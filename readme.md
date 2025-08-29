@@ -120,8 +120,86 @@ LD_LIBRARY_PATH=/vendor/lib64:$PREFIX/lib ./ac_cli -l
 ### WASM
 Tested with Emscripten.
 
-### Mac OS
-Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 is required.
+### Mac OS (Apple Silicon (M1/M2/M3) chip)
+These instructions are specifically modified to address campatibility issues with Homebrew's file paths and Apple's deprecated OpenCL framework.
+
+***Prerequisities***
+- Xcode Command Line Tools
+- Homebrew
+
+**1. Install Required Libraries via Homebrew**
+
+```shell
+brew install cmake qt ffmpeg llvm
+```
+**2. Configure Environment Variables**
+
+Homebrew on Apple silicon uses the path ```/opt/homebrew/```. This can cause ```cmake``` to fail when looking for libraries. Following environmental variables need to be set to ensure the **Qt** library is found.
+
+```shell
+export LDFLAGS="-L/opt/homebrew/opt/qt/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/qt/include"
+export PKG_CONFIG_PATH="/opt/homebrew/opt/qt/lib/pkgconfig"
+```
+
+**3. Patch the OpenCL Source Code**
+
+The Anime4KCPP project uses a modern OpenCL function,(```clCreateCommandQueueWithProperties```) that is not present in macOS's outdated OpenCL 1.2 library. This will cause a linker error during compilation. The source code must be patched to use an older, compatible function(```clCreateCommandQueue```).
+
+1. Clone the repository.
+```shell
+git clone https://github.com/TianZerL/Anime4KCPP.git
+```
+
+2. Navigate to the core source directory.
+```shell
+cd Anime4KCPP/core/src/opencl/
+```
+
+3. Open the file ```OpenCLProcessor.cpp``` and find the ```queue``` function.
+   It looks similar to this.
+```shell
+protected:
+    cl::CommandQueue& queue(cl_int* const err)
+    {
+        auto& cmdq = queues.local();
+        if (!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, err };
+        return cmdq;
+    }
+```
+   
+4. Replace the function body with the following code to correctly initialize the **OpenCL** command queue.
+```shell
+protected:
+    cl::CommandQueue& queue(cl_int* const err)
+    {
+        auto& cmdq = queues.local();
+        if (!cmdq())
+        {
+            cl_command_queue cmdq_old = clCreateCommandQueue(context.ctx(), context.device(), 0, err);
+            cmdq = cl::CommandQueue(cmdq_old);
+        }
+        return cmdq;
+    }
+```
+**4. Build the project**
+
+```shell
+mkdir build
+cd build
+
+#run the cmake command
+cmake .. \
+    -DCMAKE_C_COMPILER="/opt/homebrew/opt/llvm/bin/clang" \
+    -DCMAKE_CXX_COMPILER="/opt/homebrew/opt/llvm/bin/clang++" \
+    -DAC_BUILD_GUI=ON \
+    -DAC_CORE_WITH_OPENCL=ON \
+    -DAC_BUILD_VIDEO=ON
+
+# start compilation
+make
+```
+The final executable files, including the GUI, will be located in the ```bin``` directory inside the ```build``` folder.
 
 ## CMake options
 
