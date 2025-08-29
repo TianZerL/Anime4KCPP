@@ -33,7 +33,7 @@ if(NOT TARGET dep::opencl)
         set(ENABLE_OPENCL_LAYERINFO OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_ICD_LOADER_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
         FetchContent_MakeAvailable(opencl)
-        target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp OpenCL::OpenCL)
+        target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp OpenCL) # OpenCL::OpenCL target name conflict
         set(dep_opencl_TARGET_VERSION 300)
     endif()
     message(STATUS "dep: opencl target version ${dep_opencl_TARGET_VERSION}.")
