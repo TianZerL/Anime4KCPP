@@ -14,11 +14,11 @@
 
 #include "AC/Core/Image.hpp"
 
-ac::core::Image ac::core::imdecode(const void* const buffer, const int size, const int flag) noexcept
+ac::core::Image ac::core::imdecode(const void* const buffer, const int size, const int mode) noexcept
 {
     Image image{};
     int w = 0, h = 0, c = 0;
-    std::uint8_t* data = stbi_load_from_memory(static_cast<const std::uint8_t*>(buffer), size, &w, &h, &c, flag);
+    std::uint8_t* data = stbi_load_from_memory(static_cast<const std::uint8_t*>(buffer), size, &w, &h, &c, mode);
     if (data)
     {
         image.from(w, h, c, ac::core::Image::UInt8, data);
@@ -28,11 +28,11 @@ ac::core::Image ac::core::imdecode(const void* const buffer, const int size, con
 }
 
 #ifndef AC_CORE_DISABLE_IMAGE_IO
-ac::core::Image ac::core::imread(const char* const filename, const int flag) noexcept
+ac::core::Image ac::core::imread(const char* const filename, const int mode) noexcept
 {
     Image image{};
     int w = 0, h = 0, c = 0;
-    std::uint8_t* data = stbi_load(filename, &w, &h, &c, flag);
+    std::uint8_t* data = stbi_load(filename, &w, &h, &c, mode);
     if (data)
     {
         image.from(w, h, c, ac::core::Image::UInt8, data);

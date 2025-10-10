@@ -10,14 +10,6 @@ namespace ac::core
 {
     class Image;
 
-    // Resize the `src` based on the size of the `dst` if `fx` or `fy` <= 0, otherwise, calculate the size using `fx` and `fy`.
-    // if `dst` is empty and fx or fy <= 0, nothing will be done.
-    // if target size is same as `src`(eg: `fx` and `fy` == 1), then just make `dst` = `src` and return, no data will be copied.
-    // `src` and `dst` can be the same image.
-    AC_EXPORT void resize(const Image& src, Image& dst, double fx, double fy) noexcept;
-    // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
-    AC_EXPORT Image resize(const Image& src, double fx, double fy) noexcept;
-
     // convert RGB or RGBA to YUV.
     // if `yuv` is not an empty image, ensure its shape is correct, which won't be checked.
     // `rgb` and `yuv` can be the same image, which will be converted in place.
@@ -85,6 +77,29 @@ namespace ac::core
     // `src` and `dst` can be same.
     AC_EXPORT void shr(const Image& src, Image& dst, int n);
 
+    enum ImresizeModes
+    {
+        IMRESIZE_CATMULL_ROM,
+        IMRESIZE_MITCHELL_NETRAVALI,
+        IMRESIZE_SOFTCUBIC50,
+        IMRESIZE_SOFTCUBIC75,
+        IMRESIZE_SOFTCUBIC100,
+        IMRESIZE_LANCZOS2,
+        IMRESIZE_LANCZOS3,
+        IMRESIZE_LANCZOS4,
+        IMRESIZE_SPLINE16,
+        IMRESIZE_SPLINE36,
+        IMRESIZE_SPLINE64,
+        IMRESIZE_BILINEAR,
+    };
+    // Resize the `src` based on the size of the `dst` if `fx` or `fy` <= 0, otherwise, calculate the size using `fx` and `fy`.
+    // if `dst` is empty and fx or fy <= 0, nothing will be done.
+    // if target size is same as `src`(eg: `fx` and `fy` == 1), then just make `dst` = `src` and return, no data will be copied.
+    // `src` and `dst` can be the same image.
+    AC_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = IMRESIZE_BILINEAR) noexcept;
+    // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
+    AC_EXPORT Image resize(const Image& src, double fx, double fy, int mode = IMRESIZE_BILINEAR) noexcept;
+
     enum ImreadModes
     {
         IMREAD_UNCHANGED = 0,
@@ -93,10 +108,9 @@ namespace ac::core
         IMREAD_RGB       = 3,
         IMREAD_RGBA      = 4,
     };
-
-    AC_EXPORT Image imdecode(const void* buffer, int size, int flag) noexcept;
+    AC_EXPORT Image imdecode(const void* buffer, int size, int mode = IMREAD_UNCHANGED) noexcept;
 #ifndef AC_CORE_DISABLE_IMAGE_IO
-    AC_EXPORT Image imread(const char* filename, int flag) noexcept;
+    AC_EXPORT Image imread(const char* filename, int mode = IMREAD_UNCHANGED) noexcept;
     AC_EXPORT bool imwrite(const char* filename, const Image& image) noexcept;
 #endif
 }

@@ -1,71 +1,8 @@
-#include <cassert>
-#include <type_traits>
-
-#define STB_IMAGE_RESIZE2_IMPLEMENTATION
-#include <stb_image_resize2.h>
-
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
 namespace ac::core::detail
 {
-    static inline void resize(const Image& src, Image& dst, const double fx, const double fy) noexcept
-    {
-        if (src.empty()) return;
-
-        if (fx > 0.0 && fy > 0.0)
-        {
-            if (fx == 1.0 && fy == 1.0)
-            {
-                dst = src;
-                return;
-            }
-
-            auto dstW = static_cast<int>(src.width() * fx);
-            auto dstH = static_cast<int>(src.height() * fy);
-
-            if ((dst.width() != dstW) || (dst.height() != dstH) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
-                dst.create(dstW, dstH, src.channels(), src.type());
-        }
-        else
-        {
-            if (dst.empty()) return;
-            if (dst.width() == src.width() && dst.height() == src.height())
-            {
-                dst = src;
-                return;
-            }
-
-            if ((dst.channels() != src.channels()) || (dst.type() != src.type()))
-                dst.create(dst.width(), dst.height(), src.channels(), src.type());
-        }
-
-        stbir_resize(
-            src.ptr(), src.width(), src.height(), src.stride(),
-            dst.ptr(), dst.width(), dst.height(), dst.stride(),
-            [&]() -> stbir_pixel_layout {
-                switch (src.channels())
-                {
-                case 1: return STBIR_1CHANNEL;
-                case 2: return STBIR_2CHANNEL;
-                case 3: return STBIR_RGB;
-                case 4: return STBIR_4CHANNEL;
-                default: return assert(src.channels() == 1 || src.channels() == 2 || src.channels() == 3 || src.channels() == 4), STBIR_1CHANNEL;
-                }
-            }(),
-            [&]() -> stbir_datatype {
-                switch (src.type())
-                {
-                case Image::UInt8: return STBIR_TYPE_UINT8;
-                case Image::UInt16: return STBIR_TYPE_UINT16;
-                case Image::Float32: return STBIR_TYPE_FLOAT;
-                default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
-                }
-            }(),
-            STBIR_EDGE_CLAMP, STBIR_FILTER_TRIANGLE
-        );
-    }
-
     template<typename IN, typename OUT = IN>
     static inline void rgb2yuv(const Image& src, Image& dst)
     {
@@ -380,25 +317,6 @@ namespace ac::core::detail
             for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ >> n;
         }
     }
-}
-
-void ac::core::resize(const ac::core::Image& src, ac::core::Image& dst, const double fx, const double fy) noexcept
-{
-    if (src == dst)
-    {
-        Image tmp{};
-        detail::resize(src, tmp, fx, fy);
-        if (!tmp.empty()) dst = tmp;
-    }
-    else detail::resize(src, dst, fx, fy);
-}
-ac::core::Image ac::core::resize(const ac::core::Image& src, const double fx, const double fy) noexcept
-{
-    if (fx <= 0.0 || fy <= 0.0) return src;
-
-    Image dst{};
-    detail::resize(src, dst, fx, fy);
-    return dst;
 }
 
 void ac::core::rgb2yuv(const ac::core::Image& rgb, ac::core::Image& yuv)

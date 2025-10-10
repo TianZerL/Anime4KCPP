@@ -27,12 +27,13 @@ add_library(AC::Core ALIAS ac)
 target_sources(ac PRIVATE
     ${CORE_SOURCE_DIR}/src/Alloc.cpp
     ${CORE_SOURCE_DIR}/src/Image.cpp
-    ${CORE_SOURCE_DIR}/src/ImageProcess.cpp
     ${CORE_SOURCE_DIR}/src/ImageIO.cpp
+    ${CORE_SOURCE_DIR}/src/ImageProcess.cpp
+    ${CORE_SOURCE_DIR}/src/ImageResize.cpp
     ${CORE_SOURCE_DIR}/src/Model.cpp
     ${CORE_SOURCE_DIR}/src/Processor.cpp
-    ${CORE_SOURCE_DIR}/src/cpu/Dispatch.cpp
     ${CORE_SOURCE_DIR}/src/cpu/CPUProcessor.cpp
+    ${CORE_SOURCE_DIR}/src/cpu/Dispatch.cpp
     ${CORE_SOURCE_DIR}/src/cpu/Generic.cpp
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:${CORE_SOURCE_DIR}/src/cpu/Eigen3.cpp>
     $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_SOURCE_DIR}/src/cpu/x86/SSE.cpp>
