@@ -4,7 +4,7 @@
 #include "AC/Core/Util.hpp"
 
 #ifndef AC_CORE_STRIDE_ALIGN
-#   define AC_CORE_STRIDE_ALIGN 4
+#   define AC_CORE_STRIDE_ALIGN 32
 #endif
 
 struct ac::core::Image::ImageData
