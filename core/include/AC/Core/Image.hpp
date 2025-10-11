@@ -61,21 +61,31 @@ namespace ac::core
     // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
     // `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image.
     AC_EXPORT void yuva2rgba(const Image& y, const Image& u, const Image& v, const Image& a, Image& rgba);
+
     // remove padding in the stride of `src`, if necessary.
     // `src` and `dst` can be same.
     AC_EXPORT void unpadding(const Image& src, Image& dst) noexcept;
-    // left shift pixel
-    // modify in place
-    AC_EXPORT void shl(Image& image, int n);
-    // left shift pixel
+
+    // left shift pixel.
+    // modify in place.
+    AC_EXPORT void shl(Image& image, int n) noexcept;
+    // left shift pixel.
     // `src` and `dst` can be same.
-    AC_EXPORT void shl(const Image& src, Image& dst, int n);
-    // right shift pixel
-    // modify in place
-    AC_EXPORT void shr(Image& image, int n);
-    // right shift pixel
+    AC_EXPORT void shl(const Image& src, Image& dst, int n) noexcept;
+    // right shift pixel.
+    // modify in place.
+    AC_EXPORT void shr(Image& image, int n) noexcept;
+    // right shift pixel.
     // `src` and `dst` can be same.
-    AC_EXPORT void shr(const Image& src, Image& dst, int n);
+    AC_EXPORT void shr(const Image& src, Image& dst, int n) noexcept;
+
+    // get an image from `src` with data type conversion.
+    // if no need to convert, return `src` directly.
+    AC_EXPORT Image astype(const Image& src, int type) noexcept;
+    // copy src's pixels to dst with optional data type conversion.
+    // if `src` is empty, dst will be empty too.
+    // if `src` and `dst` is the same image, do nothing.
+    AC_EXPORT void copy(const Image& src, Image& dst) noexcept;
 
     enum ImresizeModes
     {

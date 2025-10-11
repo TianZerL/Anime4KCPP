@@ -1,3 +1,6 @@
+#include <cstring>
+#include <type_traits>
+
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
@@ -298,7 +301,7 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN>
-    static inline void shl(const Image& src, Image& dst, const int n)
+    static inline void shl(const Image& src, Image& dst, const int n) noexcept
     {
         for (int i = 0; i < src.height(); i++)
         {
@@ -308,13 +311,33 @@ namespace ac::core::detail
         }
     }
     template<typename IN, typename OUT = IN>
-    static inline void shr(const Image& src, Image& dst, const int n)
+    static inline void shr(const Image& src, Image& dst, const int n) noexcept
     {
         for (int i = 0; i < src.height(); i++)
         {
             auto in = static_cast<const IN*>(src.ptr(i));
             auto out = static_cast<OUT*>(dst.ptr(i));
             for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ >> n;
+        }
+    }
+
+    template<typename IN = void, typename OUT = IN>
+    static inline void copy(const Image& src, Image& dst) noexcept
+    {
+        for (int i = 0; i < src.height(); i++)
+        {
+            auto in = static_cast<const IN*>(src.ptr(i));
+            auto out = static_cast<OUT*>(dst.ptr(i));
+            if constexpr (std::is_same_v<IN, OUT>)
+            {
+                auto lineSize = src.width() * src.pixelSize();
+                std::memcpy(out, in, lineSize);
+            }
+            else
+            {
+                for (int j = 0; j < src.width() * src.channels(); j++)
+                    *out++ = fromFloat<OUT>(toFloat(*in++));
+            }
         }
     }
 }
@@ -477,7 +500,7 @@ void ac::core::unpadding(const Image& src, Image& dst) noexcept
     for (int i = 0; i < src.height(); i++) std::memcpy(tmp.ptr(i), src.ptr(i), lineSize);
     if (dst != tmp) dst = tmp;
 }
-void ac::core::shl(Image& image, const int n)
+void ac::core::shl(Image& image, const int n) noexcept
 {
     if (image.empty() || !image.isUint() || n <= 0) return;
     switch (image.type())
@@ -486,7 +509,7 @@ void ac::core::shl(Image& image, const int n)
     case Image::UInt16: detail::shl<std::uint16_t>(image, image, n); break;
     }
 }
-void ac::core::shl(const Image& src, Image& dst, const int n)
+void ac::core::shl(const Image& src, Image& dst, const int n) noexcept
 {
     if (src.empty() || !src.isUint() || n <= 0) return;
     Image tmp{};
@@ -500,7 +523,7 @@ void ac::core::shl(const Image& src, Image& dst, const int n)
     }
     if (dst != tmp) dst = tmp;
 }
-void ac::core::shr(Image& image, const int n)
+void ac::core::shr(Image& image, const int n) noexcept
 {
     if (image.empty() || !image.isUint() || n <= 0) return;
     switch (image.type())
@@ -509,7 +532,7 @@ void ac::core::shr(Image& image, const int n)
     case Image::UInt16: detail::shr<std::uint16_t>(image, image, n); break;
     }
 }
-void ac::core::shr(const Image& src, Image& dst, const int n)
+void ac::core::shr(const Image& src, Image& dst, const int n) noexcept
 {
     if (src.empty() || !src.isUint() || n <= 0) return;
     Image tmp{};
@@ -521,5 +544,52 @@ void ac::core::shr(const Image& src, Image& dst, const int n)
     case Image::UInt8: detail::shr<std::uint8_t>(src, tmp, n); break;
     case Image::UInt16: detail::shr<std::uint16_t>(src, tmp, n); break;
     }
+    if (dst != tmp) dst = tmp;
+}
+
+ac::core::Image ac::core::astype(const Image& src, const int type) noexcept
+{
+    if (src.empty() || src.type() == type) return src;
+
+    Image dst{ src.width(), src.height(), src.channels(), type };
+
+    if (src.type() == Image::UInt8 && dst.type() == Image::Float32)
+        detail::copy<std::uint8_t, float>(src, dst);
+    else if (src.type() == Image::Float32 && dst.type() == Image::UInt8)
+        detail::copy<float, std::uint8_t>(src, dst);
+    else if(src.type() == Image::UInt16 && dst.type() == Image::Float32)
+        detail::copy<std::uint16_t, float>(src, dst);
+    else if (src.type() == Image::Float32 && dst.type() == Image::UInt16)
+        detail::copy<float, std::uint16_t>(src, dst);
+    else if (src.type() == Image::UInt8 && dst.type() == Image::UInt16)
+        detail::copy<std::uint8_t, std::uint16_t>(src, dst);
+    else if (src.type() == Image::UInt16 && dst.type() == Image::UInt8)
+        detail::copy<std::uint16_t, std::uint8_t>(src, dst);
+
+    return dst;
+}
+void ac::core::copy(const Image& src, Image& dst) noexcept
+{
+    if (src.empty()) dst = src;
+    if (src == dst) return;
+
+    Image tmp{};
+    if (dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()))
+        tmp.create(src.width(), src.height(), src.channels(), src.type());
+    else tmp = dst;
+
+    if (src.type() == dst.type())
+        detail::copy(src, tmp);
+    else if (src.type() == Image::UInt8 && dst.type() == Image::Float32)
+        detail::copy<std::uint8_t, float>(src, tmp);
+    else if (src.type() == Image::Float32 && dst.type() == Image::UInt8)
+        detail::copy<float, std::uint8_t>(src, tmp);
+    else if (src.type() == Image::UInt16 && dst.type() == Image::Float32)
+        detail::copy<std::uint16_t, float>(src, tmp);
+    else if (src.type() == Image::Float32 && dst.type() == Image::UInt16)
+        detail::copy<float, std::uint16_t>(src, tmp);
+    else if (src.type() == Image::UInt8 && dst.type() == Image::UInt16)
+        detail::copy<std::uint8_t, std::uint16_t>(src, tmp);
+
     if (dst != tmp) dst = tmp;
 }

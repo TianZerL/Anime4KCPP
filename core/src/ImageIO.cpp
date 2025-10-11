@@ -19,6 +19,7 @@ ac::core::Image ac::core::imdecode(const void* const buffer, const int size, con
     Image image{};
     int w = 0, h = 0, c = 0;
     std::uint8_t* data = stbi_load_from_memory(static_cast<const std::uint8_t*>(buffer), size, &w, &h, &c, mode);
+    if (mode > 0 && mode <= 4) c = mode;
     if (data)
     {
         image.from(w, h, c, ac::core::Image::UInt8, data);
@@ -33,6 +34,7 @@ ac::core::Image ac::core::imread(const char* const filename, const int mode) noe
     Image image{};
     int w = 0, h = 0, c = 0;
     std::uint8_t* data = stbi_load(filename, &w, &h, &c, mode);
+    if (mode > 0 && mode <= 4) c = mode;
     if (data)
     {
         image.from(w, h, c, ac::core::Image::UInt8, data);
