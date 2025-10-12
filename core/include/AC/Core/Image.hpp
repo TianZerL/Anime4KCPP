@@ -87,6 +87,9 @@ namespace ac::core
     // if `src` and `dst` is the same image, do nothing.
     AC_EXPORT void copy(const Image& src, Image& dst) noexcept;
 
+    // crop the given area from `src`.
+    AC_EXPORT Image crop(const Image& src, int x, int y, int w, int h) noexcept;
+
     enum ImresizeModes
     {
         IMRESIZE_CATMULL_ROM,

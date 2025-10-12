@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 #include <type_traits>
 
@@ -340,6 +341,15 @@ namespace ac::core::detail
             }
         }
     }
+
+    static inline void crop(const Image& src, Image& dst, int x, int y) noexcept
+    {
+        for (int i = 0; i < dst.height(); i++)
+        {
+            auto lineSize = dst.width() * dst.pixelSize();
+            std::memcpy(dst.line(i), src.pixel(x, y + i), lineSize);
+        }
+    }
 }
 
 void ac::core::rgb2yuv(const ac::core::Image& rgb, ac::core::Image& yuv)
@@ -592,4 +602,21 @@ void ac::core::copy(const Image& src, Image& dst) noexcept
         detail::copy<std::uint8_t, std::uint16_t>(src, tmp);
 
     if (dst != tmp) dst = tmp;
+}
+
+ac::core::Image ac::core::crop(const Image& src, const int x, const int y, const int w, const int h) noexcept
+{
+    if (src.empty()) return src;
+
+    int intersectX = std::max(x, 0);
+    int intersectY = std::max(y, 0);
+    int intersectW = std::min(src.width(), x + w) - intersectX;
+    int intersectH = std::min(src.height(), y + h) - intersectY;
+
+    if (intersectW <= 0 || intersectH <= 0) return Image{};
+
+    ac::core::Image dst{ intersectW, intersectH, src.channels(), src.type() };
+    detail::crop(src, dst, intersectX, intersectY);
+
+    return dst;
 }
