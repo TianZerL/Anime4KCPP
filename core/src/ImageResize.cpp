@@ -158,12 +158,32 @@ namespace ac::core::detail
 
         switch (mode)
         {
+        case IMRESIZE_POINT:
+            filter = [](float x, float, void*) -> float { return 1.0f; };
+            support = [](float, void*) -> float { return 0.5f; };
+            break;
         case IMRESIZE_CATMULL_ROM: // b = 0, c = 1/2
             filter = [](float x, float, void*) -> float { return bicubic<0, 1, 1, 2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
         case IMRESIZE_MITCHELL_NETRAVALI: // b = 1/3, c = 1/3
             filter = [](float x, float, void*) -> float { return bicubic<1, 3, 1, 3>(x); };
+            support = [](float, void*) -> float { return 2.0f; };
+            break;
+        case IMRESIZE_BICUBIC_0_60: // b = 0, c = 3/5
+            filter = [](float x, float, void*) -> float { return bicubic<0, 1, 3, 5>(x); };
+            support = [](float, void*) -> float { return 2.0f; };
+            break;
+        case IMRESIZE_BICUBIC_0_75: // b = 0, c = 3/4
+            filter = [](float x, float, void*) -> float { return bicubic<0, 1, 3, 4>(x); };
+            support = [](float, void*) -> float { return 2.0f; };
+            break;
+        case IMRESIZE_BICUBIC_0_100: // b = 0, c = 1
+            filter = [](float x, float, void*) -> float { return bicubic<0, 1, 1, 1>(x); };
+            support = [](float, void*) -> float { return 2.0f; };
+            break;
+        case IMRESIZE_BICUBIC_20_50: // b = 0.2, c = 0.5
+            filter = [](float x, float, void*) -> float { return bicubic<1, 5, 1, 2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
         case IMRESIZE_SOFTCUBIC50: // b = 1/2, c = 1/2

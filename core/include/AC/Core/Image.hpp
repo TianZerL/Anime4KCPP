@@ -92,11 +92,16 @@ namespace ac::core
 
     enum ImresizeModes
     {
-        IMRESIZE_CATMULL_ROM,
-        IMRESIZE_MITCHELL_NETRAVALI,
-        IMRESIZE_SOFTCUBIC50,
-        IMRESIZE_SOFTCUBIC75,
-        IMRESIZE_SOFTCUBIC100,
+        IMRESIZE_POINT,
+        IMRESIZE_CATMULL_ROM,        // b = 0, c = 0.5 or a = -0.5
+        IMRESIZE_MITCHELL_NETRAVALI, // b = 1/3, c = 1/3
+        IMRESIZE_BICUBIC_0_60,       // b = 0, c = 0.6 or a = -0.6
+        IMRESIZE_BICUBIC_0_75,       // b = 0, c = 0.75 or a = -0.75
+        IMRESIZE_BICUBIC_0_100,      // b = 0, c = 1 or a = -1
+        IMRESIZE_BICUBIC_20_50,      // b = 0.2, c = 0.5
+        IMRESIZE_SOFTCUBIC50,        // b = 0.5, c = 0.5
+        IMRESIZE_SOFTCUBIC75,        // b = 0.75, c = 0.25
+        IMRESIZE_SOFTCUBIC100,       // b = 1, c = 0
         IMRESIZE_LANCZOS2,
         IMRESIZE_LANCZOS3,
         IMRESIZE_LANCZOS4,
