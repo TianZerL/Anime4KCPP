@@ -36,7 +36,9 @@ include(${CMAKE_DIR}/CheckCompiler.cmake)
 option(AC_SHARED_LIB "build as a shared library" OFF)
 option(AC_CORE_WITH_EIGEN3 "build core with eigen3" OFF)
 option(AC_CORE_WITH_SSE "build core with x86 sse" ${AC_COMPILER_SUPPORT_SSE})
+option(AC_CORE_WITH_SSE2 "build core with x86 sse2" ${AC_COMPILER_SUPPORT_SSE2})
 option(AC_CORE_WITH_AVX "build core with x86 avx" ${AC_COMPILER_SUPPORT_AVX})
+option(AC_CORE_WITH_AVX2 "build core with x86 avx2" ${AC_COMPILER_SUPPORT_AVX2})
 option(AC_CORE_WITH_FMA "build core with x86 fma and avx" ${AC_COMPILER_SUPPORT_FMA})
 option(AC_CORE_WITH_NEON "build core with arm neon" ${AC_COMPILER_SUPPORT_NEON})
 option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
@@ -88,6 +90,14 @@ if(AC_ENABLE_LTO)
     endif()
 endif()
 
+if(AC_CORE_WITH_SSE2)
+    set(AC_CORE_WITH_SSE ON)
+endif()
+
+if(AC_CORE_WITH_AVX2)
+    set(AC_CORE_WITH_FMA ON)
+endif()
+
 if(AC_CORE_WITH_FMA)
     set(AC_CORE_WITH_AVX ON)
 endif()
@@ -99,7 +109,9 @@ endif()
 message(STATUS
 "SIMD support:
     SSE: ${AC_CORE_WITH_SSE}
+    SSE2: ${AC_CORE_WITH_SSE2}
     AVX: ${AC_CORE_WITH_AVX}
+    AVX2: ${AC_CORE_WITH_AVX2}
     FMA: ${AC_CORE_WITH_FMA}
     NEON: ${AC_CORE_WITH_NEON}
     WASM_SIMD128: ${AC_CORE_WITH_WASM_SIMD128}

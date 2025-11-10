@@ -11,7 +11,9 @@ namespace ac::core::cpu::dispatch::detail
     {
     public:
         bool sse;
+        bool sse2;
         bool avx;
+        bool avx2;
         bool fma;
         bool neon;
     public:
@@ -24,8 +26,10 @@ namespace ac::core::cpu::dispatch::detail
         ISA() noexcept
         {
             ruapu_init();
-            sse = ruapu_supports("sse3");
+            sse = ruapu_supports("sse");
+            sse2 = ruapu_supports("sse2");
             avx = ruapu_supports("avx");
+            avx2 = ruapu_supports("avx2");
             fma = ruapu_supports("fma");
             neon = ruapu_supports("neon");
         }
@@ -36,9 +40,17 @@ bool ac::core::cpu::dispatch::supportSSE() noexcept
 {
     return gISA.sse;
 }
+bool ac::core::cpu::dispatch::supportSSE2() noexcept
+{
+    return gISA.sse2;
+}
 bool ac::core::cpu::dispatch::supportAVX() noexcept
 {
     return gISA.avx;
+}
+bool ac::core::cpu::dispatch::supportAVX2() noexcept
+{
+    return gISA.avx2;
 }
 bool ac::core::cpu::dispatch::supportFMA() noexcept
 {

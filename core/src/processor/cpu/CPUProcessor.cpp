@@ -116,7 +116,7 @@ namespace ac::core::cpu
 #           else
                 return arch::Generic;
 #           endif
-                }();
+            }();
 
             switch (idx)
             {
