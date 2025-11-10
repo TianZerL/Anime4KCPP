@@ -199,71 +199,71 @@ namespace ac::core::detail
 
         switch (mode)
         {
-        case IMRESIZE_POINT:
+        case RESIZE_POINT:
             filter = [](float x, float, void*) -> float { return 1.0f; };
             support = [](float, void*) -> float { return 0.5f; };
             break;
-        case IMRESIZE_CATMULL_ROM: // b = 0, c = 1/2
+        case RESIZE_CATMULL_ROM: // b = 0, c = 1/2
             filter = [](float x, float, void*) -> float { return bicubic<0, 1, 1, 2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_MITCHELL_NETRAVALI: // b = 1/3, c = 1/3
+        case RESIZE_MITCHELL_NETRAVALI: // b = 1/3, c = 1/3
             filter = [](float x, float, void*) -> float { return bicubic<1, 3, 1, 3>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_BICUBIC_0_60: // b = 0, c = 3/5
+        case RESIZE_BICUBIC_0_60: // b = 0, c = 3/5
             filter = [](float x, float, void*) -> float { return bicubic<0, 1, 3, 5>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_BICUBIC_0_75: // b = 0, c = 3/4
+        case RESIZE_BICUBIC_0_75: // b = 0, c = 3/4
             filter = [](float x, float, void*) -> float { return bicubic<0, 1, 3, 4>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_BICUBIC_0_100: // b = 0, c = 1
+        case RESIZE_BICUBIC_0_100: // b = 0, c = 1
             filter = [](float x, float, void*) -> float { return bicubic<0, 1, 1, 1>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_BICUBIC_20_50: // b = 0.2, c = 0.5
+        case RESIZE_BICUBIC_20_50: // b = 0.2, c = 0.5
             filter = [](float x, float, void*) -> float { return bicubic<1, 5, 1, 2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_SOFTCUBIC50: // b = 1/2, c = 1/2
+        case RESIZE_SOFTCUBIC50: // b = 1/2, c = 1/2
             filter = [](float x, float, void*) -> float { return bicubic<1, 2, 1, 2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_SOFTCUBIC75: // b = 3/4, c = 1/4
+        case RESIZE_SOFTCUBIC75: // b = 3/4, c = 1/4
             filter = [](float x, float, void*) -> float { return bicubic<3, 4, 1, 4>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_SOFTCUBIC100: // b = 1, c = 0
+        case RESIZE_SOFTCUBIC100: // b = 1, c = 0
             filter = [](float x, float, void*) -> float { return bicubic<1, 1, 0, 1>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_LANCZOS2:
+        case RESIZE_LANCZOS2:
             filter = [](float x, float, void*) -> float { return lanczos<2>(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_LANCZOS3:
+        case RESIZE_LANCZOS3:
             filter = [](float x, float, void*) -> float { return lanczos<3>(x); };
             support = [](float, void*) -> float { return 3.0f; };
             break;
-        case IMRESIZE_LANCZOS4:
+        case RESIZE_LANCZOS4:
             filter = [](float x, float, void*) -> float { return lanczos<4>(x); };
             support = [](float, void*) -> float { return 4.0f; };
             break;
-        case IMRESIZE_SPLINE16:
+        case RESIZE_SPLINE16:
             filter = [](float x, float, void*) -> float { return spine16(x); };
             support = [](float, void*) -> float { return 2.0f; };
             break;
-        case IMRESIZE_SPLINE36:
+        case RESIZE_SPLINE36:
             filter = [](float x, float, void*) -> float { return spine36(x); };
             support = [](float, void*) -> float { return 3.0f; };
             break;
-        case IMRESIZE_SPLINE64:
+        case RESIZE_SPLINE64:
             filter = [](float x, float, void*) -> float { return spine64(x); };
             support = [](float, void*) -> float { return 4.0f; };
             break;
-        case IMRESIZE_BILINEAR:
+        case RESIZE_BILINEAR:
         default:
             filter = [](float x, float, void*) -> float { return bilinear(x); };
             support = [](float, void*) -> float { return 1.0f; };

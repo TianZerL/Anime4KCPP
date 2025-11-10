@@ -90,33 +90,33 @@ namespace ac::core
     // crop the given area from `src`.
     AC_EXPORT Image crop(const Image& src, int x, int y, int w, int h) noexcept;
 
-    enum ImresizeModes
+    enum ResizeModes
     {
-        IMRESIZE_POINT,
-        IMRESIZE_CATMULL_ROM,        // b = 0, c = 0.5 or a = -0.5
-        IMRESIZE_MITCHELL_NETRAVALI, // b = 1/3, c = 1/3
-        IMRESIZE_BICUBIC_0_60,       // b = 0, c = 0.6 or a = -0.6
-        IMRESIZE_BICUBIC_0_75,       // b = 0, c = 0.75 or a = -0.75
-        IMRESIZE_BICUBIC_0_100,      // b = 0, c = 1 or a = -1
-        IMRESIZE_BICUBIC_20_50,      // b = 0.2, c = 0.5
-        IMRESIZE_SOFTCUBIC50,        // b = 0.5, c = 0.5
-        IMRESIZE_SOFTCUBIC75,        // b = 0.75, c = 0.25
-        IMRESIZE_SOFTCUBIC100,       // b = 1, c = 0
-        IMRESIZE_LANCZOS2,
-        IMRESIZE_LANCZOS3,
-        IMRESIZE_LANCZOS4,
-        IMRESIZE_SPLINE16,
-        IMRESIZE_SPLINE36,
-        IMRESIZE_SPLINE64,
-        IMRESIZE_BILINEAR,
+        RESIZE_POINT,
+        RESIZE_CATMULL_ROM,        // b = 0, c = 0.5 or a = -0.5
+        RESIZE_MITCHELL_NETRAVALI, // b = 1/3, c = 1/3
+        RESIZE_BICUBIC_0_60,       // b = 0, c = 0.6 or a = -0.6
+        RESIZE_BICUBIC_0_75,       // b = 0, c = 0.75 or a = -0.75
+        RESIZE_BICUBIC_0_100,      // b = 0, c = 1 or a = -1
+        RESIZE_BICUBIC_20_50,      // b = 0.2, c = 0.5
+        RESIZE_SOFTCUBIC50,        // b = 0.5, c = 0.5
+        RESIZE_SOFTCUBIC75,        // b = 0.75, c = 0.25
+        RESIZE_SOFTCUBIC100,       // b = 1, c = 0
+        RESIZE_LANCZOS2,
+        RESIZE_LANCZOS3,
+        RESIZE_LANCZOS4,
+        RESIZE_SPLINE16,
+        RESIZE_SPLINE36,
+        RESIZE_SPLINE64,
+        RESIZE_BILINEAR,
     };
     // Resize the `src` based on the size of the `dst` if `fx` or `fy` <= 0, otherwise, calculate the size using `fx` and `fy`.
     // if `dst` is empty and fx or fy <= 0, nothing will be done.
     // if target size is same as `src`(eg: `fx` and `fy` == 1), then just make `dst` = `src` and return, no data will be copied.
     // `src` and `dst` can be the same image.
-    AC_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = IMRESIZE_BILINEAR) noexcept;
+    AC_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
     // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
-    AC_EXPORT Image resize(const Image& src, double fx, double fy, int mode = IMRESIZE_BILINEAR) noexcept;
+    AC_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
 
     enum ImreadModes
     {

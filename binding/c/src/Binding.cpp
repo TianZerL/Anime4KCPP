@@ -83,10 +83,10 @@ int ac_image_to(const ac_image* const image, void* const data, const int stride)
 }
 
 #ifndef AC_CORE_DISABLE_IMAGE_IO
-int ac_imread(const char* const filename, const int flag, ac_image* const image)
+int ac_imread(const char* const filename, const int mode, ac_image* const image)
 {
     if (!(image && image->hptr)) return AC_ERROR(EINVAL);
-    auto object = ac::core::imread(filename, flag);
+    auto object = ac::core::imread(filename, mode);
     if (object.empty()) return AC_ERROR(EIO);
     image->hptr->object = object;
     detail::copyProp(image->hptr->object, image);
@@ -99,10 +99,10 @@ int ac_imwrite(const char* const filename, const ac_image* const image)
 }
 #endif
 
-int ac_resize(const ac_image* const src, ac_image* const dst, const double fx, const double fy)
+int ac_resize(const ac_image* const src, ac_image* const dst, const double fx, const double fy, const int mode)
 {
     if (!(src && src->hptr && dst && dst->hptr)) return AC_ERROR(EINVAL);
-    ac::core::resize(src->hptr->object, dst->hptr->object, fx, fy);
+    ac::core::resize(src->hptr->object, dst->hptr->object, fx, fy, mode);
     detail::copyProp(dst->hptr->object, dst);
     return AC_SUCCESS;
 }

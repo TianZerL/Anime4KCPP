@@ -19,13 +19,34 @@ enum ac_image_element_type
     AC_IMAGE_FLOAT32 = 2 << 8 | 4
 };
 
-enum ac_imread_flag
+enum ac_imread_modes
 {
     AC_IMREAD_UNCHANGED = 0,
     AC_IMREAD_GRAYSCALE = 1,
     AC_IMREAD_COLOR     = 3,
     AC_IMREAD_RGB       = 3,
     AC_IMREAD_RGBA      = 4,
+};
+
+enum ac_resize_modes
+{
+    AC_RESIZE_POINT,
+    AC_RESIZE_CATMULL_ROM,        // b = 0, c = 0.5 or a = -0.5
+    AC_RESIZE_MITCHELL_NETRAVALI, // b = 1/3, c = 1/3
+    AC_RESIZE_BICUBIC_0_60,       // b = 0, c = 0.6 or a = -0.6
+    AC_RESIZE_BICUBIC_0_75,       // b = 0, c = 0.75 or a = -0.75
+    AC_RESIZE_BICUBIC_0_100,      // b = 0, c = 1 or a = -1
+    AC_RESIZE_BICUBIC_20_50,      // b = 0.2, c = 0.5
+    AC_RESIZE_SOFTCUBIC50,        // b = 0.5, c = 0.5
+    AC_RESIZE_SOFTCUBIC75,        // b = 0.75, c = 0.25
+    AC_RESIZE_SOFTCUBIC100,       // b = 1, c = 0
+    AC_RESIZE_LANCZOS2,
+    AC_RESIZE_LANCZOS3,
+    AC_RESIZE_LANCZOS4,
+    AC_RESIZE_SPLINE16,
+    AC_RESIZE_SPLINE36,
+    AC_RESIZE_SPLINE64,
+    AC_RESIZE_BILINEAR,
 };
 
 typedef struct ac_image
@@ -48,11 +69,11 @@ CAC_API int ac_image_clone(const ac_image* src, ac_image* dst);
 CAC_API int ac_image_to(const ac_image* image, void* data, int stride);
 
 #ifndef AC_CORE_DISABLE_IMAGE_IO
-CAC_API int ac_imread(const char* filename, int flag, ac_image* image);
+CAC_API int ac_imread(const char* filename, int mode, ac_image* image);
 CAC_API int ac_imwrite(const char* filename, const ac_image* image);
 #endif
 
-CAC_API int ac_resize(const ac_image* src, ac_image* dst, double fx, double fy);
+CAC_API int ac_resize(const ac_image* src, ac_image* dst, double fx, double fy, int mode);
 CAC_API int ac_rgb2yuv(const ac_image* rgb, ac_image* yuv);
 CAC_API int ac_rgba2yuva(const ac_image* rgba, ac_image* yuva);
 CAC_API int ac_yuv2rgb(const ac_image* yuv, ac_image* rgb);
