@@ -17,7 +17,7 @@ function(generate_image_resize_simd SIMD OUTPUT_FILE_PATH_VAR)
 #define STB_IMAGE_RESIZE_STATIC
 #include <stb_image_resize2.h>
 
-auto stbir_resize_extended_@SIMD_LOWER@ = stbir_resize_extended;
+extern const auto stbir_resize_extended_@SIMD_LOWER@ = stbir_resize_extended;
 ]])
     configure_file(
         ${CORE_BINARY_DIR}/filegen/src/simd/ImageResize${SIMD_UPPER}.cpp.in

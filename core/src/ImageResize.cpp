@@ -9,46 +9,46 @@
 #include "AC/Core/Image.hpp"
 
 #ifdef AC_CORE_WITH_SSE2
-extern int (*stbir_resize_extended_sse2)(STBIR_RESIZE*);
+extern const decltype(&stbir_resize_extended) stbir_resize_extended_sse2;
 #endif
 #ifdef AC_CORE_WITH_AVX
-extern int (*stbir_resize_extended_avx)(STBIR_RESIZE*);
+extern const decltype(&stbir_resize_extended) stbir_resize_extended_avx;
 #endif
 #ifdef AC_CORE_WITH_AVX2
-extern int (*stbir_resize_extended_avx2)(STBIR_RESIZE*);
+extern const decltype(&stbir_resize_extended) stbir_resize_extended_avx2;
 #endif
 #ifdef AC_CORE_WITH_NEON
-extern int (*stbir_resize_extended_neon)(STBIR_RESIZE*);
+extern const decltype(&stbir_resize_extended) stbir_resize_extended_neon;
 #endif
 #ifdef AC_CORE_WITH_WASM_SIMD128
-extern int (*stbir_resize_extended_wasm)(STBIR_RESIZE*);
+extern const decltype(&stbir_resize_extended) stbir_resize_extended_wasm;
 #endif
-
-int (*stbir_resize_extended_auto)(STBIR_RESIZE*) = []() {
-// x86
-#ifdef AC_CORE_WITH_AVX2
-    if (ac::core::simd::supportAVX2()) return stbir_resize_extended_avx2;
-#endif
-#ifdef AC_CORE_WITH_AVX
-    if (ac::core::simd::supportAVX()) return stbir_resize_extended_avx;
-#endif
-#ifdef AC_CORE_WITH_SSE2
-    if (ac::core::simd::supportSSE2()) return stbir_resize_extended_sse2;
-#endif
-// arm
-#ifdef AC_CORE_WITH_NEON
-    if (ac::core::simd::supportNEON()) return stbir_resize_extended_neon;
-#endif
-// wasm
-#ifdef AC_CORE_WITH_WASM_SIMD128
-    return stbir_resize_extended_wasm;
-#endif
-// generic
-    return stbir_resize_extended;
-}();
 
 namespace ac::core::detail
 {
+   const auto stbir_resize_extended_auto = []() {
+        // x86
+#   ifdef AC_CORE_WITH_AVX2
+        if (ac::core::simd::supportAVX2()) return stbir_resize_extended_avx2;
+#   endif
+#   ifdef AC_CORE_WITH_AVX
+        if (ac::core::simd::supportAVX()) return stbir_resize_extended_avx;
+#   endif
+#   ifdef AC_CORE_WITH_SSE2
+        if (ac::core::simd::supportSSE2()) return stbir_resize_extended_sse2;
+#   endif
+        // arm
+#   ifdef AC_CORE_WITH_NEON
+        if (ac::core::simd::supportNEON()) return stbir_resize_extended_neon;
+#   endif
+        // wasm
+#   ifdef AC_CORE_WITH_WASM_SIMD128
+        return stbir_resize_extended_wasm;
+#   endif
+        // generic
+        return stbir_resize_extended;
+    }();
+
     static inline float sinc(const float x) noexcept
     {
         constexpr float pi = 3.14159265358979f;
