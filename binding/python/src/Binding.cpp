@@ -1,7 +1,7 @@
 #include <cstdint>
-#include <exception>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <tuple>
 
 #include <pybind11/numpy.h>
@@ -57,8 +57,8 @@ PYBIND11_MODULE(pyac, m)
         .def("error", &ac::core::Processor::error)
         .def("name", &ac::core::Processor::name)
         .def("__call__", [&](ac::core::Processor& self, const py::array in, const double factor) {
-            auto& out = processNumpyArray(self, in, factor);
-            if (!self.ok()) throw std::exception{ self.error() };
+            auto&& out = processNumpyArray(self, in, factor);
+            if (!self.ok()) throw std::runtime_error{ self.error() };
             return out;
         }, py::arg("src"), py::arg("factor") = 2.0)
         .def("__str__", [](ac::core::Processor& self) { return self.name(); })
