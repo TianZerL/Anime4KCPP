@@ -49,6 +49,9 @@ PYBIND11_MODULE(pyac, m)
         .def(py::init([](const int processorType, const int device, const char* model) {
             return ac::core::Processor::create(processorType, device, model);
         }), py::arg("processor_type") = ac::core::Processor::CPU, py::arg("device") = 0, py::arg("model") = ac::specs::ModelNameList[0])
+        .def(py::init([](const char* processorType, const int device, const char* model) {
+            return ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
+        }), py::arg("processor_type"), py::arg("device") = 0, py::arg("model") = ac::specs::ModelNameList[0])
         .def("process", processNumpyArray, py::arg("src"), py::arg("factor") = 2.0)
         .def("ok", &ac::core::Processor::ok)
         .def("error", &ac::core::Processor::error)
