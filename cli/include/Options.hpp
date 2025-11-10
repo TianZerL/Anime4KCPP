@@ -1,5 +1,5 @@
-#ifndef AC_CLI_OPTIONS_CPP
-#define AC_CLI_OPTIONS_CPP
+#ifndef AC_CLI_OPTIONS_HPP
+#define AC_CLI_OPTIONS_HPP
 
 #include <string>
 #include <vector>
