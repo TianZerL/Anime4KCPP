@@ -1,11 +1,11 @@
 #define RUAPU_IMPLEMENTATION
 #include "ruapu.h"
 
-#include "AC/Core/Dispatch.hpp"
+#include "AC/Core/SIMD.hpp"
 
-#define gISA (ac::core::cpu::dispatch::detail::ISA::instance())
+#define gISA (ac::core::simd::detail::ISA::instance())
 
-namespace ac::core::cpu::dispatch::detail
+namespace ac::core::simd::detail
 {
     struct ISA
     {
@@ -36,27 +36,27 @@ namespace ac::core::cpu::dispatch::detail
     };
 }
 
-bool ac::core::cpu::dispatch::supportSSE() noexcept
+bool ac::core::simd::supportSSE() noexcept
 {
     return gISA.sse;
 }
-bool ac::core::cpu::dispatch::supportSSE2() noexcept
+bool ac::core::simd::supportSSE2() noexcept
 {
     return gISA.sse2;
 }
-bool ac::core::cpu::dispatch::supportAVX() noexcept
+bool ac::core::simd::supportAVX() noexcept
 {
     return gISA.avx;
 }
-bool ac::core::cpu::dispatch::supportAVX2() noexcept
+bool ac::core::simd::supportAVX2() noexcept
 {
     return gISA.avx2;
 }
-bool ac::core::cpu::dispatch::supportFMA() noexcept
+bool ac::core::simd::supportFMA() noexcept
 {
     return gISA.fma;
 }
-bool ac::core::cpu::dispatch::supportNEON() noexcept
+bool ac::core::simd::supportNEON() noexcept
 {
     return gISA.neon;
 }

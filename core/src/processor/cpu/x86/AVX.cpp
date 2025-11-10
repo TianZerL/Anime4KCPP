@@ -1,6 +1,6 @@
 #include <immintrin.h>
 
-#include "AC/Core/Dispatch.hpp"
+#include "AC/Core/SIMD.hpp"
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
@@ -281,7 +281,7 @@ namespace ac::core::cpu
     void conv3x3_8to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
 #   ifdef AC_CORE_WITH_FMA
-        if (dispatch::supportFMA())
+        if (simd::supportFMA())
             conv3x3_avx_float<float, 8, 8, true>(src, dst, kernels, biases);
         else
 #   endif
@@ -290,7 +290,7 @@ namespace ac::core::cpu
     void conv3x3_residual_8to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
 #   ifdef AC_CORE_WITH_FMA
-        if (dispatch::supportFMA())
+        if (simd::supportFMA())
             conv3x3_avx_float<float, 8, 8, true, true>(src, dst, kernels, biases);
         else
 #   endif

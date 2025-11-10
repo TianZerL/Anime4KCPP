@@ -2,7 +2,7 @@
 #include <sstream>
 #include <string>
 
-#include "AC/Core/Dispatch.hpp"
+#include "AC/Core/SIMD.hpp"
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
 
@@ -97,14 +97,14 @@ namespace ac::core::cpu
             idx = (arch > arch::Begin && arch < arch::End) ? arch : []() -> int {
                 // x86
 #           ifdef AC_CORE_WITH_AVX
-                if (dispatch::supportAVX()) return arch::AVX;
+                if (simd::supportAVX()) return arch::AVX;
 #           endif
 #           ifdef AC_CORE_WITH_SSE
-                if (dispatch::supportSSE()) return arch::SSE;
+                if (simd::supportSSE()) return arch::SSE;
 #           endif
                 // arm
 #           ifdef AC_CORE_WITH_NEON
-                if (dispatch::supportNEON()) return arch::NEON;
+                if (simd::supportNEON()) return arch::NEON;
 #           endif
                 // wasm
 #           ifdef AC_CORE_WITH_WASM_SIMD128

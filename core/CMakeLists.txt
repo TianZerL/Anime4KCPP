@@ -6,19 +6,18 @@ set(CORE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 # third-party
 include(${DEPENDENCY_DIR}/ruapu.cmake)
 include(${DEPENDENCY_DIR}/stb.cmake)
-if(AC_CORE_WITH_OPENCL)
-    include(${DEPENDENCY_DIR}/opencl.cmake)
-    include(${CMAKE_DIR}/GenOpenCLKernelHeader.cmake)
-
-    generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/OpenCL/Kernel.hpp)
-endif()
 if(AC_CORE_WITH_EIGEN3)
     include(${DEPENDENCY_DIR}/eigen3.cmake)
 endif()
 if(AC_CORE_WITH_CUDA)
     include(${DEPENDENCY_DIR}/cuda.cmake)
 endif()
+if(AC_CORE_WITH_OPENCL)
+    include(${DEPENDENCY_DIR}/opencl.cmake)
+    include(${CMAKE_DIR}/GenOpenCLKernelHeader.cmake)
 
+    generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/OpenCL/Kernel.hpp)
+endif()
 include(${CMAKE_DIR}/GenImageResizeSIMD.cmake)
 
 if(AC_CORE_WITH_SSE2)
@@ -46,12 +45,12 @@ add_library(AC::Core ALIAS ac)
 
 target_sources(ac PRIVATE
     ${CORE_SOURCE_DIR}/src/Alloc.cpp
-    ${CORE_SOURCE_DIR}/src/Dispatch.cpp
     ${CORE_SOURCE_DIR}/src/Image.cpp
     ${CORE_SOURCE_DIR}/src/ImageIO.cpp
     ${CORE_SOURCE_DIR}/src/ImageProcess.cpp
     ${CORE_SOURCE_DIR}/src/ImageResize.cpp
     ${CORE_SOURCE_DIR}/src/Model.cpp
+    ${CORE_SOURCE_DIR}/src/SIMD.cpp
     ${CORE_SOURCE_DIR}/src/processor/Processor.cpp
     ${CORE_SOURCE_DIR}/src/processor/cpu/CPUProcessor.cpp
     ${CORE_SOURCE_DIR}/src/processor/cpu/Generic.cpp

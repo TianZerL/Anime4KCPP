@@ -1,7 +1,7 @@
 #ifndef AC_CORE_DISPATCH_HPP
 #define AC_CORE_DISPATCH_HPP
 
-namespace ac::core::cpu::dispatch
+namespace ac::core::simd
 {
     // x86
     bool supportSSE() noexcept;
