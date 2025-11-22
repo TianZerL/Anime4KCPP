@@ -9,7 +9,7 @@ namespace ac::specs
         "acnet-hdn1",
         "acnet-hdn2",
         "acnet-hdn3",
-        "arnet-small-normal",
+        "arnet-small-hdn",
         "arnet-small-le",
     };
 
@@ -19,7 +19,7 @@ namespace ac::specs
         "Lightweight CNN, moderate denoising.",    // acnet-hdn1
         "Lightweight CNN, heavy denoising.",       // acnet-hdn2
         "Lightweight CNN, extreme denoising.",     // acnet-hdn3
-        "Lightweight ResNet, mild denoising.",     // arnet-small-normal
+        "Lightweight ResNet, mild denoising.",     // arnet-small-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-small-le
     };
 

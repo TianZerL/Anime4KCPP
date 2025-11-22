@@ -19,7 +19,7 @@ class ac::core::model::ARNet
 public:
     enum class Variant
     {
-        SMALL_NORMAL, SMALL_LE
+        SMALL_HDN, SMALL_LE
     };
 
 public:
