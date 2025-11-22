@@ -69,7 +69,7 @@ namespace ac::core::cpu
             auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            const int index = ((i & 1) << 1) + (j & 1);
+            auto index = ((i & 1) << 1) + (j & 1);
 
             auto r = [&]() -> auto {
                 Eigen::Map<const Eigen::Array<IN, cin, 1>> rin{ in };
@@ -87,6 +87,55 @@ namespace ac::core::cpu
                 out[n] = fromFloat<OUT>((k * r).sum());
             }
         }, src, dst);
+    }
+
+    template <typename OUT>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_eigen3_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    {
+        static constexpr int cin = 8;
+        static constexpr int upscale = 2;
+
+        int w = src.width(), h = src.height();
+        int step = src.stride() / src.elementSize();
+
+        util::parallelFor(0, h, [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j, i));
+
+                auto dstX = j * upscale;
+                auto dstY = i * upscale;
+
+                auto sp = i < h - 1 ? +step : 0;
+                auto sn = i > 0 ? -step : 0;
+                auto cp = j < w - 1 ? +cin : 0;
+                auto cn = j > 0 ? -cin : 0;
+
+                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
+                auto ml = in + cn, mc = in, mr = in + cp;
+                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+
+                Eigen::Array<float, cin, 9> r{};
+                r <<
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ tl },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ tc },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ tr },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ ml },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ mc },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ mr },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ bl },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ bc },
+                    Eigen::Map<const Eigen::Array<float, cin, 1>>{ br };
+
+                for (int n = 0; n < 4; n++)
+                {
+                    Eigen::Map<const Eigen::Array<float, cin, 9>> k(kernels + n * cin * 9);
+                    float sum = (k * r).sum() + biases[n];
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
+                }
+            }
+        });
     }
 
     void conv3x3_1to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -143,10 +192,6 @@ namespace ac::core::cpu
     {
         conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to4_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-        conv3x3_eigen3<float, 8, 4>(src, dst, kernels, biases, Identity());
-    }
     void conv3x3_8to8_residual_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
         conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
@@ -154,5 +199,20 @@ namespace ac::core::cpu
     void conv3x3_8to8_residual_add_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
     {
         conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_8to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            conv3x3_8to4_identity_pixelshuffle_4to1_eigen3_float<std::uint8_t>(src, dst, kernels, biases);
+            break;
+        case Image::UInt16:
+            conv3x3_8to4_identity_pixelshuffle_4to1_eigen3_float<std::uint16_t>(src, dst, kernels, biases);
+            break;
+        case Image::Float32:
+            conv3x3_8to4_identity_pixelshuffle_4to1_eigen3_float<float>(src, dst, kernels, biases);
+            break;
+        }
     }
 }

@@ -242,7 +242,7 @@ namespace ac::core::cpu
             auto in = static_cast<const float*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            const int index = ((i & 1) << 1) + (j & 1);
+            auto index = ((i & 1) << 1) + (j & 1);
 
             constexpr int vstep = 8;
             constexpr int count = cin / vstep;
@@ -270,6 +270,99 @@ namespace ac::core::cpu
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);
+    }
+
+    template <typename OUT, bool fma>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_avx_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    {
+        static constexpr int cin = 8;
+        static constexpr int upscale = 2;
+
+        int w = src.width(), h = src.height();
+        int step = src.stride() / src.elementSize();
+
+        util::parallelFor(0, h, [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j, i));
+
+                auto dstX = j * upscale;
+                auto dstY = i * upscale;
+
+                auto sp = i < h - 1 ? +step : 0;
+                auto sn = i > 0 ? -step : 0;
+                auto cp = j < w - 1 ? +cin : 0;
+                auto cn = j > 0 ? -cin : 0;
+
+                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
+                auto ml = in + cn, mc = in, mr = in + cp;
+                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+
+                __m256 r0 = _mm256_loadu_ps(tl);
+                __m256 r1 = _mm256_loadu_ps(tc);
+                __m256 r2 = _mm256_loadu_ps(tr);
+                __m256 r3 = _mm256_loadu_ps(ml);
+                __m256 r4 = _mm256_loadu_ps(mc);
+                __m256 r5 = _mm256_loadu_ps(mr);
+                __m256 r6 = _mm256_loadu_ps(bl);
+                __m256 r7 = _mm256_loadu_ps(bc);
+                __m256 r8 = _mm256_loadu_ps(br);
+
+                for (int n = 0; n < 4; n++)
+                {
+                    __m256 s = _mm256_setzero_ps();
+
+                    __m256 k0 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 0);
+                    __m256 k1 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 1);
+                    __m256 k2 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 2);
+                    __m256 k3 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 3);
+                    __m256 k4 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 4);
+                    __m256 k5 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 5);
+                    __m256 k6 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 6);
+                    __m256 k7 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 7);
+                    __m256 k8 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 8);
+
+                    if constexpr (fma)
+                    {
+#                   ifdef AC_CORE_WITH_FMA
+                        __m256& s0 = s;
+                        __m256 s1 = _mm256_setzero_ps();
+                        __m256 s2 = _mm256_setzero_ps();
+
+                        s0 = _mm256_fmadd_ps(r0, k0, s0);
+                        s1 = _mm256_fmadd_ps(r1, k1, s1);
+                        s2 = _mm256_fmadd_ps(r2, k2, s2);
+                        s0 = _mm256_fmadd_ps(r3, k3, s0);
+                        s1 = _mm256_fmadd_ps(r4, k4, s1);
+                        s2 = _mm256_fmadd_ps(r5, k5, s2);
+                        s0 = _mm256_fmadd_ps(r6, k6, s0);
+                        s1 = _mm256_fmadd_ps(r7, k7, s1);
+                        s2 = _mm256_fmadd_ps(r8, k8, s2);
+
+                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
+#                   endif
+                    }
+                    else
+                    {
+                        __m256 s0 = _mm256_mul_ps(r0, k0);
+                        __m256 s1 = _mm256_mul_ps(r1, k1);
+                        __m256 s2 = _mm256_mul_ps(r2, k2);
+                        __m256 s3 = _mm256_mul_ps(r3, k3);
+                        __m256 s4 = _mm256_mul_ps(r4, k4);
+                        __m256 s5 = _mm256_mul_ps(r5, k5);
+                        __m256 s6 = _mm256_mul_ps(r6, k6);
+                        __m256 s7 = _mm256_mul_ps(r7, k7);
+                        __m256 s8 = _mm256_mul_ps(r8, k8);
+
+                        s = _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8))));
+                    }
+
+                    float sum = avx_hsum_ps(s) + biases[n];
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
+                }
+            }
+        });
     }
 
     void conv3x3_1to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -336,15 +429,6 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-#   ifdef AC_CORE_WITH_FMA
-        if (simd::supportFMA())
-            conv3x3_avx_float<8, 4, true>(src, dst, kernels, biases, Identity());
-        else
-#   endif
-            conv3x3_avx_float<8, 4, false>(src, dst, kernels, biases, Identity());
-    }
     void conv3x3_8to8_residual_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
 #   ifdef AC_CORE_WITH_FMA
@@ -362,5 +446,40 @@ namespace ac::core::cpu
         else
 #   endif
             conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_8to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+        {
+            switch (dst.type())
+            {
+            case Image::UInt8:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<std::uint8_t, true>(src, dst, kernels, biases);
+                break;
+            case Image::UInt16:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<std::uint16_t, true>(src, dst, kernels, biases);
+                break;
+            case Image::Float32:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<float, true>(src, dst, kernels, biases);
+                break;
+            }
+        }
+        else
+#   endif
+        {
+            switch (dst.type())
+            {
+            case Image::UInt8:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<std::uint8_t, false>(src, dst, kernels, biases);
+                break;
+            case Image::UInt16:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<std::uint16_t, false>(src, dst, kernels, biases);
+                break;
+            case Image::Float32:
+                conv3x3_8to4_identity_pixelshuffle_4to1_avx_float<float, false>(src, dst, kernels, biases);
+                break;
+            }
+        }
     }
 }

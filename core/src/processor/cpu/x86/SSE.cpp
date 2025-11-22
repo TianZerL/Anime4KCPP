@@ -195,7 +195,7 @@ namespace ac::core::cpu
             auto in = static_cast<const float*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            const int index = ((i & 1) << 1) + (j & 1);
+            auto index = ((i & 1) << 1) + (j & 1);
 
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
@@ -223,6 +223,107 @@ namespace ac::core::cpu
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);
+    }
+
+    template <typename OUT>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_sse_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    {
+        static constexpr int cin = 8;
+        static constexpr int upscale = 2;
+
+        int w = src.width(), h = src.height();
+        int step = src.stride() / src.elementSize();
+
+        util::parallelFor(0, h, [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j, i));
+
+                auto dstX = j * upscale;
+                auto dstY = i * upscale;
+
+                auto sp = i < h - 1 ? +step : 0;
+                auto sn = i > 0 ? -step : 0;
+                auto cp = j < w - 1 ? +cin : 0;
+                auto cn = j > 0 ? -cin : 0;
+
+                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
+                auto ml = in + cn, mc = in, mr = in + cp;
+                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+
+                constexpr int vstep = 4;
+                constexpr int count = cin / vstep;
+
+                __m128 r0[count]{};
+                __m128 r1[count]{};
+                __m128 r2[count]{};
+                __m128 r3[count]{};
+                __m128 r4[count]{};
+                __m128 r5[count]{};
+                __m128 r6[count]{};
+                __m128 r7[count]{};
+                __m128 r8[count]{};
+
+                for (int idx = 0; idx < count; idx++)
+                {
+                    r0[idx] = _mm_loadu_ps(tl + idx * vstep);
+                    r1[idx] = _mm_loadu_ps(tc + idx * vstep);
+                    r2[idx] = _mm_loadu_ps(tr + idx * vstep);
+                    r3[idx] = _mm_loadu_ps(ml + idx * vstep);
+                    r4[idx] = _mm_loadu_ps(mc + idx * vstep);
+                    r5[idx] = _mm_loadu_ps(mr + idx * vstep);
+                    r6[idx] = _mm_loadu_ps(bl + idx * vstep);
+                    r7[idx] = _mm_loadu_ps(bc + idx * vstep);
+                    r8[idx] = _mm_loadu_ps(br + idx * vstep);
+                }
+
+                for (int n = 0; n < 4; n++)
+                {
+                    const float* kptr[] = {
+                        kernels + n * cin * 9 + cin * 0,
+                        kernels + n * cin * 9 + cin * 1,
+                        kernels + n * cin * 9 + cin * 2,
+                        kernels + n * cin * 9 + cin * 3,
+                        kernels + n * cin * 9 + cin * 4,
+                        kernels + n * cin * 9 + cin * 5,
+                        kernels + n * cin * 9 + cin * 6,
+                        kernels + n * cin * 9 + cin * 7,
+                        kernels + n * cin * 9 + cin * 8
+                    };
+
+                    __m128 s = _mm_setzero_ps();
+
+                    for (int idx = 0; idx < count; idx++)
+                    {
+                        __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
+                        __m128 k1 = _mm_loadu_ps(kptr[1] + idx * vstep);
+                        __m128 k2 = _mm_loadu_ps(kptr[2] + idx * vstep);
+                        __m128 k3 = _mm_loadu_ps(kptr[3] + idx * vstep);
+                        __m128 k4 = _mm_loadu_ps(kptr[4] + idx * vstep);
+                        __m128 k5 = _mm_loadu_ps(kptr[5] + idx * vstep);
+                        __m128 k6 = _mm_loadu_ps(kptr[6] + idx * vstep);
+                        __m128 k7 = _mm_loadu_ps(kptr[7] + idx * vstep);
+                        __m128 k8 = _mm_loadu_ps(kptr[8] + idx * vstep);
+
+                        __m128 s0 = _mm_mul_ps(r0[idx], k0);
+                        __m128 s1 = _mm_mul_ps(r1[idx], k1);
+                        __m128 s2 = _mm_mul_ps(r2[idx], k2);
+                        __m128 s3 = _mm_mul_ps(r3[idx], k3);
+                        __m128 s4 = _mm_mul_ps(r4[idx], k4);
+                        __m128 s5 = _mm_mul_ps(r5[idx], k5);
+                        __m128 s6 = _mm_mul_ps(r6[idx], k6);
+                        __m128 s7 = _mm_mul_ps(r7[idx], k7);
+                        __m128 s8 = _mm_mul_ps(r8[idx], k8);
+
+                        s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                    }
+
+                    float sum = sse_hsum_ps(s) + biases[n];
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
+                }
+            }
+        });
     }
 
     void conv3x3_1to8_relu_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -290,5 +391,20 @@ namespace ac::core::cpu
     void conv3x3_8to8_residual_add_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
     {
         conv3x3_sse_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_8to4_identity_pixelshuffle_4to1_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            conv3x3_8to4_identity_pixelshuffle_4to1_sse_float<std::uint8_t>(src, dst, kernels, biases);
+            break;
+        case Image::UInt16:
+            conv3x3_8to4_identity_pixelshuffle_4to1_sse_float<std::uint16_t>(src, dst, kernels, biases);
+            break;
+        case Image::Float32:
+            conv3x3_8to4_identity_pixelshuffle_4to1_sse_float<float>(src, dst, kernels, biases);
+            break;
+        }
     }
 }

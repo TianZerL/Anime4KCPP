@@ -60,10 +60,9 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_generic(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
-    void pixelshuffle_4to1_generic(const Image& src, Image& dst);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
 #ifdef AC_CORE_WITH_EIGEN3
     void conv3x3_1to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -71,9 +70,9 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
 #endif
 #ifdef AC_CORE_WITH_SSE
     void conv3x3_1to8_relu_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -82,9 +81,10 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_sse(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
+
 #endif
 #ifdef AC_CORE_WITH_AVX
     void conv3x3_1to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -93,9 +93,9 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_avx(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
 #endif
 #ifdef AC_CORE_WITH_NEON
     void conv3x3_1to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -104,9 +104,9 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
 #endif
 #ifdef AC_CORE_WITH_WASM_SIMD128
     void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -115,9 +115,9 @@ namespace ac::core::cpu
 
     void conv3x3_1to8_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_lrelu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-    void conv3x3_8to4_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_residual_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
     void conv3x3_8to8_residual_add_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
 #endif
 
     class CPUProcessorBase : public Processor
@@ -159,9 +159,9 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_eigen3;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_eigen3;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_eigen3;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_eigen3;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_eigen3;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_eigen3;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_SSE
@@ -172,9 +172,9 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_sse;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_sse;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_sse;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_sse;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_sse;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_sse;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_AVX
@@ -185,9 +185,9 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_avx;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_avx;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_avx;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_avx;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_avx;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_avx;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_NEON
@@ -198,9 +198,9 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_neon;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_neon;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_neon;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_neon;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_neon;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_neon;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_WASM_SIMD128
@@ -211,9 +211,9 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_wasm_simd128;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_wasm_simd128;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_wasm_simd128;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_wasm_simd128;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_wasm_simd128;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_wasm_simd128;
                 break;
 #       endif
             default:
@@ -223,12 +223,11 @@ namespace ac::core::cpu
 
                 conv3x3_1to8_identity = conv3x3_1to8_identity_generic;
                 conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_generic;
-                conv3x3_8to4_identity = conv3x3_8to4_identity_generic;
                 conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_generic;
                 conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_generic;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_generic;
                 break;
             }
-            pixelshuffle_4to1 = pixelshuffle_4to1_generic;
         }
         ~CPUProcessorBase() noexcept override = default;
 
@@ -243,10 +242,9 @@ namespace ac::core::cpu
 
         void (*conv3x3_1to8_identity)(const Image& src, Image& dst, const float* kernels, const float* biases);
         void (*conv3x3_8to8_lrelu)(const Image& src, Image& dst, const float* kernels, const float* biases, float negativeSlope);
-        void (*conv3x3_8to4_identity)(const Image& src, Image& dst, const float* kernels, const float* biases);
         void (*conv3x3_8to8_residual_identity)(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
         void (*conv3x3_8to8_residual_add_identity)(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale, const Image& feat);
-        void (*pixelshuffle_4to1)(const Image& src, Image& dst);
+        void (*conv3x3_8to4_identity_pixelshuffle_4to1)(const Image& src, Image& dst, const float* kernels, const float* biases);
     };
 
     template<typename Model>
@@ -328,7 +326,6 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::process(const Image& s
     Image tmp1{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     Image tmp2{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     Image feat{ src.width(), src.height(), 8, ac::core::Image::Float32 };
-
     //head
     conv3x3_1to8_identity(src, feat, kernels + model.kernelOffset(0), biases + model.baisOffset(0));
     //body
@@ -342,8 +339,7 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::process(const Image& s
     conv3x3_8to8_lrelu(tmp2, tmp1, kernels + model.kernelOffset(1 + (model.blocks() - 1) * 2), biases + model.baisOffset(1 + (model.blocks() - 1) * 2), 0.2f);
     conv3x3_8to8_residual_add_identity(tmp1, tmp2, kernels + model.kernelOffset(2 + (model.blocks() - 1) * 2), biases + model.baisOffset(2 + (model.blocks() - 1) * 2), tmp2, 0.2f, feat);
     // upscale
-    conv3x3_8to4_identity(tmp2, tmp1, kernels + model.kernelOffset(1 + model.blocks() * 2), biases + model.baisOffset(1 + model.blocks() * 2));
-    pixelshuffle_4to1(tmp1, dst);
+    conv3x3_8to4_identity_pixelshuffle_4to1(tmp2, dst, kernels + model.kernelOffset(1 + model.blocks() * 2), biases + model.baisOffset(1 + model.blocks() * 2));
 }
 
 template<>

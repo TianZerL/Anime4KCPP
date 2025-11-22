@@ -71,7 +71,7 @@ namespace ac::core::cpu
             auto in = static_cast<const IN*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            const int index = ((i & 1) << 1) + (j & 1);
+            auto index = ((i & 1) << 1) + (j & 1);
 
             for (int n = 0; n < cout; n++)
             {
@@ -83,7 +83,7 @@ namespace ac::core::cpu
         }, src, dst);
     }
     template <typename IN, typename OUT, int cin, int upscale>
-    inline void pixelshuffle_generic(const Image& src, Image& dst)
+    inline void pixelshuffle_generic(const Image& src, Image& dst) noexcept
     {
         constexpr int group = upscale * upscale;
         constexpr int cout = cin / group;
@@ -96,11 +96,71 @@ namespace ac::core::cpu
                 auto in = static_cast<const IN*>(src.ptr(j / upscale, i / upscale));
                 auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-                const int index = (i % upscale) * upscale + (j % upscale);
+                auto index = (i % upscale) * upscale + (j % upscale);
 
                 for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(toFloat<IN>(in[n * group + index]));
             }
         }
+    }
+
+    template <typename OUT>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_generic_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    {
+        static constexpr int cin = 8;
+        static constexpr int upscale = 2;
+
+        int w = src.width(), h = src.height();
+        int step = src.stride() / src.elementSize();
+
+        util::parallelFor(0, h, [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j, i));
+
+                auto dstX = j * upscale;
+                auto dstY = i * upscale;
+
+                auto sp = i < h - 1 ? +step : 0;
+                auto sn = i > 0 ? -step : 0;
+                auto cp = j < w - 1 ? +cin : 0;
+                auto cn = j > 0 ? -cin : 0;
+
+                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
+                auto ml = in + cn, mc = in, mr = in + cp;
+                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+
+                for (int n = 0; n < 4; n++)
+                {
+                    auto k0 = kernels + n * cin * 9 + cin * 0;
+                    auto k1 = kernels + n * cin * 9 + cin * 1;
+                    auto k2 = kernels + n * cin * 9 + cin * 2;
+                    auto k3 = kernels + n * cin * 9 + cin * 3;
+                    auto k4 = kernels + n * cin * 9 + cin * 4;
+                    auto k5 = kernels + n * cin * 9 + cin * 5;
+                    auto k6 = kernels + n * cin * 9 + cin * 6;
+                    auto k7 = kernels + n * cin * 9 + cin * 7;
+                    auto k8 = kernels + n * cin * 9 + cin * 8;
+
+                    float sum = biases[n];
+
+                    for (int c = 0; c < cin; c++)
+                    {
+                        sum +=
+                            tl[c] * k0[c] +
+                            tc[c] * k1[c] +
+                            tr[c] * k2[c] +
+                            ml[c] * k3[c] +
+                            mc[c] * k4[c] +
+                            mr[c] * k5[c] +
+                            bl[c] * k6[c] +
+                            bc[c] * k7[c] +
+                            br[c] * k8[c];
+                    }
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
+                }
+            }
+        });
     }
 
     void conv3x3_1to8_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -157,10 +217,6 @@ namespace ac::core::cpu
     {
         conv3x3_generic<float, 8, 8>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to4_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-        conv3x3_generic<float, 8, 4>(src, dst, kernels, biases, Identity());
-    }
     void conv3x3_8to8_residual_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
         conv3x3_generic<float, 8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
@@ -169,18 +225,18 @@ namespace ac::core::cpu
     {
         conv3x3_generic<float, 8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
-    void pixelshuffle_4to1_generic(const Image& src, Image& dst)
+    void conv3x3_8to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            pixelshuffle_generic<float, std::uint8_t, 4, 2>(src, dst);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<std::uint8_t>(src, dst, kernels, biases);
             break;
         case Image::UInt16:
-            pixelshuffle_generic<float, std::uint16_t, 4, 2>(src, dst);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<std::uint16_t>(src, dst, kernels, biases);
             break;
         case Image::Float32:
-            pixelshuffle_generic<float, float, 4, 2>(src, dst);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<float>(src, dst, kernels, biases);
             break;
         }
     }

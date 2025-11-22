@@ -216,7 +216,7 @@ namespace ac::core::cpu
             auto in = static_cast<const float*>(sptr);
             auto out = static_cast<OUT*>(dptr);
 
-            const int index = ((i & 1) << 1) + (j & 1);
+            auto index = ((i & 1) << 1) + (j & 1);
 
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
@@ -249,6 +249,110 @@ namespace ac::core::cpu
                 out[n] = fromFloat<OUT>(sum);
             }
         }, src, dst);
+    }
+
+    template <typename OUT>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_neon_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    {
+        static constexpr int cin = 8;
+        static constexpr int upscale = 2;
+
+        int w = src.width(), h = src.height();
+        int step = src.stride() / src.elementSize();
+
+        util::parallelFor(0, h, [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j, i));
+
+                auto dstX = j * upscale;
+                auto dstY = i * upscale;
+
+                auto sp = i < h - 1 ? +step : 0;
+                auto sn = i > 0 ? -step : 0;
+                auto cp = j < w - 1 ? +cin : 0;
+                auto cn = j > 0 ? -cin : 0;
+
+                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
+                auto ml = in + cn, mc = in, mr = in + cp;
+                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+
+                constexpr int vstep = 4;
+                constexpr int count = cin / vstep;
+
+                float32x4_t r0[count]{};
+                float32x4_t r1[count]{};
+                float32x4_t r2[count]{};
+                float32x4_t r3[count]{};
+                float32x4_t r4[count]{};
+                float32x4_t r5[count]{};
+                float32x4_t r6[count]{};
+                float32x4_t r7[count]{};
+                float32x4_t r8[count]{};
+
+                for (int idx = 0; idx < count; idx++)
+                {
+                    r0[idx] = vld1q_f32(tl + idx * vstep);
+                    r1[idx] = vld1q_f32(tc + idx * vstep);
+                    r2[idx] = vld1q_f32(tr + idx * vstep);
+                    r3[idx] = vld1q_f32(ml + idx * vstep);
+                    r4[idx] = vld1q_f32(mc + idx * vstep);
+                    r5[idx] = vld1q_f32(mr + idx * vstep);
+                    r6[idx] = vld1q_f32(bl + idx * vstep);
+                    r7[idx] = vld1q_f32(bc + idx * vstep);
+                    r8[idx] = vld1q_f32(br + idx * vstep);
+                }
+
+                for (int n = 0; n < 4; n++)
+                {
+                    const float* kptr[] = {
+                        kernels + n * cin * 9 + cin * 0,
+                        kernels + n * cin * 9 + cin * 1,
+                        kernels + n * cin * 9 + cin * 2,
+                        kernels + n * cin * 9 + cin * 3,
+                        kernels + n * cin * 9 + cin * 4,
+                        kernels + n * cin * 9 + cin * 5,
+                        kernels + n * cin * 9 + cin * 6,
+                        kernels + n * cin * 9 + cin * 7,
+                        kernels + n * cin * 9 + cin * 8
+                    };
+
+                    float32x4_t s0 = vdupq_n_f32(0.0f);
+
+                    for (int idx = 0; idx < count; idx++)
+                    {
+                        float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
+                        float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
+                        float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
+                        float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
+                        float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
+                        float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
+                        float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
+                        float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
+                        float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
+
+                        float32x4_t s1 = vdupq_n_f32(0.0f);
+                        float32x4_t s2 = vdupq_n_f32(0.0f);
+
+                        s0 = vmlaq_f32(s0, r0[idx], k0);
+                        s1 = vmlaq_f32(s1, r1[idx], k1);
+                        s2 = vmlaq_f32(s2, r2[idx], k2);
+                        s0 = vmlaq_f32(s0, r3[idx], k3);
+                        s1 = vmlaq_f32(s1, r4[idx], k4);
+                        s2 = vmlaq_f32(s2, r5[idx], k5);
+                        s0 = vmlaq_f32(s0, r6[idx], k6);
+                        s1 = vmlaq_f32(s1, r7[idx], k7);
+                        s2 = vmlaq_f32(s2, r8[idx], k8);
+
+                        s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
+                    }
+
+                    float sum = neon_hsum_f32(s0) + biases[n];
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
+                }
+            }
+        });
     }
 
     void conv3x3_1to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -305,10 +409,6 @@ namespace ac::core::cpu
     {
         conv3x3_neon_float<8, 8>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to4_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-        conv3x3_neon_float<8, 4>(src, dst, kernels, biases, Identity());
-    }
     void conv3x3_8to8_residual_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
         conv3x3_neon_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
@@ -316,5 +416,20 @@ namespace ac::core::cpu
     void conv3x3_8to8_residual_add_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
     {
         conv3x3_neon_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_8to4_identity_pixelshuffle_4to1_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            conv3x3_8to4_identity_pixelshuffle_4to1_neon_float<std::uint8_t>(src, dst, kernels, biases);
+            break;
+        case Image::UInt16:
+            conv3x3_8to4_identity_pixelshuffle_4to1_neon_float<std::uint16_t>(src, dst, kernels, biases);
+            break;
+        case Image::Float32:
+            conv3x3_8to4_identity_pixelshuffle_4to1_neon_float<float>(src, dst, kernels, biases);
+            break;
+        }
     }
 }
