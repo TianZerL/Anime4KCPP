@@ -153,7 +153,11 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type,
         if (modelString.find("arnet") != std::string::npos) // ARNet
         {
             auto variant = ac::core::model::ARNet::Variant::SMALL_LE;
-            if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::SMALL_LE;
+            if (modelString.find("small") != std::string::npos) // ARNet-Small
+            {
+                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::SMALL_LE;
+                else if (modelString.find("normal") != std::string::npos) variant = ac::core::model::ARNet::Variant::SMALL_LE;
+            }
             return createImpl(type, device, ac::core::model::ARNet{ variant });
         }
         else // ACNet
