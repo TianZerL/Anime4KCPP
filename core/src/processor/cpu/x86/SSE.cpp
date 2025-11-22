@@ -380,10 +380,6 @@ namespace ac::core::cpu
     {
         conv3x3_sse_float<8, 8>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to4_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-        conv3x3_sse_float<8, 4>(src, dst, kernels, biases, Identity());
-    }
     void conv3x3_8to8_residual_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
         conv3x3_sse_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });

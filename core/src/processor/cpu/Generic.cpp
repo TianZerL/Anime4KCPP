@@ -103,8 +103,8 @@ namespace ac::core::cpu
         }
     }
 
-    template <typename OUT>
-    inline void conv3x3_8to4_identity_pixelshuffle_4to1_generic_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    template <typename IN, typename OUT>
+    inline void conv3x3_8to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
     {
         static constexpr int cin = 8;
         static constexpr int upscale = 2;
@@ -115,7 +115,7 @@ namespace ac::core::cpu
         util::parallelFor(0, h, [&](const int i) {
             for (int j = 0; j < w; j++)
             {
-                auto in = static_cast<const float*>(src.ptr(j, i));
+                auto in = static_cast<const IN*>(src.ptr(j, i));
 
                 auto dstX = j * upscale;
                 auto dstY = i * upscale;
@@ -146,15 +146,15 @@ namespace ac::core::cpu
                     for (int c = 0; c < cin; c++)
                     {
                         sum +=
-                            tl[c] * k0[c] +
-                            tc[c] * k1[c] +
-                            tr[c] * k2[c] +
-                            ml[c] * k3[c] +
-                            mc[c] * k4[c] +
-                            mr[c] * k5[c] +
-                            bl[c] * k6[c] +
-                            bc[c] * k7[c] +
-                            br[c] * k8[c];
+                            toFloat<IN>(tl[c]) * k0[c] +
+                            toFloat<IN>(tc[c]) * k1[c] +
+                            toFloat<IN>(tr[c]) * k2[c] +
+                            toFloat<IN>(ml[c]) * k3[c] +
+                            toFloat<IN>(mc[c]) * k4[c] +
+                            toFloat<IN>(mr[c]) * k5[c] +
+                            toFloat<IN>(bl[c]) * k6[c] +
+                            toFloat<IN>(bc[c]) * k7[c] +
+                            toFloat<IN>(br[c]) * k8[c];
                     }
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
@@ -230,13 +230,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<std::uint8_t>(src, dst, kernels, biases);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic<float, std::uint8_t>(src, dst, kernels, biases);
             break;
         case Image::UInt16:
-            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<std::uint16_t>(src, dst, kernels, biases);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic<float, std::uint16_t>(src, dst, kernels, biases);
             break;
         case Image::Float32:
-            conv3x3_8to4_identity_pixelshuffle_4to1_generic_float<float>(src, dst, kernels, biases);
+            conv3x3_8to4_identity_pixelshuffle_4to1_generic<float, float>(src, dst, kernels, biases);
             break;
         }
     }
