@@ -1,6 +1,6 @@
-function(generate_image_resize_simd SIMD OUTPUT_FILE_PATH_VAR)
-    string(TOUPPER ${SIMD} SIMD_UPPER)
-    string(TOLOWER ${SIMD} SIMD_LOWER)
+function(generate_image_resize_simd SIMD_VAR OUTPUT_FILE_PATH_VAR)
+    string(TOUPPER ${SIMD_VAR} SIMD_UPPER)
+    string(TOLOWER ${SIMD_VAR} SIMD_LOWER)
 
     file(WRITE "${CORE_BINARY_DIR}/filegen/src/simd/ImageResize${SIMD_UPPER}.cpp.in" [[
 #define STBIR_@SIMD_UPPER@

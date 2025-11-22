@@ -19,49 +19,43 @@ class ac::core::model::ARNet
 public:
     enum class Variant
     {
-        HDN
+        SMALL_NORMAL, SMALL_LE
     };
 
 public:
     AC_EXPORT ARNet(Variant v) noexcept;
 
 public:
+    int blocks() const noexcept { return blockNum; }
+
     // length in numbers
-    static constexpr int kernelLength() noexcept { return 8 * 9 + 8 * 8 * 9 * 8 + 8 * 4; }
-    static constexpr int biasLength() noexcept { return 8 * 9; }
-    static constexpr int kernelLength(const int idx) { return (idx == 0) ? 8 * 9 : ((idx > 0 && idx < 9) ? 8 * 8 * 9 : ((idx == 9) ? 8 * 4 : 0)); }
-    static constexpr int biasLength(const int idx) { return (idx >= 0 && idx < 9) ? 8 : 0; }
+    int kernelLength() const noexcept { return 8 * 9 + 8 * 8 * 9 * blockNum * 2 + 8 * 4 * 9; }
+    int biasLength() const noexcept { return 8 + 8 * blockNum * 2 + 4; }
+    int kernelLength(const int idx) const noexcept { return (idx == 0) ? 8 * 9 : ((idx > 0 && idx < (blockNum * 2 + 1)) ? 8 * 8 * 9 : ((idx == (blockNum * 2 + 1)) ? 8 * 4 * 9 : 0)); }
+    int biasLength(const int idx) const noexcept { return (idx >= 0 && idx < (blockNum * 2 + 1)) ? 8 : (idx == (blockNum * 2 + 1) ? 4 : 0); }
 
     // size in bytes
-    static constexpr std::size_t kernelSize() noexcept { return kernelLength() * sizeof(float); }
-    static constexpr std::size_t biasSize() noexcept { return biasLength() * sizeof(float); }
-    static constexpr std::size_t kernelSize(const int idx) noexcept { return kernelLength(idx) * sizeof(float); }
-    static constexpr std::size_t biasSize(const int idx) noexcept { return biasLength(idx) * sizeof(float); }
+    std::size_t kernelSize() const noexcept { return kernelLength() * sizeof(float); }
+    std::size_t biasSize() const noexcept { return biasLength() * sizeof(float); }
+    std::size_t kernelSize(const int idx) const noexcept { return kernelLength(idx) * sizeof(float); }
+    std::size_t biasSize(const int idx) const noexcept { return biasLength(idx) * sizeof(float); }
 
-public:
-    static constexpr int kernelOffset[]{
-        0,
-        0 * 8 * 8 * 9 + 8 * 9,
-        1 * 8 * 8 * 9 + 8 * 9,
-        2 * 8 * 8 * 9 + 8 * 9,
-        3 * 8 * 8 * 9 + 8 * 9,
-        4 * 8 * 8 * 9 + 8 * 9,
-        5 * 8 * 8 * 9 + 8 * 9,
-        6 * 8 * 8 * 9 + 8 * 9,
-        7 * 8 * 8 * 9 + 8 * 9,
-        8 * 8 * 8 * 9 + 8 * 9
-    };
-    static constexpr int baisOffset[]{
-        0,
-        1 * 8,
-        2 * 8,
-        3 * 8,
-        4 * 8,
-        5 * 8,
-        6 * 8,
-        7 * 8,
-        8 * 8
-    };
+    int kernelOffset(const int idx) const noexcept
+    {
+        if (idx <= 0) return 0;
+        if (idx == 1) return 8 * 9;
+        if (idx <= blockNum * 2 + 1) return 8 * 9 + (8 * 8 * 9) * (idx - 1);
+        return kernelLength();
+    }
+    int baisOffset(const int idx) const noexcept
+    {
+        if (idx <= 0) return 0;
+        if (idx == 1) return 8;
+        if (idx <= blockNum * 2 + 1) return 8 + 8 * (idx - 1);
+        return biasLength();
+    }
+private:
+    int blockNum;
 };
 
 #endif

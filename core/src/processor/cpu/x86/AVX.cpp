@@ -1,3 +1,4 @@
+#include <array>
 #include <immintrin.h>
 
 #include "AC/Core/SIMD.hpp"
@@ -14,15 +15,19 @@ namespace ac::core::cpu
         return _mm_cvtss_f32(v32);
     }
 
-    template <typename OUT, int cin, int cout, bool fma, bool residual = false>
-    inline void conv3x3_avx_float(const Image& src, Image& dst, const float* const kernels, const float* const biases)
+    template <int cin, int cout, bool fma, typename ActiveFunc, typename... ResidualArgs>
+    inline void conv3x3_avx_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
 
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const float*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
+
+        filter([=](const int i, const int j, const auto ...ptrs) {
+            [[maybe_unused]] const std::array<const void*, sizeof...(ptrs)> iptrs{ ptrs... }; // just ignore last 2 items.
+
+            auto in = static_cast<const float*>(std::get<sizeof...(ptrs) - 2>(std::forward_as_tuple(ptrs...)));
+            auto out = static_cast<float*>(std::get<sizeof...(ptrs) - 1>(std::forward_as_tuple(ptrs...)));
 
             auto sp = i < h - 1 ? +step : 0;
             auto sn = i > 0 ? -step : 0;
@@ -181,21 +186,25 @@ namespace ac::core::cpu
                         s = _mm256_add_ps(s, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
                     }
                 }
-                float sum = avx_hsum_ps(s);
-                if constexpr (residual) sum += out[n];
-                out[n] = relu<OUT>(sum + biases[n]);
+                float sum = avx_hsum_ps(s) + biases[n];
+
+                if constexpr (sizeof...(ResidualArgs))
+                    for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                        sum = sum * scales[idx] + static_cast<const float*>(iptrs[idx])[n];
+
+                out[n] = activeFunc(sum);
             }
-        }, src, dst);
+        }, residualArg.image..., src, dst);
     }
-    template <typename IN, typename OUT, int cout>
-    inline void conv3x3_avx_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases)
+    template <typename IN, int cout, typename ActiveFunc>
+    inline void conv3x3_avx_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
 
         filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+            auto out = static_cast<float*>(dptr);
 
             auto sp = i < h - 1 ? +step : 0;
             auto sn = i > 0 ? -step : 0;
@@ -222,7 +231,7 @@ namespace ac::core::cpu
                 __m256 k = _mm256_loadu_ps(kernels + n * 9 + 0);
                 auto sum = avx_hsum_ps(_mm256_mul_ps(r, k));
                 auto k8 = *(kernels + n * 9 + 8);
-                out[n] = relu<OUT>(sum + k8 * r8 + biases[n]);
+                out[n] = activeFunc(sum + k8 * r8 + biases[n]);
             }
         }, src, dst);
     }
@@ -263,38 +272,29 @@ namespace ac::core::cpu
         }, src, dst);
     }
 
-    void conv3x3_1to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    void conv3x3_1to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_avx_cin1<std::uint8_t, float, 8>(src, dst, kernels, biases);
+            conv3x3_avx_cin1<std::uint8_t, 8>(src, dst, kernels, biases, ReLU());
             break;
         case Image::UInt16:
-            conv3x3_avx_cin1<std::uint16_t, float, 8>(src, dst, kernels, biases);
+            conv3x3_avx_cin1<std::uint16_t, 8>(src, dst, kernels, biases, ReLU());
             break;
         case Image::Float32:
-            conv3x3_avx_cin1<float, float, 8>(src, dst, kernels, biases);
+            conv3x3_avx_cin1<float, 8>(src, dst, kernels, biases, ReLU());
             break;
         }
     }
-    void conv3x3_8to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    void conv3x3_8to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_avx_float<float, 8, 8, true>(src, dst, kernels, biases);
+            conv3x3_avx_float<8, 8, true>(src, dst, kernels, biases, ReLU());
         else
 #   endif
-            conv3x3_avx_float<float, 8, 8, false>(src, dst, kernels, biases);
-    }
-    void conv3x3_residual_8to8_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-#   ifdef AC_CORE_WITH_FMA
-        if (simd::supportFMA())
-            conv3x3_avx_float<float, 8, 8, true, true>(src, dst, kernels, biases);
-        else
-#   endif
-            conv3x3_avx_float<float, 8, 8, false, true>(src, dst, kernels, biases);
+            conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, ReLU());
     }
     void deconv2x2_8to1_avx(const Image& src, Image& dst, const float* kernels)
     {
@@ -310,5 +310,57 @@ namespace ac::core::cpu
             deconv2x2_avx_float<float, 8, 1>(src, dst, kernels);
             break;
         }
+    }
+
+    void conv3x3_1to8_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_avx_cin1<std::uint8_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_avx_cin1<std::uint16_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_avx_cin1<float, 8>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_8to8_lrelu_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const float negativeSlope)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<8, 8, true>(src, dst, kernels, biases, LReLU(negativeSlope));
+        else
+#   endif
+            conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, LReLU(negativeSlope));
+    }
+    void conv3x3_8to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<8, 4, true>(src, dst, kernels, biases, Identity());
+        else
+#   endif
+            conv3x3_avx_float<8, 4, false>(src, dst, kernels, biases, Identity());
+    }
+    void conv3x3_8to8_residual_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<8, 8, true>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
+        else
+#   endif
+            conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
+    }
+    void conv3x3_8to8_residual_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<8, 8, true>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+        else
+#   endif
+            conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
 }

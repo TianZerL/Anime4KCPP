@@ -14,6 +14,38 @@
 
 namespace ac::core
 {
+    struct ResidualArg
+    {
+        const Image& image;
+        float scale;
+    };
+
+    constexpr float identity(float v) noexcept;
+    constexpr float relu(float v) noexcept;
+    constexpr float lrelu(float v, float n) noexcept;
+
+    class Identity
+    {
+    public:
+        constexpr Identity() noexcept = default;
+        float operator() (const float v) const noexcept { return identity(v); }
+    };
+    class ReLU
+    {
+    public:
+        constexpr ReLU() noexcept = default;
+        float operator() (const float v) const noexcept { return relu(v); }
+    };
+    class LReLU
+    {
+    public:
+        constexpr LReLU(const float negativeSlope) noexcept : negativeSlope(negativeSlope) {}
+        float operator() (const float v) const noexcept { return lrelu(v, negativeSlope); }
+
+    private:
+        const float negativeSlope;
+    };
+
     // align v to a multiple of n, and n must a power of 2
     template <typename Integer>
     constexpr Integer align(Integer v, int n) noexcept;
@@ -31,13 +63,6 @@ namespace ac::core
     // clamp value between 0 and Unsigned's max
     template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
     constexpr Unsigned fromFloat(float v) noexcept;
-
-    // clamp value between 0.0f and value
-    template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool> = true>
-    constexpr Float relu(float v) noexcept;
-    // clamp value between 0 and Unsigned's max
-    template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
-    constexpr Unsigned relu(float v) noexcept;
 
     // compute `ceil(log2(v))` as fast as possible
     int ceilLog2(double v) noexcept;
@@ -59,6 +84,19 @@ namespace ac::core
 
     void* fastMalloc(std::size_t size) noexcept;
     void fastFree(void* ptr) noexcept;
+}
+
+inline constexpr float ac::core::identity(const float v) noexcept
+{
+    return v;
+}
+inline constexpr float ac::core::relu(const float v) noexcept
+{
+    return v < 0.0f ? 0.0f : v;
+}
+inline constexpr float ac::core::lrelu(const float v, const float n) noexcept
+{
+    return v < 0.0f ? v * n : v;
 }
 
 template <typename Integer>
@@ -87,17 +125,6 @@ template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>
 inline constexpr Unsigned ac::core::fromFloat(const float v) noexcept
 {
     return v < 0.0f ? 0 : (v > 1.0f ? std::numeric_limits<Unsigned>::max() : static_cast<Unsigned>(v * std::numeric_limits<Unsigned>::max() + 0.5f));
-}
-
-template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool>>
-inline constexpr Float ac::core::relu(const float v) noexcept
-{
-    return v < 0.0f ? 0.0f : v;
-}
-template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>>
-inline constexpr Unsigned ac::core::relu(const float v) noexcept
-{
-    return fromFloat<Unsigned>(v);
 }
 
 inline int ac::core::ceilLog2(const double v) noexcept

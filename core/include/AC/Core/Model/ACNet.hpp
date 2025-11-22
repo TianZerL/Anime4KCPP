@@ -33,38 +33,28 @@ public:
     // length in numbers
     static constexpr int kernelLength() noexcept { return 8 * 9 + 8 * 8 * 9 * 8 + 8 * 4; }
     static constexpr int biasLength() noexcept { return 8 * 9; }
-    static constexpr int kernelLength(const int idx) { return (idx == 0) ? 8 * 9 : ((idx > 0 && idx < 9) ? 8 * 8 * 9 : ((idx == 9) ? 8 * 4 : 0)); }
-    static constexpr int biasLength(const int idx) { return (idx >= 0 && idx < 9) ? 8 : 0; }
+    static constexpr int kernelLength(const int idx) noexcept { return (idx == 0) ? 8 * 9 : ((idx > 0 && idx < 9) ? 8 * 8 * 9 : ((idx == 9) ? 8 * 4 : 0)); }
+    static constexpr int biasLength(const int idx) noexcept { return (idx >= 0 && idx < 9) ? 8 : 0; }
     // size in bytes
     static constexpr std::size_t kernelSize() noexcept { return kernelLength() * sizeof(float); }
     static constexpr std::size_t biasSize() noexcept { return biasLength() * sizeof(float); }
     static constexpr std::size_t kernelSize(const int idx) noexcept { return kernelLength(idx) * sizeof(float); }
     static constexpr std::size_t biasSize(const int idx) noexcept { return biasLength(idx) * sizeof(float); }
 
-public:
-    static constexpr int kernelOffset[]{
-        0,
-        0 * 8 * 8 * 9 + 8 * 9,
-        1 * 8 * 8 * 9 + 8 * 9,
-        2 * 8 * 8 * 9 + 8 * 9,
-        3 * 8 * 8 * 9 + 8 * 9,
-        4 * 8 * 8 * 9 + 8 * 9,
-        5 * 8 * 8 * 9 + 8 * 9,
-        6 * 8 * 8 * 9 + 8 * 9,
-        7 * 8 * 8 * 9 + 8 * 9,
-        8 * 8 * 8 * 9 + 8 * 9
-    };
-    static constexpr int baisOffset[]{
-        0,
-        1 * 8,
-        2 * 8,
-        3 * 8,
-        4 * 8,
-        5 * 8,
-        6 * 8,
-        7 * 8,
-        8 * 8
-    };
+    static constexpr int kernelOffset(const int idx) noexcept
+    {
+        int offset = 0;
+        for(int i = 0; i < idx; i++)
+            offset += kernelLength(i);
+        return offset;
+    }
+    static constexpr int baisOffset(const int idx) noexcept
+    {
+        int offset = 0;
+        for(int i = 0; i < idx; i++)
+            offset += biasLength(i);
+        return offset;
+    }
 };
 
 #endif

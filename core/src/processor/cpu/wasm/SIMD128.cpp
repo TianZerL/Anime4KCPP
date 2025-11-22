@@ -12,15 +12,19 @@ namespace ac::core::cpu
         return wasm_f32x4_extract_lane(v32, 0);
     }
 
-    template <typename OUT, int cin, int cout, bool residual = false>
-    inline void conv3x3_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases)
+    template <int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
+    inline void conv3x3_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
 
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const float*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
+
+        filter([=](const int i, const int j, const auto ...ptrs) {
+            [[maybe_unused]] const std::array<const void*, sizeof...(ptrs)> iptrs{ ptrs... }; // just ignore last 2 items.
+
+            auto in = static_cast<const float*>(std::get<sizeof...(ptrs) - 2>(std::forward_as_tuple(ptrs...)));
+            auto out = static_cast<float*>(std::get<sizeof...(ptrs) - 1>(std::forward_as_tuple(ptrs...)));
 
             auto sp = i < h - 1 ? +step : 0;
             auto sn = i > 0 ? -step : 0;
@@ -132,21 +136,25 @@ namespace ac::core::cpu
 
                     s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
                 }
-                float sum = wasm_simd128_f32x4_hsum(s);
-                if constexpr (residual) sum += out[n];
-                out[n] = relu<OUT>(sum + biases[n]);
+                float sum = wasm_simd128_f32x4_hsum(s) + biases[n];
+
+                if constexpr (sizeof...(ResidualArgs))
+                    for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                        sum = sum * scales[idx] + static_cast<const float*>(iptrs[idx])[n];
+
+                out[n] = activeFunc(sum);
             }
-        }, src, dst);
+        }, residualArg.image..., src, dst);
     }
-    template <typename IN, typename OUT, int cout>
-    inline void conv3x3_wasm_simd128_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases)
+    template <typename IN, int cout, typename ActiveFunc>
+    inline void conv3x3_wasm_simd128_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
         int w = src.width(), h = src.height();
         int step = src.stride() / src.elementSize();
 
         filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
             auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+            auto out = static_cast<float*>(dptr);
 
             auto sp = i < h - 1 ? +step : 0;
             auto sn = i > 0 ? -step : 0;
@@ -167,7 +175,7 @@ namespace ac::core::cpu
                 v128_t k4 = wasm_v128_load(kernels + n * 9 + 4);
                 auto sum = wasm_simd128_f32x4_hsum(wasm_f32x4_add(wasm_f32x4_mul(r0, k0), wasm_f32x4_mul(r4, k4)));
                 auto k8 = *(kernels + n * 9 + 8);
-                out[n] = relu<OUT>(sum + k8 * r8 + biases[n]);
+                out[n] = activeFunc(sum + k8 * r8 + biases[n]);
             }
         }, src, dst);
     }
@@ -208,28 +216,24 @@ namespace ac::core::cpu
         }, src, dst);
     }
 
-    void conv3x3_1to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_wasm_simd128_cin1<std::uint8_t, float, 8>(src, dst, kernels, biases);
+            conv3x3_wasm_simd128_cin1<std::uint8_t, 8>(src, dst, kernels, biases, ReLU());
             break;
         case Image::UInt16:
-            conv3x3_wasm_simd128_cin1<std::uint16_t, float, 8>(src, dst, kernels, biases);
+            conv3x3_wasm_simd128_cin1<std::uint16_t, 8>(src, dst, kernels, biases, ReLU());
             break;
         case Image::Float32:
-            conv3x3_wasm_simd128_cin1<float, float, 8>(src, dst, kernels, biases);
+            conv3x3_wasm_simd128_cin1<float, 8>(src, dst, kernels, biases, ReLU());
             break;
         }
     }
-    void conv3x3_8to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    void conv3x3_8to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_wasm_simd128_float<float, 8, 8>(src, dst, kernels, biases);
-    }
-    void conv3x3_residual_8to8_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
-    {
-        conv3x3_wasm_simd128_float<float, 8, 8, true>(src, dst, kernels, biases);
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, ReLU());
     }
     void deconv2x2_8to1_wasm_simd128(const Image& src, Image& dst, const float* kernels)
     {
@@ -245,5 +249,37 @@ namespace ac::core::cpu
             deconv2x2_wasm_simd128_float<float, 8, 1>(src, dst, kernels);
             break;
         }
+    }
+
+    void conv3x3_1to8_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_wasm_simd128_cin1<std::uint8_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_wasm_simd128_cin1<std::uint16_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_wasm_simd128_cin1<float, 8>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_8to8_lrelu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const float negativeSlope)
+    {
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, LReLU(negativeSlope));
+    }
+    void conv3x3_8to4_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_wasm_simd128_float<8, 4>(src, dst, kernels, biases, Identity());
+    }
+    void conv3x3_8to8_residual_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
+    {
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
+    }
+    void conv3x3_8to8_residual_add_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
+    {
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
 }
