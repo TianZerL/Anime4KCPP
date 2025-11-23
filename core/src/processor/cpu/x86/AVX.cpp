@@ -90,7 +90,10 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
-                __m256 s = _mm256_setzero_ps();
+
+                __m256 s0 = _mm256_setzero_ps();
+                __m256 s1 = _mm256_setzero_ps();
+                __m256 s2 = _mm256_setzero_ps();
                 for (int idx = 0; idx < count; idx++)
                 {
                     __m256 k0 = _mm256_loadu_ps(kptr[0] + idx * vstep);
@@ -106,10 +109,6 @@ namespace ac::core::cpu
                     if constexpr (fma)
                     {
 #                   ifdef AC_CORE_WITH_FMA
-                        __m256& s0 = s;
-                        __m256 s1 = _mm256_setzero_ps();
-                        __m256 s2 = _mm256_setzero_ps();
-
                         s0 = _mm256_fmadd_ps(r0[idx], k0, s0);
                         s1 = _mm256_fmadd_ps(r1[idx], k1, s1);
                         s2 = _mm256_fmadd_ps(r2[idx], k2, s2);
@@ -119,25 +118,20 @@ namespace ac::core::cpu
                         s0 = _mm256_fmadd_ps(r6[idx], k6, s0);
                         s1 = _mm256_fmadd_ps(r7[idx], k7, s1);
                         s2 = _mm256_fmadd_ps(r8[idx], k8, s2);
-
-                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
 #                   endif
                     }
                     else
                     {
-                        __m256 s0 = _mm256_mul_ps(r0[idx], k0);
-                        __m256 s1 = _mm256_mul_ps(r1[idx], k1);
-                        __m256 s2 = _mm256_mul_ps(r2[idx], k2);
-                        __m256 s3 = _mm256_mul_ps(r3[idx], k3);
-                        __m256 s4 = _mm256_mul_ps(r4[idx], k4);
-                        __m256 s5 = _mm256_mul_ps(r5[idx], k5);
-                        __m256 s6 = _mm256_mul_ps(r6[idx], k6);
-                        __m256 s7 = _mm256_mul_ps(r7[idx], k7);
-                        __m256 s8 = _mm256_mul_ps(r8[idx], k8);
-
-                        s = _mm256_add_ps(s, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r0[idx], k0), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r1[idx], k1), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r2[idx], k2), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r3[idx], k3), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r4[idx], k4), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r5[idx], k5), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r6[idx], k6), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r7[idx], k7), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r8[idx], k8), s2);
                     }
-
                 }
                 if constexpr (remain)
                 {
@@ -154,10 +148,6 @@ namespace ac::core::cpu
                     if constexpr (fma)
                     {
 #                   ifdef AC_CORE_WITH_FMA
-                        __m256& s0 = s;
-                        __m256 s1 = _mm256_setzero_ps();
-                        __m256 s2 = _mm256_setzero_ps();
-
                         s0 = _mm256_fmadd_ps(r0[count], k0, s0);
                         s1 = _mm256_fmadd_ps(r1[count], k1, s1);
                         s2 = _mm256_fmadd_ps(r2[count], k2, s2);
@@ -167,26 +157,22 @@ namespace ac::core::cpu
                         s0 = _mm256_fmadd_ps(r6[count], k6, s0);
                         s1 = _mm256_fmadd_ps(r7[count], k7, s1);
                         s2 = _mm256_fmadd_ps(r8[count], k8, s2);
-
-                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
 #                   endif
                     }
                     else
                     {
-                        __m256 s0 = _mm256_mul_ps(r0[count], k0);
-                        __m256 s1 = _mm256_mul_ps(r1[count], k1);
-                        __m256 s2 = _mm256_mul_ps(r2[count], k2);
-                        __m256 s3 = _mm256_mul_ps(r3[count], k3);
-                        __m256 s4 = _mm256_mul_ps(r4[count], k4);
-                        __m256 s5 = _mm256_mul_ps(r5[count], k5);
-                        __m256 s6 = _mm256_mul_ps(r6[count], k6);
-                        __m256 s7 = _mm256_mul_ps(r7[count], k7);
-                        __m256 s8 = _mm256_mul_ps(r8[count], k8);
-
-                        s = _mm256_add_ps(s, _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8)))));
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r0[count], k0), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r1[count], k1), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r2[count], k2), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r3[count], k3), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r4[count], k4), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r5[count], k5), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r6[count], k6), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r7[count], k7), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r8[count], k8), s2);
                     }
                 }
-                float sum = avx_hsum_ps(s) + biases[n];
+                float sum = avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2))) + biases[n];
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
@@ -310,8 +296,6 @@ namespace ac::core::cpu
 
                 for (int n = 0; n < 4; n++)
                 {
-                    __m256 s = _mm256_setzero_ps();
-
                     __m256 k0 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 0);
                     __m256 k1 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 1);
                     __m256 k2 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 2);
@@ -322,13 +306,12 @@ namespace ac::core::cpu
                     __m256 k7 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 7);
                     __m256 k8 = _mm256_loadu_ps(kernels + n * cin * 9 + cin * 8);
 
+                    __m256 s0 = _mm256_setzero_ps();
+                    __m256 s1 = _mm256_setzero_ps();
+                    __m256 s2 = _mm256_setzero_ps();
                     if constexpr (fma)
                     {
 #                   ifdef AC_CORE_WITH_FMA
-                        __m256& s0 = s;
-                        __m256 s1 = _mm256_setzero_ps();
-                        __m256 s2 = _mm256_setzero_ps();
-
                         s0 = _mm256_fmadd_ps(r0, k0, s0);
                         s1 = _mm256_fmadd_ps(r1, k1, s1);
                         s2 = _mm256_fmadd_ps(r2, k2, s2);
@@ -338,27 +321,22 @@ namespace ac::core::cpu
                         s0 = _mm256_fmadd_ps(r6, k6, s0);
                         s1 = _mm256_fmadd_ps(r7, k7, s1);
                         s2 = _mm256_fmadd_ps(r8, k8, s2);
-
-                        s0 = _mm256_add_ps(s0, _mm256_add_ps(s1, s2));
 #                   endif
                     }
                     else
                     {
-                        __m256 s0 = _mm256_mul_ps(r0, k0);
-                        __m256 s1 = _mm256_mul_ps(r1, k1);
-                        __m256 s2 = _mm256_mul_ps(r2, k2);
-                        __m256 s3 = _mm256_mul_ps(r3, k3);
-                        __m256 s4 = _mm256_mul_ps(r4, k4);
-                        __m256 s5 = _mm256_mul_ps(r5, k5);
-                        __m256 s6 = _mm256_mul_ps(r6, k6);
-                        __m256 s7 = _mm256_mul_ps(r7, k7);
-                        __m256 s8 = _mm256_mul_ps(r8, k8);
-
-                        s = _mm256_add_ps(_mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3)), _mm256_add_ps(_mm256_add_ps(s4, s5), _mm256_add_ps(s6, _mm256_add_ps(s7, s8))));
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r0, k0), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r1, k1), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r2, k2), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r3, k3), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r4, k4), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r5, k5), s2);
+                        s0 = _mm256_add_ps(_mm256_mul_ps(r6, k6), s0);
+                        s1 = _mm256_add_ps(_mm256_mul_ps(r7, k7), s1);
+                        s2 = _mm256_add_ps(_mm256_mul_ps(r8, k8), s2);
                     }
 
-                    float sum = avx_hsum_ps(s) + biases[n];
-
+                    float sum = avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2))) + biases[n];
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
                 }
             }
