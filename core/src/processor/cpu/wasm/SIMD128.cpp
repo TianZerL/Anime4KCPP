@@ -87,7 +87,10 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
-                v128_t s = wasm_f32x4_const_splat(0.0f);
+
+                v128_t s0 = wasm_f32x4_splat(0.0f);
+                v128_t s1 = wasm_f32x4_splat(0.0f);
+                v128_t s2 = wasm_f32x4_splat(0.0f);
                 for (int idx = 0; idx < count; idx++)
                 {
                     v128_t k0 = wasm_v128_load(kptr[0] + idx * vstep);
@@ -100,17 +103,15 @@ namespace ac::core::cpu
                     v128_t k7 = wasm_v128_load(kptr[7] + idx * vstep);
                     v128_t k8 = wasm_v128_load(kptr[8] + idx * vstep);
 
-                    v128_t s0 = wasm_f32x4_mul(r0[idx], k0);
-                    v128_t s1 = wasm_f32x4_mul(r1[idx], k1);
-                    v128_t s2 = wasm_f32x4_mul(r2[idx], k2);
-                    v128_t s3 = wasm_f32x4_mul(r3[idx], k3);
-                    v128_t s4 = wasm_f32x4_mul(r4[idx], k4);
-                    v128_t s5 = wasm_f32x4_mul(r5[idx], k5);
-                    v128_t s6 = wasm_f32x4_mul(r6[idx], k6);
-                    v128_t s7 = wasm_f32x4_mul(r7[idx], k7);
-                    v128_t s8 = wasm_f32x4_mul(r8[idx], k8);
-
-                    s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r0[idx], k0), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r1[idx], k1), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r2[idx], k2), s2);
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r3[idx], k3), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r4[idx], k4), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r5[idx], k5), s2);
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r6[idx], k6), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r7[idx], k7), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r8[idx], k8), s2);
                 }
                 if constexpr (remain)
                 {
@@ -124,19 +125,17 @@ namespace ac::core::cpu
                     v128_t k7 = wasm_f32x4_make((kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f);
                     v128_t k8 = wasm_f32x4_make((kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f);
 
-                    v128_t s0 = wasm_f32x4_mul(r0[count], k0);
-                    v128_t s1 = wasm_f32x4_mul(r1[count], k1);
-                    v128_t s2 = wasm_f32x4_mul(r2[count], k2);
-                    v128_t s3 = wasm_f32x4_mul(r3[count], k3);
-                    v128_t s4 = wasm_f32x4_mul(r4[count], k4);
-                    v128_t s5 = wasm_f32x4_mul(r5[count], k5);
-                    v128_t s6 = wasm_f32x4_mul(r6[count], k6);
-                    v128_t s7 = wasm_f32x4_mul(r7[count], k7);
-                    v128_t s8 = wasm_f32x4_mul(r8[count], k8);
-
-                    s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r0[count], k0), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r1[count], k1), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r2[count], k2), s2);
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r3[count], k3), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r4[count], k4), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r5[count], k5), s2);
+                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r6[count], k6), s0);
+                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r7[count], k7), s1);
+                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r8[count], k8), s2);
                 }
-                float sum = wasm_simd128_f32x4_hsum(s) + biases[n];
+                float sum = wasm_simd128_f32x4_hsum(wasm_f32x4_add(s0, wasm_f32x4_add(s1, s2))) + biases[n];
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
@@ -282,8 +281,9 @@ namespace ac::core::cpu
                         kernels + n * cin * 9 + cin * 8
                     };
 
-                    v128_t s = wasm_f32x4_const_splat(0.0f);
-
+                    v128_t s0 = wasm_f32x4_splat(0.0f);
+                    v128_t s1 = wasm_f32x4_splat(0.0f);
+                    v128_t s2 = wasm_f32x4_splat(0.0f);
                     for (int idx = 0; idx < count; idx++)
                     {
                         v128_t k0 = wasm_v128_load(kptr[0] + idx * vstep);
@@ -296,20 +296,17 @@ namespace ac::core::cpu
                         v128_t k7 = wasm_v128_load(kptr[7] + idx * vstep);
                         v128_t k8 = wasm_v128_load(kptr[8] + idx * vstep);
 
-                        v128_t s0 = wasm_f32x4_mul(r0[idx], k0);
-                        v128_t s1 = wasm_f32x4_mul(r1[idx], k1);
-                        v128_t s2 = wasm_f32x4_mul(r2[idx], k2);
-                        v128_t s3 = wasm_f32x4_mul(r3[idx], k3);
-                        v128_t s4 = wasm_f32x4_mul(r4[idx], k4);
-                        v128_t s5 = wasm_f32x4_mul(r5[idx], k5);
-                        v128_t s6 = wasm_f32x4_mul(r6[idx], k6);
-                        v128_t s7 = wasm_f32x4_mul(r7[idx], k7);
-                        v128_t s8 = wasm_f32x4_mul(r8[idx], k8);
-
-                        s = wasm_f32x4_add(s, wasm_f32x4_add(wasm_f32x4_add(wasm_f32x4_add(s0, s1), wasm_f32x4_add(s2, s3)), wasm_f32x4_add(wasm_f32x4_add(s4, s5), wasm_f32x4_add(s6, wasm_f32x4_add(s7, s8)))));
+                        s0 = wasm_f32x4_add(wasm_f32x4_mul(r0[idx], k0), s0);
+                        s1 = wasm_f32x4_add(wasm_f32x4_mul(r1[idx], k1), s1);
+                        s2 = wasm_f32x4_add(wasm_f32x4_mul(r2[idx], k2), s2);
+                        s0 = wasm_f32x4_add(wasm_f32x4_mul(r3[idx], k3), s0);
+                        s1 = wasm_f32x4_add(wasm_f32x4_mul(r4[idx], k4), s1);
+                        s2 = wasm_f32x4_add(wasm_f32x4_mul(r5[idx], k5), s2);
+                        s0 = wasm_f32x4_add(wasm_f32x4_mul(r6[idx], k6), s0);
+                        s1 = wasm_f32x4_add(wasm_f32x4_mul(r7[idx], k7), s1);
+                        s2 = wasm_f32x4_add(wasm_f32x4_mul(r8[idx], k8), s2);
                     }
-
-                    float sum = wasm_simd128_f32x4_hsum(s) + biases[n];
+                    float sum = wasm_simd128_f32x4_hsum(wasm_f32x4_add(s0, wasm_f32x4_add(s1, s2))) + biases[n];
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
                 }

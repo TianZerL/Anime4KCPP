@@ -99,7 +99,10 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
+
                 float32x4_t s0 = vdupq_n_f32(0.0f);
+                float32x4_t s1 = vdupq_n_f32(0.0f);
+                float32x4_t s2 = vdupq_n_f32(0.0f);
                 for (int idx = 0; idx < count; idx++)
                 {
                     float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
@@ -112,9 +115,6 @@ namespace ac::core::cpu
                     float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
                     float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
 
-                    float32x4_t s1 = vdupq_n_f32(0.0f);
-                    float32x4_t s2 = vdupq_n_f32(0.0f);
-
                     s0 = vmlaq_f32(s0, r0[idx], k0);
                     s1 = vmlaq_f32(s1, r1[idx], k1);
                     s2 = vmlaq_f32(s2, r2[idx], k2);
@@ -124,8 +124,6 @@ namespace ac::core::cpu
                     s0 = vmlaq_f32(s0, r6[idx], k6);
                     s1 = vmlaq_f32(s1, r7[idx], k7);
                     s2 = vmlaq_f32(s2, r8[idx], k8);
-
-                    s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
                 }
                 if constexpr (remain)
                 {
@@ -148,8 +146,6 @@ namespace ac::core::cpu
                     float32x4_t k7 = vld1q_f32(d7);
                     float32x4_t k8 = vld1q_f32(d8);
 
-                    float32x4_t s1 = vdupq_n_f32(0.0f);
-                    float32x4_t s2 = vdupq_n_f32(0.0f);
 
                     s0 = vmlaq_f32(s0, r0[count], k0);
                     s1 = vmlaq_f32(s1, r1[count], k1);
@@ -160,10 +156,8 @@ namespace ac::core::cpu
                     s0 = vmlaq_f32(s0, r6[count], k6);
                     s1 = vmlaq_f32(s1, r7[count], k7);
                     s2 = vmlaq_f32(s2, r8[count], k8);
-
-                    s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
                 }
-                float sum = neon_hsum_f32(s0) + biases[n];
+                float sum = neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2))) + biases[n];
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
@@ -318,7 +312,8 @@ namespace ac::core::cpu
                     };
 
                     float32x4_t s0 = vdupq_n_f32(0.0f);
-
+                    float32x4_t s1 = vdupq_n_f32(0.0f);
+                    float32x4_t s2 = vdupq_n_f32(0.0f);
                     for (int idx = 0; idx < count; idx++)
                     {
                         float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
@@ -331,9 +326,6 @@ namespace ac::core::cpu
                         float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
                         float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
 
-                        float32x4_t s1 = vdupq_n_f32(0.0f);
-                        float32x4_t s2 = vdupq_n_f32(0.0f);
-
                         s0 = vmlaq_f32(s0, r0[idx], k0);
                         s1 = vmlaq_f32(s1, r1[idx], k1);
                         s2 = vmlaq_f32(s2, r2[idx], k2);
@@ -343,11 +335,8 @@ namespace ac::core::cpu
                         s0 = vmlaq_f32(s0, r6[idx], k6);
                         s1 = vmlaq_f32(s1, r7[idx], k7);
                         s2 = vmlaq_f32(s2, r8[idx], k8);
-
-                        s0 = vaddq_f32(s0, vaddq_f32(s1, s2));
                     }
-
-                    float sum = neon_hsum_f32(s0) + biases[n];
+                    float sum = neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2))) + biases[n];
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
                 }

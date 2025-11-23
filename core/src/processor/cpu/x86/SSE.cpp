@@ -88,7 +88,10 @@ namespace ac::core::cpu
                     kernels + n * cin * 9 + cin * 7,
                     kernels + n * cin * 9 + cin * 8
                 };
-                __m128 s = _mm_setzero_ps();
+
+                __m128 s0 = _mm_setzero_ps();
+                __m128 s1 = _mm_setzero_ps();
+                __m128 s2 = _mm_setzero_ps();
                 for (int idx = 0; idx < count; idx++)
                 {
                     __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
@@ -101,17 +104,15 @@ namespace ac::core::cpu
                     __m128 k7 = _mm_loadu_ps(kptr[7] + idx * vstep);
                     __m128 k8 = _mm_loadu_ps(kptr[8] + idx * vstep);
 
-                    __m128 s0 = _mm_mul_ps(r0[idx], k0);
-                    __m128 s1 = _mm_mul_ps(r1[idx], k1);
-                    __m128 s2 = _mm_mul_ps(r2[idx], k2);
-                    __m128 s3 = _mm_mul_ps(r3[idx], k3);
-                    __m128 s4 = _mm_mul_ps(r4[idx], k4);
-                    __m128 s5 = _mm_mul_ps(r5[idx], k5);
-                    __m128 s6 = _mm_mul_ps(r6[idx], k6);
-                    __m128 s7 = _mm_mul_ps(r7[idx], k7);
-                    __m128 s8 = _mm_mul_ps(r8[idx], k8);
-
-                    s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                    s0 = _mm_add_ps(_mm_mul_ps(r0[idx], k0), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r1[idx], k1), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r2[idx], k2), s2);
+                    s0 = _mm_add_ps(_mm_mul_ps(r3[idx], k3), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r4[idx], k4), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r5[idx], k5), s2);
+                    s0 = _mm_add_ps(_mm_mul_ps(r6[idx], k6), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r7[idx], k7), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r8[idx], k8), s2);
                 }
                 if constexpr (remain)
                 {
@@ -125,19 +126,17 @@ namespace ac::core::cpu
                     __m128 k7 = _mm_set_ps(0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, (kptr[7] + count * vstep)[0]);
                     __m128 k8 = _mm_set_ps(0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, (kptr[8] + count * vstep)[0]);
 
-                    __m128 s0 = _mm_mul_ps(r0[count], k0);
-                    __m128 s1 = _mm_mul_ps(r1[count], k1);
-                    __m128 s2 = _mm_mul_ps(r2[count], k2);
-                    __m128 s3 = _mm_mul_ps(r3[count], k3);
-                    __m128 s4 = _mm_mul_ps(r4[count], k4);
-                    __m128 s5 = _mm_mul_ps(r5[count], k5);
-                    __m128 s6 = _mm_mul_ps(r6[count], k6);
-                    __m128 s7 = _mm_mul_ps(r7[count], k7);
-                    __m128 s8 = _mm_mul_ps(r8[count], k8);
-
-                    s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                    s0 = _mm_add_ps(_mm_mul_ps(r0[count], k0), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r1[count], k1), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r2[count], k2), s2);
+                    s0 = _mm_add_ps(_mm_mul_ps(r3[count], k3), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r4[count], k4), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r5[count], k5), s2);
+                    s0 = _mm_add_ps(_mm_mul_ps(r6[count], k6), s0);
+                    s1 = _mm_add_ps(_mm_mul_ps(r7[count], k7), s1);
+                    s2 = _mm_add_ps(_mm_mul_ps(r8[count], k8), s2);
                 }
-                float sum = sse_hsum_ps(s) + biases[n];
+                float sum = sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2))) + biases[n];
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
@@ -291,8 +290,9 @@ namespace ac::core::cpu
                         kernels + n * cin * 9 + cin * 8
                     };
 
-                    __m128 s = _mm_setzero_ps();
-
+                    __m128 s0 = _mm_setzero_ps();
+                    __m128 s1 = _mm_setzero_ps();
+                    __m128 s2 = _mm_setzero_ps();
                     for (int idx = 0; idx < count; idx++)
                     {
                         __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
@@ -305,20 +305,17 @@ namespace ac::core::cpu
                         __m128 k7 = _mm_loadu_ps(kptr[7] + idx * vstep);
                         __m128 k8 = _mm_loadu_ps(kptr[8] + idx * vstep);
 
-                        __m128 s0 = _mm_mul_ps(r0[idx], k0);
-                        __m128 s1 = _mm_mul_ps(r1[idx], k1);
-                        __m128 s2 = _mm_mul_ps(r2[idx], k2);
-                        __m128 s3 = _mm_mul_ps(r3[idx], k3);
-                        __m128 s4 = _mm_mul_ps(r4[idx], k4);
-                        __m128 s5 = _mm_mul_ps(r5[idx], k5);
-                        __m128 s6 = _mm_mul_ps(r6[idx], k6);
-                        __m128 s7 = _mm_mul_ps(r7[idx], k7);
-                        __m128 s8 = _mm_mul_ps(r8[idx], k8);
-
-                        s = _mm_add_ps(s, _mm_add_ps(_mm_add_ps(_mm_add_ps(s0, s1), _mm_add_ps(s2, s3)), _mm_add_ps(_mm_add_ps(s4, s5), _mm_add_ps(s6, _mm_add_ps(s7, s8)))));
+                        s0 = _mm_add_ps(_mm_mul_ps(r0[idx], k0), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r1[idx], k1), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r2[idx], k2), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r3[idx], k3), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r4[idx], k4), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r5[idx], k5), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r6[idx], k6), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r7[idx], k7), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r8[idx], k8), s2);
                     }
-
-                    float sum = sse_hsum_ps(s) + biases[n];
+                    float sum = sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2))) + biases[n];
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
                 }

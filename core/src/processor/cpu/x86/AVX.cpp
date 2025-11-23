@@ -335,8 +335,8 @@ namespace ac::core::cpu
                         s1 = _mm256_add_ps(_mm256_mul_ps(r7, k7), s1);
                         s2 = _mm256_add_ps(_mm256_mul_ps(r8, k8), s2);
                     }
-
                     float sum = avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2))) + biases[n];
+
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
                 }
             }
