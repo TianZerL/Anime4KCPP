@@ -103,18 +103,29 @@ namespace ac::core::cuda
         return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
     }
 
+    template<bool check, typename T>
+    struct RestrictPointer
+    {
+        using Type = T* __restrict__;
+    };
+
+    template<typename T>
+    struct RestrictPointer<false, T>
+    {
+        using Type = T*;
+    };
+
     namespace kernel
     {
         template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
         __global__ void conv3x3_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
-            void* const __restrict__ dptr,
+            const RestrictPointer<!sizeof...(ResidualArgs), void>::Type dptr,
             const int dstW, const int dstH, const int dstC, const int dpitch,
             const float* const __restrict__ kernels,
             const float* const __restrict__ biases,
-            ActiveFunc activeFunc, ResidualArgs ...residualArg
-        )
+            ActiveFunc activeFunc, ResidualArgs ...residualArg)
         {
             [[maybe_unused]] const ::cuda::std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
@@ -211,8 +222,7 @@ namespace ac::core::cuda
             const int srcW, const int srcH, const int srcC, const int spitch,
             void* const __restrict__ dptr,
             const int dstW, const int dstH, const int dstC, const int dpitch,
-            const float* const __restrict__ kernels
-        )
+            const float* const __restrict__ kernels)
         {
             auto x = blockIdx.x * blockDim.x + threadIdx.x;
             auto y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -240,8 +250,7 @@ namespace ac::core::cuda
             void* const __restrict__ dptr,
             const int dstW, const int dstH, const int dstC, const int dpitch,
             const float* const __restrict__ kernels,
-            const float* const __restrict__ biases
-        )
+            const float* const __restrict__ biases)
         {
             static constexpr int cin = 8;
             static constexpr int upscale = 2;
