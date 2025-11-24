@@ -251,16 +251,11 @@ namespace ac::core::cpu
     class CPUProcessorSeqCNN : public CPUProcessorBase
     {
     public:
-        CPUProcessorSeqCNN(const int arch, const Model& model) noexcept : CPUProcessorBase(arch)
-        {
-            kernels = model.kernels();
-            biases = model.biases();
-        }
+        CPUProcessorSeqCNN(const int arch, const Model& model) noexcept : CPUProcessorBase(arch), model(model) {}
         ~CPUProcessorSeqCNN() noexcept override = default;
 
     protected:
-        const float* kernels;
-        const float* biases;
+        Model model;
     };
 
     template<typename Model>
@@ -285,16 +280,17 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNet>::process(const Image& s
 {
     Image tmp1{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     Image tmp2{ src.width(), src.height(), 8, ac::core::Image::Float32 };
-    conv3x3_1to8_relu(src, tmp1, kernels + model::ACNet::kernelOffset(0), biases + model::ACNet::baisOffset(0));
-    conv3x3_8to8_relu(tmp1, tmp2, kernels + model::ACNet::kernelOffset(1), biases + model::ACNet::baisOffset(1));
-    conv3x3_8to8_relu(tmp2, tmp1, kernels + model::ACNet::kernelOffset(2), biases + model::ACNet::baisOffset(2));
-    conv3x3_8to8_relu(tmp1, tmp2, kernels + model::ACNet::kernelOffset(3), biases + model::ACNet::baisOffset(3));
-    conv3x3_8to8_relu(tmp2, tmp1, kernels + model::ACNet::kernelOffset(4), biases + model::ACNet::baisOffset(4));
-    conv3x3_8to8_relu(tmp1, tmp2, kernels + model::ACNet::kernelOffset(5), biases + model::ACNet::baisOffset(5));
-    conv3x3_8to8_relu(tmp2, tmp1, kernels + model::ACNet::kernelOffset(6), biases + model::ACNet::baisOffset(6));
-    conv3x3_8to8_relu(tmp1, tmp2, kernels + model::ACNet::kernelOffset(7), biases + model::ACNet::baisOffset(7));
-    conv3x3_8to8_relu(tmp2, tmp1, kernels + model::ACNet::kernelOffset(8), biases + model::ACNet::baisOffset(8));
-    deconv2x2_8to1(tmp1, dst, kernels + model::ACNet::kernelOffset(9));
+
+    conv3x3_1to8_relu(src, tmp1, model.kernel(0), model.bias(0));
+    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(1), model.bias(1));
+    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(2), model.bias(2));
+    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(3), model.bias(3));
+    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(4), model.bias(4));
+    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(5), model.bias(5));
+    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(6), model.bias(6));
+    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(7), model.bias(7));
+    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(8), model.bias(8));
+    deconv2x2_8to1(tmp1, dst, model.kernel(9));
 }
 
 template<>
@@ -313,12 +309,9 @@ public:
 
 private:
     void process(const Image& src, Image& dst) override;
-
-private:
-    model::ARNet model;
 };
 
-ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::CPUProcessor(const int arch, const model::ARNet& model) noexcept : CPUProcessorSeqCNN(arch, model), model(model) {}
+ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::CPUProcessor(const int arch, const model::ARNet& model) noexcept : CPUProcessorSeqCNN(arch, model) {}
 ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::~CPUProcessor() noexcept = default;
 
 void ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::process(const Image& src, Image& dst)
@@ -326,20 +319,22 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ARNet>::process(const Image& s
     Image tmp1{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     Image tmp2{ src.width(), src.height(), 8, ac::core::Image::Float32 };
     Image feat{ src.width(), src.height(), 8, ac::core::Image::Float32 };
+
+    int l = 0;
     //head
-    conv3x3_1to8_identity(src, feat, kernels + model.kernelOffset(0), biases + model.baisOffset(0));
+    conv3x3_1to8_identity(src, feat, model.kernel(l), model.bias(l)); l++;
     //body
-    conv3x3_8to8_lrelu(feat, tmp1, kernels + model.kernelOffset(1), biases + model.baisOffset(1), 0.2f);
-    conv3x3_8to8_residual_identity(tmp1, tmp2, kernels + model.kernelOffset(2), biases + model.baisOffset(2), feat, 0.2f);
+    conv3x3_8to8_lrelu(feat, tmp1, model.kernel(l), model.bias(l), 0.2f); l++;
+    conv3x3_8to8_residual_identity(tmp1, tmp2, model.kernel(l), model.bias(l), feat, 0.2f); l++;
     for (int i = 0; i < model.blocks() - 2; i++)
     {
-        conv3x3_8to8_lrelu(tmp2, tmp1, kernels + model.kernelOffset(i * 2 + 3), biases + model.baisOffset(i * 2 + 3), 0.2f);
-        conv3x3_8to8_residual_identity(tmp1, tmp2, kernels + model.kernelOffset(i * 2 + 4), biases + model.baisOffset(i * 2 + 4), tmp2, 0.2f);
+        conv3x3_8to8_lrelu(tmp2, tmp1, model.kernel(l), model.bias(l), 0.2f); l++;
+        conv3x3_8to8_residual_identity(tmp1, tmp2, model.kernel(l), model.bias(l), tmp2, 0.2f); l++;
     }
-    conv3x3_8to8_lrelu(tmp2, tmp1, kernels + model.kernelOffset(1 + (model.blocks() - 1) * 2), biases + model.baisOffset(1 + (model.blocks() - 1) * 2), 0.2f);
-    conv3x3_8to8_residual_add_identity(tmp1, tmp2, kernels + model.kernelOffset(2 + (model.blocks() - 1) * 2), biases + model.baisOffset(2 + (model.blocks() - 1) * 2), tmp2, 0.2f, feat);
+    conv3x3_8to8_lrelu(tmp2, tmp1, model.kernel(l), model.bias(l), 0.2f); l++;
+    conv3x3_8to8_residual_add_identity(tmp1, tmp2, model.kernel(l), model.bias(l), tmp2, 0.2f, feat); l++;
     // upscale
-    conv3x3_8to4_identity_pixelshuffle_4to1(tmp2, dst, kernels + model.kernelOffset(1 + model.blocks() * 2), biases + model.baisOffset(1 + model.blocks() * 2));
+    conv3x3_8to4_identity_pixelshuffle_4to1(tmp2, dst, model.kernel(l), model.bias(l));
 }
 
 template<>

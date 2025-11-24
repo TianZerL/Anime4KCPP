@@ -14,8 +14,6 @@ namespace ac::core::model
 
 class ac::core::model::ACNet
 {
-    AC_CORE_SEQ_CNN_MODEL(ACNet)
-
 public:
     enum class Variant
     {
@@ -41,6 +39,9 @@ public:
     static constexpr std::size_t kernelSize(const int idx) noexcept { return kernelLength(idx) * sizeof(float); }
     static constexpr std::size_t biasSize(const int idx) noexcept { return biasLength(idx) * sizeof(float); }
 
+    static constexpr int kernels() { return 10; }
+    static constexpr int biases() { return 9; }
+
     static constexpr int kernelOffset(const int idx) noexcept
     {
         int offset = 0;
@@ -48,13 +49,20 @@ public:
             offset += kernelLength(i);
         return offset;
     }
-    static constexpr int baisOffset(const int idx) noexcept
+    static constexpr int biasOffset(const int idx) noexcept
     {
         int offset = 0;
         for(int i = 0; i < idx; i++)
             offset += biasLength(i);
         return offset;
     }
+
+    const float* kernel(const int idx = 0) const noexcept { return kptr + kernelOffset(idx); }
+    const float* bias(const int idx = 0) const noexcept { return bptr + biasOffset(idx); }
+
+private:
+    const float* kptr;
+    const float* bptr;
 };
 
 #endif

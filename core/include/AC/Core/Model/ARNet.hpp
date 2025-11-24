@@ -14,8 +14,6 @@ namespace ac::core::model
 
 class ac::core::model::ARNet
 {
-    AC_CORE_SEQ_CNN_MODEL(ARNet)
-
 public:
     enum class Variant
     {
@@ -26,8 +24,6 @@ public:
     AC_EXPORT ARNet(Variant v) noexcept;
 
 public:
-    int blocks() const noexcept { return blockNum; }
-
     // length in numbers
     int kernelLength() const noexcept { return 8 * 9 + 8 * 8 * 9 * blockNum * 2 + 8 * 4 * 9; }
     int biasLength() const noexcept { return 8 + 8 * blockNum * 2 + 4; }
@@ -40,22 +36,33 @@ public:
     std::size_t kernelSize(const int idx) const noexcept { return kernelLength(idx) * sizeof(float); }
     std::size_t biasSize(const int idx) const noexcept { return biasLength(idx) * sizeof(float); }
 
+    int blocks() const noexcept { return blockNum; }
+    int kernels() const noexcept { return blockNum * 2 + 2; }
+    int biases() const noexcept { return blockNum * 2 + 2; }
+
     int kernelOffset(const int idx) const noexcept
     {
         if (idx <= 0) return 0;
         if (idx == 1) return 8 * 9;
-        if (idx <= blockNum * 2 + 1) return 8 * 9 + (8 * 8 * 9) * (idx - 1);
+        if (idx < kernels()) return 8 * 9 + (8 * 8 * 9) * (idx - 1);
         return kernelLength();
     }
-    int baisOffset(const int idx) const noexcept
+    int biasOffset(const int idx) const noexcept
     {
         if (idx <= 0) return 0;
         if (idx == 1) return 8;
-        if (idx <= blockNum * 2 + 1) return 8 + 8 * (idx - 1);
+        if (idx < biases()) return 8 + 8 * (idx - 1);
         return biasLength();
     }
+
+    const float* kernel(const int idx = 0) const noexcept { return kptr + kernelOffset(idx); }
+    const float* bias(const int idx = 0) const noexcept { return bptr + biasOffset(idx); }
+
 private:
     int blockNum;
+
+    const float* kptr;
+    const float* bptr;
 };
 
 #endif

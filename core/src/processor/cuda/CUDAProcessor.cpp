@@ -1,4 +1,3 @@
-#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <sstream>
@@ -7,6 +6,7 @@
 
 #include <cuda_runtime.h>
 
+#include "AC/Core/Image.hpp"
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
 #include "AC/Util/ThreadLocal.hpp"
@@ -181,17 +181,6 @@ namespace ac::core::cuda
         return contextList;
     }
 
-    static inline cudaChannelFormatDesc channelType(const Image::ElementType elementType) noexcept
-    {
-        switch (elementType)
-        {
-        case Image::UInt8: return cudaCreateChannelDesc<std::uint8_t>();
-        case Image::UInt16: return cudaCreateChannelDesc<std::uint16_t>();
-        case Image::Float32: return cudaCreateChannelDesc<float>();
-        default: return assert(elementType == Image::UInt8 || elementType == Image::UInt16 || elementType == Image::Float32), cudaCreateChannelDesc<std::uint8_t>();
-        }
-    }
-
     class CUDAProcessorBase : public Processor
     {
     public:
@@ -223,26 +212,42 @@ namespace ac::core::cuda
     class CUDAProcessorSeqCNN : public CUDAProcessorBase
     {
     public:
-        CUDAProcessorSeqCNN(const int device, const Model& model) noexcept : CUDAProcessorBase(device)
+        CUDAProcessorSeqCNN(const int device, const Model& model) noexcept : CUDAProcessorBase(device), model(model)
         {
             auto& err = errors.local();
             err = cudaSetDevice(idx); if (err != cudaSuccess) return;
-            err = cudaMalloc(&kernels, model.kernelSize()); if (err != cudaSuccess) return;
-            err = cudaMalloc(&biases, model.biasSize()); if (err != cudaSuccess) return;
-            err = cudaMemcpy(kernels, model.kernels(), model.kernelSize(), cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
-            err = cudaMemcpy(biases, model.biases(), model.biasSize(), cudaMemcpyHostToDevice);
+
+            for (int i = 0; i < model.kernels(); i++)
+            {
+                float* dkptr = nullptr;
+                auto hkptr = model.kernel(i);
+                auto size = model.kernelSize(i);
+                err = cudaMalloc(&dkptr, size); if (err != cudaSuccess) return;
+                kernels.emplace_back(dkptr);
+                err = cudaMemcpy(dkptr, hkptr, size, cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
+            }
+            for (int i = 0; i < model.biases(); i++)
+            {
+                float* dkptr = nullptr;
+                auto hkptr = model.bias(i);
+                auto size = model.biasSize(i);
+                err = cudaMalloc(&dkptr, size); if (err != cudaSuccess) return;
+                biases.emplace_back(dkptr);
+                err = cudaMemcpy(dkptr, hkptr, size, cudaMemcpyHostToDevice); if (err != cudaSuccess) return;
+            }
         }
         ~CUDAProcessorSeqCNN() noexcept override
         {
             cudaSetDevice(idx);
 
-            if (kernels) cudaFree(kernels);
-            if (biases) cudaFree(biases);
+            for(auto kernel : kernels) cudaFree(kernel);
+            for(auto bias : biases) cudaFree(bias);
         }
 
     protected:
-        float* kernels = nullptr;
-        float* biases = nullptr;
+        Model model;
+        std::vector<float*> kernels{};
+        std::vector<float*> biases{};
     };
 
     template<typename Model>
@@ -275,33 +280,35 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     DeviceImageBuffer tmp2{ src.width(), src.height(), 8, 2 };
     DeviceImageBuffer out{ dst };
 
+    int l = 0;
+
     in.fromHost(src, stream);
 
     conv3x3_1to8_relu_cuda(
         in.ptr, in.w, in.h, in.c, in.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernels + model::ACNet::kernelOffset(0), biases + model::ACNet::baisOffset(0),
-        src.type(), stream);
+        kernels[l], biases[l],
+        src.type(), stream); l++;
 
     for (int i = 0; i < 4; i++)
     {
         conv3x3_8to8_relu_cuda(
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            kernels + model::ACNet::kernelOffset(i * 2 + 1), biases + model::ACNet::baisOffset(i * 2 + 1),
-            stream);
+            kernels[l], biases[l],
+            stream); l++;
 
         conv3x3_8to8_relu_cuda(
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernels + model::ACNet::kernelOffset(i * 2 + 2), biases + model::ACNet::baisOffset(i * 2 + 2),
-            stream);
+            kernels[l], biases[l],
+            stream); l++;
     }
 
     deconv2x2_8to1_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
-        kernels + model::ACNet::kernelOffset(9),
+        kernels[l],
         dst.type(), stream);
 
     out.toHost(dst, stream);
@@ -325,12 +332,9 @@ public:
 
 private:
     void process(const Image& src, Image& dst) override;
-
-private:
-    model::ARNet model;
 };
 
-ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::CUDAProcessor(const int device, const model::ARNet& model) noexcept : CUDAProcessorSeqCNN(device, model), model(model) {}
+ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::CUDAProcessor(const int device, const model::ARNet& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
 ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::~CUDAProcessor() noexcept = default;
 
 void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image& src, Image& dst)
@@ -346,50 +350,52 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
     DeviceImageBuffer feat{ src.width(), src.height(), 8, 2 };
     DeviceImageBuffer out{ dst };
 
+    int l = 0;
+
     in.fromHost(src, stream);
 
     conv3x3_1to8_identity_cuda(
         in.ptr, in.w, in.h, in.c, in.pitch,
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernels + model.kernelOffset(0), biases + model.baisOffset(0),
-        src.type(), stream);
+        kernels[l], biases[l],
+        src.type(), stream); l++;
 
     conv3x3_8to8_lrelu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernels + model.kernelOffset(1), biases + model.baisOffset(1), 0.2f, stream);
+        kernels[l], biases[l], 0.2f, stream); l++;
     conv3x3_8to8_residual_identity_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernels + model.kernelOffset(2), biases + model.baisOffset(2),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch, 0.2f, stream);
+        kernels[l], biases[l],
+        feat.ptr, feat.w, feat.h, feat.c, feat.pitch, 0.2f, stream); l++;
     for (int i = 0; i < model.blocks() - 2; i++)
     {
         conv3x3_8to8_lrelu_cuda(
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernels + model.kernelOffset(i * 2 + 3), biases + model.baisOffset(i * 2 + 3), 0.2f, stream);
+            kernels[l], biases[l], 0.2f, stream); l++;
         conv3x3_8to8_residual_identity_cuda(
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            kernels + model.kernelOffset(i * 2 + 4), biases + model.baisOffset(i * 2 + 4),
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f, stream);
+            kernels[l], biases[l],
+            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f, stream); l++;
     }
     conv3x3_8to8_lrelu_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernels + model.kernelOffset(1 + (model.blocks() - 1) * 2), biases + model.baisOffset(1 + (model.blocks() - 1) * 2), 0.2f, stream);
+        kernels[l], biases[l], 0.2f, stream); l++;
     conv3x3_8to8_residual_identity_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernels + model.kernelOffset(2 + (model.blocks() - 1) * 2), biases + model.baisOffset(2 + (model.blocks() - 1) * 2),
+        kernels[l], biases[l],
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f,
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream);
+        stream); l++;
     conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
-        kernels + model.kernelOffset(1 + model.blocks() * 2), biases + model.baisOffset(1 + model.blocks() * 2),
+        kernels[l], biases[l],
         dst.type(), stream);
 
     out.toHost(dst, stream);
