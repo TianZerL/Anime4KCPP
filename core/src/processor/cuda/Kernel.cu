@@ -149,6 +149,9 @@ namespace ac::core::cuda
             constexpr auto threads = BlockSize::x * BlockSize::y;
             constexpr auto knum = cout * 9 * cin;
             constexpr auto bnum = cout;
+            constexpr auto rsizeY = BlockSize::y + 2;
+            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
+
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
@@ -166,6 +169,7 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
+
             __shared__ float bptr[bnum];
             if constexpr (threads < bnum)
             {
@@ -184,8 +188,6 @@ namespace ac::core::cuda
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
 
-            constexpr auto rsizeY = BlockSize::y + 2;
-            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
             __shared__ IN iptr[rsizeY][rsizeX];
             for (int j = 0; j < rsizeY; j++)
             {
@@ -288,18 +290,20 @@ namespace ac::core::cuda
             const float* const __restrict__ kernels,
             const float* const __restrict__ biases)
         {
-            constexpr int cin = 8;
-            constexpr int upscale = 2;
-
             auto bx = blockIdx.x * BlockSize::x;
             auto by = blockIdx.y * BlockSize::y;
             auto x = bx + threadIdx.x;
             auto y = by + threadIdx.y;
             auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
+            constexpr auto cin = 8;
+            constexpr auto upscale = 2;
             constexpr auto threads = BlockSize::x * BlockSize::y;
             constexpr auto knum = 4 * 9 * 8;
             constexpr auto bnum = 4;
+            constexpr auto rsizeY = BlockSize::y + 2;
+            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
+
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
@@ -317,6 +321,7 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
+
             __shared__ float bptr[bnum];
             if constexpr (threads < bnum)
             {
@@ -335,8 +340,6 @@ namespace ac::core::cuda
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
 
-            constexpr auto rsizeY = BlockSize::y + 2;
-            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
             __shared__ IN iptr[rsizeY][rsizeX];
             for (int j = 0; j < rsizeY; j++)
             {
