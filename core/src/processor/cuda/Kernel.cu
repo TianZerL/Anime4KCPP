@@ -8,6 +8,12 @@
 
 namespace ac::core::cuda
 {
+    struct BlockSize
+    {
+        static constexpr int x = 16;
+        static constexpr int y = 8;
+    };
+
     struct ResidualArg
     {
         const void* ptr;
@@ -136,7 +142,7 @@ namespace ac::core::cuda
 
             constexpr auto knum = cout * 9 * cin;
             constexpr auto bnum = cout;
-            __shared__ __align__(16) float kptr[knum];
+            __shared__ float kptr[knum];
             if (threads < knum)
             {
                 auto line = knum / threads;
@@ -153,7 +159,7 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
-            __shared__ __align__(16) float bptr[bnum];
+            __shared__ float bptr[bnum];
             if (threads < bnum)
             {
                 auto line = bnum / threads;
@@ -262,7 +268,7 @@ namespace ac::core::cuda
 
             constexpr auto knum = 4 * 9 * 8;
             constexpr auto bnum = 4;
-            __shared__ __align__(16) float kptr[knum];
+            __shared__ float kptr[knum];
             if (threads < knum)
             {
                 auto line = knum / threads;
@@ -279,7 +285,7 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
-            __shared__ __align__(16) float bptr[bnum];
+            __shared__ float bptr[bnum];
             if (threads < bnum)
             {
                 auto line = bnum / threads;
@@ -351,7 +357,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         switch (stype)
         {
@@ -376,7 +382,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
     }
@@ -390,7 +396,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (dstW + block.x - 1) / block.x, (dstH + block.y - 1) / block.y };
         switch (dtype)
         {
@@ -414,7 +420,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         switch (stype)
         {
@@ -440,7 +446,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, LReLU(negativeSlope));
     }
@@ -457,7 +463,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (
             sptr, srcW, srcH, srcC, spitch,
@@ -481,7 +487,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (
             sptr, srcW, srcH, srcC, spitch,
@@ -502,7 +508,7 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept
     {
-        dim3 block{ 16, 8 };
+        dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
         switch (dtype)
         {

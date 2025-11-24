@@ -227,6 +227,12 @@ namespace ac::core::opencl
             return cmdq;
         }
     protected:
+        struct WorkGroupSize
+        {
+            static constexpr int x = 16;
+            static constexpr int y = 8;
+        };
+    protected:
         Context context;
         util::ThreadLocal<cl_int> errors;
         util::ThreadLocal<cl::CommandQueue> queues;
@@ -296,8 +302,8 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
 {
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
-    cl::size_type srcRangeW = align(srcW, 16), srcRangeH = align(srcH, 8);
-    cl::size_type dstRangeW = align(dstW, 16), dstRangeH = align(dstH, 8);
+    cl::size_type srcRangeW = align(srcW, WorkGroupSize::x), srcRangeH = align(srcH, WorkGroupSize::y);
+    cl::size_type dstRangeW = align(dstW, WorkGroupSize::x), dstRangeH = align(dstH, WorkGroupSize::y);
 
     auto& err = errors.local();
     auto& cmdq = queue(&err); if (err != CL_SUCCESS) return;
@@ -317,25 +323,25 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     err = conv3x3_1to8_relu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
     for (int i = 0; i < 4; i++)
     {
         err = conv3x3_8to8_relu.setArg(0, tmp1); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(1, tmp2); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
         err = conv3x3_8to8_relu.setArg(0, tmp2); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
     }
     err = deconv2x2_8to1.setArg(0, tmp1); if (err != CL_SUCCESS) return;
     err = deconv2x2_8to1.setArg(1, out); if (err != CL_SUCCESS) return;
     err = deconv2x2_8to1.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(deconv2x2_8to1, cl::NullRange, { dstRangeW, dstRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return;
+    err = cmdq.enqueueNDRangeKernel(deconv2x2_8to1, cl::NullRange, { dstRangeW, dstRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueReadImage(out, CL_TRUE, { 0,0,0 }, { dstW,dstH,1 }, dst.stride(), 0, dst.ptr());
 }
 
@@ -364,7 +370,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
 {
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
-    cl::size_type srcRangeW = align(srcW, 16), srcRangeH = align(srcH, 8);
+    cl::size_type srcRangeW = align(srcW, WorkGroupSize::x), srcRangeH = align(srcH, WorkGroupSize::y);
 
     auto& err = errors.local();
     auto& cmdq = queue(&err); if (err != CL_SUCCESS) return;
@@ -388,14 +394,14 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     err = conv3x3_1to8_identity.setArg(1, feat); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_identity.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_identity.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_identity, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     err = conv3x3_8to8_lrelu.setArg(0, feat); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(4, 0.2f); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     err = conv3x3_8to8_residual_identity.setArg(0, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_identity.setArg(1, tmp2); if (err != CL_SUCCESS) return;
@@ -403,7 +409,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     err = conv3x3_8to8_residual_identity.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_identity.setArg(4, feat); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_identity.setArg(5, 0.2f); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     for (int i = 0; i < (model.blocks() - 2) / 2; i++)
     {
@@ -412,7 +418,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
         err = conv3x3_8to8_lrelu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(4, 0.2f); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
         err = conv3x3_8to8_residual_identity.setArg(0, tmp1); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(1, tmp3); if (err != CL_SUCCESS) return;
@@ -420,14 +426,14 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
         err = conv3x3_8to8_residual_identity.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(4, tmp2); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(5, 0.2f); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
         err = conv3x3_8to8_lrelu.setArg(0, tmp3); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_lrelu.setArg(4, 0.2f); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
         err = conv3x3_8to8_residual_identity.setArg(0, tmp1); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(1, tmp2); if (err != CL_SUCCESS) return;
@@ -435,14 +441,14 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
         err = conv3x3_8to8_residual_identity.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(4, tmp3); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_residual_identity.setArg(5, 0.2f); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
     }
     err = conv3x3_8to8_lrelu.setArg(0, tmp2); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_lrelu.setArg(4, 0.2f); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_lrelu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     err = conv3x3_8to8_residual_add_identity.setArg(0, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_add_identity.setArg(1, tmp3); if (err != CL_SUCCESS) return;
@@ -451,13 +457,13 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     err = conv3x3_8to8_residual_add_identity.setArg(4, tmp2); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_add_identity.setArg(5, 0.2f); if (err != CL_SUCCESS) return;
     err = conv3x3_8to8_residual_add_identity.setArg(6, feat); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_add_identity, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return; l++;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_residual_add_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     err = conv3x3_8to4_identity_pixelshuffle_4to1.setArg(0, tmp3); if (err != CL_SUCCESS) return;
     err = conv3x3_8to4_identity_pixelshuffle_4to1.setArg(1, out); if (err != CL_SUCCESS) return;
     err = conv3x3_8to4_identity_pixelshuffle_4to1.setArg(2, kernels[l]); if (err != CL_SUCCESS) return;
     err = conv3x3_8to4_identity_pixelshuffle_4to1.setArg(3, biases[l]); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_8to4_identity_pixelshuffle_4to1, cl::NullRange, { srcRangeW, srcRangeH }, { 16, 8 }); if (err != CL_SUCCESS) return;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to4_identity_pixelshuffle_4to1, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueReadImage(out, CL_TRUE, { 0,0,0 }, { dstW,dstH,1 }, dst.stride(), 0, dst.ptr());
 }
 
