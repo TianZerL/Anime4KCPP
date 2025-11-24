@@ -59,6 +59,11 @@ namespace ac::core::cuda
         const float negativeSlope;
     };
 
+    template<typename T, int N>
+    __device__ static inline const T* getReadPtrFromShared(const T(* const sharedPtr)[N], const int c, const int tx, const int ty)
+    {
+        return sharedPtr[1 + ty] + (1 + tx) * c;
+    }
     template<typename T>
     __device__ static inline const T* getReadPtr(const void* const ptr, const int w, const int h, const int c, const int pitch, const int x, const int y)
     {
@@ -135,8 +140,10 @@ namespace ac::core::cuda
         {
             [[maybe_unused]] const ::cuda::std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
-            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
-            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+            auto bx = blockIdx.x * BlockSize::x;
+            auto by = blockIdx.y * BlockSize::y;
+            auto x = bx + threadIdx.x;
+            auto y = by + threadIdx.y;
             auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
             constexpr auto threads = BlockSize::x * BlockSize::y;
@@ -145,8 +152,8 @@ namespace ac::core::cuda
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
-                auto line = knum / threads;
-                auto remain = knum % threads;
+                constexpr auto line = knum / threads;
+                constexpr auto remain = knum % threads;
                 for (int i = 0; i < line; i++)
                 {
                     auto idx = tid + i * threads;
@@ -162,8 +169,8 @@ namespace ac::core::cuda
             __shared__ float bptr[bnum];
             if constexpr (threads < bnum)
             {
-                auto line = bnum / threads;
-                auto remain = bnum % threads;
+                constexpr auto line = bnum / threads;
+                constexpr auto remain = bnum % threads;
                 for (int i = 0; i < line; i++)
                 {
                     auto idx = tid + i * threads;
@@ -176,6 +183,29 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
+
+            constexpr auto rsizeY = BlockSize::y + 2;
+            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
+            __shared__ IN iptr[rsizeY][rsizeX];
+            for (int j = 0; j < rsizeY; j++)
+            {
+                if constexpr (threads < rsizeX)
+                {
+                    constexpr auto line = rsizeX / threads;
+                    constexpr auto remain = rsizeX % threads;
+                    for (int i = 0; i < line; i++)
+                    {
+                        auto idx = tid + i * threads;
+                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                    }
+                    if (tid < remain)
+                    {
+                        auto idx = tid + line * threads;
+                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                    }
+                }
+                else if (tid < rsizeX) iptr[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
+            }
             __syncthreads();
 
             if (x >= srcW || y >= srcH) return;
@@ -183,15 +213,15 @@ namespace ac::core::cuda
             auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
 
             const IN* r[] = {
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y + 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y + 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y + 1)
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1)
             };
 
             for (int n = 0; n < cout; n++)
@@ -258,11 +288,13 @@ namespace ac::core::cuda
             const float* const __restrict__ kernels,
             const float* const __restrict__ biases)
         {
-            static constexpr int cin = 8;
-            static constexpr int upscale = 2;
+            constexpr int cin = 8;
+            constexpr int upscale = 2;
 
-            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
-            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+            auto bx = blockIdx.x * BlockSize::x;
+            auto by = blockIdx.y * BlockSize::y;
+            auto x = bx + threadIdx.x;
+            auto y = by + threadIdx.y;
             auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
             constexpr auto threads = BlockSize::x * BlockSize::y;
@@ -271,8 +303,8 @@ namespace ac::core::cuda
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
-                auto line = knum / threads;
-                auto remain = knum % threads;
+                constexpr auto line = knum / threads;
+                constexpr auto remain = knum % threads;
                 for (int i = 0; i < line; i++)
                 {
                     auto idx = tid + i * threads;
@@ -288,8 +320,8 @@ namespace ac::core::cuda
             __shared__ float bptr[bnum];
             if constexpr (threads < bnum)
             {
-                auto line = bnum / threads;
-                auto remain = bnum % threads;
+                constexpr auto line = bnum / threads;
+                constexpr auto remain = bnum % threads;
                 for (int i = 0; i < line; i++)
                 {
                     auto idx = tid + i * threads;
@@ -302,20 +334,43 @@ namespace ac::core::cuda
                 }
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
+
+            constexpr auto rsizeY = BlockSize::y + 2;
+            constexpr auto rsizeX = (BlockSize::x + 2) * cin;
+            __shared__ IN iptr[rsizeY][rsizeX];
+            for (int j = 0; j < rsizeY; j++)
+            {
+                if constexpr (threads < rsizeX)
+                {
+                    constexpr auto line = rsizeX / threads;
+                    constexpr auto remain = rsizeX % threads;
+                    for (int i = 0; i < line; i++)
+                    {
+                        auto idx = tid + i * threads;
+                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                    }
+                    if (tid < remain)
+                    {
+                        auto idx = tid + line * threads;
+                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                    }
+                }
+                else if (tid < rsizeX) iptr[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
+            }
             __syncthreads();
 
             if (x >= srcW || y >= srcH) return;
 
             const IN* r[] = {
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y - 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y    ),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x - 1, y + 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x    , y + 1),
-                getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + 1, y + 1)
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    ),
+                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1),
+                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1)
             };
 
             auto dstX = x * upscale;
