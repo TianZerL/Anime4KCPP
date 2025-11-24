@@ -11,7 +11,7 @@ namespace ac::core::cuda
     struct BlockSize
     {
         static constexpr int x = 16;
-        static constexpr int y = 8;
+        static constexpr int y = 16;
     };
 
     struct ResidualArg
