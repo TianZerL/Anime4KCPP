@@ -135,15 +135,15 @@ namespace ac::core::cuda
         {
             [[maybe_unused]] const ::cuda::std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
-            auto x = blockIdx.x * blockDim.x + threadIdx.x;
-            auto y = blockIdx.y * blockDim.y + threadIdx.y;
-            auto tid = threadIdx.y * blockDim.x + threadIdx.x;
-            auto threads = blockDim.x * blockDim.y;
+            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
+            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+            auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
+            constexpr auto threads = BlockSize::x * BlockSize::y;
             constexpr auto knum = cout * 9 * cin;
             constexpr auto bnum = cout;
             __shared__ float kptr[knum];
-            if (threads < knum)
+            if constexpr (threads < knum)
             {
                 auto line = knum / threads;
                 auto remain = knum % threads;
@@ -160,7 +160,7 @@ namespace ac::core::cuda
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
             __shared__ float bptr[bnum];
-            if (threads < bnum)
+            if constexpr (threads < bnum)
             {
                 auto line = bnum / threads;
                 auto remain = bnum % threads;
@@ -230,8 +230,8 @@ namespace ac::core::cuda
             const int dstW, const int dstH, const int dstC, const int dpitch,
             const float* const __restrict__ kernels)
         {
-            auto x = blockIdx.x * blockDim.x + threadIdx.x;
-            auto y = blockIdx.y * blockDim.y + threadIdx.y;
+            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
+            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
 
             if (x >= dstW || y >= dstH) return;
 
@@ -261,15 +261,15 @@ namespace ac::core::cuda
             static constexpr int cin = 8;
             static constexpr int upscale = 2;
 
-            auto x = blockIdx.x * blockDim.x + threadIdx.x;
-            auto y = blockIdx.y * blockDim.y + threadIdx.y;
-            auto tid = threadIdx.y * blockDim.x + threadIdx.x;
-            auto threads = blockDim.x * blockDim.y;
+            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
+            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+            auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
+            constexpr auto threads = BlockSize::x * BlockSize::y;
             constexpr auto knum = 4 * 9 * 8;
             constexpr auto bnum = 4;
             __shared__ float kptr[knum];
-            if (threads < knum)
+            if constexpr (threads < knum)
             {
                 auto line = knum / threads;
                 auto remain = knum % threads;
@@ -286,7 +286,7 @@ namespace ac::core::cuda
             }
             else if (tid < knum) kptr[tid] = kernels[tid];
             __shared__ float bptr[bnum];
-            if (threads < bnum)
+            if constexpr (threads < bnum)
             {
                 auto line = bnum / threads;
                 auto remain = bnum % threads;
