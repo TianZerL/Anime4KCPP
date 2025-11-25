@@ -9,8 +9,10 @@ namespace ac::specs
         "acnet-hdn1",
         "acnet-hdn2",
         "acnet-hdn3",
-        "arnet-small-hdn",
-        "arnet-small-le",
+        "arnet-s-hdn",
+        "arnet-s-le",
+        "arnet-m-hdn",
+        "arnet-m-le",
     };
 
     constexpr const char* ModelDescriptionList[] = {
@@ -19,8 +21,10 @@ namespace ac::specs
         "Lightweight CNN, moderate denoising.",    // acnet-hdn1
         "Lightweight CNN, heavy denoising.",       // acnet-hdn2
         "Lightweight CNN, extreme denoising.",     // acnet-hdn3
-        "Lightweight ResNet, mild denoising.",     // arnet-small-hdn
-        "Lightweight ResNet, line enhancing.",     // arnet-small-le
+        "Lightweight ResNet, mild denoising.",     // arnet-s-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-s-le
+        "Lightweight ResNet, mild denoising.",     // arnet-m-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-m-le
     };
 
     constexpr const char* ProcessorNameList[] = {

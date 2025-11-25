@@ -32,15 +32,25 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
 {
     switch (v)
     {
-    case Variant::SMALL_HDN:
+    case Variant::S_HDN:
         blockNum = 8;
-        kptr = param::ARNet_small_HDN_NHWC_kernels;
-        bptr = param::ARNet_small_HDN_NHWC_biases;
+        kptr = param::ARNet_S_HDN_NHWC_kernels;
+        bptr = param::ARNet_S_HDN_NHWC_biases;
         break;
-    case Variant::SMALL_LE:
+    case Variant::S_LE:
         blockNum = 8;
-        kptr = param::ARNet_small_LE_NHWC_kernels;
-        bptr = param::ARNet_small_LE_NHWC_biases;
+        kptr = param::ARNet_S_LE_NHWC_kernels;
+        bptr = param::ARNet_S_LE_NHWC_biases;
+        break;
+    case Variant::M_HDN:
+        blockNum = 16;
+        kptr = param::ARNet_M_HDN_NHWC_kernels;
+        bptr = param::ARNet_M_HDN_NHWC_biases;
+        break;
+    case Variant::M_LE:
+        blockNum = 16;
+        kptr = param::ARNet_M_LE_NHWC_kernels;
+        bptr = param::ARNet_M_LE_NHWC_biases;
         break;
     }
 }

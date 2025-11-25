@@ -152,11 +152,16 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type,
 
         if (modelString.find("arnet") != std::string::npos) // ARNet
         {
-            auto variant = ac::core::model::ARNet::Variant::SMALL_LE;
-            if (modelString.find("small") != std::string::npos) // ARNet-Small
+            auto variant = ac::core::model::ARNet::Variant::S_LE;
+            if (modelString.find("s") != std::string::npos) // ARNet-S
             {
-                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::SMALL_LE;
-                else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::SMALL_HDN;
+                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_LE;
+                else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_HDN;
+            }
+            else if (modelString.find("m") != std::string::npos) // ARNet-M
+            {
+                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_LE;
+                else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_HDN;
             }
             return createImpl(type, device, ac::core::model::ARNet{ variant });
         }
