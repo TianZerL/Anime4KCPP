@@ -170,9 +170,9 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
         }
     });
 #else
+    gLogger.warning() << "This build does not support video processing";
     for (auto&& task : videoTaskList)
     {
-        gLogger.warning() << "This build does not support video processing";
         emit task->finished(false);
         if (dptr->total.fetch_sub(1, std::memory_order_relaxed) == 1) emit stopped();
     }
