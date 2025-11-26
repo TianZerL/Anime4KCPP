@@ -17,7 +17,7 @@ struct ac_processor_handle
 
 namespace detail
 {
-    void copyProp(const ac::core::Image& src, ac_image* dst)
+    static inline void copyProp(const ac::core::Image& src, ac_image* dst)
     {
         dst->width = src.width();
         dst->height = src.height();
@@ -180,6 +180,16 @@ const char* ac_processor_name(const ac_processor* const processor)
     if (!(processor && processor->hptr)) return nullptr;
     return processor->hptr->object->name();
 }
+int ac_processor_type(const ac_processor* const processor)
+{
+    if (!(processor && processor->hptr)) return AC_ERROR(EINVAL);
+    return processor->hptr->object->type();
+}
+const char* ac_processor_type_name(const ac_processor* const processor)
+{
+    if (!(processor && processor->hptr)) return nullptr;
+    return processor->hptr->object->typeName();
+}
 
 const char* ac_processor_info(const int processor_type)
 {
@@ -194,12 +204,4 @@ const char* ac_processor_info(const int processor_type)
 #endif
     default: return "unsupported processor";
     }
-}
-int ac_processor_type(const char* const processor_type_name)
-{
-    return ac::core::Processor::type(processor_type_name);
-}
-const char* ac_processor_type_name(const int processor_type)
-{
-    return ac::core::Processor::type(processor_type);
 }

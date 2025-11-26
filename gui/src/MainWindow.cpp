@@ -111,10 +111,10 @@ void MainWindow::init()
     ui->spin_box_device->setValue(gConfig.upscaler.device);
     ui->double_spin_box_factor->setMinimum(1.0);
     ui->double_spin_box_factor->setValue(gConfig.upscaler.factor);
-    ui->combo_box_processor->addItems({ std::begin(ac::specs::ProcessorNameList), std::end(ac::specs::ProcessorNameList) });
+    ui->combo_box_processor->addItems({ std::begin(ac::specs::ProcessorList), std::end(ac::specs::ProcessorList) });
     for (std::size_t i = 0; i < std::size(ac::specs::ProcessorDescriptionList); i++) ui->combo_box_processor->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ProcessorDescriptionList[i]), Qt::ToolTipRole);
     ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
-    ui->combo_box_model->addItems({ std::begin(ac::specs::ModelNameList), std::end(ac::specs::ModelNameList) });
+    ui->combo_box_model->addItems({ std::begin(ac::specs::ModelList), std::end(ac::specs::ModelList) });
     for (std::size_t i = 0; i < std::size(ac::specs::ModelDescriptionList); i++) ui->combo_box_model->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ModelDescriptionList[i]), Qt::ToolTipRole);
     ui->combo_box_model->setCurrentText(gConfig.upscaler.model);
     QObject::connect(ui->spin_box_device, qOverload<int>(&QSpinBox::valueChanged), this,

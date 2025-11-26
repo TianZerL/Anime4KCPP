@@ -235,6 +235,14 @@ namespace ac::core::cpu
         {
             return arch::NameList[idx];
         }
+        int type() const noexcept override
+        {
+            return Processor::CPU;
+        }
+        const char* typeName() const noexcept override
+        {
+            return "CPU";
+        }
     protected:
         void (*conv3x3_1to8_relu)(const Image& src, Image& dst, const float* kernels, const float* biases);
         void (*conv3x3_8to8_relu)(const Image& src, Image& dst, const float* kernels, const float* biases);

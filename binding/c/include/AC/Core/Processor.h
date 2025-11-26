@@ -22,8 +22,8 @@ enum ac_processor_type
 
 typedef struct ac_processor
 {
-    int type;
     int device;
+    const char* type;
     const char* model;
     struct ac_processor_handle* hptr;
 } ac_processor;
@@ -35,9 +35,9 @@ CAC_API int ac_processor_process(ac_processor* processor, const ac_image* src, a
 CAC_API int ac_processor_ok(const ac_processor* processor);
 CAC_API const char* ac_processor_error(const ac_processor* processor);
 CAC_API const char* ac_processor_name(const ac_processor* processor);
+CAC_API int ac_processor_type(const ac_processor* processor);
+CAC_API const char* ac_processor_type_name(const ac_processor* processor);
 
 CAC_API const char* ac_processor_info(int processor_type);
-CAC_API int ac_processor_type(const char* processor_type_name);
-CAC_API const char* ac_processor_type_name(int processor_type);
 
 #endif

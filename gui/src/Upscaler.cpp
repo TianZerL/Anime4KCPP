@@ -16,9 +16,9 @@
 
 struct Upscaler::UpscalerData
 {
-    int processorType = ac::core::Processor::CPU;
     int device = 0;
     double factor = 2.0;
+    QString processorType{};
     QString model{};
     std::shared_ptr<ac::core::Processor> processor{};
     std::atomic_bool stopFlag = false;
@@ -49,12 +49,15 @@ Upscaler::~Upscaler() noexcept = default;
 void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 {
     if (dptr->total.load(std::memory_order_relaxed)) return;
-    dptr->device = gConfig.upscaler.device;
     dptr->factor = gConfig.upscaler.factor;
-    dptr->model = gConfig.upscaler.model;
 
-    int processorType = ac::core::Processor::type(gConfig.upscaler.processor.toLocal8Bit());
-    if (!dptr->processor || dptr->processorType != processorType) dptr->processor = ac::core::Processor::create(dptr->processorType = processorType, dptr->device, dptr->model.toLocal8Bit());
+    if (!dptr->processor || dptr->device != gConfig.upscaler.device || dptr->processorType != gConfig.upscaler.processor || dptr->model != gConfig.upscaler.model)
+    {
+        dptr->processor = ac::core::Processor::create(gConfig.upscaler.processor.toLocal8Bit(), gConfig.upscaler.device, gConfig.upscaler.model.toLocal8Bit());
+        dptr->device = gConfig.upscaler.device;
+        dptr->processorType = gConfig.upscaler.processor;
+        dptr->model = gConfig.upscaler.model;
+    }
     if (!dptr->processor->ok())
     {
         gLogger.error() << dptr->processor->error();
@@ -78,7 +81,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
     }
 
     static auto threads = ac::util::ThreadPool::hardwareThreads();
-    static ac::util::ThreadPool pool{ dptr->processorType == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1 };
+    static ac::util::ThreadPool pool{ dptr->processor->type() == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1};
 
 #ifdef AC_CLI_ENABLE_VIDEO
     pool.exec([=](){
@@ -166,7 +169,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                 stopwatch.stop();
                 pipeline.close();
                 if (data.error.load(std::memory_order_relaxed)) gLogger.error() << task->path.input << ": Failed due to " << data.error.load(std::memory_order_relaxed);
-                else gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
+                else gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << dptr->processor->typeName() << ' ' << dptr->processor->name() << ']';
                 gLogger.info() << "Save video to " << task->path.output;
             }
             emit progress(100);
@@ -207,7 +210,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     emit task->finished(false);
                     return;
                 }
-                gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << gConfig.upscaler.processor << ' ' << dptr->processor->name() << ']';
+                gLogger.info() << task->path.input <<": Finished in " << stopwatch.elapsed() << "s [" << dptr->processor->typeName() << ' ' << dptr->processor->name() << ']';
 
                 if (ac::core::imwrite(task->path.output.toLocal8Bit(), dst)) gLogger.info() << "Save image to " << task->path.output;
                 else

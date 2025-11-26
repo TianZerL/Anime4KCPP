@@ -51,7 +51,7 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
 
     auto model = args[4].Defined() ? args[4].AsString() : "acnet-hdn0";
 
-    processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
+    processor = ac::core::Processor::create(processorType, device, model);
     if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
 }
 

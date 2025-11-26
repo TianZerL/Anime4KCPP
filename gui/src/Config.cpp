@@ -24,8 +24,8 @@ Config::Config() noexcept
     io.imageOutputPath = dir.canonicalPath();
     io.videoOutputPath = dir.canonicalPath();
 
-    upscaler.model = ac::specs::ModelNameList[0];
-    upscaler.processor = ac::specs::ProcessorNameList[0];
+    upscaler.model = ac::specs::ModelList[0];
+    upscaler.processor = ac::specs::ProcessorList[0];
 
     load();
 }

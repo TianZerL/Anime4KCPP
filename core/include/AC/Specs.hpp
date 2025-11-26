@@ -3,7 +3,7 @@
 
 namespace ac::specs
 {
-    constexpr const char* ModelNameList[] = {
+    constexpr const char* ModelList[] = {
         "acnet-gan",
         "acnet-hdn0",
         "acnet-hdn1",
@@ -27,7 +27,7 @@ namespace ac::specs
         "Lightweight ResNet, line enhancing.",     // arnet-m-le
     };
 
-    constexpr const char* ProcessorNameList[] = {
+    constexpr const char* ProcessorList[] = {
         "cpu",
 #   ifdef AC_CORE_WITH_OPENCL
         "opencl",

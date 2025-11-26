@@ -3,7 +3,6 @@
 
 #include <QDir>
 #include <QString>
-#include <QStringList>
 
 #define gConfig (Config::instance())
 

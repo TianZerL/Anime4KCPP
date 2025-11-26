@@ -219,6 +219,14 @@ namespace ac::core::opencl
         {
             return context.name.c_str();
         }
+        int type() const noexcept override
+        {
+            return Processor::OpenCL;
+        }
+        const char* typeName() const noexcept override
+        {
+            return "OpenCL";
+        }
     protected:
         cl::CommandQueue& queue(cl_int* const err)
         {

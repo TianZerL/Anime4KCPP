@@ -106,21 +106,21 @@ public:
     int getDevice();
     int getLimitWidth();
     int getLimitHeight();
-    const TCHAR* getProcessorName();
+    const TCHAR* getProcessorType();
     const TCHAR* getModelName();
 
     void setFactor(double v) const;
     void setDevice(int v) const;
     void setLimitWidth(int v) const;
     void setLimitHeight(int v) const;
-    void setProcessorName(const TCHAR* v) const;
+    void setProcessorType(const TCHAR* v) const;
     void setModelName(const TCHAR* v) const;
 
 public:
     static RegArgument& instance();
 
 public:
-    static constexpr int ProcessorNameMaxSize = 32;
+    static constexpr int ProcessorTypeMaxSize = 32;
     static constexpr int ModelNameMaxSize = 32;
 
     static constexpr double FactorDefault = 2.0;
@@ -128,13 +128,13 @@ public:
     static constexpr int LimitWidthDefault = 1280;
     static constexpr int LimitHeightDefault = 720;
 private:
-    static constexpr const TCHAR* ProcessorNameDefault = TEXT("cpu");
+    static constexpr const TCHAR* ProcessorTypeDefault = TEXT("cpu");
     static constexpr const TCHAR* ModelNameDefault = TEXT("acnet-hdn0");
     static constexpr const TCHAR* FactorValueName = TEXT("Factor");
     static constexpr const TCHAR* DeviceValueName = TEXT("Device");
     static constexpr const TCHAR* LimitWidthValueName = TEXT("LimitWidth");
     static constexpr const TCHAR* LimitHeightValueName = TEXT("LimitHeight");
-    static constexpr const TCHAR* ProcessorNameValueName = TEXT("ProcessorName");
+    static constexpr const TCHAR* ProcessorTypeValueName = TEXT("ProcessorType");
     static constexpr const TCHAR* ModelNameValueName = TEXT("ModelName");
 private:
     HKEY key{};
@@ -142,7 +142,7 @@ private:
     int device{};
     int limitWidth{};
     int limitHeight{};
-    TCHAR processorName[ProcessorNameMaxSize]{};
+    TCHAR ProcessorType[ProcessorTypeMaxSize]{};
     TCHAR modelName[ModelNameMaxSize]{};
 };
 
@@ -246,11 +246,11 @@ Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) : CTransformFilter(nam
     factor = gRegArgument.getFactor();
     size.limit.width = gRegArgument.getLimitWidth();
     size.limit.height = gRegArgument.getLimitHeight();
-    auto processorName = gRegArgument.getProcessorName();
+    auto ProcessorType = gRegArgument.getProcessorType();
     auto device = gRegArgument.getDevice();
     auto modelName = gRegArgument.getModelName();
 
-    processor = ac::core::Processor::create(ac::core::Processor::type(T2A(processorName)), device, T2A(modelName));
+    processor = ac::core::Processor::create(T2A(ProcessorType), device, T2A(modelName));
     if (!processor->ok() && phr) *phr = E_UNEXPECTED;
 }
 STDMETHODIMP Filter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
@@ -419,15 +419,15 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%.2lf"), factor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_FACTOR), buffer);
 
-    for (auto name : ac::specs::ProcessorNameList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), A2T(name));
-    auto processorName = gRegArgument.getProcessorName();
-    ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), -1, processorName);
+    for (auto item : ac::specs::ProcessorList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), A2T(item));
+    auto ProcessorType = gRegArgument.getProcessorType();
+    ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), -1, ProcessorType);
 
     auto device = gRegArgument.getDevice();
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%d"), device);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_DEVICE), buffer);
 
-    for (auto name : ac::specs::ModelNameList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), A2T(name));
+    for (auto item : ac::specs::ModelList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), A2T(item));
     auto modelName = gRegArgument.getModelName();
     ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), -1, modelName);
 
@@ -471,7 +471,7 @@ HRESULT PropertyPage::OnApplyChanges()
     gRegArgument.setFactor(factor);
 
     ComboBox_GetText(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), buffer, NUMELMS(buffer));
-    gRegArgument.setProcessorName(buffer);
+    gRegArgument.setProcessorType(buffer);
 
     Edit_GetText(GetDlgItem(m_Dlg, IDC_EDIT_DEVICE), buffer, NUMELMS(buffer));
     auto device = _tcstol(buffer, &endptr, 10);
@@ -535,16 +535,16 @@ int RegArgument::getLimitHeight()
         return limitHeight;
     else return LimitHeightDefault;
 }
-const TCHAR* RegArgument::getProcessorName()
+const TCHAR* RegArgument::getProcessorType()
 {
-    DWORD size = ProcessorNameMaxSize;
-    auto data = reinterpret_cast<LPBYTE>(processorName);
-    if (ERROR_SUCCESS == RegQueryValueEx(key, ProcessorNameValueName, nullptr, nullptr, data, &size))
+    DWORD size = ProcessorTypeMaxSize;
+    auto data = reinterpret_cast<LPBYTE>(ProcessorType);
+    if (ERROR_SUCCESS == RegQueryValueEx(key, ProcessorTypeValueName, nullptr, nullptr, data, &size))
     {
-        processorName[size - 1] = TEXT('\0');
-        return processorName;
+        ProcessorType[size - 1] = TEXT('\0');
+        return ProcessorType;
     }
-    else return ProcessorNameDefault;
+    else return ProcessorTypeDefault;
 }
 const TCHAR* RegArgument::getModelName()
 {
@@ -581,11 +581,11 @@ void RegArgument::setLimitHeight(const int v) const
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitHeightValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setProcessorName(const TCHAR* const v) const
+void RegArgument::setProcessorType(const TCHAR* const v) const
 {
-    DWORD size = ProcessorNameMaxSize;
+    DWORD size = ProcessorTypeMaxSize;
     auto data = reinterpret_cast<const BYTE*>(v);
-    RegSetValueEx(key, ProcessorNameValueName, 0, REG_SZ, data, size);
+    RegSetValueEx(key, ProcessorTypeValueName, 0, REG_SZ, data, size);
 }
 void RegArgument::setModelName(const TCHAR* const v) const
 {

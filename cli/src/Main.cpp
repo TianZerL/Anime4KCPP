@@ -55,13 +55,13 @@ static bool list(const Options& options)
     if (options.list.processors)
     {
         printf("Processors:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ProcessorNameList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorNameList[i], ac::specs::ProcessorDescriptionList[i]);
+        for (std::size_t i = 0; i < std::size(ac::specs::ProcessorList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorList[i], ac::specs::ProcessorDescriptionList[i]);
         return true;
     }
     if (options.list.models)
     {
         printf("Models:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ModelNameList); i++) printf("  %-16s  %s\n", ac::specs::ModelNameList[i], ac::specs::ModelDescriptionList[i]);
+        for (std::size_t i = 0; i < std::size(ac::specs::ModelList); i++) printf("  %-16s  %s\n", ac::specs::ModelList[i], ac::specs::ModelDescriptionList[i]);
         return true;
     }
     return false;
@@ -71,7 +71,7 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
 {
     auto batch = options.inputs.size();
     auto threads = ac::util::ThreadPool::hardwareThreads();
-    auto targetThreads = ac::core::Processor::type(options.processor.c_str()) == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1;
+    auto targetThreads = processor->type() == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1;
     auto poolSize = batch > targetThreads ? targetThreads : batch;
     auto task = [&](const int i) {
         auto& input = options.inputs[i];
@@ -219,7 +219,7 @@ int main(int argc, char* argv[])
     if (options.inputs.empty()) return 0;
     options.outputs.resize(options.inputs.size());
 
-    auto processor = ac::core::Processor::create(ac::core::Processor::type(options.processor.c_str()), options.device, options.model.c_str());
+    auto processor = ac::core::Processor::create(options.processor.c_str(), options.device, options.model.c_str());
     if (!processor->ok())
     {
         std::printf("%s\n", processor->error());
@@ -227,7 +227,7 @@ int main(int argc, char* argv[])
     }
 
     std::printf("Model: %s\n"
-                "Processor: %s %s\n\n", options.model.c_str(), options.processor.c_str(), processor->name());
+                "Processor: %s %s\n\n", options.model.c_str(), processor->typeName(), processor->name());
 
     ac::util::Stopwatch stopwatch{};
     if (options.video)

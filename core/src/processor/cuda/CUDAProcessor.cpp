@@ -203,6 +203,14 @@ namespace ac::core::cuda
         {
             return ContextList[idx].name.c_str();
         }
+        int type() const noexcept override
+        {
+            return Processor::CUDA;
+        }
+        const char* typeName() const noexcept override
+        {
+            return "CUDA";
+        }
     protected:
         int computeCapability{};
         util::ThreadLocal<cudaError_t> errors{};

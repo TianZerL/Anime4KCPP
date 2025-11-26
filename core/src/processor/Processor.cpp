@@ -1,9 +1,72 @@
 #include <cctype>
 #include <string>
+#include <variant>
 
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
 #include "AC/Core/Util.hpp"
+
+namespace ac::core::detail
+{
+    static inline int findProcessorType(const char* type) noexcept
+    {
+        if (type)
+        {
+            std::string typeString = type;
+
+            for (char& ch : typeString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+            if (typeString == "opencl") return Processor::OpenCL;
+            if (typeString == "cuda") return Processor::CUDA;
+        }
+        return Processor::CPU;
+    }
+    static inline std::variant<model::ACNet, model::ARNet> findModel(const char* model) noexcept
+    {
+        if (model)
+        {
+            std::string modelString = model;
+
+            for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+
+            if (modelString.find("arnet") != std::string::npos) // ARNet
+            {
+                auto variant = ac::core::model::ARNet::Variant::S_LE;
+                if (modelString.find("s") != std::string::npos) // ARNet-S
+                {
+                    if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_LE;
+                    else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_HDN;
+                }
+                else if (modelString.find("m") != std::string::npos) // ARNet-M
+                {
+                    if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_LE;
+                    else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_HDN;
+                }
+                return ac::core::model::ARNet{ variant };
+            }
+            else // ACNet
+            {
+                auto variant = ac::core::model::ACNet::Variant::GAN;
+                if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
+                {
+                    variant = ac::core::model::ACNet::Variant::HDN0;
+                    for (char ch : modelString)
+                    {
+                        if (ch == '0') variant = ac::core::model::ACNet::Variant::HDN0;
+                        else if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
+                        else if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
+                        else if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
+                        else continue;
+
+                        break;
+                    }
+                }
+                return ac::core::model::ACNet{ variant };
+            }
+        }
+        return ac::core::model::ACNet{ ac::core::model::ACNet::Variant::HDN0 };
+    }
+}
 
 ac::core::Processor::Processor() noexcept : idx(0) {}
 ac::core::Processor::~Processor() = default;
@@ -101,35 +164,10 @@ const char* ac::core::Processor::error() noexcept
     return "NO ERROR";
 }
 
-int ac::core::Processor::type(const char* const str) noexcept
+std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const char* type, const int device, const char* const model)
 {
-    if (str)
-    {
-        std::string typeString = str;
-
-        for (char& ch : typeString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-
-        if (typeString == "opencl") return OpenCL;
-        if (typeString == "cuda") return CUDA;
-    }
-    return CPU;
-}
-const char* ac::core::Processor::type(const int id) noexcept
-{
-    switch (id)
-    {
-    case OpenCL:
-        return "opencl";
-    case CUDA:
-        return "cuda";
-    default:
-        return "cpu";
-    }
-}
-std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type, const int device, const char* const model)
-{
-    auto createImpl = [](int type, int device, auto&& model) {
-        switch (type)
+    return std::visit([=](auto&& model) {
+        switch (detail::findProcessorType(type))
         {
 #   ifdef AC_CORE_WITH_OPENCL
         case ac::core::Processor::OpenCL:
@@ -142,48 +180,5 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const int type,
         default:
             return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
         }
-    };
-
-    if (model)
-    {
-        std::string modelString = model;
-
-        for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-
-        if (modelString.find("arnet") != std::string::npos) // ARNet
-        {
-            auto variant = ac::core::model::ARNet::Variant::S_LE;
-            if (modelString.find("s") != std::string::npos) // ARNet-S
-            {
-                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_LE;
-                else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_HDN;
-            }
-            else if (modelString.find("m") != std::string::npos) // ARNet-M
-            {
-                if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_LE;
-                else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_HDN;
-            }
-            return createImpl(type, device, ac::core::model::ARNet{ variant });
-        }
-        else // ACNet
-        {
-            auto variant = ac::core::model::ACNet::Variant::GAN;
-            if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
-            {
-                variant = ac::core::model::ACNet::Variant::HDN0;
-                for (char ch : modelString)
-                {
-                    if (ch == '0') variant = ac::core::model::ACNet::Variant::HDN0;
-                    else if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
-                    else if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
-                    else if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
-                    else continue;
-
-                    break;
-                }
-            }
-            return createImpl(type, device, ac::core::model::ACNet{ variant });
-        }
-    }
-    return createImpl(type, device, ac::core::model::ACNet{ ac::core::model::ACNet::Variant::HDN0 });
+    }, detail::findModel(model));
 }

@@ -93,7 +93,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     ctx->vi.height = static_cast<decltype(ctx->vi.height)>(vi->height * factor);
     ctx->type = type;
     ctx->factor = factor;
-    ctx->processor = ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
+    ctx->processor = ac::core::Processor::create(processorType, device, model);
     if (!ctx->processor->ok()) SET_ERROR(ctx->processor->error());
 
     VSFilterDependency deps[] = { {node, rpGeneral} };

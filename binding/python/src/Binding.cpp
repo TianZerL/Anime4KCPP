@@ -46,12 +46,9 @@ PYBIND11_MODULE(pyac, m)
     };
 
     py::class_<ac::core::Processor, std::shared_ptr<ac::core::Processor>>(core, "Processor")
-        .def(py::init([](const int processorType, const int device, const char* model) {
-            return ac::core::Processor::create(processorType, device, model);
-        }), py::arg("processor_type") = ac::core::Processor::CPU, py::arg("device") = 0, py::arg("model") = ac::specs::ModelNameList[0])
-        .def(py::init([](const char* processorType, const int device, const char* model) {
-            return ac::core::Processor::create(ac::core::Processor::type(processorType), device, model);
-        }), py::arg("processor_type"), py::arg("device") = 0, py::arg("model") = ac::specs::ModelNameList[0])
+        .def(py::init([](const char* type, const int device, const char* model) {
+            return ac::core::Processor::create(type, device, model);
+        }), py::arg("type") = "cpu", py::arg("device") = 0, py::arg("model") = ac::specs::ModelList[0])
         .def("process", processNumpyArray, py::arg("src"), py::arg("factor") = 2.0)
         .def("ok", &ac::core::Processor::ok)
         .def("error", &ac::core::Processor::error)
@@ -166,8 +163,8 @@ PYBIND11_MODULE(pyac, m)
         return tuple;
     };
 
-    specs.attr("ModelNameList") = makeTuple(ac::specs::ModelNameList);
+    specs.attr("ModelList") = makeTuple(ac::specs::ModelList);
     specs.attr("ModelDescriptionList") = makeTuple(ac::specs::ModelDescriptionList);
-    specs.attr("ProcessorNameList") = makeTuple(ac::specs::ProcessorNameList);
+    specs.attr("ProcessorList") = makeTuple(ac::specs::ProcessorList);
     specs.attr("ProcessorDescriptionList") = makeTuple(ac::specs::ProcessorDescriptionList);
 }

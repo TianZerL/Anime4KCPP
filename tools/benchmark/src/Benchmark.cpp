@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     std::printf("\n");
 
     auto model = argc > 1 ? argv[1] : "acnet";
-    auto processorType = ac::core::Processor::type(argc > 2 ? argv[2] : "cpu");
+    auto processorType = argc > 2 ? argv[2] : "cpu";
     auto processor = ac::core::Processor::create(processorType, argc > 3 ? std::atoi(argv[3]) : 0, model);
     if (!processor->ok())
     {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     int batch = argc > 6 ? std::max(std::atoi(argv[6]), 1) : processorType == ac::core::Processor::CPU ? 60 : 600;
     int threads = argc > 7 ? std::max(std::atoi(argv[7]), 1) : ac::util::ThreadPool::hardwareThreads();
 
-    std::printf("model: %s, processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", model, ac::core::Processor::type(processorType), processor->name(), w, h, batch, threads);
+    std::printf("model: %s, processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", model, processor->typeName(), processor->name(), w, h, batch, threads);
 
     // max image pool size: 128m
     ImagePool images{ w, h, batch, std::min(128 * 1024 * 1024 / (w * h), batch) };
