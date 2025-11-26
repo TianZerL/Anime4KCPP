@@ -1,4 +1,5 @@
 #include <array>
+
 #include <xmmintrin.h>
 
 #include "AC/Core/Image.hpp"

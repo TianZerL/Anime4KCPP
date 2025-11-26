@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     }
     int w = argc > 4 ? std::max(std::atoi(argv[4]), 3) : 720;
     int h = argc > 5 ? std::max(std::atoi(argv[5]), 3) : 480;
-    int batch = argc > 6 ? std::max(std::atoi(argv[6]), 1) : processorType == ac::core::Processor::CPU ? 60 : 600;
+    int batch = argc > 6 ? std::max(std::atoi(argv[6]), 1) : processor->type() == ac::core::Processor::CPU ? 60 : 600;
     int threads = argc > 7 ? std::max(std::atoi(argv[7]), 1) : ac::util::ThreadPool::hardwareThreads();
 
     std::printf("model: %s, processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", model, processor->typeName(), processor->name(), w, h, batch, threads);

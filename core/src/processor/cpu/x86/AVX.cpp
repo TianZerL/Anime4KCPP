@@ -1,4 +1,5 @@
 #include <array>
+
 #include <immintrin.h>
 
 #include "AC/Core/SIMD.hpp"

@@ -1,4 +1,5 @@
 #include <array>
+
 #include <wasm_simd128.h>
 
 #include "AC/Core/Image.hpp"

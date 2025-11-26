@@ -1,4 +1,5 @@
 #include <array>
+
 #include <Eigen/Core>
 
 #include "AC/Core/Image.hpp"
