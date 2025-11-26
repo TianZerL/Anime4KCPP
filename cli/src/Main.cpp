@@ -43,13 +43,7 @@ static bool list(const Options& options)
     }
     if (options.list.devices)
     {
-        std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
-#   ifdef AC_CORE_WITH_OPENCL
-        std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
-        std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
-#   endif
+        std::printf("%s", ac::core::Processor::listInfo());
         return true;
     }
     if (options.list.processors)

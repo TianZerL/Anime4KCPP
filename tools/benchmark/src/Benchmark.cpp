@@ -64,14 +64,7 @@ int main(int argc, char* argv[])
 {
     std::printf("usage: [model] [processor] [device] [width] [height] [batch] [threads]\n");
     std::printf("\n");
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::CPU>());
-#ifdef AC_CORE_WITH_OPENCL
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::OpenCL>());
-#endif
-#ifdef AC_CORE_WITH_CUDA
-    std::printf("%s", ac::core::Processor::info<ac::core::Processor::CUDA>());
-#endif
-    std::printf("\n");
+    std::printf("%s\n", ac::core::Processor::listInfo());
 
     auto model = argc > 1 ? argv[1] : "acnet";
     auto processorType = argc > 2 ? argv[2] : "cpu";

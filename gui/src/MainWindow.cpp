@@ -192,7 +192,7 @@ void MainWindow::init()
     setAcceptDrops(true);
 
     gLogger.info() << "Anime4KCPP GUI v" AC_CORE_VERSION_STR " started";
-    gLogger.info() << '\n' << gUpscaler.info();
+    gLogger.info() << '\n' << gUpscaler.listProcessorInfo();
 }
 
 void MainWindow::addTask(const QFileInfo& fileInfo)
@@ -313,7 +313,7 @@ void MainWindow::on_action_list_devices_triggered()
     devicesMessageBox->setAttribute(Qt::WA_DeleteOnClose);
     devicesMessageBox->setWindowTitle(tr("Devices"));
     devicesMessageBox->setWindowModality(Qt::NonModal);
-    devicesMessageBox->setText(Upscaler::info());
+    devicesMessageBox->setText(gUpscaler.listProcessorInfo());
     if (auto layout = qobject_cast<QGridLayout*>(devicesMessageBox->layout()))
         layout->addItem(new QSpacerItem{ 250, 0, QSizePolicy::Minimum, QSizePolicy::Expanding }, layout->rowCount(), 0, 1, layout->columnCount());
     devicesMessageBox->show();

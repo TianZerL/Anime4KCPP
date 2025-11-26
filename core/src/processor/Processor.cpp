@@ -182,3 +182,19 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const char* typ
         }
     }, detail::findModel(model));
 }
+
+const char* ac::core::Processor::listInfo()
+{
+    static auto buffer = []() -> std::string {
+        return std::string{}
+            .append(ac::core::Processor::info<ac::core::Processor::CPU>())
+#       ifdef AC_CORE_WITH_OPENCL
+            .append(ac::core::Processor::info<ac::core::Processor::OpenCL>())
+#       endif
+#       ifdef AC_CORE_WITH_CUDA
+            .append(ac::core::Processor::info<ac::core::Processor::CUDA>())
+#       endif
+            ;
+    }();
+    return buffer.c_str();
+}

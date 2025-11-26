@@ -362,6 +362,6 @@ AC_EXPORT const char* ac::core::Processor::info<ac::core::Processor::CPU>()
             buffer << "  [" << i << "] " << cpu::arch::NameList[i] << '\n';
         }
         return buffer.str();
-        }();
+    }();
     return infoBuffer.c_str();
 }

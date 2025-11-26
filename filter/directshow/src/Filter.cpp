@@ -439,14 +439,7 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%d"), limitHeight);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_LIMIT_HEIGHT), buffer);
 
-    decltype(NUMELMS(buffer)) count = 0;
-    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::CPU>(), buffer + count, NUMELMS(buffer) - count);
-#ifdef AC_CORE_WITH_OPENCL
-    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::OpenCL>(), buffer + count, NUMELMS(buffer) - count);
-#endif
-#ifdef AC_CORE_WITH_CUDA
-    count += util::asciiToWindowsAscii(ac::core::Processor::info<ac::core::Processor::CUDA>(), buffer + count, NUMELMS(buffer) - count);
-#endif
+    util::asciiToWindowsAscii(ac::core::Processor::listInfo(), buffer, NUMELMS(buffer));
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
 
     Static_SetText(GetDlgItem(m_Dlg, IDC_STATIC_VERSION), TEXT(AC_CORE_VERSION_STR));

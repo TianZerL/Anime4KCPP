@@ -39,5 +39,6 @@ CAC_API int ac_processor_type(const ac_processor* processor);
 CAC_API const char* ac_processor_type_name(const ac_processor* processor);
 
 CAC_API const char* ac_processor_info(int processor_type);
+CAC_API const char* ac_processor_list_info();
 
 #endif

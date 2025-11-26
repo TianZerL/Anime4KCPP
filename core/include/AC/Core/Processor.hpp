@@ -38,6 +38,7 @@ private:
 
 public:
     AC_EXPORT static std::shared_ptr<Processor> create(const char* type, int device, const char* model);
+    AC_EXPORT static const char* listInfo();
 
     template<int type, typename Model> static std::shared_ptr<Processor> create(int idx, const Model& model);
     template<int type> static const char* info();

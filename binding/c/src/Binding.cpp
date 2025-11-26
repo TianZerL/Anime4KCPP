@@ -205,3 +205,7 @@ const char* ac_processor_info(const int processor_type)
     default: return "unsupported processor";
     }
 }
+const char* ac_processor_list_info()
+{
+    return ac::core::Processor::listInfo();
+}

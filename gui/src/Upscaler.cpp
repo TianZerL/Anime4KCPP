@@ -30,16 +30,9 @@ Upscaler& Upscaler::instance() noexcept
     static Upscaler upscaler{};
     return upscaler;
 }
-QString Upscaler::info()
+QString& Upscaler::listProcessorInfo()
 {
-    QString buffer{};
-    buffer.append(ac::core::Processor::info<ac::core::Processor::CPU>());
-#ifdef AC_CORE_WITH_OPENCL
-    buffer.append(ac::core::Processor::info<ac::core::Processor::OpenCL>());
-#endif
-#ifdef AC_CORE_WITH_CUDA
-    buffer.append(ac::core::Processor::info<ac::core::Processor::CUDA>());
-#endif
+    static QString buffer{ ac::core::Processor::listInfo() };
     return buffer;
 }
 

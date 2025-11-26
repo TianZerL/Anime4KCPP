@@ -37,7 +37,7 @@ private:
 
 public:
     static Upscaler& instance() noexcept;
-    static QString info();
+    static QString& listProcessorInfo();
 
 public:
     Upscaler();
