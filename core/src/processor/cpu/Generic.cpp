@@ -8,61 +8,64 @@ namespace ac::core::cpu
     template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_generic(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
+        [[maybe_unused]] const std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        filter([=](const int i, const int j, const auto ...ptrs) {
-            [[maybe_unused]] const std::array<const void*, sizeof...(ptrs)> iptrs{ ptrs... }; // just ignore last 2 items.
-
-            auto in = static_cast<const IN*>(std::get<sizeof...(ptrs) - 2>(std::forward_as_tuple(ptrs...)));
-            auto out = static_cast<float*>(std::get<sizeof...(ptrs) - 1>(std::forward_as_tuple(ptrs...)));
-
-            auto sp = i < h - 1 ? +step : 0;
-            auto sn = i > 0 ? -step : 0;
-            auto cp = j < w - 1 ? +cin : 0;
-            auto cn = j > 0 ? -cin : 0;
-
-            auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-            auto ml = in + cn, mc = in, mr = in + cp;
-            auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
-
-            for (int n = 0; n < cout; n++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                auto k0 = kernels + n * cin * 9 + cin * 0;
-                auto k1 = kernels + n * cin * 9 + cin * 1;
-                auto k2 = kernels + n * cin * 9 + cin * 2;
-                auto k3 = kernels + n * cin * 9 + cin * 3;
-                auto k4 = kernels + n * cin * 9 + cin * 4;
-                auto k5 = kernels + n * cin * 9 + cin * 5;
-                auto k6 = kernels + n * cin * 9 + cin * 6;
-                auto k7 = kernels + n * cin * 9 + cin * 7;
-                auto k8 = kernels + n * cin * 9 + cin * 8;
+                auto out = static_cast<float*>(dst.ptr(j, i));
 
-                float sum = biases[n];
+                auto tp = i > 0 ? 1 : 0;
+                auto bp = i < src.height() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
 
-                for (int c = 0; c < cin; c++)
+                auto tl = static_cast<const IN*>(src.ptr(j - lp, i - tp));
+                auto tc = static_cast<const IN*>(src.ptr(j     , i - tp));
+                auto tr = static_cast<const IN*>(src.ptr(j + rp, i - tp));
+                auto ml = static_cast<const IN*>(src.ptr(j - lp, i     ));
+                auto mc = static_cast<const IN*>(src.ptr(j     , i     ));
+                auto mr = static_cast<const IN*>(src.ptr(j + rp, i     ));
+                auto bl = static_cast<const IN*>(src.ptr(j - lp, i + bp));
+                auto bc = static_cast<const IN*>(src.ptr(j     , i + bp));
+                auto br = static_cast<const IN*>(src.ptr(j + rp, i + bp));
+
+                for (int n = 0; n < cout; n++)
                 {
-                    sum +=
-                        toFloat<IN>(tl[c]) * k0[c] +
-                        toFloat<IN>(tc[c]) * k1[c] +
-                        toFloat<IN>(tr[c]) * k2[c] +
-                        toFloat<IN>(ml[c]) * k3[c] +
-                        toFloat<IN>(mc[c]) * k4[c] +
-                        toFloat<IN>(mr[c]) * k5[c] +
-                        toFloat<IN>(bl[c]) * k6[c] +
-                        toFloat<IN>(bc[c]) * k7[c] +
-                        toFloat<IN>(br[c]) * k8[c];
+                    auto k0 = kernels + n * cin * 9 + cin * 0;
+                    auto k1 = kernels + n * cin * 9 + cin * 1;
+                    auto k2 = kernels + n * cin * 9 + cin * 2;
+                    auto k3 = kernels + n * cin * 9 + cin * 3;
+                    auto k4 = kernels + n * cin * 9 + cin * 4;
+                    auto k5 = kernels + n * cin * 9 + cin * 5;
+                    auto k6 = kernels + n * cin * 9 + cin * 6;
+                    auto k7 = kernels + n * cin * 9 + cin * 7;
+                    auto k8 = kernels + n * cin * 9 + cin * 8;
+
+                    float sum = biases[n];
+
+                    for (int c = 0; c < cin; c++)
+                    {
+                        sum +=
+                            toFloat<IN>(tl[c]) * k0[c] +
+                            toFloat<IN>(tc[c]) * k1[c] +
+                            toFloat<IN>(tr[c]) * k2[c] +
+                            toFloat<IN>(ml[c]) * k3[c] +
+                            toFloat<IN>(mc[c]) * k4[c] +
+                            toFloat<IN>(mr[c]) * k5[c] +
+                            toFloat<IN>(bl[c]) * k6[c] +
+                            toFloat<IN>(bc[c]) * k7[c] +
+                            toFloat<IN>(br[c]) * k8[c];
+                    }
+
+                    if constexpr (sizeof...(ResidualArgs))
+                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                            sum = sum * residualArgs[idx].scale + static_cast<const float*>(residualArgs[idx].image.ptr(j, i))[n];
+
+                    out[n] = activeFunc(sum);
                 }
-
-                if constexpr (sizeof...(ResidualArgs))
-                    for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                        sum = sum * scales[idx] + static_cast<const float*>(iptrs[idx])[n];
-
-                out[n] = activeFunc(sum);
             }
-        }, residualArg.image..., src, dst);
+        });
     }
     template <typename IN, typename OUT, int cin, int cout>
     inline void deconv2x2_generic(const Image& src, Image& dst, const float* const kernels)
@@ -109,25 +112,26 @@ namespace ac::core::cpu
         static constexpr int cin = 8;
         static constexpr int upscale = 2;
 
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
-
-        util::parallelFor(0, h, [&](const int i) {
-            for (int j = 0; j < w; j++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                auto in = static_cast<const IN*>(src.ptr(j, i));
-
-                auto dstX = j * upscale;
                 auto dstY = i * upscale;
+                auto dstX = j * upscale;
 
-                auto sp = i < h - 1 ? +step : 0;
-                auto sn = i > 0 ? -step : 0;
-                auto cp = j < w - 1 ? +cin : 0;
-                auto cn = j > 0 ? -cin : 0;
+                auto tp = i > 0 ? 1 : 0;
+                auto bp = i < src.height() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-                auto ml = in + cn, mc = in, mr = in + cp;
-                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+                auto tl = static_cast<const IN*>(src.ptr(j - lp, i - tp));
+                auto tc = static_cast<const IN*>(src.ptr(j     , i - tp));
+                auto tr = static_cast<const IN*>(src.ptr(j + rp, i - tp));
+                auto ml = static_cast<const IN*>(src.ptr(j - lp, i     ));
+                auto mc = static_cast<const IN*>(src.ptr(j     , i     ));
+                auto mr = static_cast<const IN*>(src.ptr(j + rp, i     ));
+                auto bl = static_cast<const IN*>(src.ptr(j - lp, i + bp));
+                auto bc = static_cast<const IN*>(src.ptr(j     , i + bp));
+                auto br = static_cast<const IN*>(src.ptr(j + rp, i + bp));
 
                 for (int n = 0; n < 4; n++)
                 {

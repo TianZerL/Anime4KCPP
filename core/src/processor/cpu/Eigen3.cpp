@@ -9,58 +9,51 @@ namespace ac::core::cpu
     template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
+        [[maybe_unused]] const std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        filter([=](const int i, const int j, const auto ...ptrs) {
-            [[maybe_unused]] const std::array<const void*, sizeof...(ptrs)> iptrs{ ptrs... }; // just ignore last 2 items.
-
-            auto in = static_cast<const IN*>(std::get<sizeof...(ptrs) - 2>(std::forward_as_tuple(ptrs...)));
-            auto out = static_cast<float*>(std::get<sizeof...(ptrs) - 1>(std::forward_as_tuple(ptrs...)));
-
-            auto sp = i < h - 1 ? +step : 0;
-            auto sn = i > 0 ? -step : 0;
-            auto cp = j < w - 1 ? +cin : 0;
-            auto cn = j > 0 ? -cin : 0;
-
-            auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-            auto ml = in + cn, mc = in, mr = in + cp;
-            auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
-
-            auto r = [=]() -> auto {
-                Eigen::Array<IN, cin, 9> rin{};
-                rin <<
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tl },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tc },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tr },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ ml },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mc },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mr },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bl },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bc },
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>>{ br };
-                if constexpr (std::is_same_v<IN, float>)
-                    return rin;
-                else if constexpr (std::is_floating_point_v<IN>)
-                    return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
-                else if constexpr (std::is_unsigned_v<IN>)
-                    return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-            }();
-
-            for (int n = 0; n < cout; n++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                Eigen::Map<const Eigen::Array<float, cin, 9>> k(kernels + n * cin * 9);
-                float sum = (k * r).sum() + biases[n];
+                auto out = static_cast<float*>(dst.ptr(j, i));
 
-                if constexpr (sizeof...(ResidualArgs))
-                    for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                        sum = sum * scales[idx] + static_cast<const float*>(iptrs[idx])[n];
+                auto r = [&]() -> auto {
+                    auto tp = i > 0 ? 1 : 0;
+                    auto bp = i < src.height() - 1 ? 1 : 0;
+                    auto lp = j > 0 ? 1 : 0;
+                    auto rp = j < src.width() - 1 ? 1 : 0;
 
-                out[n] = activeFunc(sum);
+                    Eigen::Array<IN, cin, 9> rin{};
+                    rin <<
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i + bp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i + bp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i + bp)) };
+                    if constexpr (std::is_same_v<IN, float>)
+                        return rin;
+                    else if constexpr (std::is_floating_point_v<IN>)
+                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
+                    else if constexpr (std::is_unsigned_v<IN>)
+                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
+                }();
+
+                for (int n = 0; n < cout; n++)
+                {
+                    Eigen::Map<const Eigen::Array<float, cin, 9>> k(kernels + n * cin * 9);
+                    float sum = (k * r).sum() + biases[n];
+
+                    if constexpr (sizeof...(ResidualArgs))
+                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                            sum = sum * residualArgs[idx].scale + static_cast<const float*>(residualArgs[idx].image.ptr(j, i))[n];
+
+                    out[n] = activeFunc(sum);
+                }
             }
-        }, residualArg.image..., src, dst);
+        });
     }
     template <typename IN, typename OUT, int cin, int cout>
     inline void deconv2x2_eigen3(const Image& src, Image& dst, const float* const kernels)
@@ -95,38 +88,29 @@ namespace ac::core::cpu
         static constexpr int cin = 8;
         static constexpr int upscale = 2;
 
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
-
-        util::parallelFor(0, h, [&](const int i) {
-            for (int j = 0; j < w; j++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                auto in = static_cast<const IN*>(src.ptr(j, i));
-
-                auto dstX = j * upscale;
                 auto dstY = i * upscale;
+                auto dstX = j * upscale;
 
-                auto sp = i < h - 1 ? +step : 0;
-                auto sn = i > 0 ? -step : 0;
-                auto cp = j < w - 1 ? +cin : 0;
-                auto cn = j > 0 ? -cin : 0;
+                auto r = [&]() -> auto {
+                    auto tp = i > 0 ? 1 : 0;
+                    auto bp = i < src.height() - 1 ? 1 : 0;
+                    auto lp = j > 0 ? 1 : 0;
+                    auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-                auto ml = in + cn, mc = in, mr = in + cp;
-                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
-
-                auto r = [=]() -> auto {
                     Eigen::Array<IN, cin, 9> rin{};
                     rin <<
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tl },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tc },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ tr },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ ml },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mc },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ mr },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bl },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ bc },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ br };
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i - tp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i     )) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i + bp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i + bp)) },
+                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i + bp)) };
                     if constexpr (std::is_same_v<IN, float>)
                         return rin;
                     else if constexpr (std::is_floating_point_v<IN>)

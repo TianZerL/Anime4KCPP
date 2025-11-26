@@ -1,3 +1,4 @@
+#include <array>
 #include <arm_neon.h>
 
 #include "AC/Core/Image.hpp"
@@ -18,190 +19,196 @@ namespace ac::core::cpu
     template <int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_neon_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
+        [[maybe_unused]] const std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        filter([=](const int i, const int j, const auto ...ptrs) {
-            [[maybe_unused]] const std::array<const void*, sizeof...(ptrs)> iptrs{ ptrs... }; // just ignore last 2 items.
-
-            auto in = static_cast<const float*>(std::get<sizeof...(ptrs) - 2>(std::forward_as_tuple(ptrs...)));
-            auto out = static_cast<float*>(std::get<sizeof...(ptrs) - 1>(std::forward_as_tuple(ptrs...)));
-
-            auto sp = i < h - 1 ? +step : 0;
-            auto sn = i > 0 ? -step : 0;
-            auto cp = j < w - 1 ? +cin : 0;
-            auto cn = j > 0 ? -cin : 0;
-
-            auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-            auto ml = in + cn, mc = in, mr = in + cp;
-            auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
-
-            constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
-
-            float32x4_t r0[count + (remain ? 1 : 0)]{};
-            float32x4_t r1[count + (remain ? 1 : 0)]{};
-            float32x4_t r2[count + (remain ? 1 : 0)]{};
-            float32x4_t r3[count + (remain ? 1 : 0)]{};
-            float32x4_t r4[count + (remain ? 1 : 0)]{};
-            float32x4_t r5[count + (remain ? 1 : 0)]{};
-            float32x4_t r6[count + (remain ? 1 : 0)]{};
-            float32x4_t r7[count + (remain ? 1 : 0)]{};
-            float32x4_t r8[count + (remain ? 1 : 0)]{};
-
-            for (int idx = 0; idx < count; idx++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                r0[idx] = vld1q_f32(tl + idx * vstep);
-                r1[idx] = vld1q_f32(tc + idx * vstep);
-                r2[idx] = vld1q_f32(tr + idx * vstep);
-                r3[idx] = vld1q_f32(ml + idx * vstep);
-                r4[idx] = vld1q_f32(mc + idx * vstep);
-                r5[idx] = vld1q_f32(mr + idx * vstep);
-                r6[idx] = vld1q_f32(bl + idx * vstep);
-                r7[idx] = vld1q_f32(bc + idx * vstep);
-                r8[idx] = vld1q_f32(br + idx * vstep);
-            }
-            if constexpr (remain)
-            {
-                const float d0[vstep] = {(tl + count * vstep)[0], remain > 1 ? (tl + count * vstep)[1] : 0.0f, remain > 2 ? (tl + count * vstep)[2] : 0.0f, 0.0f};
-                const float d1[vstep] = {(tc + count * vstep)[0], remain > 1 ? (tc + count * vstep)[1] : 0.0f, remain > 2 ? (tc + count * vstep)[2] : 0.0f, 0.0f};
-                const float d2[vstep] = {(tr + count * vstep)[0], remain > 1 ? (tr + count * vstep)[1] : 0.0f, remain > 2 ? (tr + count * vstep)[2] : 0.0f, 0.0f};
-                const float d3[vstep] = {(ml + count * vstep)[0], remain > 1 ? (ml + count * vstep)[1] : 0.0f, remain > 2 ? (ml + count * vstep)[2] : 0.0f, 0.0f};
-                const float d4[vstep] = {(mc + count * vstep)[0], remain > 1 ? (mc + count * vstep)[1] : 0.0f, remain > 2 ? (mc + count * vstep)[2] : 0.0f, 0.0f};
-                const float d5[vstep] = {(mr + count * vstep)[0], remain > 1 ? (mr + count * vstep)[1] : 0.0f, remain > 2 ? (mr + count * vstep)[2] : 0.0f, 0.0f};
-                const float d6[vstep] = {(bl + count * vstep)[0], remain > 1 ? (bl + count * vstep)[1] : 0.0f, remain > 2 ? (bl + count * vstep)[2] : 0.0f, 0.0f};
-                const float d7[vstep] = {(bc + count * vstep)[0], remain > 1 ? (bc + count * vstep)[1] : 0.0f, remain > 2 ? (bc + count * vstep)[2] : 0.0f, 0.0f};
-                const float d8[vstep] = {(br + count * vstep)[0], remain > 1 ? (br + count * vstep)[1] : 0.0f, remain > 2 ? (br + count * vstep)[2] : 0.0f, 0.0f};
-                r0[count] = vld1q_f32(d0);
-                r1[count] = vld1q_f32(d1);
-                r2[count] = vld1q_f32(d2);
-                r3[count] = vld1q_f32(d3);
-                r4[count] = vld1q_f32(d4);
-                r5[count] = vld1q_f32(d5);
-                r6[count] = vld1q_f32(d6);
-                r7[count] = vld1q_f32(d7);
-                r8[count] = vld1q_f32(d8);
-            }
+                auto out = static_cast<float*>(dst.ptr(j, i));
 
-            for (int n = 0; n < cout; n++)
-            {
-                const float* kptr[] = {
-                    kernels + n * cin * 9 + cin * 0,
-                    kernels + n * cin * 9 + cin * 1,
-                    kernels + n * cin * 9 + cin * 2,
-                    kernels + n * cin * 9 + cin * 3,
-                    kernels + n * cin * 9 + cin * 4,
-                    kernels + n * cin * 9 + cin * 5,
-                    kernels + n * cin * 9 + cin * 6,
-                    kernels + n * cin * 9 + cin * 7,
-                    kernels + n * cin * 9 + cin * 8
-                };
+                auto tp = i > 0 ? 1 : 0;
+                auto bp = i < src.height() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
 
-                float32x4_t s0 = vdupq_n_f32(0.0f);
-                float32x4_t s1 = vdupq_n_f32(0.0f);
-                float32x4_t s2 = vdupq_n_f32(0.0f);
+                auto tl = static_cast<const float*>(src.ptr(j - lp, i - tp));
+                auto tc = static_cast<const float*>(src.ptr(j     , i - tp));
+                auto tr = static_cast<const float*>(src.ptr(j + rp, i - tp));
+                auto ml = static_cast<const float*>(src.ptr(j - lp, i     ));
+                auto mc = static_cast<const float*>(src.ptr(j     , i     ));
+                auto mr = static_cast<const float*>(src.ptr(j + rp, i     ));
+                auto bl = static_cast<const float*>(src.ptr(j - lp, i + bp));
+                auto bc = static_cast<const float*>(src.ptr(j     , i + bp));
+                auto br = static_cast<const float*>(src.ptr(j + rp, i + bp));
+
+                constexpr int vstep = 4;
+                constexpr int count = cin / vstep;
+                constexpr int remain = cin % vstep;
+
+                float32x4_t r0[count + (remain ? 1 : 0)]{};
+                float32x4_t r1[count + (remain ? 1 : 0)]{};
+                float32x4_t r2[count + (remain ? 1 : 0)]{};
+                float32x4_t r3[count + (remain ? 1 : 0)]{};
+                float32x4_t r4[count + (remain ? 1 : 0)]{};
+                float32x4_t r5[count + (remain ? 1 : 0)]{};
+                float32x4_t r6[count + (remain ? 1 : 0)]{};
+                float32x4_t r7[count + (remain ? 1 : 0)]{};
+                float32x4_t r8[count + (remain ? 1 : 0)]{};
+
                 for (int idx = 0; idx < count; idx++)
                 {
-                    float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
-                    float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
-                    float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
-                    float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
-                    float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
-                    float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
-                    float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
-                    float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
-                    float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
-
-                    s0 = vmlaq_f32(s0, r0[idx], k0);
-                    s1 = vmlaq_f32(s1, r1[idx], k1);
-                    s2 = vmlaq_f32(s2, r2[idx], k2);
-                    s0 = vmlaq_f32(s0, r3[idx], k3);
-                    s1 = vmlaq_f32(s1, r4[idx], k4);
-                    s2 = vmlaq_f32(s2, r5[idx], k5);
-                    s0 = vmlaq_f32(s0, r6[idx], k6);
-                    s1 = vmlaq_f32(s1, r7[idx], k7);
-                    s2 = vmlaq_f32(s2, r8[idx], k8);
+                    r0[idx] = vld1q_f32(tl + idx * vstep);
+                    r1[idx] = vld1q_f32(tc + idx * vstep);
+                    r2[idx] = vld1q_f32(tr + idx * vstep);
+                    r3[idx] = vld1q_f32(ml + idx * vstep);
+                    r4[idx] = vld1q_f32(mc + idx * vstep);
+                    r5[idx] = vld1q_f32(mr + idx * vstep);
+                    r6[idx] = vld1q_f32(bl + idx * vstep);
+                    r7[idx] = vld1q_f32(bc + idx * vstep);
+                    r8[idx] = vld1q_f32(br + idx * vstep);
                 }
                 if constexpr (remain)
                 {
-                    const float d0[vstep] = {(kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d1[vstep] = {(kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d2[vstep] = {(kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d3[vstep] = {(kptr[3] + count * vstep)[0], remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d4[vstep] = {(kptr[4] + count * vstep)[0], remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d5[vstep] = {(kptr[5] + count * vstep)[0], remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d6[vstep] = {(kptr[6] + count * vstep)[0], remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d7[vstep] = {(kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float d8[vstep] = {(kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f};
-                    float32x4_t k0 = vld1q_f32(d0);
-                    float32x4_t k1 = vld1q_f32(d1);
-                    float32x4_t k2 = vld1q_f32(d2);
-                    float32x4_t k3 = vld1q_f32(d3);
-                    float32x4_t k4 = vld1q_f32(d4);
-                    float32x4_t k5 = vld1q_f32(d5);
-                    float32x4_t k6 = vld1q_f32(d6);
-                    float32x4_t k7 = vld1q_f32(d7);
-                    float32x4_t k8 = vld1q_f32(d8);
-
-
-                    s0 = vmlaq_f32(s0, r0[count], k0);
-                    s1 = vmlaq_f32(s1, r1[count], k1);
-                    s2 = vmlaq_f32(s2, r2[count], k2);
-                    s0 = vmlaq_f32(s0, r3[count], k3);
-                    s1 = vmlaq_f32(s1, r4[count], k4);
-                    s2 = vmlaq_f32(s2, r5[count], k5);
-                    s0 = vmlaq_f32(s0, r6[count], k6);
-                    s1 = vmlaq_f32(s1, r7[count], k7);
-                    s2 = vmlaq_f32(s2, r8[count], k8);
+                    const float d0[vstep] = {(tl + count * vstep)[0], remain > 1 ? (tl + count * vstep)[1] : 0.0f, remain > 2 ? (tl + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d1[vstep] = {(tc + count * vstep)[0], remain > 1 ? (tc + count * vstep)[1] : 0.0f, remain > 2 ? (tc + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d2[vstep] = {(tr + count * vstep)[0], remain > 1 ? (tr + count * vstep)[1] : 0.0f, remain > 2 ? (tr + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d3[vstep] = {(ml + count * vstep)[0], remain > 1 ? (ml + count * vstep)[1] : 0.0f, remain > 2 ? (ml + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d4[vstep] = {(mc + count * vstep)[0], remain > 1 ? (mc + count * vstep)[1] : 0.0f, remain > 2 ? (mc + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d5[vstep] = {(mr + count * vstep)[0], remain > 1 ? (mr + count * vstep)[1] : 0.0f, remain > 2 ? (mr + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d6[vstep] = {(bl + count * vstep)[0], remain > 1 ? (bl + count * vstep)[1] : 0.0f, remain > 2 ? (bl + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d7[vstep] = {(bc + count * vstep)[0], remain > 1 ? (bc + count * vstep)[1] : 0.0f, remain > 2 ? (bc + count * vstep)[2] : 0.0f, 0.0f};
+                    const float d8[vstep] = {(br + count * vstep)[0], remain > 1 ? (br + count * vstep)[1] : 0.0f, remain > 2 ? (br + count * vstep)[2] : 0.0f, 0.0f};
+                    r0[count] = vld1q_f32(d0);
+                    r1[count] = vld1q_f32(d1);
+                    r2[count] = vld1q_f32(d2);
+                    r3[count] = vld1q_f32(d3);
+                    r4[count] = vld1q_f32(d4);
+                    r5[count] = vld1q_f32(d5);
+                    r6[count] = vld1q_f32(d6);
+                    r7[count] = vld1q_f32(d7);
+                    r8[count] = vld1q_f32(d8);
                 }
-                float sum = neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2))) + biases[n];
 
-                if constexpr (sizeof...(ResidualArgs))
-                    for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                        sum = sum * scales[idx] + static_cast<const float*>(iptrs[idx])[n];
+                for (int n = 0; n < cout; n++)
+                {
+                    const float* kptr[] = {
+                        kernels + n * cin * 9 + cin * 0,
+                        kernels + n * cin * 9 + cin * 1,
+                        kernels + n * cin * 9 + cin * 2,
+                        kernels + n * cin * 9 + cin * 3,
+                        kernels + n * cin * 9 + cin * 4,
+                        kernels + n * cin * 9 + cin * 5,
+                        kernels + n * cin * 9 + cin * 6,
+                        kernels + n * cin * 9 + cin * 7,
+                        kernels + n * cin * 9 + cin * 8
+                    };
 
-                out[n] = activeFunc(sum);
+                    float32x4_t s0 = vdupq_n_f32(0.0f);
+                    float32x4_t s1 = vdupq_n_f32(0.0f);
+                    float32x4_t s2 = vdupq_n_f32(0.0f);
+                    for (int idx = 0; idx < count; idx++)
+                    {
+                        float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
+                        float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
+                        float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
+                        float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
+                        float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
+                        float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
+                        float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
+                        float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
+                        float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
+
+                        s0 = vmlaq_f32(s0, r0[idx], k0);
+                        s1 = vmlaq_f32(s1, r1[idx], k1);
+                        s2 = vmlaq_f32(s2, r2[idx], k2);
+                        s0 = vmlaq_f32(s0, r3[idx], k3);
+                        s1 = vmlaq_f32(s1, r4[idx], k4);
+                        s2 = vmlaq_f32(s2, r5[idx], k5);
+                        s0 = vmlaq_f32(s0, r6[idx], k6);
+                        s1 = vmlaq_f32(s1, r7[idx], k7);
+                        s2 = vmlaq_f32(s2, r8[idx], k8);
+                    }
+                    if constexpr (remain)
+                    {
+                        const float d0[vstep] = {(kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d1[vstep] = {(kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d2[vstep] = {(kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d3[vstep] = {(kptr[3] + count * vstep)[0], remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d4[vstep] = {(kptr[4] + count * vstep)[0], remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d5[vstep] = {(kptr[5] + count * vstep)[0], remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d6[vstep] = {(kptr[6] + count * vstep)[0], remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d7[vstep] = {(kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f};
+                        const float d8[vstep] = {(kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f};
+                        float32x4_t k0 = vld1q_f32(d0);
+                        float32x4_t k1 = vld1q_f32(d1);
+                        float32x4_t k2 = vld1q_f32(d2);
+                        float32x4_t k3 = vld1q_f32(d3);
+                        float32x4_t k4 = vld1q_f32(d4);
+                        float32x4_t k5 = vld1q_f32(d5);
+                        float32x4_t k6 = vld1q_f32(d6);
+                        float32x4_t k7 = vld1q_f32(d7);
+                        float32x4_t k8 = vld1q_f32(d8);
+
+
+                        s0 = vmlaq_f32(s0, r0[count], k0);
+                        s1 = vmlaq_f32(s1, r1[count], k1);
+                        s2 = vmlaq_f32(s2, r2[count], k2);
+                        s0 = vmlaq_f32(s0, r3[count], k3);
+                        s1 = vmlaq_f32(s1, r4[count], k4);
+                        s2 = vmlaq_f32(s2, r5[count], k5);
+                        s0 = vmlaq_f32(s0, r6[count], k6);
+                        s1 = vmlaq_f32(s1, r7[count], k7);
+                        s2 = vmlaq_f32(s2, r8[count], k8);
+                    }
+                    float sum = neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2))) + biases[n];
+
+                    if constexpr (sizeof...(ResidualArgs))
+                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                            sum = sum * residualArgs[idx].scale + static_cast<const float*>(residualArgs[idx].image.ptr(j, i))[n];
+
+                    out[n] = activeFunc(sum);
+                }
             }
-        }, residualArg.image..., src, dst);
+        });
     }
     template <typename IN, int cout, typename ActiveFunc>
     inline void conv3x3_neon_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
-
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<float*>(dptr);
-
-            auto sp = i < h - 1 ? +step : 0;
-            auto sn = i > 0 ? -step : 0;
-            auto cp = j < w - 1 ? +1 : 0;
-            auto cn = j > 0 ? -1 : 0;
-
-            auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-            auto ml = in + cn, mc = in, mr = in + cp;
-            auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
-
-            const float d0[4] = {toFloat<IN>(*tl), toFloat<IN>(*tc), toFloat<IN>(*tr), toFloat<IN>(*ml)};
-            const float d4[4] = {toFloat<IN>(*mc), toFloat<IN>(*mr), toFloat<IN>(*bl), toFloat<IN>(*bc)};
-            auto r8 = toFloat<IN>(*br);
-
-            float32x4_t r0 = vld1q_f32(d0);
-            float32x4_t r4 = vld1q_f32(d4);
-
-            for (int n = 0; n < cout; n++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                float32x4_t k0 = vld1q_f32(kernels + n * 9 + 0);
-                float32x4_t k4 = vld1q_f32(kernels + n * 9 + 4);
-                auto sum = neon_hsum_f32(vmlaq_f32(vmulq_f32(r0, k0), r4, k4));
-                auto k8 = *(kernels + n * 9 + 8);
-                out[n] = activeFunc(sum + k8 * r8 + biases[n]);
+                auto out = static_cast<float*>(dst.ptr(j, i));
+
+                auto tp = i > 0 ? 1 : 0;
+                auto bp = i < src.height() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
+
+                const float d[] = {
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i + bp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i + bp)))
+                };
+                auto r8 = toFloat(*static_cast<const IN*>(src.ptr(j + rp, i + bp)));
+
+                float32x4_t r0 = vld1q_f32(d + 0);
+                float32x4_t r4 = vld1q_f32(d + 4);
+
+                for (int n = 0; n < cout; n++)
+                {
+                    float32x4_t k0 = vld1q_f32(kernels + n * 9 + 0);
+                    float32x4_t k4 = vld1q_f32(kernels + n * 9 + 4);
+                    auto sum = neon_hsum_f32(vmlaq_f32(vmulq_f32(r0, k0), r4, k4));
+                    auto k8 = *(kernels + n * 9 + 8);
+                    out[n] = activeFunc(sum + k8 * r8 + biases[n]);
+                }
             }
-        }, src, dst);
+        });
     }
     template <typename OUT, int cin, int cout>
     inline void deconv2x2_neon_float(const Image& src, Image& dst, const float* const kernels)
@@ -251,25 +258,26 @@ namespace ac::core::cpu
         static constexpr int cin = 8;
         static constexpr int upscale = 2;
 
-        int w = src.width(), h = src.height();
-        int step = src.stride() / src.elementSize();
-
-        util::parallelFor(0, h, [&](const int i) {
-            for (int j = 0; j < w; j++)
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                auto in = static_cast<const float*>(src.ptr(j, i));
-
-                auto dstX = j * upscale;
                 auto dstY = i * upscale;
+                auto dstX = j * upscale;
 
-                auto sp = i < h - 1 ? +step : 0;
-                auto sn = i > 0 ? -step : 0;
-                auto cp = j < w - 1 ? +cin : 0;
-                auto cn = j > 0 ? -cin : 0;
+                auto tp = i > 0 ? 1 : 0;
+                auto bp = i < src.height() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = in + sn + cn, tc = in + sn, tr = in + sn + cp;
-                auto ml = in + cn, mc = in, mr = in + cp;
-                auto bl = in + sp + cn, bc = in + sp, br = in + sp + cp;
+                auto tl = static_cast<const float*>(src.ptr(j - lp, i - tp));
+                auto tc = static_cast<const float*>(src.ptr(j     , i - tp));
+                auto tr = static_cast<const float*>(src.ptr(j + rp, i - tp));
+                auto ml = static_cast<const float*>(src.ptr(j - lp, i     ));
+                auto mc = static_cast<const float*>(src.ptr(j     , i     ));
+                auto mr = static_cast<const float*>(src.ptr(j + rp, i     ));
+                auto bl = static_cast<const float*>(src.ptr(j - lp, i + bp));
+                auto bc = static_cast<const float*>(src.ptr(j     , i + bp));
+                auto br = static_cast<const float*>(src.ptr(j + rp, i + bp));
 
                 constexpr int vstep = 4;
                 constexpr int count = cin / vstep;
