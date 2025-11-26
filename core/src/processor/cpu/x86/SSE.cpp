@@ -20,12 +20,13 @@ namespace ac::core::cpu
         [[maybe_unused]] const std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
 
         util::parallelFor(0, src.height(), [&](const int i) {
+            auto tp = i > 0 ? 1 : 0;
+            auto bp = i < src.height() - 1 ? 1 : 0;
+
             for (int j = 0; j < src.width(); j++)
             {
                 auto out = static_cast<float*>(dst.ptr(j, i));
 
-                auto tp = i > 0 ? 1 : 0;
-                auto bp = i < src.height() - 1 ? 1 : 0;
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
@@ -154,12 +155,13 @@ namespace ac::core::cpu
     inline void conv3x3_sse_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
         util::parallelFor(0, src.height(), [&](const int i) {
+            auto tp = i > 0 ? 1 : 0;
+            auto bp = i < src.height() - 1 ? 1 : 0;
+
             for (int j = 0; j < src.width(); j++)
             {
                 auto out = static_cast<float*>(dst.ptr(j, i));
 
-                auto tp = i > 0 ? 1 : 0;
-                auto bp = i < src.height() - 1 ? 1 : 0;
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
@@ -230,13 +232,14 @@ namespace ac::core::cpu
         static constexpr int upscale = 2;
 
         util::parallelFor(0, src.height(), [&](const int i) {
+            auto tp = i > 0 ? 1 : 0;
+            auto bp = i < src.height() - 1 ? 1 : 0;
+
             for (int j = 0; j < src.width(); j++)
             {
                 auto dstY = i * upscale;
                 auto dstX = j * upscale;
 
-                auto tp = i > 0 ? 1 : 0;
-                auto bp = i < src.height() - 1 ? 1 : 0;
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
