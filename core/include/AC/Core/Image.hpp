@@ -64,7 +64,7 @@ namespace ac::core
 
     // remove padding in the stride of `src`, if necessary.
     // `src` and `dst` can be same.
-    AC_EXPORT void unpadding(const Image& src, Image& dst) noexcept;
+    AC_EXPORT Image unpadding(const Image& src) noexcept;
 
     // left shift pixel.
     // modify in place.
@@ -87,7 +87,8 @@ namespace ac::core
     // if `src` and `dst` is the same image, do nothing.
     AC_EXPORT void copy(const Image& src, Image& dst) noexcept;
 
-    // crop the given area from `src`.
+    // return a view of the given area from `src`.
+    // use 'clone()' to copy data, if necessary.
     AC_EXPORT Image crop(const Image& src, int x, int y, int w, int h) noexcept;
 
     enum ResizeModes

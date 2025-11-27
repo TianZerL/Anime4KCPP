@@ -57,22 +57,24 @@ bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
         char ext[5] = "";
         for (int i = 0; i < 4 && idx + 1 + i < count; i++) ext[i] = static_cast<char>(std::tolower(static_cast<unsigned char>((filename + idx + 1)[i])));
 
-        Image out = image;
         if (!std::strcmp(ext, "png"))
+        {
+            Image out = image;
             return stbi_write_png(filename, out.width(), out.height(), out.channels(), out.ptr(), out.stride());
+        }
         if (!std::strcmp(ext, "jpg") || !std::strcmp(ext, "jpeg"))
         {
-            unpadding(out, out);
+            Image out = unpadding(image);
             return stbi_write_jpg(filename, out.width(), out.height(), out.channels(), out.ptr(), 95);
         }
         if (!std::strcmp(ext, "bmp"))
         {
-            unpadding(out, out);
+            Image out = unpadding(image);
             return stbi_write_bmp(filename, out.width(), out.height(), out.channels(), out.ptr());
         }
         if (!std::strcmp(ext, "tga"))
         {
-            unpadding(out, out);
+            Image out = unpadding(image);
             return stbi_write_tga(filename, out.width(), out.height(), out.channels(), out.ptr());
         }
     }

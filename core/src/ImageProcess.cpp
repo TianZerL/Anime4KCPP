@@ -341,15 +341,6 @@ namespace ac::core::detail
             }
         }
     }
-
-    static inline void crop(const Image& src, Image& dst, int x, int y) noexcept
-    {
-        for (int i = 0; i < dst.height(); i++)
-        {
-            auto lineSize = dst.width() * dst.pixelSize();
-            std::memcpy(dst.line(i), src.pixel(x, y + i), lineSize);
-        }
-    }
 }
 
 void ac::core::rgb2yuv(const ac::core::Image& rgb, ac::core::Image& yuv)
@@ -494,21 +485,16 @@ void ac::core::yuva2rgba(const Image& y, const Image& u, const Image& v, const I
     case Image::Float32: return detail::yuva2rgba<float>(y, u, v, a, rgba);
     }
 }
-void ac::core::unpadding(const Image& src, Image& dst) noexcept
+ac::core::Image ac::core::unpadding(const Image& src) noexcept
 {
-    if (src.empty()) return;
     auto lineSize = src.width() * src.pixelSize();
-    if (src.stride() == lineSize)
-    {
-        if (dst != src) dst = src;
-        return;
-    }
-    Image tmp{};
-    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()) || (dst.stride() != lineSize))
-        tmp.create(src.width(), src.height(), src.channels(), src.type(), lineSize);
-    else tmp = dst;
-    for (int i = 0; i < src.height(); i++) std::memcpy(tmp.ptr(i), src.ptr(i), lineSize);
-    if (dst != tmp) dst = tmp;
+    if (src.empty() || (src.stride() == lineSize)) return src;
+
+    Image dst{ src.width(), src.height(), src.channels(), src.type(), lineSize };
+
+    for (int i = 0; i < src.height(); i++) std::memcpy(dst.ptr(i), src.ptr(i), lineSize);
+
+    return dst;
 }
 void ac::core::shl(Image& image, const int n) noexcept
 {
@@ -615,8 +601,5 @@ ac::core::Image ac::core::crop(const Image& src, const int x, const int y, const
 
     if (intersectW <= 0 || intersectH <= 0) return Image{};
 
-    ac::core::Image dst{ intersectW, intersectH, src.channels(), src.type() };
-    detail::crop(src, dst, intersectX, intersectY);
-
-    return dst;
+    return ac::core::Image{ intersectW, intersectH, src.channels(), src.type(), src.ptr(intersectX, intersectY), src.stride() };
 }
