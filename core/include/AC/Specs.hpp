@@ -9,10 +9,14 @@ namespace ac::specs
         "acnet-hdn1",
         "acnet-hdn2",
         "acnet-hdn3",
-        "arnet-s-hdn",
-        "arnet-s-le",
-        "arnet-m-hdn",
-        "arnet-m-le",
+        "arnet-b8-hdn",
+        "arnet-b8-le",
+        "arnet-b16-hdn",
+        "arnet-b16-le",
+        "arnet-b24-hdn",
+        "arnet-b24-le",
+        "arnet-b32-hdn",
+        "arnet-b32-le",
     };
 
     constexpr const char* ModelDescriptionList[] = {
@@ -21,10 +25,14 @@ namespace ac::specs
         "Lightweight CNN, moderate denoising.",    // acnet-hdn1
         "Lightweight CNN, heavy denoising.",       // acnet-hdn2
         "Lightweight CNN, extreme denoising.",     // acnet-hdn3
-        "Lightweight ResNet, mild denoising.",     // arnet-s-hdn
-        "Lightweight ResNet, line enhancing.",     // arnet-s-le
-        "Lightweight ResNet, mild denoising.",     // arnet-m-hdn
-        "Lightweight ResNet, line enhancing.",     // arnet-m-le
+        "Lightweight ResNet, mild denoising.",     // arnet-b8-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-b8-le
+        "Lightweight ResNet, mild denoising.",     // arnet-b16-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-b16-le
+        "Lightweight ResNet, mild denoising.",     // arnet-b24-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-b24-le
+        "Lightweight ResNet, mild denoising.",     // arnet-b32-hdn
+        "Lightweight ResNet, line enhancing.",     // arnet-b32-le
     };
 
     constexpr const char* ProcessorList[] = {

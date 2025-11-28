@@ -17,7 +17,7 @@ class ac::core::model::ARNet
 public:
     enum class Variant
     {
-        S_HDN, S_LE, M_HDN, M_LE
+        B8_HDN, B8_LE, B16_HDN, B16_LE, B24_HDN, B24_LE, B32_HDN, B32_LE
     };
 
 public:

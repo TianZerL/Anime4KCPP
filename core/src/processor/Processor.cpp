@@ -31,16 +31,26 @@ namespace ac::core::detail
 
             if (modelString.find("arnet") != std::string::npos) // ARNet
             {
-                auto variant = ac::core::model::ARNet::Variant::S_LE;
-                if (modelString.find("s") != std::string::npos) // ARNet-S
+                auto variant = ac::core::model::ARNet::Variant::B8_LE;
+                if (modelString.find("8") != std::string::npos) // ARNet-B8
                 {
-                    if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_LE;
-                    else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::S_HDN;
+                    variant = ac::core::model::ARNet::Variant::B8_LE;
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::B8_HDN;
                 }
-                else if (modelString.find("m") != std::string::npos) // ARNet-M
+                else if (modelString.find("16") != std::string::npos) // ARNet-B16
                 {
-                    if (modelString.find("le") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_LE;
-                    else if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::M_HDN;
+                    variant = ac::core::model::ARNet::Variant::B16_LE;
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::B16_HDN;
+                }
+                else if (modelString.find("24") != std::string::npos) // ARNet-B24
+                {
+                    variant = ac::core::model::ARNet::Variant::B24_LE;
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::B24_HDN;
+                }
+                else if (modelString.find("32") != std::string::npos) // ARNet-B32
+                {
+                    variant = ac::core::model::ARNet::Variant::B32_LE;
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ARNet::Variant::B32_HDN;
                 }
                 return ac::core::model::ARNet{ variant };
             }
