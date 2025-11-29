@@ -10,6 +10,11 @@ Anime4KCPP is a high performance anime upscaler.
 
 Anime4KCPP v3 uses CNN based algorithm, and aims to be simple and efficient.
 
+# Playground
+Use [Anime4KCPP Playground](https://tianzerl.github.io/Anime4KCPP-Playground/) to upscale images in your browser with WebAssembly.
+
+***For the Microsoft Edge browser, to achieve optimal performance, you need to disable the Enhanced Security for the site.***
+
 # Build
 ## Dependency
 Build tools:
@@ -118,7 +123,7 @@ LD_LIBRARY_PATH=/vendor/lib64:$PREFIX/lib ./ac_cli -l
 ```
 
 ### WASM
-Tested with Emscripten.
+Tested with Emscripten. check [Anime4KCPP-Playground](https://github.com/TianZerL/Anime4KCPP-Playground).
 
 ### Mac OS
 Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 is required.
@@ -150,7 +155,6 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 | AC_TOOLS_BENCHMARK                   | build benchmark                                    | OFF         |
 | AC_TEST_UTIL                         | build util module test                             | OFF         |
 | AC_TEST_VIDEO                        | build video module test                            | OFF         |
-| AC_TEST_WASM                         | build wasm test (Emscripten only)                  | OFF         |
 | AC_ENABLE_LTO                        | enable LTO                                         | OFF         |
 | AC_ENABLE_STATIC_CRT                 | enable static link crt                             | OFF         |
 | AC_DISABLE_RTTI                      | disable rtti                                       | OFF         |
