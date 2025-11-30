@@ -60,6 +60,8 @@ typedef struct ac_image
     struct ac_image_handle* hptr;
 } ac_image;
 
+AC_C_API ac_image* ac_image_alloc(void);
+AC_C_API void ac_image_free(ac_image** image);
 AC_C_API int ac_image_ref(const ac_image* src, ac_image* dst);
 AC_C_API void ac_image_unref(ac_image* image);
 AC_C_API int ac_image_create(ac_image* image);

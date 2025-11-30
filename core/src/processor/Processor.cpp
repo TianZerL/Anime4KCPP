@@ -21,7 +21,7 @@ namespace ac::core::detail
         }
         return Processor::CPU;
     }
-    static inline std::variant<model::ACNet, model::ARNet> findModel(const char* model) noexcept
+    static inline auto findModel(const char* model) noexcept -> std::variant<model::ACNet, model::ARNet>
     {
         if (model)
         {

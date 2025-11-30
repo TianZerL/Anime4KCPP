@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <memory>
 
 #include "AC/Core.hpp"
@@ -28,6 +29,19 @@ namespace detail
     }
 }
 
+ac_image* ac_image_alloc()
+{
+    auto ptr = std::malloc(sizeof(ac_image));
+    if (ptr) std::memset(ptr, 0, sizeof(ac_image));
+    return static_cast<ac_image*>(ptr);
+}
+void ac_image_free(ac_image** const image)
+{
+    if (!(image && *image)) return;
+    ac_image_unref(*image);
+    std::free(*image);
+    *image = nullptr;
+}
 int ac_image_ref(const ac_image* const src, ac_image* const dst)
 {
     if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);

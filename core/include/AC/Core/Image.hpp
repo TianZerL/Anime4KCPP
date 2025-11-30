@@ -181,7 +181,7 @@ public:
     bool isUint() const noexcept { return (elementType >> 8) == 0; }
     bool isInt() const noexcept { return (elementType >> 8) == 1; }
     bool isFloat() const noexcept { return (elementType >> 8) == 2; }
-    bool onwership() const noexcept { return dptr != nullptr; }
+    bool ownership() const noexcept { return dptr != nullptr; }
 
     bool operator==(const Image& other) const noexcept { return this->pixels == other.pixels; }
     bool operator!=(const Image& other) const noexcept { return !operator==(other); }
