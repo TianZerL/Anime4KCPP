@@ -31,6 +31,8 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set_property(CACHE CMAKE_INSTALL_PREFIX PROPERTY VALUE "${TOP_DIR}/install")
 endif()
 
+include(GNUInstallDirs)
+
 include(${CMAKE_DIR}/CheckCompiler.cmake)
 
 option(AC_SHARED_LIB "build as a shared library" OFF)
@@ -177,5 +179,5 @@ install(
     EXPORT AC
     FILE ACConfig.cmake
     NAMESPACE AC::
-    DESTINATION ac/cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ac
 )

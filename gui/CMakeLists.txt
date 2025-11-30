@@ -114,6 +114,6 @@ ac_check_enable_static_crt(ac_gui)
 
 install(
     TARGETS ac_gui
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     BUNDLE DESTINATION Applications
 )

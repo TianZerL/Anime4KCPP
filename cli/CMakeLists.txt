@@ -30,5 +30,5 @@ ac_check_enable_static_crt(ac_cli)
 
 install(
     TARGETS ac_cli
-    RUNTIME DESTINATION bin
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

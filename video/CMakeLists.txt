@@ -20,7 +20,7 @@ target_sources(ac_video PRIVATE
 target_include_directories(ac_video PUBLIC
     $<BUILD_INTERFACE:${VIDEO_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${VIDEO_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:ac/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(ac_video PRIVATE ac_util_misc ac_util_threads dep::ffmpeg)
@@ -43,9 +43,9 @@ generate_export_header(ac_video
 
 install(
     TARGETS ac_video EXPORT AC
-    ARCHIVE DESTINATION ac/lib
-    LIBRARY DESTINATION ac/lib
-    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY ${VIDEO_SOURCE_DIR}/include ${VIDEO_BINARY_DIR}/include DESTINATION ac)
+install(DIRECTORY ${VIDEO_SOURCE_DIR}/include/ ${VIDEO_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

@@ -15,7 +15,6 @@ ac_check_enable_static_crt(ac_filter_vs)
 
 install(
     TARGETS ac_filter_vs
-    ARCHIVE DESTINATION filter
-    LIBRARY DESTINATION filter
-    RUNTIME DESTINATION filter
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

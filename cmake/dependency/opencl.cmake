@@ -16,12 +16,6 @@ if(NOT TARGET dep::opencl)
     endif()
     if(dep_opencl_FETCH)
         message(STATUS "dep: opencl sdk not found or not supported, will be fetched online.")
-        include(FetchContent)
-        FetchContent_Declare(
-            opencl
-            GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-SDK.git
-            GIT_TAG main
-        )
         set(OPENCL_SDK_BUILD_UTILITY_LIBRARIES OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_SDK_BUILD_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_SDK_BUILD_OPENGL_SAMPLES OFF CACHE BOOL "OpenCL SDK option" FORCE)
@@ -34,7 +28,27 @@ if(NOT TARGET dep::opencl)
         set(OPENCL_HEADERS_BUILD_CXX_TESTS OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(ENABLE_OPENCL_LAYERINFO OFF CACHE BOOL "OpenCL SDK option" FORCE)
         set(OPENCL_ICD_LOADER_BUILD_TESTING OFF CACHE BOOL "OpenCL SDK option" FORCE)
-        FetchContent_MakeAvailable(opencl)
+        include(FetchContent)
+        if (CMAKE_VERSION VERSION_LESS 3.28)
+            FetchContent_Declare(
+                opencl
+                GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-SDK.git
+                GIT_TAG main
+            )
+            FetchContent_GetProperties(opencl)
+            if(NOT opencl_POPULATED)
+                FetchContent_Populate(opencl)
+                add_subdirectory(${opencl_SOURCE_DIR} ${opencl_BINARY_DIR} EXCLUDE_FROM_ALL)
+            endif()
+        else()
+            FetchContent_Declare(
+                opencl
+                GIT_REPOSITORY https://github.com/KhronosGroup/OpenCL-SDK.git
+                GIT_TAG main
+                EXCLUDE_FROM_ALL
+            )
+            FetchContent_MakeAvailable(opencl)
+        endif()
         target_link_libraries(dep_opencl INTERFACE OpenCL::HeadersCpp OpenCL) # OpenCL::OpenCL target name conflict
     endif()
     if(NOT dep_opencl_TARGET_VERSION)

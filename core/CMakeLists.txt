@@ -75,7 +75,7 @@ target_sources(ac PRIVATE
 target_include_directories(ac PUBLIC
     $<BUILD_INTERFACE:${CORE_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CORE_BINARY_DIR}/include>
-    $<INSTALL_INTERFACE:ac/include>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 # We don't need setting any cpu arch flag for MSVC, setting it may actually degrade performance.
@@ -201,15 +201,15 @@ set_target_properties(ac PROPERTIES EXPORT_NAME "Core")
 
 include(GenerateExportHeader)
 generate_export_header(ac
-    BASE_NAME "AC"
-    EXPORT_FILE_NAME ${CORE_BINARY_DIR}/include/ACExport.hpp
+    BASE_NAME "AC_CORE"
+    EXPORT_FILE_NAME ${CORE_BINARY_DIR}/include/ACCoreExport.hpp
 )
 
 install(
     TARGETS ac EXPORT AC
-    ARCHIVE DESTINATION ac/lib
-    LIBRARY DESTINATION ac/lib
-    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY ${CORE_SOURCE_DIR}/include ${CORE_BINARY_DIR}/include DESTINATION ac)
+install(DIRECTORY ${CORE_SOURCE_DIR}/include/ ${CORE_BINARY_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
