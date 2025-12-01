@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 
 #include "AC/Core.hpp"
