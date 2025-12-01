@@ -78,14 +78,36 @@ namespace ac::core::opencl
         {
             std::string platformName{ "Unknown" };
             platform.getInfo(CL_PLATFORM_NAME, &platformName);
+
             std::vector<cl::Device> devices{};
             platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+
+            bool amdapp = platformName == "AMD Accelerated Parallel Processing";
+
             for (auto&& device : devices)
             {
                 if (!checkDevice(device)) continue;
-                std::string name{ "Unknown" };
-                device.getInfo(CL_DEVICE_NAME, &name);
-                contexts.emplace_back(Context{ name.append(" (").append(platformName).append(")"), device, {}, {} });
+
+                std::string name{};
+
+                std::string deviceName{ "Unknown" };
+                device.getInfo(CL_DEVICE_NAME, &deviceName);
+
+                if (amdapp)
+                {
+                    std::string boardNameAMD{ "Unknown" };
+                    device.getInfo(0x4038 /*CL_DEVICE_BOARD_NAME_AMD*/, &boardNameAMD);
+
+                    name = boardNameAMD.append(" (").append(deviceName).append(", ");
+                }
+                else name = deviceName.append(" (");
+
+                std::string driverVersion{ "Unknown" };
+                device.getInfo(CL_DRIVER_VERSION, &driverVersion);
+
+                name.append(platformName).append(", ").append(driverVersion).append(")");
+
+                contexts.emplace_back(Context{ name, device, {}, {}});
             }
         }
         return contexts;
