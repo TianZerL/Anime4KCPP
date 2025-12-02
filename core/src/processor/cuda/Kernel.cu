@@ -132,7 +132,7 @@ namespace ac::core::cuda
         __global__ void conv3x3_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
-            const RestrictPointer<!sizeof...(ResidualArgs), void>::Type dptr,
+            const typename RestrictPointer<!sizeof...(ResidualArgs), void>::Type dptr,
             const int dstW, const int dstH, const int dstC, const int dpitch,
             const float* const __restrict__ kernels,
             const float* const __restrict__ biases,
