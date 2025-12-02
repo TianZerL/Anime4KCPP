@@ -49,6 +49,16 @@ struct ImagePool
 
 static void benchmark(const std::shared_ptr<ac::core::Processor>& processor, const ImagePool& images, int batch, std::size_t threads)
 {
+    for (int i = 0; i < 5; i++)
+    {
+        processor->process(images.select(i), 2.0);
+        if (!processor->ok())
+        {
+            std::printf("%s\n", processor->error());
+            return;
+        }
+    }
+
     ac::util::Stopwatch stopwatch{};
     if (threads > 1)
     {
