@@ -44,7 +44,7 @@ namespace ac::core::opencl
         switch (vendorId)
         {
         case 0x1002: // AMD
-            if (context.name.rfind("gfx", 0) == 0 && std::isdigit(static_cast<unsigned char>(context.name[6]))) // gfx10000 or newer
+            if (auto pos = context.name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(context.name[pos + 6]))) // gfx1000 or newer
                 return "AMD_RDNA";
             return "AMD_GCN";
         case 0x8086: // Intel
@@ -123,7 +123,7 @@ namespace ac::core::opencl
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
 
         std::string options{};
-        options.append("-DARCH_").append(getArch(context)).push_back(' ');
+        options.append("-DARCH_").append(getArch(context));
 
         cl::Program kernelProgram{ context.ctx, kernelString, false, &err }; if (err != CL_SUCCESS) return err;
         cl::Program commonProgram{ context.ctx, kernel::CommonKernelString, false, &err }; if (err != CL_SUCCESS) return err;
