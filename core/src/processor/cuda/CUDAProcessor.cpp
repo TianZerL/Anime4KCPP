@@ -168,13 +168,13 @@ namespace ac::core::cuda
     static inline std::vector<Context>& getContextList() noexcept
     {
         static auto contextList = []() -> std::vector<Context> {
-            std::vector<Context> contexts{};
             int deviceCount = 0;
-            cudaGetDeviceCount(&deviceCount);
+            auto err = cudaGetDeviceCount(&deviceCount); if (err != cudaSuccess) return {};
+            std::vector<Context> contexts{};
             for (int i = 0; i < deviceCount; i++)
             {
                 cudaDeviceProp deviceProp{};
-                cudaGetDeviceProperties(&deviceProp, i);
+                err = cudaGetDeviceProperties(&deviceProp, i); if (err != cudaSuccess) continue;
                 int computeCapability = deviceProp.major * 10 + deviceProp.minor;
                 contexts.emplace_back(Context{ deviceProp.name, (deviceProp.totalGlobalMem >> 20), computeCapability });
             }
@@ -189,7 +189,6 @@ namespace ac::core::cuda
         CUDAProcessorBase(const int device) noexcept
         {
             idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
-            computeCapability = ContextList[idx].computeCapability;
         };
         ~CUDAProcessorBase() noexcept override = default;
 
@@ -214,7 +213,6 @@ namespace ac::core::cuda
             return "CUDA";
         }
     protected:
-        int computeCapability{};
         util::ThreadLocal<cudaError_t> errors{};
     };
 
@@ -248,10 +246,12 @@ namespace ac::core::cuda
         }
         ~CUDAProcessorSeqCNN() noexcept override
         {
-            cudaSetDevice(idx);
+            // there should not be any error here, we tentatively keep 'err' to avoid ignoring the return value.
+            auto& err = errors.local();
+            err = cudaSetDevice(idx);
 
-            for(auto kernel : kernels) cudaFree(kernel);
-            for(auto bias : biases) cudaFree(bias);
+            for(auto kernel : kernels) err = cudaFree(kernel);
+            for(auto bias : biases) err = cudaFree(bias);
         }
 
     protected:
@@ -280,10 +280,10 @@ ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::~CUDAProcessor() noexcept
 
 void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst)
 {
-    cudaSetDevice(idx);
-
     auto& err = errors.local();
     auto stream = cudaStreamPerThread;
+
+    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
     DeviceImageBuffer in{ src, err }; if (err != cudaSuccess) return;
     DeviceImageBuffer tmp1{ src.width(), src.height(), 8, 2, err }; if (err != cudaSuccess) return;
@@ -351,10 +351,10 @@ ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::~CUDAProcessor() noexcept
 
 void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image& src, Image& dst)
 {
-    cudaSetDevice(idx);
-
     auto& err = errors.local();
     auto stream = cudaStreamPerThread;
+
+    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
     DeviceImageBuffer in{ src, err }; if (err != cudaSuccess) return;
     DeviceImageBuffer tmp1{ src.width(), src.height(), 8, 2, err }; if (err != cudaSuccess) return;
