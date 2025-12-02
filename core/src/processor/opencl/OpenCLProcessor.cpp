@@ -107,7 +107,7 @@ namespace ac::core::opencl
 
                 name.append(platformName).append(", ").append(driverVersion).append(")");
 
-                contexts.emplace_back(Context{ name, device, {}, {}});
+                contexts.emplace_back(Context{ name, device, {}, {} });
             }
         }
         return contexts;
@@ -188,7 +188,7 @@ namespace ac::core::opencl
             case -17: return "CL_LINK_PROGRAM_FAILURE";
             case -18: return "CL_DEVICE_PARTITION_FAILED";
             case -19: return "CL_KERNEL_ARG_INFO_NOT_AVAILABLE";
-            // compile-time errors
+                // compile-time errors
             case -30: return "CL_INVALID_VALUE";
             case -31: return "CL_INVALID_DEVICE_TYPE";
             case -32: return "CL_INVALID_PLATFORM";
@@ -232,7 +232,7 @@ namespace ac::core::opencl
             case -70: return "CL_INVALID_DEVICE_QUEUE";
             case -71: return "CL_INVALID_SPEC_ID";
             case -72: return "CL_MAX_SIZE_RESTRICTION_EXCEEDED";
-            // extension errors
+                // extension errors
             case -1001: return "CL_PLATFORM_NOT_FOUND_KHR";
             default: return "CL_UNKNOWN_ERROR";
             }
