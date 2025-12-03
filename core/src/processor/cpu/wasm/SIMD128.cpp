@@ -17,7 +17,7 @@ namespace ac::core::cpu
     template <int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
-        [[maybe_unused]] const std::array<ResidualArg, sizeof...(ResidualArgs)> residualArgs{ residualArg... };
+        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
 
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
@@ -25,6 +25,8 @@ namespace ac::core::cpu
 
             for (int j = 0; j < src.width(); j++)
             {
+                [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
+
                 auto out = static_cast<float*>(dst.ptr(j, i));
 
                 auto lp = j > 0 ? 1 : 0;
@@ -144,7 +146,7 @@ namespace ac::core::cpu
 
                     if constexpr (sizeof...(ResidualArgs))
                         for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                            sum = sum * residualArgs[idx].scale + static_cast<const float*>(residualArgs[idx].image.ptr(j, i))[n];
+                            sum = sum * scales[idx] + iptrs[idx][n];
 
                     out[n] = activeFunc(sum);
                 }
