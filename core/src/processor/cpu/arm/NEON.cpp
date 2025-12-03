@@ -418,6 +418,10 @@ namespace ac::core::cpu
     {
         conv3x3_neon_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
+    void conv3x3_8to4_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_neon_float<8, 4>(src, dst, kernels, biases, Identity());
+    }
     void conv3x3_8to4_identity_pixelshuffle_4to1_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())

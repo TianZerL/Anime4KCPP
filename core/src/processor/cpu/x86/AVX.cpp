@@ -418,6 +418,15 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
+    void conv3x3_8to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<8, 4, true>(src, dst, kernels, biases, Identity());
+        else
+#   endif
+            conv3x3_avx_float<8, 4, false>(src, dst, kernels, biases, Identity());
+    }
     void conv3x3_8to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
 #   ifdef AC_CORE_WITH_FMA

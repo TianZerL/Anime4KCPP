@@ -231,6 +231,25 @@ namespace ac::core::cpu
     {
         conv3x3_generic<float, 8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
     }
+    void conv3x3_8to4_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_generic<float, 8, 4>(src, dst, kernels, biases, Identity());
+    }
+    void pixelshuffle_4to1_generic(const Image& src, Image& dst)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            pixelshuffle_generic<float, std::uint8_t, 4, 2>(src, dst);
+            break;
+        case Image::UInt16:
+            pixelshuffle_generic<float, std::uint16_t, 4, 2>(src, dst);
+            break;
+        case Image::Float32:
+            pixelshuffle_generic<float, float, 4, 2>(src, dst);
+            break;
+        }
+    }
     void conv3x3_8to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
