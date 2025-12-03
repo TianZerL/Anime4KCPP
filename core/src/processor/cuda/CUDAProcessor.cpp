@@ -291,6 +291,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
         err = tmp2.dealloc(stream);
         err = out.dealloc(stream);
         err = cudaStreamSynchronize(stream);
+        err = cudaPeekAtLastError();
     } };
 
     err = in.alloc(stream); if (err != cudaSuccess) return;
@@ -375,6 +376,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         err = feat.dealloc(stream);
         err = out.dealloc(stream);
         err = cudaStreamSynchronize(stream);
+        err = cudaPeekAtLastError();
     } };
 
     err = in.alloc(stream); if (err != cudaSuccess) return;
