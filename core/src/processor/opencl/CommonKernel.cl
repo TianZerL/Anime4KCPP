@@ -65,7 +65,7 @@ inline void conv3x3_cin8(
         float8 k7 = vload8(7, k);
         float8 k8 = vload8(8, k);
 
-#   if defined (ARCH_MESA) || defined (ARCH_AMD_RDNA) || defined (ARCH_INTEL)
+#   if defined (ARCH_MESA) || defined (ARCH_AMD_RDNA) || defined (ARCH_INTEL) || defined (ARCH_ADRENO)
         float8 s0 = r0 * k0 +
                     r1 * k1 +
                     r2 * k2 +
@@ -77,7 +77,7 @@ inline void conv3x3_cin8(
                     r8 * k8 ;
 
         out[n] = dot(s0.lo + s0.hi, (float4)(1.0f)) + biases[n];
-#   elif defined(ARCH_AMD_GCN)
+#   elif defined (ARCH_AMD_GCN)
         float8 s0 = (float8)(0.0f);
         float8 s1 = (float8)(0.0f);
         s0 = mad(r0, k0, s0);
