@@ -123,6 +123,9 @@ namespace ac::core::opencl
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
 
         std::string options{};
+#   ifdef AC_CORE_ENABLE_FAST_MATH
+        options.append("-cl-fast-relaxed-math ");
+#   endif
         options.append("-DARCH_").append(getArch(context));
 
         cl::Program kernelProgram{ context.ctx, kernelString, false, &err }; if (err != CL_SUCCESS) return err;
