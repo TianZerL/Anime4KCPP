@@ -109,6 +109,15 @@ namespace ac::core::cuda
         std::string name{};
         int vram{};
         int computeCapability{};
+        bool memoryPoolsSupported{};
+
+        Context(const cudaDeviceProp& deviceProp) noexcept
+        {
+            name = deviceProp.name;
+            vram = static_cast<int>(deviceProp.totalGlobalMem >> 20);
+            computeCapability = deviceProp.major * 10 + deviceProp.minor;
+            memoryPoolsSupported = deviceProp.memoryPoolsSupported;
+        }
     };
 
     //lazy load, god knows if it's safe to call the cuda function during DLL initialization
@@ -122,8 +131,7 @@ namespace ac::core::cuda
             {
                 cudaDeviceProp deviceProp{};
                 err = cudaGetDeviceProperties(&deviceProp, i); if (err != cudaSuccess) continue;
-                int computeCapability = deviceProp.major * 10 + deviceProp.minor;
-                contexts.emplace_back(Context{ deviceProp.name, static_cast<int>(deviceProp.totalGlobalMem >> 20), computeCapability });
+                contexts.emplace_back(deviceProp);
             }
             return contexts;
         }();
@@ -149,28 +157,11 @@ namespace ac::core::cuda
             pitch = align(w * c * elementSize, 128);
         }
 
-        cudaError_t alloc(cudaStream_t stream) noexcept
-        {
-            auto size = pitch * h;
-            return cudaMallocAsync(&ptr, size, stream);
-        }
-        cudaError_t dealloc(cudaStream_t stream) noexcept
-        {
-            auto err = cudaSuccess;
-            if (ptr)
-            {
-                err = cudaFreeAsync(ptr, stream);
-                if (err == cudaSuccess) ptr = nullptr;
-            }
-            return err;
-        }
-
         cudaError_t fromHost(const Image& hostImage, cudaStream_t stream) const noexcept
         {
             auto lineSize = hostImage.width() * hostImage.pixelSize();
             return cudaMemcpy2DAsync(ptr, pitch, hostImage.ptr(), hostImage.stride(), lineSize, hostImage.height(), cudaMemcpyHostToDevice, stream);
         }
-
         cudaError_t toHost(Image& hostImage, cudaStream_t stream) const noexcept
         {
             auto lineSize = w * c * elementSize;
@@ -178,12 +169,74 @@ namespace ac::core::cuda
         }
     };
 
+    class DeviceImageBufferAllocator
+    {
+    public:
+        void init(const Context& ctx) noexcept
+        {
+            if (ctx.memoryPoolsSupported)
+            {
+                deviceMalloc = deviceMallocAsync;
+                deviceFree = deviceFreeAsync;
+            }
+            else
+            {
+                deviceMalloc = deviceMallocSync;
+                deviceFree = deviceFreeSync;
+            }
+        }
+
+        cudaError_t allocate(DeviceImageBuffer& buffer, const cudaStream_t stream) const noexcept
+        {
+            auto size = buffer.pitch * buffer.h;
+            return deviceMalloc(&buffer.ptr, size, stream);
+        }
+        cudaError_t deallocate(DeviceImageBuffer& buffer, const cudaStream_t stream) const noexcept
+        {
+            auto err = cudaSuccess;
+            if (buffer.ptr)
+            {
+                err = deviceFree(buffer.ptr, stream);
+                if (err == cudaSuccess) buffer.ptr = nullptr;
+            }
+            return err;
+        }
+
+    private:
+        static cudaError_t deviceMallocAsync(void** const devPtr, const std::size_t size, const cudaStream_t stream) noexcept
+        {
+            return cudaMallocAsync(devPtr, size, stream);
+        }
+        static cudaError_t deviceFreeAsync(void* const devPtr, const cudaStream_t stream) noexcept
+        {
+            return cudaFreeAsync(devPtr, stream);
+        }
+        static cudaError_t deviceMallocSync(void** const devPtr, const std::size_t size, const cudaStream_t /*stream*/) noexcept
+        {
+            return cudaMalloc(devPtr, size);
+        }
+        static cudaError_t deviceFreeSync(void* const devPtr, const cudaStream_t /*stream*/) noexcept
+        {
+            return cudaFree(devPtr);
+        }
+
+    private:
+        decltype(&deviceMallocAsync) deviceMalloc = deviceMallocSync;
+        decltype(&deviceFreeAsync) deviceFree = deviceFreeSync;
+    };
+
     class CUDAProcessorBase : public Processor
     {
     public:
         CUDAProcessorBase(const int device) noexcept
         {
-            idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
+            auto& err = errors.local();
+            if (ContextList.empty()) err = cudaErrorNoDevice;
+            else
+            {
+                idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
+                bufferAllocator.init(ContextList[idx]);
+            }
         };
         ~CUDAProcessorBase() noexcept override = default;
 
@@ -208,6 +261,7 @@ namespace ac::core::cuda
             return "CUDA";
         }
     protected:
+        DeviceImageBufferAllocator bufferAllocator{};
         util::ThreadLocal<cudaError_t> errors{};
     };
 
@@ -217,7 +271,7 @@ namespace ac::core::cuda
     public:
         CUDAProcessorSeqCNN(const int device, const Model& model) noexcept : CUDAProcessorBase(device), model(model)
         {
-            auto& err = errors.local();
+            auto& err = errors.local(); if (err != cudaSuccess) return;
             err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
             for (int i = 0; i < model.kernels(); i++)
@@ -286,18 +340,18 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet>::process(const Image&
     DeviceImageBuffer out{ dst };
 
     util::Defer defer{ [&]() {
-        err = in.dealloc(stream);
-        err = tmp1.dealloc(stream);
-        err = tmp2.dealloc(stream);
-        err = out.dealloc(stream);
+        err = bufferAllocator.deallocate(out, stream);
+        err = bufferAllocator.deallocate(tmp2, stream);
+        err = bufferAllocator.deallocate(tmp1, stream);
+        err = bufferAllocator.deallocate(in,stream);
         err = cudaStreamSynchronize(stream);
         err = cudaPeekAtLastError();
     } };
 
-    err = in.alloc(stream); if (err != cudaSuccess) return;
-    err = tmp1.alloc(stream); if (err != cudaSuccess) return;
-    err = tmp2.alloc(stream); if (err != cudaSuccess) return;
-    err = out.alloc(stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(in, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(tmp1, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(tmp2, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(out, stream); if (err != cudaSuccess) return;
 
     int l = 0;
 
@@ -370,20 +424,20 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
     DeviceImageBuffer out{ dst };
 
     util::Defer defer{ [&]() {
-        err = in.dealloc(stream);
-        err = tmp1.dealloc(stream);
-        err = tmp2.dealloc(stream);
-        err = feat.dealloc(stream);
-        err = out.dealloc(stream);
+        err = bufferAllocator.deallocate(out, stream); 
+        err = bufferAllocator.deallocate(feat, stream);
+        err = bufferAllocator.deallocate(tmp2, stream);
+        err = bufferAllocator.deallocate(tmp1, stream);
+        err = bufferAllocator.deallocate(in, stream);
         err = cudaStreamSynchronize(stream);
         err = cudaPeekAtLastError();
     } };
 
-    err = in.alloc(stream); if (err != cudaSuccess) return;
-    err = tmp1.alloc(stream); if (err != cudaSuccess) return;
-    err = tmp2.alloc(stream); if (err != cudaSuccess) return;
-    err = feat.alloc(stream); if (err != cudaSuccess) return;
-    err = out.alloc(stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(in, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(tmp1, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(tmp2, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(feat, stream); if (err != cudaSuccess) return;
+    err = bufferAllocator.allocate(out, stream); if (err != cudaSuccess) return;
 
     int l = 0;
 
