@@ -29,6 +29,7 @@ namespace ac::core::opencl
     struct Context
     {
         std::string name{};
+        std::string info{};
         cl::Device device{};
         cl::Context ctx{};
         cl::Program program{};
@@ -89,6 +90,7 @@ namespace ac::core::opencl
                 if (!checkDevice(device)) continue;
 
                 std::string name{};
+                std::string info{};
 
                 std::string deviceName{ "Unknown" };
                 device.getInfo(CL_DEVICE_NAME, &deviceName);
@@ -98,16 +100,17 @@ namespace ac::core::opencl
                     std::string boardNameAMD{ "Unknown" };
                     device.getInfo(0x4038 /*CL_DEVICE_BOARD_NAME_AMD*/, &boardNameAMD);
 
-                    name = boardNameAMD.append(" (").append(deviceName).append(", ");
+                    name = boardNameAMD;
+                    info.append(deviceName).append(", ");
                 }
-                else name = deviceName.append(" (");
+                else name = deviceName;
 
                 std::string driverVersion{ "Unknown" };
                 device.getInfo(CL_DRIVER_VERSION, &driverVersion);
 
-                name.append(platformName).append(", ").append(driverVersion).append(")");
+                info.append(platformName).append(", ").append(driverVersion);
 
-                contexts.emplace_back(Context{ name, device, {}, {} });
+                contexts.emplace_back(Context{ name, info, device, {}, {} });
             }
         }
         return contexts;
@@ -514,7 +517,7 @@ AC_CORE_EXPORT const char* ac::core::Processor::info<ac::core::Processor::OpenCL
         auto contextList = opencl::getContextList();
         std::ostringstream buffer{ "OpenCL:\n", std::ios_base::ate };
         for (std::size_t i = 0; i < contextList.size(); i++)
-            buffer << "  [" << i << "] " << contextList[i].name << '\n';
+            buffer << "  [" << i << "] " << contextList[i].name << " (" << contextList[i].info << ") " << '\n';
         return buffer.str();
     }();
     return infoBuffer.c_str();
