@@ -1,4 +1,6 @@
 #include <cstddef>
+#include <cstdint>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -172,18 +174,45 @@ namespace ac::core::cuda
     class DeviceImageBufferAllocator
     {
     public:
-        void init(const Context& ctx) noexcept
+        cudaError_t init(const int idx) noexcept
         {
-            if (ctx.memoryPoolsSupported)
+            cudaError_t err = cudaSuccess;
+
+            device = idx;
+            memoryPoolsSupported = ContextList[idx].memoryPoolsSupported;
+            if (memoryPoolsSupported)
             {
                 deviceMalloc = deviceMallocAsync;
                 deviceFree = deviceFreeAsync;
+
+                cudaMemPool_t pool{};
+                err = cudaDeviceGetDefaultMemPool(&pool, device);
+                if (err == cudaSuccess)
+                {
+                    auto threshold = std::numeric_limits<std::uint64_t>::max();
+                    err = cudaMemPoolSetAttribute(pool, cudaMemPoolAttrReleaseThreshold, &threshold);
+                }
             }
             else
             {
                 deviceMalloc = deviceMallocSync;
                 deviceFree = deviceFreeSync;
             }
+
+            return err;
+        }
+        cudaError_t deinit() const noexcept
+        {
+            cudaError_t err = cudaSuccess;
+
+            if (memoryPoolsSupported)
+            {
+                cudaMemPool_t pool{};
+                err = cudaDeviceGetDefaultMemPool(&pool, device);
+                if (err == cudaSuccess) err = cudaMemPoolTrimTo(pool, 0);
+            }
+
+            return err;
         }
 
         cudaError_t allocate(DeviceImageBuffer& buffer, const cudaStream_t stream) const noexcept
@@ -223,6 +252,8 @@ namespace ac::core::cuda
     private:
         decltype(&deviceMallocAsync) deviceMalloc = deviceMallocSync;
         decltype(&deviceFreeAsync) deviceFree = deviceFreeSync;
+        int device = 0;
+        bool memoryPoolsSupported = false;
     };
 
     class CUDAProcessorBase : public Processor
@@ -235,10 +266,15 @@ namespace ac::core::cuda
             else
             {
                 idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
-                bufferAllocator.init(ContextList[idx]);
+                err = bufferAllocator.init(idx);
             }
         };
-        ~CUDAProcessorBase() noexcept override = default;
+        ~CUDAProcessorBase() noexcept override
+        {
+            // there should not be any error here, we tentatively keep 'err' to avoid ignoring the return value.
+            auto& err = errors.local();
+            err = bufferAllocator.deinit();
+        }
 
         bool ok() noexcept override
         {
