@@ -149,6 +149,53 @@ namespace ac::core::opencl
         }
     }
 
+    class ImageBuffer : private cl::Image
+    {
+    public:
+        ImageBuffer() noexcept = default;
+        ImageBuffer(const ImageBuffer&) = delete;
+        ImageBuffer(ImageBuffer&&) noexcept = default;
+        ImageBuffer& operator=(const ImageBuffer&) = delete;
+        ImageBuffer& operator=(ImageBuffer&&) noexcept = default;
+
+        const cl::Image& get(
+            const cl::Context& ctx,
+            const cl_mem_flags flags,
+            const cl_channel_order channelOrder,
+            const cl_channel_type channelType,
+            const cl::size_type channels,
+            const cl::size_type width,
+            const cl::size_type height,
+            cl_int* const err)
+        {
+            if (!object_ || w != width || h != height || type != channelType)
+            {
+                auto arraySize = (channels + 3) / 4;
+
+                if (arraySize < 2)
+                    *this = cl::Image2D{ ctx, flags, {channelOrder, channelType}, width, height, 0, nullptr, err };
+                else
+                    *this = cl::Image2DArray{ ctx, flags, {channelOrder, channelType}, arraySize, width, height, 0, 0, nullptr, err };
+
+                if (!err || *err == CL_SUCCESS)
+                {
+                    w = width;
+                    h = height;
+                    type = channelType;
+                }
+                else *this = ImageBuffer{};
+            }
+            return *this;
+        }
+
+    private:
+        using cl::Image::operator=;
+
+    private:
+        cl::size_type h{}, w{};
+        cl_channel_type type{};
+    };
+
     class OpenCLProcessorBase : public Processor
     {
     public:
@@ -327,6 +374,11 @@ private:
     util::ThreadLocal<cl::Kernel> conv3x3_1to8_relu_kernels;
     util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_kernels;
     util::ThreadLocal<cl::Kernel> deconv2x2_8to1_kernels;
+
+    util::ThreadLocal<ImageBuffer> inImageBuffers;
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers;
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers;
+    util::ThreadLocal<ImageBuffer> outImageBuffers;
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ACNetKernelString) {}
@@ -346,10 +398,15 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     auto& conv3x3_8to8_relu = conv3x3_8to8_relu_kernels.local(context.program, "conv3x3_8to8_relu", &err); if (err != CL_SUCCESS) return;
     auto& deconv2x2_8to1 = deconv2x2_8to1_kernels.local(context.program, "deconv2x2_8to1", &err); if (err != CL_SUCCESS) return;
 
-    cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray tmp2{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2D out{ context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, {CL_R, channelType(dst.type())}, dstW, dstH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
+    auto& inImageBuffer = inImageBuffers.local();
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
+    auto& outImageBuffer = outImageBuffers.local();
+
+    auto& in = inImageBuffer.get(context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, CL_R, channelType(src.type()), 1, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& tmp1 = tmp1ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& tmp2 = tmp2ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& out = outImageBuffer.get(context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, CL_R, channelType(dst.type()), 1, dstW, dstH, &err); if (err != CL_SUCCESS) return;
 
     int l = 0;
     err = cmdq.enqueueWriteImage(in, CL_FALSE, { 0,0,0 }, { srcW,srcH,1 }, src.stride(), 0, src.ptr()); if (err != CL_SUCCESS) return;
@@ -402,6 +459,13 @@ private:
     util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_identity_kernels;
     util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_add_identity_kernels;
     util::ThreadLocal<cl::Kernel> conv3x3_8to4_identity_pixelshuffle_4to1_kernels;
+
+    util::ThreadLocal<ImageBuffer> inImageBuffers;
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers;
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers;
+    util::ThreadLocal<ImageBuffer> tmp3ImageBuffers;
+    util::ThreadLocal<ImageBuffer> featImageBuffers;
+    util::ThreadLocal<ImageBuffer> outImageBuffers;
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::OpenCLProcessor(const int device, const model::ARNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ARNetKernelString) {}
@@ -422,12 +486,19 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     auto& conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_kernels.local(context.program, "conv3x3_8to8_residual_add_identity", &err); if (err != CL_SUCCESS) return;
     auto& conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_kernels.local(context.program, "conv3x3_8to4_identity_pixelshuffle_4to1", &err); if (err != CL_SUCCESS) return;
 
-    cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray tmp2{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray tmp3{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2DArray feat{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
-    cl::Image2D out{ context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, {CL_R, channelType(dst.type())}, dstW, dstH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
+    auto& inImageBuffer = inImageBuffers.local();
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
+    auto& tmp3ImageBuffer = tmp3ImageBuffers.local();
+    auto& featImageBuffer = featImageBuffers.local();
+    auto& outImageBuffer = outImageBuffers.local();
+
+    auto& in = inImageBuffer.get(context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, CL_R, channelType(src.type()), 1, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& tmp1 = tmp1ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& tmp2 = tmp2ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& tmp3 = tmp3ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& feat = featImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
+    auto& out = outImageBuffer.get(context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, CL_R, channelType(dst.type()), 1, dstW, dstH, &err); if (err != CL_SUCCESS) return;
 
     int l = 0;
     err = cmdq.enqueueWriteImage(in, CL_FALSE, { 0,0,0 }, { srcW,srcH,1 }, src.stride(), 0, src.ptr()); if (err != CL_SUCCESS) return;
