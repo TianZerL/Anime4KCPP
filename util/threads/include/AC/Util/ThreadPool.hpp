@@ -81,7 +81,7 @@ inline void ac::util::ThreadPool::exec(F&& f)
 }
 
 template<typename F, typename ...Args>
-inline auto ac::util::ThreadPool::exec(F&& f, Args && ...args)
+inline auto ac::util::ThreadPool::exec(F&& f, Args&& ...args)
 {
     auto task = std::make_shared<std::packaged_task<decltype(std::declval<F>()(std::declval<Args>()...))()>>(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
     auto ret = task->get_future();

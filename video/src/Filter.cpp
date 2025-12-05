@@ -81,7 +81,7 @@ namespace ac::video::detail
                     }
                 }
             };
-            while(!encodeChan.isClose()) process();
+            while(!encodeChan.isClosed()) process();
             while(!encodeChan.empty()) process();
         });
 
@@ -108,7 +108,7 @@ namespace ac::video::detail
                         success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
                     }
                 };
-                while (!decodeChan.isClose()) process();
+                while (!decodeChan.isClosed()) process();
                 while (!decodeChan.empty()) process();
                 // last one close the door
                 if(remainingThreads.fetch_sub(1, std::memory_order_relaxed) == 1) encodeChan.close();

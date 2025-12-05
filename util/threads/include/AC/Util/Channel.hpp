@@ -41,7 +41,7 @@ public:
     std::size_t size();
     bool empty();
     void close();
-    bool isClose();
+    bool isClosed();
 private:
     bool stop = false;
     const std::size_t capacity;
@@ -104,7 +104,7 @@ inline void ac::util::Channel<T, Queue>::close()
     producer.notify_all();
 }
 template<typename T, typename Queue>
-inline bool ac::util::Channel<T, Queue>::isClose()
+inline bool ac::util::Channel<T, Queue>::isClosed()
 {
     const std::lock_guard lock{ mtx };
     return stop;
