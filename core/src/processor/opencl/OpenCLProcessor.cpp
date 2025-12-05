@@ -322,6 +322,11 @@ public:
 
 private:
     void process(const Image& src, Image& dst) override;
+
+private:
+    util::ThreadLocal<cl::Kernel> conv3x3_1to8_relu_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_kernels;
+    util::ThreadLocal<cl::Kernel> deconv2x2_8to1_kernels;
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ACNetKernelString) {}
@@ -337,9 +342,9 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     auto& err = errors.local();
     auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
 
-    cl::Kernel conv3x3_1to8_relu{ context.program, "conv3x3_1to8_relu", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel conv3x3_8to8_relu{ context.program, "conv3x3_8to8_relu", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel deconv2x2_8to1{ context.program, "deconv2x2_8to1", &err }; if (err != CL_SUCCESS) return;
+    auto& conv3x3_1to8_relu = conv3x3_1to8_relu_kernels.local(context.program, "conv3x3_1to8_relu", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to8_relu = conv3x3_8to8_relu_kernels.local(context.program, "conv3x3_8to8_relu", &err); if (err != CL_SUCCESS) return;
+    auto& deconv2x2_8to1 = deconv2x2_8to1_kernels.local(context.program, "deconv2x2_8to1", &err); if (err != CL_SUCCESS) return;
 
     cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
@@ -390,6 +395,13 @@ public:
 
 private:
     void process(const Image& src, Image& dst) override;
+
+private:
+    util::ThreadLocal<cl::Kernel> conv3x3_1to8_identity_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_lrelu_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_identity_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_add_identity_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_8to4_identity_pixelshuffle_4to1_kernels;
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::OpenCLProcessor(const int device, const model::ARNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ARNetKernelString) {}
@@ -404,11 +416,11 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     auto& err = errors.local();
     auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
 
-    cl::Kernel conv3x3_1to8_identity{ context.program, "conv3x3_1to8_identity", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel conv3x3_8to8_lrelu{ context.program, "conv3x3_8to8_lrelu", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel conv3x3_8to8_residual_identity{ context.program, "conv3x3_8to8_residual_identity", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel conv3x3_8to8_residual_add_identity{ context.program, "conv3x3_8to8_residual_add_identity", &err }; if (err != CL_SUCCESS) return;
-    cl::Kernel conv3x3_8to4_identity_pixelshuffle_4to1{ context.program, "conv3x3_8to4_identity_pixelshuffle_4to1", &err }; if (err != CL_SUCCESS) return;
+    auto& conv3x3_1to8_identity = conv3x3_1to8_identity_kernels.local(context.program, "conv3x3_1to8_identity", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to8_lrelu = conv3x3_8to8_lrelu_kernels.local(context.program, "conv3x3_8to8_lrelu", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to8_residual_identity = conv3x3_8to8_residual_identity_kernels.local(context.program, "conv3x3_8to8_residual_identity", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to8_residual_add_identity = conv3x3_8to8_residual_add_identity_kernels.local(context.program, "conv3x3_8to8_residual_add_identity", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_kernels.local(context.program, "conv3x3_8to4_identity_pixelshuffle_4to1", &err); if (err != CL_SUCCESS) return;
 
     cl::Image2D in{ context.ctx, CL_MEM_READ_ONLY | CL_MEM_HOST_WRITE_ONLY, {CL_R, channelType(src.type())}, srcW, srcH, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
     cl::Image2DArray tmp1{ context.ctx, CL_MEM_READ_WRITE, {CL_RGBA, CL_HALF_FLOAT}, 2, srcW, srcH, 0, 0, nullptr, &err }; if (err != CL_SUCCESS) return;
