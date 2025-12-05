@@ -256,13 +256,6 @@ namespace ac::core::opencl
             return "OpenCL";
         }
     protected:
-        cl::CommandQueue& queue(cl_int* const err)
-        {
-            auto& cmdq = queues.local();
-            if (!cmdq()) cmdq = cl::CommandQueue{ context.ctx, context.device, 0, err };
-            return cmdq;
-        }
-    protected:
         struct WorkGroupSize
         {
             static constexpr int x = 16;
@@ -342,7 +335,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
     cl::size_type dstRangeW = align(dstW, WorkGroupSize::x), dstRangeH = align(dstH, WorkGroupSize::y);
 
     auto& err = errors.local();
-    auto& cmdq = queue(&err); if (err != CL_SUCCESS) return;
+    auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
 
     cl::Kernel conv3x3_1to8_relu{ context.program, "conv3x3_1to8_relu", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel conv3x3_8to8_relu{ context.program, "conv3x3_8to8_relu", &err }; if (err != CL_SUCCESS) return;
@@ -409,7 +402,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::process(const Im
     cl::size_type srcRangeW = align(srcW, WorkGroupSize::x), srcRangeH = align(srcH, WorkGroupSize::y);
 
     auto& err = errors.local();
-    auto& cmdq = queue(&err); if (err != CL_SUCCESS) return;
+    auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
 
     cl::Kernel conv3x3_1to8_identity{ context.program, "conv3x3_1to8_identity", &err }; if (err != CL_SUCCESS) return;
     cl::Kernel conv3x3_8to8_lrelu{ context.program, "conv3x3_8to8_lrelu", &err }; if (err != CL_SUCCESS) return;
