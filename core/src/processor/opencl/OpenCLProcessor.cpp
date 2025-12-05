@@ -309,9 +309,9 @@ namespace ac::core::opencl
             static constexpr int y = 8;
         };
     protected:
-        Context context;
-        util::ThreadLocal<cl_int> errors;
-        util::ThreadLocal<cl::CommandQueue> queues;
+        Context context{};
+        util::ThreadLocal<cl_int> errors{};
+        util::ThreadLocal<cl::CommandQueue> queues{};
     };
 
     template<typename Model>
@@ -371,14 +371,14 @@ private:
     void process(const Image& src, Image& dst) override;
 
 private:
-    util::ThreadLocal<cl::Kernel> conv3x3_1to8_relu_kernels;
-    util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_kernels;
-    util::ThreadLocal<cl::Kernel> deconv2x2_8to1_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_1to8_relu_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_kernels{};
+    util::ThreadLocal<cl::Kernel> deconv2x2_8to1_kernels{};
 
-    util::ThreadLocal<ImageBuffer> inImageBuffers;
-    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers;
-    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers;
-    util::ThreadLocal<ImageBuffer> outImageBuffers;
+    util::ThreadLocal<ImageBuffer> inImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> outImageBuffers{};
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ACNetKernelString) {}
@@ -454,18 +454,18 @@ private:
     void process(const Image& src, Image& dst) override;
 
 private:
-    util::ThreadLocal<cl::Kernel> conv3x3_1to8_identity_kernels;
-    util::ThreadLocal<cl::Kernel> conv3x3_8to8_lrelu_kernels;
-    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_identity_kernels;
-    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_add_identity_kernels;
-    util::ThreadLocal<cl::Kernel> conv3x3_8to4_identity_pixelshuffle_4to1_kernels;
+    util::ThreadLocal<cl::Kernel> conv3x3_1to8_identity_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_lrelu_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_identity_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_residual_add_identity_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to4_identity_pixelshuffle_4to1_kernels{};
 
-    util::ThreadLocal<ImageBuffer> inImageBuffers;
-    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers;
-    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers;
-    util::ThreadLocal<ImageBuffer> tmp3ImageBuffers;
-    util::ThreadLocal<ImageBuffer> featImageBuffers;
-    util::ThreadLocal<ImageBuffer> outImageBuffers;
+    util::ThreadLocal<ImageBuffer> inImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp3ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> featImageBuffers{};
+    util::ThreadLocal<ImageBuffer> outImageBuffers{};
 };
 
 ac::core::opencl::OpenCLProcessor<ac::core::model::ARNet>::OpenCLProcessor(const int device, const model::ARNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ARNetKernelString) {}
