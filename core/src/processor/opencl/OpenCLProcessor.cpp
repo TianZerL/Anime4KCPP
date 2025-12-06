@@ -26,6 +26,42 @@
 
 namespace ac::core::opencl
 {
+    class Arch
+    {
+    public:
+        enum Value
+        {
+            AMD_RDNA,
+            AMD_GCN,
+            INTEL,
+            NVIDIA,
+            ADRENO,
+            MESA,
+            OTHER,
+        };
+
+    public:
+        constexpr explicit Arch(Value v = OTHER) noexcept : value(v) {}
+        constexpr Arch& operator=(Value v) noexcept { value = v; return *this; }
+        constexpr operator Value() const noexcept { return value; }
+        constexpr const char* name() const noexcept
+        {
+            switch (value)
+            {
+            case AMD_RDNA: return "AMD_RDNA";
+            case AMD_GCN: return "AMD_GCN";
+            case INTEL: return "INTEL";
+            case NVIDIA: return "NVIDIA";
+            case ADRENO: return "ADRENO";
+            case MESA: return "MESA";
+            default: return "OTHER";
+            }
+        }
+
+    private:
+        Value value;
+    };
+
     struct Context
     {
         std::string name{};
@@ -33,31 +69,63 @@ namespace ac::core::opencl
         cl::Device device{};
         cl::Context ctx{};
         cl::Program program{};
-    };
+        Arch arch{};
 
-    static inline const char* getArch(Context& context)
-    {
-        if (context.name.find("rusticl") != std::string::npos) return "MESA";
-
-        cl_int err = CL_SUCCESS;
-
-        auto vendorId = context.device.getInfo<CL_DEVICE_VENDOR_ID>(&err); if (err != CL_SUCCESS) return "OTHER";
-        switch (vendorId)
+        Context() noexcept = default;
+        Context(const cl::Platform& platform, const cl::Device& device) noexcept : device(device)
         {
-        case 0x1002: // AMD
-            if (auto pos = context.name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(context.name[pos + 6]))) // gfx1000 or newer
-                return "AMD_RDNA";
-            return "AMD_GCN";
-        case 0x8086: // Intel
-            return "INTEL";
-        case 0x10DE: // Nvidia
-            return "NVIDIA";
-        case 0x5143: // Qualcomm
-            return "ADRENO";
-        default:
-            return "OTHER";
+            std::string platformName{ "Unknown" };
+            platform.getInfo(CL_PLATFORM_NAME, &platformName);
+
+            bool amdapp = platformName == "AMD Accelerated Parallel Processing";
+
+            std::string deviceName{ "Unknown" };
+            device.getInfo(CL_DEVICE_NAME, &deviceName);
+
+            if (amdapp)
+            {
+                std::string boardNameAMD{ "Unknown" };
+                device.getInfo(0x4038 /*CL_DEVICE_BOARD_NAME_AMD*/, &boardNameAMD);
+
+                name = boardNameAMD;
+                info.append(deviceName).append(", ");
+            }
+            else name = deviceName;
+
+            std::string driverVersion{ "Unknown" };
+            device.getInfo(CL_DRIVER_VERSION, &driverVersion);
+
+            info.append(platformName).append(", ").append(driverVersion);
+
+
+            if (name.find("rusticl") != std::string::npos) arch = Arch::MESA;
+            else
+            {
+                cl_uint vendorId{};
+                if (device.getInfo(CL_DEVICE_VENDOR_ID, &vendorId) == CL_SUCCESS)
+                {
+                    switch (vendorId)
+                    {
+                    case 0x1002: // AMD
+                        if (auto pos = name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(name[pos + 6]))) // gfx1000 or newer
+                            arch = Arch::AMD_RDNA;
+                        else
+                            arch = Arch::AMD_GCN;
+                        break;
+                    case 0x8086: // Intel
+                        arch = Arch::INTEL;
+                        break;
+                    case 0x10DE: // Nvidia
+                        arch = Arch::NVIDIA;
+                        break;
+                    case 0x5143: // Qualcomm
+                        arch = Arch::ADRENO;
+                        break;
+                    }
+                }
+            }
         }
-    }
+    };
 
     // we need the device with image support
     static inline bool checkDevice(const cl::Device& device)
@@ -77,41 +145,11 @@ namespace ac::core::opencl
         cl::Platform::get(&platforms);
         for (auto&& platform : platforms)
         {
-            std::string platformName{ "Unknown" };
-            platform.getInfo(CL_PLATFORM_NAME, &platformName);
-
             std::vector<cl::Device> devices{};
             platform.getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
-            bool amdapp = platformName == "AMD Accelerated Parallel Processing";
-
             for (auto&& device : devices)
-            {
-                if (!checkDevice(device)) continue;
-
-                std::string name{};
-                std::string info{};
-
-                std::string deviceName{ "Unknown" };
-                device.getInfo(CL_DEVICE_NAME, &deviceName);
-
-                if (amdapp)
-                {
-                    std::string boardNameAMD{ "Unknown" };
-                    device.getInfo(0x4038 /*CL_DEVICE_BOARD_NAME_AMD*/, &boardNameAMD);
-
-                    name = boardNameAMD;
-                    info.append(deviceName).append(", ");
-                }
-                else name = deviceName;
-
-                std::string driverVersion{ "Unknown" };
-                device.getInfo(CL_DRIVER_VERSION, &driverVersion);
-
-                info.append(platformName).append(", ").append(driverVersion);
-
-                contexts.emplace_back(Context{ name, info, device, {}, {} });
-            }
+                if (checkDevice(device)) contexts.emplace_back(platform, device);
         }
         return contexts;
     }
@@ -129,7 +167,7 @@ namespace ac::core::opencl
 #   ifdef AC_CORE_ENABLE_FAST_MATH
         options.append("-cl-fast-relaxed-math ");
 #   endif
-        options.append("-DARCH_").append(getArch(context));
+        options.append("-DARCH_").append(context.arch.name());
 
         cl::Program kernelProgram{ context.ctx, kernelString, false, &err }; if (err != CL_SUCCESS) return err;
         cl::Program commonProgram{ context.ctx, kernel::CommonKernelString, false, &err }; if (err != CL_SUCCESS) return err;
