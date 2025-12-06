@@ -62,6 +62,13 @@ namespace ac::core::opencl
         Value value;
     };
 
+    struct KernelBuildData
+    {
+        const char* kernelString;
+        std::string compileOptions;
+        bool passWeightsByConstant;
+    };
+
     struct Context
     {
         std::string name{};
@@ -70,6 +77,7 @@ namespace ac::core::opencl
         cl::Context ctx{};
         cl::Program program{};
         Arch arch{};
+        cl_ulong constantMemorySize{};
 
         Context() noexcept = default;
         Context(const cl::Platform& platform, const cl::Device& device) noexcept : device(device)
@@ -124,6 +132,8 @@ namespace ac::core::opencl
                     }
                 }
             }
+
+            device.getInfo(CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, &constantMemorySize);
         }
     };
 
@@ -155,7 +165,7 @@ namespace ac::core::opencl
     }
 
     // we can call `init` multiple times
-    static inline cl_int init(Context& context, const char* const kernelString) noexcept
+    static inline cl_int init(Context& context, const KernelBuildData& buildData) noexcept
     {
         if (!context.device()) return CL_DEVICE_NOT_AVAILABLE;
         if (context.ctx() && context.program()) return CL_SUCCESS;
@@ -164,12 +174,14 @@ namespace ac::core::opencl
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
 
         std::string options{};
+        if (buildData.passWeightsByConstant) options.append("-DPASS_WEIGHTS_BY_CONSTANT ");
 #   ifdef AC_CORE_ENABLE_FAST_MATH
         options.append("-cl-fast-relaxed-math ");
 #   endif
-        options.append("-DARCH_").append(context.arch.name());
+        options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
 
-        cl::Program kernelProgram{ context.ctx, kernelString, false, &err }; if (err != CL_SUCCESS) return err;
+
+        cl::Program kernelProgram{ context.ctx, buildData.kernelString, false, &err }; if (err != CL_SUCCESS) return err;
         cl::Program commonProgram{ context.ctx, kernel::CommonKernelString, false, &err }; if (err != CL_SUCCESS) return err;
 
         err = kernelProgram.compile(options.c_str(), { context.device }, { commonProgram }, { "CommonKernel.cl" }); if (err != CL_SUCCESS) return err;
@@ -237,7 +249,7 @@ namespace ac::core::opencl
     class OpenCLProcessorBase : public Processor
     {
     public:
-        OpenCLProcessorBase(const int device, const char* kernelString) noexcept
+        OpenCLProcessorBase(const int device) noexcept
         {
             auto& err = errors.local();
             auto contextList = getContextList();
@@ -246,7 +258,6 @@ namespace ac::core::opencl
             {
                 idx = (device >= 0 && static_cast<decltype(contextList.size())>(device) < contextList.size()) ? device : 0;
                 context = contextList[idx];
-                err = init(context, kernelString);
             }
         }
         ~OpenCLProcessorBase() noexcept override = default;
@@ -356,12 +367,23 @@ namespace ac::core::opencl
     class OpenCLProcessorSeqCNN : public OpenCLProcessorBase
     {
     public:
-        OpenCLProcessorSeqCNN(const int device, const Model& model, const char* kernelString) noexcept : OpenCLProcessorBase(device, kernelString), model(model), splitWeights(false)
+        OpenCLProcessorSeqCNN(const int device, const Model& model, const char* kernelString) noexcept : OpenCLProcessorBase(device), model(model), splitWeights(false)
         {
             auto& err = errors.local();
             if (err != CL_SUCCESS) return; // check if initialization was successful
 
-            if (context.arch == Arch::ADRENO) splitWeights = true;
+            if (context.arch != Arch::AMD_RDNA && context.arch != Arch::NVIDIA && (
+                model.kernelSize() > context.constantMemorySize ||
+                model.biasSize() > context.constantMemorySize ||
+                context.arch == Arch::ADRENO)) splitWeights = true;
+
+            KernelBuildData buildData {
+                kernelString,
+                splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
+                splitWeights || (model.kernelSize() <= context.constantMemorySize && model.biasSize() <= context.constantMemorySize)
+            };
+
+            err = init(context, buildData); if (err != CL_SUCCESS) return;
 
             if (splitWeights)
             {
