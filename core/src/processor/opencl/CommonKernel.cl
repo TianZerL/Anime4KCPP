@@ -10,10 +10,13 @@ constant sampler_t n_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_T
 inline void conv3x3_cin1(
     read_only image2d_t src,
     float* const out, const int cout,
-    constant float* const kernels,
-    constant float* const biases,
+    global const float* const restrict kernels, const int koffset,
+    global const float* const restrict biases, const int boffset,
     const int x, const int y)
 {
+    global const float* const restrict kptr = kernels + koffset;
+    global const float* const restrict bptr = biases + boffset;
+
     float8 r0 = (float8)(
         read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
         read_imagef(src, n_sampler, (int2)(x  , y-1)).x,
@@ -28,19 +31,22 @@ inline void conv3x3_cin1(
 
     for(int n = 0; n < cout; n++)
     {
-        float8 k0 = vload8(0, kernels + n * 9 + 0);
-        float k8 = kernels[n * 9 + 8];
-        out[n] = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi) + r8 * k8 + biases[n];
+        float8 k0 = vload8(0, kptr + n * 9 + 0);
+        float k8 = kptr[n * 9 + 8];
+        out[n] = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi) + r8 * k8 + bptr[n];
     }
 }
 
 inline void conv3x3_cin8(
     read_only image2d_array_t src,
     float* const out, const int cout,
-    constant float* const kernels,
-    constant float* const biases,
+    global const float* const restrict kernels, const int koffset,
+    global const float* const restrict biases, const int boffset,
     const int x, const int y)
 {
+    global const float* const restrict kptr = kernels + koffset;
+    global const float* const restrict bptr = biases + boffset;
+
     float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, 1, 0)));
     float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, 1, 0)));
     float8 r2 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y-1, 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y-1, 1, 0)));
@@ -53,7 +59,7 @@ inline void conv3x3_cin8(
 
     for(int n = 0; n < cout; n++)
     {
-        constant float* k = kernels + n * 8 * 9;
+        global const float* const restrict k = kptr + n * 8 * 9;
 
         float8 k0 = vload8(0, k);
         float8 k1 = vload8(1, k);
@@ -76,7 +82,7 @@ inline void conv3x3_cin8(
                     r7 * k7 +
                     r8 * k8 ;
 
-        out[n] = dot(s0.lo + s0.hi, (float4)(1.0f)) + biases[n];
+        out[n] = dot(s0.lo + s0.hi, (float4)(1.0f)) + bptr[n];
 #   elif defined (ARCH_AMD_GCN)
         float8 s0 = (float8)(0.0f);
         float8 s1 = (float8)(0.0f);
@@ -89,7 +95,7 @@ inline void conv3x3_cin8(
         s0 = mad(r6, k6, s0);
         s1 = mad(r7, k7, s1) + r8 * k8;
 
-        out[n] = dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f)) + biases[n];
+        out[n] = dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f)) + bptr[n];
 #   else
         float s0 = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi);
         float s1 = dot(r1.lo, k1.lo) + dot(r1.hi, k1.hi);
@@ -101,7 +107,7 @@ inline void conv3x3_cin8(
         float s7 = dot(r7.lo, k7.lo) + dot(r7.hi, k7.hi);
         float s8 = dot(r8.lo, k8.lo) + dot(r8.hi, k8.hi);
 
-        out[n] = s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + biases[n];
+        out[n] = s0 + s1 + s2 + s3 + s4 + s5 + s6 + s7 + s8 + bptr[n];
 #   endif
     }
 }
