@@ -372,11 +372,23 @@ namespace ac::core::opencl
             auto& err = errors.local();
             if (err != CL_SUCCESS) return; // check if initialization was successful
 
-            if (context.arch != Arch::AMD_RDNA && context.arch != Arch::NVIDIA && (
+            // Determine whether to split weights into separate buffers:
+            // - AMD RDNA and NVIDIA: Never split weights (optimized for contiguous memory access)
+            // - Adreno: Always split weights (better performance with smaller buffers)
+            // - Other architectures: Split only if total weights exceed device's constant memory limit
+            if (context.arch != Arch::AMD_RDNA && 
+                context.arch != Arch::NVIDIA && (
                 model.kernelSize() > context.constantMemorySize ||
                 model.biasSize() > context.constantMemorySize ||
                 context.arch == Arch::ADRENO)) splitWeights = true;
 
+            // Configure kernel build options:
+            // - If weights are split: Don't use offset calculations (each layer has its own buffer)
+            // - If weights are NOT split: Use offset calculations to index into single buffer
+            // - Use constant memory for weights when:
+            //   a) Weights are split (each smaller buffer fits in constant memory), OR
+            //   b) Total weights fit in constant memory (fastest access for unsplit weights)
+            //   Note: RDNA/NVIDIA with oversized weights cannot use constant memory (fallback to global)
             KernelBuildData buildData {
                 kernelString,
                 splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
