@@ -204,9 +204,8 @@ namespace ac::core::opencl
     public:
         ImageBuffer() noexcept = default;
         ImageBuffer(const ImageBuffer&) = delete;
-        ImageBuffer(ImageBuffer&&) noexcept = default;
+        ImageBuffer(ImageBuffer&&) noexcept = delete;
         ImageBuffer& operator=(const ImageBuffer&) = delete;
-        ImageBuffer& operator=(ImageBuffer&&) noexcept = default;
 
         const cl::Image& get(
             const cl::Context& ctx,
@@ -239,6 +238,7 @@ namespace ac::core::opencl
         }
 
     private:
+        ImageBuffer& operator=(ImageBuffer&&) noexcept = default;
         using cl::Image::operator=;
 
     private:

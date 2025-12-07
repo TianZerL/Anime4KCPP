@@ -133,9 +133,9 @@ namespace ac::core::cpu
     public:
         ImageBuffer() noexcept = default;
         ImageBuffer(const ImageBuffer&) = delete;
-        ImageBuffer(ImageBuffer&&) noexcept = default;
+        ImageBuffer(ImageBuffer&&) noexcept = delete;
         ImageBuffer& operator=(const ImageBuffer&) = delete;
-        ImageBuffer& operator=(ImageBuffer&&) noexcept = default;
+        ImageBuffer& operator=(ImageBuffer&&) noexcept = delete;
 
         Image& get(const int width, const int height, const int channels, const Image::ElementType type)
         {
