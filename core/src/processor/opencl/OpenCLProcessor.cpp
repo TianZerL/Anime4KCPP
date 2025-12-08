@@ -105,8 +105,7 @@ namespace ac::core::opencl
 
             info.append(platformName).append(", ").append(driverVersion);
 
-
-            if (name.find("rusticl") != std::string::npos) arch = Arch::MESA;
+            if (platformName == "rusticl") arch = Arch::MESA;
             else
             {
                 cl_uint vendorId{};
