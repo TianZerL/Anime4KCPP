@@ -14,12 +14,16 @@
 #define A2T(s) (sizeof(TCHAR) == sizeof(char) ? (LPCTSTR)(s) : (util::asciiToString<TCHAR>(s).c_str()))
 #define T2A(s) (sizeof(TCHAR) == sizeof(char) ? (LPCSTR)(s) : (util::asciiToString<char>(s).c_str()))
 
-#define SET_PLANAR_FORMAT(t) (((t) << 8) | 0)
-#define SET_PACKED_FORMAT(t) (((t) << 8) | 1)
-#define IS_PLANAR_FORMAT(f) (((f) & 0xff) == 0)
-#define GET_FORMAT_TYPE(f) ((f) >> 8)
-
 #define gRegArgument (RegArgument::instance())
+
+DEFINE_GUID(MEDIASUBTYPE_I420,
+    0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+
+DEFINE_GUID(MEDIASUBTYPE_YV16,
+    0x36315659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+
+DEFINE_GUID(MEDIASUBTYPE_YV24,
+    0x34325659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 namespace util
 {
@@ -69,9 +73,32 @@ private:
     Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
 
 private:
-    struct { struct { LONG width, height; } src, dst, limit; } size{};
+    struct Size { int width, height; } limit{};
+
+    struct
+    {
+        Size src, dst;
+        int channels;
+        int part;
+    } luma{}, chroma{};
+
+    int totalParts{};
+
+    struct Format
+    {
+        ac::core::Image::ElementType type = 0;
+        struct {
+            int w = 0, h = 0;
+        } subsampling{};
+        bool packed{};
+
+        operator bool() const noexcept
+        {
+            return type != 0 && subsampling.w != 0 && subsampling.h != 0;
+        }
+    } format{};
+
 private:
-    int format{};
     double factor{};
     std::shared_ptr<ac::core::Processor> processor{};
 };
@@ -150,6 +177,10 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
 {
     {
         &MEDIATYPE_Video,
+        &MEDIASUBTYPE_I420
+    },
+    {
+        &MEDIATYPE_Video,
         &MEDIASUBTYPE_IYUV
     },
     {
@@ -167,7 +198,23 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
     {
         &MEDIATYPE_Video,
         &MEDIASUBTYPE_P016
-    }
+    },
+    {
+        &MEDIATYPE_Video,
+        &MEDIASUBTYPE_YV16
+    },
+    {
+        &MEDIATYPE_Video,
+        &MEDIASUBTYPE_P210
+    },
+    {
+        &MEDIATYPE_Video,
+        &MEDIASUBTYPE_P216
+    },
+    {
+        &MEDIATYPE_Video,
+        &MEDIASUBTYPE_YV24
+    },
 };
 const AMOVIESETUP_PIN sudPins[] =
 {
@@ -243,9 +290,9 @@ CUnknown* Filter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
 }
 Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) : CTransformFilter(name, punk, CLSID_AC_FILTER)
 {
+    limit.width = gRegArgument.getLimitWidth();
+    limit.height = gRegArgument.getLimitHeight();
     factor = gRegArgument.getFactor();
-    size.limit.width = gRegArgument.getLimitWidth();
-    size.limit.height = gRegArgument.getLimitHeight();
     auto ProcessorType = gRegArgument.getProcessorType();
     auto device = gRegArgument.getDevice();
     auto modelName = gRegArgument.getModelName();
@@ -270,24 +317,32 @@ HRESULT Filter::CheckInputType(const CMediaType* mtIn)
         !IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo))
         return VFW_E_TYPE_NOT_ACCEPTED;
 
-    format = [&]() -> int {
+    format = [&]() -> Format {
         // planar: YYYYUUVV
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_IYUV) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV12)) return SET_PLANAR_FORMAT(ac::core::Image::UInt8);
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_I420) ||
+            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_IYUV) ||
+            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV12)) return Format{ ac::core::Image::UInt8, {2, 2}, false };
+        // planar: YUV422
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV16)) return Format{ ac::core::Image::UInt8, {2, 1}, false };
+        // planar: YUV444
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV24)) return Format{ ac::core::Image::UInt8, {1, 1}, false };
         // packed: YYYYUVUV
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_NV12)) return SET_PACKED_FORMAT(ac::core::Image::UInt8);
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_NV12)) return Format{ ac::core::Image::UInt8, {2, 2}, true };
         if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P010) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P016)) return SET_PACKED_FORMAT(ac::core::Image::UInt16);
-        return 0;
-        }();
+            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P016)) return Format{ ac::core::Image::UInt16, {2, 2}, true };
+        // packed: YUV422
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P210) ||
+            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P216)) return Format{ ac::core::Image::UInt16, {2, 1}, true };
+        return {};
+    }();
 
     if (!format) return VFW_E_TYPE_NOT_ACCEPTED;
 
     auto checkVideoInfo = [&](auto* vi) -> HRESULT {
-        if (vi->bmiHeader.biWidth > size.limit.width || vi->bmiHeader.biHeight > size.limit.height)
+        if (vi->bmiHeader.biWidth > limit.width || vi->bmiHeader.biHeight > limit.height)
             return VFW_E_TYPE_NOT_ACCEPTED;
         return S_OK;
-        };
+    };
     if (IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2))
         return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mtIn->Format()));
     else
@@ -316,17 +371,29 @@ HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
     if (FAILED(hr)) return hr;
 
     auto setVideoInfo = [&](auto* vi) {
-        size.src.width = vi->bmiHeader.biWidth;
-        size.src.height = vi->bmiHeader.biHeight;
-        size.dst.width = static_cast<decltype(size.dst.width)>(size.src.width * factor);
-        size.dst.height = static_cast<decltype(size.dst.height)>(size.src.height * factor);
-        vi->bmiHeader.biWidth = size.dst.width;
-        vi->bmiHeader.biHeight = size.dst.height;
+        luma.src.width = vi->bmiHeader.biWidth;
+        luma.src.height = vi->bmiHeader.biHeight;
+        luma.dst.width = static_cast<decltype(luma.dst.width)>(luma.src.width * factor);
+        luma.dst.height = static_cast<decltype(luma.dst.height)>(luma.src.height * factor);
+        luma.channels = 1;
+        luma.part = format.subsampling.w * format.subsampling.h;
+
+        chroma.src.width = luma.src.width / format.subsampling.w;
+        chroma.src.height = (luma.src.height / format.subsampling.h) * (format.packed ? 1 : 2);
+        chroma.dst.width = luma.dst.width / format.subsampling.w;
+        chroma.dst.height = (luma.dst.height / format.subsampling.h) * (format.packed ? 1 : 2);
+        chroma.channels = !format.packed ? 1 : 2;
+        chroma.part = 2;
+
+        totalParts = luma.part + chroma.part;
+
+        vi->bmiHeader.biWidth = luma.dst.width;
+        vi->bmiHeader.biHeight = luma.dst.height;
         vi->bmiHeader.biSizeImage = DIBSIZE(vi->bmiHeader);
         mt->SetSampleSize(vi->bmiHeader.biSizeImage);
-        SetRect(&vi->rcSource, 0, 0, size.dst.width, size.dst.height);
-        SetRect(&vi->rcTarget, 0, 0, size.dst.width, size.dst.height);
-        };
+        SetRect(&vi->rcSource, 0, 0, luma.dst.width, luma.dst.height);
+        SetRect(&vi->rcTarget, 0, 0, luma.dst.width, luma.dst.height);
+    };
     if (IsEqualGUID(*mt->FormatType(), FORMAT_VideoInfo2))
         setVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mt->Format()));
     else
@@ -364,14 +431,13 @@ HRESULT Filter::Transform(IMediaSample* in, IMediaSample* out)
     in->GetPointer(&src);
     out->GetPointer(&dst);
 
-    ac::core::Image srcy{ size.src.width, size.src.height, 1, GET_FORMAT_TYPE(format), src, ((in->GetActualDataLength() * 2) / 3) / size.src.height };
-    ac::core::Image dsty{ size.dst.width, size.dst.height, 1, GET_FORMAT_TYPE(format), dst, ((out->GetActualDataLength() * 2) / 3) / size.dst.height };
+    ac::core::Image srcy{ luma.src.width, luma.src.height, luma.channels, format.type, src, ((in->GetActualDataLength() * luma.part) / totalParts) / luma.src.height };
+    ac::core::Image dsty{ luma.dst.width, luma.dst.height, luma.channels, format.type, dst, ((out->GetActualDataLength() * luma.part) / totalParts) / luma.dst.height };
     processor->process(srcy, dsty, factor);
     if (!processor->ok()) return E_FAIL;
 
-    int channels = IS_PLANAR_FORMAT(format) ? 1 : 2;
-    ac::core::Image srcuv{ size.src.width / 2, size.src.height / channels, channels, GET_FORMAT_TYPE(format), src + srcy.size(), ((in->GetActualDataLength() * channels) / 3) / size.src.height };
-    ac::core::Image dstuv{ size.dst.width / 2, size.dst.height / channels, channels, GET_FORMAT_TYPE(format), dst + dsty.size(), ((out->GetActualDataLength() * channels) / 3) / size.dst.height };
+    ac::core::Image srcuv{ chroma.src.width, chroma.src.height, chroma.channels, format.type, src + srcy.size(), ((in->GetActualDataLength() * chroma.part) / totalParts) / chroma.src.height };
+    ac::core::Image dstuv{ chroma.dst.width, chroma.dst.height, chroma.channels, format.type, dst + dsty.size(), ((out->GetActualDataLength() * chroma.part) / totalParts) / chroma.dst.height };
     ac::core::resize(srcuv, dstuv, 0.0, 0.0);
 
     return S_OK;
