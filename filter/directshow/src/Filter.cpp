@@ -215,6 +215,10 @@ const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
         &MEDIATYPE_Video,
         &MEDIASUBTYPE_YV24
     },
+    {
+        &MEDIATYPE_Video,
+        &MEDIASUBTYPE_NV24
+    },
 };
 const AMOVIESETUP_PIN sudPins[] =
 {
@@ -333,6 +337,8 @@ HRESULT Filter::CheckInputType(const CMediaType* mtIn)
         // packed: YUV422
         if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P210) ||
             IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P216)) return Format{ ac::core::Image::UInt16, {2, 1}, true };
+        // packed: YUV444
+        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_NV24)) return Format{ ac::core::Image::UInt8, {1, 1}, true };
         return {};
     }();
 
