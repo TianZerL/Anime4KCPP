@@ -16,15 +16,6 @@
 
 #define gRegArgument (RegArgument::instance())
 
-DEFINE_GUID(MEDIASUBTYPE_I420,
-    0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-
-DEFINE_GUID(MEDIASUBTYPE_YV16,
-    0x36315659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-
-DEFINE_GUID(MEDIASUBTYPE_YV24,
-    0x34325659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
-
 namespace util
 {
     template<typename CharOut, typename CharIn>
@@ -172,6 +163,10 @@ private:
     TCHAR ProcessorType[ProcessorTypeMaxSize]{};
     TCHAR modelName[ModelNameMaxSize]{};
 };
+
+DEFINE_GUID(MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+DEFINE_GUID(MEDIASUBTYPE_YV16, 0x36315659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+DEFINE_GUID(MEDIASUBTYPE_YV24, 0x34325659, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 const AMOVIESETUP_MEDIATYPE sudPinTypes[] =
 {
@@ -415,7 +410,7 @@ HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* 
 
     request->cbBuffer = static_cast<decltype(request->cbBuffer)>(m_pOutput->CurrentMediaType().GetSampleSize());
 
-    if (request->cbAlign == 0) request->cbAlign = 1;
+    if (request->cbAlign == 0) request->cbAlign = 32;
     if (request->cBuffers == 0) request->cBuffers = 1;
 
     ALLOCATOR_PROPERTIES actual{};
