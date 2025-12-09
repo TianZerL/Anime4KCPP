@@ -33,7 +33,7 @@ endif()
 
 include(GNUInstallDirs)
 
-include(${CMAKE_DIR}/CheckCompiler.cmake)
+include(${CMAKE_DIR}/CheckCompilerSIMD.cmake)
 
 option(AC_SHARED_LIB "build as a shared library" OFF)
 option(AC_CORE_WITH_EIGEN3 "build core with eigen3" OFF)
