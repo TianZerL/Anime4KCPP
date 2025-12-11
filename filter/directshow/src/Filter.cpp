@@ -1,6 +1,9 @@
+#include <cstddef>
 #include <memory>
+#include <new>
 #include <string>
 
+#include <wrl/client.h>
 #include <streams.h>
 #include <dvdmedia.h>
 #include <tchar.h>
@@ -10,6 +13,8 @@
 
 #include "AC/Core.hpp"
 #include "AC/Specs.hpp"
+
+#include "SideData.hpp"
 
 #define A2T(s) (sizeof(TCHAR) == sizeof(char) ? (LPCTSTR)(s) : (util::asciiToString<TCHAR>(s).c_str()))
 #define T2A(s) (sizeof(TCHAR) == sizeof(char) ? (LPCSTR)(s) : (util::asciiToString<char>(s).c_str()))
@@ -51,6 +56,7 @@ public:
     DECLARE_IUNKNOWN;
 
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
+    CBasePin* GetPin(int n) override;
 
     HRESULT CheckInputType(const CMediaType* mtIn) override;
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut) override;
@@ -61,7 +67,7 @@ public:
     STDMETHODIMP GetPages(CAUUID* pages) override;
 
 private:
-    Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
+    Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) noexcept;
 
 private:
     struct Size { int width, height; } limit{};
@@ -106,36 +112,37 @@ private:
     HRESULT OnApplyChanges() override;
 
 private:
-    PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* phr);
+    PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) noexcept;
 
 private:
     static constexpr int StringBufferSize = 512;
 
     bool isInitialized = false;
 };
+
 class RegArgument
 {
 private:
-    RegArgument();
-    ~RegArgument();
+    RegArgument() noexcept;
+    ~RegArgument() noexcept;
 
 public:
-    double getFactor();
-    int getDevice();
-    int getLimitWidth();
-    int getLimitHeight();
-    const TCHAR* getProcessorType();
-    const TCHAR* getModelName();
+    double getFactor() noexcept;
+    int getDevice() noexcept;
+    int getLimitWidth() noexcept;
+    int getLimitHeight() noexcept;
+    const TCHAR* getProcessorType() noexcept;
+    const TCHAR* getModelName() noexcept;
 
-    void setFactor(double v) const;
-    void setDevice(int v) const;
-    void setLimitWidth(int v) const;
-    void setLimitHeight(int v) const;
-    void setProcessorType(const TCHAR* v) const;
-    void setModelName(const TCHAR* v) const;
+    void setFactor(double v) const noexcept;
+    void setDevice(int v) const noexcept;
+    void setLimitWidth(int v) const noexcept;
+    void setLimitHeight(int v) const noexcept;
+    void setProcessorType(const TCHAR* v) const noexcept;
+    void setModelName(const TCHAR* v) const noexcept;
 
 public:
-    static RegArgument& instance();
+    static RegArgument& instance() noexcept;
 
 public:
     static constexpr int ProcessorTypeMaxSize = 32;
@@ -276,18 +283,18 @@ STDAPI DllUnregisterServer()
 }
 
 extern "C" BOOL WINAPI DllEntryPoint(HINSTANCE, ULONG, LPVOID);
-BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, LPVOID lpReserved)
+BOOL APIENTRY DllMain(const HANDLE hModule, const DWORD dwReason, const LPVOID lpReserved)
 {
     return DllEntryPoint((HINSTANCE)(hModule), dwReason, lpReserved);
 }
 
-CUnknown* Filter::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
+CUnknown* Filter::CreateInstance(const LPUNKNOWN punk, HRESULT* const phr)
 {
-    auto object = new Filter(NAME("Anime4KCPP for DirectShow"), punk, phr);
+    auto object = new(std::nothrow) Filter{ NAME("Anime4KCPP for DirectShow"), punk, phr };
     if (!object && phr) *phr = E_OUTOFMEMORY;
     return object;
 }
-Filter::Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) : CTransformFilter(name, punk, CLSID_AC_FILTER)
+Filter::Filter(TCHAR* const name, const LPUNKNOWN punk, HRESULT* const phr) noexcept : CTransformFilter(name, punk, CLSID_AC_FILTER)
 {
     limit.width = gRegArgument.getLimitWidth();
     limit.height = gRegArgument.getLimitHeight();
@@ -308,32 +315,50 @@ STDMETHODIMP Filter::NonDelegatingQueryInterface(REFIID riid, void** ppv)
     else
         return CTransformFilter::NonDelegatingQueryInterface(riid, ppv);
 }
-HRESULT Filter::CheckInputType(const CMediaType* mtIn)
+CBasePin* Filter::GetPin(const int n)
+{
+    HRESULT hr = S_OK;
+
+    if (!m_pInput && !m_pOutput)
+    {
+        auto input = std::unique_ptr<CSideDataInputPin>{ new(std::nothrow) CSideDataInputPin{ NAME("Filter input pin"), this, &hr, L"Input" } };
+        if (!input || FAILED(hr)) return nullptr;
+        auto output = std::unique_ptr<CTransformOutputPin>{ new(std::nothrow) CTransformOutputPin{ NAME("Filter output pin"), this, &hr, L"Output" } };
+        if (!output || FAILED(hr)) return nullptr;
+
+        m_pInput = input.release();
+        m_pOutput = output.release();
+    }
+
+    if (n == 0) return m_pInput;
+    if (n == 1) return m_pOutput;
+    return nullptr;
+}
+HRESULT Filter::CheckInputType(const CMediaType* const mtIn)
 {
     CheckPointer(mtIn, E_POINTER);
 
-    if (!IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2) &&
-        !IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo))
+    if (*mtIn->FormatType() != FORMAT_VideoInfo2 && *mtIn->FormatType() != FORMAT_VideoInfo)
         return VFW_E_TYPE_NOT_ACCEPTED;
 
     format = [&]() -> Format {
         // planar: YYYYUUVV
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_I420) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_IYUV) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV12)) return Format{ ac::core::Image::UInt8, {2, 2}, false };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_I420 ||
+            *mtIn->Subtype() == MEDIASUBTYPE_IYUV ||
+            *mtIn->Subtype() == MEDIASUBTYPE_YV12) return Format{ ac::core::Image::UInt8, {2, 2}, false };
         // planar: YUV422
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV16)) return Format{ ac::core::Image::UInt8, {2, 1}, false };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_YV16) return Format{ ac::core::Image::UInt8, {2, 1}, false };
         // planar: YUV444
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_YV24)) return Format{ ac::core::Image::UInt8, {1, 1}, false };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_YV24) return Format{ ac::core::Image::UInt8, {1, 1}, false };
         // packed: YYYYUVUV
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_NV12)) return Format{ ac::core::Image::UInt8, {2, 2}, true };
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P010) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P016)) return Format{ ac::core::Image::UInt16, {2, 2}, true };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_NV12) return Format{ ac::core::Image::UInt8, {2, 2}, true };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_P010 ||
+            *mtIn->Subtype() == MEDIASUBTYPE_P016) return Format{ ac::core::Image::UInt16, {2, 2}, true };
         // packed: YUV422
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P210) ||
-            IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_P216)) return Format{ ac::core::Image::UInt16, {2, 1}, true };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_P210 ||
+            *mtIn->Subtype() == MEDIASUBTYPE_P216) return Format{ ac::core::Image::UInt16, {2, 1}, true };
         // packed: YUV444
-        if (IsEqualGUID(*mtIn->Subtype(), MEDIASUBTYPE_NV24)) return Format{ ac::core::Image::UInt8, {1, 1}, true };
+        if (*mtIn->Subtype() == MEDIASUBTYPE_NV24) return Format{ ac::core::Image::UInt8, {1, 1}, true };
         return {};
     }();
 
@@ -344,24 +369,23 @@ HRESULT Filter::CheckInputType(const CMediaType* mtIn)
             return VFW_E_TYPE_NOT_ACCEPTED;
         return S_OK;
     };
-    if (IsEqualGUID(*mtIn->FormatType(), FORMAT_VideoInfo2))
+    if (*mtIn->FormatType() == FORMAT_VideoInfo2)
         return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mtIn->Format()));
     else
         return checkVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mtIn->Format()));
 }
-HRESULT Filter::CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut)
+HRESULT Filter::CheckTransform(const CMediaType* const mtIn, const CMediaType* const mtOut)
 {
     CheckPointer(mtIn, E_POINTER);
     CheckPointer(mtOut, E_POINTER);
 
-    if (!IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo2) &&
-        !IsEqualGUID(*mtOut->FormatType(), FORMAT_VideoInfo))
+    if (*mtOut->FormatType() != FORMAT_VideoInfo2 && *mtOut->FormatType() != FORMAT_VideoInfo)
         return VFW_E_TYPE_NOT_ACCEPTED;
-    if (!IsEqualGUID(*mtIn->Subtype(), *mtOut->Subtype()))
+    if (*mtIn->Subtype() != *mtOut->Subtype())
         return VFW_E_TYPE_NOT_ACCEPTED;
     return S_OK;
 }
-HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
+HRESULT Filter::GetMediaType(const int pos, CMediaType* const mt)
 {
     if (m_pInput->IsConnected() == FALSE) return E_UNEXPECTED;
     if (pos < 0) return E_INVALIDARG;
@@ -395,14 +419,14 @@ HRESULT Filter::GetMediaType(int pos, CMediaType* mt)
         SetRect(&vi->rcSource, 0, 0, luma.dst.width, luma.dst.height);
         SetRect(&vi->rcTarget, 0, 0, luma.dst.width, luma.dst.height);
     };
-    if (IsEqualGUID(*mt->FormatType(), FORMAT_VideoInfo2))
+    if (*mt->FormatType() == FORMAT_VideoInfo2)
         setVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mt->Format()));
     else
         setVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mt->Format()));
 
     return S_OK;
 }
-HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* request)
+HRESULT Filter::DecideBufferSize(IMemAllocator* const alloctor, ALLOCATOR_PROPERTIES* const request)
 {
     if (!m_pInput->IsConnected()) return E_UNEXPECTED;
     CheckPointer(alloctor, E_POINTER);
@@ -422,7 +446,7 @@ HRESULT Filter::DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* 
 
     return S_OK;
 }
-HRESULT Filter::Transform(IMediaSample* in, IMediaSample* out)
+HRESULT Filter::Transform(IMediaSample* const in, IMediaSample* const out)
 {
     CheckPointer(in, E_POINTER);
     CheckPointer(out, E_POINTER);
@@ -441,9 +465,27 @@ HRESULT Filter::Transform(IMediaSample* in, IMediaSample* out)
     ac::core::Image dstuv{ chroma.dst.width, chroma.dst.height, chroma.channels, format.type, dst + dsty.size(), ((out->GetActualDataLength() * chroma.part) / totalParts) / chroma.dst.height };
     ac::core::resize(srcuv, dstuv, 0.0, 0.0);
 
+    Microsoft::WRL::ComPtr<IMediaSideData> inputSideData{};
+    Microsoft::WRL::ComPtr<IMediaSideData> outputSideData{};
+    if (SUCCEEDED(in->QueryInterface(CLSID_IMediaSideData, &inputSideData)) && SUCCEEDED(out->QueryInterface(CLSID_IMediaSideData, &outputSideData)))
+    {
+        const BYTE* data{};
+        std::size_t size{};
+
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataHDR, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataHDR, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataHDRContentLightLevel, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataHDRContentLightLevel, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataHDR10Plus, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataHDR10Plus, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataDOVIRPU, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataDOVIRPU, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataDOVIMetadata, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataDOVIMetadata, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataDOVIMetadataV2, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataDOVIMetadataV2, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideData3DOffset, &data, &size))) outputSideData->SetSideData(IID_MediaSideData3DOffset, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataEIA608CC, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataEIA608CC, data, size);
+        if (SUCCEEDED(inputSideData->GetSideData(IID_MediaSideDataControlFlags, &data, &size))) outputSideData->SetSideData(IID_MediaSideDataControlFlags, data, size);
+    }
+
     return S_OK;
 }
-STDMETHODIMP Filter::GetPages(CAUUID* pages)
+STDMETHODIMP Filter::GetPages(CAUUID* const pages)
 {
     CheckPointer(pages, E_POINTER);
 
@@ -454,14 +496,14 @@ STDMETHODIMP Filter::GetPages(CAUUID* pages)
     return S_OK;
 }
 
-CUnknown* PropertyPage::CreateInstance(LPUNKNOWN punk, HRESULT* phr)
+CUnknown* PropertyPage::CreateInstance(const LPUNKNOWN punk, HRESULT* const phr)
 {
-    auto object = new PropertyPage(NAME("Anime4KCPP for DirectShow Property Page"), punk, phr);
+    auto object = new(std::nothrow) PropertyPage{ NAME("Anime4KCPP for DirectShow Property Page"), punk, phr };
     if (!object && phr) *phr = E_OUTOFMEMORY;
     return object;
 }
-PropertyPage::PropertyPage(TCHAR* name, LPUNKNOWN punk, HRESULT* /*phr*/) : CBasePropertyPage(name, punk, IDD_PROPPAGE, IDS_TITLE) {}
-INT_PTR PropertyPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+PropertyPage::PropertyPage(TCHAR* const name, const LPUNKNOWN punk, HRESULT* const /*phr*/) noexcept : CBasePropertyPage(name, punk, IDD_PROPPAGE, IDS_TITLE) {}
+INT_PTR PropertyPage::OnReceiveMessage(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -554,16 +596,16 @@ HRESULT PropertyPage::OnApplyChanges()
     return S_OK;
 }
 
-RegArgument::RegArgument()
+RegArgument::RegArgument() noexcept
 {
     RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Anime4KCPP\\DSFilter"), 0, nullptr,
         REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_READ, nullptr, &key, nullptr);
 }
-RegArgument::~RegArgument()
+RegArgument::~RegArgument() noexcept
 {
     RegCloseKey(key);
 }
-double RegArgument::getFactor()
+double RegArgument::getFactor() noexcept
 {
     DWORD size = sizeof(factor);
     auto data = reinterpret_cast<LPBYTE>(&factor);
@@ -571,7 +613,7 @@ double RegArgument::getFactor()
         return factor;
     else return FactorDefault;
 }
-int RegArgument::getDevice()
+int RegArgument::getDevice() noexcept
 {
     DWORD size = sizeof(device);
     auto data = reinterpret_cast<LPBYTE>(&device);
@@ -579,7 +621,7 @@ int RegArgument::getDevice()
         return device;
     else return DeviceDefault;
 }
-int RegArgument::getLimitWidth()
+int RegArgument::getLimitWidth() noexcept
 {
     DWORD size = sizeof(limitWidth);
     auto data = reinterpret_cast<LPBYTE>(&limitWidth);
@@ -587,7 +629,7 @@ int RegArgument::getLimitWidth()
         return limitWidth;
     else return LimitWidthDefault;
 }
-int RegArgument::getLimitHeight()
+int RegArgument::getLimitHeight() noexcept
 {
     DWORD size = sizeof(limitHeight);
     auto data = reinterpret_cast<LPBYTE>(&limitHeight);
@@ -595,7 +637,7 @@ int RegArgument::getLimitHeight()
         return limitHeight;
     else return LimitHeightDefault;
 }
-const TCHAR* RegArgument::getProcessorType()
+const TCHAR* RegArgument::getProcessorType() noexcept
 {
     DWORD size = ProcessorTypeMaxSize;
     auto data = reinterpret_cast<LPBYTE>(ProcessorType);
@@ -606,7 +648,7 @@ const TCHAR* RegArgument::getProcessorType()
     }
     else return ProcessorTypeDefault;
 }
-const TCHAR* RegArgument::getModelName()
+const TCHAR* RegArgument::getModelName() noexcept
 {
     DWORD size = ModelNameMaxSize;
     auto data = reinterpret_cast<LPBYTE>(modelName);
@@ -617,44 +659,44 @@ const TCHAR* RegArgument::getModelName()
     }
     else return ModelNameDefault;
 }
-void RegArgument::setFactor(const double v) const
+void RegArgument::setFactor(const double v) const noexcept
 {
     DWORD size = sizeof(factor);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, FactorValueName, 0, REG_BINARY, data, size);
 }
-void RegArgument::setDevice(const int v) const
+void RegArgument::setDevice(const int v) const noexcept
 {
     DWORD size = sizeof(device);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, DeviceValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitWidth(const int v) const
+void RegArgument::setLimitWidth(const int v) const noexcept
 {
     DWORD size = sizeof(limitWidth);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitWidthValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setLimitHeight(const int v) const
+void RegArgument::setLimitHeight(const int v) const noexcept
 {
     DWORD size = sizeof(limitHeight);
     auto data = reinterpret_cast<const BYTE*>(&v);
     RegSetValueEx(key, LimitHeightValueName, 0, REG_DWORD, data, size);
 }
-void RegArgument::setProcessorType(const TCHAR* const v) const
+void RegArgument::setProcessorType(const TCHAR* const v) const noexcept
 {
     DWORD size = ProcessorTypeMaxSize;
     auto data = reinterpret_cast<const BYTE*>(v);
     RegSetValueEx(key, ProcessorTypeValueName, 0, REG_SZ, data, size);
 }
-void RegArgument::setModelName(const TCHAR* const v) const
+void RegArgument::setModelName(const TCHAR* const v) const noexcept
 {
     DWORD size = ModelNameMaxSize;
     auto data = reinterpret_cast<const BYTE*>(v);
     RegSetValueEx(key, ModelNameValueName, 0, REG_SZ, data, size);
 }
 
-RegArgument& RegArgument::instance()
+RegArgument& RegArgument::instance() noexcept
 {
     static RegArgument object{};
     return object;
