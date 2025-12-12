@@ -198,37 +198,35 @@ STDMETHODIMP CSideDataInputPin::ReceiveConnection(IPin* const connector, const A
     {
         CAutoLock lock{ m_pLock };
 
-        CMediaType mt{ *amt };
-
         HRESULT hr = S_OK;
-        hr = CheckMediaType(&mt); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
-        hr = SetMediaType(&mt); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
+
+        CMediaType mtIn{ *amt };
+        hr = CheckMediaType(&mtIn); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
+        hr = SetMediaType(&mtIn); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
 
         auto outputPin = static_cast<CBaseOutputPin*>(m_pTransformFilter->GetPin(1));
         if (outputPin && outputPin->IsConnected())
         {
             int timeout = 100;
-            hr = outputPin->GetMediaType(0, &mt); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
+            CMediaType mtOut{};
+            hr = outputPin->GetMediaType(0, &mtOut); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
             for (;;)
             {
-                hr = outputPin->GetConnected()->ReceiveConnection(outputPin, &mt);
-                if (SUCCEEDED(hr) || timeout < 0) break;
-                if (hr == VFW_E_BUFFERS_OUTSTANDING)
+                hr = outputPin->GetConnected()->ReceiveConnection(outputPin, &mtOut);
+                if (hr != VFW_E_BUFFERS_OUTSTANDING || timeout < 0) break;
+                if (timeout)
                 {
-                    if (timeout)
-                    {
-                        Sleep(10);
-                        timeout -= 10;
-                    }
-                    else
-                    {
-                        outputPin->DeliverBeginFlush();
-                        outputPin->DeliverEndFlush();
-                        timeout -= 1;
-                    }
+                    Sleep(10);
+                    timeout -= 10;
+                }
+                else
+                {
+                    outputPin->DeliverBeginFlush();
+                    outputPin->DeliverEndFlush();
+                    timeout -= 1;
                 }
             }
-            if (SUCCEEDED(hr)) hr = outputPin->SetMediaType(&mt);
+            if (SUCCEEDED(hr)) hr = outputPin->SetMediaType(&mtOut);
         }
         return hr;
     }
