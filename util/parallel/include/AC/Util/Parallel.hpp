@@ -24,15 +24,38 @@ inline void ac::util::parallelFor(const IndexType first, const IndexType last, F
     for (IndexType i = first; i < last; i++) func(i);
 #else
     static const std::size_t threads = ThreadPool::hardwareThreads();
-    if (threads > 1)
+    auto range = last - first;
+    if (range > 0)
     {
-        static ThreadPool pool{ threads + 1 };
-        std::vector<std::future<void>> tasks{};
-        tasks.reserve(static_cast<decltype(tasks.size())>(last) - static_cast<decltype(tasks.size())>(first));
-        for (IndexType i = first; i < last; i++) tasks.emplace_back(pool.exec([&](IndexType idx) { func(idx); }, i));
-        for (auto&& task : tasks) task.wait();
+        if (threads > 1 && range > 1)
+        {
+            static ThreadPool pool{ threads + 1 };
+
+            auto blocks = range / threads;
+            auto remain = range % threads;
+
+            std::vector<std::future<void>> tasks{};
+            tasks.reserve(static_cast<decltype(tasks.size())>(threads + remain));
+
+            IndexType i = first;
+            if (blocks)
+                while (i < (last - remain))
+                {
+                    auto next = i + static_cast<IndexType>(blocks);
+                    tasks.emplace_back(pool.exec([&](const IndexType startIdx, const IndexType endIdx) { for (IndexType idx = startIdx; idx < endIdx; idx++) func(idx); }, i, next));
+                    i = next;
+                }
+            if (remain)
+                while (i < last)
+                {
+                    tasks.emplace_back(pool.exec(func, i));
+                    i++;
+                }
+
+            for (auto&& task : tasks) task.wait();
+        }
+        else for (IndexType i = first; i < last; i++) func(i);
     }
-    else for (IndexType i = first; i < last; i++) func(i);
 #endif
 }
 
