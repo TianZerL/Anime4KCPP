@@ -454,22 +454,21 @@ CUnknown* PropertyPage::CreateInstance(const LPUNKNOWN punk, HRESULT* const phr)
     return object;
 }
 PropertyPage::PropertyPage(TCHAR* const name, const LPUNKNOWN punk, HRESULT* const /*phr*/) noexcept : CBasePropertyPage(name, punk, IDD_PROPPAGE, IDS_TITLE) {}
-INT_PTR PropertyPage::OnReceiveMessage(const HWND hwnd, const UINT uMsg, const WPARAM wParam, const LPARAM lParam)
+INT_PTR PropertyPage::OnReceiveMessage(const HWND hwnd, const UINT msg, const WPARAM wparam, const LPARAM lparam)
 {
-    switch (uMsg)
+    switch (msg)
     {
     case WM_COMMAND:
     {
         if (isInitialized)
         {
             m_bDirty = TRUE;
-            if (m_pPageSite)
-                m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
+            if (m_pPageSite) m_pPageSite->OnStatusChange(PROPPAGESTATUS_DIRTY);
         }
-        return (LRESULT)1;
+        return 1;
     }
     }
-    return CBasePropertyPage::OnReceiveMessage(hwnd, uMsg, wParam, lParam);
+    return CBasePropertyPage::OnReceiveMessage(hwnd, msg, wparam, lparam);
 }
 HRESULT PropertyPage::OnActivate()
 {
