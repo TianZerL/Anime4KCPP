@@ -7,8 +7,9 @@ include(${DEPENDENCY_DIR}/directshow.cmake)
 include(${CMAKE_DIR}/GenDSFilterRC.cmake)
 
 add_library(ac_filter_ds MODULE
-    ${FILTER_DIRECTSHOW_SOURCE_DIR}/src/SideData.cpp
     ${FILTER_DIRECTSHOW_SOURCE_DIR}/src/Filter.cpp
+    ${FILTER_DIRECTSHOW_SOURCE_DIR}/src/Registry.cpp
+    ${FILTER_DIRECTSHOW_SOURCE_DIR}/src/SideData.cpp
     ${FILTER_DIRECTSHOW_BINARY_DIR}/rc/Filter.rc
     ${FILTER_DIRECTSHOW_BINARY_DIR}/rc/Filter.def
 )

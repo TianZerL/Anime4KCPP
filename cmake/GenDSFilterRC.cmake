@@ -1,5 +1,5 @@
 # Generate some files required for VS
-file(WRITE "${FILTER_DIRECTSHOW_BINARY_DIR}/include/resource.h" [[
+file(WRITE "${FILTER_DIRECTSHOW_BINARY_DIR}/include/resource.hpp" [[
 //{{NO_DEPENDENCIES}}
 #define IDD_PROPPAGE                    102
 #define IDS_TITLE                       103
