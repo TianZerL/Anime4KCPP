@@ -34,7 +34,7 @@ private:
 
     struct GUIDHasher
     {
-        auto operator()(const GUID& guid) const noexcept
+        std::size_t operator()(const GUID& guid) const noexcept
         {
             std::uint64_t lo{};
             std::uint64_t hi{};
