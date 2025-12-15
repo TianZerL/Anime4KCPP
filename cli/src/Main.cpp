@@ -154,7 +154,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             ProgressBar* progressBar;
             std::atomic<const char*> error;
         } data{};
-        data.shift = info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0; // bytes * 8 - bits
+        data.shift = info.bitDepth.lsb ? ((info.bitDepth.bits + 7) / 8 * 8 - info.bitDepth.bits) : 0; // bytes * 8 - bits
         data.factor = options.factor;
         data.frames = info.fps * info.duration;
         data.processor = processor;

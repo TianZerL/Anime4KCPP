@@ -123,7 +123,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     std::atomic<const char*> error;
                 } data {
                     dptr->stopFlag,
-                    info.bitDepth.lsb ? ((info.bitDepth.bits - 1) / 8 + 1) * 8 - info.bitDepth.bits : 0, // bytes * 8 - bits
+                    info.bitDepth.lsb ? ((info.bitDepth.bits + 7) / 8 * 8 - info.bitDepth.bits) : 0, // bytes * 8 - bits
                     dptr->factor,
                     info.fps * info.duration,
                     this,
