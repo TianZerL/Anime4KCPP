@@ -158,6 +158,7 @@ namespace ac::video
             encoderCtx->color_primaries = decoderCtx->color_primaries;
             encoderCtx->color_trc = decoderCtx->color_trc;
             encoderCtx->colorspace = decoderCtx->colorspace;
+            encoderCtx->color_range = decoderCtx->color_range;
             if (efmtCtx->oformat->flags & AVFMT_GLOBALHEADER) encoderCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             ret = avcodec_open2(encoderCtx, codec, nullptr); if (ret < 0) return false;
             // copy all streams
@@ -284,17 +285,41 @@ namespace ac::video
             if (!src.dptr) return false;
             auto srcFrame = src.dptr->frame;
             auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
+
             dstFrame->width = encoderCtx->width;
             dstFrame->height = encoderCtx->height;
-            dstFrame->format = srcFrame->format;
+            dstFrame->format = encoderCtx->pix_fmt;
+
             dstFrame->pts = srcFrame->pts;
-    #   if LIBAVUTIL_VERSION_MAJOR > 57 // ffmpeg 5, libavutil 57
-            dstFrame->duration = srcFrame->duration;
-    #   endif
+
+            dstFrame->color_primaries = srcFrame->color_primaries;
+            dstFrame->color_trc = srcFrame->color_trc;
+            dstFrame->colorspace = srcFrame->colorspace;
+            dstFrame->color_range = srcFrame->color_range;
+
+            dstFrame->sample_aspect_ratio = srcFrame->sample_aspect_ratio;
+
             if (av_frame_get_buffer(dstFrame, 0) < 0)
             {
                 av_frame_free(&dstFrame);
                 return false;
+            }
+            // copy some side datas (basically for HDR)
+            for (int i = 0; i < srcFrame->nb_side_data; i++)
+            {
+                const AVFrameSideData* srcSideData = srcFrame->side_data[i];
+                switch (srcSideData->type)
+                {
+                case AV_FRAME_DATA_A53_CC:
+                case AV_FRAME_DATA_MASTERING_DISPLAY_METADATA:
+                case AV_FRAME_DATA_CONTENT_LIGHT_LEVEL: break;
+                default: continue;
+                }
+                AVBufferRef* bufferRef = av_buffer_ref(srcSideData->buf);
+                if (!bufferRef) continue;
+                AVFrameSideData* dstSideData = av_frame_new_side_data_from_buf(dstFrame, srcSideData->type, bufferRef);
+                if (!dstSideData) av_buffer_unref(&bufferRef);
+                else av_dict_copy(&dstSideData->metadata, srcSideData->metadata, 0);
             }
 
             fill(dst, dstFrame, src.dptr->packets);
