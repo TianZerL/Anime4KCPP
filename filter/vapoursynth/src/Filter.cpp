@@ -46,7 +46,7 @@ static const VSFrame* VS_CC filter(int n, int activationReason, void* instanceCt
     return nullptr;
 }
 
-static void VS_CC destory(void* instanceCtx, VSCore* /*core*/, const VSAPI* vsapi)
+static void VS_CC destroy(void* instanceCtx, VSCore* /*core*/, const VSAPI* vsapi)
 {
     auto ctx = static_cast<Context*>(instanceCtx);
     vsapi->freeNode(ctx->node);
@@ -99,7 +99,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     ctx->processor = processor;
 
     VSFilterDependency deps[] = { {node, rpGeneral} };
-    vsapi->createVideoFilter(out, "Upscale", &ctx->vi, filter, destory, fmParallel, deps, 1, ctx, core);
+    vsapi->createVideoFilter(out, "Upscale", &ctx->vi, filter, destroy, fmParallel, deps, 1, ctx, core);
 }
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi)
