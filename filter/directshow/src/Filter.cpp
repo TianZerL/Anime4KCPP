@@ -358,7 +358,7 @@ HRESULT Filter::GetMediaType(const int pos, CMediaType* const mt)
         chroma.src.height = (luma.src.height / format.subsampling.h) * (format.packed ? 1 : 2);
         chroma.dst.width = luma.dst.width / format.subsampling.w;
         chroma.dst.height = (luma.dst.height / format.subsampling.h) * (format.packed ? 1 : 2);
-        chroma.channels = !format.packed ? 1 : 2;
+        chroma.channels = format.packed ? 2 : 1;
         chroma.part = 2;
 
         totalParts = luma.part + chroma.part;

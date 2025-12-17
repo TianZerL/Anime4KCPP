@@ -86,6 +86,9 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     auto model = vsapi->mapGetData(in, "model", 0, &err);
     if (err != peSuccess) model = "acnet-hdn0";
 
+    auto processor = ac::core::Processor::create(processorType, device, model);
+    if (!processor->ok()) EXIT_WITH_ERROR(processor->error());
+
     auto ctx = new Context{};
     ctx->node = node;
     ctx->vi = *vi;
@@ -93,8 +96,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     ctx->vi.height = static_cast<decltype(ctx->vi.height)>(vi->height * factor);
     ctx->type = type;
     ctx->factor = factor;
-    ctx->processor = ac::core::Processor::create(processorType, device, model);
-    if (!ctx->processor->ok()) EXIT_WITH_ERROR(ctx->processor->error());
+    ctx->processor = processor;
 
     VSFilterDependency deps[] = { {node, rpGeneral} };
     vsapi->createVideoFilter(out, "Upscale", &ctx->vi, filter, destory, fmParallel, deps, 1, ctx, core);
