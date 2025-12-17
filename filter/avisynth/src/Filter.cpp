@@ -8,17 +8,15 @@
 #ifdef _WIN32
 #   define EXPORT_API extern "C" __declspec(dllexport)
 #   define STDCALL __stdcall
-#   define CDECL __cdecl
 #else
 #   define EXPORT_API extern "C"
 #   define STDCALL
-#   define CDECL
 #endif
 
 class Filter : public GenericVideoFilter
 {
 public:
-    Filter(PClip child, const AVSValue& args, IScriptEnvironment* env);
+    Filter(const AVSValue& args, IScriptEnvironment* env);
     PVideoFrame STDCALL GetFrame(int n, IScriptEnvironment* env) override;
 private:
     int type;
@@ -26,7 +24,7 @@ private:
     std::shared_ptr<ac::core::Processor> processor;
 };
 
-Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : GenericVideoFilter(child)
+Filter::Filter(const AVSValue& args, IScriptEnvironment* const env) : GenericVideoFilter(args[0].AsClip())
 {
     type = [&]() -> int {
         if (vi.IsPlanar() && (vi.IsYUV() || vi.IsY() || vi.IsYUVA()))
@@ -55,7 +53,7 @@ Filter::Filter(PClip child, const AVSValue& args, IScriptEnvironment* env) : Gen
     if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
 }
 
-PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
+PVideoFrame STDCALL Filter::GetFrame(const int n, IScriptEnvironment* const env)
 {
     PVideoFrame src = child->GetFrame(n, env);
     PVideoFrame dst = env->NewVideoFrameP(vi, &src);
@@ -76,11 +74,6 @@ PVideoFrame STDCALL Filter::GetFrame(int n, IScriptEnvironment* env)
     return dst;
 }
 
-AVSValue CDECL create(AVSValue args, void* /*userdata*/, IScriptEnvironment* env)
-{
-    return new Filter(args[0].AsClip(), args, env);
-}
-
 const AVS_Linkage* AVS_linkage = 0;
 
 EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors)
@@ -92,7 +85,9 @@ EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, cons
         "[processor]s"
         "[device]i"
         "[model]s",
-        create, nullptr);
+        [] (AVSValue args, void* /*userdata*/, IScriptEnvironment* env) -> AVSValue {
+            return new Filter(args, env);
+        }, nullptr);
     env->AddFunction("ACInfoList",
         "",
         [] (AVSValue /*args*/, void* /*userdata*/, IScriptEnvironment* /*env*/) -> AVSValue {
