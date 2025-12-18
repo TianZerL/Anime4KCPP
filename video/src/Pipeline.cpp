@@ -96,7 +96,7 @@ namespace ac::video
         {
             int ret = 0;
             epacket = av_packet_alloc(); if (!epacket) return false;
-            ret = avformat_alloc_output_context2(&efmtCtx, nullptr, nullptr, filename); if (ret < 0) return false;
+            ret = avformat_alloc_output_context2(&efmtCtx, av_guess_format(nullptr, filename, nullptr), "matroska", filename); if (ret < 0) return false;
 
             AVPixelFormat targetPixFmt = AV_PIX_FMT_NONE;
             if (hints.format && *hints.format) targetPixFmt = av_get_pix_fmt(hints.format);
