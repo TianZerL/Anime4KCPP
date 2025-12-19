@@ -88,8 +88,13 @@ namespace ac::core
     AC_CORE_EXPORT void copy(const Image& src, Image& dst) noexcept;
 
     // return a view of the given area from `src`.
-    // use 'clone()' to copy data, if necessary.
+    // you should use 'clone()' to copy data, if necessary.
     AC_CORE_EXPORT Image crop(const Image& src, int x, int y, int w, int h) noexcept;
+
+    // extract `n` channels start from `channel` of `src`.
+    AC_CORE_EXPORT Image extract(const Image& src, int channel, int n) noexcept;
+    // insert 'image' to 'src' in `channel`.
+    AC_CORE_EXPORT Image insert(const Image& src, const Image& image, int channel) noexcept;
 
     enum ResizeModes
     {

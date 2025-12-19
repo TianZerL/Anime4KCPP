@@ -603,3 +603,52 @@ ac::core::Image ac::core::crop(const Image& src, const int x, const int y, const
 
     return ac::core::Image{ intersectW, intersectH, src.channels(), src.type(), src.ptr(intersectX, intersectY), src.stride() };
 }
+
+ac::core::Image ac::core::extract(const Image& src, const int channel, const int n) noexcept
+{
+    if (src.empty() || channel >= src.channels() || channel < 0 || n <= 0) return Image{};
+    if (channel == 0 && n >= src.channels()) return src;
+
+    ac::core::Image dst{ src.width(), src.height(), std::min(src.channels() - channel, n), src.type() };
+
+    for (int i = 0; i < dst.height(); i++)
+        for (int j = 0; j < dst.width(); j++)
+            std::memcpy(dst.pixel(j, i), src.pixel(j, i) + channel * src.elementSize(), dst.pixelSize());
+
+    return dst;
+}
+
+ac::core::Image ac::core::insert(const Image& src, const Image& image, const int channel) noexcept
+{
+    if (src.empty() || image.empty() || channel > src.channels() || channel < 0 ||
+        image.width() != src.width() || image.height() != src.height() || image.type() != src.type())
+        return src;
+
+    ac::core::Image dst{ src.width(), src.height(), src.channels() + image.channels(), src.type()};
+
+    auto step1 = channel * src.elementSize();
+    auto step2 = image.pixelSize();
+    auto step3 = src.pixelSize() - step1;
+
+    for (int i = 0; i < dst.height(); i++)
+        for (int j = 0; j < dst.width(); j++)
+        {
+            auto dp = dst.pixel(j, i);
+            auto sp = src.pixel(j, i);
+            auto ip = image.pixel(j, i);
+
+            if (step1 > 0)
+            {
+                std::memcpy(dp, sp, step1);
+                dp += step1;
+                sp += step1;
+            }
+
+            std::memcpy(dp, ip, step2);
+            dp += step2;
+
+            if (step3 > 0) std::memcpy(dp, sp, step3);
+        }
+
+    return dst;
+}
