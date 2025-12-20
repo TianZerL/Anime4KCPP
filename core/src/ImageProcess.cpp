@@ -301,24 +301,14 @@ namespace ac::core::detail
         }, srcy, srcu, srcv, srca, dst);
     }
 
-    template<typename IN, typename OUT = IN>
-    static inline void shl(const Image& src, Image& dst, const int n) noexcept
+    template<typename IN, typename OUT = IN, typename OP>
+    static inline void elementwise(const Image& src, Image& dst, const int n, OP&& op) noexcept
     {
         for (int i = 0; i < src.height(); i++)
         {
             auto in = static_cast<const IN*>(src.ptr(i));
             auto out = static_cast<OUT*>(dst.ptr(i));
-            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ << n;
-        }
-    }
-    template<typename IN, typename OUT = IN>
-    static inline void shr(const Image& src, Image& dst, const int n) noexcept
-    {
-        for (int i = 0; i < src.height(); i++)
-        {
-            auto in = static_cast<const IN*>(src.ptr(i));
-            auto out = static_cast<OUT*>(dst.ptr(i));
-            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = *in++ >> n;
+            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = op(*in++, n);
         }
     }
 
@@ -340,6 +330,35 @@ namespace ac::core::detail
                     *out++ = fromFloat<OUT>(toFloat(*in++));
             }
         }
+    }
+}
+
+namespace ac::core::impl
+{
+    template <typename OP>
+    void bitwise(Image& image, const int n, OP&& op) noexcept
+    {
+        if (image.empty() || image.isFloat() || n <= 0) return;
+        switch (image.type())
+        {
+        case Image::UInt8: detail::elementwise<std::uint8_t>(image, image, n, op); break;
+        case Image::UInt16: detail::elementwise<std::uint16_t>(image, image, n, op); break;
+        }
+    }
+    template <typename OP>
+    void bitwise(const Image& src, Image& dst, const int n, OP&& op) noexcept
+    {
+        if (src.empty() || src.isFloat() || n <= 0) return;
+        Image tmp{};
+        if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
+            tmp.create(src.width(), src.height(), src.channels(), src.type());
+        else tmp = dst;
+        switch (src.type())
+        {
+        case Image::UInt8: detail::elementwise<std::uint8_t>(src, tmp, n, op); break;
+        case Image::UInt16: detail::elementwise<std::uint16_t>(src, tmp, n, op); break;
+        }
+        if (dst != tmp) dst = tmp;
     }
 }
 
@@ -498,49 +517,19 @@ ac::core::Image ac::core::unpadding(const Image& src) noexcept
 }
 void ac::core::shl(Image& image, const int n) noexcept
 {
-    if (image.empty() || !image.isUint() || n <= 0) return;
-    switch (image.type())
-    {
-    case Image::UInt8: detail::shl<std::uint8_t>(image, image, n); break;
-    case Image::UInt16: detail::shl<std::uint16_t>(image, image, n); break;
-    }
+    impl::bitwise(image, n, [](auto a, auto b) { return a << b; });
 }
 void ac::core::shl(const Image& src, Image& dst, const int n) noexcept
 {
-    if (src.empty() || !src.isUint() || n <= 0) return;
-    Image tmp{};
-    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
-        tmp.create(src.width(), src.height(), src.channels(), src.type());
-    else tmp = dst;
-    switch (src.type())
-    {
-    case Image::UInt8: detail::shl<std::uint8_t>(src, tmp, n); break;
-    case Image::UInt16: detail::shl<std::uint16_t>(src, tmp, n); break;
-    }
-    if (dst != tmp) dst = tmp;
+    impl::bitwise(src, dst, n, [](auto a, auto b) { return a << b; });
 }
 void ac::core::shr(Image& image, const int n) noexcept
 {
-    if (image.empty() || !image.isUint() || n <= 0) return;
-    switch (image.type())
-    {
-    case Image::UInt8: detail::shr<std::uint8_t>(image, image, n); break;
-    case Image::UInt16: detail::shr<std::uint16_t>(image, image, n); break;
-    }
+    impl::bitwise(image, n, [](auto a, auto b) { return a >> b; });
 }
 void ac::core::shr(const Image& src, Image& dst, const int n) noexcept
 {
-    if (src.empty() || !src.isUint() || n <= 0) return;
-    Image tmp{};
-    if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
-        tmp.create(src.width(), src.height(), src.channels(), src.type());
-    else tmp = dst;
-    switch (src.type())
-    {
-    case Image::UInt8: detail::shr<std::uint8_t>(src, tmp, n); break;
-    case Image::UInt16: detail::shr<std::uint16_t>(src, tmp, n); break;
-    }
-    if (dst != tmp) dst = tmp;
+    impl::bitwise(src, dst, n, [](auto a, auto b) { return a >> b; });
 }
 
 ac::core::Image ac::core::astype(const Image& src, const int type) noexcept
