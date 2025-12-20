@@ -11,18 +11,25 @@ namespace ac::specs
         "acnet-hdn3",
         "arnet-b4-hdn",
         "arnet-b4-le",
+        "arnet-b4-ls",
         "arnet-b8-hdn",
         "arnet-b8-le",
+        "arnet-b8-ls",
         "arnet-b16-hdn",
         "arnet-b16-le",
+        "arnet-b16-ls",
         "arnet-b24-hdn",
         "arnet-b24-le",
+        "arnet-b24-ls",
         "arnet-b32-hdn",
         "arnet-b32-le",
+        "arnet-b32-ls",
         "arnet-b48-hdn",
         "arnet-b48-le",
+        "arnet-b48-ls",
         "arnet-b64-hdn",
         "arnet-b64-le",
+        "arnet-b64-ls",
     };
 
     constexpr const char* ModelDescriptionList[] = {
@@ -33,18 +40,25 @@ namespace ac::specs
         "Lightweight CNN, extreme denoising.",     // acnet-hdn3
         "Lightweight ResNet, mild denoising.",     // arnet-b4-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b4-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b4-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b8-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b8-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b4-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b16-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b16-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b16-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b24-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b24-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b24-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b32-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b32-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b32-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b48-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b48-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b48-ls
         "Lightweight ResNet, mild denoising.",     // arnet-b64-hdn
         "Lightweight ResNet, line enhancing.",     // arnet-b64-le
+        "Lightweight ResNet, line sharpening.",    // arnet-b64-ls
     };
 
     constexpr const char* ProcessorList[] = {
