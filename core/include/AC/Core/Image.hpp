@@ -10,131 +10,328 @@ namespace ac::core
 {
     class Image;
 
-    // convert RGB or RGBA to YUV.
-    // if `yuv` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `rgb` and `yuv` can be the same image, which will be converted in place.
+    /**
+     * @brief Convert a RGB or RGBA image to YUV.
+     *
+     * `rgb` and `yuv` can be the same image, which will be converted in place.
+     *
+     * @param rgb Input, RGB or RGBA image.
+     * @param yuv Output, YUV image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgb2yuv(const Image& rgb, Image& yuv);
-    // convert RGB or RGBA to Y and UV.
-    // if `y` and `uv` are not empty images, ensure their shapes are correct, which won't be checked.
-    // `rgb`, `y` and `uv` **cannot** be the same image.
+    /**
+     * @brief Convert a RGB or RGBA image to Y and UV.
+     *
+     * `rgb`, `y` and `uv` **cannot** be the same image.
+     *
+     * @param rgb Input, RGB or RGBA image.
+     * @param y Output, Y image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param uv Output, UV image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgb2yuv(const Image& rgb, Image& y, Image& uv);
-    // convert RGB or RGBA to Y, U and V.
-    // if `y`, `u` and `v` are not empty images, ensure their shapes are correct, which won't be checked.
-    // `rgb`, `y`, `u` and `v` **cannot** be the same image.
+    /**
+     * @brief Convert a RGB or RGBA image to Y, U and V.
+     *
+     * `rgb`, `y`, `u` and `v` **cannot** be the same image.
+     *
+     * @param rgb Input, RGB or RGBA image.
+     * @param y Output, Y image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param u Output, U image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param v Output, V image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgb2yuv(const Image& rgb, Image& y, Image& u, Image& v);
 
-    // convert RGBA to YUVA.
-    // if `yuva` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `rgba` and `yuva` can be the same image, which will be converted in place.
+    /**
+     * @brief Convert a RGBA image to YUVA.
+     *
+     * `rgba` and `yuva` can be the same image, which will be converted in place.
+     *
+     * @param rgba Input, RGBA image.
+     * @param yuva Output, YUVA image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgba2yuva(const Image& rgba, Image& yuva);
-    // convert RGBA to Y and UVA.
-    // if `y` and `uva` are not empty images, ensure their shapes are correct, which won't be checked.
-    // `rgba`, `y` and `uva` **cannot** be the same image.
+    /**
+     * @brief Convert a RGBA image to Y and UVA.
+     *
+     * `rgba`, `y` and `uva` **cannot** be the same image.
+     *
+     * @param rgba Input, RGBA image.
+     * @param y Output, Y image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param uva Output, UVA image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgba2yuva(const Image& rgba, Image& y, Image& uva);
-    // convert RGBA to Y, U, V and A.
-    // if `y`, `u`, `v` and `a` are not empty images, ensure their shapes are correct, which won't be checked.
-    // `rgba`, `y`, `u`, `v` and `a` **cannot** be the same image.
+    /**
+     * @brief Convert a RGBA image to Y, U, V and A.
+     *
+     * `rgba`, `y`, `u`, `v` and `a` **cannot** be the same image.
+     *
+     * @param rgba Input, RGBA image.
+     * @param y Output, Y image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param u Output, U image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param v Output, V image, if not empty, ensure the shape is correct, which won't be checked.
+     * @param a Output, A (alpha) image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void rgba2yuva(const Image& rgba, Image& y, Image& u, Image& v, Image& a);
 
-    // convert YUV to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `yuv` and `rgb` can be the same image, which will be converted in place.
+    /**
+     * @brief Convert a YUV image to RGB.
+     *
+     * `yuv` and `rgb` can be the same image, which will be converted in place.
+     *
+     * @param yuv Input, YUV image.
+     * @param rgb Output, RGB image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuv2rgb(const Image& yuv, Image& rgb);
-    // convert Y and UV to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `y`, `uv` and `rgb` **cannot** be the same image.
+    /**
+     * @brief Convert Y and UV images to RGB.
+     *
+     * `y`, `uv` and `rgb` **cannot** be the same image.
+     *
+     * @param y Input, Y image.
+     * @param uv Input, UV image.
+     * @param rgb Output, RGB image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuv2rgb(const Image& y, const Image& uv, Image& rgb);
-    // convert Y, U and V to RGB.
-    // if `rgb` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `y`, `u`, `v` and `rgb` **cannot** be the same image.
+    /**
+     * @brief Convert Y, U and V images to RGB.
+     *
+     * `y`, `u`, `v` and `rgb` **cannot** be the same image.
+     *
+     * @param y Input, Y image.
+     * @param u Input, U image.
+     * @param v Input, V image.
+     * @param rgb Output, RGB image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuv2rgb(const Image& y, const Image& u, const Image& v, Image& rgb);
 
-    // convert YUVA to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `yuva` and `rgba` can be the same image, which will be converted in place.
+    /**
+     * @brief Convert a YUVA image to RGBA.
+     *
+     * `yuva` and `rgba` can be the same image, which will be converted in place.
+     *
+     * @param yuva Input, YUVA image.
+     * @param rgba Output, RGBA image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuva2rgba(const Image& yuva, Image& rgba);
-    // convert Y and UVA to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `y`, `uva` and `rgba` **cannot** be the same image.
+    /**
+     * @brief Convert Y and UVA images to RGBA.
+     *
+     * `y`, `uva` and `rgba` **cannot** be the same image.
+     *
+     * @param y Input, Y image.
+     * @param uva Input, UVA image.
+     * @param rgba Output, RGBA image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuva2rgba(const Image& y, const Image& uva, Image& rgba);
-    // convert Y, U and V to RGBA.
-    // if `rgba` is not an empty image, ensure its shape is correct, which won't be checked.
-    // `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image.
+    /**
+     * @brief Convert Y, U, V and A images to RGBA.
+     *
+     * `y`, `u`, `v`, `a` and `rgba` **cannot** be the same image.
+     *
+     * @param y Input, Y image.
+     * @param u Input, U image.
+     * @param v Input, V image.
+     * @param a Input, A (alpha) image.
+     * @param rgba Output, RGBA image, if not empty, ensure the shape is correct, which won't be checked.
+     */
     AC_CORE_EXPORT void yuva2rgba(const Image& y, const Image& u, const Image& v, const Image& a, Image& rgba);
 
-    // remove padding in the stride of `src`, if necessary.
-    // `src` and `dst` can be same.
+    /**
+     * @brief Remove padding in the stride of `src`, if necessary.
+     * @param src Source image.
+     * @return Unpadded image, or `src` if no padding exists.
+     */
     AC_CORE_EXPORT Image unpadding(const Image& src) noexcept;
 
-    // left shift pixel.
-    // modify in place.
+    /**
+     * @brief Left shift pixel values in place.
+     *
+     * Modifies the image in place by shifting pixel values left by `n` bits.
+     *
+     * Only applies to integer image types.
+     *
+     * @param image Image to modify.
+     * @param n Number of bits to shift.
+     */
     AC_CORE_EXPORT void shl(Image& image, int n) noexcept;
-    // left shift pixel.
-    // `src` and `dst` can be same.
+    /**
+     * @brief Left shift pixel values.
+     *
+     * Shifts pixel values left by `n` bits. `src` and `dst` can be the same image.
+     *
+     * Only applies to integer image types.
+     *
+     * @param src Source image.
+     * @param dst Destination image.
+     * @param n Number of bits to shift.
+     */
     AC_CORE_EXPORT void shl(const Image& src, Image& dst, int n) noexcept;
-    // right shift pixel.
-    // modify in place.
+    /**
+     * @brief Right shift pixel values in place.
+     *
+     * Modifies the image in place by shifting pixel values right by `n` bits.
+     *
+     * Only applies to integer image types.
+     *
+     * @param image Image to modify.
+     * @param n Number of bits to shift.
+     */
     AC_CORE_EXPORT void shr(Image& image, int n) noexcept;
-    // right shift pixel.
-    // `src` and `dst` can be same.
+    /**
+     * @brief Right shift pixel values.
+     *
+     * Shifts pixel values right by `n` bits. `src` and `dst` can be the same image.
+     *
+     * Only applies to integer image types.
+     *
+     * @param src Source image.
+     * @param dst Destination image.
+     * @param n Number of bits to shift.
+     */
     AC_CORE_EXPORT void shr(const Image& src, Image& dst, int n) noexcept;
 
-    // get an image from `src` with data type conversion.
-    // if no need to convert, return `src` directly.
+    /**
+     * @brief Get an image from `src` with data type conversion.
+     *
+     * If no conversion is needed (type matches), returns `src` directly.
+     *
+     * @param src Source image.
+     * @param type Target element type.
+     * @return Converted image, or `src` if types match.
+     */
     AC_CORE_EXPORT Image astype(const Image& src, int type) noexcept;
-    // copy src's pixels to dst with optional data type conversion.
-    // if `src` is empty, dst will be empty too.
-    // if `src` and `dst` is the same image, do nothing.
+    /**
+     * @brief Copy pixels of `src` to `dst` with optional data type conversion.
+     *
+     * If `src` is empty, `dst` will be empty too.
+     *
+     * If `src` and `dst` is the same image, do nothing.
+     *
+     * If `dst` has different dimensions or type than `src`, it will be reallocated.
+     *
+     * @param src Source image.
+     * @param dst Destination image.
+     */
     AC_CORE_EXPORT void copy(const Image& src, Image& dst) noexcept;
 
-    // return a view of the given area from `src`.
-    // you should use 'clone()' to copy data, if necessary.
+    /**
+     * @brief Crops a rectangular region from the source image.
+     * @param src Source image.
+     * @param x X-coordinate of the rectangle's left-top corner (when width positive) or right-bottom corner (when width negative).
+     * @param y Y-coordinate of the rectangle's left-top corner (when height positive) or right-bottom corner (when height negative).
+     * @param w Rectangle width. Positive extends to right, negative extends to left.
+     * @param h Rectangle height. Positive extends to bottom, negative extends to top.
+     * @return Image View of the specified region, use `clone()` for an independent copy. Returns empty image if region invalid or source empty.
+     */
     AC_CORE_EXPORT Image crop(const Image& src, int x, int y, int w, int h) noexcept;
 
-    // extract `n` channels start from `channel` of `src`.
+    /**
+     * @brief Extract `n` channels starting from `channel` of `src`.
+     *
+     * Creates a new image containing a subset of channels from the source image.
+     *
+     * @param src Source image.
+     * @param channel Starting channel index (0-based).
+     * @param n Number of channels to extract.
+     * @return Extracted channels, or empty image if parameters invalid.
+     */
     AC_CORE_EXPORT Image extract(const Image& src, int channel, int n) noexcept;
-    // insert 'image' to 'src' in `channel`.
+    /**
+     * @brief Insert `image` to `src` at `channel`.
+     *
+     * Creates a new image by inserting `image` into `src` at the specified channel position.
+     *
+     * @param src Source image.
+     * @param image Image to insert.
+     * @param channel Channel position to insert at (0-based).
+     * @return Combined image, or `src` if parameters invalid.
+     */
     AC_CORE_EXPORT Image insert(const Image& src, const Image& image, int channel) noexcept;
 
+    /// @brief Resize interpolation modes.
     enum ResizeModes
     {
-        RESIZE_POINT,
-        RESIZE_CATMULL_ROM,        // b = 0, c = 0.5 or a = -0.5
-        RESIZE_MITCHELL_NETRAVALI, // b = 1/3, c = 1/3
-        RESIZE_BICUBIC_0_60,       // b = 0, c = 0.6 or a = -0.6
-        RESIZE_BICUBIC_0_75,       // b = 0, c = 0.75 or a = -0.75
-        RESIZE_BICUBIC_0_100,      // b = 0, c = 1 or a = -1
-        RESIZE_BICUBIC_20_50,      // b = 0.2, c = 0.5
-        RESIZE_SOFTCUBIC50,        // b = 0.5, c = 0.5
-        RESIZE_SOFTCUBIC75,        // b = 0.75, c = 0.25
-        RESIZE_SOFTCUBIC100,       // b = 1, c = 0
-        RESIZE_LANCZOS2,
-        RESIZE_LANCZOS3,
-        RESIZE_LANCZOS4,
-        RESIZE_SPLINE16,
-        RESIZE_SPLINE36,
-        RESIZE_SPLINE64,
-        RESIZE_BILINEAR,
+        RESIZE_POINT,               ///< Nearest neighbor interpolation
+        RESIZE_CATMULL_ROM,         ///< Bicubic interpolation (b = 0; c = 0.5 or a = -0.5)
+        RESIZE_MITCHELL_NETRAVALI,  ///< Bicubic interpolation (b = 1/3; c = 1/3)
+        RESIZE_BICUBIC_0_60,        ///< Bicubic interpolation (b = 0; c = 0.6 or a = -0.6)
+        RESIZE_BICUBIC_0_75,        ///< Bicubic interpolation (b = 0; c = 0.75 or a = -0.75)
+        RESIZE_BICUBIC_0_100,       ///< Bicubic interpolation (b = 0; c = 1 or a = -1)
+        RESIZE_BICUBIC_20_50,       ///< Bicubic interpolation (b = 0.2; c = 0.5)
+        RESIZE_SOFTCUBIC50,         ///< Bicubic interpolation (b = 0.5; c = 0.5)
+        RESIZE_SOFTCUBIC75,         ///< Bicubic interpolation (b = 0.75; c = 0.25)
+        RESIZE_SOFTCUBIC100,        ///< Bicubic interpolation (b = 1; c = 0)
+        RESIZE_LANCZOS2,            ///< Lanczos interpolation (a = 2)
+        RESIZE_LANCZOS3,            ///< Lanczos interpolation (a = 3)
+        RESIZE_LANCZOS4,            ///< Lanczos interpolation (a = 4)
+        RESIZE_SPLINE16,            ///< 16-tap spline interpolation
+        RESIZE_SPLINE36,            ///< 36-tap spline interpolation
+        RESIZE_SPLINE64,            ///< 64-tap spline interpolation
+        RESIZE_BILINEAR,            ///< Bilinear interpolation
     };
-    // Resize the `src` based on the size of the `dst` if `fx` or `fy` <= 0, otherwise, calculate the size using `fx` and `fy`.
-    // if `dst` is empty and fx or fy <= 0, nothing will be done.
-    // if target size is same as `src`(eg: `fx` and `fy` == 1), then just make `dst` = `src` and return, no data will be copied.
-    // `src` and `dst` can be the same image.
+
+    /**
+     * @brief Resize the `src` image.
+     *
+     * Resizes based on the size of the `dst` if `fx` or `fy` <= 0, otherwise calculates
+     * size using `fx` and `fy`. If target size is same as `src` (e.g., `fx` and `fy` == 1),
+     * then just make `dst` = `src` and return, no data will be copied.
+     * `src` and `dst` can be the same image.
+     *
+     * @param src Source image.
+     * @param dst Destination image (will be resized to appropriate dimensions).
+     * @param fx Horizontal scale factor (if > 0, overrides dst width).
+     * @param fy Vertical scale factor (if > 0, overrides dst height).
+     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     */
     AC_CORE_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
-    // if `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
+    /**
+     * @brief Resize the `src` image and return a new image.
+     *
+     * If `fx` or `fy` <= 0, return `src`, otherwise, calculate the size using `fx` and `fy`.
+     *
+     * @param src Source image.
+     * @param fx Horizontal scale factor.
+     * @param fy Vertical scale factor.
+     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     * @return Resized image, or `src` if scale factors invalid.
+     */
     AC_CORE_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
 
+    /// @brief Image reading modes.
     enum ImreadModes
     {
-        IMREAD_UNCHANGED = 0,
-        IMREAD_GRAYSCALE = 1,
-        IMREAD_COLOR     = 3,
-        IMREAD_RGB       = 3,
-        IMREAD_RGBA      = 4,
+        IMREAD_UNCHANGED = 0,  ///< Load image as-is (including alpha channel)
+        IMREAD_GRAYSCALE = 1,  ///< Load image as grayscale (1 channels)
+        IMREAD_COLOR     = 3,  ///< Load image as RGB (3 channels)
+        IMREAD_RGB       = 3,  ///< Load image as RGB (3 channels)
+        IMREAD_RGBA      = 4,  ///< Load image as RGBA (4 channels)
     };
+    /**
+     * @brief Decode an image from memory buffer.
+     *
+     * @param buffer Pointer to image data in memory.
+     * @param size Size of image data in bytes.
+     * @param mode Reading mode (default: `IMREAD_UNCHANGED`).
+     * @return Decoded image, or empty image on failure.
+     */
     AC_CORE_EXPORT Image imdecode(const void* buffer, int size, int mode = IMREAD_UNCHANGED) noexcept;
 #ifndef AC_CORE_DISABLE_IMAGE_IO
+    /**
+     * @brief Read an image from file.
+     *
+     * @param filename Path to image file.
+     * @param mode Reading mode (default: `IMREAD_UNCHANGED`).
+     * @return Loaded image, or empty image on failure.
+     */
     AC_CORE_EXPORT Image imread(const char* filename, int mode = IMREAD_UNCHANGED) noexcept;
+    /**
+     * @brief Write an image to file.
+     *
+     * @param filename Path to output file.
+     * @param image Image to save.
+     * @return True on success, false on failure.
+     */
     AC_CORE_EXPORT bool imwrite(const char* filename, const Image& image) noexcept;
 #endif
 }
@@ -145,7 +342,7 @@ private:
     struct ImageData;
 
 public:
-    // 2(float) or 1(int) or 0(uint) << 8 | sizeof (type)
+    /// @brief Format: 2(float) or 1(int) or 0(uint) << 8 | sizeof(type)
     using ElementType = int;
     static constexpr ElementType UInt8   = 0 << 8 | 1;
     static constexpr ElementType UInt16  = 0 << 8 | 2;
@@ -165,6 +362,7 @@ public:
     AC_CORE_EXPORT void map(int w, int h, int c, ElementType elementType, void* data, int stride = 0) noexcept;
     AC_CORE_EXPORT void from(int w, int h, int c, ElementType elementType, const void* data, int stride = 0);
     AC_CORE_EXPORT void to(void* data, int stride = 0) const noexcept;
+    AC_CORE_EXPORT Image view(int x, int y, int w, int h) const noexcept;
     AC_CORE_EXPORT Image clone() const;
 
 public:

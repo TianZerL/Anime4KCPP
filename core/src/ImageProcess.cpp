@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <type_traits>
 
@@ -583,14 +584,12 @@ ac::core::Image ac::core::crop(const Image& src, const int x, const int y, const
 {
     if (src.empty()) return src;
 
-    int intersectX = std::max(x, 0);
-    int intersectY = std::max(y, 0);
-    int intersectW = std::min(src.width(), x + w) - intersectX;
-    int intersectH = std::min(src.height(), y + h) - intersectY;
+    int rectX = w < 0 ? x + w : x;
+    int rectY = h < 0 ? y + h : y;
+    int rectW = std::abs(w);
+    int rectH = std::abs(h);
 
-    if (intersectW <= 0 || intersectH <= 0) return Image{};
-
-    return ac::core::Image{ intersectW, intersectH, src.channels(), src.type(), src.ptr(intersectX, intersectY), src.stride() };
+    return src.view(rectX, rectY, rectW, rectH);
 }
 
 ac::core::Image ac::core::extract(const Image& src, const int channel, const int n) noexcept

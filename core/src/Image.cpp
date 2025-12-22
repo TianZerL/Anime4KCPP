@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 
 #include "AC/Core/Image.hpp"
@@ -76,6 +77,28 @@ void ac::core::Image::to(void* const data, const int stride) const noexcept
     int pitch = (stride >= lineSize) ? stride : lineSize;
     auto dst = static_cast<std::uint8_t*>(data);
     for (int i = 0; i < height(); i++) std::memcpy(dst + i * pitch, line(i), lineSize);
+}
+ac::core::Image ac::core::Image::view(const int x, const int y, const int w, const int h) const noexcept
+{
+    Image dst{};
+
+    int intersectX = std::max(x, 0);
+    int intersectY = std::max(y, 0);
+    int intersectW = std::min(width(), x + w) - intersectX;
+    int intersectH = std::min(height(), y + h) - intersectY;
+
+    if (intersectW > 0 && intersectH > 0)
+    {
+        dst.w = intersectW;
+        dst.h = intersectH;
+        dst.c = channels();
+        dst.elementType = type();
+        dst.pitch = stride();
+        dst.pixels = ptr(intersectX, intersectY);
+        dst.dptr = this->dptr;
+    }
+
+    return dst;
 }
 ac::core::Image ac::core::Image::clone() const
 {

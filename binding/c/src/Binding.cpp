@@ -82,6 +82,14 @@ int ac_image_from(ac_image* image, const void* data)
     detail::copyProp(image->hptr->object, image);
     return AC_SUCCESS;
 }
+int ac_image_view(const ac_image* const src, ac_image* const dst, const int x, const int y, const int w, const int h)
+{
+    if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
+    if (dst->hptr) dst->hptr->object = src->hptr->object.view(x, y, w, h);
+    else dst->hptr = new ac_image_handle{ src->hptr->object.view(x, y, w, h) };
+    detail::copyProp(dst->hptr->object, dst);
+    return AC_SUCCESS;
+}
 int ac_image_clone(const ac_image* const src, ac_image* const dst)
 {
     if (!(src && dst && src->hptr)) return AC_ERROR(EINVAL);
