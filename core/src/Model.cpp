@@ -37,6 +37,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         kptr = param::ARNet_B4_HDN_NHWC_kernels;
         bptr = param::ARNet_B4_HDN_NHWC_biases;
         break;
+    case Variant::B4_HDNS:
+        blockNum = 4;
+        kptr = param::ARNet_B4_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B4_HDNS_NHWC_biases;
+        break;
     case Variant::B4_LE:
         blockNum = 4;
         kptr = param::ARNet_B4_LE_NHWC_kernels;
@@ -51,6 +56,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         blockNum = 8;
         kptr = param::ARNet_B8_HDN_NHWC_kernels;
         bptr = param::ARNet_B8_HDN_NHWC_biases;
+        break;
+    case Variant::B8_HDNS:
+        blockNum = 8;
+        kptr = param::ARNet_B8_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B8_HDNS_NHWC_biases;
         break;
     case Variant::B8_LE:
         blockNum = 8;
@@ -67,6 +77,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         kptr = param::ARNet_B16_HDN_NHWC_kernels;
         bptr = param::ARNet_B16_HDN_NHWC_biases;
         break;
+    case Variant::B16_HDNS:
+        blockNum = 16;
+        kptr = param::ARNet_B16_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B16_HDNS_NHWC_biases;
+        break;
     case Variant::B16_LE:
         blockNum = 16;
         kptr = param::ARNet_B16_LE_NHWC_kernels;
@@ -81,6 +96,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         blockNum = 24;
         kptr = param::ARNet_B24_HDN_NHWC_kernels;
         bptr = param::ARNet_B24_HDN_NHWC_biases;
+        break;
+    case Variant::B24_HDNS:
+        blockNum = 24;
+        kptr = param::ARNet_B24_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B24_HDNS_NHWC_biases;
         break;
     case Variant::B24_LE:
         blockNum = 24;
@@ -97,6 +117,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         kptr = param::ARNet_B32_HDN_NHWC_kernels;
         bptr = param::ARNet_B32_HDN_NHWC_biases;
         break;
+    case Variant::B32_HDNS:
+        blockNum = 32;
+        kptr = param::ARNet_B32_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B32_HDNS_NHWC_biases;
+        break;
     case Variant::B32_LE:
         blockNum = 32;
         kptr = param::ARNet_B32_LE_NHWC_kernels;
@@ -112,6 +137,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         kptr = param::ARNet_B48_HDN_NHWC_kernels;
         bptr = param::ARNet_B48_HDN_NHWC_biases;
         break;
+    case Variant::B48_HDNS:
+        blockNum = 48;
+        kptr = param::ARNet_B48_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B48_HDNS_NHWC_biases;
+        break;
     case Variant::B48_LE:
         blockNum = 48;
         kptr = param::ARNet_B48_LE_NHWC_kernels;
@@ -126,6 +156,11 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         blockNum = 64;
         kptr = param::ARNet_B64_HDN_NHWC_kernels;
         bptr = param::ARNet_B64_HDN_NHWC_biases;
+        break;
+    case Variant::B64_HDNS:
+        blockNum = 64;
+        kptr = param::ARNet_B64_HDNS_NHWC_kernels;
+        bptr = param::ARNet_B64_HDNS_NHWC_biases;
         break;
     case Variant::B64_LE:
         blockNum = 64;

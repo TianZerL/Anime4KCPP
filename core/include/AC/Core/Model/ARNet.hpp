@@ -17,13 +17,13 @@ class ac::core::model::ARNet
 public:
     enum class Variant
     {
-        B4_HDN, B4_LE, B4_LS,
-        B8_HDN, B8_LE, B8_LS,
-        B16_HDN, B16_LE, B16_LS,
-        B24_HDN, B24_LE, B24_LS,
-        B32_HDN, B32_LE, B32_LS,
-        B48_HDN, B48_LE, B48_LS,
-        B64_HDN, B64_LE, B64_LS
+        B4_HDN, B4_HDNS, B4_LE, B4_LS,
+        B8_HDN, B8_HDNS, B8_LE, B8_LS,
+        B16_HDN, B16_HDNS, B16_LE, B16_LS,
+        B24_HDN, B24_HDNS, B24_LE, B24_LS,
+        B32_HDN, B32_HDNS, B32_LE, B32_LS,
+        B48_HDN, B48_HDNS, B48_LE, B48_LS,
+        B64_HDN, B64_HDNS, B64_LE, B64_LS
     };
 
 public:
