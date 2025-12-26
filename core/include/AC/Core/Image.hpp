@@ -209,6 +209,8 @@ namespace ac::core
      *
      * If `dst` has different dimensions or type than `src`, it will be reallocated.
      *
+     * If `dst` is not empty, convert data type to match `dst`.
+     * 
      * @param src Source image.
      * @param dst Destination image.
      */
@@ -385,8 +387,8 @@ public:
     bool isInt() const noexcept { return (elementType >> 8) == 1; }
     bool isFloat() const noexcept { return (elementType >> 8) == 2; }
     bool ownership() const noexcept { return dptr != nullptr; }
-
-    bool operator==(const Image& other) const noexcept { return this->pixels == other.pixels; }
+    /// @brief Check whether the images share the same buffer.
+    bool operator==(const Image& other) const noexcept { return (this->ownership() && other.ownership()) ? (this->dptr == other.dptr) : (this->pixels == other.pixels); }
     bool operator!=(const Image& other) const noexcept { return !operator==(other); }
 
 private:

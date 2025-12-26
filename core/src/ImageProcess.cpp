@@ -351,7 +351,7 @@ namespace ac::core::impl
     {
         if (src.empty() || src.isFloat() || n <= 0) return;
         Image tmp{};
-        if (src == dst || dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
+        if (dst.empty() || (src == dst) || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
             tmp.create(src.width(), src.height(), src.channels(), src.type());
         else tmp = dst;
         switch (src.type())
@@ -556,25 +556,32 @@ ac::core::Image ac::core::astype(const Image& src, const int type) noexcept
 }
 void ac::core::copy(const Image& src, Image& dst) noexcept
 {
-    if (src.empty()) dst = src;
-    if (src == dst) return;
+    if (src.empty())
+    {
+        dst = src;
+        return;
+    }
+
+    bool sameShape = (dst.width() == src.width()) && (dst.height() == src.height()) && (dst.channels() == src.channels());
+
+    if ((dst.ptr() == src.ptr()) && (dst.type() == src.type()) && sameShape) return;
 
     Image tmp{};
-    if (dst.empty() || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()))
-        tmp.create(src.width(), src.height(), src.channels(), src.type());
+    if (dst.empty() || (src == dst) || !sameShape)
+        tmp.create(src.width(), src.height(), src.channels(), dst.empty() ? src.type() : dst.type());
     else tmp = dst;
 
-    if (src.type() == dst.type())
+    if (src.type() == tmp.type())
         detail::copy(src, tmp);
-    else if (src.type() == Image::UInt8 && dst.type() == Image::Float32)
+    else if (src.type() == Image::UInt8 && tmp.type() == Image::Float32)
         detail::copy<std::uint8_t, float>(src, tmp);
-    else if (src.type() == Image::Float32 && dst.type() == Image::UInt8)
+    else if (src.type() == Image::Float32 && tmp.type() == Image::UInt8)
         detail::copy<float, std::uint8_t>(src, tmp);
-    else if (src.type() == Image::UInt16 && dst.type() == Image::Float32)
+    else if (src.type() == Image::UInt16 && tmp.type() == Image::Float32)
         detail::copy<std::uint16_t, float>(src, tmp);
-    else if (src.type() == Image::Float32 && dst.type() == Image::UInt16)
+    else if (src.type() == Image::Float32 && tmp.type() == Image::UInt16)
         detail::copy<float, std::uint16_t>(src, tmp);
-    else if (src.type() == Image::UInt8 && dst.type() == Image::UInt16)
+    else if (src.type() == Image::UInt8 && tmp.type() == Image::UInt16)
         detail::copy<std::uint8_t, std::uint16_t>(src, tmp);
 
     if (dst != tmp) dst = tmp;

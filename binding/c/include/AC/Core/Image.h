@@ -122,9 +122,5 @@ static int ac_image_is_float(const ac_image* image)
 {
     return (image->element_type >> 8) == 2;
 }
-static int ac_image_same(const ac_image* a, const ac_image* b)
-{
-    return a->ptr == b->ptr;
-}
 
 #endif
