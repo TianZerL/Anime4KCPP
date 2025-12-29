@@ -105,7 +105,7 @@
         <location filename="../ui/MainWindow.ui" line="62"/>
         <location filename="../ui/MainWindow.ui" line="144"/>
         <location filename="../ui/MainWindow.ui" line="168"/>
-        <location filename="../src/MainWindow.cpp" line="203"/>
+        <location filename="../src/MainWindow.cpp" line="205"/>
         <source>image</source>
         <translation>圖像</translation>
     </message>
@@ -123,7 +123,7 @@
         <location filename="../ui/MainWindow.ui" line="27"/>
         <location filename="../ui/MainWindow.ui" line="93"/>
         <location filename="../ui/MainWindow.ui" line="185"/>
-        <location filename="../src/MainWindow.cpp" line="203"/>
+        <location filename="../src/MainWindow.cpp" line="205"/>
         <source>video</source>
         <translation>影片</translation>
     </message>
@@ -166,7 +166,7 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="124"/>
         <location filename="../ui/MainWindow.ui" line="151"/>
-        <location filename="../src/MainWindow.cpp" line="134"/>
+        <location filename="../src/MainWindow.cpp" line="136"/>
         <source>open</source>
         <translation>開啟</translation>
     </message>
@@ -262,7 +262,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="372"/>
-        <location filename="../src/MainWindow.cpp" line="351"/>
+        <location filename="../src/MainWindow.cpp" line="353"/>
         <source>About</source>
         <translation>關於</translation>
     </message>
@@ -273,7 +273,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="382"/>
-        <location filename="../src/MainWindow.cpp" line="268"/>
+        <location filename="../src/MainWindow.cpp" line="270"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -284,108 +284,108 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="395"/>
-        <location filename="../src/MainWindow.cpp" line="268"/>
+        <location filename="../src/MainWindow.cpp" line="270"/>
         <source>Exit confirmation</source>
         <translation>退出確認</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="400"/>
-        <location filename="../src/MainWindow.cpp" line="325"/>
+        <location filename="../src/MainWindow.cpp" line="327"/>
         <source>License</source>
         <translation>授權條款</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="127"/>
+        <location filename="../src/MainWindow.cpp" line="129"/>
         <source>type</source>
         <translation>類型</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="127"/>
+        <location filename="../src/MainWindow.cpp" line="129"/>
         <source>status</source>
         <translation>狀態</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="127"/>
+        <location filename="../src/MainWindow.cpp" line="129"/>
         <source>name</source>
         <translation>名稱</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="127"/>
+        <location filename="../src/MainWindow.cpp" line="129"/>
         <source>output name</source>
         <translation>輸出名稱</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="127"/>
+        <location filename="../src/MainWindow.cpp" line="129"/>
         <source>path</source>
         <translation>路徑</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="135"/>
+        <location filename="../src/MainWindow.cpp" line="137"/>
         <source>remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="204"/>
+        <location filename="../src/MainWindow.cpp" line="206"/>
         <source>ready</source>
         <translation>就緒</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="228"/>
+        <location filename="../src/MainWindow.cpp" line="230"/>
         <source>input</source>
         <translation>輸入</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="228"/>
+        <location filename="../src/MainWindow.cpp" line="230"/>
         <source>output</source>
         <translation>輸出</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="212"/>
+        <location filename="../src/MainWindow.cpp" line="214"/>
         <source>succeeded</source>
         <translation>成功</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="212"/>
+        <location filename="../src/MainWindow.cpp" line="214"/>
         <source>failed</source>
         <translation>失敗</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="311"/>
+        <location filename="../src/MainWindow.cpp" line="313"/>
         <source>Devices</source>
         <translation>裝置</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="369"/>
+        <location filename="../src/MainWindow.cpp" line="371"/>
         <source>Anime4KCPP: A high performance anime upscaler</source>
         <translation>Anime4KCPP：高性能動漫超分工具</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="370"/>
+        <location filename="../src/MainWindow.cpp" line="372"/>
         <source>core version</source>
         <translation>核心版本</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="371"/>
+        <location filename="../src/MainWindow.cpp" line="373"/>
         <source>video module</source>
         <translation>影片模組</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="372"/>
+        <location filename="../src/MainWindow.cpp" line="374"/>
         <source>build date</source>
         <translation>構建日期</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="373"/>
+        <location filename="../src/MainWindow.cpp" line="375"/>
         <source>toolchain</source>
         <translation>工具鏈</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="374"/>
+        <location filename="../src/MainWindow.cpp" line="376"/>
         <source>Copyright</source>
         <translation>版權所有</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="375"/>
+        <location filename="../src/MainWindow.cpp" line="377"/>
         <source>disabled</source>
         <translation>不可用</translation>
     </message>
