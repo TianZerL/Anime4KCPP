@@ -30,38 +30,60 @@
     </message>
     <message>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="12"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="14"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="16"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="18"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="20"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="22"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="24"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="28"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="32"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="36"/>
         <source>Lightweight ResNet, mild denoising.</source>
         <translation>轻量ResNet，轻度降噪。</translation>
     </message>
     <message>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="13"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="17"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="19"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="21"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="23"/>
         <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="25"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="29"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="33"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="37"/>
+        <source>Lightweight ResNet, hdn with sharpening.</source>
+        <translation>轻量ResNet，HDN锐化。</translation>
+    </message>
+    <message>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="14"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="18"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="22"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="26"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="30"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="34"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="38"/>
         <source>Lightweight ResNet, line enhancing.</source>
         <translation>轻量ResNet，线条增强。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="28"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="19"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="23"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="27"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="31"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="35"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="39"/>
+        <source>Lightweight ResNet, line sharpening.</source>
+        <translation>轻量ResNet，线条锐化。</translation>
+    </message>
+    <message>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="42"/>
         <source>General-purpose CPU processing with optional SIMD acceleration.</source>
         <translation>通用CPU计算，支持SIMD加速。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="29"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="43"/>
         <source>Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.</source>
         <translation>跨平台异构计算加速，需要支持OpenCL1.2+标准的设备。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="30"/>
+        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="44"/>
         <source>NVIDIA GPU acceleration requiring Compute Capability 5.0+.</source>
         <translation>NVIDIA GPU加速，需CUDA计算能力5.0+的设备。</translation>
     </message>
