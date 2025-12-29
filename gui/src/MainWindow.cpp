@@ -43,7 +43,6 @@ MainWindow::~MainWindow() noexcept = default;
 void MainWindow::init()
 {
     qApp->setStyle(QStyleFactory::create(gConfig.gui.styleName));
-    qApp->setPalette(qApp->style()->standardPalette());
 
     QObject::connect(ui->action_exit, &QAction::triggered, this, &MainWindow::close);
 
@@ -53,7 +52,6 @@ void MainWindow::init()
         QObject::connect(action, &QAction::triggered, this, [=]() {
             gConfig.gui.styleName = action->text();
             qApp->setStyle(QStyleFactory::create(gConfig.gui.styleName));
-            qApp->setPalette(qApp->style()->standardPalette());
         });
         ui->menu_settings_style->addAction(action);
     }
@@ -83,12 +81,12 @@ void MainWindow::init()
     QObject::connect(ui->line_edit_output_path_video, &QLineEdit::textChanged, this,
         [](const QString& value) { gConfig.io.videoOutputPath = value; });
     QObject::connect(ui->push_button_output_path_image_select, &QPushButton::clicked, this, [=]() {
-            auto path = MainWindow::selectDir();
-            if (!path.isEmpty()) ui->line_edit_output_path_image->setText(path);
+        auto path = MainWindow::selectDir();
+        if (!path.isEmpty()) ui->line_edit_output_path_image->setText(path);
     });
     QObject::connect(ui->push_button_output_path_video_select, &QPushButton::clicked, this, [=]() {
-            auto path = MainWindow::selectDir();
-            if (!path.isEmpty()) ui->line_edit_output_path_video->setText(path);
+        auto path = MainWindow::selectDir();
+        if (!path.isEmpty()) ui->line_edit_output_path_video->setText(path);
     });
     QObject::connect(ui->push_button_output_path_image_open, &QPushButton::clicked, this,
         []() { MainWindow::openDir(gConfig.io.imageOutputPath); });
@@ -218,19 +216,18 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
         taskListModel.setHeaderData(0, Qt::Horizontal, count, Qt::UserRole);
     });
 
-    auto updateOutputInfo = [taskDataWeakPointer = QWeakPointer<TaskData>(taskData), baseName = fileInfo.completeBaseName(), itemOutputName, itemPath]()
+    auto updateOutputInfo = [taskDataWeakPointer = QWeakPointer<TaskData>(taskData), baseName = fileInfo.completeBaseName(), itemOutputName, itemPath]() {
+        if (auto taskData = taskDataWeakPointer.toStrongRef())
         {
-            if (auto taskData = taskDataWeakPointer.toStrongRef())
-            {
-                auto& prefix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imagePrefix : gConfig.io.videoPrefix;
-                auto& suffix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageSuffix : gConfig.io.videoSuffix;
-                auto outputName = prefix + baseName + suffix;
-                taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
+            auto& prefix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imagePrefix : gConfig.io.videoPrefix;
+            auto& suffix = taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageSuffix : gConfig.io.videoSuffix;
+            auto outputName = prefix + baseName + suffix;
+            taskData->path.output = QDir{ taskData->type == TaskData::TYPE_IMAGE ? gConfig.io.imageOutputPath : gConfig.io.videoOutputPath }.filePath(outputName);
 
-                itemOutputName->setText(outputName);
-                itemPath->setData(QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
-            }
-        };
+            itemOutputName->setText(outputName);
+            itemPath->setData(QString{ "%1: %3\n%2: %4" }.arg(tr("input"), tr("output"), taskData->path.input, taskData->path.output), Qt::ToolTipRole);
+        }
+    };
 
     updateOutputInfo();
 
