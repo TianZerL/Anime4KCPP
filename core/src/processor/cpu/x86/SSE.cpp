@@ -23,6 +23,10 @@ namespace ac::core::cpu
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
 
+            constexpr int vstep = 4;
+            constexpr int count = cin / vstep;
+            constexpr int remain = cin % vstep;
+
             for (int j = 0; j < src.width(); j++)
             {
                 [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
@@ -32,54 +36,19 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = static_cast<const float*>(src.ptr(j - lp, i - tp));
-                auto tc = static_cast<const float*>(src.ptr(j     , i - tp));
-                auto tr = static_cast<const float*>(src.ptr(j + rp, i - tp));
-                auto ml = static_cast<const float*>(src.ptr(j - lp, i     ));
-                auto mc = static_cast<const float*>(src.ptr(j     , i     ));
-                auto mr = static_cast<const float*>(src.ptr(j + rp, i     ));
-                auto bl = static_cast<const float*>(src.ptr(j - lp, i + bp));
-                auto bc = static_cast<const float*>(src.ptr(j     , i + bp));
-                auto br = static_cast<const float*>(src.ptr(j + rp, i + bp));
+                const float* dptr[] = {
+                    static_cast<const float*>(src.ptr(j - lp, i - tp)),
+                    static_cast<const float*>(src.ptr(j     , i - tp)),
+                    static_cast<const float*>(src.ptr(j + rp, i - tp)),
+                    static_cast<const float*>(src.ptr(j - lp, i     )),
+                    static_cast<const float*>(src.ptr(j     , i     )),
+                    static_cast<const float*>(src.ptr(j + rp, i     )),
+                    static_cast<const float*>(src.ptr(j - lp, i + bp)),
+                    static_cast<const float*>(src.ptr(j     , i + bp)),
+                    static_cast<const float*>(src.ptr(j + rp, i + bp)),
+                };
 
-                constexpr int vstep = 4;
-                constexpr int count = cin / vstep;
-                constexpr int remain = cin % vstep;
-
-                __m128 r0[count + (remain ? 1 : 0)]{};
-                __m128 r1[count + (remain ? 1 : 0)]{};
-                __m128 r2[count + (remain ? 1 : 0)]{};
-                __m128 r3[count + (remain ? 1 : 0)]{};
-                __m128 r4[count + (remain ? 1 : 0)]{};
-                __m128 r5[count + (remain ? 1 : 0)]{};
-                __m128 r6[count + (remain ? 1 : 0)]{};
-                __m128 r7[count + (remain ? 1 : 0)]{};
-                __m128 r8[count + (remain ? 1 : 0)]{};
-
-                for (int idx = 0; idx < count; idx++)
-                {
-                    r0[idx] = _mm_loadu_ps(tl + idx * vstep);
-                    r1[idx] = _mm_loadu_ps(tc + idx * vstep);
-                    r2[idx] = _mm_loadu_ps(tr + idx * vstep);
-                    r3[idx] = _mm_loadu_ps(ml + idx * vstep);
-                    r4[idx] = _mm_loadu_ps(mc + idx * vstep);
-                    r5[idx] = _mm_loadu_ps(mr + idx * vstep);
-                    r6[idx] = _mm_loadu_ps(bl + idx * vstep);
-                    r7[idx] = _mm_loadu_ps(bc + idx * vstep);
-                    r8[idx] = _mm_loadu_ps(br + idx * vstep);
-                }
-                if constexpr (remain)
-                {
-                    r0[count] = _mm_set_ps(0.0f, remain > 2 ? (tl + count * vstep)[2] : 0.0f, remain > 1 ? (tl + count * vstep)[1] : 0.0f, (tl + count * vstep)[0]);
-                    r1[count] = _mm_set_ps(0.0f, remain > 2 ? (tc + count * vstep)[2] : 0.0f, remain > 1 ? (tc + count * vstep)[1] : 0.0f, (tc + count * vstep)[0]);
-                    r2[count] = _mm_set_ps(0.0f, remain > 2 ? (tr + count * vstep)[2] : 0.0f, remain > 1 ? (tr + count * vstep)[1] : 0.0f, (tr + count * vstep)[0]);
-                    r3[count] = _mm_set_ps(0.0f, remain > 2 ? (ml + count * vstep)[2] : 0.0f, remain > 1 ? (ml + count * vstep)[1] : 0.0f, (ml + count * vstep)[0]);
-                    r4[count] = _mm_set_ps(0.0f, remain > 2 ? (mc + count * vstep)[2] : 0.0f, remain > 1 ? (mc + count * vstep)[1] : 0.0f, (mc + count * vstep)[0]);
-                    r5[count] = _mm_set_ps(0.0f, remain > 2 ? (mr + count * vstep)[2] : 0.0f, remain > 1 ? (mr + count * vstep)[1] : 0.0f, (mr + count * vstep)[0]);
-                    r6[count] = _mm_set_ps(0.0f, remain > 2 ? (bl + count * vstep)[2] : 0.0f, remain > 1 ? (bl + count * vstep)[1] : 0.0f, (bl + count * vstep)[0]);
-                    r7[count] = _mm_set_ps(0.0f, remain > 2 ? (bc + count * vstep)[2] : 0.0f, remain > 1 ? (bc + count * vstep)[1] : 0.0f, (bc + count * vstep)[0]);
-                    r8[count] = _mm_set_ps(0.0f, remain > 2 ? (br + count * vstep)[2] : 0.0f, remain > 1 ? (br + count * vstep)[1] : 0.0f, (br + count * vstep)[0]);
-                }
+                float sum[cout]{};
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -98,8 +67,19 @@ namespace ac::core::cpu
                     __m128 s0 = _mm_setzero_ps();
                     __m128 s1 = _mm_setzero_ps();
                     __m128 s2 = _mm_setzero_ps();
+
                     for (int idx = 0; idx < count; idx++)
                     {
+                        __m128 r0 = _mm_loadu_ps(dptr[0] + idx * vstep);
+                        __m128 r1 = _mm_loadu_ps(dptr[1] + idx * vstep);
+                        __m128 r2 = _mm_loadu_ps(dptr[2] + idx * vstep);
+                        __m128 r3 = _mm_loadu_ps(dptr[3] + idx * vstep);
+                        __m128 r4 = _mm_loadu_ps(dptr[4] + idx * vstep);
+                        __m128 r5 = _mm_loadu_ps(dptr[5] + idx * vstep);
+                        __m128 r6 = _mm_loadu_ps(dptr[6] + idx * vstep);
+                        __m128 r7 = _mm_loadu_ps(dptr[7] + idx * vstep);
+                        __m128 r8 = _mm_loadu_ps(dptr[8] + idx * vstep);
+
                         __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
                         __m128 k1 = _mm_loadu_ps(kptr[1] + idx * vstep);
                         __m128 k2 = _mm_loadu_ps(kptr[2] + idx * vstep);
@@ -110,18 +90,28 @@ namespace ac::core::cpu
                         __m128 k7 = _mm_loadu_ps(kptr[7] + idx * vstep);
                         __m128 k8 = _mm_loadu_ps(kptr[8] + idx * vstep);
 
-                        s0 = _mm_add_ps(_mm_mul_ps(r0[idx], k0), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r1[idx], k1), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r2[idx], k2), s2);
-                        s0 = _mm_add_ps(_mm_mul_ps(r3[idx], k3), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r4[idx], k4), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r5[idx], k5), s2);
-                        s0 = _mm_add_ps(_mm_mul_ps(r6[idx], k6), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r7[idx], k7), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r8[idx], k8), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r0, k0), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r1, k1), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r2, k2), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r3, k3), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r4, k4), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r5, k5), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r6, k6), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r7, k7), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r8, k8), s2);
                     }
                     if constexpr (remain)
                     {
+                        __m128 r0 = _mm_set_ps(0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, (dptr[0] + count * vstep)[0]);
+                        __m128 r1 = _mm_set_ps(0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, (dptr[1] + count * vstep)[0]);
+                        __m128 r2 = _mm_set_ps(0.0f, remain > 2 ? (dptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[2] + count * vstep)[1] : 0.0f, (dptr[2] + count * vstep)[0]);
+                        __m128 r3 = _mm_set_ps(0.0f, remain > 2 ? (dptr[3] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[3] + count * vstep)[1] : 0.0f, (dptr[3] + count * vstep)[0]);
+                        __m128 r4 = _mm_set_ps(0.0f, remain > 2 ? (dptr[4] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[4] + count * vstep)[1] : 0.0f, (dptr[4] + count * vstep)[0]);
+                        __m128 r5 = _mm_set_ps(0.0f, remain > 2 ? (dptr[5] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[5] + count * vstep)[1] : 0.0f, (dptr[5] + count * vstep)[0]);
+                        __m128 r6 = _mm_set_ps(0.0f, remain > 2 ? (dptr[6] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[6] + count * vstep)[1] : 0.0f, (dptr[6] + count * vstep)[0]);
+                        __m128 r7 = _mm_set_ps(0.0f, remain > 2 ? (dptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[7] + count * vstep)[1] : 0.0f, (dptr[7] + count * vstep)[0]);
+                        __m128 r8 = _mm_set_ps(0.0f, remain > 2 ? (dptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[8] + count * vstep)[1] : 0.0f, (dptr[8] + count * vstep)[0]);
+
                         __m128 k0 = _mm_set_ps(0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, (kptr[0] + count * vstep)[0]);
                         __m128 k1 = _mm_set_ps(0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, (kptr[1] + count * vstep)[0]);
                         __m128 k2 = _mm_set_ps(0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, (kptr[2] + count * vstep)[0]);
@@ -132,23 +122,26 @@ namespace ac::core::cpu
                         __m128 k7 = _mm_set_ps(0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, (kptr[7] + count * vstep)[0]);
                         __m128 k8 = _mm_set_ps(0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, (kptr[8] + count * vstep)[0]);
 
-                        s0 = _mm_add_ps(_mm_mul_ps(r0[count], k0), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r1[count], k1), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r2[count], k2), s2);
-                        s0 = _mm_add_ps(_mm_mul_ps(r3[count], k3), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r4[count], k4), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r5[count], k5), s2);
-                        s0 = _mm_add_ps(_mm_mul_ps(r6[count], k6), s0);
-                        s1 = _mm_add_ps(_mm_mul_ps(r7[count], k7), s1);
-                        s2 = _mm_add_ps(_mm_mul_ps(r8[count], k8), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r0, k0), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r1, k1), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r2, k2), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r3, k3), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r4, k4), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r5, k5), s2);
+                        s0 = _mm_add_ps(_mm_mul_ps(r6, k6), s0);
+                        s1 = _mm_add_ps(_mm_mul_ps(r7, k7), s1);
+                        s2 = _mm_add_ps(_mm_mul_ps(r8, k8), s2);
                     }
-                    float sum = sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2))) + biases[n];
+                    sum[n] = sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2))) + biases[n];
+                }
 
+                for (int n = 0; n < cout; n++)
+                {
                     if constexpr (sizeof...(ResidualArgs))
                         for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                            sum = sum * scales[idx] + iptrs[idx][n];
+                            sum[n] = sum[n] * scales[idx] + iptrs[idx][n];
 
-                    out[n] = activeFunc(sum);
+                    out[n] = activeFunc(sum[n]);
                 }
             }
         });
