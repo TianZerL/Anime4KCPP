@@ -201,131 +201,6 @@ namespace ac::core::cpu
 
                     out[n] = activeFunc(sum[n]);
                 }
-
-//                for (int n = 0; n < cout; n++)
-//                {
-//                    const float* kptr[] = {
-//                        kernels + n * cin * 9 + cin * 0,
-//                        kernels + n * cin * 9 + cin * 1,
-//                        kernels + n * cin * 9 + cin * 2,
-//                        kernels + n * cin * 9 + cin * 3,
-//                        kernels + n * cin * 9 + cin * 4,
-//                        kernels + n * cin * 9 + cin * 5,
-//                        kernels + n * cin * 9 + cin * 6,
-//                        kernels + n * cin * 9 + cin * 7,
-//                        kernels + n * cin * 9 + cin * 8
-//                    };
-//
-//                    __m256 s0 = _mm256_setzero_ps();
-//                    __m256 s1 = _mm256_setzero_ps();
-//                    __m256 s2 = _mm256_setzero_ps();
-//
-//                    for (int idx = 0; idx < count; idx++)
-//                    {
-//                        __m256 r0 = _mm256_loadu_ps(dptr[0] + idx * vstep);
-//                        __m256 r1 = _mm256_loadu_ps(dptr[1] + idx * vstep);
-//                        __m256 r2 = _mm256_loadu_ps(dptr[2] + idx * vstep);
-//                        __m256 r3 = _mm256_loadu_ps(dptr[3] + idx * vstep);
-//                        __m256 r4 = _mm256_loadu_ps(dptr[4] + idx * vstep);
-//                        __m256 r5 = _mm256_loadu_ps(dptr[5] + idx * vstep);
-//                        __m256 r6 = _mm256_loadu_ps(dptr[6] + idx * vstep);
-//                        __m256 r7 = _mm256_loadu_ps(dptr[7] + idx * vstep);
-//                        __m256 r8 = _mm256_loadu_ps(dptr[8] + idx * vstep);
-//
-//                        __m256 k0 = _mm256_loadu_ps(kptr[0] + idx * vstep);
-//                        __m256 k1 = _mm256_loadu_ps(kptr[1] + idx * vstep);
-//                        __m256 k2 = _mm256_loadu_ps(kptr[2] + idx * vstep);
-//                        __m256 k3 = _mm256_loadu_ps(kptr[3] + idx * vstep);
-//                        __m256 k4 = _mm256_loadu_ps(kptr[4] + idx * vstep);
-//                        __m256 k5 = _mm256_loadu_ps(kptr[5] + idx * vstep);
-//                        __m256 k6 = _mm256_loadu_ps(kptr[6] + idx * vstep);
-//                        __m256 k7 = _mm256_loadu_ps(kptr[7] + idx * vstep);
-//                        __m256 k8 = _mm256_loadu_ps(kptr[8] + idx * vstep);
-//
-//#                   ifdef AC_CORE_WITH_FMA
-//                        if constexpr (fma)
-//                        {
-//                            s0 = _mm256_fmadd_ps(r0, k0, s0);
-//                            s1 = _mm256_fmadd_ps(r1, k1, s1);
-//                            s2 = _mm256_fmadd_ps(r2, k2, s2);
-//                            s0 = _mm256_fmadd_ps(r3, k3, s0);
-//                            s1 = _mm256_fmadd_ps(r4, k4, s1);
-//                            s2 = _mm256_fmadd_ps(r5, k5, s2);
-//                            s0 = _mm256_fmadd_ps(r6, k6, s0);
-//                            s1 = _mm256_fmadd_ps(r7, k7, s1);
-//                            s2 = _mm256_fmadd_ps(r8, k8, s2);
-//                        }
-//                        else
-//#                   endif
-//                        {
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r0, k0), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r1, k1), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r2, k2), s2);
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r3, k3), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r4, k4), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r5, k5), s2);
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r6, k6), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r7, k7), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r8, k8), s2);
-//                        }
-//                    }
-//                    if constexpr (remain)
-//                    {
-//                        __m256 r0 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[0] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[0] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[0] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[0] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, (dptr[0] + count * vstep)[0]);
-//                        __m256 r1 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[1] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[1] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[1] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[1] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, (dptr[1] + count * vstep)[0]);
-//                        __m256 r2 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[2] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[2] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[2] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[2] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[2] + count * vstep)[1] : 0.0f, (dptr[2] + count * vstep)[0]);
-//                        __m256 r3 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[3] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[3] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[3] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[3] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[3] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[3] + count * vstep)[1] : 0.0f, (dptr[3] + count * vstep)[0]);
-//                        __m256 r4 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[4] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[4] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[4] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[4] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[4] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[4] + count * vstep)[1] : 0.0f, (dptr[4] + count * vstep)[0]);
-//                        __m256 r5 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[5] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[5] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[5] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[5] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[5] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[5] + count * vstep)[1] : 0.0f, (dptr[5] + count * vstep)[0]);
-//                        __m256 r6 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[6] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[6] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[6] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[6] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[6] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[6] + count * vstep)[1] : 0.0f, (dptr[6] + count * vstep)[0]);
-//                        __m256 r7 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[7] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[7] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[7] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[7] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[7] + count * vstep)[1] : 0.0f, (dptr[7] + count * vstep)[0]);
-//                        __m256 r8 = _mm256_set_ps(0.0f, remain > 6 ? (dptr[8] + count * vstep)[6] : 0.0f, remain > 5 ? (dptr[8] + count * vstep)[5] : 0.0f, remain > 4 ? (dptr[8] + count * vstep)[4] : 0.0f, remain > 3 ? (dptr[8] + count * vstep)[3] : 0.0f, remain > 2 ? (dptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[8] + count * vstep)[1] : 0.0f, (dptr[8] + count * vstep)[0]);
-//
-//                        __m256 k0 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[0] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[0] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[0] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[0] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, (kptr[0] + count * vstep)[0]);
-//                        __m256 k1 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[1] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[1] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[1] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[1] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, (kptr[1] + count * vstep)[0]);
-//                        __m256 k2 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[2] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[2] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[2] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[2] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, (kptr[2] + count * vstep)[0]);
-//                        __m256 k3 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[3] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[3] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[3] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[3] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, (kptr[3] + count * vstep)[0]);
-//                        __m256 k4 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[4] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[4] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[4] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[4] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, (kptr[4] + count * vstep)[0]);
-//                        __m256 k5 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[5] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[5] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[5] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[5] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, (kptr[5] + count * vstep)[0]);
-//                        __m256 k6 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[6] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[6] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[6] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[6] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, (kptr[6] + count * vstep)[0]);
-//                        __m256 k7 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[7] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[7] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[7] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[7] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, (kptr[7] + count * vstep)[0]);
-//                        __m256 k8 = _mm256_set_ps(0.0f, remain > 6 ? (kptr[8] + count * vstep)[6] : 0.0f, remain > 5 ? (kptr[8] + count * vstep)[5] : 0.0f, remain > 4 ? (kptr[8] + count * vstep)[4] : 0.0f, remain > 3 ? (kptr[8] + count * vstep)[3] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, (kptr[8] + count * vstep)[0]);
-//
-//#                   ifdef AC_CORE_WITH_FMA
-//                        if constexpr (fma)
-//                        {
-//                            s0 = _mm256_fmadd_ps(r0, k0, s0);
-//                            s1 = _mm256_fmadd_ps(r1, k1, s1);
-//                            s2 = _mm256_fmadd_ps(r2, k2, s2);
-//                            s0 = _mm256_fmadd_ps(r3, k3, s0);
-//                            s1 = _mm256_fmadd_ps(r4, k4, s1);
-//                            s2 = _mm256_fmadd_ps(r5, k5, s2);
-//                            s0 = _mm256_fmadd_ps(r6, k6, s0);
-//                            s1 = _mm256_fmadd_ps(r7, k7, s1);
-//                            s2 = _mm256_fmadd_ps(r8, k8, s2);
-//                        }
-//                        else
-//#                   endif
-//                        {
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r0, k0), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r1, k1), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r2, k2), s2);
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r3, k3), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r4, k4), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r5, k5), s2);
-//                            s0 = _mm256_add_ps(_mm256_mul_ps(r6, k6), s0);
-//                            s1 = _mm256_add_ps(_mm256_mul_ps(r7, k7), s1);
-//                            s2 = _mm256_add_ps(_mm256_mul_ps(r8, k8), s2);
-//                        }
-//                    }
-//                    float sum = avx_hsum_ps(_mm256_add_ps(s0, _mm256_add_ps(s1, s2))) + biases[n];
-//
-//                    if constexpr (sizeof...(ResidualArgs))
-//                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-//                            sum = sum * scales[idx] + iptrs[idx][n];
-//
-//                    out[n] = activeFunc(sum);
-//                }
             }
         });
     }
@@ -603,5 +478,48 @@ namespace ac::core::cpu
                 break;
             }
         }
+    }
+
+    void conv3x3_1to16_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_avx_cin1<std::uint8_t, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_avx_cin1<std::uint16_t, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_avx_cin1<float, 16>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_16to16_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<16, 16, true>(src, dst, kernels, biases, ReLU());
+        else
+#   endif
+            conv3x3_avx_float<16, 16, false>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_16to16_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<16, 16, true>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+        else
+#   endif
+            conv3x3_avx_float<16, 16, false>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_16to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<16, 4, true>(src, dst, kernels, biases, Identity());
+        else
+#   endif
+            conv3x3_avx_float<16, 4, false>(src, dst, kernels, biases, Identity());
     }
 }

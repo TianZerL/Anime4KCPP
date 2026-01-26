@@ -267,4 +267,32 @@ namespace ac::core::cpu
             break;
         }
     }
+
+    void conv3x3_1to16_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_generic<std::uint8_t, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_generic<std::uint16_t, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_generic<float, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_16to16_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_generic<float, 16, 16>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_16to16_add_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+        conv3x3_generic<float, 16, 16>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_16to4_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_generic<float, 16, 4>(src, dst, kernels, biases, Identity());
+    }
 }

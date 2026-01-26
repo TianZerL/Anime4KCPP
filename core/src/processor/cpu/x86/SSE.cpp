@@ -49,36 +49,37 @@ namespace ac::core::cpu
                 };
 
                 float sum[cout]{};
+                std::memcpy(sum, biases, sizeof(sum));
 
-                for (int n = 0; n < cout; n++)
+                for (int idx = 0; idx < count; idx++)
                 {
-                    const float* kptr[] = {
-                        kernels + n * cin * 9 + cin * 0,
-                        kernels + n * cin * 9 + cin * 1,
-                        kernels + n * cin * 9 + cin * 2,
-                        kernels + n * cin * 9 + cin * 3,
-                        kernels + n * cin * 9 + cin * 4,
-                        kernels + n * cin * 9 + cin * 5,
-                        kernels + n * cin * 9 + cin * 6,
-                        kernels + n * cin * 9 + cin * 7,
-                        kernels + n * cin * 9 + cin * 8
-                    };
+                    __m128 r0 = _mm_loadu_ps(dptr[0] + idx * vstep);
+                    __m128 r1 = _mm_loadu_ps(dptr[1] + idx * vstep);
+                    __m128 r2 = _mm_loadu_ps(dptr[2] + idx * vstep);
+                    __m128 r3 = _mm_loadu_ps(dptr[3] + idx * vstep);
+                    __m128 r4 = _mm_loadu_ps(dptr[4] + idx * vstep);
+                    __m128 r5 = _mm_loadu_ps(dptr[5] + idx * vstep);
+                    __m128 r6 = _mm_loadu_ps(dptr[6] + idx * vstep);
+                    __m128 r7 = _mm_loadu_ps(dptr[7] + idx * vstep);
+                    __m128 r8 = _mm_loadu_ps(dptr[8] + idx * vstep);
 
-                    __m128 s0 = _mm_setzero_ps();
-                    __m128 s1 = _mm_setzero_ps();
-                    __m128 s2 = _mm_setzero_ps();
-
-                    for (int idx = 0; idx < count; idx++)
+                    for (int n = 0; n < cout; n++)
                     {
-                        __m128 r0 = _mm_loadu_ps(dptr[0] + idx * vstep);
-                        __m128 r1 = _mm_loadu_ps(dptr[1] + idx * vstep);
-                        __m128 r2 = _mm_loadu_ps(dptr[2] + idx * vstep);
-                        __m128 r3 = _mm_loadu_ps(dptr[3] + idx * vstep);
-                        __m128 r4 = _mm_loadu_ps(dptr[4] + idx * vstep);
-                        __m128 r5 = _mm_loadu_ps(dptr[5] + idx * vstep);
-                        __m128 r6 = _mm_loadu_ps(dptr[6] + idx * vstep);
-                        __m128 r7 = _mm_loadu_ps(dptr[7] + idx * vstep);
-                        __m128 r8 = _mm_loadu_ps(dptr[8] + idx * vstep);
+                        const float* kptr[] = {
+                            kernels + n * cin * 9 + cin * 0,
+                            kernels + n * cin * 9 + cin * 1,
+                            kernels + n * cin * 9 + cin * 2,
+                            kernels + n * cin * 9 + cin * 3,
+                            kernels + n * cin * 9 + cin * 4,
+                            kernels + n * cin * 9 + cin * 5,
+                            kernels + n * cin * 9 + cin * 6,
+                            kernels + n * cin * 9 + cin * 7,
+                            kernels + n * cin * 9 + cin * 8
+                        };
+
+                        __m128 s0 = _mm_setzero_ps();
+                        __m128 s1 = _mm_setzero_ps();
+                        __m128 s2 = _mm_setzero_ps();
 
                         __m128 k0 = _mm_loadu_ps(kptr[0] + idx * vstep);
                         __m128 k1 = _mm_loadu_ps(kptr[1] + idx * vstep);
@@ -99,18 +100,40 @@ namespace ac::core::cpu
                         s0 = _mm_add_ps(_mm_mul_ps(r6, k6), s0);
                         s1 = _mm_add_ps(_mm_mul_ps(r7, k7), s1);
                         s2 = _mm_add_ps(_mm_mul_ps(r8, k8), s2);
+
+                        sum[n] += sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2)));
                     }
-                    if constexpr (remain)
+                }
+                if constexpr (remain)
+                {
+                    __m128 r0 = _mm_set_ps(0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, (dptr[0] + count * vstep)[0]);
+                    __m128 r1 = _mm_set_ps(0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, (dptr[1] + count * vstep)[0]);
+                    __m128 r2 = _mm_set_ps(0.0f, remain > 2 ? (dptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[2] + count * vstep)[1] : 0.0f, (dptr[2] + count * vstep)[0]);
+                    __m128 r3 = _mm_set_ps(0.0f, remain > 2 ? (dptr[3] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[3] + count * vstep)[1] : 0.0f, (dptr[3] + count * vstep)[0]);
+                    __m128 r4 = _mm_set_ps(0.0f, remain > 2 ? (dptr[4] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[4] + count * vstep)[1] : 0.0f, (dptr[4] + count * vstep)[0]);
+                    __m128 r5 = _mm_set_ps(0.0f, remain > 2 ? (dptr[5] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[5] + count * vstep)[1] : 0.0f, (dptr[5] + count * vstep)[0]);
+                    __m128 r6 = _mm_set_ps(0.0f, remain > 2 ? (dptr[6] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[6] + count * vstep)[1] : 0.0f, (dptr[6] + count * vstep)[0]);
+                    __m128 r7 = _mm_set_ps(0.0f, remain > 2 ? (dptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[7] + count * vstep)[1] : 0.0f, (dptr[7] + count * vstep)[0]);
+                    __m128 r8 = _mm_set_ps(0.0f, remain > 2 ? (dptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[8] + count * vstep)[1] : 0.0f, (dptr[8] + count * vstep)[0]);
+
+
+                    for (int n = 0; n < cout; n++)
                     {
-                        __m128 r0 = _mm_set_ps(0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, (dptr[0] + count * vstep)[0]);
-                        __m128 r1 = _mm_set_ps(0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, (dptr[1] + count * vstep)[0]);
-                        __m128 r2 = _mm_set_ps(0.0f, remain > 2 ? (dptr[2] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[2] + count * vstep)[1] : 0.0f, (dptr[2] + count * vstep)[0]);
-                        __m128 r3 = _mm_set_ps(0.0f, remain > 2 ? (dptr[3] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[3] + count * vstep)[1] : 0.0f, (dptr[3] + count * vstep)[0]);
-                        __m128 r4 = _mm_set_ps(0.0f, remain > 2 ? (dptr[4] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[4] + count * vstep)[1] : 0.0f, (dptr[4] + count * vstep)[0]);
-                        __m128 r5 = _mm_set_ps(0.0f, remain > 2 ? (dptr[5] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[5] + count * vstep)[1] : 0.0f, (dptr[5] + count * vstep)[0]);
-                        __m128 r6 = _mm_set_ps(0.0f, remain > 2 ? (dptr[6] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[6] + count * vstep)[1] : 0.0f, (dptr[6] + count * vstep)[0]);
-                        __m128 r7 = _mm_set_ps(0.0f, remain > 2 ? (dptr[7] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[7] + count * vstep)[1] : 0.0f, (dptr[7] + count * vstep)[0]);
-                        __m128 r8 = _mm_set_ps(0.0f, remain > 2 ? (dptr[8] + count * vstep)[2] : 0.0f, remain > 1 ? (dptr[8] + count * vstep)[1] : 0.0f, (dptr[8] + count * vstep)[0]);
+                        const float* kptr[] = {
+                            kernels + n * cin * 9 + cin * 0,
+                            kernels + n * cin * 9 + cin * 1,
+                            kernels + n * cin * 9 + cin * 2,
+                            kernels + n * cin * 9 + cin * 3,
+                            kernels + n * cin * 9 + cin * 4,
+                            kernels + n * cin * 9 + cin * 5,
+                            kernels + n * cin * 9 + cin * 6,
+                            kernels + n * cin * 9 + cin * 7,
+                            kernels + n * cin * 9 + cin * 8
+                        };
+
+                        __m128 s0 = _mm_setzero_ps();
+                        __m128 s1 = _mm_setzero_ps();
+                        __m128 s2 = _mm_setzero_ps();
 
                         __m128 k0 = _mm_set_ps(0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, (kptr[0] + count * vstep)[0]);
                         __m128 k1 = _mm_set_ps(0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, (kptr[1] + count * vstep)[0]);
@@ -131,8 +154,9 @@ namespace ac::core::cpu
                         s0 = _mm_add_ps(_mm_mul_ps(r6, k6), s0);
                         s1 = _mm_add_ps(_mm_mul_ps(r7, k7), s1);
                         s2 = _mm_add_ps(_mm_mul_ps(r8, k8), s2);
+
+                        sum[n] += sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2)));
                     }
-                    sum[n] = sse_hsum_ps(_mm_add_ps(s0, _mm_add_ps(s1, s2))) + biases[n];
                 }
 
                 for (int n = 0; n < cout; n++)
@@ -401,5 +425,33 @@ namespace ac::core::cpu
             conv3x3_8to4_identity_pixelshuffle_4to1_sse_float<float>(src, dst, kernels, biases);
             break;
         }
+    }
+
+    void conv3x3_1to16_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_sse_cin1<std::uint8_t, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_sse_cin1<std::uint16_t, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_sse_cin1<float, 16>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_16to16_relu_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_sse_float<16, 16>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_16to16_add_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+        conv3x3_sse_float<16, 16>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_16to4_identity_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_sse_float<16, 4>(src, dst, kernels, biases, Identity());
     }
 }

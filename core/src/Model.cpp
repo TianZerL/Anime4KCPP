@@ -174,3 +174,19 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
         break;
     }
 }
+
+template<int F>
+ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
+{
+    switch (v)
+    {
+    case Variant::NORMAL:
+        blockNum = 4;
+        kptr = param::ArtCNN_C4F16_NHWC_kernels;
+        bptr = param::ArtCNN_C4F16_NHWC_biases;
+        break;
+    }
+}
+
+template class ac::core::model::ArtCNN<16>;
+template class ac::core::model::ArtCNN<32>;
