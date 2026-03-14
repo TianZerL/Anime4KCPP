@@ -788,14 +788,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ArtCNN<16>>::process(con
     err = cmdq.enqueueNDRangeKernel(conv3x3_1to16_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
     err = conv3x3_16to16_relu.setArg(0, feat); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_relu.setArg(1, tmp2); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_relu.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(conv3x3_16to16_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
-
-    err = conv3x3_16to16_relu.setArg(0, tmp2); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_relu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
@@ -819,8 +811,16 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ArtCNN<16>>::process(con
     err = conv3x3_16to16_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueNDRangeKernel(conv3x3_16to16_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
-    err = conv3x3_16to16_add_identity.setArg(0, tmp1); if (err != CL_SUCCESS) return;
-    err = conv3x3_16to16_add_identity.setArg(1, tmp2); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(0, tmp1); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(1, tmp2); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_16to16_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
+
+    err = conv3x3_16to16_add_identity.setArg(0, tmp2); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to16_add_identity.setArg(1, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_add_identity.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_add_identity.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_16to16_add_identity.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
@@ -828,7 +828,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ArtCNN<16>>::process(con
     err = conv3x3_16to16_add_identity.setArg(6, feat); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueNDRangeKernel(conv3x3_16to16_add_identity, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
 
-    err = conv3x3_16to4_identity_pixelshuffle_4to1.setArg(0, tmp2); if (err != CL_SUCCESS) return;
+    err = conv3x3_16to4_identity_pixelshuffle_4to1.setArg(0, tmp1); if (err != CL_SUCCESS) return;
     err = conv3x3_16to4_identity_pixelshuffle_4to1.setArg(1, out); if (err != CL_SUCCESS) return;
     err = conv3x3_16to4_identity_pixelshuffle_4to1.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_16to4_identity_pixelshuffle_4to1.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;

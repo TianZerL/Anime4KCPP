@@ -81,7 +81,7 @@ namespace ac::core::cuda
         const float scale,
         cudaStream_t stream
     ) noexcept;
-    void conv3x3_8to8_residual_identity_cuda(
+    void conv3x3_8to8_residual_add_identity_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -96,6 +96,46 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept;
     void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_1to16_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to16_relu_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to16_add_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        void* fptr,
+        int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -556,7 +596,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         kernels[l], biases[l], 0.2f, stream); l++;
-    conv3x3_8to8_residual_identity_cuda(
+    conv3x3_8to8_residual_add_identity_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernels[l], biases[l],
@@ -582,6 +622,105 @@ template<>
 AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ARNet>(const int idx, const model::ARNet& model)
 {
     return std::make_shared<cuda::CUDAProcessor<model::ARNet>>(idx, model);
+}
+
+
+template<>
+class ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>> : public CUDAProcessorSeqCNN<model::ArtCNN<16>>
+{
+public:
+    CUDAProcessor(int device, const model::ArtCNN<16>& model) noexcept;
+    ~CUDAProcessor() noexcept override;
+
+private:
+    void process(const Image& src, Image& dst) override;
+
+private:
+    util::ThreadLocal<ImageBuffer> inImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> featImageBuffers{};
+    util::ThreadLocal<ImageBuffer> outImageBuffers{};
+};
+
+ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::CUDAProcessor(const int device, const model::ArtCNN<16>& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
+ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::~CUDAProcessor() noexcept = default;
+
+void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const Image& src, Image& dst)
+{
+    auto& err = errors.local();
+    auto stream = cudaStreamPerThread;
+
+    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
+
+    auto& inImageBuffer = inImageBuffers.local();
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
+    auto& featImageBuffer = featImageBuffers.local();
+    auto& outImageBuffer = outImageBuffers.local();
+
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+
+    int l = 0;
+
+    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+
+    conv3x3_1to16_identity_cuda(
+        in.ptr, in.w, in.h, in.c, in.pitch,
+        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
+        kernels[l], biases[l],
+        src.type(), stream); l++;
+
+    conv3x3_16to16_relu_cuda(
+        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        kernels[l], biases[l], stream); l++;
+
+    conv3x3_16to16_relu_cuda(
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        kernels[l], biases[l], stream); l++;
+
+    conv3x3_16to16_relu_cuda(
+        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        kernels[l], biases[l], stream); l++;
+
+    conv3x3_16to16_relu_cuda(
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        kernels[l], biases[l], stream); l++;
+
+    conv3x3_16to16_add_identity_cuda(
+        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        kernels[l], biases[l],
+        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
+        stream); l++;
+
+    conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        out.ptr, out.w, out.h, out.c, out.pitch,
+        kernels[l], biases[l],
+        dst.type(), stream);
+
+    err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
+
+    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+
+    err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
+
+    err = cudaPeekAtLastError();
+}
+
+template<>
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ArtCNN<16>>(const int idx, const model::ArtCNN<16>& model)
+{
+    return std::make_shared<cuda::CUDAProcessor<model::ArtCNN<16>>>(idx, model);
 }
 
 

@@ -489,15 +489,15 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ArtCNN<16>>::process(const Ima
 
     conv3x3_1to16_identity(src, feat, model.kernel(l), model.bias(l)); l++;
 
-    conv3x3_16to16_relu(feat, tmp2, model.kernel(l), model.bias(l)); l++;
-    conv3x3_16to16_relu(tmp2, tmp1, model.kernel(l), model.bias(l)); l++;
+    conv3x3_16to16_relu(feat, tmp1, model.kernel(l), model.bias(l)); l++;
     conv3x3_16to16_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
     conv3x3_16to16_relu(tmp2, tmp1, model.kernel(l), model.bias(l)); l++;
+    conv3x3_16to16_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
 
-    conv3x3_16to16_add_identity(tmp1, tmp2, model.kernel(l), model.bias(l), feat); l++;
+    conv3x3_16to16_add_identity(tmp2, tmp1, model.kernel(l), model.bias(l), feat); l++;
 
-    conv3x3_16to4_identity(tmp2, tmp1, model.kernel(l), model.bias(l));
-    pixelshuffle_4to1(tmp1, dst);
+    conv3x3_16to4_identity(tmp1, tmp2, model.kernel(l), model.bias(l));
+    pixelshuffle_4to1(tmp2, dst);
 }
 
 template<>
