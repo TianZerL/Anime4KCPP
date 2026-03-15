@@ -17,6 +17,141 @@ namespace ac::core::cpu
     #endif
     }
 
+    template <int cin, int cout>
+    inline void conv3x3_neon_float_impl(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+    {
+        constexpr int vstep = 4;
+        constexpr int count = cin / vstep;
+        constexpr int remain = cin % vstep;
+
+        std::memcpy(out, biases, sizeof(float) * cout);
+
+        for (int idx = 0; idx < count; idx++)
+        {
+            float32x4_t r0 = vld1q_f32(rptr[0] + idx * vstep);
+            float32x4_t r1 = vld1q_f32(rptr[1] + idx * vstep);
+            float32x4_t r2 = vld1q_f32(rptr[2] + idx * vstep);
+            float32x4_t r3 = vld1q_f32(rptr[3] + idx * vstep);
+            float32x4_t r4 = vld1q_f32(rptr[4] + idx * vstep);
+            float32x4_t r5 = vld1q_f32(rptr[5] + idx * vstep);
+            float32x4_t r6 = vld1q_f32(rptr[6] + idx * vstep);
+            float32x4_t r7 = vld1q_f32(rptr[7] + idx * vstep);
+            float32x4_t r8 = vld1q_f32(rptr[8] + idx * vstep);
+
+            for (int n = 0; n < cout; n++)
+            {
+                const float* kptr[] = {
+                    kernels + n * cin * 9 + cin * 0,
+                    kernels + n * cin * 9 + cin * 1,
+                    kernels + n * cin * 9 + cin * 2,
+                    kernels + n * cin * 9 + cin * 3,
+                    kernels + n * cin * 9 + cin * 4,
+                    kernels + n * cin * 9 + cin * 5,
+                    kernels + n * cin * 9 + cin * 6,
+                    kernels + n * cin * 9 + cin * 7,
+                    kernels + n * cin * 9 + cin * 8
+                };
+
+                float32x4_t s0 = vdupq_n_f32(0.0f);
+                float32x4_t s1 = vdupq_n_f32(0.0f);
+                float32x4_t s2 = vdupq_n_f32(0.0f);
+
+                float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
+                float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
+                float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
+                float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
+                float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
+                float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
+                float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
+                float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
+                float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
+
+                s0 = vmlaq_f32(s0, r0, k0);
+                s1 = vmlaq_f32(s1, r1, k1);
+                s2 = vmlaq_f32(s2, r2, k2);
+                s0 = vmlaq_f32(s0, r3, k3);
+                s1 = vmlaq_f32(s1, r4, k4);
+                s2 = vmlaq_f32(s2, r5, k5);
+                s0 = vmlaq_f32(s0, r6, k6);
+                s1 = vmlaq_f32(s1, r7, k7);
+                s2 = vmlaq_f32(s2, r8, k8);
+
+                out[n] += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
+            }
+        }
+        if constexpr (remain)
+        {
+            const float rd0[vstep] = {(rptr[0] + count * vstep)[0], remain > 1 ? (rptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[0] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd1[vstep] = {(rptr[1] + count * vstep)[0], remain > 1 ? (rptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[1] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd2[vstep] = {(rptr[2] + count * vstep)[0], remain > 1 ? (rptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[2] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd3[vstep] = {(rptr[3] + count * vstep)[0], remain > 1 ? (rptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[3] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd4[vstep] = {(rptr[4] + count * vstep)[0], remain > 1 ? (rptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[4] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd5[vstep] = {(rptr[5] + count * vstep)[0], remain > 1 ? (rptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[5] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd6[vstep] = {(rptr[6] + count * vstep)[0], remain > 1 ? (rptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[6] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd7[vstep] = {(rptr[7] + count * vstep)[0], remain > 1 ? (rptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[7] + count * vstep)[2] : 0.0f, 0.0f};
+            const float rd8[vstep] = {(rptr[8] + count * vstep)[0], remain > 1 ? (rptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[8] + count * vstep)[2] : 0.0f, 0.0f};
+            float32x4_t r0 = vld1q_f32(rd0);
+            float32x4_t r1 = vld1q_f32(rd1);
+            float32x4_t r2 = vld1q_f32(rd2);
+            float32x4_t r3 = vld1q_f32(rd3);
+            float32x4_t r4 = vld1q_f32(rd4);
+            float32x4_t r5 = vld1q_f32(rd5);
+            float32x4_t r6 = vld1q_f32(rd6);
+            float32x4_t r7 = vld1q_f32(rd7);
+            float32x4_t r8 = vld1q_f32(rd8);
+
+            for (int n = 0; n < cout; n++)
+            {
+                const float* kptr[] = {
+                    kernels + n * cin * 9 + cin * 0,
+                    kernels + n * cin * 9 + cin * 1,
+                    kernels + n * cin * 9 + cin * 2,
+                    kernels + n * cin * 9 + cin * 3,
+                    kernels + n * cin * 9 + cin * 4,
+                    kernels + n * cin * 9 + cin * 5,
+                    kernels + n * cin * 9 + cin * 6,
+                    kernels + n * cin * 9 + cin * 7,
+                    kernels + n * cin * 9 + cin * 8
+                };
+
+                float32x4_t s0 = vdupq_n_f32(0.0f);
+                float32x4_t s1 = vdupq_n_f32(0.0f);
+                float32x4_t s2 = vdupq_n_f32(0.0f);
+
+                const float kd0[vstep] = {(kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd1[vstep] = {(kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd2[vstep] = {(kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd3[vstep] = {(kptr[3] + count * vstep)[0], remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd4[vstep] = {(kptr[4] + count * vstep)[0], remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd5[vstep] = {(kptr[5] + count * vstep)[0], remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd6[vstep] = {(kptr[6] + count * vstep)[0], remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd7[vstep] = {(kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f};
+                const float kd8[vstep] = {(kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f};
+                float32x4_t k0 = vld1q_f32(kd0);
+                float32x4_t k1 = vld1q_f32(kd1);
+                float32x4_t k2 = vld1q_f32(kd2);
+                float32x4_t k3 = vld1q_f32(kd3);
+                float32x4_t k4 = vld1q_f32(kd4);
+                float32x4_t k5 = vld1q_f32(kd5);
+                float32x4_t k6 = vld1q_f32(kd6);
+                float32x4_t k7 = vld1q_f32(kd7);
+                float32x4_t k8 = vld1q_f32(kd8);
+
+                s0 = vmlaq_f32(s0, r0, k0);
+                s1 = vmlaq_f32(s1, r1, k1);
+                s2 = vmlaq_f32(s2, r2, k2);
+                s0 = vmlaq_f32(s0, r3, k3);
+                s1 = vmlaq_f32(s1, r4, k4);
+                s2 = vmlaq_f32(s2, r5, k5);
+                s0 = vmlaq_f32(s0, r6, k6);
+                s1 = vmlaq_f32(s1, r7, k7);
+                s2 = vmlaq_f32(s2, r8, k8);
+
+                out[n] += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
+            }
+        }
+    }
+
     template <int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_neon_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
@@ -25,10 +160,6 @@ namespace ac::core::cpu
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
-
-            constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
 
             for (int j = 0; j < src.width(); j++)
             {
@@ -39,7 +170,7 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                const float* dptr[] = {
+                const float* rptr[] = {
                     static_cast<const float*>(src.ptr(j - lp, i - tp)),
                     static_cast<const float*>(src.ptr(j     , i - tp)),
                     static_cast<const float*>(src.ptr(j + rp, i - tp)),
@@ -52,132 +183,8 @@ namespace ac::core::cpu
                 };
 
                 float sum[cout]{};
-                std::memcpy(sum, biases, sizeof(sum));
 
-                for (int idx = 0; idx < count; idx++)
-                {
-                    float32x4_t r0 = vld1q_f32(dptr[0] + idx * vstep);
-                    float32x4_t r1 = vld1q_f32(dptr[1] + idx * vstep);
-                    float32x4_t r2 = vld1q_f32(dptr[2] + idx * vstep);
-                    float32x4_t r3 = vld1q_f32(dptr[3] + idx * vstep);
-                    float32x4_t r4 = vld1q_f32(dptr[4] + idx * vstep);
-                    float32x4_t r5 = vld1q_f32(dptr[5] + idx * vstep);
-                    float32x4_t r6 = vld1q_f32(dptr[6] + idx * vstep);
-                    float32x4_t r7 = vld1q_f32(dptr[7] + idx * vstep);
-                    float32x4_t r8 = vld1q_f32(dptr[8] + idx * vstep);
-
-                    for (int n = 0; n < cout; n++)
-                    {
-                        const float* kptr[] = {
-                            kernels + n * cin * 9 + cin * 0,
-                            kernels + n * cin * 9 + cin * 1,
-                            kernels + n * cin * 9 + cin * 2,
-                            kernels + n * cin * 9 + cin * 3,
-                            kernels + n * cin * 9 + cin * 4,
-                            kernels + n * cin * 9 + cin * 5,
-                            kernels + n * cin * 9 + cin * 6,
-                            kernels + n * cin * 9 + cin * 7,
-                            kernels + n * cin * 9 + cin * 8
-                        };
-
-                        float32x4_t s0 = vdupq_n_f32(0.0f);
-                        float32x4_t s1 = vdupq_n_f32(0.0f);
-                        float32x4_t s2 = vdupq_n_f32(0.0f);
-
-                        float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
-                        float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
-                        float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
-                        float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
-                        float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
-                        float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
-                        float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
-                        float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
-                        float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
-
-                        s0 = vmlaq_f32(s0, r0, k0);
-                        s1 = vmlaq_f32(s1, r1, k1);
-                        s2 = vmlaq_f32(s2, r2, k2);
-                        s0 = vmlaq_f32(s0, r3, k3);
-                        s1 = vmlaq_f32(s1, r4, k4);
-                        s2 = vmlaq_f32(s2, r5, k5);
-                        s0 = vmlaq_f32(s0, r6, k6);
-                        s1 = vmlaq_f32(s1, r7, k7);
-                        s2 = vmlaq_f32(s2, r8, k8);
-
-                        sum[n] += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
-                    }
-                }
-                if constexpr (remain)
-                {
-                    const float rd0[vstep] = {(dptr[0] + count * vstep)[0], remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd1[vstep] = {(dptr[1] + count * vstep)[0], remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd2[vstep] = {(dptr[2] + count * vstep)[0], remain > 1 ? (dptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[2] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd3[vstep] = {(dptr[3] + count * vstep)[0], remain > 1 ? (dptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[3] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd4[vstep] = {(dptr[4] + count * vstep)[0], remain > 1 ? (dptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[4] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd5[vstep] = {(dptr[5] + count * vstep)[0], remain > 1 ? (dptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[5] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd6[vstep] = {(dptr[6] + count * vstep)[0], remain > 1 ? (dptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[6] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd7[vstep] = {(dptr[7] + count * vstep)[0], remain > 1 ? (dptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[7] + count * vstep)[2] : 0.0f, 0.0f};
-                    const float rd8[vstep] = {(dptr[8] + count * vstep)[0], remain > 1 ? (dptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[8] + count * vstep)[2] : 0.0f, 0.0f};
-                    float32x4_t r0 = vld1q_f32(rd0);
-                    float32x4_t r1 = vld1q_f32(rd1);
-                    float32x4_t r2 = vld1q_f32(rd2);
-                    float32x4_t r3 = vld1q_f32(rd3);
-                    float32x4_t r4 = vld1q_f32(rd4);
-                    float32x4_t r5 = vld1q_f32(rd5);
-                    float32x4_t r6 = vld1q_f32(rd6);
-                    float32x4_t r7 = vld1q_f32(rd7);
-                    float32x4_t r8 = vld1q_f32(rd8);
-
-                    for (int n = 0; n < cout; n++)
-                    {
-                        const float* kptr[] = {
-                            kernels + n * cin * 9 + cin * 0,
-                            kernels + n * cin * 9 + cin * 1,
-                            kernels + n * cin * 9 + cin * 2,
-                            kernels + n * cin * 9 + cin * 3,
-                            kernels + n * cin * 9 + cin * 4,
-                            kernels + n * cin * 9 + cin * 5,
-                            kernels + n * cin * 9 + cin * 6,
-                            kernels + n * cin * 9 + cin * 7,
-                            kernels + n * cin * 9 + cin * 8
-                        };
-
-                        float32x4_t s0 = vdupq_n_f32(0.0f);
-                        float32x4_t s1 = vdupq_n_f32(0.0f);
-                        float32x4_t s2 = vdupq_n_f32(0.0f);
-
-                        const float kd0[vstep] = {(kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd1[vstep] = {(kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd2[vstep] = {(kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd3[vstep] = {(kptr[3] + count * vstep)[0], remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd4[vstep] = {(kptr[4] + count * vstep)[0], remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd5[vstep] = {(kptr[5] + count * vstep)[0], remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd6[vstep] = {(kptr[6] + count * vstep)[0], remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd7[vstep] = {(kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f};
-                        const float kd8[vstep] = {(kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f};
-                        float32x4_t k0 = vld1q_f32(kd0);
-                        float32x4_t k1 = vld1q_f32(kd1);
-                        float32x4_t k2 = vld1q_f32(kd2);
-                        float32x4_t k3 = vld1q_f32(kd3);
-                        float32x4_t k4 = vld1q_f32(kd4);
-                        float32x4_t k5 = vld1q_f32(kd5);
-                        float32x4_t k6 = vld1q_f32(kd6);
-                        float32x4_t k7 = vld1q_f32(kd7);
-                        float32x4_t k8 = vld1q_f32(kd8);
-
-                        s0 = vmlaq_f32(s0, r0, k0);
-                        s1 = vmlaq_f32(s1, r1, k1);
-                        s2 = vmlaq_f32(s2, r2, k2);
-                        s0 = vmlaq_f32(s0, r3, k3);
-                        s1 = vmlaq_f32(s1, r4, k4);
-                        s2 = vmlaq_f32(s2, r5, k5);
-                        s0 = vmlaq_f32(s0, r6, k6);
-                        s1 = vmlaq_f32(s1, r7, k7);
-                        s2 = vmlaq_f32(s2, r8, k8);
-
-                        sum[n] += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
-                    }
-                }
+                conv3x3_neon_float_impl<cin, cout>(rptr, sum, kernels, biases);
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -281,10 +288,6 @@ namespace ac::core::cpu
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
 
-            constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
-
             for (int j = 0; j < src.width(); j++)
             {
                 auto dstY = i * upscale;
@@ -293,7 +296,7 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                const float* dptr[] = {
+                const float* rptr[] = {
                     static_cast<const float*>(src.ptr(j - lp, i - tp)),
                     static_cast<const float*>(src.ptr(j     , i - tp)),
                     static_cast<const float*>(src.ptr(j + rp, i - tp)),
@@ -306,62 +309,8 @@ namespace ac::core::cpu
                 };
 
                 float sum[cout]{};
-                std::memcpy(sum, biases, sizeof(sum));
 
-                for (int idx = 0; idx < count; idx++)
-                {
-                    float32x4_t r0 = vld1q_f32(dptr[0] + idx * vstep);
-                    float32x4_t r1 = vld1q_f32(dptr[1] + idx * vstep);
-                    float32x4_t r2 = vld1q_f32(dptr[2] + idx * vstep);
-                    float32x4_t r3 = vld1q_f32(dptr[3] + idx * vstep);
-                    float32x4_t r4 = vld1q_f32(dptr[4] + idx * vstep);
-                    float32x4_t r5 = vld1q_f32(dptr[5] + idx * vstep);
-                    float32x4_t r6 = vld1q_f32(dptr[6] + idx * vstep);
-                    float32x4_t r7 = vld1q_f32(dptr[7] + idx * vstep);
-                    float32x4_t r8 = vld1q_f32(dptr[8] + idx * vstep);
-
-                    for (int n = 0; n < cout; n++)
-                    {
-                        const float* kptr[] = {
-                            kernels + n * cin * 9 + cin * 0,
-                            kernels + n * cin * 9 + cin * 1,
-                            kernels + n * cin * 9 + cin * 2,
-                            kernels + n * cin * 9 + cin * 3,
-                            kernels + n * cin * 9 + cin * 4,
-                            kernels + n * cin * 9 + cin * 5,
-                            kernels + n * cin * 9 + cin * 6,
-                            kernels + n * cin * 9 + cin * 7,
-                            kernels + n * cin * 9 + cin * 8
-                        };
-
-                        float32x4_t s0 = vdupq_n_f32(0.0f);
-                        float32x4_t s1 = vdupq_n_f32(0.0f);
-                        float32x4_t s2 = vdupq_n_f32(0.0f);
-
-                        float32x4_t k0 = vld1q_f32(kptr[0] + idx * vstep);
-                        float32x4_t k1 = vld1q_f32(kptr[1] + idx * vstep);
-                        float32x4_t k2 = vld1q_f32(kptr[2] + idx * vstep);
-                        float32x4_t k3 = vld1q_f32(kptr[3] + idx * vstep);
-                        float32x4_t k4 = vld1q_f32(kptr[4] + idx * vstep);
-                        float32x4_t k5 = vld1q_f32(kptr[5] + idx * vstep);
-                        float32x4_t k6 = vld1q_f32(kptr[6] + idx * vstep);
-                        float32x4_t k7 = vld1q_f32(kptr[7] + idx * vstep);
-                        float32x4_t k8 = vld1q_f32(kptr[8] + idx * vstep);
-
-                        s0 = vmlaq_f32(s0, r0, k0);
-                        s1 = vmlaq_f32(s1, r1, k1);
-                        s2 = vmlaq_f32(s2, r2, k2);
-                        s0 = vmlaq_f32(s0, r3, k3);
-                        s1 = vmlaq_f32(s1, r4, k4);
-                        s2 = vmlaq_f32(s2, r5, k5);
-                        s0 = vmlaq_f32(s0, r6, k6);
-                        s1 = vmlaq_f32(s1, r7, k7);
-                        s2 = vmlaq_f32(s2, r8, k8);
-
-                        sum[n] += neon_hsum_f32(vaddq_f32(s0, vaddq_f32(s1, s2)));
-                    }
-                }
-                if constexpr (remain)
+                conv3x3_neon_float_impl<cin, cout>(rptr, sum, kernels, biases);
                 {
                     const float rd0[vstep] = {(dptr[0] + count * vstep)[0], remain > 1 ? (dptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[0] + count * vstep)[2] : 0.0f, 0.0f};
                     const float rd1[vstep] = {(dptr[1] + count * vstep)[0], remain > 1 ? (dptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (dptr[1] + count * vstep)[2] : 0.0f, 0.0f};

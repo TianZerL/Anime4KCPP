@@ -23,15 +23,15 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = static_cast<const IN*>(src.ptr(j - lp, i - tp));
-                auto tc = static_cast<const IN*>(src.ptr(j     , i - tp));
-                auto tr = static_cast<const IN*>(src.ptr(j + rp, i - tp));
-                auto ml = static_cast<const IN*>(src.ptr(j - lp, i     ));
-                auto mc = static_cast<const IN*>(src.ptr(j     , i     ));
-                auto mr = static_cast<const IN*>(src.ptr(j + rp, i     ));
-                auto bl = static_cast<const IN*>(src.ptr(j - lp, i + bp));
-                auto bc = static_cast<const IN*>(src.ptr(j     , i + bp));
-                auto br = static_cast<const IN*>(src.ptr(j + rp, i + bp));
+                auto r0 = static_cast<const IN*>(src.ptr(j - lp, i - tp));
+                auto r1 = static_cast<const IN*>(src.ptr(j     , i - tp));
+                auto r2 = static_cast<const IN*>(src.ptr(j + rp, i - tp));
+                auto r3 = static_cast<const IN*>(src.ptr(j - lp, i     ));
+                auto r4 = static_cast<const IN*>(src.ptr(j     , i     ));
+                auto r5 = static_cast<const IN*>(src.ptr(j + rp, i     ));
+                auto r6 = static_cast<const IN*>(src.ptr(j - lp, i + bp));
+                auto r7 = static_cast<const IN*>(src.ptr(j     , i + bp));
+                auto r8 = static_cast<const IN*>(src.ptr(j + rp, i + bp));
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -50,15 +50,15 @@ namespace ac::core::cpu
                     for (int c = 0; c < cin; c++)
                     {
                         sum +=
-                            toFloat<IN>(tl[c]) * k0[c] +
-                            toFloat<IN>(tc[c]) * k1[c] +
-                            toFloat<IN>(tr[c]) * k2[c] +
-                            toFloat<IN>(ml[c]) * k3[c] +
-                            toFloat<IN>(mc[c]) * k4[c] +
-                            toFloat<IN>(mr[c]) * k5[c] +
-                            toFloat<IN>(bl[c]) * k6[c] +
-                            toFloat<IN>(bc[c]) * k7[c] +
-                            toFloat<IN>(br[c]) * k8[c];
+                            toFloat<IN>(r0[c]) * k0[c] +
+                            toFloat<IN>(r1[c]) * k1[c] +
+                            toFloat<IN>(r2[c]) * k2[c] +
+                            toFloat<IN>(r3[c]) * k3[c] +
+                            toFloat<IN>(r4[c]) * k4[c] +
+                            toFloat<IN>(r5[c]) * k5[c] +
+                            toFloat<IN>(r6[c]) * k6[c] +
+                            toFloat<IN>(r7[c]) * k7[c] +
+                            toFloat<IN>(r8[c]) * k8[c];
                     }
 
                     if constexpr (sizeof...(ResidualArgs))
@@ -126,15 +126,15 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                auto tl = static_cast<const IN*>(src.ptr(j - lp, i - tp));
-                auto tc = static_cast<const IN*>(src.ptr(j     , i - tp));
-                auto tr = static_cast<const IN*>(src.ptr(j + rp, i - tp));
-                auto ml = static_cast<const IN*>(src.ptr(j - lp, i     ));
-                auto mc = static_cast<const IN*>(src.ptr(j     , i     ));
-                auto mr = static_cast<const IN*>(src.ptr(j + rp, i     ));
-                auto bl = static_cast<const IN*>(src.ptr(j - lp, i + bp));
-                auto bc = static_cast<const IN*>(src.ptr(j     , i + bp));
-                auto br = static_cast<const IN*>(src.ptr(j + rp, i + bp));
+                auto r0 = static_cast<const IN*>(src.ptr(j - lp, i - tp));
+                auto r1 = static_cast<const IN*>(src.ptr(j     , i - tp));
+                auto r2 = static_cast<const IN*>(src.ptr(j + rp, i - tp));
+                auto r3 = static_cast<const IN*>(src.ptr(j - lp, i     ));
+                auto r4 = static_cast<const IN*>(src.ptr(j     , i     ));
+                auto r5 = static_cast<const IN*>(src.ptr(j + rp, i     ));
+                auto r6 = static_cast<const IN*>(src.ptr(j - lp, i + bp));
+                auto r7 = static_cast<const IN*>(src.ptr(j     , i + bp));
+                auto r8 = static_cast<const IN*>(src.ptr(j + rp, i + bp));
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -153,15 +153,15 @@ namespace ac::core::cpu
                     for (int c = 0; c < cin; c++)
                     {
                         sum +=
-                            toFloat<IN>(tl[c]) * k0[c] +
-                            toFloat<IN>(tc[c]) * k1[c] +
-                            toFloat<IN>(tr[c]) * k2[c] +
-                            toFloat<IN>(ml[c]) * k3[c] +
-                            toFloat<IN>(mc[c]) * k4[c] +
-                            toFloat<IN>(mr[c]) * k5[c] +
-                            toFloat<IN>(bl[c]) * k6[c] +
-                            toFloat<IN>(bc[c]) * k7[c] +
-                            toFloat<IN>(br[c]) * k8[c];
+                            toFloat<IN>(r0[c]) * k0[c] +
+                            toFloat<IN>(r1[c]) * k1[c] +
+                            toFloat<IN>(r2[c]) * k2[c] +
+                            toFloat<IN>(r3[c]) * k3[c] +
+                            toFloat<IN>(r4[c]) * k4[c] +
+                            toFloat<IN>(r5[c]) * k5[c] +
+                            toFloat<IN>(r6[c]) * k6[c] +
+                            toFloat<IN>(r7[c]) * k7[c] +
+                            toFloat<IN>(r8[c]) * k8[c];
                     }
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
