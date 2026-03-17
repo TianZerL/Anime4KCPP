@@ -210,7 +210,6 @@ int main(int argc, char* argv[])
 
     if (list(options)) return 0;
 
-    if (options.inputs.empty()) return 0;
     options.outputs.resize(options.inputs.size());
 
     auto processor = ac::core::Processor::create(options.processor.c_str(), options.device, options.model.c_str());
