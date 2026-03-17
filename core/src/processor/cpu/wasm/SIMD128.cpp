@@ -414,4 +414,47 @@ namespace ac::core::cpu
     {
         conv3x3_wasm_simd128_float<16, 4>(src, dst, kernels, biases, Identity());
     }
+
+    void conv3x3_1to32_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_wasm_simd128_cin1<std::uint8_t, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_wasm_simd128_cin1<std::uint16_t, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_wasm_simd128_cin1<float, 32>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_32to32_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_wasm_simd128_float<32, 32>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_32to32_add_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+        conv3x3_wasm_simd128_float<32, 32>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_32to4_identity_pixelshuffle_4to1_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            conv3x3_identity_pixelshuffle_simd128_float<std::uint8_t, 32, 2>(src, dst, kernels, biases);
+            break;
+        case Image::UInt16:
+            conv3x3_identity_pixelshuffle_simd128_float<std::uint16_t, 32, 2>(src, dst, kernels, biases);
+            break;
+        case Image::Float32:
+            conv3x3_identity_pixelshuffle_simd128_float<float, 32, 2>(src, dst, kernels, biases);
+            break;
+        }
+    }
+    void conv3x3_32to4_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_wasm_simd128_float<32, 4>(src, dst, kernels, biases, Identity());
+    }
 }

@@ -295,6 +295,49 @@ namespace ac::core::cpu
         conv3x3_generic<float, 16, 4>(src, dst, kernels, biases, Identity());
     }
 
+    void conv3x3_1to32_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_generic<std::uint8_t, 1, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_generic<std::uint16_t, 1, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_generic<float, 1, 32>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_32to32_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_generic<float, 32, 32>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_32to32_add_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+        conv3x3_generic<float, 32, 32>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_32to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            conv3x3_identity_pixelshuffle_generic<float, std::uint8_t, 32, 2>(src, dst, kernels, biases);
+            break;
+        case Image::UInt16:
+            conv3x3_identity_pixelshuffle_generic<float, std::uint16_t, 32, 2>(src, dst, kernels, biases);
+            break;
+        case Image::Float32:
+            conv3x3_identity_pixelshuffle_generic<float, float, 32, 2>(src, dst, kernels, biases);
+            break;
+        }
+    }
+    void conv3x3_32to4_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        conv3x3_generic<float, 32, 4>(src, dst, kernels, biases, Identity());
+    }
+
     void pixelshuffle_4to1_generic(const Image& src, Image& dst)
     {
         switch (dst.type())

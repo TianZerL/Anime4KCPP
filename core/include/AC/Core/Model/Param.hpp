@@ -5,7 +5,7 @@ namespace ac::core::model::param
 {
 #include "AC/Core/Model/Param/ACNet.p"
 #include "AC/Core/Model/Param/ARNet.p"
-#include "AC/Core/Model/Param/ArtCNNF16.p"
+#include "AC/Core/Model/Param/ArtCNN.p"
 }
 
 #endif

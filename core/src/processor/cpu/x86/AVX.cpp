@@ -526,4 +526,82 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<16, 4, false>(src, dst, kernels, biases, Identity());
     }
+
+    void conv3x3_1to32_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_avx_cin1<std::uint8_t, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv3x3_avx_cin1<std::uint16_t, 32>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv3x3_avx_cin1<float, 32>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_32to32_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<32, 32, true>(src, dst, kernels, biases, ReLU());
+        else
+#   endif
+            conv3x3_avx_float<32, 32, false>(src, dst, kernels, biases, ReLU());
+    }
+    void conv3x3_32to32_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<32, 32, true>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+        else
+#   endif
+            conv3x3_avx_float<32, 32, false>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+    }
+    void conv3x3_32to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+        {
+            switch (dst.type())
+            {
+            case Image::UInt8:
+                conv3x3_identity_pixelshuffle_avx_float<std::uint8_t, 32, 2, true>(src, dst, kernels, biases);
+                break;
+            case Image::UInt16:
+                conv3x3_identity_pixelshuffle_avx_float<std::uint16_t, 32, 2, true>(src, dst, kernels, biases);
+                break;
+            case Image::Float32:
+                conv3x3_identity_pixelshuffle_avx_float<float, 32, 2, true>(src, dst, kernels, biases);
+                break;
+            }
+        }
+        else
+#   endif
+        {
+            switch (dst.type())
+            {
+            case Image::UInt8:
+                conv3x3_identity_pixelshuffle_avx_float<std::uint8_t, 32, 2, false>(src, dst, kernels, biases);
+                break;
+            case Image::UInt16:
+                conv3x3_identity_pixelshuffle_avx_float<std::uint16_t, 32, 2, false>(src, dst, kernels, biases);
+                break;
+            case Image::Float32:
+                conv3x3_identity_pixelshuffle_avx_float<float, 32, 2, false>(src, dst, kernels, biases);
+                break;
+            }
+        }
+    }
+    void conv3x3_32to4_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<32, 4, true>(src, dst, kernels, biases, Identity());
+        else
+#   endif
+            conv3x3_avx_float<32, 4, false>(src, dst, kernels, biases, Identity());
+    }
 }

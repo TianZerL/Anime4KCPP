@@ -178,14 +178,29 @@ ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
 template<int F>
 ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
 {
-    switch (v)
+    if constexpr (F == 16)
     {
-    case Variant::NORMAL:
-        blockNum = 4;
-        kptr = param::ArtCNN_C4F16_NHWC_kernels;
-        bptr = param::ArtCNN_C4F16_NHWC_biases;
-        break;
+        switch (v)
+        {
+        case Variant::NORMAL:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F16_NHWC_kernels;
+            bptr = param::ArtCNN_C4F16_NHWC_biases;
+            break;
+        }
     }
+    else if constexpr (F == 32)
+    {
+        switch (v)
+        {
+        case Variant::NORMAL:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F32_NHWC_kernels;
+            bptr = param::ArtCNN_C4F32_NHWC_biases;
+            break;
+        }
+    }
+    else static_assert(F == 32, "Unsupported ArtCNN model");
 }
 
 template class ac::core::model::ArtCNN<16>;

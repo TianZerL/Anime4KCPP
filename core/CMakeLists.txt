@@ -20,6 +20,7 @@ if(AC_CORE_WITH_OPENCL)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ACNetKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ACNetKernel.hpp ACNet)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ARNetKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ARNetKernel.hpp ARNet)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ArtCNNF16Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ArtCNNF16Kernel.hpp ArtCNNF16)
+    generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ArtCNNF32Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ArtCNNF32Kernel.hpp ArtCNNF32)
 endif()
 include(${CMAKE_DIR}/GenImageResizeSIMD.cmake)
 

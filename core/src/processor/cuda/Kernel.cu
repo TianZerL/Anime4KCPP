@@ -152,6 +152,8 @@ namespace ac::core::cuda
             constexpr auto rsizeY = BlockSize::y + 2;
             constexpr auto rsizeX = (BlockSize::x + 2) * cin;
 
+            constexpr bool imageToShared = rsizeY * rsizeX * sizeof(IN) <= 8192;
+
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
@@ -188,43 +190,64 @@ namespace ac::core::cuda
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
 
-            __shared__ IN iptr[rsizeY][rsizeX];
-            for (int j = 0; j < rsizeY; j++)
+            ::cuda::std::conditional_t<imageToShared, const IN(*)[rsizeX], const void* __restrict__> iptr{};
+            if constexpr (imageToShared)
             {
-                if constexpr (threads < rsizeX)
+                __shared__ IN ibuffer[rsizeY][rsizeX];
+                for (int j = 0; j < rsizeY; j++)
                 {
-                    constexpr auto line = rsizeX / threads;
-                    constexpr auto remain = rsizeX % threads;
-                    for (int i = 0; i < line; i++)
+                    if constexpr (threads < rsizeX)
                     {
-                        auto idx = tid + i * threads;
-                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        constexpr auto line = rsizeX / threads;
+                        constexpr auto remain = rsizeX % threads;
+                        for (int i = 0; i < line; i++)
+                        {
+                            auto idx = tid + i * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        }
+                        if (remain > 0 && tid < remain)
+                        {
+                            auto idx = tid + line * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        }
                     }
-                    if (remain > 0 && tid < remain)
-                    {
-                        auto idx = tid + line * threads;
-                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
-                    }
+                    else if (tid < rsizeX) ibuffer[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
                 }
-                else if (tid < rsizeX) iptr[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
+                iptr = ibuffer;
             }
+            else iptr = sptr;
+
             __syncthreads();
 
             if (x >= srcW || y >= srcH) return;
 
             auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
 
-            const IN* r[] = {
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1)
-            };
+            const IN* r[9]{};
+            if constexpr (imageToShared)
+            {
+                r[0] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1);
+                r[1] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1);
+                r[2] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1);
+                r[3] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    );
+                r[4] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    );
+                r[5] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    );
+                r[6] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1);
+                r[7] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1);
+                r[8] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1);
+            }
+            else
+            {
+                r[0] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y - 1);
+                r[1] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y - 1);
+                r[2] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y - 1);
+                r[3] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y    );
+                r[4] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y    );
+                r[5] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y    );
+                r[6] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y + 1);
+                r[7] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y + 1);
+                r[8] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y + 1);
+            }
 
             for (int n = 0; n < cout; n++)
             {
@@ -303,6 +326,8 @@ namespace ac::core::cuda
             constexpr auto rsizeY = BlockSize::y + 2;
             constexpr auto rsizeX = (BlockSize::x + 2) * cin;
 
+            constexpr bool imageToShared = rsizeY * rsizeX * sizeof(IN) <= 8192;
+
             __shared__ float kptr[knum];
             if constexpr (threads < knum)
             {
@@ -339,41 +364,64 @@ namespace ac::core::cuda
             }
             else if (tid < bnum) bptr[tid] = biases[tid];
 
-            __shared__ IN iptr[rsizeY][rsizeX];
-            for (int j = 0; j < rsizeY; j++)
+            ::cuda::std::conditional_t<imageToShared, const IN(*)[rsizeX], const void* __restrict__> iptr{};
+            if constexpr (imageToShared)
             {
-                if constexpr (threads < rsizeX)
+                __shared__ IN ibuffer[rsizeY][rsizeX];
+                for (int j = 0; j < rsizeY; j++)
                 {
-                    constexpr auto line = rsizeX / threads;
-                    constexpr auto remain = rsizeX % threads;
-                    for (int i = 0; i < line; i++)
+                    if constexpr (threads < rsizeX)
                     {
-                        auto idx = tid + i * threads;
-                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        constexpr auto line = rsizeX / threads;
+                        constexpr auto remain = rsizeX % threads;
+                        for (int i = 0; i < line; i++)
+                        {
+                            auto idx = tid + i * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        }
+                        if (remain > 0 && tid < remain)
+                        {
+                            auto idx = tid + line * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
+                        }
                     }
-                    if (remain > 0 && tid < remain)
-                    {
-                        auto idx = tid + line * threads;
-                        iptr[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + idx / cin, by - 1 + j)[idx % cin];
-                    }
+                    else if (tid < rsizeX) ibuffer[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
                 }
-                else if (tid < rsizeX) iptr[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - 1 + tid / cin, by - 1 + j)[tid % cin];
+                iptr = ibuffer;
             }
+            else iptr = sptr;
+
             __syncthreads();
 
             if (x >= srcW || y >= srcH) return;
 
-            const IN* r[] = {
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    ),
-                getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1),
-                getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1)
-            };
+            auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
+
+            const IN* r[9]{};
+            if constexpr (imageToShared)
+            {
+                r[0] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1);
+                r[1] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1);
+                r[2] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1);
+                r[3] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    );
+                r[4] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    );
+                r[5] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    );
+                r[6] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1);
+                r[7] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1);
+                r[8] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1);
+            }
+            else
+            {
+                r[0] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y - 1);
+                r[1] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y - 1);
+                r[2] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y - 1);
+                r[3] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y    );
+                r[4] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y    );
+                r[5] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y    );
+                r[6] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y + 1);
+                r[7] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y + 1);
+                r[8] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y + 1);
+            }
 
             auto dstX = x * upscale;
             auto dstY = y * upscale;
@@ -660,6 +708,91 @@ namespace ac::core::cuda
             return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
         case Image::Float32:
             return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+        }
+    }
+
+    void conv3x3_1to32_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        switch (stype)
+        {
+        case Image::UInt8:
+            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            kernel::conv3x3_cuda<float, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_32to32_relu_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_cuda<half, 32, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+    }
+    void conv3x3_32to32_add_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        void* fptr,
+        int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_cuda<half, 32, 32> <<< grid, block, 0, stream >>> (
+            sptr, srcW, srcH, srcC, spitch,
+            dptr, dstW, dstH, dstC, dpitch,
+            kernels, biases,
+            Identity(),
+            ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
+    }
+    void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        switch (dtype)
+        {
+        case Image::UInt8:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+        case Image::UInt16:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+        case Image::Float32:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
         }
     }
 }
