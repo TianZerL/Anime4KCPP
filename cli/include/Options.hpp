@@ -33,6 +33,8 @@ struct Options
         bool models = false;
         bool processors = false;
         bool version = false;
+
+        operator bool() const noexcept { return devices || models || processors || version; }
     } list;
 };
 

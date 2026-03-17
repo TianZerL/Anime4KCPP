@@ -15,7 +15,7 @@
 #   include "ProgressBar.hpp"
 #endif
 
-static bool list(const Options& options)
+static void list(const Options& options)
 {
     if (options.list.version)
     {
@@ -39,26 +39,22 @@ static bool list(const Options& options)
             "Copyright (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
             "https://github.com/TianZerL/Anime4KCPP\n"
         );
-        return true;
     }
     if (options.list.devices)
     {
+        printf("Devices:\n");
         std::printf("%s", ac::core::Processor::listInfo());
-        return true;
     }
     if (options.list.processors)
     {
         printf("Processors:\n");
         for (std::size_t i = 0; i < std::size(ac::specs::ProcessorList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorList[i], ac::specs::ProcessorDescriptionList[i]);
-        return true;
     }
     if (options.list.models)
     {
         printf("Models:\n");
         for (std::size_t i = 0; i < std::size(ac::specs::ModelList); i++) printf("  %-16s  %s\n", ac::specs::ModelList[i], ac::specs::ModelDescriptionList[i]);
-        return true;
     }
-    return false;
 }
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
@@ -208,7 +204,11 @@ int main(int argc, char* argv[])
 {
     auto options = parse(argc, argv);
 
-    if (list(options)) return 0;
+    if (options.list)
+    {
+        list(options);
+        return 0;
+    }
 
     options.outputs.resize(options.inputs.size());
 

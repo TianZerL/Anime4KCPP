@@ -38,7 +38,7 @@ Options parse(const int argc, const char* const* argv) noexcept
 
     app.footer("Use 'ac_cli video -h' to get help for video processing.");
 
-    try { app.parse(argc, argv); if (options.inputs.empty()) throw CLI::CallForHelp(); }
+    try { app.parse(argc, argv); if (!options.list && options.inputs.empty()) throw CLI::CallForHelp(); }
     catch (const CLI::ParseError& e) { std::exit(app.exit(e)); }
 
     options.video.enable = video->parsed();

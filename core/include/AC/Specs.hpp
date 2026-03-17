@@ -37,6 +37,8 @@ namespace ac::specs
         "arnet-b64-hdns",
         "arnet-b64-le",
         "arnet-b64-ls",
+        "artcnn-c4f16",
+        "artcnn-c4f32",
     };
 
     constexpr const char* ModelDescriptionList[] = {
@@ -73,6 +75,8 @@ namespace ac::specs
         "Lightweight ResNet, hdn with sharpening.",// arnet-b64-hdns
         "Lightweight ResNet, line enhancing.",     // arnet-b64-le
         "Lightweight ResNet, line sharpening.",    // arnet-b64-ls
+        "Lightweight option for real-time tasks.", // artcnn-c4f16
+        "Real-time tasks if hardware allows.",     // artcnn-c4f32
     };
 
     constexpr const char* ProcessorList[] = {
