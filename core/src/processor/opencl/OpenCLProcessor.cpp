@@ -378,8 +378,7 @@ namespace ac::core::opencl
             // - Adreno: Always split weights (better performance with smaller buffers)
             // - Other architectures: Split only if total weights exceed device's constant memory limit
             if (context.arch != Arch::AMD_RDNA && (
-                model.kernelSize() > context.constantMemorySize ||
-                model.biasSize() > context.constantMemorySize ||
+                (model.kernelSize() + model.biasSize() + model.alphaSize() > context.constantMemorySize) ||
                 context.arch == Arch::ADRENO)) splitWeights = true;
 
             // Configure kernel build options:
@@ -392,7 +391,7 @@ namespace ac::core::opencl
             KernelBuildData buildData {
                 kernelString,
                 splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
-                splitWeights || (model.kernelSize() <= context.constantMemorySize && model.biasSize() <= context.constantMemorySize)
+                splitWeights || (model.kernelSize() + model.biasSize() + model.alphaSize() <= context.constantMemorySize)
             };
 
             err = init(context, buildData); if (err != CL_SUCCESS) return;
@@ -422,24 +421,53 @@ namespace ac::core::opencl
                     );
                     if (err != CL_SUCCESS) return;
                 }
+
+                for (int i = 0; i < model.alphas(); i++)
+                {
+                    alphas.emplace_back(
+                        context.ctx,
+                        CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
+                        model.alphaSize(i),
+                        const_cast<float*>(model.alpha(i)),
+                        &err
+                    );
+                    if (err != CL_SUCCESS) return;
+                }
             }
             else
             {
-                kernels.emplace_back(
-                    context.ctx,
-                    CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
-                    model.kernelSize(),
-                    const_cast<float*>(model.kernel()),
-                    &err
-                ); if (err != CL_SUCCESS) return;
+                if (model.kernelSize() > 0)
+                {
+                    kernels.emplace_back(
+                        context.ctx,
+                        CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
+                        model.kernelSize(),
+                        const_cast<float*>(model.kernel()),
+                        &err
+                    ); if (err != CL_SUCCESS) return;
+                }
 
-                biases.emplace_back(
-                    context.ctx,
-                    CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
-                    model.biasSize(),
-                    const_cast<float*>(model.bias()),
-                    &err
-                ); if (err != CL_SUCCESS) return;
+                if (model.biasSize() > 0)
+                {
+                    biases.emplace_back(
+                        context.ctx,
+                        CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
+                        model.biasSize(),
+                        const_cast<float*>(model.bias()),
+                        &err
+                    ); if (err != CL_SUCCESS) return;
+                }
+
+                if (model.alphaSize() > 0)
+                {
+                    biases.emplace_back(
+                        context.ctx,
+                        CL_MEM_READ_ONLY | CL_MEM_HOST_NO_ACCESS | CL_MEM_COPY_HOST_PTR,
+                        model.alphaSize(),
+                        const_cast<float*>(model.alpha()),
+                        &err
+                    ); if (err != CL_SUCCESS) return;
+                }
             }
         }
         ~OpenCLProcessorSeqCNN() noexcept override = default;
@@ -453,6 +481,11 @@ namespace ac::core::opencl
         {
             return splitWeights ? biases[l] : biases.front();
         }
+        const cl::Buffer& alpha(const int l) const noexcept
+        {
+            // TODO: fix me.
+            return splitWeights ? alphas[l] : alphas.front();
+        }
         int kernelOffset(const int l) const noexcept
         {
             return splitWeights ? 0 : model.kernelOffset(l);
@@ -461,12 +494,17 @@ namespace ac::core::opencl
         {
             return splitWeights ? 0 : model.biasOffset(l);
         }
+        int alphaOffset(const int l) const noexcept
+        {
+            return splitWeights ? 0 : model.alphaOffset(l);
+        }
 
     protected:
         Model model;
         bool splitWeights;
         std::vector<cl::Buffer> kernels{};
         std::vector<cl::Buffer> biases{};
+        std::vector<cl::Buffer> alphas{};
     };
 
     template<typename Model>

@@ -499,6 +499,42 @@ namespace ac::core::cpu
         conv3x3_generic<float, 32, 4>(src, dst, kernels, biases, Identity());
     }
 
+    void conv5x5_1to8_identity_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv5x5_generic<std::uint8_t, 1, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv5x5_generic<std::uint16_t, 1, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv5x5_generic<float, 1, 8>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_8to8_prelu_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        conv3x3_generic<float, 8, 8>(src, dst, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_8to8_prelu_conv1x1_8to8_prelu_add_generic(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat)
+    {
+        conv3x3_conv1x1_generic<float, 8, 8, 8>(
+            src, dst,
+            kernels1, biases1, PReLU(alphas1), nullptr,
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+        );
+    }
+    void conv1x1_8to8_prelu_add_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas, const Image& feat)
+    {
+        conv1x1_generic<float, 8, 8>(src, dst, kernels, biases, PReLU(alphas), ResidualArg{ feat, 1.0f });
+    }
+
     void pixelshuffle_4to1_generic(const Image& src, Image& dst)
     {
         switch (dst.type())

@@ -1,5 +1,5 @@
-#ifndef AC_CORE_MODEL_ARTCNN_HPP
-#define AC_CORE_MODEL_ARTCNN_HPP
+#ifndef AC_CORE_MODEL_FSRCNNX_HPP
+#define AC_CORE_MODEL_FSRCNNX_HPP
 
 #include <cstddef>
 
@@ -8,42 +8,41 @@
 namespace ac::core::model
 {
     template<int F>
-    class ArtCNN;
+    class FSRCNNX;
 }
 
 template<int F>
-class ac::core::model::ArtCNN
+class ac::core::model::FSRCNNX
 {
 public:
     enum class Variant
     {
-        NORMAL//, DS, DN
+        NORMAL
     };
 
 public:
-    AC_CORE_EXPORT ArtCNN(Variant v) noexcept;
+    AC_CORE_EXPORT FSRCNNX(Variant v) noexcept;
 
 public:
     // length in numbers
-    int kernelLength() const noexcept { return F * 9 + F * F * 9 * (blockNum + 1) + F * 4 * 9; }
-    int kernelLength(const int idx) const noexcept { return (idx == 0) ? F * 9 : ((idx > 0 && idx < (blockNum + 1 + 1)) ? F * F * 9 : ((idx == (blockNum + 1 + 1)) ? F * 4 * 9 : 0)); }
+    int kernelLength() const noexcept { return F * 25 + F * F * 9 * blockNum + F * F * 1 + F * 4 * 9; }
     int biasLength() const noexcept { return F + F * (blockNum + 1) + 4; }
+    int alphaLength() const noexcept { return F * (blockNum + 1); }
+    int kernelLength(const int idx) const noexcept { return (idx == 0) ? F * 25 : ((idx > 0 && idx < (blockNum + 1)) ? F * F * 9 : ((idx == (blockNum + 1)) ? F * F * 1 : ((idx == (blockNum + 1 + 1)) ? F * 4 * 9: 0))); }
     int biasLength(const int idx) const noexcept { return (idx >= 0 && idx < (blockNum + 1 + 1)) ? F : (idx == (blockNum + 1 + 1) ? 4 : 0); }
-    static constexpr int alphaLength() noexcept { return 0; }
-    static constexpr int alphaLength(const int /*idx*/) noexcept { return 0; }
-
+    int alphaLength(const int idx) const noexcept { return (idx >= 1 && idx < (blockNum + 1 + 1)) ? F : 0; }
     // size in bytes
     std::size_t kernelSize() const noexcept { return kernelLength() * sizeof(float); }
-    std::size_t kernelSize(const int idx) const noexcept { return kernelLength(idx) * sizeof(float); }
     std::size_t biasSize() const noexcept { return biasLength() * sizeof(float); }
+    std::size_t alphaSize() const noexcept { return alphaLength() * sizeof(float); }
+    std::size_t kernelSize(const int idx) const noexcept { return kernelLength(idx) * sizeof(float); }
     std::size_t biasSize(const int idx) const noexcept { return biasLength(idx) * sizeof(float); }
-    static constexpr std::size_t alphaSize() noexcept { return alphaLength() * sizeof(float); }
-    static constexpr std::size_t alphaSize(const int idx) noexcept { return alphaLength(idx) * sizeof(float); }
+    std::size_t alphaSize(const int idx) const noexcept { return alphaLength(idx) * sizeof(float); }
 
     int blocks() const noexcept { return blockNum; }
     int kernels() const noexcept { return blockNum + 1 + 2; }
     int biases() const noexcept { return blockNum + 1 + 2; }
-    static constexpr int alphas() noexcept { return 0; }
+    int alphas() const noexcept { return blockNum + 1; }
 
     int kernelOffset(const int idx) const noexcept
     {
@@ -58,17 +57,23 @@ public:
         if (idx < biases()) return F * idx;
         return biasLength();
     }
-    static constexpr int alphaOffset(const int /*idx*/) noexcept { return 0; }
+    int alphaOffset(const int idx) const noexcept
+    {
+        if (idx <= 1) return 0;
+        if (idx < alphas() + 1) return F * (idx - 1);
+        return alphaLength();
+    }
 
     const float* kernel(const int idx = 0) const noexcept { return kptr + kernelOffset(idx); }
     const float* bias(const int idx = 0) const noexcept { return bptr + biasOffset(idx); }
-    static constexpr const float* alpha(const int idx = 0) noexcept { return nullptr; }
+    const float* alpha(const int idx = 0) const noexcept { return aptr + alphaOffset(idx); }
 
 private:
     int blockNum;
 
     const float* kptr;
     const float* bptr;
+    const float* aptr;
 };
 
 #endif

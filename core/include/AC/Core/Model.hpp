@@ -4,5 +4,6 @@
 #include "AC/Core/Model/ACNet.hpp"
 #include "AC/Core/Model/ARNet.hpp"
 #include "AC/Core/Model/ArtCNN.hpp"
+#include "AC/Core/Model/FSRCNNX.hpp"
 
 #endif

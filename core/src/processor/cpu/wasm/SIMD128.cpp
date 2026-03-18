@@ -443,7 +443,7 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename IN, int cin, int ctemp, int cout, typename ActiveFunc3x3, typename ResidualArg3x3, typename ActiveFunc1x1, typename ResidualArg1x1>
+    template <int cin, int ctemp, int cout, typename ActiveFunc3x3, typename ResidualArg3x3, typename ActiveFunc1x1, typename ResidualArg1x1>
     inline void conv3x3_conv1x1_neon_float(
         const Image& src, Image& dst,
         const float* const kernels3x3, const float* const biases3x3, ActiveFunc3x3&& activeFunc3x3, ResidualArg3x3&& residualArg3x3,
@@ -667,5 +667,41 @@ namespace ac::core::cpu
     void conv3x3_32to4_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         conv3x3_wasm_simd128_float<32, 4>(src, dst, kernels, biases, Identity());
+    }
+
+    void conv5x5_1to8_identity_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv5x5_wasm_simd128_cin1<std::uint8_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv5x5_wasm_simd128_cin1<std::uint16_t, 8>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv5x5_wasm_simd128_cin1<float, 8>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_8to8_prelu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_8to8_prelu_conv1x1_8to8_prelu_add_wasm_simd128(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat)
+    {
+        conv3x3_conv1x1_wasm_simd128_float<8, 8, 8>(
+            src, dst,
+            kernels1, biases1, PReLU(alphas1), nullptr,
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+        );
+    }
+    void conv1x1_8to8_prelu_add_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas, const Image& feat)
+    {
+        conv1x1_wasm_simd128_float<8, 8>(src, dst, kernels, biases, PReLU(alphas), ResidualArg{ feat, 1.0f });
     }
 }

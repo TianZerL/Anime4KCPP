@@ -40,6 +40,103 @@ inline void conv3x3_cin1(
     }
 }
 
+inline void conv5x5_cin1(
+    read_only image2d_t src,
+    float* const out, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    float8 r0 = (float8)(
+        read_imagef(src, n_sampler, (int2)(x-2, y-2)).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y-2)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y-2)).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y-2)).x,
+        read_imagef(src, n_sampler, (int2)(x+2, y-2)).x,
+        read_imagef(src, n_sampler, (int2)(x-2, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y-1)).x
+    );
+    float8 r8 = (float8)(
+        read_imagef(src, n_sampler, (int2)(x+1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x+2, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x-2, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x  , y  )).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x+2, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x-2, y+1)).x
+    );
+    float8 r16 = (float8)(
+        read_imagef(src, n_sampler, (int2)(x-1, y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x+2, y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x-2, y+2)).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y+2)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y+2)).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y+2)).x
+    );
+    float r24 = read_imagef(src, n_sampler, (int2)(x+2, y+2)).x;
+
+    for(int n = 0; n < cout; n++)
+    {
+        float8 k0 = vload8(0, kernels + n * 25 + 0);
+        float8 k8 = vload8(0, kernels + n * 25 + 8);
+        float8 k16 = vload8(0, kernels + n * 25 + 16);
+        float k24 = kernels[n * 25 + 24];
+
+        float8 s = r0 * k0 + r8 * k8 + r16 * k16;
+        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + r24 * k24 + biases[n];
+    }
+}
+
+inline void conv1x1(
+    read_only image2d_array_t src, float* const out,
+    const int cin, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    const int count = cin / 8;
+
+    for(int n = 0; n < cout; n++)
+    {
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin;
+        float8 s = (float8)(0.0f);
+        for(int idx = 0; idx < count; idx++)
+        {
+            float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x, y, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x, y, idx * 2 + 1, 0)));
+            float8 k = vload8(idx, kptr);
+            s += r * k;
+        }
+        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
+    }
+}
+
+inline void conv1x1_from_array(
+    const float* const in, float* const out,
+    const int cin, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    const int count = cin / 8;
+
+    for(int n = 0; n < cout; n++)
+    {
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin;
+        float8 s = (float8)(0.0f);
+        for(int idx = 0; idx < count; idx++)
+        {
+            float8 r = vload8(idx, in);
+            float8 k = vload8(idx, kptr);
+            s += r * k;
+        }
+        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
+    }
+}
+
 inline void conv3x3(
     read_only image2d_array_t src, float* const out,
     const int cin, const int cout,
@@ -51,7 +148,7 @@ inline void conv3x3(
 
     for(int n = 0; n < cout; n++)
     {
-        WEIGHTS_SPACE const float* const restrict k = kernels + n * cin * 9;
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
 #   if defined (ARCH_AMD_GCN)
         float8 s0 = (float8)(0.0f);
         float8 s1 = (float8)(0.0f);
@@ -72,15 +169,15 @@ inline void conv3x3(
             float8 r7 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y+1, l0, 0)), read_imagef(src, n_sampler, (int4)(x  , y+1, l1, 0)));
             float8 r8 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y+1, l0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y+1, l1, 0)));
 
-            float8 k0 = vload8(count * 0 + idx, k);
-            float8 k1 = vload8(count * 1 + idx, k);
-            float8 k2 = vload8(count * 2 + idx, k);
-            float8 k3 = vload8(count * 3 + idx, k);
-            float8 k4 = vload8(count * 4 + idx, k);
-            float8 k5 = vload8(count * 5 + idx, k);
-            float8 k6 = vload8(count * 6 + idx, k);
-            float8 k7 = vload8(count * 7 + idx, k);
-            float8 k8 = vload8(count * 8 + idx, k);
+            float8 k0 = vload8(count * 0 + idx, kptr);
+            float8 k1 = vload8(count * 1 + idx, kptr);
+            float8 k2 = vload8(count * 2 + idx, kptr);
+            float8 k3 = vload8(count * 3 + idx, kptr);
+            float8 k4 = vload8(count * 4 + idx, kptr);
+            float8 k5 = vload8(count * 5 + idx, kptr);
+            float8 k6 = vload8(count * 6 + idx, kptr);
+            float8 k7 = vload8(count * 7 + idx, kptr);
+            float8 k8 = vload8(count * 8 + idx, kptr);
 
 #       if defined (ARCH_AMD_GCN)
             s0 = mad(r0, k0, s0);
@@ -111,6 +208,41 @@ inline void conv3x3(
     }
 }
 
+inline void conv1x1_cin8(
+    read_only image2d_array_t src,
+    float* const out, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x, y, 0, 0)), read_imagef(src, n_sampler, (int4)(x, y, 1, 0)));
+
+    for(int n = 0; n < cout; n++)
+    {
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * 8;
+
+        float8 k = vload8(0, kptr);
+        float8 s = r * k;
+        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
+    }
+}
+
+inline void conv1x1_cin8_from_array(
+    const float8 rin,  float* const out, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    for(int n = 0; n < cout; n++)
+    {
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * 8;
+
+        float8 k = vload8(0, kptr);
+        float8 s = rin * k;
+        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
+    }
+}
+
 inline void conv3x3_cin8(
     read_only image2d_array_t src,
     float* const out, const int cout,
@@ -130,17 +262,17 @@ inline void conv3x3_cin8(
 
     for(int n = 0; n < cout; n++)
     {
-        WEIGHTS_SPACE const float* const restrict k = kernels + n * 8 * 9;
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * 8 * 9;
 
-        float8 k0 = vload8(0, k);
-        float8 k1 = vload8(1, k);
-        float8 k2 = vload8(2, k);
-        float8 k3 = vload8(3, k);
-        float8 k4 = vload8(4, k);
-        float8 k5 = vload8(5, k);
-        float8 k6 = vload8(6, k);
-        float8 k7 = vload8(7, k);
-        float8 k8 = vload8(8, k);
+        float8 k0 = vload8(0, kptr);
+        float8 k1 = vload8(1, kptr);
+        float8 k2 = vload8(2, kptr);
+        float8 k3 = vload8(3, kptr);
+        float8 k4 = vload8(4, kptr);
+        float8 k5 = vload8(5, kptr);
+        float8 k6 = vload8(6, kptr);
+        float8 k7 = vload8(7, kptr);
+        float8 k8 = vload8(8, kptr);
 
 #   if defined (ARCH_AMD_GCN)
         float8 s0 = (float8)(0.0f);

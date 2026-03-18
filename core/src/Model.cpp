@@ -205,3 +205,36 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bp
 
 template class ac::core::model::ArtCNN<16>;
 template class ac::core::model::ArtCNN<32>;
+
+template<int F>
+ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
+{
+    if constexpr (F == 8)
+    {
+        switch (v)
+        {
+        case Variant::NORMAL:
+            blockNum = 4;
+            kptr = param::FSRCNNX_F8_NHWC_kernels;
+            bptr = param::FSRCNNX_F8_NHWC_biases;
+            aptr = param::FSRCNNX_F8_NHWC_alphas;
+            break;
+        }
+    }
+    else if constexpr (F == 16)
+    {
+        switch (v)
+        {
+        case Variant::NORMAL:
+            blockNum = 4;
+            kptr = param::FSRCNNX_F16_NHWC_kernels;
+            bptr = param::FSRCNNX_F16_NHWC_biases;
+            aptr = param::FSRCNNX_F16_NHWC_alphas;
+            break;
+        }
+    }
+    else static_assert(F == 16, "Unsupported FSRCNNX model");
+}
+
+template class ac::core::model::FSRCNNX<8>;
+template class ac::core::model::FSRCNNX<16>;
