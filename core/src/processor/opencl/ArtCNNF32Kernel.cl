@@ -50,7 +50,7 @@ kernel void conv3x3_32to32_relu(
     }
 }
 
-kernel void conv3x3_32to32_add_identity(
+kernel void conv3x3_32to32_identity_add(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
     WEIGHTS_SPACE const float* restrict kernels,
@@ -72,7 +72,7 @@ kernel void conv3x3_32to32_add_identity(
     for (int i = 0; i < 8; i++)
     {
         conv3x3(src, s, 32, 4, kernels + 32 * 9 * 4 * i, biases + 4 * i, x, y);
-        write_imagef(dst, (int4)(x, y, i, 0), Identity(vload4(0, s) + read_imagef(feat, n_sampler, (int4)(x, y, i, 0))));
+        write_imagef(dst, (int4)(x, y, i, 0), Identity(vload4(0, s)) + read_imagef(feat, n_sampler, (int4)(x, y, i, 0)));
     }
 }
 

@@ -50,7 +50,7 @@ kernel void conv3x3_16to16_relu(
     write_imagef(dst, (int4)(x, y, 3, 0), ReLU(vload4(3, s)));
 }
 
-kernel void conv3x3_16to16_add_identity(
+kernel void conv3x3_16to16_identity_add(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
     WEIGHTS_SPACE const float* restrict kernels,
@@ -70,10 +70,10 @@ kernel void conv3x3_16to16_add_identity(
     float s[16];
     conv3x3(src, s, 16, 16, kernels, biases, x, y);
 
-    write_imagef(dst, (int4)(x, y, 0, 0), Identity(vload4(0, s) + read_imagef(feat, n_sampler, (int4)(x, y, 0, 0))));
-    write_imagef(dst, (int4)(x, y, 1, 0), Identity(vload4(1, s) + read_imagef(feat, n_sampler, (int4)(x, y, 1, 0))));
-    write_imagef(dst, (int4)(x, y, 2, 0), Identity(vload4(2, s) + read_imagef(feat, n_sampler, (int4)(x, y, 2, 0))));
-    write_imagef(dst, (int4)(x, y, 3, 0), Identity(vload4(3, s) + read_imagef(feat, n_sampler, (int4)(x, y, 3, 0))));
+    write_imagef(dst, (int4)(x, y, 0, 0), Identity(vload4(0, s)) + read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)));
+    write_imagef(dst, (int4)(x, y, 1, 0), Identity(vload4(1, s)) + read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)));
+    write_imagef(dst, (int4)(x, y, 2, 0), Identity(vload4(2, s)) + read_imagef(feat, n_sampler, (int4)(x, y, 2, 0)));
+    write_imagef(dst, (int4)(x, y, 3, 0), Identity(vload4(3, s)) + read_imagef(feat, n_sampler, (int4)(x, y, 3, 0)));
 }
 
 kernel void conv3x3_16to4_identity_pixelshuffle_4to1(

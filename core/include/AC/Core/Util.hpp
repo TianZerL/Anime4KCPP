@@ -28,22 +28,32 @@ namespace ac::core
     {
     public:
         constexpr Identity() noexcept = default;
-        float operator() (const float v) const noexcept { return identity(v); }
+        float operator() (const float v, const int /*c*/) const noexcept { return identity(v); }
     };
     class ReLU
     {
     public:
         constexpr ReLU() noexcept = default;
-        float operator() (const float v) const noexcept { return relu(v); }
+        float operator() (const float v, const int /*c*/) const noexcept { return relu(v); }
     };
     class LReLU
     {
     public:
         constexpr LReLU(const float negativeSlope) noexcept : negativeSlope(negativeSlope) {}
-        float operator() (const float v) const noexcept { return lrelu(v, negativeSlope); }
+        float operator() (const float v, const int /*c*/) const noexcept { return lrelu(v, negativeSlope); }
 
     private:
         const float negativeSlope;
+    };
+
+    class PReLU
+    {
+    public:
+        constexpr PReLU(const float* const alphas) noexcept : alphas(alphas) {}
+        float operator() (const float v, const int c) const noexcept { return lrelu(v, alphas[c]); }
+
+    private:
+        const float* alphas;
     };
 
     /**

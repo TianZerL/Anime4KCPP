@@ -69,7 +69,7 @@ namespace ac::core::cuda
         const float negativeSlope,
         cudaStream_t stream
     ) noexcept;
-    void conv3x3_8to8_residual_identity_cuda(
+    void conv3x3_8to8_identity_residual_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -81,7 +81,7 @@ namespace ac::core::cuda
         const float scale,
         cudaStream_t stream
     ) noexcept;
-    void conv3x3_8to8_residual_add_identity_cuda(
+    void conv3x3_8to8_identity_residual_add_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -124,7 +124,7 @@ namespace ac::core::cuda
         const float* biases,
         cudaStream_t stream
     ) noexcept;
-    void conv3x3_16to16_add_identity_cuda(
+    void conv3x3_16to16_identity_add_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -164,7 +164,7 @@ namespace ac::core::cuda
         const float* biases,
         cudaStream_t stream
     ) noexcept;
-    void conv3x3_32to32_add_identity_cuda(
+    void conv3x3_32to32_identity_add_cuda(
         const void* sptr,
         int srcW, int srcH, int srcC, int spitch,
         void* dptr,
@@ -615,7 +615,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         kernels[l], biases[l], 0.2f, stream); l++;
-    conv3x3_8to8_residual_identity_cuda(
+    conv3x3_8to8_identity_residual_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernels[l], biases[l],
@@ -626,7 +626,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
             kernels[l], biases[l], 0.2f, stream); l++;
-        conv3x3_8to8_residual_identity_cuda(
+        conv3x3_8to8_identity_residual_cuda(
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             kernels[l], biases[l],
@@ -636,7 +636,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         kernels[l], biases[l], 0.2f, stream); l++;
-    conv3x3_8to8_residual_add_identity_cuda(
+    conv3x3_8to8_identity_residual_add_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernels[l], biases[l],
@@ -731,7 +731,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernels[l], biases[l], stream); l++;
-    conv3x3_16to16_add_identity_cuda(
+    conv3x3_16to16_identity_add_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         kernels[l], biases[l],
@@ -826,7 +826,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernels[l], biases[l], stream); l++;
-    conv3x3_32to32_add_identity_cuda(
+    conv3x3_32to32_identity_add_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         kernels[l], biases[l],

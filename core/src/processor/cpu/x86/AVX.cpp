@@ -1,4 +1,5 @@
 #include <array>
+#include <type_traits>
 
 #include <immintrin.h>
 
@@ -16,6 +17,42 @@ namespace ac::core::cpu
         return _mm_cvtss_f32(v32);
     }
 
+    template <int cin, int cout>
+    inline void conv1x1_avx_float_impl(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+    {
+        constexpr int vstep = 8;
+        constexpr int count = cin / vstep;
+        constexpr int remain = cin % vstep;
+
+        std::memcpy(out, biases, sizeof(float) * cout);
+
+        for (int idx = 0; idx < count; idx++)
+        {
+            __m256 r = _mm256_loadu_ps(rptr[0] + idx * vstep);
+
+            for (int n = 0; n < cout; n++)
+            {
+                auto kptr = kernels + n * cin;
+
+                __m256 k = _mm256_loadu_ps(kptr + idx * vstep);
+
+                out[n] += avx_hsum_ps(_mm256_mul_ps(r, k));
+            }
+        }
+        if constexpr (remain)
+        {
+            __m256 r = _mm256_set_ps(0.0f, remain > 6 ? (rptr[0] + count * vstep)[6] : 0.0f, remain > 5 ? (rptr[0] + count * vstep)[5] : 0.0f, remain > 4 ? (rptr[0] + count * vstep)[4] : 0.0f, remain > 3 ? (rptr[0] + count * vstep)[3] : 0.0f, remain > 2 ? (rptr[0] + count * vstep)[2] : 0.0f, remain > 1 ? (rptr[0] + count * vstep)[1] : 0.0f, (rptr[0] + count * vstep)[0]);
+
+            for (int n = 0; n < cout; n++)
+            {
+                auto kptr = kernels + n * cin;
+
+                __m256 k = _mm256_set_ps(0.0f, remain > 6 ? (kptr + count * vstep)[6] : 0.0f, remain > 5 ? (kptr + count * vstep)[5] : 0.0f, remain > 4 ? (kptr + count * vstep)[4] : 0.0f, remain > 3 ? (kptr + count * vstep)[3] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, remain > 1 ? (kptr + count * vstep)[1] : 0.0f, (kptr + count * vstep)[0]);
+
+                out[n] += avx_hsum_ps(_mm256_mul_ps(r, k));
+            }
+        }
+    }
     template <int cin, int cout, bool fma>
     inline void conv3x3_avx_float_impl(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
     {
@@ -167,6 +204,36 @@ namespace ac::core::cpu
         }
     }
 
+    template <int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
+    inline void conv1x1_avx_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
+    {
+        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
+
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
+
+                auto out = static_cast<float*>(dst.ptr(j, i));
+                const float* rptr[] = { static_cast<const float*>(src.ptr(j, i)) };
+
+                float sum[cout]{};
+
+                conv1x1_avx_float_impl<cin, cout>(rptr, sum, kernels, biases);
+
+                for (int n = 0; n < cout; n++)
+                {
+                    sum[n] = activeFunc(sum[n], n);
+
+                    if constexpr (sizeof...(ResidualArgs))
+                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
+                            sum[n] = sum[n] * scales[idx] + iptrs[idx][n];
+
+                    out[n] = sum[n];
+                }
+            }
+        });
+    }
     template <int cin, int cout, bool fma, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_avx_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
@@ -203,11 +270,13 @@ namespace ac::core::cpu
 
                 for (int n = 0; n < cout; n++)
                 {
+                    sum[n] = activeFunc(sum[n], n);
+
                     if constexpr (sizeof...(ResidualArgs))
                         for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
                             sum[n] = sum[n] * scales[idx] + iptrs[idx][n];
 
-                    out[n] = activeFunc(sum[n]);
+                    out[n] = sum[n];
                 }
             }
         });
@@ -242,7 +311,73 @@ namespace ac::core::cpu
                     __m256 k = _mm256_loadu_ps(kernels + n * 9 + 0);
                     auto sum = avx_hsum_ps(_mm256_mul_ps(r, k));
                     auto k8 = *(kernels + n * 9 + 8);
-                    out[n] = activeFunc(sum + k8 * r8 + biases[n]);
+                    out[n] = activeFunc(sum + r8 * k8 + biases[n], n);
+                }
+            }
+        });
+    }
+    template <typename IN, int cout, bool fma, typename ActiveFunc>
+    inline void conv5x5_avx_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
+    {
+        util::parallelFor(0, src.height(), [&](const int i) {
+            int ioffsets[5] = { i > 1 ? -2 : -1 , i > 0 ? -1 : 0 , 0, i < src.height() - 1 ? 1 : 0, i < src.height() - 2 ? 2 : 1 };
+
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto out = static_cast<float*>(dst.ptr(j, i));
+
+                int joffsets[5] = { j > 1 ? -2 : -1, j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : 1 };
+
+                __m256 r0 = _mm256_set_ps(
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[0]))));
+                __m256 r8 = _mm256_set_ps(
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[1]))));
+                __m256 r16 = _mm256_set_ps(
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[3]))));
+                auto r24 = toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[4])));
+
+                for (int n = 0; n < cout; n++)
+                {
+                    __m256 k0 = _mm256_loadu_ps(kernels + n * 25 + 0);
+                    __m256 k8 = _mm256_loadu_ps(kernels + n * 25 + 8);
+                    __m256 k16 = _mm256_loadu_ps(kernels + n * 25 + 16);
+
+                    auto sum = biases[n];
+
+#           ifdef AC_CORE_WITH_FMA
+                    if constexpr (fma)
+                    {
+                        sum = avx_hsum_ps(_mm256_fmadd_ps(r0, k0, _mm256_fmadd_ps(r8, k8, _mm256_mul_ps(r16, k16))));
+                    }
+                    else
+#           endif
+                    {
+                        sum = avx_hsum_ps(_mm256_add_ps(_mm256_mul_ps(r0, k0), _mm256_add_ps(_mm256_mul_ps(r8, k8), _mm256_mul_ps(r16, k16))));
+                    }
+
+                    auto k24 = *(kernels + n * 25 + 24);
+                    out[n] = activeFunc(sum + r24 * k24, n);
                 }
             }
         });
@@ -322,6 +457,64 @@ namespace ac::core::cpu
         });
     }
 
+    template <typename IN, int cin, int ctemp, int cout, bool fma, typename ActiveFunc3x3, typename ResidualArg3x3, typename ActiveFunc1x1, typename ResidualArg1x1>
+    inline void conv3x3_conv1x1_avx_float(
+        const Image& src, Image& dst,
+        const float* const kernels3x3, const float* const biases3x3, ActiveFunc3x3&& activeFunc3x3, ResidualArg3x3&& residualArg3x3,
+        const float* const kernels1x1, const float* const biases1x1, ActiveFunc1x1&& activeFunc1x1, ResidualArg1x1&& residualArg1x1)
+    {
+        util::parallelFor(0, src.height(), [&](const int i) {
+            auto tp = i > 0 ? 1 : 0;
+            auto bp = i < src.height() - 1 ? 1 : 0;
+
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto out = static_cast<float*>(dst.ptr(j, i));
+
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
+
+                const float* rptr[] = {
+                    static_cast<const float*>(src.ptr(j - lp, i - tp)),
+                    static_cast<const float*>(src.ptr(j     , i - tp)),
+                    static_cast<const float*>(src.ptr(j + rp, i - tp)),
+                    static_cast<const float*>(src.ptr(j - lp, i     )),
+                    static_cast<const float*>(src.ptr(j     , i     )),
+                    static_cast<const float*>(src.ptr(j + rp, i     )),
+                    static_cast<const float*>(src.ptr(j - lp, i + bp)),
+                    static_cast<const float*>(src.ptr(j     , i + bp)),
+                    static_cast<const float*>(src.ptr(j + rp, i + bp)),
+                };
+
+                float buffer[ctemp]{};
+
+                conv3x3_avx_float_impl<cin, ctemp, fma>(rptr, buffer, kernels3x3, biases3x3);
+
+                for (int n = 0; n < ctemp; n++)
+                {
+                    buffer[n] = activeFunc3x3(buffer[n], n);
+
+                    if constexpr (std::is_same_v<ResidualArg3x3, ResidualArg>)
+                        buffer[n] = buffer[n] * residualArg3x3.scale + static_cast<const float*>(residualArg3x3.image.ptr(j, i))[n];
+                }
+
+                rptr[0] = buffer;
+                float sum[cout]{};
+                conv1x1_avx_float_impl<ctemp, cout>(rptr, sum, kernels1x1, biases1x1);
+
+                for (int n = 0; n < cout; n++)
+                {
+                    sum[n] = activeFunc1x1(sum[n], n);
+
+                    if constexpr (std::is_same_v<ResidualArg1x1, ResidualArg>)
+                        sum[n] = sum[n] * residualArg1x1.scale + static_cast<const float*>(residualArg1x1.image.ptr(j, i))[n];
+
+                    out[n] = sum[n];
+                }
+            }
+        });
+    }
+
     void conv3x3_1to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())
@@ -386,7 +579,7 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, LReLU(negativeSlope));
     }
-    void conv3x3_8to8_residual_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
+    void conv3x3_8to8_identity_residual_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
@@ -395,7 +588,7 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<8, 8, false>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
     }
-    void conv3x3_8to8_residual_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
+    void conv3x3_8to8_identity_residual_add_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
@@ -473,7 +666,7 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<16, 16, false>(src, dst, kernels, biases, ReLU());
     }
-    void conv3x3_16to16_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    void conv3x3_16to16_identity_add_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
@@ -551,7 +744,7 @@ namespace ac::core::cpu
 #   endif
             conv3x3_avx_float<32, 32, false>(src, dst, kernels, biases, ReLU());
     }
-    void conv3x3_32to32_add_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
+    void conv3x3_32to32_identity_add_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
