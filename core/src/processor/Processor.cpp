@@ -38,6 +38,13 @@ namespace ac::core::detail
             {
                 if (modelString.find("f8") != std::string::npos)
                 {
+                    if (modelString.find("distort") != std::string::npos || modelString.find("dp") != std::string::npos)
+                    {
+                        auto variant = ac::core::model::FSRCNNX<8>::Variant::DISTORT_PLUS;
+
+                        return ac::core::model::FSRCNNX<8>{ variant };
+                    }
+
                     auto variant = ac::core::model::FSRCNNX<8>::Variant::NORMAL;
 
                     return ac::core::model::FSRCNNX<8>{ variant };

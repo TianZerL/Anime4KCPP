@@ -219,6 +219,12 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept : kptr(nullptr), 
             bptr = param::FSRCNNX_F8_NHWC_biases;
             aptr = param::FSRCNNX_F8_NHWC_alphas;
             break;
+        case Variant::DISTORT_PLUS:
+            blockNum = 4;
+            kptr = param::FSRCNNX_F8_DistortPlus_NHWC_kernels;
+            bptr = param::FSRCNNX_F8_DistortPlus_NHWC_biases;
+            aptr = param::FSRCNNX_F8_DistortPlus_NHWC_alphas;
+            break;
         }
     }
     else if constexpr (F == 16)
@@ -230,6 +236,12 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept : kptr(nullptr), 
             kptr = param::FSRCNNX_F16_NHWC_kernels;
             bptr = param::FSRCNNX_F16_NHWC_biases;
             aptr = param::FSRCNNX_F16_NHWC_alphas;
+            break;
+        case Variant::DISTORT_PLUS:
+            blockNum = 4;
+            kptr = param::FSRCNNX_F16_DistortPlus_NHWC_kernels;
+            bptr = param::FSRCNNX_F16_DistortPlus_NHWC_biases;
+            aptr = param::FSRCNNX_F16_DistortPlus_NHWC_alphas;
             break;
         }
     }
