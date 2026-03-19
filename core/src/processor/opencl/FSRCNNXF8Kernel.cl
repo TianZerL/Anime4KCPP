@@ -45,11 +45,11 @@ kernel void conv3x3_8to8_prelu(
     float s[8];
     conv3x3_cin8(src, s, 8, kernels, biases, x, y);
 
-    write_imagef(dst, (int4)(x, y, 0, 0), LReLU(vload4(0, s), vload4(0, alphas)));
-    write_imagef(dst, (int4)(x, y, 1, 0), LReLU(vload4(1, s), vload4(1, alphas)));
+    write_imagef(dst, (int4)(x, y, 0, 0), PReLU(vload4(0, s), vload4(0, alphas)));
+    write_imagef(dst, (int4)(x, y, 1, 0), PReLU(vload4(1, s), vload4(1, alphas)));
 }
 
-kernel void conv3x3_8to8_prelu_conv1x1_8to8_prelu_add(
+kernel void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
     WEIGHTS_SPACE const float* restrict kernels1, const int koffset1,
@@ -78,8 +78,8 @@ kernel void conv3x3_8to8_prelu_conv1x1_8to8_prelu_add(
 
     conv1x1_cin8_from_vector(LReLU(vload8(0, s), vload8(0, alphas1)), s, 8, kernels2, biases2, x, y);
 
-    write_imagef(dst, (int4)(x, y, 0, 0), LReLU(vload4(0, s), vload4(0, alphas2)) + read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)));
-    write_imagef(dst, (int4)(x, y, 1, 0), LReLU(vload4(1, s), vload4(1, alphas2)) + read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)));
+    write_imagef(dst, (int4)(x, y, 0, 0), PReLU(vload4(0, s) + read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)), vload4(0, alphas2)));
+    write_imagef(dst, (int4)(x, y, 1, 0), PReLU(vload4(1, s) + read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)), vload4(1, alphas2)));
 }
 
 kernel void conv3x3_8to4_identity_pixelshuffle_4to1(

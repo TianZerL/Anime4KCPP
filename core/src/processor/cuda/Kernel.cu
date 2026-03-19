@@ -36,6 +36,10 @@ namespace ac::core::cuda
     {
         return fmaxf(v, v * n);
     }
+    __device__ static float prelu(float v, float n) noexcept
+    {
+        return fmaxf(v, 0.0f) + n * fminf(v, 0.0f);
+    }
 
     class Identity
     {
@@ -62,7 +66,7 @@ namespace ac::core::cuda
     {
     public:
         PReLU(const float* __restrict__ alphas) noexcept : alphas(alphas) {}
-        __device__ float operator() (const float v, const int c) const noexcept { return lrelu(v, alphas[c]); }
+        __device__ float operator() (const float v, const int c) const noexcept { return prelu(v, alphas[c]); }
 
     private:
         const float* __restrict__ alphas;
@@ -137,7 +141,7 @@ namespace ac::core::cuda
 
     namespace kernel
     {
-        template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
+        template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
         __global__ void conv1x1_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -211,16 +215,18 @@ namespace ac::core::cuda
 
                 for (int c = 0; c < cin; c++) sum += toFloat(r[c]) * k[c];
 
-                sum = activeFunc(sum, n);
+                if constexpr (!postactive) sum = activeFunc(sum, n);
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
                         sum = sum * residualArgs[idx].scale + toFloat(getReadPtr<half>(residualArgs[idx].ptr, residualArgs[idx].w, residualArgs[idx].h, residualArgs[idx].c, residualArgs[idx].pitch, x, y)[n]);
 
+                if constexpr (postactive) sum = activeFunc(sum, n);
+
                 out[n] = toHalf(sum);
             }
         }
-        template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
+        template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
         __global__ void conv3x3_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -362,16 +368,18 @@ namespace ac::core::cuda
                     for (int c = 0; c < cin; c++)
                         sum += toFloat(r[idx][c]) * k[idx][c];
 
-                sum = activeFunc(sum, n);
+                if constexpr (!postactive) sum = activeFunc(sum, n);
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
                         sum = sum * residualArgs[idx].scale + toFloat(getReadPtr<half>(residualArgs[idx].ptr, residualArgs[idx].w, residualArgs[idx].h, residualArgs[idx].c, residualArgs[idx].pitch, x, y)[n]);
 
+                if constexpr (postactive) sum = activeFunc(sum, n);
+
                 out[n] = toHalf(sum);
             }
         }
-        template <typename IN, int cin, int cout, typename ActiveFunc, typename... ResidualArgs>
+        template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
         __global__ void conv5x5_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -488,11 +496,13 @@ namespace ac::core::cuda
                     }
                 }
 
-                sum = activeFunc(sum, n);
+                if constexpr (!postactive) sum = activeFunc(sum, n);
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
                         sum = sum * residualArgs[idx].scale + toFloat(getReadPtr<half>(residualArgs[idx].ptr, residualArgs[idx].w, residualArgs[idx].h, residualArgs[idx].c, residualArgs[idx].pitch, x, y)[n]);
+
+                if constexpr (postactive) sum = activeFunc(sum, n);
 
                 out[n] = toHalf(sum);
             }
@@ -671,212 +681,217 @@ namespace ac::core::cuda
                 *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = fromFloat<OUT>(sum);
             }
         }
-    }
-    template <typename IN, int cin, int ctemp, int cout, typename ActiveFunc3x3, typename ResidualArgs3x3, typename ActiveFunc1x1, typename ResidualArgs1x1>
-    __global__ void conv3x3_conv1x1_cuda(
-        const void* const __restrict__ sptr,
-        const int srcW, const int srcH, const int srcC, const int spitch,
-        const typename RestrictPointer<::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>, void>::Type dptr,
-        const int dstW, const int dstH, const int dstC, const int dpitch,
-        const float* const __restrict__ kernels3x3, const float* const __restrict__ biases3x3, ActiveFunc3x3 activeFunc3x3, ResidualArgs3x3 residualArg3x3,
-        const float* const __restrict__ kernels1x1, const float* const __restrict__ biases1x1, ActiveFunc1x1 activeFunc1x1, ResidualArgs1x1 residualArg1x1)
-    {
-        auto bx = blockIdx.x * BlockSize::x;
-        auto by = blockIdx.y * BlockSize::y;
-        auto x = bx + threadIdx.x;
-        auto y = by + threadIdx.y;
-        auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
-
-        constexpr auto threads = BlockSize::x * BlockSize::y;
-        constexpr auto knum3x3 = ctemp * 9 * cin;
-        constexpr auto bnum3x3 = ctemp;
-        constexpr auto knum1x1 = cout * 1 * ctemp;
-        constexpr auto bnum1x1 = cout;
-        constexpr auto ksize = knum3x3 > knum1x1 ? knum3x3 : knum1x1;
-        constexpr auto bsize = bnum3x3 > bnum1x1 ? bnum3x3 : bnum1x1;
-        constexpr auto pad = 1;
-        constexpr auto rsizeY = BlockSize::y + pad * 2;
-        constexpr auto rsizeX = (BlockSize::x + pad * 2) * cin;
-
-        constexpr bool imageToShared = rsizeY * rsizeX * sizeof(IN) <= 8192;
-
-        __shared__ float kptr[ksize];
-        if constexpr (threads < knum3x3)
+    
+        template <typename IN, int cin, int ctemp, int cout, bool postactive3x3 = false, bool postactive1x1 = false, typename ActiveFunc3x3, typename ResidualArgs3x3, typename ActiveFunc1x1, typename ResidualArgs1x1>
+        __global__ void conv3x3_conv1x1_cuda(
+            const void* const __restrict__ sptr,
+            const int srcW, const int srcH, const int srcC, const int spitch,
+            const typename RestrictPointer<::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>, void>::Type dptr,
+            const int dstW, const int dstH, const int dstC, const int dpitch,
+            const float* const __restrict__ kernels3x3, const float* const __restrict__ biases3x3, ActiveFunc3x3 activeFunc3x3, ResidualArgs3x3 residualArg3x3,
+            const float* const __restrict__ kernels1x1, const float* const __restrict__ biases1x1, ActiveFunc1x1 activeFunc1x1, ResidualArgs1x1 residualArg1x1)
         {
-            constexpr auto line = knum3x3 / threads;
-            constexpr auto remain = knum3x3 % threads;
-            for (int i = 0; i < line; i++)
-            {
-                auto idx = tid + i * threads;
-                kptr[idx] = kernels3x3[idx];
-            }
-            if (remain > 0 && tid < remain)
-            {
-                auto idx = tid + line * threads;
-                kptr[idx] = kernels3x3[idx];
-            }
-        }
-        else if (tid < knum3x3) kptr[tid] = kernels3x3[tid];
+            auto bx = blockIdx.x * BlockSize::x;
+            auto by = blockIdx.y * BlockSize::y;
+            auto x = bx + threadIdx.x;
+            auto y = by + threadIdx.y;
+            auto tid = threadIdx.y * BlockSize::x + threadIdx.x;
 
-        __shared__ float bptr[bsize];
-        if constexpr (threads < bnum3x3)
-        {
-            constexpr auto line = bnum3x3 / threads;
-            constexpr auto remain = bnum3x3 % threads;
-            for (int i = 0; i < line; i++)
-            {
-                auto idx = tid + i * threads;
-                bptr[idx] = biases3x3[idx];
-            }
-            if (remain > 0 && tid < remain)
-            {
-                auto idx = tid + line * threads;
-                bptr[idx] = biases3x3[idx];
-            }
-        }
-        else if (tid < bnum3x3) bptr[tid] = biases3x3[tid];
+            constexpr auto threads = BlockSize::x * BlockSize::y;
+            constexpr auto knum3x3 = ctemp * 9 * cin;
+            constexpr auto bnum3x3 = ctemp;
+            constexpr auto knum1x1 = cout * 1 * ctemp;
+            constexpr auto bnum1x1 = cout;
+            constexpr auto ksize = knum3x3 > knum1x1 ? knum3x3 : knum1x1;
+            constexpr auto bsize = bnum3x3 > bnum1x1 ? bnum3x3 : bnum1x1;
+            constexpr auto pad = 1;
+            constexpr auto rsizeY = BlockSize::y + pad * 2;
+            constexpr auto rsizeX = (BlockSize::x + pad * 2) * cin;
 
-        ::cuda::std::conditional_t<imageToShared, const IN(*)[rsizeX], const void* __restrict__> iptr{};
-        if constexpr (imageToShared)
-        {
-            __shared__ IN ibuffer[rsizeY][rsizeX];
-            for (int j = 0; j < rsizeY; j++)
+            constexpr bool imageToShared = rsizeY * rsizeX * sizeof(IN) <= 8192;
+
+            __shared__ float kptr[ksize];
+            if constexpr (threads < knum3x3)
             {
-                if constexpr (threads < rsizeX)
+                constexpr auto line = knum3x3 / threads;
+                constexpr auto remain = knum3x3 % threads;
+                for (int i = 0; i < line; i++)
                 {
-                    constexpr auto line = rsizeX / threads;
-                    constexpr auto remain = rsizeX % threads;
-                    for (int i = 0; i < line; i++)
-                    {
-                        auto idx = tid + i * threads;
-                        ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + idx / cin, by - pad + j)[idx % cin];
-                    }
-                    if (remain > 0 && tid < remain)
-                    {
-                        auto idx = tid + line * threads;
-                        ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + idx / cin, by - pad + j)[idx % cin];
-                    }
+                    auto idx = tid + i * threads;
+                    kptr[idx] = kernels3x3[idx];
                 }
-                else if (tid < rsizeX) ibuffer[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + tid / cin, by - pad + j)[tid % cin];
+                if (remain > 0 && tid < remain)
+                {
+                    auto idx = tid + line * threads;
+                    kptr[idx] = kernels3x3[idx];
+                }
             }
-            iptr = ibuffer;
-        }
-        else iptr = sptr;
+            else if (tid < knum3x3) kptr[tid] = kernels3x3[tid];
 
-        __syncthreads();
-
-        if (x >= srcW || y >= srcH) return;
-
-        auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
-
-        half buffer[ctemp]{};
-
-        const IN* r[9]{};
-        if constexpr (imageToShared)
-        {
-            r[0] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y - 1);
-            r[1] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y - 1);
-            r[2] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y - 1);
-            r[3] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y    );
-            r[4] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y    );
-            r[5] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y    );
-            r[6] = getReadPtrFromShared(iptr, cin, threadIdx.x - 1, threadIdx.y + 1);
-            r[7] = getReadPtrFromShared(iptr, cin, threadIdx.x    , threadIdx.y + 1);
-            r[8] = getReadPtrFromShared(iptr, cin, threadIdx.x + 1, threadIdx.y + 1);
-        }
-        else
-        {
-            r[0] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y - 1);
-            r[1] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y - 1);
-            r[2] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y - 1);
-            r[3] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y    );
-            r[4] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y    );
-            r[5] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y    );
-            r[6] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y + 1);
-            r[7] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y + 1);
-            r[8] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y + 1);
-        }
-
-        for (int n = 0; n < ctemp; n++)
-        {
-            const float* k[] = {
-                kptr + n * cin * 9 + cin * 0,
-                kptr + n * cin * 9 + cin * 1,
-                kptr + n * cin * 9 + cin * 2,
-                kptr + n * cin * 9 + cin * 3,
-                kptr + n * cin * 9 + cin * 4,
-                kptr + n * cin * 9 + cin * 5,
-                kptr + n * cin * 9 + cin * 6,
-                kptr + n * cin * 9 + cin * 7,
-                kptr + n * cin * 9 + cin * 8
-            };
-
-            float sum = bptr[n];
-
-            for (int idx = 0; idx < 9; idx++)
-                for (int c = 0; c < cin; c++)
-                    sum += toFloat(r[idx][c]) * k[idx][c];
-
-            sum = activeFunc3x3(sum, n);
-
-            if constexpr (::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>)
-                sum = sum * residualArg3x3.scale + toFloat(getReadPtr<half>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
-
-            buffer[n] = toHalf(sum);
-        }
-
-        if constexpr (threads < knum1x1)
-        {
-            constexpr auto line = knum1x1 / threads;
-            constexpr auto remain = knum1x1 % threads;
-            for (int i = 0; i < line; i++)
+            __shared__ float bptr[bsize];
+            if constexpr (threads < bnum3x3)
             {
-                auto idx = tid + i * threads;
-                kptr[idx] = kernels1x1[idx];
+                constexpr auto line = bnum3x3 / threads;
+                constexpr auto remain = bnum3x3 % threads;
+                for (int i = 0; i < line; i++)
+                {
+                    auto idx = tid + i * threads;
+                    bptr[idx] = biases3x3[idx];
+                }
+                if (remain > 0 && tid < remain)
+                {
+                    auto idx = tid + line * threads;
+                    bptr[idx] = biases3x3[idx];
+                }
             }
-            if (remain > 0 && tid < remain)
+            else if (tid < bnum3x3) bptr[tid] = biases3x3[tid];
+
+            ::cuda::std::conditional_t<imageToShared, const IN(*)[rsizeX], const void* __restrict__> iptr{};
+            if constexpr (imageToShared)
             {
-                auto idx = tid + line * threads;
-                kptr[idx] = kernels1x1[idx];
+                __shared__ IN ibuffer[rsizeY][rsizeX];
+                for (int j = 0; j < rsizeY; j++)
+                {
+                    if constexpr (threads < rsizeX)
+                    {
+                        constexpr auto line = rsizeX / threads;
+                        constexpr auto remain = rsizeX % threads;
+                        for (int i = 0; i < line; i++)
+                        {
+                            auto idx = tid + i * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + idx / cin, by - pad + j)[idx % cin];
+                        }
+                        if (remain > 0 && tid < remain)
+                        {
+                            auto idx = tid + line * threads;
+                            ibuffer[j][idx] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + idx / cin, by - pad + j)[idx % cin];
+                        }
+                    }
+                    else if (tid < rsizeX) ibuffer[j][tid] = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, bx - pad + tid / cin, by - pad + j)[tid % cin];
+                }
+                iptr = ibuffer;
+            }
+            else iptr = sptr;
+
+            __syncthreads();
+
+            if (x >= srcW || y >= srcH) return;
+
+            auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
+
+            half buffer[ctemp]{};
+
+            const IN* r[9]{};
+            if constexpr (imageToShared)
+            {
+                r[0] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x - 1, threadIdx.y - 1);
+                r[1] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x    , threadIdx.y - 1);
+                r[2] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x + 1, threadIdx.y - 1);
+                r[3] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x - 1, threadIdx.y    );
+                r[4] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x    , threadIdx.y    );
+                r[5] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x + 1, threadIdx.y    );
+                r[6] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x - 1, threadIdx.y + 1);
+                r[7] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x    , threadIdx.y + 1);
+                r[8] = getReadPtrFromShared<pad>(iptr, cin, threadIdx.x + 1, threadIdx.y + 1);
+            }
+            else
+            {
+                r[0] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y - 1);
+                r[1] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y - 1);
+                r[2] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y - 1);
+                r[3] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y    );
+                r[4] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y    );
+                r[5] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y    );
+                r[6] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x - 1, y + 1);
+                r[7] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x    , y + 1);
+                r[8] = getReadPtr<IN>(iptr, srcW, srcH, srcC, spitch, x + 1, y + 1);
+            }
+
+            for (int n = 0; n < ctemp; n++)
+            {
+                const float* k[] = {
+                    kptr + n * cin * 9 + cin * 0,
+                    kptr + n * cin * 9 + cin * 1,
+                    kptr + n * cin * 9 + cin * 2,
+                    kptr + n * cin * 9 + cin * 3,
+                    kptr + n * cin * 9 + cin * 4,
+                    kptr + n * cin * 9 + cin * 5,
+                    kptr + n * cin * 9 + cin * 6,
+                    kptr + n * cin * 9 + cin * 7,
+                    kptr + n * cin * 9 + cin * 8
+                };
+
+                float sum = bptr[n];
+
+                for (int idx = 0; idx < 9; idx++)
+                    for (int c = 0; c < cin; c++)
+                        sum += toFloat(r[idx][c]) * k[idx][c];
+
+                if constexpr (!postactive3x3) sum = activeFunc3x3(sum, n);
+
+                if constexpr (::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>)
+                    sum = sum * residualArg3x3.scale + toFloat(getReadPtr<half>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
+
+                if constexpr (postactive3x3) sum = activeFunc3x3(sum, n);
+
+                buffer[n] = toHalf(sum);
+            }
+
+            if constexpr (threads < knum1x1)
+            {
+                constexpr auto line = knum1x1 / threads;
+                constexpr auto remain = knum1x1 % threads;
+                for (int i = 0; i < line; i++)
+                {
+                    auto idx = tid + i * threads;
+                    kptr[idx] = kernels1x1[idx];
+                }
+                if (remain > 0 && tid < remain)
+                {
+                    auto idx = tid + line * threads;
+                    kptr[idx] = kernels1x1[idx];
+                }
+            }
+            else if (tid < knum1x1) kptr[tid] = kernels1x1[tid];
+
+            if constexpr (threads < bnum1x1)
+            {
+                constexpr auto line = bnum1x1 / threads;
+                constexpr auto remain = bnum1x1 % threads;
+                for (int i = 0; i < line; i++)
+                {
+                    auto idx = tid + i * threads;
+                    bptr[idx] = biases1x1[idx];
+                }
+                if (remain > 0 && tid < remain)
+                {
+                    auto idx = tid + line * threads;
+                    bptr[idx] = biases1x1[idx];
+                }
+            }
+            else if (tid < bnum1x1) bptr[tid] = biases1x1[tid];
+
+            __syncthreads();
+
+            for (int n = 0; n < cout; n++)
+            {
+                const float* k = kptr + n * ctemp;
+
+                float sum = bptr[n];
+
+                for (int c = 0; c < ctemp; c++) sum += toFloat(buffer[c]) * k[c];
+
+                if constexpr (!postactive1x1) sum = activeFunc1x1(sum, n);
+
+                if constexpr (::cuda::std::is_same_v<ResidualArgs1x1, ResidualArg>)
+                    sum = sum * residualArg1x1.scale + toFloat(getReadPtr<half>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
+
+                if constexpr (postactive1x1) sum = activeFunc1x1(sum, n);
+
+                out[n] = toHalf(sum);
             }
         }
-        else if (tid < knum1x1) kptr[tid] = kernels1x1[tid];
-
-        if constexpr (threads < bnum1x1)
-        {
-            constexpr auto line = bnum1x1 / threads;
-            constexpr auto remain = bnum1x1 % threads;
-            for (int i = 0; i < line; i++)
-            {
-                auto idx = tid + i * threads;
-                bptr[idx] = biases1x1[idx];
-            }
-            if (remain > 0 && tid < remain)
-            {
-                auto idx = tid + line * threads;
-                bptr[idx] = biases1x1[idx];
-            }
-        }
-        else if (tid < bnum1x1) bptr[tid] = biases1x1[tid];
-
-        __syncthreads();
-
-        for (int n = 0; n < cout; n++)
-        {
-            const float* k = kptr + n * ctemp;
-
-            float sum = bptr[n];
-
-            for (int c = 0; c < ctemp; c++) sum += toFloat(buffer[c]) * k[c];
-
-            sum = activeFunc1x1(sum, n);
-
-            if constexpr (::cuda::std::is_same_v<ResidualArgs1x1, ResidualArg>)
-                sum = sum * residualArg1x1.scale + toFloat(getReadPtr<half>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
-
-            out[n] = toHalf(sum);
-        }
-    }
+}
 
     void conv3x3_1to8_relu_cuda(
         const void* sptr,
@@ -1221,5 +1236,65 @@ namespace ac::core::cuda
         case Image::Float32:
             return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
         }
+    }
+
+    void conv5x5_1to8_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        switch (stype)
+        {
+        case Image::UInt8:
+            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            kernel::conv5x5_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_8to8_prelu_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const float* alphas,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_conv1x1_cuda<half, 8, 8, 8, false, true> <<< grid, block, 0, stream >>> (
+            sptr, srcW, srcH, srcC, spitch,
+            dptr, dstW, dstH, dstC, dpitch,
+            kernels1, biases1, PReLU(alphas1), nullptr,
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+        );
     }
 }

@@ -21,7 +21,12 @@ namespace ac::core::detail
         }
         return Processor::CPU;
     }
-    static inline auto findModel(const char* model) noexcept -> std::variant<model::ACNet, model::ARNet, model::ArtCNN<16>, model::ArtCNN<32>>
+    static inline auto findModel(const char* model) noexcept -> std::variant<
+        model::ACNet,
+        model::ARNet,
+        model::ArtCNN<16>, model::ArtCNN<32>,
+        model::FSRCNNX<8>
+    >
     {
         if (model)
         {
@@ -29,20 +34,27 @@ namespace ac::core::detail
 
             for (char& ch : modelString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
+            if (modelString.find("fsrcnnx") != std::string::npos)
+            {
+                if (modelString.find("f8") != std::string::npos)
+                {
+                    auto variant = ac::core::model::FSRCNNX<8>::Variant::NORMAL;
+
+                    return ac::core::model::FSRCNNX<8>{ variant };
+                }
+            }
             if (modelString.find("artcnn") != std::string::npos)
             {
-                if (modelString.find("f16") != std::string::npos)
-                {
-                    auto variant = ac::core::model::ArtCNN<16>::Variant::NORMAL;
-
-                    return ac::core::model::ArtCNN<16>{ variant };
-                }
-                else if (modelString.find("f32") != std::string::npos)
+                if (modelString.find("f32") != std::string::npos)
                 {
                     auto variant = ac::core::model::ArtCNN<32>::Variant::NORMAL;
 
                     return ac::core::model::ArtCNN<32>{ variant };
                 }
+
+                auto variant = ac::core::model::ArtCNN<16>::Variant::NORMAL;
+
+                return ac::core::model::ArtCNN<16>{ variant };
             }
             if (modelString.find("arnet") != std::string::npos) // ARNet
             {

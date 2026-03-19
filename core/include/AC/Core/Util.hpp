@@ -1,6 +1,7 @@
 #ifndef AC_CORE_UTIL_HPP
 #define AC_CORE_UTIL_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -23,6 +24,7 @@ namespace ac::core
     constexpr float identity(float v) noexcept;
     constexpr float relu(float v) noexcept;
     constexpr float lrelu(float v, float n) noexcept;
+    constexpr float prelu(float v, float n) noexcept;
 
     class Identity
     {
@@ -50,7 +52,7 @@ namespace ac::core
     {
     public:
         constexpr PReLU(const float* const alphas) noexcept : alphas(alphas) {}
-        float operator() (const float v, const int c) const noexcept { return lrelu(v, alphas[c]); }
+        float operator() (const float v, const int c) const noexcept { return prelu(v, alphas[c]); }
 
     private:
         const float* alphas;
@@ -165,6 +167,10 @@ inline constexpr float ac::core::relu(const float v) noexcept
 inline constexpr float ac::core::lrelu(const float v, const float n) noexcept
 {
     return v < v * n ? v * n : v;
+}
+inline constexpr float ac::core::prelu(const float v, const float n) noexcept
+{
+    return std::max(v, 0.0f) + n * std::min(v, 0.0f);
 }
 
 template <typename Integer>
