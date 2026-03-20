@@ -330,7 +330,7 @@ namespace ac::core::cpu
 
                 int joffsets[5] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0)};
 
-                const float d[25]{};
+                float d[25]{};
                 for (int in = 0; in < 5; in++)
                     for (int jn = 0; jn < 5; jn++)
                         d[in * 5 + jn] = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[jn], i + ioffsets[in])));
