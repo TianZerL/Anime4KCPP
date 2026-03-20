@@ -1297,4 +1297,64 @@ namespace ac::core::cuda
             kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
         );
     }
+
+    void conv5x5_1to16_identity_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        switch (stype)
+        {
+        case Image::UInt8:
+            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            kernel::conv5x5_cuda<float, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_16to16_prelu_cuda(
+        const void* sptr,
+        int srcW, int srcH, int srcC, int spitch,
+        void* dptr,
+        int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const float* alphas,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_cuda<half, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        kernel::conv3x3_conv1x1_cuda<half, 16, 16, 16, false, true> <<< grid, block, 0, stream >>> (
+            sptr, srcW, srcH, srcC, spitch,
+            dptr, dstW, dstH, dstC, dpitch,
+            kernels1, biases1, PReLU(alphas1), nullptr,
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+        );
+    }
 }

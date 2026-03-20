@@ -506,4 +506,36 @@ namespace ac::core::cpu
     {
         conv1x1_eigen3<float, 8, 8, true>(src, dst, kernels, biases, PReLU(alphas), ResidualArg{ feat, 1.0f });
     }
+
+    void conv5x5_1to16_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv5x5_eigen3<std::uint8_t, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::UInt16:
+            conv5x5_eigen3<std::uint16_t, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        case Image::Float32:
+            conv5x5_eigen3<float, 1, 16>(src, dst, kernels, biases, Identity());
+            break;
+        }
+    }
+    void conv3x3_16to16_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        conv3x3_eigen3<float, 16, 16>(src, dst, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_eigen3(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat)
+    {
+        conv3x3_conv1x1_eigen3<float, 16, 16, 16, false, true>(
+            src, dst,
+            kernels1, biases1, PReLU(alphas1), nullptr,
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+        );
+    }
 }

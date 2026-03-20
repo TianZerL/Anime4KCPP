@@ -871,4 +871,70 @@ namespace ac::core::cpu
     {
         conv1x1_avx_float<8, 8, true>(src, dst, kernels, biases, PReLU(alphas), ResidualArg{ feat, 1.0f });
     }
+
+    void conv5x5_1to16_identity_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+        {
+            switch (src.type())
+            {
+            case Image::UInt8:
+                conv5x5_avx_cin1<std::uint8_t, 16, true>(src, dst, kernels, biases, Identity());
+                break;
+            case Image::UInt16:
+                conv5x5_avx_cin1<std::uint16_t, 16, true>(src, dst, kernels, biases, Identity());
+                break;
+            case Image::Float32:
+                conv5x5_avx_cin1<float, 16, true>(src, dst, kernels, biases, Identity());
+                break;
+            }
+        }
+        else
+#   endif
+        {
+            switch (src.type())
+            {
+            case Image::UInt8:
+                conv5x5_avx_cin1<std::uint8_t, 16, false>(src, dst, kernels, biases, Identity());
+                break;
+            case Image::UInt16:
+                conv5x5_avx_cin1<std::uint16_t, 16, false>(src, dst, kernels, biases, Identity());
+                break;
+            case Image::Float32:
+                conv5x5_avx_cin1<float, 16, false>(src, dst, kernels, biases, Identity());
+                break;
+            }
+        }
+    }
+    void conv3x3_16to16_prelu_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_avx_float<16, 16, true>(src, dst, kernels, biases, PReLU(alphas));
+        else
+#   endif
+            conv3x3_avx_float<16, 16, false>(src, dst, kernels, biases, PReLU(alphas));
+    }
+    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat)
+    {
+#   ifdef AC_CORE_WITH_FMA
+        if (simd::supportFMA())
+            conv3x3_conv1x1_avx_float<16, 16, 16, true, false, true>(
+                src, dst,
+                kernels1, biases1, PReLU(alphas1), nullptr,
+                kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            );
+        else
+#   endif
+            conv3x3_conv1x1_avx_float<16, 16, 16, false, false, true>(
+                src, dst,
+                kernels1, biases1, PReLU(alphas1), nullptr,
+                kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            );
+    }
 }
