@@ -18,7 +18,7 @@ class ac::core::model::ArtCNN
 public:
     enum class Variant
     {
-        NORMAL//, DS, DN
+        NORMAL, DN, DS
     };
 
 public:

@@ -38,7 +38,11 @@ namespace ac::specs
         "arnet-b64-le",
         "arnet-b64-ls",
         "artcnn-c4f16",
+        "artcnn-c4f16-dn",
+        "artcnn-c4f16-ds",
         "artcnn-c4f32",
+        "artcnn-c4f32-dn",
+        "artcnn-c4f32-ds",
         "fsrcnnx-f8",
         "fsrcnnx-f8-distort-plus",
         "fsrcnnx-f16",
@@ -79,8 +83,12 @@ namespace ac::specs
         "Lightweight ResNet, hdn with sharpening.",     // arnet-b64-hdns
         "Lightweight ResNet, line enhancing.",          // arnet-b64-le
         "Lightweight ResNet, line sharpening.",         // arnet-b64-ls
-        "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
-        "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows. (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32
+        "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
+        "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
+        "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds
+        "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32
+        "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-dn
+        "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-ds
         "FSRCNNX-8-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)",  // fsrcnnx-f8
         "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f8-distort-plus
         "FSRCNNX-16-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)", // fsrcnnx-f16

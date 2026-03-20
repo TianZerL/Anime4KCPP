@@ -36,41 +36,39 @@ namespace ac::core::detail
 
             if (modelString.find("fsrcnnx") != std::string::npos)
             {
-                if (modelString.find("f16") != std::string::npos)
+                if (modelString.find("16") != std::string::npos)
                 {
-                    if (modelString.find("distort") != std::string::npos || modelString.find("dp") != std::string::npos)
-                    {
-                        auto variant = ac::core::model::FSRCNNX<16>::Variant::DISTORT_PLUS;
-
-                        return ac::core::model::FSRCNNX<16>{ variant };
-                    }
-
                     auto variant = ac::core::model::FSRCNNX<16>::Variant::NORMAL;
+
+                    if (modelString.find("distort") != std::string::npos || modelString.find("dp") != std::string::npos)
+                        variant = ac::core::model::FSRCNNX<16>::Variant::DISTORT_PLUS;
 
                     return ac::core::model::FSRCNNX<16>{ variant };
                 }
 
-                if (modelString.find("distort") != std::string::npos || modelString.find("dp") != std::string::npos)
-                {
-                    auto variant = ac::core::model::FSRCNNX<8>::Variant::DISTORT_PLUS;
-
-                    return ac::core::model::FSRCNNX<8>{ variant };
-                }
-
                 auto variant = ac::core::model::FSRCNNX<8>::Variant::NORMAL;
+
+                if (modelString.find("distort") != std::string::npos || modelString.find("dp") != std::string::npos)
+                    variant = ac::core::model::FSRCNNX<8>::Variant::DISTORT_PLUS;
 
                 return ac::core::model::FSRCNNX<8>{ variant };
             }
             if (modelString.find("artcnn") != std::string::npos)
             {
-                if (modelString.find("f32") != std::string::npos)
+                if (modelString.find("32") != std::string::npos)
                 {
                     auto variant = ac::core::model::ArtCNN<32>::Variant::NORMAL;
+
+                    if (modelString.find("dn") != std::string::npos) variant = ac::core::model::ArtCNN<32>::Variant::DN;
+                    else if (modelString.find("ds") != std::string::npos) variant = ac::core::model::ArtCNN<32>::Variant::DS;
 
                     return ac::core::model::ArtCNN<32>{ variant };
                 }
 
                 auto variant = ac::core::model::ArtCNN<16>::Variant::NORMAL;
+
+                if (modelString.find("dn") != std::string::npos) variant = ac::core::model::ArtCNN<16>::Variant::DN;
+                else if (modelString.find("ds") != std::string::npos) variant = ac::core::model::ArtCNN<16>::Variant::DS;
 
                 return ac::core::model::ArtCNN<16>{ variant };
             }

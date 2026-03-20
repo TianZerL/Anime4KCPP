@@ -712,10 +712,6 @@ namespace ac::core::cpu
             kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
         );
     }
-    void conv1x1_8to8_add_prelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas, const Image& feat)
-    {
-        conv1x1_neon_float<8, 8, true>(src, dst, kernels, biases, PReLU(alphas), ResidualArg{ feat, 1.0f });
-    }
 
     void conv5x5_1to16_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {

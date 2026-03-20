@@ -187,6 +187,16 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bp
             kptr = param::ArtCNN_C4F16_NHWC_kernels;
             bptr = param::ArtCNN_C4F16_NHWC_biases;
             break;
+        case Variant::DN:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F16_DN_NHWC_kernels;
+            bptr = param::ArtCNN_C4F16_DN_NHWC_biases;
+            break;
+        case Variant::DS:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F16_DS_NHWC_kernels;
+            bptr = param::ArtCNN_C4F16_DS_NHWC_biases;
+            break;
         }
     }
     else if constexpr (F == 32)
@@ -197,6 +207,16 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bp
             blockNum = 4;
             kptr = param::ArtCNN_C4F32_NHWC_kernels;
             bptr = param::ArtCNN_C4F32_NHWC_biases;
+            break;
+        case Variant::DN:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F32_DN_NHWC_kernels;
+            bptr = param::ArtCNN_C4F32_DN_NHWC_biases;
+            break;
+        case Variant::DS:
+            blockNum = 4;
+            kptr = param::ArtCNN_C4F32_DS_NHWC_kernels;
+            bptr = param::ArtCNN_C4F32_DS_NHWC_biases;
             break;
         }
     }
