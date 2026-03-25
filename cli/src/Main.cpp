@@ -29,7 +29,7 @@ static void list(const Options& options)
                 "disabled\n"
 #           endif
             "  build date: " AC_BUILD_DATE "\n"
-            "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n"
+            "  toolchain: " AC_COMPILER_ID " (" AC_COMPILER_VERSION ")\n"
             "  license: "
 #           ifdef AC_CLI_ENABLE_VIDEO
                 "GPLv3\n\n"

@@ -191,7 +191,7 @@ void MainWindow::init()
 
     setAcceptDrops(true);
 
-    gLogger.info() << "Anime4KCPP GUI v" AC_CORE_VERSION_STR " started";
+    gLogger.info() << "Anime4KCPP GUI " AC_CORE_VERSION_STR " started";
     gLogger.info() << '\n' << gUpscaler.listProcessorInfo();
 }
 
@@ -356,9 +356,9 @@ void MainWindow::on_action_about_triggered()
             "%1\n\n"
             "Anime4KCPP GUI:\n"
             "  %2: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
-            "  %3: %4"
+            "  %3: %4\n"
             "  %5: " AC_BUILD_DATE "\n"
-            "  %6: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
+            "  %6: " AC_COMPILER_ID " (" AC_COMPILER_VERSION ")\n\n"
             "%7 (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
             "<a href='https://github.com/TianZerL/Anime4KCPP'>https://github.com/TianZerL/Anime4KCPP</a>\n"
             "</p>"
@@ -367,9 +367,9 @@ void MainWindow::on_action_about_triggered()
             tr("core version"),
             tr("video module"),
 #       ifdef AC_CLI_ENABLE_VIDEO
-            tr("enabled")
+            tr("enabled"),
 #       else
-            tr("disabled")
+            tr("disabled"),
 #       endif
             tr("build date"),
             tr("toolchain"),
