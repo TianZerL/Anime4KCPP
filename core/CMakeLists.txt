@@ -1,7 +1,24 @@
-project(ac_core VERSION 3.1.0.0 LANGUAGES CXX)
+project(ac_core LANGUAGES CXX)
 
 set(CORE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CORE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+
+# core version
+find_package(Git QUIET)
+
+if(GIT_FOUND)
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --tags HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE AC_CORE_VERSION_STR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+endif()
+
+if(NOT AC_CORE_VERSION_STR)
+    set(AC_CORE_VERSION_STR "${AC_VERSION_STR}")
+endif()
 
 # third-party
 include(${DEPENDENCY_DIR}/ruapu.cmake)
@@ -187,7 +204,7 @@ target_compile_definitions(ac PUBLIC
     AC_CORE_MALLOC_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>
     AC_CORE_STRIDE_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>
 
-    AC_CORE_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+    AC_CORE_VERSION_STR="${AC_CORE_VERSION_STR}"
     AC_CORE_FEATURES="$<JOIN:${AC_CORE_FEATURE_LIST}, >"
 )
 
@@ -210,7 +227,11 @@ ac_check_disable_flags(ac)
 ac_check_enable_static_crt(ac)
 ac_check_disable_pic(ac)
 
-set_target_properties(ac PROPERTIES EXPORT_NAME "Core")
+set_target_properties(ac PROPERTIES
+    EXPORT_NAME "Core"
+    VERSION ${AC_VERSION_STR}
+    SOVERSION ${AC_SOVERSION_STR}
+)
 
 include(GenerateExportHeader)
 generate_export_header(ac

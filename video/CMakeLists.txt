@@ -1,4 +1,4 @@
-project(ac_video VERSION 1.1.0.0 LANGUAGES CXX)
+project(ac_video LANGUAGES CXX)
 
 set(VIDEO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(VIDEO_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -25,15 +25,15 @@ target_include_directories(ac_video PUBLIC
 
 target_link_libraries(ac_video PRIVATE ac_util_misc ac_util_threads dep::ffmpeg)
 
-target_compile_definitions(ac_video PUBLIC
-    AC_VIDEO_VERSION_STR="${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
-)
-
 ac_check_disable_flags(ac_video)
 ac_check_enable_static_crt(ac_video)
 ac_check_disable_pic(ac_video)
 
-set_target_properties(ac_video PROPERTIES EXPORT_NAME "Video")
+set_target_properties(ac_video PROPERTIES
+    EXPORT_NAME "Video"
+    VERSION ${AC_VERSION_STR}
+    SOVERSION ${AC_SOVERSION_STR}
+)
 
 include(GenerateExportHeader)
 generate_export_header(ac_video

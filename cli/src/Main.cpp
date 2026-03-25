@@ -24,7 +24,7 @@ static void list(const Options& options)
             "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
             "  video module: "
 #           ifdef AC_CLI_ENABLE_VIDEO
-                AC_VIDEO_VERSION_STR "\n"
+                "enabled\n"
 #           else
                 "disabled\n"
 #           endif
