@@ -73,6 +73,8 @@ int main(int argc, char* argv[])
 {
     std::printf("usage: [model] [processor] [device] [width] [height] [batch] [threads]\n");
     std::printf("\n");
+    std::printf("core version: " AC_CORE_VERSION_STR "\n");
+    std::printf("\n");
     std::printf("%s\n", ac::core::Processor::listInfo());
 
     auto model = argc > 1 ? argv[1] : "acnet";
