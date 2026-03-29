@@ -172,6 +172,8 @@ namespace ac::core::cpu
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
 
+        static_assert((std::is_same_v<typename std::remove_reference_t<ResidualArgs>::DataType, float> && ...), "All residual arguments must have Type = float.");
+
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
@@ -210,6 +212,8 @@ namespace ac::core::cpu
     inline void conv3x3_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
+
+        static_assert((std::is_same_v<typename std::remove_reference_t<ResidualArgs>::DataType, float> && ...), "All residual arguments must have Type = float.");
 
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
@@ -409,8 +413,8 @@ namespace ac::core::cpu
         }, src, dst);
     }
 
-    template <typename OUT, int cin, int upscale>
-    inline void conv3x3_identity_pixelshuffle_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases) noexcept
+    template <typename OUT, int cin, int upscale, typename NearestInterpolationArg>
+    inline void conv3x3_identity_pixelshuffle_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, NearestInterpolationArg&& nearestInterpolationArg) noexcept
     {
         static constexpr int cout = upscale * upscale;
 
@@ -442,7 +446,13 @@ namespace ac::core::cpu
 
                 conv3x3_wasm_simd128_float_impl<cin, cout>(rptr, sum, kernels, biases);
 
-                for (int n = 0; n < cout; n++) *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum[n]);
+                for (int n = 0; n < cout; n++)
+                {
+                    if constexpr (IsResidualArg<NearestInterpolationArg>::value)
+                        sum[n] = sum[n] * nearestInterpolationArg.scale + toFloat(*static_cast<const typename NearestInterpolationArg::DataType*>(nearestInterpolationArg.image.ptr(j, i)));
+
+                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum[n]);
+                }
             }
         });
     }
@@ -484,7 +494,7 @@ namespace ac::core::cpu
                 {
                     if constexpr (!postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
 
-                    if constexpr (std::is_same_v<ResidualArg3x3, ResidualArg>)
+                    if constexpr (IsResidualArg<ResidualArg3x3>::value)
                         buffer[n] = buffer[n] * residualArg3x3.scale + static_cast<const float*>(residualArg3x3.image.ptr(j, i))[n];
 
                     if constexpr (postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
@@ -498,7 +508,7 @@ namespace ac::core::cpu
                 {
                     if constexpr (!postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
 
-                    if constexpr (std::is_same_v<ResidualArg1x1, ResidualArg>)
+                    if constexpr (IsResidualArg<ResidualArg1x1>::value)
                         sum[n] = sum[n] * residualArg1x1.scale + static_cast<const float*>(residualArg1x1.image.ptr(j, i))[n];
 
                     if constexpr (postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
@@ -565,24 +575,24 @@ namespace ac::core::cpu
     }
     void conv3x3_8to8_identity_residual_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
-        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale });
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg<float>{ id, scale });
     }
     void conv3x3_8to8_identity_residual_add_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale, const Image& feat)
     {
-        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg{ id, scale }, ResidualArg{ feat, 1.0f });
+        conv3x3_wasm_simd128_float<8, 8>(src, dst, kernels, biases, Identity(), ResidualArg<float>{ id, scale }, ResidualArg<float>{ feat, 1.0f });
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 8, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 8, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 8, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -612,20 +622,20 @@ namespace ac::core::cpu
     }
     void conv3x3_16to16_identity_add_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_wasm_simd128_float<16, 16>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+        conv3x3_wasm_simd128_float<16, 16>(src, dst, kernels, biases, Identity(), ResidualArg<float>{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 16, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 16, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 16, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -655,20 +665,20 @@ namespace ac::core::cpu
     }
     void conv3x3_32to32_identity_add_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_wasm_simd128_float<32, 32>(src, dst, kernels, biases, Identity(), ResidualArg{ feat, 1.0f });
+        conv3x3_wasm_simd128_float<32, 32>(src, dst, kernels, biases, Identity(), ResidualArg<float>{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 32, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 32, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 32, 2>(src, dst, kernels, biases);
+            conv3x3_identity_pixelshuffle_wasm_simd128_float<float, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -705,7 +715,7 @@ namespace ac::core::cpu
         conv3x3_conv1x1_wasm_simd128_float<8, 8, 8, false, true>(
             src, dst,
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg<float>{ feat, 1.0f }
         );
     }
 
@@ -737,7 +747,7 @@ namespace ac::core::cpu
         conv3x3_conv1x1_wasm_simd128_float<16, 16, 16, false, true>(
             src, dst,
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg<float>{ feat, 1.0f }
         );
     }
 }

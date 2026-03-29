@@ -15,11 +15,19 @@
 
 namespace ac::core
 {
+    template<typename T>
     struct ResidualArg
     {
+        using DataType = T;
+
         const Image& image;
         float scale;
     };
+
+    template<typename>
+    struct IsResidualArg : std::false_type {};
+    template<typename T>
+    struct IsResidualArg<ResidualArg<T>> : std::true_type {};
 
     constexpr float identity(float v) noexcept;
     constexpr float relu(float v) noexcept;
