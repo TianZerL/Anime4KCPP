@@ -22,187 +22,138 @@
 namespace ac::core::cuda
 {
     void conv3x3_1to8_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
         cudaStream_t stream
     ) noexcept;
     void conv3x3_8to8_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
     ) noexcept;
     void deconv2x2_8to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         Image::ElementType dtype,
         cudaStream_t stream
     ) noexcept;
     void conv3x3_1to8_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_lrelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float negativeSlope,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_identity_residual_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        void* iptr,
-        int idW, int idH, int idC, int ipitch,
-        const float scale,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_identity_residual_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        void* iptr,
-        int idW, int idH, int idC, int ipitch,
-        const float scale,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to16_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_identity_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to32_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to32_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to32_identity_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv5x5_1to8_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
         cudaStream_t stream
     ) noexcept;
     void conv3x3_8to8_prelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         const float* alphas,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_8to8_identity_residual_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const void* iptr, int idW, int idH, int idC, int ipitch,
+        const float scale,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels1, const float* biases1,
+        const void* iptr, int idW, int idH, int idC, int ipitch, const float scale,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const void* iptr, int idW, int idH, int idC, int ipitch,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_1to16_identity_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to16_relu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to16_identity_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_1to32_identity_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_32to32_relu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_32to32_identity_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept;
+    void conv5x5_1to8_identity_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType stype,
         cudaStream_t stream
     ) noexcept;
     void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
@@ -210,24 +161,28 @@ namespace ac::core::cuda
         void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        void* fptr, int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
+        cudaStream_t stream
+    ) noexcept;
+    void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
         cudaStream_t stream
     ) noexcept;
     void conv5x5_1to16_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
         cudaStream_t stream
     ) noexcept;
     void conv3x3_16to16_prelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         const float* alphas,
@@ -238,7 +193,7 @@ namespace ac::core::cuda
         void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        void* fptr, int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept;
 
@@ -647,10 +602,10 @@ AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<
 
 
 template<>
-class ac::core::cuda::CUDAProcessor<ac::core::model::ARNet> : public CUDAProcessorSeqCNN<model::ARNet>
+class ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>> : public CUDAProcessorSeqCNN<model::ARNet<8>>
 {
 public:
-    CUDAProcessor(int device, const model::ARNet& model) noexcept;
+    CUDAProcessor(int device, const model::ARNet<8>& model) noexcept;
     ~CUDAProcessor() noexcept override;
 
 private:
@@ -664,10 +619,10 @@ private:
     util::ThreadLocal<ImageBuffer> outImageBuffers{};
 };
 
-ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::CUDAProcessor(const int device, const model::ARNet& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
-ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::~CUDAProcessor() noexcept = default;
+ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::CUDAProcessor(const int device, const model::ARNet<8>& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
+ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::~CUDAProcessor() noexcept = default;
 
-void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image& src, Image& dst)
+void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::process(const Image& src, Image& dst)
 {
     auto& err = errors.local();
     auto stream = cudaStreamPerThread;
@@ -696,10 +651,10 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         kernel(l), bias(l),
         src.type(), stream); l++;
 
-    conv3x3_8to8_lrelu_cuda(
+    conv3x3_8to8_prelu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), 0.2f, stream); l++;
+        kernel(l), bias(l), alpha(l), stream); l++;
     conv3x3_8to8_identity_residual_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
@@ -707,31 +662,34 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch, 0.2f, stream); l++;
     for (int i = 0; i < model.blocks() - 2; i++)
     {
-        conv3x3_8to8_lrelu_cuda(
+        conv3x3_8to8_prelu_cuda(
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernel(l), bias(l), 0.2f, stream); l++;
+            kernel(l), bias(l), alpha(l), stream); l++;
         conv3x3_8to8_identity_residual_cuda(
             tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
             kernel(l), bias(l),
             tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f, stream); l++;
     }
-    conv3x3_8to8_lrelu_cuda(
+    conv3x3_8to8_prelu_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), 0.2f, stream); l++;
-    conv3x3_8to8_identity_residual_add_cuda(
+        kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
         tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         kernel(l), bias(l),
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f,
+        kernel(l + 1), bias(l + 1), alpha(l + 1),
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l++;
-    conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
+        stream); l+=2;
+
+    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
         tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
+        in.ptr, in.w, in.h, in.c, in.pitch,
         dst.type(), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
@@ -744,9 +702,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet>::process(const Image&
 }
 
 template<>
-AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ARNet>(const int idx, const model::ARNet& model)
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ARNet<8>>(const int idx, const model::ARNet<8>& model)
 {
-    return std::make_shared<cuda::CUDAProcessor<model::ARNet>>(idx, model);
+    return std::make_shared<cuda::CUDAProcessor<model::ARNet<8>>>(idx, model);
 }
 
 

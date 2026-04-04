@@ -28,152 +28,41 @@ ac::core::model::ACNet::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nu
     }
 }
 
-ac::core::model::ARNet::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
+template<int F>
+ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
 {
-    switch (v)
+    if constexpr (F == 8)
     {
-    case Variant::B4_HDN:
-        blockNum = 4;
-        kptr = param::ARNet_B4_HDN_NHWC_kernels;
-        bptr = param::ARNet_B4_HDN_NHWC_biases;
-        break;
-    case Variant::B4_HDNS:
-        blockNum = 4;
-        kptr = param::ARNet_B4_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B4_HDNS_NHWC_biases;
-        break;
-    case Variant::B4_LE:
-        blockNum = 4;
-        kptr = param::ARNet_B4_LE_NHWC_kernels;
-        bptr = param::ARNet_B4_LE_NHWC_biases;
-        break;
-    case Variant::B4_LS:
-        blockNum = 4;
-        kptr = param::ARNet_B4_LS_NHWC_kernels;
-        bptr = param::ARNet_B4_LS_NHWC_biases;
-        break;
-    case Variant::B8_HDN:
-        blockNum = 8;
-        kptr = param::ARNet_B8_HDN_NHWC_kernels;
-        bptr = param::ARNet_B8_HDN_NHWC_biases;
-        break;
-    case Variant::B8_HDNS:
-        blockNum = 8;
-        kptr = param::ARNet_B8_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B8_HDNS_NHWC_biases;
-        break;
-    case Variant::B8_LE:
-        blockNum = 8;
-        kptr = param::ARNet_B8_LE_NHWC_kernels;
-        bptr = param::ARNet_B8_LE_NHWC_biases;
-        break;
-    case Variant::B8_LS:
-        blockNum = 8;
-        kptr = param::ARNet_B8_LS_NHWC_kernels;
-        bptr = param::ARNet_B8_LS_NHWC_biases;
-        break;
-    case Variant::B16_HDN:
-        blockNum = 16;
-        kptr = param::ARNet_B16_HDN_NHWC_kernels;
-        bptr = param::ARNet_B16_HDN_NHWC_biases;
-        break;
-    case Variant::B16_HDNS:
-        blockNum = 16;
-        kptr = param::ARNet_B16_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B16_HDNS_NHWC_biases;
-        break;
-    case Variant::B16_LE:
-        blockNum = 16;
-        kptr = param::ARNet_B16_LE_NHWC_kernels;
-        bptr = param::ARNet_B16_LE_NHWC_biases;
-        break;
-    case Variant::B16_LS:
-        blockNum = 16;
-        kptr = param::ARNet_B16_LS_NHWC_kernels;
-        bptr = param::ARNet_B16_LS_NHWC_biases;
-        break;
-    case Variant::B24_HDN:
-        blockNum = 24;
-        kptr = param::ARNet_B24_HDN_NHWC_kernels;
-        bptr = param::ARNet_B24_HDN_NHWC_biases;
-        break;
-    case Variant::B24_HDNS:
-        blockNum = 24;
-        kptr = param::ARNet_B24_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B24_HDNS_NHWC_biases;
-        break;
-    case Variant::B24_LE:
-        blockNum = 24;
-        kptr = param::ARNet_B24_LE_NHWC_kernels;
-        bptr = param::ARNet_B24_LE_NHWC_biases;
-        break;
-    case Variant::B24_LS:
-        blockNum = 24;
-        kptr = param::ARNet_B24_LS_NHWC_kernels;
-        bptr = param::ARNet_B24_LS_NHWC_biases;
-        break;
-    case Variant::B32_HDN:
-        blockNum = 32;
-        kptr = param::ARNet_B32_HDN_NHWC_kernels;
-        bptr = param::ARNet_B32_HDN_NHWC_biases;
-        break;
-    case Variant::B32_HDNS:
-        blockNum = 32;
-        kptr = param::ARNet_B32_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B32_HDNS_NHWC_biases;
-        break;
-    case Variant::B32_LE:
-        blockNum = 32;
-        kptr = param::ARNet_B32_LE_NHWC_kernels;
-        bptr = param::ARNet_B32_LE_NHWC_biases;
-        break;
-    case Variant::B32_LS:
-        blockNum = 32;
-        kptr = param::ARNet_B32_LS_NHWC_kernels;
-        bptr = param::ARNet_B32_LS_NHWC_biases;
-        break;
-    case Variant::B48_HDN:
-        blockNum = 48;
-        kptr = param::ARNet_B48_HDN_NHWC_kernels;
-        bptr = param::ARNet_B48_HDN_NHWC_biases;
-        break;
-    case Variant::B48_HDNS:
-        blockNum = 48;
-        kptr = param::ARNet_B48_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B48_HDNS_NHWC_biases;
-        break;
-    case Variant::B48_LE:
-        blockNum = 48;
-        kptr = param::ARNet_B48_LE_NHWC_kernels;
-        bptr = param::ARNet_B48_LE_NHWC_biases;
-        break;
-    case Variant::B48_LS:
-        blockNum = 48;
-        kptr = param::ARNet_B48_LS_NHWC_kernels;
-        bptr = param::ARNet_B48_LS_NHWC_biases;
-        break;
-    case Variant::B64_HDN:
-        blockNum = 64;
-        kptr = param::ARNet_B64_HDN_NHWC_kernels;
-        bptr = param::ARNet_B64_HDN_NHWC_biases;
-        break;
-    case Variant::B64_HDNS:
-        blockNum = 64;
-        kptr = param::ARNet_B64_HDNS_NHWC_kernels;
-        bptr = param::ARNet_B64_HDNS_NHWC_biases;
-        break;
-    case Variant::B64_LE:
-        blockNum = 64;
-        kptr = param::ARNet_B64_LE_NHWC_kernels;
-        bptr = param::ARNet_B64_LE_NHWC_biases;
-        break;
-    case Variant::B64_LS:
-        blockNum = 64;
-        kptr = param::ARNet_B64_LS_NHWC_kernels;
-        bptr = param::ARNet_B64_LS_NHWC_biases;
-        break;
+        switch (v)
+        {
+        case Variant::B8_NORMAL:
+            blockNum = 8;
+            kptr = param::ARNet_F8B8_NHWC_kernels;
+            bptr = param::ARNet_F8B8_NHWC_biases;
+            aptr = param::ARNet_F8B8_NHWC_alphas;
+            break;
+        case Variant::B16_NORMAL:
+            blockNum = 16;
+            kptr = param::ARNet_F8B16_NHWC_kernels;
+            bptr = param::ARNet_F8B16_NHWC_biases;
+            aptr = param::ARNet_F8B16_NHWC_alphas;
+        case Variant::B32_NORMAL:
+            blockNum = 32;
+            kptr = param::ARNet_F8B32_NHWC_kernels;
+            bptr = param::ARNet_F8B32_NHWC_biases;
+            aptr = param::ARNet_F8B32_NHWC_alphas;
+        case Variant::B64_NORMAL:
+            blockNum = 64;
+            kptr = param::ARNet_F8B64_NHWC_kernels;
+            bptr = param::ARNet_F8B64_NHWC_biases;
+            aptr = param::ARNet_F8B64_NHWC_alphas;
+            break;
+        }
     }
+    else static_assert(F == 8, "Unsupported ARNet model");
 }
+
+template class ac::core::model::ARNet<8>;
 
 template<int F>
 ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)

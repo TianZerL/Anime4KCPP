@@ -535,14 +535,15 @@ namespace ac::core::cuda
             }
         }
 
-        template <typename IN, typename OUT, int cin, int upscale>
+        template <typename IN, typename OUT, int cin, int upscale, typename NearestInterpolationArg>
         __global__ void conv3x3_identity_pixelshuffle_cuda(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
             void* const __restrict__ dptr,
             const int dstW, const int dstH, const int dstC, const int dpitch,
             const float* const __restrict__ kernels,
-            const float* const __restrict__ biases)
+            const float* const __restrict__ biases,
+            NearestInterpolationArg nearestInterpolationArg)
         {
             auto bx = blockIdx.x * BlockSize::x;
             auto by = blockIdx.y * BlockSize::y;
@@ -677,6 +678,9 @@ namespace ac::core::cuda
                 for (int idx = 0; idx < 9; idx++)
                     for (int c = 0; c < cin; c++)
                         sum += toFloat(r[idx][c]) * k[idx][c];
+
+                if constexpr (::cuda::std::is_same_v<NearestInterpolationArg, ResidualArg>)
+                    sum = sum * nearestInterpolationArg.scale + toFloat(*getReadPtr<OUT>(nearestInterpolationArg.ptr, nearestInterpolationArg.w, nearestInterpolationArg.h, nearestInterpolationArg.c, nearestInterpolationArg.pitch, x, y));
 
                 *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = fromFloat<OUT>(sum);
             }
@@ -894,10 +898,8 @@ namespace ac::core::cuda
 }
 
     void conv3x3_1to8_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -909,21 +911,19 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            kernel::conv3x3_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+            kernel::conv3x3_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
             break;
         }
     }
     void conv3x3_8to8_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
@@ -931,13 +931,11 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         Image::ElementType dtype,
         cudaStream_t stream
@@ -957,10 +955,8 @@ namespace ac::core::cuda
     }
 
     void conv3x3_1to8_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -972,40 +968,35 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            kernel::conv3x3_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         }
     }
-    void conv3x3_8to8_lrelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+    void conv3x3_8to8_prelu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
-        const float negativeSlope,
+        const float* alphas,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, LReLU(negativeSlope));
+        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
-        void* iptr,
-        int idW, int idH, int idC, int ipitch,
+        const void* iptr, int idW, int idH, int idC, int ipitch,
         const float scale,
         cudaStream_t stream
     ) noexcept
@@ -1016,41 +1007,35 @@ namespace ac::core::cuda
             sptr, srcW, srcH, srcC, spitch,
             dptr, dstW, dstH, dstC, dpitch,
             kernels, biases,
-            Identity(),
-            ResidualArg{ iptr, idW, idH, idC, ipitch, scale });
+            Identity{},
+            ResidualArg{ iptr, idW, idH, idC, ipitch, scale }
+        );
     }
-    void conv3x3_8to8_identity_residual_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        void* iptr,
-        int idW, int idH, int idC, int ipitch,
-        const float scale,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
+    void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels1, const float* biases1,
+        const void* iptr, int idW, int idH, int idC, int ipitch, const float scale,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (
+        kernel::conv3x3_conv1x1_cuda<half, 8, 8, 8, false, false> <<< grid, block, 0, stream >>> (
             sptr, srcW, srcH, srcC, spitch,
             dptr, dstW, dstH, dstC, dpitch,
-            kernels, biases,
-            Identity(),
-            ResidualArg{ iptr, idW, idH, idC, ipitch, scale },
-            ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
+            kernels1, biases1, Identity{}, ResidualArg{iptr, idW, idH, idC, ipitch, scale },
+            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+        );
     }
-    void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+    void conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
+        const void* iptr, int idW, int idH, int idC, int ipitch,
         Image::ElementType dtype,
         cudaStream_t stream
     ) noexcept
@@ -1060,19 +1045,17 @@ namespace ac::core::cuda
         switch (dtype)
         {
         case Image::UInt8:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
         case Image::UInt16:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
         case Image::Float32:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
         }
     }
 
     void conv3x3_1to16_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -1084,21 +1067,19 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            kernel::conv3x3_cuda<float, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<float, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
@@ -1106,17 +1087,14 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+        kernel::conv3x3_cuda<half, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept
     {
@@ -1126,14 +1104,12 @@ namespace ac::core::cuda
             sptr, srcW, srcH, srcC, spitch,
             dptr, dstW, dstH, dstC, dpitch,
             kernels, biases,
-            Identity(),
+            Identity{},
             ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType dtype,
@@ -1145,19 +1121,17 @@ namespace ac::core::cuda
         switch (dtype)
         {
         case Image::UInt8:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         case Image::UInt16:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         case Image::Float32:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         }
     }
 
     void conv3x3_1to32_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -1169,21 +1143,19 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint8_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<::cuda::std::uint16_t, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            kernel::conv3x3_cuda<float, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv3x3_cuda<float, 1, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_32to32_relu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         cudaStream_t stream
@@ -1191,17 +1163,14 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 32, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU());
+        kernel::conv3x3_cuda<half, 32, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
-        void* fptr,
-        int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept
     {
@@ -1211,14 +1180,12 @@ namespace ac::core::cuda
             sptr, srcW, srcH, srcC, spitch,
             dptr, dstW, dstH, dstC, dpitch,
             kernels, biases,
-            Identity(),
+            Identity{},
             ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType dtype,
@@ -1230,19 +1197,17 @@ namespace ac::core::cuda
         switch (dtype)
         {
         case Image::UInt8:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         case Image::UInt16:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         case Image::Float32:
-            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases);
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
         }
     }
 
     void conv5x5_1to8_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -1254,37 +1219,22 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            kernel::conv5x5_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<float, 1, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         }
-    }
-    void conv3x3_8to8_prelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
-        cudaStream_t stream
-    ) noexcept
-    {
-        dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU(alphas));
     }
     void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
         const void* sptr, int srcW, int srcH, int srcC, int spitch,
         void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        void* fptr, int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept
     {
@@ -1297,12 +1247,31 @@ namespace ac::core::cuda
             kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
         );
     }
+    void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        Image::ElementType dtype,
+        cudaStream_t stream
+    ) noexcept
+    {
+        dim3 block{ BlockSize::x, BlockSize::y };
+        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
+        switch (dtype)
+        {
+        case Image::UInt8:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint8_t, 8, 2> << < grid, block, 0, stream >> > (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        case Image::UInt16:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, ::cuda::std::uint16_t, 8, 2> << < grid, block, 0, stream >> > (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        case Image::Float32:
+            return kernel::conv3x3_identity_pixelshuffle_cuda<half, float, 8, 2> << < grid, block, 0, stream >> > (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        }
+    }
 
     void conv5x5_1to16_identity_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         Image::ElementType stype,
@@ -1314,21 +1283,19 @@ namespace ac::core::cuda
         switch (stype)
         {
         case Image::UInt8:
-            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<::cuda::std::uint8_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<::cuda::std::uint16_t, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            kernel::conv5x5_cuda<float, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity());
+            kernel::conv5x5_cuda<float, 1, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_prelu_cuda(
-        const void* sptr,
-        int srcW, int srcH, int srcC, int spitch,
-        void* dptr,
-        int dstW, int dstH, int dstC, int dpitch,
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels,
         const float* biases,
         const float* alphas,
@@ -1337,14 +1304,14 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_cuda<half, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU(alphas));
+        kernel::conv3x3_cuda<half, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
         const void* sptr, int srcW, int srcH, int srcC, int spitch,
         void* dptr, int dstW, int dstH, int dstC, int dpitch,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        void* fptr, int featW, int featH, int featC, int fpitch,
+        const void* fptr, int featW, int featH, int featC, int fpitch,
         cudaStream_t stream
     ) noexcept
     {
