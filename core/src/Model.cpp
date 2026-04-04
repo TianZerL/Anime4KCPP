@@ -46,11 +46,13 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr
             kptr = param::ARNet_F8B16_NHWC_kernels;
             bptr = param::ARNet_F8B16_NHWC_biases;
             aptr = param::ARNet_F8B16_NHWC_alphas;
+            break;
         case Variant::B32_NORMAL:
             blockNum = 32;
             kptr = param::ARNet_F8B32_NHWC_kernels;
             bptr = param::ARNet_F8B32_NHWC_biases;
             aptr = param::ARNet_F8B32_NHWC_alphas;
+            break;
         case Variant::B64_NORMAL:
             blockNum = 64;
             kptr = param::ARNet_F8B64_NHWC_kernels;

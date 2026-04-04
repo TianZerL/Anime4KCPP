@@ -107,7 +107,8 @@ kernel void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add(
 
     conv1x1_cin8_from_vector(v, s, 8, kernels2, biases2, x, y);
 
-    v = PReLU(vload8(0, s), vload8(0, alphas2)) + (float8)(read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)), read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)));
+    v = vload8(0, s);
+    v = PReLU(v, vload8(0, alphas2)) + (float8)(read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)), read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)));
 
     write_imagef(dst, (int4)(x, y, 0, 0), v.lo);
     write_imagef(dst, (int4)(x, y, 1, 0), v.hi);
