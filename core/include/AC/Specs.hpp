@@ -9,34 +9,10 @@ namespace ac::specs
         "acnet-hdn1",
         "acnet-hdn2",
         "acnet-hdn3",
-        "arnet-b4-hdn",
-        "arnet-b4-hdns",
-        "arnet-b4-le",
-        "arnet-b4-ls",
-        "arnet-b8-hdn",
-        "arnet-b8-hdns",
-        "arnet-b8-le",
-        "arnet-b8-ls",
-        "arnet-b16-hdn",
-        "arnet-b16-hdns",
-        "arnet-b16-le",
-        "arnet-b16-ls",
-        "arnet-b24-hdn",
-        "arnet-b24-hdns",
-        "arnet-b24-le",
-        "arnet-b24-ls",
-        "arnet-b32-hdn",
-        "arnet-b32-hdns",
-        "arnet-b32-le",
-        "arnet-b32-ls",
-        "arnet-b48-hdn",
-        "arnet-b48-hdns",
-        "arnet-b48-le",
-        "arnet-b48-ls",
-        "arnet-b64-hdn",
-        "arnet-b64-hdns",
-        "arnet-b64-le",
-        "arnet-b64-ls",
+        "arnet-b8",
+        "arnet-b16",
+        "arnet-b32",
+        "arnet-b64",
         "artcnn-c4f16",
         "artcnn-c4f16-dn",
         "artcnn-c4f16-ds",
@@ -50,39 +26,15 @@ namespace ac::specs
     };
 
     constexpr const char* ModelDescriptionList[] = {
-        "Lightweight CNN, detail enhancement.",         // acnet-gan
-        "Lightweight CNN, mild denoising.",             // acnet-hdn0
-        "Lightweight CNN, moderate denoising.",         // acnet-hdn1
-        "Lightweight CNN, heavy denoising.",            // acnet-hdn2
-        "Lightweight CNN, extreme denoising.",          // acnet-hdn3
-        "Lightweight ResNet, mild denoising.",          // arnet-b4-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b4-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b4-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b4-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b8-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b8-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b8-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b4-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b16-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b16-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b16-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b16-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b24-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b24-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b24-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b24-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b32-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b32-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b32-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b32-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b48-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b48-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b48-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b48-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b64-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b64-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b64-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b64-ls
+        "Lightweight CNN, detail enhancement.", // acnet-gan
+        "Lightweight CNN, mild denoising.",     // acnet-hdn0
+        "Lightweight CNN, moderate denoising.", // acnet-hdn1
+        "Lightweight CNN, heavy denoising.",    // acnet-hdn2
+        "Lightweight CNN, extreme denoising.",  // acnet-hdn3
+        "ResNet for real-time tasks, without denoising.", // arnet-b8
+        "ResNet for real-time tasks, without denoising.", // arnet-b16
+        "ResNet for real-time tasks, without denoising.", // arnet-b32
+        "ResNet for real-time tasks, without denoising.", // arnet-b64
         "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
         "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
         "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds
