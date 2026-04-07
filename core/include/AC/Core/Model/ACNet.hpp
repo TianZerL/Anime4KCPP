@@ -8,10 +8,13 @@
 
 namespace ac::core::model
 {
+    class ACNetClassic;
+
+    template<int F>
     class ACNet;
 }
 
-class ac::core::model::ACNet
+class ac::core::model::ACNetClassic
 {
 public:
     enum class Variant
@@ -24,7 +27,7 @@ public:
     };
 
 public:
-    AC_CORE_EXPORT ACNet(Variant v) noexcept;
+    AC_CORE_EXPORT ACNetClassic(Variant v) noexcept;
 
 public:
     // length in numbers
@@ -75,6 +78,74 @@ public:
     static constexpr const float* alpha(const int layer = 0) noexcept { return nullptr; }
 
 private:
+    const float* kptr;
+    const float* bptr;
+};
+
+template<int F>
+class ac::core::model::ACNet
+{
+public:
+    enum class Variant
+    {
+        B8_NORMAL, B8_HDN
+    };
+
+public:
+    AC_CORE_EXPORT ACNet(Variant v) noexcept;
+
+public:
+    // length in numbers
+    int kernelLength() const noexcept { return F * 9 + F * F * 9 * blockNum + F * 4 * 9; }
+    int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (blockNum + 1)) ? F * F * 9 : ((layer == (blockNum + 1)) ? F * 4 * 9 : 0)); }
+    int biasLength() const noexcept { return F + F * blockNum + 4; }
+    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum + 1)) ? F : (layer == (blockNum + 1) ? 4 : 0); }
+    static constexpr int alphaLength() noexcept { return 0; }
+    static constexpr int alphaLength(const int /*layer*/) noexcept { return 0; }
+
+    // size in bytes
+    std::size_t kernelSize() const noexcept { return kernelLength() * sizeof(float); }
+    std::size_t kernelSize(const int layer) const noexcept { return kernelLength(layer) * sizeof(float); }
+    std::size_t biasSize() const noexcept { return biasLength() * sizeof(float); }
+    std::size_t biasSize(const int layer) const noexcept { return biasLength(layer) * sizeof(float); }
+    static constexpr std::size_t alphaSize() noexcept { return alphaLength() * sizeof(float); }
+    static constexpr std::size_t alphaSize(const int layer) noexcept { return alphaLength(layer) * sizeof(float); }
+
+    int blocks() const noexcept { return blockNum; }
+    int kernels() const noexcept { return blockNum + 1 + 1; }
+    int biases() const noexcept { return blockNum + 1 + 1; }
+    static constexpr int alphas() noexcept { return 0; }
+
+    int kernelIndex(const int layer) const noexcept { return std::clamp(layer, 0, kernels() - 1); }
+    int biasIndex(const int layer) const noexcept { return std::clamp(layer, 0, biases() - 1); }
+    static constexpr int alphaIndex(const int /*layer*/) noexcept { return 0; }
+
+    int kernelLayer(const int idx) const noexcept { return std::clamp(idx, 0, kernels() - 1); }
+    int biasLayer(const int idx) const noexcept { return std::clamp(idx, 0, biases() - 1); }
+    static constexpr int alphaLayer(const int /*idx*/) noexcept { return 0; }
+
+    int kernelOffset(const int layer) const noexcept
+    {
+        if (layer <= 0) return 0;
+        if (layer <= 1) return F * 9;
+        if (layer < kernels()) return F * 9 + (F * F * 9) * (layer - 1);
+        return kernelLength();
+    }
+    int biasOffset(const int layer) const noexcept
+    {
+        if (layer <= 0) return 0;
+        if (layer < biases()) return F * layer;
+        return biasLength();
+    }
+    static constexpr int alphaOffset(const int /*layer*/) noexcept { return 0; }
+
+    const float* kernel(const int layer = 0) const noexcept { return kptr + kernelOffset(layer); }
+    const float* bias(const int layer = 0) const noexcept { return bptr + biasOffset(layer); }
+    static constexpr const float* alpha(const int layer = 0) noexcept { return nullptr; }
+
+private:
+    int blockNum;
+
     const float* kptr;
     const float* bptr;
 };

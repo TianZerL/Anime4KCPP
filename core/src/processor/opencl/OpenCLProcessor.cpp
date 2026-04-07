@@ -516,10 +516,10 @@ namespace ac::core::opencl
 }
 
 template<>
-class ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet> : public OpenCLProcessorSeqCNN<model::ACNet>
+class ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetClassic> : public OpenCLProcessorSeqCNN<model::ACNetClassic>
 {
 public:
-    OpenCLProcessor(int device, const model::ACNet& model) noexcept;
+    OpenCLProcessor(int device, const model::ACNetClassic& model) noexcept;
     ~OpenCLProcessor() noexcept override;
 
 private:
@@ -536,10 +536,10 @@ private:
     util::ThreadLocal<ImageBuffer> outImageBuffers{};
 };
 
-ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::OpenCLProcessor(const int device, const model::ACNet& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ACNetKernelString) {}
-ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::~OpenCLProcessor() noexcept = default;
+ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetClassic>::OpenCLProcessor(const int device, const model::ACNetClassic& model) noexcept : OpenCLProcessorSeqCNN(device, model, kernel::ACNetKernelString) {}
+ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetClassic>::~OpenCLProcessor() noexcept = default;
 
-void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Image& src, Image& dst)
+void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetClassic>::process(const Image& src, Image& dst)
 {
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
@@ -599,9 +599,9 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet>::process(const Im
 }
 
 template<>
-AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::OpenCL, ac::core::model::ACNet>(const int idx, const model::ACNet& model)
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::OpenCL, ac::core::model::ACNetClassic>(const int idx, const model::ACNetClassic& model)
 {
-    return std::make_shared<opencl::OpenCLProcessor<model::ACNet>>(idx, model);
+    return std::make_shared<opencl::OpenCLProcessor<model::ACNetClassic>>(idx, model);
 }
 
 

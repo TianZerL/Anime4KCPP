@@ -1,32 +1,56 @@
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Model/Param.hpp"
 
-ac::core::model::ACNet::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr)
+ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept : kptr(nullptr), bptr(nullptr)
 {
     switch (v)
     {
     case Variant::GAN:
-        kptr = param::ACNet_GAN_NHWC_kernels;
-        bptr = param::ACNet_GAN_NHWC_biases;
+        kptr = param::ACNetClassic_GAN_NHWC_kernels;
+        bptr = param::ACNetClassic_GAN_NHWC_biases;
         break;
     case Variant::HDN0:
-        kptr = param::ACNet_HDN0_NHWC_kernels;
-        bptr = param::ACNet_HDN0_NHWC_biases;
+        kptr = param::ACNetClassic_HDN0_NHWC_kernels;
+        bptr = param::ACNetClassic_HDN0_NHWC_biases;
         break;
     case Variant::HDN1:
-        kptr = param::ACNet_HDN1_NHWC_kernels;
-        bptr = param::ACNet_HDN1_NHWC_biases;
+        kptr = param::ACNetClassic_HDN1_NHWC_kernels;
+        bptr = param::ACNetClassic_HDN1_NHWC_biases;
         break;
     case Variant::HDN2:
-        kptr = param::ACNet_HDN2_NHWC_kernels;
-        bptr = param::ACNet_HDN2_NHWC_biases;
+        kptr = param::ACNetClassic_HDN2_NHWC_kernels;
+        bptr = param::ACNetClassic_HDN2_NHWC_biases;
         break;
     case Variant::HDN3:
-        kptr = param::ACNet_HDN3_NHWC_kernels;
-        bptr = param::ACNet_HDN3_NHWC_biases;
+        kptr = param::ACNetClassic_HDN3_NHWC_kernels;
+        bptr = param::ACNetClassic_HDN3_NHWC_biases;
         break;
     }
 }
+
+template<int F>
+ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
+{
+    if constexpr (F == 8)
+    {
+        switch (v)
+        {
+        case Variant::B8_NORMAL:
+            blockNum = 8;
+            //kptr = param::ACNet_F8B8_NHWC_kernels;
+            //bptr = param::ACNet_F8B8_NHWC_biases;
+            break;
+        case Variant::B8_HDN:
+            blockNum = 16;
+            //kptr = param::ACNet_F8B8_NHWC_kernels;
+            //bptr = param::ACNet_F8B8_NHWC_biases;
+            break;
+        }
+    }
+    else static_assert(F == 8, "Unsupported ACNet model");
+}
+
+template class ac::core::model::ACNet<8>;
 
 template<int F>
 ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)

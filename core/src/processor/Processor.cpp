@@ -22,7 +22,7 @@ namespace ac::core::detail
         return Processor::CPU;
     }
     static inline auto findModel(const char* model) noexcept -> std::variant<
-        model::ACNet,
+        model::ACNetClassic,
         model::ARNet<8>,
         model::ArtCNN<16>, model::ArtCNN<32>,
         model::FSRCNNX<8>, model::FSRCNNX<16>
@@ -83,27 +83,31 @@ namespace ac::core::detail
 
                 return ac::core::model::ARNet<8>{ variant };
             }
-            else // ACNet
+            if (modelString.find("acnet") != std::string::npos) // ACNet
             {
-                auto variant = ac::core::model::ACNet::Variant::GAN;
-                if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
+                if (modelString.find("classic") != std::string::npos) // ARNetClassic
                 {
-                    variant = ac::core::model::ACNet::Variant::HDN0;
-                    for (char ch : modelString)
+                    auto variant = ac::core::model::ACNetClassic::Variant::GAN;
+                    if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
                     {
-                        if (ch == '0') variant = ac::core::model::ACNet::Variant::HDN0;
-                        else if (ch == '1') variant = ac::core::model::ACNet::Variant::HDN1;
-                        else if (ch == '2') variant = ac::core::model::ACNet::Variant::HDN2;
-                        else if (ch == '3') variant = ac::core::model::ACNet::Variant::HDN3;
-                        else continue;
+                        variant = ac::core::model::ACNetClassic::Variant::HDN0;
+                        for (char ch : modelString)
+                        {
+                            if (ch == '0') variant = ac::core::model::ACNetClassic::Variant::HDN0;
+                            else if (ch == '1') variant = ac::core::model::ACNetClassic::Variant::HDN1;
+                            else if (ch == '2') variant = ac::core::model::ACNetClassic::Variant::HDN2;
+                            else if (ch == '3') variant = ac::core::model::ACNetClassic::Variant::HDN3;
+                            else continue;
 
-                        break;
+                            break;
+                        }
                     }
+                    return ac::core::model::ACNetClassic{ variant };
                 }
-                return ac::core::model::ACNet{ variant };
+                //TODO
             }
         }
-        return ac::core::model::ACNet{ ac::core::model::ACNet::Variant::HDN0 };
+        return ac::core::model::ACNetClassic{ ac::core::model::ACNetClassic::Variant::HDN0 };
     }
 }
 
