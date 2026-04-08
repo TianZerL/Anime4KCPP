@@ -30,10 +30,10 @@ public:
 public:
     // length in numbers
     int kernelLength() const noexcept { return F * 9 + F * F * 9 * blockNum * 2 + F * F * 1 + F * 4 * 9; }
-    int biasLength() const noexcept { return F + F * (blockNum * 2 + 1) + 4; }
-    int alphaLength() const noexcept { return F * (blockNum + 1); }
     int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (blockNum * 2 + 1)) ? F * F * 9 : ((layer == (blockNum * 2 + 1)) ? F * F * 1 : ((layer == (blockNum * 2 + 1 + 1)) ? F * 4 * 9 : 0))); }
+    int biasLength() const noexcept { return F + F * (blockNum * 2 + 1) + 4; }
     int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum * 2 + 1 + 1)) ? F : (layer == (blockNum * 2 + 1 + 1) ? 4 : 0); }
+    int alphaLength() const noexcept { return F * (blockNum + 1); }
     int alphaLength(const int layer) const noexcept { return (layer >= 1 && layer < (blockNum * 2 + 1 + 1) && (layer & 1)) ? F : 0; }
     // size in bytes
     std::size_t kernelSize() const noexcept { return kernelLength() * sizeof(float); }

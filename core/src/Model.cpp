@@ -29,7 +29,7 @@ ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept : kptr(nul
 }
 
 template<int F>
-ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
+ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
 {
     if constexpr (F == 8)
     {
@@ -37,13 +37,15 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr
         {
         case Variant::B8_NORMAL:
             blockNum = 8;
-            //kptr = param::ACNet_F8B8_NHWC_kernels;
-            //bptr = param::ACNet_F8B8_NHWC_biases;
+            kptr = param::ACNet_F8B8_NHWC_kernels;
+            bptr = param::ACNet_F8B8_NHWC_biases;
+            aptr = param::ACNet_F8B8_NHWC_alphas;
             break;
         case Variant::B8_HDN:
-            blockNum = 16;
-            //kptr = param::ACNet_F8B8_NHWC_kernels;
-            //bptr = param::ACNet_F8B8_NHWC_biases;
+            blockNum = 8;
+            kptr = param::ACNet_F8B8_HDN_NHWC_kernels;
+            bptr = param::ACNet_F8B8_HDN_NHWC_biases;
+            aptr = param::ACNet_F8B8_HDN_NHWC_alphas;
             break;
         }
     }

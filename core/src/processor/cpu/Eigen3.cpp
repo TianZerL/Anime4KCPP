@@ -347,6 +347,22 @@ namespace ac::core::cpu
         }
     }
 
+    void conv3x3_1to8_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_eigen3<std::uint8_t, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::UInt16:
+            conv3x3_eigen3<std::uint16_t, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::Float32:
+            conv3x3_eigen3<float, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        }
+    }
+
     void conv3x3_1to8_identity_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())

@@ -23,6 +23,7 @@ namespace ac::core::detail
     }
     static inline auto findModel(const char* model) noexcept -> std::variant<
         model::ACNetClassic,
+        model::ACNet<8>,
         model::ARNet<8>,
         model::ArtCNN<16>, model::ArtCNN<32>,
         model::FSRCNNX<8>, model::FSRCNNX<16>
@@ -85,29 +86,34 @@ namespace ac::core::detail
             }
             if (modelString.find("acnet") != std::string::npos) // ACNet
             {
-                if (modelString.find("classic") != std::string::npos) // ARNetClassic
+                if (modelString.find("b8") != std::string::npos) // ARNetClassic
                 {
-                    auto variant = ac::core::model::ACNetClassic::Variant::GAN;
-                    if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
-                    {
-                        variant = ac::core::model::ACNetClassic::Variant::HDN0;
-                        for (char ch : modelString)
-                        {
-                            if (ch == '0') variant = ac::core::model::ACNetClassic::Variant::HDN0;
-                            else if (ch == '1') variant = ac::core::model::ACNetClassic::Variant::HDN1;
-                            else if (ch == '2') variant = ac::core::model::ACNetClassic::Variant::HDN2;
-                            else if (ch == '3') variant = ac::core::model::ACNetClassic::Variant::HDN3;
-                            else continue;
+                    auto variant = ac::core::model::ACNet<8>::Variant::B8_NORMAL;
 
-                            break;
-                        }
-                    }
-                    return ac::core::model::ACNetClassic{ variant };
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B8_HDN;
+
+                    return ac::core::model::ACNet<8>{ variant };
                 }
-                //TODO
+
+                auto variant = ac::core::model::ACNetClassic::Variant::GAN;
+                if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
+                {
+                    variant = ac::core::model::ACNetClassic::Variant::HDN0;
+                    for (char ch : modelString)
+                    {
+                        if (ch == '0') variant = ac::core::model::ACNetClassic::Variant::HDN0;
+                        else if (ch == '1') variant = ac::core::model::ACNetClassic::Variant::HDN1;
+                        else if (ch == '2') variant = ac::core::model::ACNetClassic::Variant::HDN2;
+                        else if (ch == '3') variant = ac::core::model::ACNetClassic::Variant::HDN3;
+                        else continue;
+
+                        break;
+                    }
+                }
+                return ac::core::model::ACNetClassic{ variant };
             }
         }
-        return ac::core::model::ACNetClassic{ ac::core::model::ACNetClassic::Variant::HDN0 };
+        return ac::core::model::ACNetClassic{ ac::core::model::ACNetClassic::Variant::GAN };
     }
 }
 

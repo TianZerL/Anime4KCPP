@@ -558,6 +558,22 @@ namespace ac::core::cpu
         }
     }
 
+    void conv3x3_1to8_prelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_neon_cin1<std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::UInt16:
+            conv3x3_neon_cin1<std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::Float32:
+            conv3x3_neon_cin1<float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        }
+    }
+
     void conv3x3_1to8_identity_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())

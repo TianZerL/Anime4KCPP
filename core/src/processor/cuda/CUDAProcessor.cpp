@@ -43,6 +43,15 @@ namespace ac::core::cuda
         Image::ElementType dtype,
         cudaStream_t stream
     ) noexcept;
+    void conv3x3_1to8_prelu_cuda(
+        const void* sptr, int srcW, int srcH, int srcC, int spitch,
+        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const float* kernels,
+        const float* biases,
+        const float* alphas,
+        Image::ElementType stype,
+        cudaStream_t stream
+    ) noexcept;
     void conv3x3_1to8_identity_cuda(
         const void* sptr, int srcW, int srcH, int srcC, int spitch,
         void* dptr, int dstW, int dstH, int dstC, int dpitch,
@@ -598,6 +607,91 @@ template<>
 AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ACNetClassic>(const int idx, const model::ACNetClassic& model)
 {
     return std::make_shared<cuda::CUDAProcessor<model::ACNetClassic>>(idx, model);
+}
+
+
+template<>
+class ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>> : public CUDAProcessorSeqCNN<model::ACNet<8>>
+{
+public:
+    CUDAProcessor(int device, const model::ACNet<8>& model) noexcept;
+    ~CUDAProcessor() noexcept override;
+
+private:
+    void process(const Image& src, Image& dst) override;
+
+private:
+    util::ThreadLocal<ImageBuffer> inImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp1ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> tmp2ImageBuffers{};
+    util::ThreadLocal<ImageBuffer> outImageBuffers{};
+};
+
+ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::CUDAProcessor(const int device, const model::ACNet<8>& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
+ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::~CUDAProcessor() noexcept = default;
+
+void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::process(const Image& src, Image& dst)
+{
+    auto& err = errors.local();
+    auto stream = cudaStreamPerThread;
+
+    err = cudaSetDevice(idx); if (err != cudaSuccess) return;
+
+    auto& inImageBuffer = inImageBuffers.local();
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
+    auto& outImageBuffer = outImageBuffers.local();
+
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+
+    int l = 0;
+
+    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+
+    conv3x3_1to8_prelu_cuda(
+        in.ptr, in.w, in.h, in.c, in.pitch,
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        kernel(l), bias(l), alpha(l),
+        src.type(), stream); l++;
+
+    for (int i = 0; i < model.blocks(); i += 2)
+    {
+        conv3x3_8to8_prelu_cuda(
+            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+            kernel(l), bias(l), alpha(l),
+            stream); l++;
+
+        conv3x3_8to8_prelu_cuda(
+            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+            kernel(l), bias(l), alpha(l),
+            stream); l++;
+    }
+
+    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
+        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        out.ptr, out.w, out.h, out.c, out.pitch,
+        kernel(l), bias(l),
+        in.ptr, in.w, in.h, in.c, in.pitch,
+        dst.type(), stream);
+
+    err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
+
+    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+
+    err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
+
+    err = cudaPeekAtLastError();
+}
+
+template<>
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ACNet<8>>(const int idx, const model::ACNet<8>& model)
+{
+    return std::make_shared<cuda::CUDAProcessor<model::ACNet<8>>>(idx, model);
 }
 
 

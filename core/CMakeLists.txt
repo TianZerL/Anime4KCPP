@@ -34,6 +34,7 @@ if(AC_CORE_WITH_OPENCL)
     include(${CMAKE_DIR}/GenOpenCLKernelHeader.cmake)
 
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/CommonKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/CommonKernel.hpp Common)
+    generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ACNetClassicKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ACNetClassicKernel.hpp ACNetClassic)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ACNetKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ACNetKernel.hpp ACNet)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ARNetKernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ARNetKernel.hpp ARNet)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/ArtCNNF16Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/ArtCNNF16Kernel.hpp ArtCNNF16)

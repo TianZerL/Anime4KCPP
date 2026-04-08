@@ -27,17 +27,17 @@ public:
 public:
     // length in numbers
     int kernelLength() const noexcept { return F * 25 + F * F * 9 * blockNum + F * F * 1 + F * 4 * 9; }
-    int biasLength() const noexcept { return F + F * (blockNum + 1) + 4; }
-    int alphaLength() const noexcept { return F * (blockNum + 1); }
     int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 25 : ((layer > 0 && layer < (blockNum + 1)) ? F * F * 9 : ((layer == (blockNum + 1)) ? F * F * 1 : ((layer == (blockNum + 1 + 1)) ? F * 4 * 9: 0))); }
+    int biasLength() const noexcept { return F + F * (blockNum + 1) + 4; }
     int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum + 1 + 1)) ? F : (layer == (blockNum + 1 + 1) ? 4 : 0); }
+    int alphaLength() const noexcept { return F * (blockNum + 1); }
     int alphaLength(const int layer) const noexcept { return (layer >= 1 && layer < (blockNum + 1 + 1)) ? F : 0; }
     // size in bytes
     std::size_t kernelSize() const noexcept { return kernelLength() * sizeof(float); }
-    std::size_t biasSize() const noexcept { return biasLength() * sizeof(float); }
-    std::size_t alphaSize() const noexcept { return alphaLength() * sizeof(float); }
     std::size_t kernelSize(const int layer) const noexcept { return kernelLength(layer) * sizeof(float); }
+    std::size_t biasSize() const noexcept { return biasLength() * sizeof(float); }
     std::size_t biasSize(const int layer) const noexcept { return biasLength(layer) * sizeof(float); }
+    std::size_t alphaSize() const noexcept { return alphaLength() * sizeof(float); }
     std::size_t alphaSize(const int layer) const noexcept { return alphaLength(layer) * sizeof(float); }
 
     int blocks() const noexcept { return blockNum; }

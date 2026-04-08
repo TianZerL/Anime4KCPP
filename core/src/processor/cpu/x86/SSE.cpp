@@ -563,6 +563,23 @@ namespace ac::core::cpu
             break;
         }
     }
+
+    void conv3x3_1to8_prelu_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
+    {
+        switch (src.type())
+        {
+        case Image::UInt8:
+            conv3x3_sse_cin1<std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::UInt16:
+            conv3x3_sse_cin1<std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        case Image::Float32:
+            conv3x3_sse_cin1<float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
+        }
+    }
+
     void conv3x3_8to8_prelu_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
         conv3x3_sse_float<8, 8>(src, dst, kernels, biases, PReLU{ alphas });
