@@ -9,10 +9,12 @@ namespace ac::specs
         "acnet-classic-hdn1",
         "acnet-classic-hdn2",
         "acnet-classic-hdn3",
-        "arnet-b8",
-        "arnet-b16",
-        "arnet-b32",
-        "arnet-b64",
+        "acnet-f8b8",
+        "acnet-f8b8-hdn",
+        "arnet-f8b8",
+        "arnet-f8b16",
+        "arnet-f8b32",
+        "arnet-f8b64",
         "artcnn-c4f16",
         "artcnn-c4f16-dn",
         "artcnn-c4f16-ds",
@@ -31,10 +33,12 @@ namespace ac::specs
         "Lightweight CNN, moderate denoising.", // acnet-classic-hdn1
         "Lightweight CNN, heavy denoising.",    // acnet-classic-hdn2
         "Lightweight CNN, extreme denoising.",  // acnet-classic-hdn3
-        "ResNet for real-time tasks, without denoising.", // arnet-b8
-        "ResNet for real-time tasks, without denoising.", // arnet-b16
-        "ResNet for real-time tasks, without denoising.", // arnet-b32
-        "ResNet for real-time tasks, without denoising.", // arnet-b64
+        "Lightweight CNN, without denoising.",  // acnet-f8b8
+        "Lightweight CNN, mild denoising.",     // acnet-f8b8-hdn
+        "ResNet for real-time tasks, without denoising.", // arnet-f8b8
+        "ResNet for real-time tasks, without denoising.", // arnet-f8b16
+        "ResNet for real-time tasks, without denoising.", // arnet-f8b32
+        "ResNet for real-time tasks, without denoising.", // arnet-f8b64
         "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
         "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
         "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds
