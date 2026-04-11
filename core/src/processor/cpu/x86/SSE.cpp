@@ -174,8 +174,6 @@ namespace ac::core::cpu
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
 
-        static_assert((std::is_same_v<typename std::remove_reference_t<ResidualArgs>::DataType, float> && ...), "All residual arguments must have Type = float.");
-
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
@@ -214,8 +212,6 @@ namespace ac::core::cpu
     inline void conv3x3_sse_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        static_assert((std::is_same_v<typename std::remove_reference_t<ResidualArgs>::DataType, float> && ...), "All residual arguments must have Type = float.");
 
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
@@ -440,10 +436,14 @@ namespace ac::core::cpu
 
                 conv3x3_sse_float_impl<cin, cout>(rptr, sum, kernels, biases);
 
+                constexpr bool addNearestInterpolation = std::is_same_v<NearestInterpolationArg, ResidualArg>;
+
+                [[maybe_unused]] float nearestInterpolationData{};
+                if constexpr (addNearestInterpolation) nearestInterpolationData = toFloat(*static_cast<const OUT*>(nearestInterpolationArg.image.ptr(j, i)));
+
                 for (int n = 0; n < cout; n++)
                 {
-                    if constexpr (IsResidualArg<NearestInterpolationArg>::value)
-                        sum[n] = sum[n] * nearestInterpolationArg.scale + toFloat(*static_cast<const typename NearestInterpolationArg::DataType*>(nearestInterpolationArg.image.ptr(j, i)));
+                    if constexpr (addNearestInterpolation) sum[n] = sum[n] * nearestInterpolationArg.scale + nearestInterpolationData;
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum[n]);
                 }
@@ -488,7 +488,7 @@ namespace ac::core::cpu
                 {
                     if constexpr (!postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
 
-                    if constexpr (IsResidualArg<ResidualArg3x3>::value)
+                    if constexpr (std::is_same_v<ResidualArg3x3, ResidualArg>)
                         buffer[n] = buffer[n] * residualArg3x3.scale + static_cast<const float*>(residualArg3x3.image.ptr(j, i))[n];
 
                     if constexpr (postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
@@ -502,7 +502,7 @@ namespace ac::core::cpu
                 {
                     if constexpr (!postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
 
-                    if constexpr (IsResidualArg<ResidualArg1x1>::value)
+                    if constexpr (std::is_same_v<ResidualArg1x1, ResidualArg>)
                         sum[n] = sum[n] * residualArg1x1.scale + static_cast<const float*>(residualArg1x1.image.ptr(j, i))[n];
 
                     if constexpr (postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
@@ -586,7 +586,7 @@ namespace ac::core::cpu
     }
     void conv3x3_8to8_identity_residual_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
-        conv3x3_sse_float<8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg<float>{ id, scale });
+        conv3x3_sse_float<8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_sse(
         const Image& src, Image& dst,
@@ -597,8 +597,8 @@ namespace ac::core::cpu
     {
         conv3x3_conv1x1_sse_float<8, 8, 8, false, false>(
             src, dst,
-            kernels1, biases1, Identity{}, ResidualArg<float>{ id, scale },
-            kernels2, biases2, PReLU(alphas2), ResidualArg<float>{ feat, 1.0f }
+            kernels1, biases1, Identity{}, ResidualArg{ id, scale },
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_add_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id)
@@ -606,13 +606,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_sse_float<std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg<std::uint8_t>{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_sse_float<std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_sse_float<std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg<std::uint16_t>{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_sse_float<std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_sse_float<float, 8, 2>(src, dst, kernels, biases, ResidualArg<float>{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_sse_float<float, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         }
     }
@@ -638,7 +638,7 @@ namespace ac::core::cpu
     }
     void conv3x3_16to16_identity_add_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_sse_float<16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg<float>{ feat, 1.0f });
+        conv3x3_sse_float<16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
@@ -677,7 +677,7 @@ namespace ac::core::cpu
     }
     void conv3x3_32to32_identity_add_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_sse_float<32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg<float>{ feat, 1.0f });
+        conv3x3_sse_float<32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
@@ -719,7 +719,7 @@ namespace ac::core::cpu
         conv3x3_conv1x1_sse_float<8, 8, 8, false, true>(
             src, dst,
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg<float>{ feat, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_sse(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -766,7 +766,7 @@ namespace ac::core::cpu
         conv3x3_conv1x1_sse_float<16, 16, 16, false, true>(
             src, dst,
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg<float>{ feat, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
         );
     }
 }
