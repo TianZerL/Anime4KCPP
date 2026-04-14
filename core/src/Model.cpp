@@ -1,7 +1,10 @@
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Model/Param.hpp"
 
-ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept : kptr(nullptr), bptr(nullptr)
+template <typename Model>
+ac::core::model::BaseModel<Model>::BaseModel() noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0) {}
+
+ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept
 {
     switch (v)
     {
@@ -29,7 +32,7 @@ ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept : kptr(nul
 }
 
 template<int F>
-ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
+ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept
 {
     if constexpr (F == 8)
     {
@@ -55,7 +58,7 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept : kptr(nullptr), bptr
 template class ac::core::model::ACNet<8>;
 
 template<int F>
-ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
+ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
 {
     if constexpr (F == 8)
     {
@@ -67,11 +70,23 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr
             bptr = param::ARNet_F8B8_NHWC_biases;
             aptr = param::ARNet_F8B8_NHWC_alphas;
             break;
+        case Variant::B8_HDN:
+            blockNum = 8;
+            kptr = param::ARNet_F8B8_HDN_NHWC_kernels;
+            bptr = param::ARNet_F8B8_HDN_NHWC_biases;
+            aptr = param::ARNet_F8B8_HDN_NHWC_alphas;
+            break;
         case Variant::B16_NORMAL:
             blockNum = 16;
             kptr = param::ARNet_F8B16_NHWC_kernels;
             bptr = param::ARNet_F8B16_NHWC_biases;
             aptr = param::ARNet_F8B16_NHWC_alphas;
+            break;
+        case Variant::B16_HDN:
+            blockNum = 16;
+            kptr = param::ARNet_F8B16_HDN_NHWC_kernels;
+            bptr = param::ARNet_F8B16_HDN_NHWC_biases;
+            aptr = param::ARNet_F8B16_HDN_NHWC_alphas;
             break;
         case Variant::B32_NORMAL:
             blockNum = 32;
@@ -93,7 +108,7 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept : kptr(nullptr), bptr
 template class ac::core::model::ARNet<8>;
 
 template<int F>
-ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), blockNum(0)
+ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept
 {
     if constexpr (F == 16)
     {
@@ -144,7 +159,7 @@ template class ac::core::model::ArtCNN<16>;
 template class ac::core::model::ArtCNN<32>;
 
 template<int F>
-ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0)
+ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept
 {
     if constexpr (F == 8)
     {

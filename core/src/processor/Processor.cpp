@@ -75,6 +75,16 @@ namespace ac::core::detail
             }
             if (modelString.find("arnet") != std::string::npos) // ARNet
             {
+                if (modelString.find("hdn") != std::string::npos)
+                {
+                    auto variant = ac::core::model::ARNet<8>::Variant::B8_HDN;
+
+                    if (modelString.find("b8") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B8_HDN;
+                    else if (modelString.find("b16") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B16_HDN;
+
+                    return ac::core::model::ARNet<8>{ variant };
+                }
+
                 auto variant = ac::core::model::ARNet<8>::Variant::B8_NORMAL;
 
                 if (modelString.find("b8") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B8_NORMAL;
