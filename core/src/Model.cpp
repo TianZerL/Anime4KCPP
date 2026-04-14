@@ -2,31 +2,31 @@
 #include "AC/Core/Model/Param.hpp"
 
 template <typename Model>
-ac::core::model::BaseModel<Model>::BaseModel() noexcept : kptr(nullptr), bptr(nullptr), aptr(nullptr), blockNum(0) {}
+ac::core::model::BaseModel<Model>::BaseModel() noexcept : blockNum(0), kptr(nullptr), bptr(nullptr), aptr(nullptr) {}
 
 ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept
 {
     switch (v)
     {
     case Variant::GAN:
-        kptr = param::ACNetClassic_GAN_NHWC_kernels;
-        bptr = param::ACNetClassic_GAN_NHWC_biases;
+        this->kptr = param::ACNetClassic_GAN_NHWC_kernels;
+        this->bptr = param::ACNetClassic_GAN_NHWC_biases;
         break;
     case Variant::HDN0:
-        kptr = param::ACNetClassic_HDN0_NHWC_kernels;
-        bptr = param::ACNetClassic_HDN0_NHWC_biases;
+        this->kptr = param::ACNetClassic_HDN0_NHWC_kernels;
+        this->bptr = param::ACNetClassic_HDN0_NHWC_biases;
         break;
     case Variant::HDN1:
-        kptr = param::ACNetClassic_HDN1_NHWC_kernels;
-        bptr = param::ACNetClassic_HDN1_NHWC_biases;
+        this->kptr = param::ACNetClassic_HDN1_NHWC_kernels;
+        this->bptr = param::ACNetClassic_HDN1_NHWC_biases;
         break;
     case Variant::HDN2:
-        kptr = param::ACNetClassic_HDN2_NHWC_kernels;
-        bptr = param::ACNetClassic_HDN2_NHWC_biases;
+        this->kptr = param::ACNetClassic_HDN2_NHWC_kernels;
+        this->bptr = param::ACNetClassic_HDN2_NHWC_biases;
         break;
     case Variant::HDN3:
-        kptr = param::ACNetClassic_HDN3_NHWC_kernels;
-        bptr = param::ACNetClassic_HDN3_NHWC_biases;
+        this->kptr = param::ACNetClassic_HDN3_NHWC_kernels;
+        this->bptr = param::ACNetClassic_HDN3_NHWC_biases;
         break;
     }
 }
@@ -39,16 +39,16 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept
         switch (v)
         {
         case Variant::B8_NORMAL:
-            blockNum = 8;
-            kptr = param::ACNet_F8B8_NHWC_kernels;
-            bptr = param::ACNet_F8B8_NHWC_biases;
-            aptr = param::ACNet_F8B8_NHWC_alphas;
+            this->blockNum = 8;
+            this->kptr = param::ACNet_F8B8_NHWC_kernels;
+            this->bptr = param::ACNet_F8B8_NHWC_biases;
+            this->aptr = param::ACNet_F8B8_NHWC_alphas;
             break;
         case Variant::B8_HDN:
-            blockNum = 8;
-            kptr = param::ACNet_F8B8_HDN_NHWC_kernels;
-            bptr = param::ACNet_F8B8_HDN_NHWC_biases;
-            aptr = param::ACNet_F8B8_HDN_NHWC_alphas;
+            this->blockNum = 8;
+            this->kptr = param::ACNet_F8B8_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B8_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B8_HDN_NHWC_alphas;
             break;
         }
     }
@@ -65,40 +65,40 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
         switch (v)
         {
         case Variant::B8_NORMAL:
-            blockNum = 8;
-            kptr = param::ARNet_F8B8_NHWC_kernels;
-            bptr = param::ARNet_F8B8_NHWC_biases;
-            aptr = param::ARNet_F8B8_NHWC_alphas;
+            this->blockNum = 8;
+            this->kptr = param::ARNet_F8B8_NHWC_kernels;
+            this->bptr = param::ARNet_F8B8_NHWC_biases;
+            this->aptr = param::ARNet_F8B8_NHWC_alphas;
             break;
         case Variant::B8_HDN:
-            blockNum = 8;
-            kptr = param::ARNet_F8B8_HDN_NHWC_kernels;
-            bptr = param::ARNet_F8B8_HDN_NHWC_biases;
-            aptr = param::ARNet_F8B8_HDN_NHWC_alphas;
+            this->blockNum = 8;
+            this->kptr = param::ARNet_F8B8_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B8_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B8_HDN_NHWC_alphas;
             break;
         case Variant::B16_NORMAL:
-            blockNum = 16;
-            kptr = param::ARNet_F8B16_NHWC_kernels;
-            bptr = param::ARNet_F8B16_NHWC_biases;
-            aptr = param::ARNet_F8B16_NHWC_alphas;
+            this->blockNum = 16;
+            this->kptr = param::ARNet_F8B16_NHWC_kernels;
+            this->bptr = param::ARNet_F8B16_NHWC_biases;
+            this->aptr = param::ARNet_F8B16_NHWC_alphas;
             break;
         case Variant::B16_HDN:
-            blockNum = 16;
-            kptr = param::ARNet_F8B16_HDN_NHWC_kernels;
-            bptr = param::ARNet_F8B16_HDN_NHWC_biases;
-            aptr = param::ARNet_F8B16_HDN_NHWC_alphas;
+            this->blockNum = 16;
+            this->kptr = param::ARNet_F8B16_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B16_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B16_HDN_NHWC_alphas;
             break;
         case Variant::B32_NORMAL:
-            blockNum = 32;
-            kptr = param::ARNet_F8B32_NHWC_kernels;
-            bptr = param::ARNet_F8B32_NHWC_biases;
-            aptr = param::ARNet_F8B32_NHWC_alphas;
+            this->blockNum = 32;
+            this->kptr = param::ARNet_F8B32_NHWC_kernels;
+            this->bptr = param::ARNet_F8B32_NHWC_biases;
+            this->aptr = param::ARNet_F8B32_NHWC_alphas;
             break;
         case Variant::B64_NORMAL:
-            blockNum = 64;
-            kptr = param::ARNet_F8B64_NHWC_kernels;
-            bptr = param::ARNet_F8B64_NHWC_biases;
-            aptr = param::ARNet_F8B64_NHWC_alphas;
+            this->blockNum = 64;
+            this->kptr = param::ARNet_F8B64_NHWC_kernels;
+            this->bptr = param::ARNet_F8B64_NHWC_biases;
+            this->aptr = param::ARNet_F8B64_NHWC_alphas;
             break;
         }
     }
@@ -115,19 +115,19 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept
         switch (v)
         {
         case Variant::NORMAL:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F16_NHWC_kernels;
-            bptr = param::ArtCNN_C4F16_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F16_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F16_NHWC_biases;
             break;
         case Variant::DN:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F16_DN_NHWC_kernels;
-            bptr = param::ArtCNN_C4F16_DN_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F16_DN_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F16_DN_NHWC_biases;
             break;
         case Variant::DS:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F16_DS_NHWC_kernels;
-            bptr = param::ArtCNN_C4F16_DS_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F16_DS_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F16_DS_NHWC_biases;
             break;
         }
     }
@@ -136,19 +136,19 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept
         switch (v)
         {
         case Variant::NORMAL:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F32_NHWC_kernels;
-            bptr = param::ArtCNN_C4F32_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F32_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F32_NHWC_biases;
             break;
         case Variant::DN:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F32_DN_NHWC_kernels;
-            bptr = param::ArtCNN_C4F32_DN_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F32_DN_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F32_DN_NHWC_biases;
             break;
         case Variant::DS:
-            blockNum = 4;
-            kptr = param::ArtCNN_C4F32_DS_NHWC_kernels;
-            bptr = param::ArtCNN_C4F32_DS_NHWC_biases;
+            this->blockNum = 4;
+            this->kptr = param::ArtCNN_C4F32_DS_NHWC_kernels;
+            this->bptr = param::ArtCNN_C4F32_DS_NHWC_biases;
             break;
         }
     }
@@ -166,16 +166,16 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept
         switch (v)
         {
         case Variant::NORMAL:
-            blockNum = 4;
-            kptr = param::FSRCNNX_F8_NHWC_kernels;
-            bptr = param::FSRCNNX_F8_NHWC_biases;
-            aptr = param::FSRCNNX_F8_NHWC_alphas;
+            this->blockNum = 4;
+            this->kptr = param::FSRCNNX_F8_NHWC_kernels;
+            this->bptr = param::FSRCNNX_F8_NHWC_biases;
+            this->aptr = param::FSRCNNX_F8_NHWC_alphas;
             break;
         case Variant::DISTORT_PLUS:
-            blockNum = 4;
-            kptr = param::FSRCNNX_F8_DistortPlus_NHWC_kernels;
-            bptr = param::FSRCNNX_F8_DistortPlus_NHWC_biases;
-            aptr = param::FSRCNNX_F8_DistortPlus_NHWC_alphas;
+            this->blockNum = 4;
+            this->kptr = param::FSRCNNX_F8_DistortPlus_NHWC_kernels;
+            this->bptr = param::FSRCNNX_F8_DistortPlus_NHWC_biases;
+            this->aptr = param::FSRCNNX_F8_DistortPlus_NHWC_alphas;
             break;
         }
     }
@@ -184,16 +184,16 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept
         switch (v)
         {
         case Variant::NORMAL:
-            blockNum = 4;
-            kptr = param::FSRCNNX_F16_NHWC_kernels;
-            bptr = param::FSRCNNX_F16_NHWC_biases;
-            aptr = param::FSRCNNX_F16_NHWC_alphas;
+            this->blockNum = 4;
+            this->kptr = param::FSRCNNX_F16_NHWC_kernels;
+            this->bptr = param::FSRCNNX_F16_NHWC_biases;
+            this->aptr = param::FSRCNNX_F16_NHWC_alphas;
             break;
         case Variant::DISTORT_PLUS:
-            blockNum = 4;
-            kptr = param::FSRCNNX_F16_DistortPlus_NHWC_kernels;
-            bptr = param::FSRCNNX_F16_DistortPlus_NHWC_biases;
-            aptr = param::FSRCNNX_F16_DistortPlus_NHWC_alphas;
+            this->blockNum = 4;
+            this->kptr = param::FSRCNNX_F16_DistortPlus_NHWC_kernels;
+            this->bptr = param::FSRCNNX_F16_DistortPlus_NHWC_biases;
+            this->aptr = param::FSRCNNX_F16_DistortPlus_NHWC_alphas;
             break;
         }
     }

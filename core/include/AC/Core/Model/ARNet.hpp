@@ -29,20 +29,20 @@ public:
     AC_CORE_EXPORT ARNet(Variant v) noexcept;
 
 public:
-    int kernelLength() const noexcept { return F * 9 + F * F * 9 * blockNum * 2 + F * F * 1 + F * 4 * 9; }
-    int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (blockNum * 2 + 1)) ? F * F * 9 : ((layer == (blockNum * 2 + 1)) ? F * F * 1 : ((layer == (blockNum * 2 + 1 + 1)) ? F * 4 * 9 : 0))); }
-    int biasLength() const noexcept { return F + F * (blockNum * 2 + 1) + 4; }
-    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum * 2 + 1 + 1)) ? F : (layer == (blockNum * 2 + 1 + 1) ? 4 : 0); }
-    int alphaLength() const noexcept { return F * (blockNum + 1); }
-    int alphaLength(const int layer) const noexcept { return (layer >= 1 && layer < (blockNum * 2 + 1 + 1) && (layer & 1)) ? F : 0; }
+    int kernelLength() const noexcept { return F * 9 + F * F * 9 * this->blockNum * 2 + F * F * 1 + F * 4 * 9; }
+    int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (this->blockNum * 2 + 1)) ? F * F * 9 : ((layer == (this->blockNum * 2 + 1)) ? F * F * 1 : ((layer == (this->blockNum * 2 + 1 + 1)) ? F * 4 * 9 : 0))); }
+    int biasLength() const noexcept { return F + F * (this->blockNum * 2 + 1) + 4; }
+    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (this->blockNum * 2 + 1 + 1)) ? F : (layer == (this->blockNum * 2 + 1 + 1) ? 4 : 0); }
+    int alphaLength() const noexcept { return F * (this->blockNum + 1); }
+    int alphaLength(const int layer) const noexcept { return (layer >= 1 && layer < (this->blockNum * 2 + 1 + 1) && (layer & 1)) ? F : 0; }
 
-    int kernels() const noexcept { return blockNum * 2 + 3; }
-    int biases() const noexcept { return blockNum * 2 + 3; }
-    int alphas() const noexcept { return blockNum + 1; }
+    int kernels() const noexcept { return this->blockNum * 2 + 3; }
+    int biases() const noexcept { return this->blockNum * 2 + 3; }
+    int alphas() const noexcept { return this->blockNum + 1; }
 
     int kernelIndex(const int layer) const noexcept { return std::clamp(layer, 0, kernels() - 1); }
     int biasIndex(const int layer) const noexcept { return std::clamp(layer, 0, biases() - 1); }
-    int alphaIndex(const int layer) const noexcept { return (std::clamp(layer, 1, blockNum * 2 + 1) - 1) / 2; }
+    int alphaIndex(const int layer) const noexcept { return (std::clamp(layer, 1, this->blockNum * 2 + 1) - 1) / 2; }
 
     int kernelLayer(const int idx) const noexcept { return std::clamp(idx, 0, kernels() - 1); }
     int biasLayer(const int idx) const noexcept { return std::clamp(idx, 0, biases() - 1); }
@@ -52,8 +52,8 @@ public:
     {
         if (layer <= 0) return 0;
         if (layer <= 1) return F * 9;
-        if (layer <= (blockNum * 2 + 1)) return F * 9 + F * F * 9 * (layer - 1);
-        if (layer < kernels()) return F * 9 + F * F * 9 * (blockNum * 2) + F * F * 1;
+        if (layer <= (this->blockNum * 2 + 1)) return F * 9 + F * F * 9 * (layer - 1);
+        if (layer < kernels()) return F * 9 + F * F * 9 * (this->blockNum * 2) + F * F * 1;
         return kernelLength();
     }
     int biasOffset(const int layer) const noexcept

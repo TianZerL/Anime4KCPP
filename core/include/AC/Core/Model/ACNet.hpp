@@ -73,16 +73,16 @@ public:
     AC_CORE_EXPORT ACNet(Variant v) noexcept;
 
 public:
-    int kernelLength() const noexcept { return F * 9 + F * F * 9 * blockNum + F * 4 * 9; }
-    int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (blockNum + 1)) ? F * F * 9 : ((layer == (blockNum + 1)) ? F * 4 * 9 : 0)); }
-    int biasLength() const noexcept { return F + F * blockNum + 4; }
-    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum + 1)) ? F : (layer == (blockNum + 1) ? 4 : 0); }
-    int alphaLength() const noexcept { return F * (blockNum + 1); }
-    int alphaLength(const int layer) const noexcept { return (layer >= 0 && layer < (blockNum + 1)) ? F : 0; }
+    int kernelLength() const noexcept { return F * 9 + F * F * 9 * this->blockNum + F * 4 * 9; }
+    int kernelLength(const int layer) const noexcept { return (layer == 0) ? F * 9 : ((layer > 0 && layer < (this->blockNum + 1)) ? F * F * 9 : ((layer == (this->blockNum + 1)) ? F * 4 * 9 : 0)); }
+    int biasLength() const noexcept { return F + F * this->blockNum + 4; }
+    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (this->blockNum + 1)) ? F : (layer == (this->blockNum + 1) ? 4 : 0); }
+    int alphaLength() const noexcept { return F * (this->blockNum + 1); }
+    int alphaLength(const int layer) const noexcept { return (layer >= 0 && layer < (this->blockNum + 1)) ? F : 0; }
 
-    int kernels() const noexcept { return blockNum + 1 + 1; }
-    int biases() const noexcept { return blockNum + 1 + 1; }
-    int alphas() const noexcept { return blockNum + 1; }
+    int kernels() const noexcept { return this->blockNum + 1 + 1; }
+    int biases() const noexcept { return this->blockNum + 1 + 1; }
+    int alphas() const noexcept { return this->blockNum + 1; }
 
     int kernelIndex(const int layer) const noexcept { return std::clamp(layer, 0, kernels() - 1); }
     int biasIndex(const int layer) const noexcept { return std::clamp(layer, 0, biases() - 1); }

@@ -33,7 +33,7 @@ public:
     std::size_t alphaSize() const noexcept { return static_cast<const Model*>(this)->alphaLength() * sizeof(float); }
     std::size_t alphaSize(const int layer) const noexcept { return static_cast<const Model*>(this)->alphaLength(layer) * sizeof(float); }
 
-    int blocks() const noexcept { return blockNum; }
+    int blocks() const noexcept { return this->blockNum; }
     int kernels() const noexcept { return 0; }
     int biases() const noexcept { return 0; }
     int alphas() const noexcept { return 0; }
