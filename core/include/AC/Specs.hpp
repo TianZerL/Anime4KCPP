@@ -12,7 +12,9 @@ namespace ac::specs
         "acnet-f8b8",
         "acnet-f8b8-hdn",
         "arnet-f8b8",
+        "arnet-f8b8-hdn",
         "arnet-f8b16",
+        "arnet-f8b16-hdn",
         "arnet-f8b32",
         "arnet-f8b64",
         "artcnn-c4f16",
@@ -36,7 +38,9 @@ namespace ac::specs
         "Lightweight CNN, without denoising.",  // acnet-f8b8
         "Lightweight CNN, mild denoising.",     // acnet-f8b8-hdn
         "ResNet for real-time tasks, without denoising.", // arnet-f8b8
+        "ResNet for real-time tasks, mild denoising.",    // acnet-f8b8-hdn
         "ResNet for real-time tasks, without denoising.", // arnet-f8b16
+        "ResNet for real-time tasks, mild denoising.",    // acnet-f8b16-hdn
         "ResNet for real-time tasks, without denoising.", // arnet-f8b32
         "ResNet for real-time tasks, without denoising.", // arnet-f8b64
         "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
