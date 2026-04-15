@@ -21,7 +21,7 @@ public:
     {
         B8_NORMAL, B8_HDN,
         B16_NORMAL, B16_HDN,
-        B32_NORMAL,
+        B32_NORMAL, B32_HDN,
         B64_NORMAL
     };
 

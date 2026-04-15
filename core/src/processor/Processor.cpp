@@ -81,6 +81,7 @@ namespace ac::core::detail
 
                     if (modelString.find("b8") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B8_HDN;
                     else if (modelString.find("b16") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B16_HDN;
+                    else if (modelString.find("b32") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B32_HDN;
 
                     return ac::core::model::ARNet<8>{ variant };
                 }
