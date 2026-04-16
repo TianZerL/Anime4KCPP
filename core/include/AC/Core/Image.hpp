@@ -210,7 +210,7 @@ namespace ac::core
      * If `dst` has different dimensions or type than `src`, it will be reallocated.
      *
      * If `dst` is not empty, convert data type to match `dst`.
-     * 
+     *
      * @param src Source image.
      * @param dst Destination image.
      */
@@ -253,7 +253,7 @@ namespace ac::core
     /// @brief Resize interpolation modes.
     enum ResizeModes
     {
-        RESIZE_POINT,               ///< Nearest neighbor interpolation
+        RESIZE_POINT,               ///< Same as nearest interpolation for upscaling and box resampling for downscaling
         RESIZE_CATMULL_ROM,         ///< Bicubic interpolation (b = 0; c = 0.5 or a = -0.5)
         RESIZE_MITCHELL_NETRAVALI,  ///< Bicubic interpolation (b = 1/3; c = 1/3)
         RESIZE_BICUBIC_0_60,        ///< Bicubic interpolation (b = 0; c = 0.6 or a = -0.6)
