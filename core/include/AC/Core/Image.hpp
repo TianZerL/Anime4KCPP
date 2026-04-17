@@ -284,9 +284,9 @@ namespace ac::core
      * @param dst Destination image (will be resized to appropriate dimensions).
      * @param fx Horizontal scale factor (if > 0, overrides dst width).
      * @param fy Vertical scale factor (if > 0, overrides dst height).
-     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     * @param mode Interpolation mode (default: `RESIZE_CATMULL_ROM`).
      */
-    AC_CORE_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
+    AC_CORE_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_CATMULL_ROM) noexcept;
     /**
      * @brief Resize the `src` image and return a new image.
      *
@@ -295,10 +295,10 @@ namespace ac::core
      * @param src Source image.
      * @param fx Horizontal scale factor.
      * @param fy Vertical scale factor.
-     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     * @param mode Interpolation mode (default: `RESIZE_CATMULL_ROM`).
      * @return Resized image, or `src` if scale factors invalid.
      */
-    AC_CORE_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
+    AC_CORE_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_CATMULL_ROM) noexcept;
 
     /// @brief Image reading modes.
     enum ImreadModes

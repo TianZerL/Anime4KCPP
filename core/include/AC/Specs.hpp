@@ -18,6 +18,7 @@ namespace ac::specs
         "arnet-f8b32",
         "arnet-f8b32-hdn",
         "arnet-f8b64",
+        "arnet-f8b64-hdn",
         "artcnn-c4f16",
         "artcnn-c4f16-dn",
         "artcnn-c4f16-ds",
@@ -45,6 +46,7 @@ namespace ac::specs
         "ResNet for real-time tasks, without denoising.", // arnet-f8b32
         "ResNet for real-time tasks, mild denoising.",    // arnet-f8b32-hdn
         "ResNet for real-time tasks, without denoising.", // arnet-f8b64
+        "ResNet for real-time tasks, mild denoising.",    // arnet-f8b64-hdn
         "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
         "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
         "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds

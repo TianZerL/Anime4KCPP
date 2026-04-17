@@ -106,6 +106,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->bptr = param::ARNet_F8B64_NHWC_biases;
             this->aptr = param::ARNet_F8B64_NHWC_alphas;
             break;
+        case Variant::B64_HDN:
+            this->blockNum = 64;
+            this->kptr = param::ARNet_F8B64_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B64_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B64_HDN_NHWC_alphas;
+            break;
         }
     }
     else static_assert(F == 8, "Unsupported ARNet model");
