@@ -130,15 +130,22 @@ namespace ac::video
             case AV_PIX_FMT_NV24:
             case AV_PIX_FMT_NV42:
             case AV_PIX_FMT_P010:
-            case AV_PIX_FMT_P210:
+            case AV_PIX_FMT_P016:
             case AV_PIX_FMT_NV20:
+#       if LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+            case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P410:
+            case AV_PIX_FMT_P216:
+            case AV_PIX_FMT_P416:
+#       endif
+#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
             case AV_PIX_FMT_P012:
+#       endif
+#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P212:
             case AV_PIX_FMT_P412:
-            case AV_PIX_FMT_P016:
-            case AV_PIX_FMT_P216:
-            case AV_PIX_FMT_P416: break;
+#       endif
+                break;
             default: return false;
             }
             // just let encoder to choose a profile
@@ -455,6 +462,7 @@ namespace ac::video
             case AV_PIX_FMT_NV16: hscale = 1; [[fallthrough]];
             case AV_PIX_FMT_NV21:
             case AV_PIX_FMT_NV12: planes = 2; break;
+#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P412:
             case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
@@ -462,8 +470,25 @@ namespace ac::video
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P212:
             case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
-            case AV_PIX_FMT_P010:
             case AV_PIX_FMT_P012:
+#       elif LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
+            case AV_PIX_FMT_P410:
+            case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
+            case AV_PIX_FMT_NV20:
+            case AV_PIX_FMT_P210:
+            case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
+            case AV_PIX_FMT_P012:
+#       elif LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+            case AV_PIX_FMT_P410:
+            case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
+            case AV_PIX_FMT_NV20:
+            case AV_PIX_FMT_P210:
+            case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
+
+#       else
+            case AV_PIX_FMT_NV20: hscale = 1; [[fallthrough]];
+#       endif
+            case AV_PIX_FMT_P010:
             case AV_PIX_FMT_P016: elementSize = sizeof(std::uint16_t); planes = 2; break;
             default: break;
             }
@@ -493,6 +518,7 @@ namespace ac::video
             case AV_PIX_FMT_YUV422P10:
             case AV_PIX_FMT_YUV444P10:
             case AV_PIX_FMT_NV20: bitDepth.lsb = true; [[fallthrough]];
+#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
@@ -503,12 +529,40 @@ namespace ac::video
             case AV_PIX_FMT_P412:
             case AV_PIX_FMT_P212:
             case AV_PIX_FMT_P012: bitDepth.bits = 12; break;
+            case AV_PIX_FMT_P416:
+            case AV_PIX_FMT_P216:
+#       elif LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
+            case AV_PIX_FMT_P410:
+            case AV_PIX_FMT_P210:
+            case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
+            case AV_PIX_FMT_GRAY12:
+            case AV_PIX_FMT_YUV420P12:
+            case AV_PIX_FMT_YUV422P12:
+            case AV_PIX_FMT_YUV444P12: bitDepth.lsb = true; [[fallthrough]];
+            case AV_PIX_FMT_P012: bitDepth.bits = 12; break;
+            case AV_PIX_FMT_P416:
+            case AV_PIX_FMT_P216:
+#       elif LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+            case AV_PIX_FMT_P410:
+            case AV_PIX_FMT_P210:
+            case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
+            case AV_PIX_FMT_GRAY12:
+            case AV_PIX_FMT_YUV420P12:
+            case AV_PIX_FMT_YUV422P12:
+            case AV_PIX_FMT_YUV444P12: bitDepth.lsb = true; bitDepth.bits = 12; break;
+            case AV_PIX_FMT_P416:
+            case AV_PIX_FMT_P216:
+#       else
+            case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
+            case AV_PIX_FMT_GRAY12:
+            case AV_PIX_FMT_YUV420P12:
+            case AV_PIX_FMT_YUV422P12:
+            case AV_PIX_FMT_YUV444P12: bitDepth.lsb = true; bitDepth.bits = 12; break;
+#       endif
             case AV_PIX_FMT_GRAY16:
             case AV_PIX_FMT_YUV420P16:
             case AV_PIX_FMT_YUV422P16:
             case AV_PIX_FMT_YUV444P16:
-            case AV_PIX_FMT_P416:
-            case AV_PIX_FMT_P216:
             case AV_PIX_FMT_P016: bitDepth.bits = 16; break;
             default: break;
             }
