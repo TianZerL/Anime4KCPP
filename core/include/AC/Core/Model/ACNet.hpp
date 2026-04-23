@@ -9,13 +9,13 @@
 
 namespace ac::core::model
 {
-    class ACNetClassic;
+    class ACNetLegacy;
 
     template<int F>
     class ACNet;
 }
 
-class ac::core::model::ACNetClassic : public BaseModel<ACNetClassic>
+class ac::core::model::ACNetLegacy : public BaseModel<ACNetLegacy>
 {
 public:
     enum class Variant
@@ -28,7 +28,7 @@ public:
     };
 
 public:
-    AC_CORE_EXPORT ACNetClassic(Variant v) noexcept;
+    AC_CORE_EXPORT ACNetLegacy(Variant v) noexcept;
 
 public:
     int kernelLength() const noexcept { return 8 * 9 + 8 * 8 * 9 * 8 + 8 * 4; }

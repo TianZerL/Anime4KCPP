@@ -527,10 +527,10 @@ namespace ac::core::cuda
 }
 
 template<>
-class ac::core::cuda::CUDAProcessor<ac::core::model::ACNetClassic> : public CUDAProcessorSeqCNN<model::ACNetClassic>
+class ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy> : public CUDAProcessorSeqCNN<model::ACNetLegacy>
 {
 public:
-    CUDAProcessor(int device, const model::ACNetClassic& model) noexcept;
+    CUDAProcessor(int device, const model::ACNetLegacy& model) noexcept;
     ~CUDAProcessor() noexcept override;
 
 private:
@@ -543,10 +543,10 @@ private:
     util::ThreadLocal<ImageBuffer> outImageBuffers{};
 };
 
-ac::core::cuda::CUDAProcessor<ac::core::model::ACNetClassic>::CUDAProcessor(const int device, const model::ACNetClassic& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
-ac::core::cuda::CUDAProcessor<ac::core::model::ACNetClassic>::~CUDAProcessor() noexcept = default;
+ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::CUDAProcessor(const int device, const model::ACNetLegacy& model) noexcept : CUDAProcessorSeqCNN(device, model) {}
+ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::~CUDAProcessor() noexcept = default;
 
-void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetClassic>::process(const Image& src, Image& dst)
+void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const Image& src, Image& dst)
 {
     auto& err = errors.local();
     auto stream = cudaStreamPerThread;
@@ -604,9 +604,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetClassic>::process(const
 }
 
 template<>
-AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ACNetClassic>(const int idx, const model::ACNetClassic& model)
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CUDA, ac::core::model::ACNetLegacy>(const int idx, const model::ACNetLegacy& model)
 {
-    return std::make_shared<cuda::CUDAProcessor<model::ACNetClassic>>(idx, model);
+    return std::make_shared<cuda::CUDAProcessor<model::ACNetLegacy>>(idx, model);
 }
 
 

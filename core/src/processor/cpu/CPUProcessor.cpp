@@ -659,10 +659,10 @@ namespace ac::core::cpu
 }
 
 template<>
-class ac::core::cpu::CPUProcessor<ac::core::model::ACNetClassic> : public ac::core::cpu::CPUProcessorSeqCNN<ac::core::model::ACNetClassic>
+class ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy> : public ac::core::cpu::CPUProcessorSeqCNN<ac::core::model::ACNetLegacy>
 {
 public:
-    CPUProcessor(int arch, const model::ACNetClassic& model) noexcept;
+    CPUProcessor(int arch, const model::ACNetLegacy& model) noexcept;
     ~CPUProcessor() noexcept override;
 
 private:
@@ -673,10 +673,10 @@ private:
     util::ThreadLocal<ImageBuffer> tmp2ImageBuffers{};
 };
 
-ac::core::cpu::CPUProcessor<ac::core::model::ACNetClassic>::CPUProcessor(const int arch, const model::ACNetClassic& model) noexcept : CPUProcessorSeqCNN(arch, model) {}
-ac::core::cpu::CPUProcessor<ac::core::model::ACNetClassic>::~CPUProcessor() noexcept = default;
+ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::CPUProcessor(const int arch, const model::ACNetLegacy& model) noexcept : CPUProcessorSeqCNN(arch, model) {}
+ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::~CPUProcessor() noexcept = default;
 
-void ac::core::cpu::CPUProcessor<ac::core::model::ACNetClassic>::process(const Image& src, Image& dst)
+void ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::process(const Image& src, Image& dst)
 {
     auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
     auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
@@ -697,9 +697,9 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNetClassic>::process(const I
 }
 
 template<>
-AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU ,ac::core::model::ACNetClassic>(const int idx, const model::ACNetClassic& model)
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU ,ac::core::model::ACNetLegacy>(const int idx, const model::ACNetLegacy& model)
 {
-    return std::make_shared<cpu::CPUProcessor<model::ACNetClassic>>(idx, model);
+    return std::make_shared<cpu::CPUProcessor<model::ACNetLegacy>>(idx, model);
 }
 
 

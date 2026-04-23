@@ -4,11 +4,11 @@
 namespace ac::specs
 {
     constexpr const char* ModelList[] = {
-        "acnet-classic-gan",
-        "acnet-classic-hdn0",
-        "acnet-classic-hdn1",
-        "acnet-classic-hdn2",
-        "acnet-classic-hdn3",
+        "acnet-legacy-gan",
+        "acnet-legacy-hdn0",
+        "acnet-legacy-hdn1",
+        "acnet-legacy-hdn2",
+        "acnet-legacy-hdn3",
         "acnet-f8b8",
         "acnet-f8b8-hdn",
         "arnet-f8b8",
@@ -32,11 +32,11 @@ namespace ac::specs
     };
 
     constexpr const char* ModelDescriptionList[] = {
-        "Lightweight CNN, detail enhancement.", // acnet-classic-gan
-        "Lightweight CNN, mild denoising.",     // acnet-classic-hdn0
-        "Lightweight CNN, moderate denoising.", // acnet-classic-hdn1
-        "Lightweight CNN, heavy denoising.",    // acnet-classic-hdn2
-        "Lightweight CNN, extreme denoising.",  // acnet-classic-hdn3
+        "Lightweight CNN, detail enhancement.", // acnet-legacy-gan
+        "Lightweight CNN, mild denoising.",     // acnet-legacy-hdn0
+        "Lightweight CNN, moderate denoising.", // acnet-legacy-hdn1
+        "Lightweight CNN, heavy denoising.",    // acnet-legacy-hdn2
+        "Lightweight CNN, extreme denoising.",  // acnet-legacy-hdn3
         "Lightweight CNN, without denoising.",  // acnet-f8b8
         "Lightweight CNN, mild denoising.",     // acnet-f8b8-hdn
         "ResNet for real-time tasks, without denoising.", // arnet-f8b8

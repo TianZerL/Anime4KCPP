@@ -4,29 +4,29 @@
 template <typename Model>
 ac::core::model::BaseModel<Model>::BaseModel() noexcept : blockNum(0), kptr(nullptr), bptr(nullptr), aptr(nullptr) {}
 
-ac::core::model::ACNetClassic::ACNetClassic(const Variant v) noexcept
+ac::core::model::ACNetLegacy::ACNetLegacy(const Variant v) noexcept
 {
     switch (v)
     {
     case Variant::GAN:
-        this->kptr = param::ACNetClassic_GAN_NHWC_kernels;
-        this->bptr = param::ACNetClassic_GAN_NHWC_biases;
+        this->kptr = param::ACNetLegacy_GAN_NHWC_kernels;
+        this->bptr = param::ACNetLegacy_GAN_NHWC_biases;
         break;
     case Variant::HDN0:
-        this->kptr = param::ACNetClassic_HDN0_NHWC_kernels;
-        this->bptr = param::ACNetClassic_HDN0_NHWC_biases;
+        this->kptr = param::ACNetLegacy_HDN0_NHWC_kernels;
+        this->bptr = param::ACNetLegacy_HDN0_NHWC_biases;
         break;
     case Variant::HDN1:
-        this->kptr = param::ACNetClassic_HDN1_NHWC_kernels;
-        this->bptr = param::ACNetClassic_HDN1_NHWC_biases;
+        this->kptr = param::ACNetLegacy_HDN1_NHWC_kernels;
+        this->bptr = param::ACNetLegacy_HDN1_NHWC_biases;
         break;
     case Variant::HDN2:
-        this->kptr = param::ACNetClassic_HDN2_NHWC_kernels;
-        this->bptr = param::ACNetClassic_HDN2_NHWC_biases;
+        this->kptr = param::ACNetLegacy_HDN2_NHWC_kernels;
+        this->bptr = param::ACNetLegacy_HDN2_NHWC_biases;
         break;
     case Variant::HDN3:
-        this->kptr = param::ACNetClassic_HDN3_NHWC_kernels;
-        this->bptr = param::ACNetClassic_HDN3_NHWC_biases;
+        this->kptr = param::ACNetLegacy_HDN3_NHWC_kernels;
+        this->bptr = param::ACNetLegacy_HDN3_NHWC_biases;
         break;
     }
 }

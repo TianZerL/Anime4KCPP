@@ -22,7 +22,7 @@ namespace ac::core::detail
         return Processor::CPU;
     }
     static inline auto findModel(const char* model) noexcept -> std::variant<
-        model::ACNetClassic,
+        model::ACNetLegacy,
         model::ACNet<8>,
         model::ARNet<8>,
         model::ArtCNN<16>, model::ArtCNN<32>,
@@ -107,25 +107,25 @@ namespace ac::core::detail
                     return ac::core::model::ACNet<8>{ variant };
                 }
 
-                auto variant = ac::core::model::ACNetClassic::Variant::GAN;
+                auto variant = ac::core::model::ACNetLegacy::Variant::GAN;
                 if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
                 {
-                    variant = ac::core::model::ACNetClassic::Variant::HDN0;
+                    variant = ac::core::model::ACNetLegacy::Variant::HDN0;
                     for (char ch : modelString)
                     {
-                        if (ch == '0') variant = ac::core::model::ACNetClassic::Variant::HDN0;
-                        else if (ch == '1') variant = ac::core::model::ACNetClassic::Variant::HDN1;
-                        else if (ch == '2') variant = ac::core::model::ACNetClassic::Variant::HDN2;
-                        else if (ch == '3') variant = ac::core::model::ACNetClassic::Variant::HDN3;
+                        if (ch == '0') variant = ac::core::model::ACNetLegacy::Variant::HDN0;
+                        else if (ch == '1') variant = ac::core::model::ACNetLegacy::Variant::HDN1;
+                        else if (ch == '2') variant = ac::core::model::ACNetLegacy::Variant::HDN2;
+                        else if (ch == '3') variant = ac::core::model::ACNetLegacy::Variant::HDN3;
                         else continue;
 
                         break;
                     }
                 }
-                return ac::core::model::ACNetClassic{ variant };
+                return ac::core::model::ACNetLegacy{ variant };
             }
         }
-        return ac::core::model::ACNetClassic{ ac::core::model::ACNetClassic::Variant::GAN };
+        return ac::core::model::ACNetLegacy{ ac::core::model::ACNetLegacy::Variant::GAN };
     }
 }
 
