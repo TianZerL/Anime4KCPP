@@ -30,7 +30,7 @@ file(WRITE "${FILTER_DIRECTSHOW_BINARY_DIR}/include/resource.hpp" [[
 ]])
 
 file(WRITE "${FILTER_DIRECTSHOW_BINARY_DIR}/rc/Filter.rc" [[
-#include "resource.h"
+#include "resource.hpp"
 #define APSTUDIO_READONLY_SYMBOLS
 #include "winres.h"
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -39,7 +39,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #ifdef APSTUDIO_INVOKED
 1 TEXTINCLUDE
 BEGIN
-    "resource.h\0"
+    "resource.hpp\0"
 END
 2 TEXTINCLUDE
 BEGIN
