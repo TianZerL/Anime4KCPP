@@ -19,7 +19,7 @@ class ac::core::model::FSRCNNX : public BaseModel<FSRCNNX<F>>
 public:
     enum class Variant
     {
-        NORMAL, DISTORT_PLUS
+        B4_NORMAL, B4_DISTORT_PLUS
     };
 
 public:

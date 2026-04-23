@@ -19,7 +19,7 @@ class ac::core::model::ArtCNN : public BaseModel<ArtCNN<F>>
 public:
     enum class Variant
     {
-        NORMAL, DN, DS
+        C4_NORMAL, C4_DN, C4_DS
     };
 
 public:

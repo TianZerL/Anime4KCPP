@@ -25,10 +25,10 @@ namespace ac::specs
         "artcnn-c4f32",
         "artcnn-c4f32-dn",
         "artcnn-c4f32-ds",
-        "fsrcnnx-f8",
-        "fsrcnnx-f8-distort-plus",
-        "fsrcnnx-f16",
-        "fsrcnnx-f16-distort-plus",
+        "fsrcnnx-f8b4",
+        "fsrcnnx-f8b4-distort-plus",
+        "fsrcnnx-f16b4",
+        "fsrcnnx-f16b4-distort-plus",
     };
 
     constexpr const char* ModelDescriptionList[] = {
@@ -54,9 +54,9 @@ namespace ac::specs
         "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-dn
         "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-ds
         "FSRCNNX-8-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)",  // fsrcnnx-f8
-        "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f8-distort-plus
+        "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f8b4-distort-plus
         "FSRCNNX-16-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)", // fsrcnnx-f16
-        "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f16-distort-plus
+        "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f16b4-distort-plus
     };
 
     constexpr const char* ProcessorList[] = {

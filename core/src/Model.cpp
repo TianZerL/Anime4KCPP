@@ -126,17 +126,17 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept
     {
         switch (v)
         {
-        case Variant::NORMAL:
+        case Variant::C4_NORMAL:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F16_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F16_NHWC_biases;
             break;
-        case Variant::DN:
+        case Variant::C4_DN:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F16_DN_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F16_DN_NHWC_biases;
             break;
-        case Variant::DS:
+        case Variant::C4_DS:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F16_DS_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F16_DS_NHWC_biases;
@@ -147,17 +147,17 @@ ac::core::model::ArtCNN<F>::ArtCNN(const Variant v) noexcept
     {
         switch (v)
         {
-        case Variant::NORMAL:
+        case Variant::C4_NORMAL:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F32_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F32_NHWC_biases;
             break;
-        case Variant::DN:
+        case Variant::C4_DN:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F32_DN_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F32_DN_NHWC_biases;
             break;
-        case Variant::DS:
+        case Variant::C4_DS:
             this->blockNum = 4;
             this->kptr = param::ArtCNN_C4F32_DS_NHWC_kernels;
             this->bptr = param::ArtCNN_C4F32_DS_NHWC_biases;
@@ -177,13 +177,13 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept
     {
         switch (v)
         {
-        case Variant::NORMAL:
+        case Variant::B4_NORMAL:
             this->blockNum = 4;
             this->kptr = param::FSRCNNX_F8_NHWC_kernels;
             this->bptr = param::FSRCNNX_F8_NHWC_biases;
             this->aptr = param::FSRCNNX_F8_NHWC_alphas;
             break;
-        case Variant::DISTORT_PLUS:
+        case Variant::B4_DISTORT_PLUS:
             this->blockNum = 4;
             this->kptr = param::FSRCNNX_F8_DistortPlus_NHWC_kernels;
             this->bptr = param::FSRCNNX_F8_DistortPlus_NHWC_biases;
@@ -195,13 +195,13 @@ ac::core::model::FSRCNNX<F>::FSRCNNX(const Variant v) noexcept
     {
         switch (v)
         {
-        case Variant::NORMAL:
+        case Variant::B4_NORMAL:
             this->blockNum = 4;
             this->kptr = param::FSRCNNX_F16_NHWC_kernels;
             this->bptr = param::FSRCNNX_F16_NHWC_biases;
             this->aptr = param::FSRCNNX_F16_NHWC_alphas;
             break;
-        case Variant::DISTORT_PLUS:
+        case Variant::B4_DISTORT_PLUS:
             this->blockNum = 4;
             this->kptr = param::FSRCNNX_F16_DistortPlus_NHWC_kernels;
             this->bptr = param::FSRCNNX_F16_DistortPlus_NHWC_biases;
