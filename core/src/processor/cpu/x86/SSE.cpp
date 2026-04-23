@@ -312,10 +312,10 @@ namespace ac::core::cpu
                     toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[0]))),
                     toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[0]))));
                 __m128 r4 = _mm_set_ps(
-                    toFloat(*static_cast<const IN*>(src.ptr(j+ joffsets[2], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j+ joffsets[1], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j+ joffsets[0], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j+ joffsets[4], i + ioffsets[0]))));
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[0]))));
                 __m128 r8 = _mm_set_ps(
                     toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[2]))),
                     toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[2]))),

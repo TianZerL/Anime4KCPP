@@ -333,33 +333,33 @@ namespace ac::core::cpu
                 int joffsets[5] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0) };
 
                 __m256 r0 = _mm256_set_ps(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[0]))));
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[0]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[0]))));
                 __m256 r8 = _mm256_set_ps(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[1]))));
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[2]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[1]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[1]))));
                 __m256 r16 = _mm256_set_ps(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[0], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[3], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[2], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[1], i + ioffsets[3]))));
-                auto r24 = toFloat(*static_cast<const IN*>(src.ptr(j + ioffsets[4], i + ioffsets[4])));
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[4]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[3]))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[3]))));
+                auto r24 = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[4])));
 
                 for (int n = 0; n < cout; n++)
                 {

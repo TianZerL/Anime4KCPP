@@ -1,6 +1,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <utility>
 
 #include "AC/Core/SIMD.hpp"
 #include "AC/Core/Model.hpp"
@@ -697,7 +698,7 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::process(const Im
 }
 
 template<>
-AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU ,ac::core::model::ACNetLegacy>(const int idx, const model::ACNetLegacy& model)
+AC_CORE_EXPORT std::shared_ptr<ac::core::Processor> ac::core::Processor::create<ac::core::Processor::CPU, ac::core::model::ACNetLegacy>(const int idx, const model::ACNetLegacy& model)
 {
     return std::make_shared<cpu::CPUProcessor<model::ACNetLegacy>>(idx, model);
 }
@@ -729,14 +730,17 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNet<8>>::process(const Image
     auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
-    conv3x3_1to8_prelu(src, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-    for (int i = 0; i < model.blocks(); i += 2)
+    conv3x3_1to8_prelu(src, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks(); i++)
     {
-        conv3x3_8to8_prelu(tmp1, tmp2, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-        conv3x3_8to8_prelu(tmp2, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+        conv3x3_8to8_prelu(*tmpI, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+        std::swap(tmpI, tmpO);
     }
-    conv3x3_8to4_identity_pixelshuffle_4to1_add(tmp1, dst, model.kernel(l), model.bias(l), src);
+    conv3x3_8to4_identity_pixelshuffle_4to1_add(*tmpI, dst, model.kernel(l), model.bias(l), src);
 }
 
 template<>
@@ -830,18 +834,23 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ArtCNN<16>>::process(const Ima
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, ac::core::Image::Float32);
     auto& feat = featImageBuffer.get(src.width(), src.height(), 16, ac::core::Image::Float32);
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
-
     // head
     conv3x3_1to16_identity(src, feat, model.kernel(l), model.bias(l)); l++;
     // body
-    conv3x3_16to16_relu(feat, tmp1, model.kernel(l), model.bias(l)); l++;
-    conv3x3_16to16_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
-    conv3x3_16to16_relu(tmp2, tmp1, model.kernel(l), model.bias(l)); l++;
-    conv3x3_16to16_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
-    conv3x3_16to16_identity_add(tmp2, tmp1, model.kernel(l), model.bias(l), feat); l++;
+    conv3x3_16to16_relu(feat, *tmpO, model.kernel(l), model.bias(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 1; i++)
+    {
+        conv3x3_16to16_relu(*tmpI, *tmpO, model.kernel(l), model.bias(l)); l++;
+        std::swap(tmpI, tmpO);
+    }
+    conv3x3_16to16_identity_add(*tmpI, *tmpO, model.kernel(l), model.bias(l), feat); l++;
+    std::swap(tmpI, tmpO);
     // upscale
-    conv3x3_16to4_identity_pixelshuffle_4to1(tmp1, dst, model.kernel(l), model.bias(l));
+    conv3x3_16to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));
 }
 
 template<>
@@ -880,18 +889,23 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ArtCNN<32>>::process(const Ima
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 32, ac::core::Image::Float32);
     auto& feat = featImageBuffer.get(src.width(), src.height(), 32, ac::core::Image::Float32);
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
-
     // head
     conv3x3_1to32_identity(src, feat, model.kernel(l), model.bias(l)); l++;
     // body
-    conv3x3_32to32_relu(feat, tmp1, model.kernel(l), model.bias(l)); l++;
-    conv3x3_32to32_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
-    conv3x3_32to32_relu(tmp2, tmp1, model.kernel(l), model.bias(l)); l++;
-    conv3x3_32to32_relu(tmp1, tmp2, model.kernel(l), model.bias(l)); l++;
-    conv3x3_32to32_identity_add(tmp2, tmp1, model.kernel(l), model.bias(l), feat); l++;
+    conv3x3_32to32_relu(feat, *tmpO, model.kernel(l), model.bias(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 1; i++)
+    {
+        conv3x3_32to32_relu(*tmpI, *tmpO, model.kernel(l), model.bias(l)); l++;
+        std::swap(tmpI, tmpO);
+    }
+    conv3x3_32to32_identity_add(*tmpI, *tmpO, model.kernel(l), model.bias(l), feat); l++;
+    std::swap(tmpI, tmpO);
     // upscale
-    conv3x3_32to4_identity_pixelshuffle_4to1(tmp1, dst, model.kernel(l), model.bias(l));
+    conv3x3_32to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));
 }
 
 template<>
@@ -930,21 +944,27 @@ void ac::core::cpu::CPUProcessor<ac::core::model::FSRCNNX<8>>::process(const Ima
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
     auto& feat = featImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
-
     // head
     conv5x5_1to8_identity(src, feat, model.kernel(l), model.bias(l)); l++;
     // body
-    conv3x3_8to8_prelu(feat, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-    conv3x3_8to8_prelu(tmp1, tmp2, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-    conv3x3_8to8_prelu(tmp2, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+    conv3x3_8to8_prelu(feat, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 2; i++)
+    {
+        conv3x3_8to8_prelu(*tmpI, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_8to8_prelu_conv1x1_8to8_add_prelu(
-        tmp1, tmp2,
+        *tmpI, *tmpO,
         model.kernel(l), model.bias(l), model.alpha(l),
         model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat
     ); l += 2;
+    std::swap(tmpI, tmpO);
     // upscale
-    conv3x3_8to4_identity_pixelshuffle_4to1(tmp2, dst, model.kernel(l), model.bias(l));
+    conv3x3_8to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));
 }
 
 template<>
@@ -983,21 +1003,27 @@ void ac::core::cpu::CPUProcessor<ac::core::model::FSRCNNX<16>>::process(const Im
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, ac::core::Image::Float32);
     auto& feat = featImageBuffer.get(src.width(), src.height(), 16, ac::core::Image::Float32);
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
-
     // head
     conv5x5_1to16_identity(src, feat, model.kernel(l), model.bias(l)); l++;
     // body
-    conv3x3_16to16_prelu(feat, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-    conv3x3_16to16_prelu(tmp1, tmp2, model.kernel(l), model.bias(l), model.alpha(l)); l++;
-    conv3x3_16to16_prelu(tmp2, tmp1, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+    conv3x3_16to16_prelu(feat, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 2; i++)
+    {
+        conv3x3_16to16_prelu(*tmpI, *tmpO, model.kernel(l), model.bias(l), model.alpha(l)); l++;
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
-        tmp1, tmp2,
+        *tmpI, *tmpO,
         model.kernel(l), model.bias(l), model.alpha(l),
         model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat
     ); l += 2;
+    std::swap(tmpI, tmpO);
     // upscale
-    conv3x3_16to4_identity_pixelshuffle_4to1(tmp2, dst, model.kernel(l), model.bias(l));
+    conv3x3_16to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));
 }
 
 template<>

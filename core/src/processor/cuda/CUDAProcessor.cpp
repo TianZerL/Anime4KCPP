@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include <cuda_runtime.h>
 
@@ -647,33 +648,29 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::process(const Ima
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = in.fromHost(src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to8_prelu_cuda(
         in.ptr, in.w, in.h, in.c, in.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), alpha(l),
         src.type(), stream); l++;
-
-    for (int i = 0; i < model.blocks(); i += 2)
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks(); i++)
     {
         conv3x3_8to8_prelu_cuda(
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
             kernel(l), bias(l), alpha(l),
             stream); l++;
-
-        conv3x3_8to8_prelu_cuda(
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernel(l), bias(l), alpha(l),
-            stream); l++;
+        std::swap(tmpI, tmpO);
     }
-
     conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
         in.ptr, in.w, in.h, in.c, in.pitch,
@@ -842,6 +839,8 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
     auto& feat = featImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = in.fromHost(src, stream); if (err != cudaSuccess) return;
@@ -854,29 +853,27 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
 
     conv3x3_16to16_relu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), stream); l++;
-    conv3x3_16to16_relu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), stream); l++;
-    conv3x3_16to16_relu_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), stream); l++;
-    conv3x3_16to16_relu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), stream); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 1; i++)
+    {
+        conv3x3_16to16_relu_cuda(
+            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
+            kernel(l), bias(l), stream); l++;
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_16to16_identity_add_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l),
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         stream); l++;
+    std::swap(tmpI, tmpO);
 
     conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
         dst.type(), stream);
@@ -937,6 +934,8 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
     auto& feat = featImageBuffer.get(src.width(), src.height(), 32, 2, allocator, stream, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = in.fromHost(src, stream); if (err != cudaSuccess) return;
@@ -949,29 +948,27 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
 
     conv3x3_32to32_relu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), stream); l++;
-    conv3x3_32to32_relu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), stream); l++;
-    conv3x3_32to32_relu_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), stream); l++;
-    conv3x3_32to32_relu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), stream); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 1; i++)
+    {
+        conv3x3_32to32_relu_cuda(
+            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
+            kernel(l), bias(l), stream); l++;
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_32to32_identity_add_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l),
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         stream); l++;
+    std::swap(tmpI, tmpO);
 
     conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
         dst.type(), stream);
@@ -1032,6 +1029,8 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
     auto& feat = featImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = in.fromHost(src, stream); if (err != cudaSuccess) return;
@@ -1044,27 +1043,28 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
 
     conv3x3_8to8_prelu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_8to8_prelu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_8to8_prelu_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 2; i++)
+    {
+        conv3x3_8to8_prelu_cuda(
+            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
+            kernel(l), bias(l), alpha(l), stream); l++;   
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), alpha(l),
         kernel(l + 1), bias(l + 1), alpha(l + 1),
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         stream); l += 2;
+    std::swap(tmpI, tmpO);
 
     conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
         dst.type(), stream);
@@ -1125,6 +1125,8 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
     auto& feat = featImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = in.fromHost(src, stream); if (err != cudaSuccess) return;
@@ -1137,27 +1139,28 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
 
     conv3x3_16to16_prelu_cuda(
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_16to16_prelu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_16to16_prelu_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 2; i++)
+    {
+        conv3x3_16to16_prelu_cuda(
+            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
+            kernel(l), bias(l), alpha(l), stream); l++;
+        std::swap(tmpI, tmpO);
+    }
     conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
+        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
         kernel(l), bias(l), alpha(l),
         kernel(l + 1), bias(l + 1), alpha(l + 1),
         feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
         stream); l += 2;
+    std::swap(tmpI, tmpO);
 
     conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
+        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
         out.ptr, out.w, out.h, out.c, out.pitch,
         kernel(l), bias(l),
         dst.type(), stream);
