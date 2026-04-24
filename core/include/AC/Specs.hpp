@@ -3,79 +3,196 @@
 
 namespace ac::specs
 {
-    constexpr const char* ModelList[] = {
-        "acnet-legacy-gan",
-        "acnet-legacy-hdn0",
-        "acnet-legacy-hdn1",
-        "acnet-legacy-hdn2",
-        "acnet-legacy-hdn3",
-        "acnet-f8b8",
-        "acnet-f8b8-hdn",
-        "arnet-f8b8",
-        "arnet-f8b8-hdn",
-        "arnet-f8b16",
-        "arnet-f8b16-hdn",
-        "arnet-f8b32",
-        "arnet-f8b32-hdn",
-        "arnet-f8b64",
-        "arnet-f8b64-hdn",
-        "artcnn-c4f16",
-        "artcnn-c4f16-dn",
-        "artcnn-c4f16-ds",
-        "artcnn-c4f32",
-        "artcnn-c4f32-dn",
-        "artcnn-c4f32-ds",
-        "fsrcnnx-f8b4",
-        "fsrcnnx-f8b4-distort-plus",
-        "fsrcnnx-f16b4",
-        "fsrcnnx-f16b4-distort-plus",
+    struct Model
+    {
+        const char* name;
+        const char* description;
+        int parameterCount;
+        const char* version = nullptr;
+        const char* author = nullptr;
+        const char* homepage = nullptr;
     };
 
-    constexpr const char* ModelDescriptionList[] = {
-        "Lightweight CNN, detail enhancement.", // acnet-legacy-gan
-        "Lightweight CNN, mild denoising.",     // acnet-legacy-hdn0
-        "Lightweight CNN, moderate denoising.", // acnet-legacy-hdn1
-        "Lightweight CNN, heavy denoising.",    // acnet-legacy-hdn2
-        "Lightweight CNN, extreme denoising.",  // acnet-legacy-hdn3
-        "Lightweight CNN, without denoising.",  // acnet-f8b8
-        "Lightweight CNN, mild denoising.",     // acnet-f8b8-hdn
-        "ResNet for real-time tasks, without denoising.", // arnet-f8b8
-        "ResNet for real-time tasks, mild denoising.",    // acnet-f8b8-hdn
-        "ResNet for real-time tasks, without denoising.", // arnet-f8b16
-        "ResNet for real-time tasks, mild denoising.",    // acnet-f8b16-hdn
-        "ResNet for real-time tasks, without denoising.", // arnet-f8b32
-        "ResNet for real-time tasks, mild denoising.",    // arnet-f8b32-hdn
-        "ResNet for real-time tasks, without denoising.", // arnet-f8b64
-        "ResNet for real-time tasks, mild denoising.",    // arnet-f8b64-hdn
-        "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
-        "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
-        "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds
-        "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32
-        "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-dn
-        "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-ds
-        "FSRCNNX-8-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)",  // fsrcnnx-f8
-        "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f8b4-distort-plus
-        "FSRCNNX-16-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)", // fsrcnnx-f16
-        "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f16b4-distort-plus
+    struct Processor
+    {
+        const char* name;
+        const char* description;
     };
 
-    constexpr const char* ProcessorList[] = {
-        "cpu",
+    constexpr Model ModelList[] = {
+        {
+            "acnet-legacy-gan",
+            "Lightweight CNN, detail enhancement.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn0",
+            "Lightweight CNN, mild denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn1",
+            "Lightweight CNN, moderate denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn2",
+            "Lightweight CNN, heavy denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn3",
+            "Lightweight CNN, extreme denoising.",
+            4784
+        },
+        {
+            "acnet-f8b8",
+            "Lightweight CNN, without denoising.",
+            5044
+        },
+        {
+            "acnet-f8b8-hdn",
+            "Lightweight CNN, mild denoising.",
+            5044
+        },
+        {
+            "arnet-f8b8",
+            "ResNet for real-time tasks, without denoising.",
+            9860
+        },
+        {
+            "arnet-f8b8-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            9860
+        },
+        {
+            "arnet-f8b16",
+            "ResNet for real-time tasks, without denoising.",
+            19268
+        },
+        {
+            "arnet-f8b16-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            19268
+        },
+        {
+            "arnet-f8b32",
+            "ResNet for real-time tasks, without denoising.",
+            38084
+        },
+        {
+            "arnet-f8b32-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            38084
+        },
+        {
+            "arnet-f8b64",
+            "ResNet for real-time tasks, without denoising.",
+            75716
+        },
+        {
+            "arnet-f8b64-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            75716
+        },
+        {
+            "artcnn-c4f16",
+            "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f16-dn",
+            "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f16-ds",
+            "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32",
+            "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32-dn",
+            "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32-ds",
+            "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "fsrcnnx-f8b4",
+            "FSRCNNX-8-0-4-1 from igv.",
+            2948,
+            "v1.1",
+            "igv",
+            "https://github.com/igv/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f8b4-distort-plus",
+            "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin.",
+            2948,
+            "1.3_distort_plus",
+            "nessotrin",
+            "https://github.com/nessotrin/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f16b4",
+            "FSRCNNX-16-0-4-1 from igv.",
+            10628,
+            "v1.1",
+            "igv",
+            "https://github.com/igv/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f16b4-distort-plus",
+            "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin.",
+            10628,
+            "1.3_distort_plus",
+            "nessotrin",
+            "https://github.com/nessotrin/FSRCNN-TensorFlow"
+        }
+    };
+
+    constexpr Processor ProcessorList[] = {
+        {
+            "cpu",
+            "General-purpose CPU processing with optional SIMD acceleration."
+        },
 #   ifdef AC_CORE_WITH_OPENCL
-        "opencl",
+        {
+            "opencl",
+            "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices."
+        },
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        "cuda",
-#   endif
-    };
-
-    constexpr const char* ProcessorDescriptionList[] = {
-        "General-purpose CPU processing with optional SIMD acceleration.",      // cpu
-#   ifdef AC_CORE_WITH_OPENCL
-        "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.", // opencl
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
-        "NVIDIA GPU acceleration requiring Compute Capability 5.0+.",           // cuda
+        {
+            "cuda",
+            "NVIDIA GPU acceleration requiring Compute Capability 5.0+."
+        },
 #   endif
     };
 }

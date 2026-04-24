@@ -35,7 +35,7 @@ PYBIND11_MODULE(pyac, m)
             if (src.format == py::format_descriptor<std::uint16_t>::format()) return ac::core::Image::UInt16;
             if (src.format == py::format_descriptor<float>::format()) return ac::core::Image::Float32;
             throw py::buffer_error{ "Incompatible type: expected uint8, uint16 or float32." };
-            }();
+        }();
         py::array out{ in.dtype(), dstC == 1 ? py::array::ShapeContainer{ dstH, dstW } : py::array::ShapeContainer{ dstH, dstW, dstC } };
         auto dst = out.request();
         ac::core::Image srci{ srcW, srcH, srcC, type, src.ptr, static_cast<int>(src.strides[0]) };
@@ -163,8 +163,34 @@ PYBIND11_MODULE(pyac, m)
         return tuple;
     };
 
-    specs.attr("ModelList") = makeTuple(ac::specs::ModelList);
-    specs.attr("ModelDescriptionList") = makeTuple(ac::specs::ModelDescriptionList);
-    specs.attr("ProcessorList") = makeTuple(ac::specs::ProcessorList);
-    specs.attr("ProcessorDescriptionList") = makeTuple(ac::specs::ProcessorDescriptionList);
+    specs.attr("ModelList") = []() {
+        auto size = std::size(ac::specs::ModelList);
+        py::tuple tuple{ size };
+        for (decltype(size) i = 0; i < size; i++)
+        {
+            auto&& model = ac::specs::ModelList[i];
+            py::dict dict{};
+            dict["name"] = model.name;
+            dict["description"] = model.description;
+            dict["parameter_count"] = model.parameterCount;
+            dict["version"] = model.version;
+            dict["author"] = model.author;
+            dict["homepage"] = model.homepage;
+            tuple[i] = dict;
+        }
+        return tuple;
+    }();
+    specs.attr("ProcessorList") = []() {
+        auto size = std::size(ac::specs::ProcessorList);
+        py::tuple tuple{ size };
+        for (decltype(size) i = 0; i < size; i++)
+        {
+            auto&& processor = ac::specs::ProcessorList[i];
+            py::dict dict{};
+            dict["name"] = processor.name;
+            dict["description"] = processor.description;
+            tuple[i] = dict;
+        }
+        return tuple;
+    }();
 }

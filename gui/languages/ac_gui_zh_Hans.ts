@@ -1,89 +1,323 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="zh_Hans">
+<TS version="2.1" language="zh_CN">
 <context>
     <name>ExternI18N</name>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="7"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="22"/>
+        <source>acnet-legacy-gan</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="23"/>
         <source>Lightweight CNN, detail enhancement.</source>
         <translation>轻量CNN，细节增强。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="8"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="27"/>
+        <source>acnet-legacy-hdn0</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="28"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="53"/>
         <source>Lightweight CNN, mild denoising.</source>
         <translation>轻量CNN，轻度降噪。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="9"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="32"/>
+        <source>acnet-legacy-hdn1</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="33"/>
         <source>Lightweight CNN, moderate denoising.</source>
         <translation>轻量CNN，中度降噪。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="10"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="37"/>
+        <source>acnet-legacy-hdn2</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="38"/>
         <source>Lightweight CNN, heavy denoising.</source>
         <translation>轻量CNN，强力降噪。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="11"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="42"/>
+        <source>acnet-legacy-hdn3</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="43"/>
         <source>Lightweight CNN, extreme denoising.</source>
         <translation>轻量CNN，极致降噪。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="12"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="16"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="20"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="24"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="28"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="32"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="36"/>
-        <source>Lightweight ResNet, mild denoising.</source>
-        <translation>轻量ResNet，轻度降噪。</translation>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="47"/>
+        <source>acnet-f8b8</source>
+        <translation></translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="13"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="17"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="21"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="25"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="29"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="33"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="37"/>
-        <source>Lightweight ResNet, hdn with sharpening.</source>
-        <translation>轻量ResNet，HDN锐化。</translation>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="48"/>
+        <source>Lightweight CNN, without denoising.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="14"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="18"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="22"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="26"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="30"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="34"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="38"/>
-        <source>Lightweight ResNet, line enhancing.</source>
-        <translation>轻量ResNet，线条增强。</translation>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="52"/>
+        <source>acnet-f8b8-hdn</source>
+        <translation></translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="15"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="19"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="23"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="27"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="31"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="35"/>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="39"/>
-        <source>Lightweight ResNet, line sharpening.</source>
-        <translation>轻量ResNet，线条锐化。</translation>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="57"/>
+        <source>arnet-f8b8</source>
+        <translation></translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="42"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="58"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="68"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="78"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="88"/>
+        <source>ResNet for real-time tasks, without denoising.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="62"/>
+        <source>arnet-f8b8-hdn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="63"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="73"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="83"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="93"/>
+        <source>ResNet for real-time tasks, mild denoising.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="67"/>
+        <source>arnet-f8b16</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="72"/>
+        <source>arnet-f8b16-hdn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="77"/>
+        <source>arnet-f8b32</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="82"/>
+        <source>arnet-f8b32-hdn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="87"/>
+        <source>arnet-f8b64</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="92"/>
+        <source>arnet-f8b64-hdn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="97"/>
+        <source>artcnn-c4f16</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="98"/>
+        <source>ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="100"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="108"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="116"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="124"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="132"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="140"/>
+        <source>v1.6.2</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="101"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="109"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="117"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="125"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="133"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="141"/>
+        <source>Artoriuz</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="102"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="110"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="118"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="126"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="134"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="142"/>
+        <source>https://github.com/Artoriuz/ArtCNN</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="105"/>
+        <source>artcnn-c4f16-dn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="106"/>
+        <source>ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="113"/>
+        <source>artcnn-c4f16-ds</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="114"/>
+        <source>ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="121"/>
+        <source>artcnn-c4f32</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="122"/>
+        <source>ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="129"/>
+        <source>artcnn-c4f32-dn</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="130"/>
+        <source>ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="137"/>
+        <source>artcnn-c4f32-ds</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="138"/>
+        <source>ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="145"/>
+        <source>fsrcnnx-f8b4</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="146"/>
+        <source>FSRCNNX-8-0-4-1 from igv.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="148"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="164"/>
+        <source>v1.1</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="149"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="165"/>
+        <source>igv</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="150"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="166"/>
+        <source>https://github.com/igv/FSRCNN-TensorFlow</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="153"/>
+        <source>fsrcnnx-f8b4-distort-plus</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="154"/>
+        <source>FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="156"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="172"/>
+        <source>1.3_distort_plus</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="157"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="173"/>
+        <source>nessotrin</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="158"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="174"/>
+        <source>https://github.com/nessotrin/FSRCNN-TensorFlow</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="161"/>
+        <source>fsrcnnx-f16b4</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="162"/>
+        <source>FSRCNNX-16-0-4-1 from igv.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="169"/>
+        <source>fsrcnnx-f16b4-distort-plus</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="170"/>
+        <source>FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="179"/>
+        <source>cpu</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="180"/>
         <source>General-purpose CPU processing with optional SIMD acceleration.</source>
         <translation>通用CPU计算，支持SIMD加速。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="43"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="184"/>
+        <source>opencl</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="185"/>
         <source>Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.</source>
         <translation>跨平台异构计算加速，需要支持OpenCL1.2+标准的设备。</translation>
     </message>
     <message>
-        <location filename="../../build/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="44"/>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="190"/>
+        <source>cuda</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../../build_msvc/gui/i18n/i18n_marker_ac_specs_hpp.cpp" line="191"/>
         <source>NVIDIA GPU acceleration requiring Compute Capability 5.0+.</source>
         <translation>NVIDIA GPU加速，需CUDA计算能力5.0+的设备。</translation>
     </message>
@@ -105,7 +339,7 @@
         <location filename="../ui/MainWindow.ui" line="62"/>
         <location filename="../ui/MainWindow.ui" line="144"/>
         <location filename="../ui/MainWindow.ui" line="168"/>
-        <location filename="../src/MainWindow.cpp" line="205"/>
+        <location filename="../src/MainWindow.cpp" line="218"/>
         <source>image</source>
         <translation>图像</translation>
     </message>
@@ -123,7 +357,7 @@
         <location filename="../ui/MainWindow.ui" line="27"/>
         <location filename="../ui/MainWindow.ui" line="93"/>
         <location filename="../ui/MainWindow.ui" line="185"/>
-        <location filename="../src/MainWindow.cpp" line="205"/>
+        <location filename="../src/MainWindow.cpp" line="218"/>
         <source>video</source>
         <translation>视频</translation>
     </message>
@@ -166,7 +400,7 @@
     <message>
         <location filename="../ui/MainWindow.ui" line="124"/>
         <location filename="../ui/MainWindow.ui" line="151"/>
-        <location filename="../src/MainWindow.cpp" line="136"/>
+        <location filename="../src/MainWindow.cpp" line="149"/>
         <source>open</source>
         <translation>打开</translation>
     </message>
@@ -262,7 +496,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="372"/>
-        <location filename="../src/MainWindow.cpp" line="353"/>
+        <location filename="../src/MainWindow.cpp" line="366"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
@@ -273,7 +507,7 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="382"/>
-        <location filename="../src/MainWindow.cpp" line="270"/>
+        <location filename="../src/MainWindow.cpp" line="283"/>
         <source>Exit</source>
         <translation>退出</translation>
     </message>
@@ -284,108 +518,138 @@
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="395"/>
-        <location filename="../src/MainWindow.cpp" line="270"/>
+        <location filename="../src/MainWindow.cpp" line="283"/>
         <source>Exit confirmation</source>
         <translation>退出确认</translation>
     </message>
     <message>
         <location filename="../ui/MainWindow.ui" line="400"/>
-        <location filename="../src/MainWindow.cpp" line="327"/>
+        <location filename="../src/MainWindow.cpp" line="340"/>
         <source>License</source>
         <translation>许可证</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="129"/>
+        <location filename="../src/MainWindow.cpp" line="142"/>
         <source>type</source>
         <translation>类型</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="129"/>
+        <location filename="../src/MainWindow.cpp" line="142"/>
         <source>status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="129"/>
+        <location filename="../src/MainWindow.cpp" line="142"/>
         <source>name</source>
         <translation>名称</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="129"/>
+        <location filename="../src/MainWindow.cpp" line="142"/>
         <source>output name</source>
         <translation>输出名称</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="129"/>
+        <location filename="../src/MainWindow.cpp" line="142"/>
         <source>path</source>
         <translation>路径</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="137"/>
+        <location filename="../src/MainWindow.cpp" line="150"/>
         <source>remove</source>
         <translation>移除</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="206"/>
+        <location filename="../src/MainWindow.cpp" line="219"/>
         <source>ready</source>
         <translation>就绪</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="230"/>
+        <location filename="../src/MainWindow.cpp" line="243"/>
         <source>input</source>
         <translation>输入</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="230"/>
+        <location filename="../src/MainWindow.cpp" line="243"/>
         <source>output</source>
         <translation>输出</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="214"/>
+        <location filename="../src/MainWindow.cpp" line="227"/>
         <source>succeeded</source>
         <translation>成功</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="214"/>
+        <location filename="../src/MainWindow.cpp" line="123"/>
+        <source>Parameter count</source>
+        <translation>参数量</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="124"/>
+        <source>Version</source>
+        <translation>版本</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="125"/>
+        <source>Author</source>
+        <translation>作者</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="126"/>
+        <source>Homepage</source>
+        <translation>主页</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="127"/>
+        <source>Description</source>
+        <translation>描述</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="227"/>
         <source>failed</source>
         <translation>失败</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="313"/>
+        <location filename="../src/MainWindow.cpp" line="326"/>
         <source>Devices</source>
         <translation>设备</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="371"/>
+        <location filename="../src/MainWindow.cpp" line="379"/>
         <source>Anime4KCPP: A high performance anime upscaler</source>
         <translation>Anime4KCPP：高性能动漫超分工具</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="372"/>
+        <location filename="../src/MainWindow.cpp" line="380"/>
         <source>core version</source>
         <translation>核心版本</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="373"/>
+        <location filename="../src/MainWindow.cpp" line="381"/>
         <source>video module</source>
         <translation>视频模块</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="374"/>
+        <location filename="../src/MainWindow.cpp" line="383"/>
+        <source>enabled</source>
+        <translation>可用</translation>
+    </message>
+    <message>
+        <location filename="../src/MainWindow.cpp" line="387"/>
         <source>build date</source>
         <translation>构建日期</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="375"/>
+        <location filename="../src/MainWindow.cpp" line="388"/>
         <source>toolchain</source>
         <translation>工具链</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="376"/>
+        <location filename="../src/MainWindow.cpp" line="389"/>
         <source>Copyright</source>
         <translation>版权所有</translation>
     </message>
     <message>
-        <location filename="../src/MainWindow.cpp" line="377"/>
+        <location filename="../src/MainWindow.cpp" line="385"/>
         <source>disabled</source>
         <translation>不可用</translation>
     </message>

@@ -10,8 +10,8 @@ struct Options
 {
     std::vector<std::string> inputs{};
     std::vector<std::string> outputs{};
-    std::string model{ ac::specs::ModelList[0] };
-    std::string processor{ ac::specs::ProcessorList[0] };
+    std::string model{ ac::specs::ModelList[0].name };
+    std::string processor{ ac::specs::ProcessorList[0].name };
     double factor = 2.0;
     int device = 0;
 

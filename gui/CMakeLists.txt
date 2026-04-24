@@ -44,18 +44,16 @@ if (WIN32)
 endif()
 
 file(READ ${TOP_DIR}/core/include/AC/Specs.hpp AC_SPECS_HPP_CONTENT)
-string(REGEX MATCHALL "constexpr[ \t]+const[ \t]+char[ \t]*\\*[ \t]*[a-zA-Z_]+DescriptionList\\[\\][ \t]*=[ \t]*\\{[^\\}]+\\}" AC_SPECS_HPP_CONTENT_MATCHED_LIST "${AC_SPECS_HPP_CONTENT}")
-list(JOIN AC_SPECS_HPP_CONTENT_MATCHED_LIST ";\n    " AC_SPECS_HPP_CONTENT_MATCHED)
-string(REGEX REPLACE "\"([^\"]+)\"" "QT_TRANSLATE_NOOP(\"ExternI18N\", \"\\1\")" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MATCHED}")
-string(REGEX REPLACE "#[^\n]+\n" "" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+string(REPLACE "namespace ac::specs" "namespace i18n::ac::specs" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT}")
+string(REPLACE "#ifndef AC_SPECS_HPP\n" "" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+string(REPLACE "#define AC_SPECS_HPP\n" "" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+string(REPLACE "#endif\n" "" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+string(REGEX REPLACE "\"([^\"]+)\"" "QT_TRANSLATE_NOOP(\"ExternI18N\", \"\\1\")" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
+string(REGEX REPLACE "\n+" "\n" AC_SPECS_HPP_CONTENT_MODIFIED "${AC_SPECS_HPP_CONTENT_MODIFIED}")
 file(WRITE "${GUI_BINARY_DIR}/filegen/i18n/i18n_marker_ac_specs_hpp.cpp.in" [[
 // Auto-generated i18n marker
 #include <QTranslator>
-
-namespace i18n::ac::specs
-{
-    @AC_SPECS_HPP_CONTENT_MODIFIED@;
-}
+@AC_SPECS_HPP_CONTENT_MODIFIED@
 ]])
 configure_file(
     ${GUI_BINARY_DIR}/filegen/i18n/i18n_marker_ac_specs_hpp.cpp.in

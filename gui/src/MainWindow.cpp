@@ -109,13 +109,27 @@ void MainWindow::init()
     ui->spin_box_device->setValue(gConfig.upscaler.device);
     ui->double_spin_box_factor->setMinimum(1.0);
     ui->double_spin_box_factor->setValue(gConfig.upscaler.factor);
-    ui->combo_box_processor->addItems({ std::begin(ac::specs::ProcessorList), std::end(ac::specs::ProcessorList) });
-    for (std::size_t i = 0; i < std::size(ac::specs::ProcessorDescriptionList); i++) ui->combo_box_processor->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ProcessorDescriptionList[i]), Qt::ToolTipRole);
+    for (auto&& processor : ac::specs::ProcessorList)
+    {
+        ui->combo_box_processor->addItem(processor.name);
+        ui->combo_box_processor->setItemData(ui->combo_box_processor->count() - 1, QCoreApplication::translate("ExternI18N", processor.description), Qt::ToolTipRole);
+    }
     ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
     ui->combo_box_model->setStyleSheet("combobox-popup: 0;");
     ui->combo_box_model->view()->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->combo_box_model->addItems({ std::begin(ac::specs::ModelList), std::end(ac::specs::ModelList) });
-    for (std::size_t i = 0; i < std::size(ac::specs::ModelDescriptionList); i++) ui->combo_box_model->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ModelDescriptionList[i]), Qt::ToolTipRole);
+    for (auto&& model : ac::specs::ModelList)
+    {
+        QString modelInfo{};
+        modelInfo.append(QString{ "%1\n" }.arg(model.name));
+        modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Parameter count")).arg(model.parameterCount));
+        if (model.version) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Version")).arg(QCoreApplication::translate("ExternI18N", model.version)));
+        if (model.author) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Author")).arg(QCoreApplication::translate("ExternI18N", model.author)));
+        if (model.homepage) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Homepage")).arg(QCoreApplication::translate("ExternI18N", model.homepage)));
+        modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Description")).arg(QCoreApplication::translate("ExternI18N", model.description)));
+
+        ui->combo_box_model->addItem(model.name);
+        ui->combo_box_model->setItemData(ui->combo_box_model->count() - 1, modelInfo, Qt::ToolTipRole);
+    }
     ui->combo_box_model->setCurrentText(gConfig.upscaler.model);
     QObject::connect(ui->spin_box_device, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.upscaler.device = value; });

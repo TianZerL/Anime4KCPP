@@ -98,7 +98,7 @@ namespace ac::core::detail
             }
             if (modelString.find("acnet") != std::string::npos) // ACNet
             {
-                if (modelString.find("b8") != std::string::npos) // ARNetClassic
+                if (modelString.find("b8") != std::string::npos)
                 {
                     auto variant = ac::core::model::ACNet<8>::Variant::B8_NORMAL;
 
@@ -107,8 +107,8 @@ namespace ac::core::detail
                     return ac::core::model::ACNet<8>{ variant };
                 }
 
-                auto variant = ac::core::model::ACNetLegacy::Variant::GAN;
-                if (modelString.find("hdn") != std::string::npos) // ACNet-HDN
+                auto variant = ac::core::model::ACNetLegacy::Variant::GAN; // ACNetLegcay
+                if (modelString.find("hdn") != std::string::npos)
                 {
                     variant = ac::core::model::ACNetLegacy::Variant::HDN0;
                     for (char ch : modelString)
@@ -156,7 +156,7 @@ void ac::core::Processor::process(const Image& src, Image& dst, const double fac
 
     if (!dst.empty())
     {
-        if (src.channels() == 1) //grey
+        if (src.channels() == 1) //gray
         {
             if (fxy == 1.0)
             {

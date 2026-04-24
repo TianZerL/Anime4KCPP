@@ -48,12 +48,20 @@ static void list(const Options& options)
     if (options.list.processors)
     {
         printf("Processors:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ProcessorList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorList[i], ac::specs::ProcessorDescriptionList[i]);
+        for (auto&& processor : ac::specs::ProcessorList) printf("  %-16s  %s\n", processor.name, processor.description);
     }
     if (options.list.models)
     {
         printf("Models:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ModelList); i++) printf("  %-16s  %s\n", ac::specs::ModelList[i], ac::specs::ModelDescriptionList[i]);
+        for (auto&& model : ac::specs::ModelList)
+        {
+            printf("  %s:\n", model.name);
+            printf("    parameter count: %d\n", model.parameterCount);
+            if (model.version) printf("    version: %s\n", model.version);
+            if (model.author) printf("    author: %s\n", model.author);
+            if (model.homepage) printf("    homepage: %s\n", model.homepage);
+            printf("    description: %s\n", model.description);
+        }
     }
 }
 
