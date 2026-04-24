@@ -432,7 +432,7 @@ namespace ac::core::cpu
         conv3x3_conv1x1_generic<float, 8, 8, 8, false, false>(
             src, dst,
             kernels1, biases1, Identity{}, ResidualArg{ id, scale },
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_add_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id)
@@ -552,8 +552,8 @@ namespace ac::core::cpu
     {
         conv3x3_conv1x1_generic<float, 8, 8, 8, false, true>(
             src, dst,
-            kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            kernels1, biases1, PReLU{ alphas1 }, nullptr,
+            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_generic(const Image& src, Image& dst, const float* kernels, const float* biases)
@@ -599,8 +599,8 @@ namespace ac::core::cpu
     {
         conv3x3_conv1x1_generic<float, 16, 16, 16, false, true>(
             src, dst,
-            kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat, 1.0f }
+            kernels1, biases1, PReLU{ alphas1 }, nullptr,
+            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
         );
     }
 
