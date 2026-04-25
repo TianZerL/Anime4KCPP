@@ -38,7 +38,7 @@ public:
     static constexpr int LimitWidthDefault = 1280;
     static constexpr int LimitHeightDefault = 720;
 private:
-    static constexpr const TCHAR* ProcessorTypeDefault = TEXT("cpu");
+    static constexpr const TCHAR* ProcessorTypeDefault = TEXT("auto");
     static constexpr const TCHAR* ModelNameDefault = TEXT("acnet-legacy-hdn0");
     static constexpr const TCHAR* FactorValueName = TEXT("Factor");
     static constexpr const TCHAR* DeviceValueName = TEXT("Device");

@@ -16,6 +16,7 @@ namespace ac::core::detail
 
             for (char& ch : typeString) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
 
+            if (typeString == "auto") return -1;
             if (typeString == "opencl") return Processor::OpenCL;
             if (typeString == "cuda") return Processor::CUDA;
         }
@@ -230,6 +231,8 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const char* typ
     return std::visit([=](auto&& model) {
         switch (detail::findProcessorType(type))
         {
+        case ac::core::Processor::CPU:
+            return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
 #   ifdef AC_CORE_WITH_OPENCL
         case ac::core::Processor::OpenCL:
             return ac::core::Processor::create<ac::core::Processor::OpenCL>(device, model);
@@ -238,8 +241,20 @@ std::shared_ptr<ac::core::Processor> ac::core::Processor::create(const char* typ
         case ac::core::Processor::CUDA:
             return ac::core::Processor::create<ac::core::Processor::CUDA>(device, model);
 #   endif
-        default:
-            return ac::core::Processor::create<ac::core::Processor::CPU>(device, model);
+        default: // auto
+        {
+            std::shared_ptr<ac::core::Processor> processor{};
+#   ifdef AC_CORE_WITH_CUDA
+            processor = ac::core::Processor::create<ac::core::Processor::CUDA>(-1, model);
+            if (processor->ok()) return processor;
+#   endif
+#   ifdef AC_CORE_WITH_OPENCL
+            processor = ac::core::Processor::create<ac::core::Processor::OpenCL>(-1, model);
+            if (processor->ok()) return processor;
+#   endif
+            processor = ac::core::Processor::create<ac::core::Processor::CPU>(-1, model);
+            return processor;
+        }
         }
     }, detail::findModel(model));
 }

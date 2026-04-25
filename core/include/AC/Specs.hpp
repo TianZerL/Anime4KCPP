@@ -179,6 +179,10 @@ namespace ac::specs
 
     constexpr Processor ProcessorList[] = {
         {
+            "auto",
+            "Auto-detect reasonable processor and device."
+        },
+        {
             "cpu",
             "General-purpose CPU processing with optional SIMD acceleration."
         },
