@@ -155,7 +155,7 @@ namespace ac::specs
             "fsrcnnx-f8b4-distort-plus",
             "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin.",
             2948,
-            "1.3_distort_plus",
+            "v1.3_distort_plus",
             "nessotrin",
             "https://github.com/nessotrin/FSRCNN-TensorFlow"
         },
@@ -171,7 +171,7 @@ namespace ac::specs
             "fsrcnnx-f16b4-distort-plus",
             "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin.",
             10628,
-            "1.3_distort_plus",
+            "v1.3_distort_plus",
             "nessotrin",
             "https://github.com/nessotrin/FSRCNN-TensorFlow"
         }
