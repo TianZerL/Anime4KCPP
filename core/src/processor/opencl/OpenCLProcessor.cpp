@@ -84,6 +84,7 @@ namespace ac::core::opencl
         cl::Program program{};
         Arch arch{};
         cl_ulong constantMemorySize{};
+        unsigned int performanceScore{};
 
         Context() noexcept = default;
         Context(const cl::Platform& platform, const cl::Device& device) noexcept : device(device)
@@ -139,6 +140,12 @@ namespace ac::core::opencl
             }
 
             device.getInfo(CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, &constantMemorySize);
+
+            cl_uint maxComputeUnits{};
+            cl_uint maxClockFrequency{};
+            device.getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &maxComputeUnits);
+            device.getInfo(CL_DEVICE_MAX_CLOCK_FREQUENCY, &maxClockFrequency);
+            performanceScore = maxComputeUnits * maxClockFrequency;
         }
     };
 
@@ -146,6 +153,10 @@ namespace ac::core::opencl
     static inline bool checkDevice(const cl::Device& device)
     {
         cl_int err = CL_SUCCESS;
+        auto deviceAvailable = device.getInfo<CL_DEVICE_AVAILABLE>(&err);
+        if (err != CL_SUCCESS || deviceAvailable != CL_TRUE) return false;
+        auto compilerAvailable = device.getInfo<CL_DEVICE_COMPILER_AVAILABLE>(&err);
+        if (err != CL_SUCCESS || compilerAvailable != CL_TRUE) return false;
         auto imageSupport = device.getInfo<CL_DEVICE_IMAGE_SUPPORT>(&err);
         if (err != CL_SUCCESS || imageSupport != CL_TRUE) return false;
         return true;
@@ -261,7 +272,15 @@ namespace ac::core::opencl
             if (contextList.empty()) err = CL_DEVICE_NOT_FOUND;
             else
             {
-                idx = (device >= 0 && static_cast<decltype(contextList.size())>(device) < contextList.size()) ? device : 0;
+                int deviceCount = static_cast<int>(contextList.size());
+                if (!(device >= 0 && device < deviceCount))
+                {
+                    idx = 0;
+                    for (int i = 0; i < deviceCount; i++)
+                        if (contextList[i].performanceScore > contextList[idx].performanceScore)
+                            idx = i;
+                }
+                else idx = device;
                 context = contextList[idx];
             }
         }
