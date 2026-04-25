@@ -210,18 +210,42 @@ namespace ac::core::cuda
     struct Context
     {
         std::string name{};
+        int id{};
         int vram{};
         int computeCapability{};
+        int performanceScore{};
         bool memoryPoolsSupported{};
 
-        Context(const cudaDeviceProp& deviceProp) noexcept
+        Context() noexcept = default;
+        Context(const int deviceId, const cudaDeviceProp& deviceProp) noexcept
         {
             name = deviceProp.name;
+            id = deviceId;
             vram = static_cast<int>(deviceProp.totalGlobalMem >> 20);
             computeCapability = deviceProp.major * 10 + deviceProp.minor;
             memoryPoolsSupported = deviceProp.memoryPoolsSupported;
+
+            int clockRate = 0;
+            cudaDeviceGetAttribute(&clockRate, cudaDevAttrClockRate, deviceId);
+            int multiProcessorCount = 0;
+            cudaDeviceGetAttribute(&multiProcessorCount, cudaDevAttrMultiProcessorCount, deviceId);
+
+            performanceScore = clockRate * multiProcessorCount;
         }
     };
+
+    static inline bool checkDevice(const int deviceId, const cudaDeviceProp& deviceProp)
+    {
+        cudaError_t err = cudaSuccess;
+
+        if (deviceProp.major < 5) return false;
+
+        int computeMode = cudaComputeModeDefault;
+        err = cudaDeviceGetAttribute(&computeMode, cudaDevAttrComputeMode, deviceId);
+        if (err != cudaSuccess || computeMode == cudaComputeModeProhibited) return false;
+
+        return true;
+    }
 
     //lazy load, god knows if it's safe to call the cuda function during DLL initialization
     static inline std::vector<Context>& getContextList() noexcept
@@ -234,7 +258,7 @@ namespace ac::core::cuda
             {
                 cudaDeviceProp deviceProp{};
                 err = cudaGetDeviceProperties(&deviceProp, i); if (err != cudaSuccess) continue;
-                contexts.emplace_back(deviceProp);
+                if (checkDevice(i, deviceProp)) contexts.emplace_back(i, deviceProp);
             }
             return contexts;
         }();
@@ -274,19 +298,19 @@ namespace ac::core::cuda
     class DeviceImageAllocator
     {
     public:
-        cudaError_t init(const int idx) noexcept
+        cudaError_t init(const Context& ctx) noexcept
         {
             cudaError_t err = cudaSuccess;
 
-            device = idx;
-            memoryPoolsSupported = ContextList[idx].memoryPoolsSupported;
+            deviceId = ctx.id;
+            memoryPoolsSupported = ctx.memoryPoolsSupported;
             if (memoryPoolsSupported)
             {
                 deviceMalloc = deviceMallocAsync;
                 deviceFree = deviceFreeAsync;
 
                 cudaMemPool_t pool{};
-                err = cudaDeviceGetDefaultMemPool(&pool, device);
+                err = cudaDeviceGetDefaultMemPool(&pool, deviceId);
                 if (err == cudaSuccess)
                 {
                     auto threshold = std::numeric_limits<std::uint64_t>::max();
@@ -308,7 +332,7 @@ namespace ac::core::cuda
             if (memoryPoolsSupported)
             {
                 cudaMemPool_t pool{};
-                err = cudaDeviceGetDefaultMemPool(&pool, device);
+                err = cudaDeviceGetDefaultMemPool(&pool, deviceId);
                 if (err == cudaSuccess) err = cudaMemPoolTrimTo(pool, 0);
             }
 
@@ -352,7 +376,7 @@ namespace ac::core::cuda
     private:
         decltype(&deviceMallocAsync) deviceMalloc = deviceMallocSync;
         decltype(&deviceFreeAsync) deviceFree = deviceFreeSync;
-        int device = 0;
+        int deviceId = 0;
         bool memoryPoolsSupported = false;
     };
 
@@ -413,8 +437,17 @@ namespace ac::core::cuda
             if (ContextList.empty()) err = cudaErrorNoDevice;
             else
             {
-                idx = (device >= 0 && static_cast<decltype(ContextList.size())>(device) < ContextList.size()) ? device : 0;
-                err = allocator.init(idx);
+                int deviceCount = static_cast<int>(ContextList.size());
+                if (!(device >= 0 && device < deviceCount))
+                {
+                    idx = 0;
+                    for (int i = 0; i < deviceCount; i++)
+                        if (ContextList[i].performanceScore > ContextList[idx].performanceScore)
+                            idx = i;
+                }
+                else idx = device;
+                context = ContextList[idx];
+                err = allocator.init(context);
             }
         };
         ~CUDAProcessorBase() noexcept override
@@ -435,7 +468,7 @@ namespace ac::core::cuda
         }
         const char* name() const noexcept override
         {
-            return ContextList[idx].name.c_str();
+            return context.name.c_str();
         }
         int type() const noexcept override
         {
@@ -447,6 +480,7 @@ namespace ac::core::cuda
         }
 
     protected:
+        Context context{};
         DeviceImageAllocator allocator{};
         util::ThreadLocal<cudaError_t> errors{};
     };
