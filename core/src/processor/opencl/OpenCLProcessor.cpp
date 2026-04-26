@@ -92,60 +92,51 @@ namespace ac::core::opencl
             std::string platformName{ "Unknown" };
             platform.getInfo(CL_PLATFORM_NAME, &platformName);
 
-            bool amdapp = platformName == "AMD Accelerated Parallel Processing";
+            std::string platformVendor{ "Unknown" };
+            platform.getInfo(CL_PLATFORM_VENDOR, &platformVendor);
 
             std::string deviceName{ "Unknown" };
             device.getInfo(CL_DEVICE_NAME, &deviceName);
 
-            if (amdapp)
+            std::string driverVersion{ "Unknown" };
+            device.getInfo(CL_DRIVER_VERSION, &driverVersion);
+
+            if (platformVendor == "Advanced Micro Devices, Inc.")
             {
                 std::string boardNameAMD{ "Unknown" };
                 device.getInfo(0x4038 /*CL_DEVICE_BOARD_NAME_AMD*/, &boardNameAMD);
 
                 name = boardNameAMD;
                 info.append(deviceName).append(", ");
+
+                if (auto pos = name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(name[pos + 6]))) // gfx1000 or newer
+                    arch = Arch::AMD_RDNA;
+                else
+                    arch = Arch::AMD_GCN;
             }
-            else name = deviceName;
-
-            std::string driverVersion{ "Unknown" };
-            device.getInfo(CL_DRIVER_VERSION, &driverVersion);
-
-            info.append(platformName).append(", ").append(driverVersion);
-
-            if (platformName == "rusticl") arch = Arch::MESA;
             else
             {
-                cl_uint vendorId{};
-                if (device.getInfo(CL_DEVICE_VENDOR_ID, &vendorId) == CL_SUCCESS)
-                {
-                    switch (vendorId)
-                    {
-                    case 0x1002: // AMD
-                        if (auto pos = name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(name[pos + 6]))) // gfx1000 or newer
-                            arch = Arch::AMD_RDNA;
-                        else
-                            arch = Arch::AMD_GCN;
-                        break;
-                    case 0x8086: // Intel
-                        arch = Arch::INTEL;
-                        break;
-                    case 0x10DE: // Nvidia
-                        arch = Arch::NVIDIA;
-                        break;
-                    case 0x5143: // Qualcomm
-                        arch = Arch::ADRENO;
-                        break;
-                    }
-                }
+                name = deviceName;
+
+                if (platformVendor == "Mesa/X.org") arch = Arch::MESA;
+                else if (platformVendor == "Intel(R) Corporation") arch = Arch::INTEL;
+                else if (platformVendor == "NVIDIA Corporation") arch = Arch::NVIDIA;
+                else if (platformVendor == "QUALCOMM") arch = Arch::ADRENO;
             }
+
+            info.append(platformName).append(", ").append(driverVersion);
 
             device.getInfo(CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE, &constantMemorySize);
 
             cl_uint maxComputeUnits{};
             cl_uint maxClockFrequency{};
+            cl_device_type deviceType{};
             device.getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &maxComputeUnits);
             device.getInfo(CL_DEVICE_MAX_CLOCK_FREQUENCY, &maxClockFrequency);
-            performanceScore = maxComputeUnits * maxClockFrequency;
+            device.getInfo(CL_DEVICE_TYPE, &deviceType);
+
+            cl_uint performanceFactor = ((deviceType == CL_DEVICE_TYPE_GPU) ? 64 : 1) * ((arch == Arch::OTHER) ? 1 : 10);
+            performanceScore = maxComputeUnits * maxClockFrequency * performanceFactor;
         }
     };
 
