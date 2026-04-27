@@ -6,149 +6,65 @@
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
+#include "AC/Core/Internal/Processor/CPU/Common.hpp"
+
 namespace ac::core::cpu
 {
-    template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
-    inline void conv1x1_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
+    template <typename IN, int cout, typename ActiveFunc>
+    inline void conv3x3_cin1_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        util::parallelFor(0, src.height(), [&](const int i) {
-            for (int j = 0; j < src.width(); j++)
-            {
-                [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
-
-                auto out = static_cast<float*>(dst.ptr(j, i));
-
-                auto r = [&]() -> auto {
-                    Eigen::Map<const Eigen::Array<IN, cin, 1>> rin{ static_cast<const IN*>(src.ptr(j, i)) };
-
-                    if constexpr (std::is_same_v<IN, float>)
-                        return rin;
-                    else if constexpr (std::is_floating_point_v<IN>)
-                        return Eigen::Array<float, cin, 1>{ rin.template cast<float>() };
-                    else if constexpr (std::is_unsigned_v<IN>)
-                        return Eigen::Array<float, cin, 1>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-                }();
-
-                for (int n = 0; n < cout; n++)
-                {
-                    Eigen::Map<const Eigen::Array<float, cin, 1>> k{ kernels + n * cin };
-                    float sum = (k * r).sum() + biases[n];
-
-                    if constexpr (!postactive) sum = activeFunc(sum, n);
-
-                    if constexpr (sizeof...(ResidualArgs))
-                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                            sum = sum * scales[idx] + iptrs[idx][n];
-
-                    if constexpr (postactive) sum = activeFunc(sum, n);
-
-                    out[n] = sum;
-                }
-            }
-        });
-    }
-    template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
-    inline void conv5x5_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
-    {
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
-        util::parallelFor(0, src.height(), [&](const int i) {
-            int ioffsets[5] = { i > 1 ? -2 : (i > 0 ? -1 : 0) , i > 0 ? -1 : 0 , 0, i < src.height() - 1 ? 1 : 0, i < src.height() - 2 ? 2 : (i < src.height() - 1 ? 1 : 0) };
-
-            for (int j = 0; j < src.width(); j++)
-            {
-                [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
-
-                auto out = static_cast<float*>(dst.ptr(j, i));
-
-                auto r = [&]() -> auto {
-                    int joffsets[5] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0) };
-
-                    Eigen::Array<IN, cin, 25> rin{};
-                    for (int in = 0; in < 5; in++)
-                        for (int jn = 0; jn < 5; jn++)
-                            rin.col(in * 5 + jn) = Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + joffsets[jn], i + ioffsets[in])) };
-
-                    if constexpr (std::is_same_v<IN, float>)
-                        return rin;
-                    else if constexpr (std::is_floating_point_v<IN>)
-                        return Eigen::Array<float, cin, 25>{ rin.template cast<float>() };
-                    else if constexpr (std::is_unsigned_v<IN>)
-                        return Eigen::Array<float, cin, 25>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-                }();
-
-                for (int n = 0; n < cout; n++)
-                {
-                    Eigen::Map<const Eigen::Array<float, cin, 25>> k{ kernels + n * cin * 25 };
-                    float sum = (k * r).sum() + biases[n];
-
-                    if constexpr (!postactive) sum = activeFunc(sum, n);
-
-                    if constexpr (sizeof...(ResidualArgs))
-                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                            sum = sum * scales[idx] + iptrs[idx][n];
-
-                    if constexpr (postactive) sum = activeFunc(sum, n);
-
-                    out[n] = sum;
-                }
-            }
-        });
-    }
-    template <typename IN, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
-    inline void conv3x3_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
-    {
-        [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
-
         util::parallelFor(0, src.height(), [&](const int i) {
             auto tp = i > 0 ? 1 : 0;
             auto bp = i < src.height() - 1 ? 1 : 0;
 
             for (int j = 0; j < src.width(); j++)
             {
-                [[maybe_unused]] const std::array<const float*, sizeof...(ResidualArgs)> iptrs{ static_cast<const float*>(residualArg.image.ptr(j, i))... };
-
                 auto out = static_cast<float*>(dst.ptr(j, i));
 
-                auto r = [&]() -> auto {
-                    auto lp = j > 0 ? 1 : 0;
-                    auto rp = j < src.width() - 1 ? 1 : 0;
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
 
-                    Eigen::Array<IN, cin, 9> rin{};
-                    rin <<
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i + bp)) };
-                    if constexpr (std::is_same_v<IN, float>)
-                        return rin;
-                    else if constexpr (std::is_floating_point_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
-                    else if constexpr (std::is_unsigned_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-                }();
+                Eigen::Vector<float, 9> r{
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i - tp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i     ))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i + bp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j     , i + bp))),
+                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i + bp)))
+                };
 
                 for (int n = 0; n < cout; n++)
                 {
-                    Eigen::Map<const Eigen::Array<float, cin, 9>> k{ kernels + n * cin * 9 };
-                    float sum = (k * r).sum() + biases[n];
+                    Eigen::Map<const Eigen::Vector<float, 9>> k{ kernels + n * 9 };
+                    out[n] = activeFunc(r.dot(k) + biases[n], n);
+                }
+            }
+        });
+    }
+    template <typename IN, int cout, typename ActiveFunc>
+    inline void conv5x5_cin1_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
+    {
+        util::parallelFor(0, src.height(), [&](const int i) {
+            int ioffsets[5] = { i > 1 ? -2 : (i > 0 ? -1 : 0) , i > 0 ? -1 : 0 , 0, i < src.height() - 1 ? 1 : 0, i < src.height() - 2 ? 2 : (i < src.height() - 1 ? 1 : 0) };
 
-                    if constexpr (!postactive) sum = activeFunc(sum, n);
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto out = static_cast<float*>(dst.ptr(j, i));
 
-                    if constexpr (sizeof...(ResidualArgs))
-                        for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                            sum = sum * scales[idx] + iptrs[idx][n];
+                int joffsets[5] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0) };
 
-                    if constexpr (postactive) sum = activeFunc(sum, n);
+                Eigen::Vector<float, 25> r;
+                for (int in = 0; in < 5; in++)
+                    for (int jn = 0; jn < 5; jn++)
+                        r[in * 5 + jn] = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[jn], i + ioffsets[in])));
 
-                    out[n] = sum;
+                for (int n = 0; n < cout; n++)
+                {
+                    Eigen::Map<const Eigen::Vector<float, 25>> k{ kernels + n * 25 };
+                    out[n] = activeFunc(r.dot(k) + biases[n], n);
                 }
             }
         });
@@ -180,154 +96,51 @@ namespace ac::core::cpu
         }, src, dst);
     }
 
-    template <typename IN, typename OUT, int cin, int upscale, typename NearestInterpolationArg>
-    inline void conv3x3_identity_pixelshuffle_eigen3(const Image& src, Image& dst, const float* const kernels, const float* const biases, NearestInterpolationArg&& nearestInterpolationArg) noexcept
+    struct ConvImplEigen3
     {
-        static constexpr int cout = upscale * upscale;
+        template <int cin, int cout>
+        static void conv1x1(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        {
+            Eigen::Map<const Eigen::Matrix<float, cin, 1>> r{ rptr[0] };
+            Eigen::Map<const Eigen::Matrix<float, cout, cin, Eigen::RowMajor>> k{ kernels };
+            Eigen::Map<const Eigen::Matrix<float, cout, 1>> b{ biases };
+            Eigen::Map<Eigen::Matrix<float, cout, 1>> s{ out };
 
-        util::parallelFor(0, src.height(), [&](const int i) {
-            auto tp = i > 0 ? 1 : 0;
-            auto bp = i < src.height() - 1 ? 1 : 0;
+            s.noalias() = k * r + b;
+        }
 
-            for (int j = 0; j < src.width(); j++)
-            {
-                auto dstY = i * upscale;
-                auto dstX = j * upscale;
+        template <int cin, int cout>
+        static void conv3x3(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        {
+            Eigen::Matrix<float, cin * 9, 1> r;
+            for (int p = 0; p < 9; p++) r.template segment<cin>(p * cin) = Eigen::Map<const Eigen::Matrix<float, cin, 1>>{ rptr[p] };
 
-                auto r = [&]() -> auto {
-                    auto lp = j > 0 ? 1 : 0;
-                    auto rp = j < src.width() - 1 ? 1 : 0;
+            Eigen::Map<const Eigen::Matrix<float, cout, cin * 9, Eigen::RowMajor>> k{ kernels };
+            Eigen::Map<const Eigen::Matrix<float, cout, 1>> b{ biases };
+            Eigen::Map<Eigen::Matrix<float, cout, 1>> s{ out };
 
-                    Eigen::Array<IN, cin, 9> rin{};
-                    rin <<
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i + bp)) };
-                    if constexpr (std::is_same_v<IN, float>)
-                        return rin;
-                    else if constexpr (std::is_floating_point_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
-                    else if constexpr (std::is_unsigned_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-                }();
-
-                constexpr bool addNearestInterpolation = std::is_same_v<NearestInterpolationArg, ResidualArg>;
-
-                [[maybe_unused]] float nearestInterpolationData{};
-                if constexpr (addNearestInterpolation) nearestInterpolationData = toFloat(*static_cast<const OUT*>(nearestInterpolationArg.image.ptr(j, i)));
-
-                for (int n = 0; n < cout; n++)
-                {
-                    Eigen::Map<const Eigen::Array<float, cin, 9>> k(kernels + n * cin * 9);
-                    float sum = (k * r).sum() + biases[n];
-
-                    if constexpr (addNearestInterpolation) sum = sum * nearestInterpolationArg.scale + nearestInterpolationData;
-
-                    *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum);
-                }
-            }
-        });
-    }
-
-    template <typename IN, int cin, int ctemp, int cout, bool postactive3x3 = false, bool postactive1x1 = false, typename ActiveFunc3x3, typename ResidualArg3x3, typename ActiveFunc1x1, typename ResidualArg1x1>
-    inline void conv3x3_conv1x1_eigen3(
-        const Image& src, Image& dst,
-        const float* const kernels3x3, const float* const biases3x3, ActiveFunc3x3&& activeFunc3x3, ResidualArg3x3&& residualArg3x3,
-        const float* const kernels1x1, const float* const biases1x1, ActiveFunc1x1&& activeFunc1x1, ResidualArg1x1&& residualArg1x1)
-    {
-        util::parallelFor(0, src.height(), [&](const int i) {
-            auto tp = i > 0 ? 1 : 0;
-            auto bp = i < src.height() - 1 ? 1 : 0;
-
-            for (int j = 0; j < src.width(); j++)
-            {
-                auto out = static_cast<float*>(dst.ptr(j, i));
-
-                float buffer[ctemp]{};
-
-                auto r = [&]() -> auto {
-                    auto lp = j > 0 ? 1 : 0;
-                    auto rp = j < src.width() - 1 ? 1 : 0;
-
-                    Eigen::Array<IN, cin, 9> rin{};
-                    rin <<
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i - tp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i     )) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j - lp, i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j     , i + bp)) },
-                        Eigen::Map<const Eigen::Array<IN, cin, 1>>{ static_cast<const IN*>(src.ptr(j + rp, i + bp)) };
-                    if constexpr (std::is_same_v<IN, float>)
-                        return rin;
-                    else if constexpr (std::is_floating_point_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() };
-                    else if constexpr (std::is_unsigned_v<IN>)
-                        return Eigen::Array<float, cin, 9>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-                }();
-
-                for (int n = 0; n < ctemp; n++)
-                {
-                    Eigen::Map<const Eigen::Array<float, cin, 9>> k{ kernels3x3 + n * cin * 9 };
-                    float sum = (k * r).sum() + biases3x3[n];
-
-                    if constexpr (!postactive3x3) sum = activeFunc3x3(sum, n);
-
-                    if constexpr (std::is_same_v<ResidualArg3x3, ResidualArg>)
-                        sum = sum * residualArg3x3.scale + static_cast<const float*>(residualArg3x3.image.ptr(j, i))[n];
-
-                    if constexpr (postactive3x3) sum = activeFunc3x3(sum, n);
-
-                    buffer[n] = sum;
-                }
-
-                Eigen::Map<const Eigen::Array<float, ctemp, 1>> rb{ buffer };
-
-                for (int n = 0; n < cout; n++)
-                {
-                    Eigen::Map<const Eigen::Array<float, ctemp, 1>> k{ kernels1x1 + n * ctemp };
-
-                    float sum = (k * rb).sum() + biases1x1[n];
-
-                    if constexpr (!postactive1x1) sum = activeFunc1x1(sum, n);
-
-                    if constexpr (std::is_same_v<ResidualArg1x1, ResidualArg>)
-                        sum = sum * residualArg1x1.scale + static_cast<const float*>(residualArg1x1.image.ptr(j, i))[n];
-
-                    if constexpr (postactive1x1) sum = activeFunc1x1(sum, n);
-
-                    out[n] = sum;
-                }
-            }
-        });
-    }
+            s.noalias() = k * r + b;
+        }
+    };
 
     void conv3x3_1to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_eigen3<std::uint8_t, 1, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1_eigen3<std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            conv3x3_eigen3<std::uint16_t, 1, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1_eigen3<std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            conv3x3_eigen3<float, 1, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1_eigen3<float, 8>(src, dst, kernels, biases, ReLU{});
             break;
         }
     }
     void conv3x3_8to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_eigen3(const Image& src, Image& dst, const float* kernels)
     {
@@ -350,13 +163,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_eigen3<std::uint8_t, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1_eigen3<std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::UInt16:
-            conv3x3_eigen3<std::uint16_t, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1_eigen3<std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::Float32:
-            conv3x3_eigen3<float, 1, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1_eigen3<float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -366,23 +179,23 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_eigen3<std::uint8_t, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_eigen3<std::uint16_t, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_eigen3<float, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_8to8_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
-        conv3x3_eigen3<float, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
+        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_eigen3(
         const Image& src, Image& dst,
@@ -391,7 +204,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_eigen3<float, 8, 8, 8, false, false>(
+        conv3x3_conv1x1_float<ConvImplEigen3, 8, 8, 8, false, false>(
             src, dst,
             kernels1, biases1, Identity{}, ResidualArg{ id, scale },
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -402,13 +215,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_eigen3<float, float, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         }
     }
@@ -418,36 +231,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_eigen3<std::uint8_t, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_eigen3<std::uint16_t, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_eigen3<float, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_eigen3<float, 16, 16>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_eigen3<float, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_eigen3<float, float, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -457,36 +270,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_eigen3<std::uint8_t, 1, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_eigen3<std::uint16_t, 1, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_eigen3<float, 1, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1_eigen3<float, 32>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_32to32_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_eigen3<float, 32, 32>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<ConvImplEigen3, 32, 32>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_eigen3<float, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<ConvImplEigen3, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_eigen3<float, float, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -496,13 +309,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_eigen3<std::uint8_t, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_eigen3<std::uint16_t, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_eigen3<float, 1, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -512,7 +325,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_eigen3<float, 8, 8, 8, false, true>(
+        conv3x3_conv1x1_float<ConvImplEigen3, 8, 8, 8, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -523,13 +336,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_eigen3<float, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_eigen3<float, float, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -539,19 +352,19 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_eigen3<std::uint8_t, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_eigen3<std::uint16_t, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_eigen3<float, 1, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1_eigen3<float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_eigen3<float, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_eigen3(
         const Image& src, Image& dst,
@@ -559,7 +372,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_eigen3<float, 16, 16, 16, false, true>(
+        conv3x3_conv1x1_float<ConvImplEigen3, 16, 16, 16, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }

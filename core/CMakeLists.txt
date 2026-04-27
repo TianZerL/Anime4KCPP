@@ -100,6 +100,8 @@ target_include_directories(ac PUBLIC
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+target_include_directories(ac PRIVATE $<BUILD_INTERFACE:${CORE_SOURCE_DIR}/internal>)
+
 # cuda 12.9 and newer with VisualStudio need this.
 if (AC_CORE_WITH_CUDA AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER 12.8)
     set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cuda/Kernel.cu PROPERTIES COMPILE_OPTIONS "-Xcompiler=/Zc:preprocessor")
