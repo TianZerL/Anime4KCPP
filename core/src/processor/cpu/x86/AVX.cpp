@@ -22,7 +22,7 @@ namespace ac::core::cpu
 
     public:
         template <int vsize>
-        static float dot(const float* v1, const float* v2) noexcept
+        static float dot(const float* const v1, const float* const v2) noexcept
         {
             constexpr int vstep = 8;
             constexpr int count = vsize / vstep;
@@ -53,7 +53,7 @@ namespace ac::core::cpu
         }
 
         template <int cout, int cpos>
-        static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int vstep = 8;
             constexpr int count = cpos / vstep;
@@ -86,7 +86,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int vstep = 8;
             constexpr int count = cin / vstep;

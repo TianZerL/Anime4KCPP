@@ -8,7 +8,7 @@ namespace ac::core::cpu
     struct OpImplGeneric
     {
         template <int vsize>
-        static float dot(const float* v1, const float* v2) noexcept
+        static float dot(const float* const v1, const float* const v2) noexcept
         {
             float sum = 0.0f;
 
@@ -18,7 +18,7 @@ namespace ac::core::cpu
         }
 
         template <int cout, int cpos>
-        static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             for (int n = 0; n < cout; n++)
             {
@@ -29,7 +29,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             std::memcpy(out, biases, sizeof(float) * cout);
 
