@@ -1,5 +1,3 @@
-#include <array>
-
 #include <arm_neon.h>
 
 #include "AC/Core/Image.hpp"

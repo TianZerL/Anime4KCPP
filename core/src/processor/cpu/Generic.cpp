@@ -1,6 +1,3 @@
-#include <array>
-#include <type_traits>
-
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 

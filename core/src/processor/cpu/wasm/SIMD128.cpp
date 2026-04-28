@@ -1,9 +1,9 @@
-#include <array>
-
 #include <wasm_simd128.h>
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
+
+#include "AC/Core/Internal/Processor/CPU/Common.hpp"
 
 namespace ac::core::cpu
 {

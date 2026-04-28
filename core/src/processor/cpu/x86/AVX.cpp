@@ -1,6 +1,3 @@
-#include <array>
-#include <type_traits>
-
 #include <immintrin.h>
 
 #include "AC/Core/SIMD.hpp"

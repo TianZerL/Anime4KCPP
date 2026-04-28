@@ -1,6 +1,3 @@
-#include <array>
-#include <type_traits>
-
 #include <xmmintrin.h>
 
 #include "AC/Core/Image.hpp"
