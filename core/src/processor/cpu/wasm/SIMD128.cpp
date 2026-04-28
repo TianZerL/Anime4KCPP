@@ -14,123 +14,6 @@ namespace ac::core::cpu
         return wasm_f32x4_extract_lane(v32, 0);
     }
 
-    template <typename IN, int cout, typename ActiveFunc>
-    inline void conv3x3_cin1_wasm_simd128(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
-    {
-        util::parallelFor(0, src.height(), [&](const int i) {
-            auto tp = i > 0 ? 1 : 0;
-            auto bp = i < src.height() - 1 ? 1 : 0;
-
-            for (int j = 0; j < src.width(); j++)
-            {
-                auto out = static_cast<float*>(dst.ptr(j, i));
-
-                auto lp = j > 0 ? 1 : 0;
-                auto rp = j < src.width() - 1 ? 1 : 0;
-
-                v128_t r0 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i - tp))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j     , i - tp))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i - tp))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i     )))
-                );
-                v128_t r4 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j     , i     ))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + rp, i     ))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j - lp, i + bp))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j     , i + bp)))
-                );
-                auto r8 = toFloat(*static_cast<const IN*>(src.ptr(j + rp, i + bp)));
-
-                for (int n = 0; n < cout; n++)
-                {
-                    v128_t k0 = wasm_v128_load(kernels + n * 9 + 0);
-                    v128_t k4 = wasm_v128_load(kernels + n * 9 + 4);
-                    auto sum = wasm_simd128_f32x4_hsum(wasm_f32x4_add(wasm_f32x4_mul(r0, k0), wasm_f32x4_mul(r4, k4)));
-                    auto k8 = *(kernels + n * 9 + 8);
-                    out[n] = activeFunc(sum + r8 * k8 + biases[n], n);
-                }
-            }
-        });
-    }
-    template <typename IN, int cout, typename ActiveFunc>
-    inline void conv5x5_cin1_wasm_simd128(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
-    {
-        util::parallelFor(0, src.height(), [&](const int i) {
-            int ioffsets[5] = { i > 1 ? -2 : (i > 0 ? -1 : 0) , i > 0 ? -1 : 0 , 0, i < src.height() - 1 ? 1 : 0, i < src.height() - 2 ? 2 : (i < src.height() - 1 ? 1 : 0)};
-
-            for (int j = 0; j < src.width(); j++)
-            {
-                auto out = static_cast<float*>(dst.ptr(j, i));
-
-                int joffsets[5] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0)};
-
-                v128_t r0 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[0])))
-                );
-                v128_t r4 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[0]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[1])))
-                );
-                v128_t r8 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[1]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[2])))
-                );
-                v128_t r12 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[2]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[3])))
-                );
-                v128_t r16 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[3]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[3])))
-                );
-                v128_t r20 = wasm_f32x4_make(
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[0], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[1], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[2], i + ioffsets[4]))),
-                    toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[3], i + ioffsets[4])))
-                );
-                auto r24 = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[4], i + ioffsets[4])));
-
-                for (int n = 0; n < cout; n++)
-                {
-                    v128_t k0 = wasm_v128_load(kernels + n * 25 + 0);
-                    v128_t k4 = wasm_v128_load(kernels + n * 25 + 4);
-                    v128_t k8 = wasm_v128_load(kernels + n * 25 + 8);
-                    v128_t k12 = wasm_v128_load(kernels + n * 25 + 12);
-                    v128_t k16 = wasm_v128_load(kernels + n * 25 + 16);
-                    v128_t k20 = wasm_v128_load(kernels + n * 25 + 20);
-
-                    v128_t s0 = wasm_f32x4_splat(0.0f);
-                    v128_t s1 = wasm_f32x4_splat(0.0f);
-                    v128_t s2 = wasm_f32x4_splat(0.0f);
-
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r0, k0), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r4, k4), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r8, k8), s2);
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r12, k12), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r16, k16), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r20, k20), s2);
-
-                    auto sum = wasm_simd128_f32x4_hsum(wasm_f32x4_add(s0, wasm_f32x4_add(s1, s2)));
-
-                    auto k24 = *(kernels + n * 25 + 24);
-                    out[n] = activeFunc(sum + r24 * k24 + biases[n], n);
-                }
-            }
-        });
-    }
     template <typename OUT, int cin, int cout>
     inline void deconv2x2_wasm_simd128_float(const Image& src, Image& dst, const float* const kernels)
     {
@@ -170,45 +53,35 @@ namespace ac::core::cpu
 
     struct ConvImplWASM
     {
-        template <int cin, int cout>
-        static void conv1x1(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        template <int cout, int cpos>
+        static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
+            constexpr int count = cpos / vstep;
+            constexpr int remain = cpos % vstep;
 
-            std::memcpy(out, biases, sizeof(float) * cout);
+            v128_t r[count];
+            for (int idx = 0; idx < count; idx++) r[idx] = wasm_v128_load(rptr + idx * vstep);
 
-            for (int idx = 0; idx < count; idx++)
+            for (int n = 0; n < cout; n++)
             {
-                v128_t r = wasm_v128_load(rptr[0] + idx * vstep);
-
-                for (int n = 0; n < cout; n++)
+                v128_t s = wasm_f32x4_splat(0.0f);
+                auto kptr = kernels + n * cpos;
+                for (int idx = 0; idx < count; idx++)
                 {
-                    auto kptr = kernels + n * cin;
-
                     v128_t k = wasm_v128_load(kptr + idx * vstep);
-
-                    out[n] += wasm_simd128_f32x4_hsum(wasm_f32x4_mul(r, k));
+                    s = wasm_f32x4_add(wasm_f32x4_mul(r[idx], k), s);
                 }
-            }
-            if constexpr (remain)
-            {
-                v128_t r = wasm_f32x4_make((rptr[0] + count * vstep)[0], remain > 1 ? (rptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[0] + count * vstep)[2] : 0.0f, 0.0f);
+                auto sum = wasm_simd128_f32x4_hsum(s);
 
-                for (int n = 0; n < cout; n++)
-                {
-                    auto kptr = kernels + n * cin;
+                for (int i = 0; i < remain; i++) sum += rptr[count * vstep + i] * kptr[count * vstep + i];
 
-                    v128_t k = wasm_f32x4_make((kptr + count * vstep)[0], remain > 1 ? (kptr + count * vstep)[1] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, 0.0f);
-
-                    out[n] += wasm_simd128_f32x4_hsum(wasm_f32x4_mul(r, k));
-                }
+                out[n] = sum + biases[n];
             }
         }
 
-        template <int cin, int cout>
-        static void conv3x3(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
+        template <int cin, int cout, int cpos>
+        static void conv(const float* rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
@@ -216,113 +89,25 @@ namespace ac::core::cpu
 
             std::memcpy(out, biases, sizeof(float) * cout);
 
-            for (int idx = 0; idx < count; idx++)
+            v128_t s[cout];
+            for (int n = 0; n < cout; n++) s[n] = wasm_f32x4_splat(0.0f);
+            for (int p = 0; p < cpos; p++)
             {
-                v128_t r0 = wasm_v128_load(rptr[0] + idx * vstep);
-                v128_t r1 = wasm_v128_load(rptr[1] + idx * vstep);
-                v128_t r2 = wasm_v128_load(rptr[2] + idx * vstep);
-                v128_t r3 = wasm_v128_load(rptr[3] + idx * vstep);
-                v128_t r4 = wasm_v128_load(rptr[4] + idx * vstep);
-                v128_t r5 = wasm_v128_load(rptr[5] + idx * vstep);
-                v128_t r6 = wasm_v128_load(rptr[6] + idx * vstep);
-                v128_t r7 = wasm_v128_load(rptr[7] + idx * vstep);
-                v128_t r8 = wasm_v128_load(rptr[8] + idx * vstep);
-
-                for (int n = 0; n < cout; n++)
+                for (int idx = 0; idx < count; idx++)
                 {
-                    const float* kptr[] = {
-                        kernels + n * cin * 9 + cin * 0,
-                        kernels + n * cin * 9 + cin * 1,
-                        kernels + n * cin * 9 + cin * 2,
-                        kernels + n * cin * 9 + cin * 3,
-                        kernels + n * cin * 9 + cin * 4,
-                        kernels + n * cin * 9 + cin * 5,
-                        kernels + n * cin * 9 + cin * 6,
-                        kernels + n * cin * 9 + cin * 7,
-                        kernels + n * cin * 9 + cin * 8
-                    };
-
-                    v128_t s0 = wasm_f32x4_splat(0.0f);
-                    v128_t s1 = wasm_f32x4_splat(0.0f);
-                    v128_t s2 = wasm_f32x4_splat(0.0f);
-
-                    v128_t k0 = wasm_v128_load(kptr[0] + idx * vstep);
-                    v128_t k1 = wasm_v128_load(kptr[1] + idx * vstep);
-                    v128_t k2 = wasm_v128_load(kptr[2] + idx * vstep);
-                    v128_t k3 = wasm_v128_load(kptr[3] + idx * vstep);
-                    v128_t k4 = wasm_v128_load(kptr[4] + idx * vstep);
-                    v128_t k5 = wasm_v128_load(kptr[5] + idx * vstep);
-                    v128_t k6 = wasm_v128_load(kptr[6] + idx * vstep);
-                    v128_t k7 = wasm_v128_load(kptr[7] + idx * vstep);
-                    v128_t k8 = wasm_v128_load(kptr[8] + idx * vstep);
-
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r0, k0), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r1, k1), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r2, k2), s2);
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r3, k3), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r4, k4), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r5, k5), s2);
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r6, k6), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r7, k7), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r8, k8), s2);
-
-                    out[n] += wasm_simd128_f32x4_hsum(wasm_f32x4_add(s0, wasm_f32x4_add(s1, s2)));
+                    v128_t r = wasm_v128_load(rptr[p] + idx * vstep);
+                    for (int n = 0; n < cout; n++)
+                    {
+                        v128_t k = wasm_v128_load(kernels + n * cin * cpos + cin * p + idx * vstep);
+                        s[n] = wasm_f32x4_add(wasm_f32x4_mul(r, k), s[n]);
+                    }
                 }
+                if constexpr (remain)
+                    for (int c = count * vstep; c < cin; c++)
+                        for (int n = 0; n < cout; n++) out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
             }
-            if constexpr (remain)
-            {
-                v128_t r0 = wasm_f32x4_make((rptr[0] + count * vstep)[0], remain > 1 ? (rptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[0] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r1 = wasm_f32x4_make((rptr[1] + count * vstep)[0], remain > 1 ? (rptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[1] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r2 = wasm_f32x4_make((rptr[2] + count * vstep)[0], remain > 1 ? (rptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[2] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r3 = wasm_f32x4_make((rptr[3] + count * vstep)[0], remain > 1 ? (rptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[3] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r4 = wasm_f32x4_make((rptr[4] + count * vstep)[0], remain > 1 ? (rptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[4] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r5 = wasm_f32x4_make((rptr[5] + count * vstep)[0], remain > 1 ? (rptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[5] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r6 = wasm_f32x4_make((rptr[6] + count * vstep)[0], remain > 1 ? (rptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[6] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r7 = wasm_f32x4_make((rptr[7] + count * vstep)[0], remain > 1 ? (rptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[7] + count * vstep)[2] : 0.0f, 0.0f);
-                v128_t r8 = wasm_f32x4_make((rptr[8] + count * vstep)[0], remain > 1 ? (rptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (rptr[8] + count * vstep)[2] : 0.0f, 0.0f);
-
-                for (int n = 0; n < cout; n++)
-                {
-                    const float* kptr[] = {
-                        kernels + n * cin * 9 + cin * 0,
-                        kernels + n * cin * 9 + cin * 1,
-                        kernels + n * cin * 9 + cin * 2,
-                        kernels + n * cin * 9 + cin * 3,
-                        kernels + n * cin * 9 + cin * 4,
-                        kernels + n * cin * 9 + cin * 5,
-                        kernels + n * cin * 9 + cin * 6,
-                        kernels + n * cin * 9 + cin * 7,
-                        kernels + n * cin * 9 + cin * 8
-                    };
-
-                    v128_t s0 = wasm_f32x4_splat(0.0f);
-                    v128_t s1 = wasm_f32x4_splat(0.0f);
-                    v128_t s2 = wasm_f32x4_splat(0.0f);
-
-                    v128_t k0 = wasm_f32x4_make((kptr[0] + count * vstep)[0], remain > 1 ? (kptr[0] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[0] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k1 = wasm_f32x4_make((kptr[1] + count * vstep)[0], remain > 1 ? (kptr[1] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[1] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k2 = wasm_f32x4_make((kptr[2] + count * vstep)[0], remain > 1 ? (kptr[2] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[2] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k3 = wasm_f32x4_make((kptr[3] + count * vstep)[0], remain > 1 ? (kptr[3] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[3] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k4 = wasm_f32x4_make((kptr[4] + count * vstep)[0], remain > 1 ? (kptr[4] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[4] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k5 = wasm_f32x4_make((kptr[5] + count * vstep)[0], remain > 1 ? (kptr[5] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[5] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k6 = wasm_f32x4_make((kptr[6] + count * vstep)[0], remain > 1 ? (kptr[6] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[6] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k7 = wasm_f32x4_make((kptr[7] + count * vstep)[0], remain > 1 ? (kptr[7] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[7] + count * vstep)[2] : 0.0f, 0.0f);
-                    v128_t k8 = wasm_f32x4_make((kptr[8] + count * vstep)[0], remain > 1 ? (kptr[8] + count * vstep)[1] : 0.0f, remain > 2 ? (kptr[8] + count * vstep)[2] : 0.0f, 0.0f);
-
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r0, k0), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r1, k1), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r2, k2), s2);
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r3, k3), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r4, k4), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r5, k5), s2);
-                    s0 = wasm_f32x4_add(wasm_f32x4_mul(r6, k6), s0);
-                    s1 = wasm_f32x4_add(wasm_f32x4_mul(r7, k7), s1);
-                    s2 = wasm_f32x4_add(wasm_f32x4_mul(r8, k8), s2);
-
-                    out[n] += wasm_simd128_f32x4_hsum(wasm_f32x4_add(s0, wasm_f32x4_add(s1, s2)));
-                }
-            }
-        }
+            for (int n = 0; n < cout; n++) out[n] += wasm_simd128_f32x4_hsum(s[n]);
+        }   
     };
 
     void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
