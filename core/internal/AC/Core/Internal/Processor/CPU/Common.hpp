@@ -11,16 +11,21 @@
 namespace ac::core::cpu
 {
     template <typename OpImpl, typename OUT, int cin, int cout>
-    inline void deconv2x2(const Image& src, Image& dst, const float* const kernels)
+    inline void deconv2x2(const Image& src, Image& dst, const float* const kernels) noexcept
     {
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const float*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        constexpr int upscale = 2;
+        for (int i = 0; i < dst.height(); i++)
+        {
+            for (int j = 0; j < dst.width(); j++)
+            {
+                auto in = static_cast<const float*>(src.ptr(j / upscale, i / upscale));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            auto index = ((i & 1) << 1) + (j & 1);
+                auto index = (i % upscale) * upscale + (j % upscale);
 
-            for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index));
-        }, src, dst);
+                for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index));
+            }
+        }
     }
 
     template <typename OUT, int cin, int upscale>
