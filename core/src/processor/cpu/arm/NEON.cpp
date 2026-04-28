@@ -7,60 +7,45 @@
 
 namespace ac::core::cpu
 {
-    static inline float neon_hsum_f32(const float32x4_t& v) noexcept
+    struct OpImplNEON
     {
-    #if defined(__aarch64__) || defined(_M_ARM64)
-        return vaddvq_f32(v);
-    #else
-        float32x2_t x64 = vadd_f32(vget_low_f32(v), vget_high_f32(v));
-        return vget_lane_f32(vpadd_f32(x64, x64), 0);
-    #endif
-    }
+    private:
+        static inline float hsum(const float32x4_t& v) noexcept
+        {
+        #if defined(__aarch64__) || defined(_M_ARM64)
+            return vaddvq_f32(v);
+        #else
+            float32x2_t x64 = vadd_f32(vget_low_f32(v), vget_high_f32(v));
+            return vget_lane_f32(vpadd_f32(x64, x64), 0);
+        #endif
+        }
 
-    template <typename OUT, int cin, int cout>
-    inline void deconv2x2_neon_float(const Image& src, Image& dst, const float* const kernels)
-    {
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const float*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            auto index = ((i & 1) << 1) + (j & 1);
-
+    public:
+        template <int vsize>
+        static float dot(const float* v1, const float* v2) noexcept
+        {
             constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
+            constexpr int count = vsize / vstep;
+            constexpr int remain = vsize % vstep;
 
-            float32x4_t  r[count + (remain ? 1 : 0)]{};
-            for (int idx = 0; idx < count; idx++) r[idx] = vld1q_f32(in + idx * vstep);
+            float sum = 0.0f;
+
+            float32x4_t s = vdupq_n_f32(0.0f);
+            for (int idx = 0; idx < count; idx++)
+            {
+                float32x4_t r1 = vld1q_f32(v1 + idx * vstep);
+                float32x4_t r2 = vld1q_f32(v2 + idx * vstep);
+                s = vmlaq_f32(s, r1, r2);
+            }
+            sum += hsum(s);
+
             if constexpr (remain)
-            {
-                const float d[vstep] = {(in + count * vstep)[0], remain > 1 ? (in + count * vstep)[1] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, 0.0f};
-                r[count] = vld1q_f32(d);
-            }
+                for (int i = count * vstep; i < vsize; i++)
+                    sum += v1[i] * v2[i];
 
-            for (int n = 0; n < cout; n++)
-            {
-                auto kptr = kernels + n * cin * 4 + cin * index;
-                float sum = 0.0f;
-                float32x4_t k[count + (remain ? 1 : 0)]{};
-                for (int idx = 0; idx < count; idx++)
-                {
-                    k[idx] = vld1q_f32(kptr + idx * vstep);
-                    sum += neon_hsum_f32(vmulq_f32(r[idx], k[idx]));
-                }
-                if constexpr (remain)
-                {
-                    const float d[vstep] = {(kptr + count * vstep)[0], remain > 1 ? (kptr + count * vstep)[1] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, 0.0f};
-                    k[count] = vld1q_f32(d);
-                    sum += neon_hsum_f32(vmulq_f32(r[count], k[count]));
-                }
-                out[n] = fromFloat<OUT>(sum);
-            }
-        }, src, dst);
-    }
+            return sum;
+        }
 
-    struct ConvImplNEON
-    {
         template <int cout, int cpos>
         static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
         {
@@ -80,7 +65,7 @@ namespace ac::core::cpu
                     float32x4_t k = vld1q_f32(kptr + idx * vstep);
                     s = vmlaq_f32(s, r[idx], k);
                 }
-                auto sum = neon_hsum_f32(s);
+                auto sum = hsum(s);
 
                 for (int i = 0; i < remain; i++) sum += rptr[count * vstep + i] * kptr[count * vstep + i];
 
@@ -114,7 +99,7 @@ namespace ac::core::cpu
                     for (int c = count * vstep; c < cin; c++)
                         for (int n = 0; n < cout; n++) out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
             }
-            for (int n = 0; n < cout; n++) out[n] += neon_hsum_f32(s[n]);
+            for (int n = 0; n < cout; n++) out[n] += hsum(s[n]);
         }
     };
 
@@ -123,32 +108,32 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplNEON, float, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplNEON, float, 8>(src, dst, kernels, biases, ReLU{});
             break;
         }
     }
     void conv3x3_8to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplNEON, 8, 8>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplNEON, 8, 8>(src, dst, kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            deconv2x2_neon_float<std::uint8_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplNEON, std::uint8_t, 8, 1>(src, dst, kernels);
             break;
         case Image::UInt16:
-            deconv2x2_neon_float<std::uint16_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplNEON, std::uint16_t, 8, 1>(src, dst, kernels);
             break;
         case Image::Float32:
-            deconv2x2_neon_float<float, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplNEON, float, 8, 1>(src, dst, kernels);
             break;
         }
     }
@@ -158,13 +143,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplNEON, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplNEON, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -174,23 +159,23 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplNEON, float, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_8to8_prelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_float<ConvImplNEON, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<OpImplNEON, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
-        conv3x3_float<ConvImplNEON, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
+        conv3x3_float<OpImplNEON, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_neon(
         const Image& src, Image& dst,
@@ -199,7 +184,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplNEON, 8, 8, 8, false, false>(
+        conv3x3_conv1x1_float<OpImplNEON, 8, 8, 8, false, false>(
             src, dst,
             kernels1, biases1, Identity{}, ResidualArg{ id, scale },
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -210,13 +195,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, float, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, float, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
             break;
         }
     }
@@ -226,36 +211,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplNEON, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplNEON, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplNEON, float, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplNEON, 16, 16>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplNEON, 16, 16>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_float<ConvImplNEON, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<OpImplNEON, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, float, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, float, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -265,36 +250,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplNEON, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplNEON, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplNEON, float, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplNEON, float, 32>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_32to32_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplNEON, 32, 32>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplNEON, 32, 32>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_float<ConvImplNEON, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<OpImplNEON, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_neon(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, float, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, float, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -304,13 +289,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1<ConvImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1<ConvImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1<ConvImplNEON, float, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -320,7 +305,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplNEON, 8, 8, 8, false, true>(
+        conv3x3_conv1x1_float<OpImplNEON, 8, 8, 8, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -331,13 +316,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplNEON, float, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplNEON, float, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -347,19 +332,19 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1<ConvImplNEON, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1<ConvImplNEON, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1<ConvImplNEON, float, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplNEON, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_prelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_float<ConvImplNEON, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<OpImplNEON, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_neon(
         const Image& src, Image& dst,
@@ -367,7 +352,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplNEON, 16, 16, 16, false, true>(
+        conv3x3_conv1x1_float<OpImplNEON, 16, 16, 16, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }

@@ -8,54 +8,50 @@
 
 namespace ac::core::cpu
 {
-    static inline float avx_hsum_ps(const __m256& v) noexcept
-    {
-        __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
-        __m128 v64 = _mm_add_ps(v128, _mm_movehl_ps(v128, v128));
-        __m128 v32 = _mm_add_ss(v64, _mm_movehdup_ps(v64));
-        return _mm_cvtss_f32(v32);
-    }
-
-    template <typename OUT, int cin, int cout>
-    inline void deconv2x2_float_avx(const Image& src, Image& dst, const float* const kernels)
-    {
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const float*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            auto index = ((i & 1) << 1) + (j & 1);
-
-            constexpr int vstep = 8;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
-
-            __m256 r[count + (remain ? 1 : 0)]{};
-            for (int idx = 0; idx < count; idx++)  r[idx] = _mm256_loadu_ps(in + idx * vstep);
-            if constexpr (remain) r[count] = _mm256_set_ps(0.0f, remain > 6 ? (in + count * vstep)[6] : 0.0f, remain > 5 ? (in + count * vstep)[5] : 0.0f, remain > 4 ? (in + count * vstep)[4] : 0.0f, remain > 3 ? (in + count * vstep)[3] : 0.0f, remain > 2 ? (in + count * vstep)[2] : 0.0f, remain > 1 ? (in + count * vstep)[1] : 0.0f, (in + count * vstep)[0]);
-
-            for (int n = 0; n < cout; n++)
-            {
-                auto kptr = kernels + n * cin * 4 + cin * index;
-                float sum = 0.0f;
-                __m256 k[count + (remain ? 1 : 0)]{};
-                for (int idx = 0; idx < count; idx++)
-                {
-                    k[idx] = _mm256_loadu_ps(kptr + idx * vstep);
-                    sum += avx_hsum_ps(_mm256_mul_ps(r[idx], k[idx]));
-                }
-                if constexpr (remain)
-                {
-                    k[count] = _mm256_set_ps(0.0f, remain > 6 ? (kptr + count * vstep)[6] : 0.0f, remain > 5 ? (kptr + count * vstep)[5] : 0.0f, remain > 4 ? (kptr + count * vstep)[4] : 0.0f, remain > 3 ? (kptr + count * vstep)[3] : 0.0f, remain > 2 ? (kptr + count * vstep)[2] : 0.0f, remain > 1 ? (kptr + count * vstep)[1] : 0.0f, (kptr + count * vstep)[0]);
-                    sum += avx_hsum_ps(_mm256_mul_ps(r[count], k[count]));
-                }
-                out[n] = fromFloat<OUT>(sum);
-            }
-        }, src, dst);
-    }
-
     template <bool fma>
-    struct ConvImplAVX
+    struct OpImplAVX
     {
+    private:
+        static inline float hsum(const __m256& v) noexcept
+        {
+            __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
+            __m128 v64 = _mm_add_ps(v128, _mm_movehl_ps(v128, v128));
+            __m128 v32 = _mm_add_ss(v64, _mm_movehdup_ps(v64));
+            return _mm_cvtss_f32(v32);
+        }
+
+    public:
+        template <int vsize>
+        static float dot(const float* v1, const float* v2) noexcept
+        {
+            constexpr int vstep = 8;
+            constexpr int count = vsize / vstep;
+            constexpr int remain = vsize % vstep;
+
+            float sum = 0.0f;
+
+            __m256 s = _mm256_setzero_ps();
+            for (int idx = 0; idx < count; idx++)
+            {
+                __m256 r1 = _mm256_loadu_ps(v1 + idx * vstep);
+                __m256 r2 = _mm256_loadu_ps(v2 + idx * vstep);
+
+#               ifdef AC_CORE_WITH_FMA
+                if constexpr (fma)
+                    s = _mm256_fmadd_ps(r1, r2, s);
+                else
+#               endif
+                    s = _mm256_add_ps(_mm256_mul_ps(r1, r2), s);
+            }
+            sum += hsum(s);
+
+            if constexpr (remain)
+                for (int i = count * vstep; i < vsize; i++)
+                    sum += v1[i] * v2[i];
+
+            return sum;
+        }
+
         template <int cout, int cpos>
         static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
         {
@@ -81,7 +77,7 @@ namespace ac::core::cpu
 #               endif
                         s = _mm256_add_ps(_mm256_mul_ps(r[idx], k), s);
                 }
-                auto sum = avx_hsum_ps(s);
+                auto sum = hsum(s);
 
                 for (int i = 0; i < remain; i++) sum += rptr[count * vstep + i] * kptr[count * vstep + i];
 
@@ -120,7 +116,7 @@ namespace ac::core::cpu
                     for (int c = count * vstep; c < cin; c++)
                         for (int n = 0; n < cout; n++) out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
             }
-            for (int n = 0; n < cout; n++) out[n] += avx_hsum_ps(s[n]);
+            for (int n = 0; n < cout; n++) out[n] += hsum(s[n]);
         }
     };
 
@@ -129,13 +125,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplAVX<false>, float, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplAVX<false>, float, 8>(src, dst, kernels, biases, ReLU{});
             break;
         }
     }
@@ -143,23 +139,23 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 8, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<true>, 8, 8>(src, dst, kernels, biases, ReLU{});
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 8, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<false>, 8, 8>(src, dst, kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_avx(const Image& src, Image& dst, const float* kernels)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            deconv2x2_float_avx<std::uint8_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplAVX<false>, std::uint8_t, 8, 1>(src, dst, kernels);
             break;
         case Image::UInt16:
-            deconv2x2_float_avx<std::uint16_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplAVX<false>, std::uint16_t, 8, 1>(src, dst, kernels);
             break;
         case Image::Float32:
-            deconv2x2_float_avx<float, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplAVX<false>, float, 8, 1>(src, dst, kernels);
             break;
         }
     }
@@ -169,13 +165,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplAVX<false>, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplAVX<false>, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -185,13 +181,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplAVX<false>, float, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -199,19 +195,19 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_float<OpImplAVX<true>, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_float<OpImplAVX<false>, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
+            conv3x3_float<OpImplAVX<true>, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
+            conv3x3_float<OpImplAVX<false>, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_avx(
         const Image& src, Image& dst,
@@ -222,14 +218,14 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_conv1x1_float<ConvImplAVX<true>, 8, 8, 8, false, false>(
+            conv3x3_conv1x1_float<OpImplAVX<true>, 8, 8, 8, false, false>(
                 src, dst,
                 kernels1, biases1, Identity{}, ResidualArg{ id, scale },
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
             );
         else
 #   endif
-            conv3x3_conv1x1_float<ConvImplAVX<false>, 8, 8, 8, false, false>(
+            conv3x3_conv1x1_float<OpImplAVX<false>, 8, 8, 8, false, false>(
                 src, dst,
                 kernels1, biases1, Identity{}, ResidualArg{ id, scale },
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -243,13 +239,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, float, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, float, 8, 2>(src, dst, kernels, biases, ResidualArg{ id, 1.0f });
                 break;
             }
         }
@@ -259,13 +255,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, float, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, float, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -276,13 +272,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplAVX<false>, float, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -290,19 +286,19 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 16, 16>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<true>, 16, 16>(src, dst, kernels, biases, ReLU{});
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 16, 16>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<false>, 16, 16>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+            conv3x3_float<OpImplAVX<true>, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+            conv3x3_float<OpImplAVX<false>, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
@@ -312,13 +308,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, float, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, float, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -328,13 +324,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, float, 16, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, float, 16, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -345,13 +341,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplAVX<false>, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplAVX<false>, float, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplAVX<false>, float, 32>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -359,19 +355,19 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 32, 32>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<true>, 32, 32>(src, dst, kernels, biases, ReLU{});
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 32, 32>(src, dst, kernels, biases, ReLU{});
+            conv3x3_float<OpImplAVX<false>, 32, 32>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+            conv3x3_float<OpImplAVX<true>, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+            conv3x3_float<OpImplAVX<false>, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_avx(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
@@ -381,13 +377,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, float, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, float, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -397,13 +393,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, float, 32, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, float, 32, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -417,13 +413,13 @@ namespace ac::core::cpu
             switch (src.type())
             {
             case Image::UInt8:
-                conv5x5_cin1<ConvImplAVX<true>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::UInt16:
-                conv5x5_cin1<ConvImplAVX<true>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::Float32:
-                conv5x5_cin1<ConvImplAVX<true>, float, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, float, 8>(src, dst, kernels, biases, Identity{});
                 break;
             }
         }
@@ -433,13 +429,13 @@ namespace ac::core::cpu
             switch (src.type())
             {
             case Image::UInt8:
-                conv5x5_cin1<ConvImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::UInt16:
-                conv5x5_cin1<ConvImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::Float32:
-                conv5x5_cin1<ConvImplAVX<false>, float, 8>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, float, 8>(src, dst, kernels, biases, Identity{});
                 break;
             }
         }
@@ -452,14 +448,14 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_conv1x1_float<ConvImplAVX<true>, 8, 8, 8, false, true>(
+            conv3x3_conv1x1_float<OpImplAVX<true>, 8, 8, 8, false, true>(
                 src, dst,
                 kernels1, biases1, PReLU{ alphas1 }, nullptr,
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
             );
         else
 #   endif
-            conv3x3_conv1x1_float<ConvImplAVX<false>, 8, 8, 8, false, true>(
+            conv3x3_conv1x1_float<OpImplAVX<false>, 8, 8, 8, false, true>(
                 src, dst,
                 kernels1, biases1, PReLU{ alphas1 }, nullptr,
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -473,13 +469,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<true>, float, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<true>, float, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -489,13 +485,13 @@ namespace ac::core::cpu
             switch (dst.type())
             {
             case Image::UInt8:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::UInt16:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             case Image::Float32:
-                conv3x3_identity_pixelshuffle_float<ConvImplAVX<false>, float, 8, 2>(src, dst, kernels, biases, nullptr);
+                conv3x3_identity_pixelshuffle_float<OpImplAVX<false>, float, 8, 2>(src, dst, kernels, biases, nullptr);
                 break;
             }
         }
@@ -509,13 +505,13 @@ namespace ac::core::cpu
             switch (src.type())
             {
             case Image::UInt8:
-                conv5x5_cin1<ConvImplAVX<true>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::UInt16:
-                conv5x5_cin1<ConvImplAVX<true>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::Float32:
-                conv5x5_cin1<ConvImplAVX<true>, float, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<true>, float, 16>(src, dst, kernels, biases, Identity{});
                 break;
             }
         }
@@ -525,13 +521,13 @@ namespace ac::core::cpu
             switch (src.type())
             {
             case Image::UInt8:
-                conv5x5_cin1<ConvImplAVX<false>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::UInt16:
-                conv5x5_cin1<ConvImplAVX<false>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
                 break;
             case Image::Float32:
-                conv5x5_cin1<ConvImplAVX<false>, float, 16>(src, dst, kernels, biases, Identity{});
+                conv5x5_cin1<OpImplAVX<false>, float, 16>(src, dst, kernels, biases, Identity{});
                 break;
             }
         }
@@ -540,10 +536,10 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_float<ConvImplAVX<true>, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_float<OpImplAVX<true>, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
         else
 #   endif
-            conv3x3_float<ConvImplAVX<false>, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_float<OpImplAVX<false>, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx(
         const Image& src, Image& dst,
@@ -553,14 +549,14 @@ namespace ac::core::cpu
     {
 #   ifdef AC_CORE_WITH_FMA
         if (simd::supportFMA())
-            conv3x3_conv1x1_float<ConvImplAVX<true>, 16, 16, 16, false, true>(
+            conv3x3_conv1x1_float<OpImplAVX<true>, 16, 16, 16, false, true>(
                 src, dst,
                 kernels1, biases1, PReLU{ alphas1 }, nullptr,
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
             );
         else
 #   endif
-            conv3x3_conv1x1_float<ConvImplAVX<false>, 16, 16, 16, false, true>(
+            conv3x3_conv1x1_float<OpImplAVX<false>, 16, 16, 16, false, true>(
                 src, dst,
                 kernels1, biases1, PReLU{ alphas1 }, nullptr,
                 kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }

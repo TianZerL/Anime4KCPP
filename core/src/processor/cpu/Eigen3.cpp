@@ -7,35 +7,17 @@
 
 namespace ac::core::cpu
 {
-    template <typename IN, typename OUT, int cin, int cout>
-    inline void deconv2x2_eigen3(const Image& src, Image& dst, const float* const kernels)
+    struct OpImplEigen3
     {
-        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        template <int vsize>
+        static float dot(const float* v1, const float* v2) noexcept
+        {
+            Eigen::Map<const Eigen::Vector<float, vsize>> r1{ v1 };
+            Eigen::Map<const Eigen::Vector<float, vsize>> r2{ v2 };
 
-            auto index = ((i & 1) << 1) + (j & 1);
+            return r1.dot(r2);
+        }
 
-            auto r = [&]() -> auto {
-                Eigen::Map<const Eigen::Array<IN, cin, 1>> rin{ in };
-                if constexpr (std::is_same_v<IN, float>)
-                    return rin;
-                else if constexpr (std::is_floating_point_v<IN>)
-                    return Eigen::Array<float, cin, 1>{ rin.template cast<float>() };
-                else if constexpr (std::is_unsigned_v<IN>)
-                    return Eigen::Array<float, cin, 1>{ rin.template cast<float>() / std::numeric_limits<IN>::max() };
-            }();
-
-            for (int n = 0; n < cout; n++)
-            {
-                Eigen::Map<const Eigen::Array<float, cin, 1>> k(kernels + n * cin * 4 + cin * index);
-                out[n] = fromFloat<OUT>((k * r).sum());
-            }
-        }, src, dst);
-    }
-
-    struct ConvImplEigen3
-    {
         template <int cout, int cpos>
         static void conv_cin1(const float rptr[], float* const out, const float* const kernels, const float* const biases) noexcept
         {
@@ -67,32 +49,32 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplEigen3, float, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, ReLU{});
             break;
         }
     }
     void conv3x3_8to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplEigen3, 8, 8>(src, dst, kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_eigen3(const Image& src, Image& dst, const float* kernels)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            deconv2x2_eigen3<float, std::uint8_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplEigen3, std::uint8_t, 8, 1>(src, dst, kernels);
             break;
         case Image::UInt16:
-            deconv2x2_eigen3<float, std::uint16_t, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplEigen3, std::uint16_t, 8, 1>(src, dst, kernels);
             break;
         case Image::Float32:
-            deconv2x2_eigen3<float, float, 8, 1>(src, dst, kernels);
+            deconv2x2<OpImplEigen3, float, 8, 1>(src, dst, kernels);
             break;
         }
     }
@@ -102,13 +84,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplEigen3, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -118,23 +100,23 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_8to8_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<OpImplEigen3, 8, 8>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, const float scale)
     {
-        conv3x3_float<ConvImplEigen3, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
+        conv3x3_float<OpImplEigen3, 8, 8>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, scale });
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_eigen3(
         const Image& src, Image& dst,
@@ -143,7 +125,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplEigen3, 8, 8, 8, false, false>(
+        conv3x3_conv1x1_float<OpImplEigen3, 8, 8, 8, false, false>(
             src, dst,
             kernels1, biases1, Identity{}, ResidualArg{ id, scale },
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -154,13 +136,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
         }
     }
@@ -170,36 +152,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplEigen3, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplEigen3, 16, 16>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<OpImplEigen3, 16, 16>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint8_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -209,36 +191,36 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1<ConvImplEigen3, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1<ConvImplEigen3, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1<ConvImplEigen3, float, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplEigen3, float, 32>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_32to32_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
-        conv3x3_float<ConvImplEigen3, 32, 32>(src, dst, kernels, biases, ReLU{});
+        conv3x3_float<OpImplEigen3, 32, 32>(src, dst, kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat)
     {
-        conv3x3_float<ConvImplEigen3, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
+        conv3x3_float<OpImplEigen3, 32, 32>(src, dst, kernels, biases, Identity{}, ResidualArg{ feat, 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint8_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -248,13 +230,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1<ConvImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1<ConvImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1<ConvImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -264,7 +246,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplEigen3, 8, 8, 8, false, true>(
+        conv3x3_conv1x1_float<OpImplEigen3, 8, 8, 8, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }
@@ -275,13 +257,13 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint8_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<ConvImplEigen3, float, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
         }
     }
@@ -291,19 +273,19 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1<ConvImplEigen3, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1<ConvImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1<ConvImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas)
     {
-        conv3x3_float<ConvImplEigen3, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
+        conv3x3_float<OpImplEigen3, 16, 16>(src, dst, kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_eigen3(
         const Image& src, Image& dst,
@@ -311,7 +293,7 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat)
     {
-        conv3x3_conv1x1_float<ConvImplEigen3, 16, 16, 16, false, true>(
+        conv3x3_conv1x1_float<OpImplEigen3, 16, 16, 16, false, true>(
             src, dst,
             kernels1, biases1, PReLU{ alphas1 }, nullptr,
             kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat, 1.0f }

@@ -10,7 +10,20 @@
 
 namespace ac::core::cpu
 {
-    template <typename IN, typename OUT, int cin, int upscale>
+    template <typename OpImpl, typename OUT, int cin, int cout>
+    inline void deconv2x2(const Image& src, Image& dst, const float* const kernels)
+    {
+        filter([=](const int i, const int j, const void* const sptr, void* const dptr) {
+            auto in = static_cast<const float*>(sptr);
+            auto out = static_cast<OUT*>(dptr);
+
+            auto index = ((i & 1) << 1) + (j & 1);
+
+            for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index));
+        }, src, dst);
+    }
+
+    template <typename OUT, int cin, int upscale>
     inline void pixelshuffle(const Image& src, Image& dst) noexcept
     {
         constexpr int group = upscale * upscale;
@@ -21,17 +34,17 @@ namespace ac::core::cpu
         {
             for (int j = 0; j < dst.width(); j++)
             {
-                auto in = static_cast<const IN*>(src.ptr(j / upscale, i / upscale));
+                auto in = static_cast<const float*>(src.ptr(j / upscale, i / upscale));
                 auto out = static_cast<OUT*>(dst.ptr(j, i));
 
                 auto index = (i % upscale) * upscale + (j % upscale);
 
-                for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(toFloat(in[n * group + index]));
+                for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(in[n * group + index]);
             }
         }
     }
 
-    template <typename ConvImpl, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
+    template <typename OpImpl, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
     inline void conv1x1_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
@@ -53,7 +66,7 @@ namespace ac::core::cpu
 
                 float sum[cout]{};
 
-                ConvImpl::template conv<cin, cout, 1 * 1>(rptr, sum, kernels, biases);
+                OpImpl::template conv<cin, cout, 1 * 1>(rptr, sum, kernels, biases);
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -71,7 +84,7 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename ConvImpl, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
+    template <typename OpImpl, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
     inline void conv3x3_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {
         [[maybe_unused]] const std::array<float, sizeof...(ResidualArgs)> scales{ residualArg.scale... };
@@ -103,7 +116,7 @@ namespace ac::core::cpu
 
                 float sum[cout]{};
 
-                ConvImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
+                OpImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -121,7 +134,7 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename ConvImpl, typename IN, int cout, typename ActiveFunc>
+    template <typename OpImpl, typename IN, int cout, typename ActiveFunc>
     inline void conv3x3_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
         util::parallelFor(0, src.height(), [&](const int i) {
@@ -147,14 +160,14 @@ namespace ac::core::cpu
                     toFloat(*static_cast<const IN*>(src.ptr(j + rp, i + bp))),
                 };
 
-                ConvImpl::template conv_cin1<cout, 3 * 3>(rptr, out, kernels, biases);
+                OpImpl::template conv_cin1<cout, 3 * 3>(rptr, out, kernels, biases);
 
                 for (int n = 0; n < cout; n++) out[n] = activeFunc(out[n], n);
             }
         });
     }
 
-    template <typename ConvImpl, typename IN, int cout, typename ActiveFunc>
+    template <typename OpImpl, typename IN, int cout, typename ActiveFunc>
     inline void conv5x5_cin1(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc)
     {
         util::parallelFor(0, src.height(), [&](const int i) {
@@ -171,14 +184,14 @@ namespace ac::core::cpu
                     for (int jn = 0; jn < 5; jn++)
                         rptr[in * 5 + jn] = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[jn], i + ioffsets[in])));
 
-                ConvImpl::template conv_cin1<cout, 5 * 5>(rptr, out, kernels, biases);
+                OpImpl::template conv_cin1<cout, 5 * 5>(rptr, out, kernels, biases);
 
                 for (int n = 0; n < cout; n++) out[n] = activeFunc(out[n], n);
             }
         });
     }
 
-    template <typename ConvImpl, int cin, int ctemp, int cout,
+    template <typename OpImpl, int cin, int ctemp, int cout,
         bool postactive3x3 = false,
         bool postactive1x1 = false,
         typename ActiveFunc3x3, typename ResidualArg3x3,
@@ -213,7 +226,7 @@ namespace ac::core::cpu
 
                 float buffer[ctemp]{};
 
-                ConvImpl::template conv<cin, ctemp, 3 * 3>(rptr, buffer, kernels3x3, biases3x3);
+                OpImpl::template conv<cin, ctemp, 3 * 3>(rptr, buffer, kernels3x3, biases3x3);
 
                 for (int n = 0; n < ctemp; n++)
                 {
@@ -228,7 +241,7 @@ namespace ac::core::cpu
                 rptr[0] = buffer;
                 float sum[cout]{};
 
-                ConvImpl::template conv<ctemp, cout, 1 * 1>(rptr, sum, kernels1x1, biases1x1);
+                OpImpl::template conv<ctemp, cout, 1 * 1>(rptr, sum, kernels1x1, biases1x1);
 
                 for (int n = 0; n < cout; n++)
                 {
@@ -245,7 +258,7 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename ConvImpl, typename OUT, int cin, int upscale, typename NearestInterpolationArg>
+    template <typename OpImpl, typename OUT, int cin, int upscale, typename NearestInterpolationArg>
     inline void conv3x3_identity_pixelshuffle_float(
         const Image& src, Image& dst,
         const float* const kernels, const float* const biases,
@@ -279,7 +292,7 @@ namespace ac::core::cpu
 
                 float sum[cout]{};
 
-                ConvImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
+                OpImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
 
                 constexpr bool addNearestInterpolation = std::is_same_v<NearestInterpolationArg, ResidualArg>;
 
