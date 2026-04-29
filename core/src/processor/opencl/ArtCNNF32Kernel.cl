@@ -41,12 +41,20 @@ kernel void conv3x3_32to32_relu(
     biases += boffset;
 #endif
 
-    float s[4];
+    float buffer[16];
 
-    for (int i = 0; i < 8; i++)
+    for(int n = 0; n < 2; n++)
     {
-        conv3x3(src, s, 32, 4, kernels + 32 * 9 * 4 * i, biases + 4 * i, x, y);
-        write_imagef(dst, (int4)(x, y, i, 0), ReLU(vload4(0, s)));
+        float16 s = vload16(n, biases);
+        for(int c = 0; c < 4; c++)
+        {
+            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + 32 * 9 * 16 * n, x, y);
+            s += vload16(0, buffer);
+        }
+        write_imagef(dst, (int4)(x, y, n * 4 + 0, 0), ReLU(s.s0123));
+        write_imagef(dst, (int4)(x, y, n * 4 + 1, 0), ReLU(s.s4567));
+        write_imagef(dst, (int4)(x, y, n * 4 + 2, 0), ReLU(s.s89ab));
+        write_imagef(dst, (int4)(x, y, n * 4 + 3, 0), ReLU(s.scdef));
     }
 }
 
@@ -67,12 +75,20 @@ kernel void conv3x3_32to32_identity_add(
     biases += boffset;
 #endif
 
-    float s[4];
+    float buffer[16];
 
-    for (int i = 0; i < 8; i++)
+    for(int n = 0; n < 2; n++)
     {
-        conv3x3(src, s, 32, 4, kernels + 32 * 9 * 4 * i, biases + 4 * i, x, y);
-        write_imagef(dst, (int4)(x, y, i, 0), Identity(vload4(0, s)) + read_imagef(feat, n_sampler, (int4)(x, y, i, 0)));
+        float16 s = vload16(n, biases);
+        for(int c = 0; c < 4; c++)
+        {
+            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + 32 * 9 * 16 * n, x, y);
+            s += vload16(0, buffer);
+        }
+        write_imagef(dst, (int4)(x, y, n * 4 + 0, 0), Identity(s.s0123) + read_imagef(feat, n_sampler, (int4)(x, y, n * 4 + 0, 0)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 1, 0), Identity(s.s4567) + read_imagef(feat, n_sampler, (int4)(x, y, n * 4 + 1, 0)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 2, 0), Identity(s.s89ab) + read_imagef(feat, n_sampler, (int4)(x, y, n * 4 + 2, 0)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 3, 0), Identity(s.scdef) + read_imagef(feat, n_sampler, (int4)(x, y, n * 4 + 3, 0)));
     }
 }
 
