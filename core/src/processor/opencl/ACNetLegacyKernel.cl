@@ -40,7 +40,7 @@ kernel void conv3x3_8to8_relu(
 #endif
 
     float s[8];
-    conv3x3(src, s, 8, 8, kernels, biases, x, y);
+    conv3x3_cin8(src, s, 8, kernels, biases, x, y);
 
     write_imagef(dst, (int4)(x, y, 0, 0), ReLU(vload4(0, s)));
     write_imagef(dst, (int4)(x, y, 1, 0), ReLU(vload4(1, s)));

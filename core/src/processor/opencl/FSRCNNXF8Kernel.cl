@@ -43,7 +43,7 @@ kernel void conv3x3_8to8_prelu(
 #endif
 
     float s[8];
-    conv3x3(src, s, 8, 8, kernels, biases, x, y);
+    conv3x3_cin8(src, s, 8, kernels, biases, x, y);
 
     float8 v = vload8(0, s);
     v = PReLU(v, vload8(0, alphas));
@@ -77,7 +77,7 @@ kernel void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu(
 #endif
 
     float s[8];
-    conv3x3(src, s, 8, 8, kernels1, biases1, x, y);
+    conv3x3_cin8(src, s, 8, kernels1, biases1, x, y);
 
     float8 v = vload8(0, s);
     v = PReLU(v, vload8(0, alphas1));
@@ -109,7 +109,7 @@ kernel void conv3x3_8to4_identity_pixelshuffle_4to1(
 #endif
 
     float s[4];
-    conv3x3(src, s, 8, 4, kernels, biases, x, y);
+    conv3x3_cin8(src, s, 4, kernels, biases, x, y);
 
     float4 pixel = clamp(Identity(vload4(0, s)), 0.0f, 1.0f);
     int2 dst_coord = (int2)(x, y) * 2;
