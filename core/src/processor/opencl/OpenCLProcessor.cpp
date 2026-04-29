@@ -109,7 +109,7 @@ namespace ac::core::opencl
                 name = boardNameAMD;
                 info.append(deviceName).append(", ");
 
-                if (auto pos = name.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(name[pos + 6]))) // gfx1000 or newer
+                if (auto pos = deviceName.find("gfx"); pos != std::string::npos && std::isdigit(static_cast<unsigned char>(deviceName[pos + 6]))) // gfx1000 or newer
                     arch = Arch::AMD_RDNA;
                 else
                     arch = Arch::AMD_GCN;
