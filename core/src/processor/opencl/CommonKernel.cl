@@ -100,7 +100,6 @@ inline void conv3x3(
 {
     const int count = cin / 8;
 
-#if defined (ARCH_AMD_RDNA)
     if(count > 2)
     {
         for(int n = 0; n < cout; n++) out[n] = biases[n];
@@ -108,12 +107,13 @@ inline void conv3x3(
         {
             for(int xpos = -1; xpos <= 1; xpos++)
             {
+                int pos = (ypos + 1) * 3 + (xpos + 1);
                 for(int idx = 0; idx < count; idx++)
                 {
-                    float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, idx * 2 + 1, 0)));
+                    float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 1, 0)));
                     for(int n = 0; n < cout; n++)
                     {
-                        float8 k = vload8(count * ((ypos + 1) * 3 + xpos + 1) + idx, kernels + n * cin * 9);
+                        float8 k = vload8(count * (pos + n * 9) + idx, kernels);
                         out[n] += dot(r.hi, k.hi) + dot(r.lo, k.lo);
                     }
                 }
@@ -121,28 +121,27 @@ inline void conv3x3(
         }
     }
     else
-#endif
     {
         for(int n = 0; n < cout; n++)
         {
-            WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
             float8 s = (float8)(0.0f);
             {
                 for(int ypos = -1; ypos <= 1; ypos++)
                 {
                     for(int xpos = -1; xpos <= 1; xpos++)
                     {
+                        int pos = (ypos + 1) * 3 + (xpos + 1);
                         for(int idx = 0; idx < count; idx++)
                         {
-                            float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, idx * 2 + 1, 0)));
-                            float8 k = vload8(count * ((ypos + 1) * 3 + xpos + 1) + idx, kptr);
+                            float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 1, 0)));
+                            float8 k = vload8(count * (pos + n * 9) + idx, kernels);
                             s += r * k;
                         }
                     }
                 }
             }
             out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
-        }       
+        }
     }
 }
 
