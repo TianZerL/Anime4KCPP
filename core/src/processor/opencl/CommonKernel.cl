@@ -14,29 +14,6 @@
 
 constant sampler_t n_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
-inline void conv1x1(
-    read_only image2d_array_t src, float* const out,
-    const int cin, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
-    const int x, const int y)
-{
-    const int count = cin / 8;
-
-    for(int n = 0; n < cout; n++)
-    {
-        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin;
-        float8 s = (float8)(0.0f);
-        for(int idx = 0; idx < count; idx++)
-        {
-            float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x, y, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x, y, idx * 2 + 1, 0)));
-            float8 k = vload8(idx, kptr);
-            s += r * k;
-        }
-        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
-    }
-}
-
 inline void conv1x1_from_array(
     const float* const in, float* const out,
     const int cin, const int cout,
@@ -60,37 +37,16 @@ inline void conv1x1_from_array(
     }
 }
 
-inline void conv1x1_cin8(
-    read_only image2d_array_t src,
-    float* const out, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
-    const int x, const int y)
-{
-    float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x, y, 0, 0)), read_imagef(src, n_sampler, (int4)(x, y, 1, 0)));
-
-    for(int n = 0; n < cout; n++)
-    {
-        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * 8;
-
-        float8 k = vload8(0, kptr);
-        float8 s = r * k;
-        out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
-    }
-}
-
 inline void conv1x1_cin8_from_vector(
-    const float8 rin,  float* const out, const int cout,
+    const float8 r,  float* const out, const int cout,
     WEIGHTS_SPACE const float* const restrict kernels,
     WEIGHTS_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     for(int n = 0; n < cout; n++)
     {
-        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * 8;
-
-        float8 k = vload8(0, kptr);
-        float8 s = rin * k;
+        float8 k = vload8(n, kernels);
+        float8 s = r * k;
         out[n] = dot(s.lo + s.hi, (float4)(1.0f)) + biases[n];
     }
 }
@@ -166,33 +122,6 @@ inline void conv3x3(
     }
 }
 
-inline void conv3x3_cin1(
-    read_only image2d_t src,
-    float* const out, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
-    const int x, const int y)
-{
-    float8 r0 = (float8)(
-        read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
-        read_imagef(src, n_sampler, (int2)(x  , y-1)).x,
-        read_imagef(src, n_sampler, (int2)(x+1, y-1)).x,
-        read_imagef(src, n_sampler, (int2)(x-1, y  )).x,
-        read_imagef(src, n_sampler, (int2)(x  , y  )).x,
-        read_imagef(src, n_sampler, (int2)(x+1, y  )).x,
-        read_imagef(src, n_sampler, (int2)(x-1, y+1)).x,
-        read_imagef(src, n_sampler, (int2)(x  , y+1)).x
-    );
-    float r8 = read_imagef(src, n_sampler, (int2)(x+1, y+1)).x;
-
-    for(int n = 0; n < cout; n++)
-    {
-        float8 k0 = vload8(0, kernels + n * 9 + 0);
-        float k8 = kernels[n * 9 + 8];
-        out[n] = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi) + r8 * k8 + biases[n];
-    }
-}
-
 inline void conv3x3_cin8(
     read_only image2d_array_t src,
     float* const out, const int cout,
@@ -250,6 +179,33 @@ inline void conv3x3_cin8(
 
         out[n] = dot(s0.lo + s0.hi, (float4)(1.0f)) + biases[n];
 #   endif
+    }
+}
+
+inline void conv3x3_cin1(
+    read_only image2d_t src,
+    float* const out, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    float8 r0 = (float8)(
+        read_imagef(src, n_sampler, (int2)(x-1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y-1)).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x  , y  )).x,
+        read_imagef(src, n_sampler, (int2)(x+1, y  )).x,
+        read_imagef(src, n_sampler, (int2)(x-1, y+1)).x,
+        read_imagef(src, n_sampler, (int2)(x  , y+1)).x
+    );
+    float r8 = read_imagef(src, n_sampler, (int2)(x+1, y+1)).x;
+
+    for(int n = 0; n < cout; n++)
+    {
+        float8 k0 = vload8(0, kernels + n * 9 + 0);
+        float k8 = kernels[n * 9 + 8];
+        out[n] = dot(r0.lo, k0.lo) + dot(r0.hi, k0.hi) + r8 * k8 + biases[n];
     }
 }
 
