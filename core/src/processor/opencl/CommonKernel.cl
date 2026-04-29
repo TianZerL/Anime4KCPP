@@ -102,22 +102,65 @@ inline void conv3x3(
 
     if(count > 2)
     {
-        for(int n = 0; n < cout; n++) out[n] = biases[n];
-        for(int ypos = -1; ypos <= 1; ypos++)
+        for(int n = 0; n < cout; n++)
         {
-            for(int xpos = -1; xpos <= 1; xpos++)
+            WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
+#       if defined (ARCH_AMD_GCN)
+            float8 s0 = (float8)(0.0f);
+            float8 s1 = (float8)(0.0f);
+#       else
+            float8 s0 = (float8)(0.0f);
+#       endif
+            for(int idx = 0; idx < count; idx++)
             {
-                int pos = (ypos + 1) * 3 + (xpos + 1);
-                for(int idx = 0; idx < count; idx++)
-                {
-                    float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 1, 0)));
-                    for(int n = 0; n < cout; n++)
-                    {
-                        float8 k = vload8(count * (pos + n * 9) + idx, kernels);
-                        out[n] += dot(r.hi, k.hi) + dot(r.lo, k.lo);
-                    }
-                }
+                const int l0 = idx * 2 + 0;
+                const int l1 = idx * 2 + 1;
+                float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, l0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, l1, 0)));
+                float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, l0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, l1, 0)));
+                float8 r2 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y-1, l0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y-1, l1, 0)));
+                float8 r3 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y  , l0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y  , l1, 0)));
+                float8 r4 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y  , l0, 0)), read_imagef(src, n_sampler, (int4)(x  , y  , l1, 0)));
+                float8 r5 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y  , l0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y  , l1, 0)));
+                float8 r6 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y+1, l0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y+1, l1, 0)));
+                float8 r7 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y+1, l0, 0)), read_imagef(src, n_sampler, (int4)(x  , y+1, l1, 0)));
+                float8 r8 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y+1, l0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y+1, l1, 0)));
+    
+                float8 k0 = vload8(count * 0 + idx, kptr);
+                float8 k1 = vload8(count * 1 + idx, kptr);
+                float8 k2 = vload8(count * 2 + idx, kptr);
+                float8 k3 = vload8(count * 3 + idx, kptr);
+                float8 k4 = vload8(count * 4 + idx, kptr);
+                float8 k5 = vload8(count * 5 + idx, kptr);
+                float8 k6 = vload8(count * 6 + idx, kptr);
+                float8 k7 = vload8(count * 7 + idx, kptr);
+                float8 k8 = vload8(count * 8 + idx, kptr);
+    
+#           if defined (ARCH_AMD_GCN)
+                s0 = mad(r0, k0, s0);
+                s1 = mad(r1, k1, s1);
+                s0 = mad(r2, k2, s0);
+                s1 = mad(r3, k3, s1);
+                s0 = mad(r4, k4, s0);
+                s1 = mad(r5, k5, s1);
+                s0 = mad(r6, k6, s0);
+                s1 = mad(r7, k7, s1) + r8 * k8;
+#           else
+                s0 += r0 * k0 +
+                      r1 * k1 +
+                      r2 * k2 +
+                      r3 * k3 +
+                      r4 * k4 +
+                      r5 * k5 +
+                      r6 * k6 +
+                      r7 * k7 +
+                      r8 * k8 ;
+#           endif
             }
+#       if defined (ARCH_AMD_GCN)
+            out[n] = dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f)) + biases[n];
+#       else
+            out[n] = dot(s0.lo + s0.hi, (float4)(1.0f)) + biases[n];
+#       endif
         }
     }
     else
