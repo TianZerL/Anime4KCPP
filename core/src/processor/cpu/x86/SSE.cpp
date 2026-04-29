@@ -10,11 +10,38 @@ namespace ac::core::cpu
     struct OpImplSSE
     {
     private:
-        static inline float hsum(const __m128& v) noexcept
+        static float hsum(const __m128& v) noexcept
         {
             __m128 v64 = _mm_add_ps(v, _mm_movehl_ps(v, v));
             __m128 v32 = _mm_add_ss(v64, _mm_shuffle_ps(v64, v64, _MM_SHUFFLE(3, 3, 1, 1)));
             return _mm_cvtss_f32(v32);
+        }
+
+        template <int cin, int scount, int cpos>
+        static void convKernel(const int sgroupIdx, const float** const rptr, __m128* const s, float* const out, const float* const kernels) noexcept
+        {
+            constexpr int vstep = 4;
+            constexpr int count = cin / vstep;
+            constexpr int remain = cin % vstep;
+
+            for (int n = 0; n < scount; n++) s[n] = _mm_setzero_ps();
+            for (int p = 0; p < cpos; p++)
+            {
+                for (int idx = 0; idx < count; idx++)
+                {
+                    __m128 r = _mm_loadu_ps(rptr[p] + idx * vstep);
+                    for (int n = 0; n < scount; n++)
+                    {
+                        __m128 k = _mm_loadu_ps(kernels + (sgroupIdx * scount + n) * cin * cpos + cin * p + idx * vstep);
+                        s[n] = _mm_add_ps(_mm_mul_ps(r, k), s[n]);
+                    }
+                }
+                if constexpr (remain)
+                    for (int c = count * vstep; c < cin; c++)
+                        for (int n = 0; n < scount; n++)
+                            out[sgroupIdx * scount + n] += rptr[p][c] * kernels[(sgroupIdx * scount + n) * cin * cpos + cin * p + c];
+            }
+            for (int n = 0; n < scount; n++) out[sgroupIdx * scount + n] += hsum(s[n]);
         }
 
     public:
@@ -73,30 +100,19 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
+            constexpr int scount = 8;
+            constexpr int sgroup = cout / scount;
+            constexpr int sremian = cout % scount;
 
             std::memcpy(out, biases, sizeof(float) * cout);
 
-            __m128 s[cout];
-            for (int n = 0; n < cout; n++) s[n] = _mm_setzero_ps();
-            for (int p = 0; p < cpos; p++)
-            {
-                for (int idx = 0; idx < count; idx++)
-                {
-                    __m128 r = _mm_loadu_ps(rptr[p] + idx * vstep);
-                    for (int n = 0; n < cout; n++)
-                    {
-                        __m128 k = _mm_loadu_ps(kernels + n * cin * cpos + cin * p + idx * vstep);
-                        s[n] = _mm_add_ps(_mm_mul_ps(r, k), s[n]);
-                    }
-                }
-                if constexpr (remain)
-                    for (int c = count * vstep; c < cin; c++)
-                        for (int n = 0; n < cout; n++) out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
-            }
-            for (int n = 0; n < cout; n++) out[n] += hsum(s[n]);
+            __m128 s[sgroup > 0 ? scount : sremian];
+
+            if constexpr (sgroup)
+                for (int i = 0; i < sgroup; i++)
+                    convKernel<cin, scount, cpos>(i, rptr, s, out, kernels);
+            if constexpr (sremian)
+                convKernel<cin, sremian, cpos>(sgroup, rptr, s, out, kernels);
         }
     };
 

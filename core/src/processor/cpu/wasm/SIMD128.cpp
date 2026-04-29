@@ -17,6 +17,33 @@ namespace ac::core::cpu
             return wasm_f32x4_extract_lane(v32, 0);
         }
 
+        template <int cin, int scount, int cpos>
+        static void convKernel(const int sgroupIdx, const float** const rptr, v128_t* const s, float* const out, const float* const kernels) noexcept
+        {
+            constexpr int vstep = 4;
+            constexpr int count = cin / vstep;
+            constexpr int remain = cin % vstep;
+
+            for (int n = 0; n < scount; n++) s[n] = wasm_f32x4_splat(0.0f);
+            for (int p = 0; p < cpos; p++)
+            {
+                for (int idx = 0; idx < count; idx++)
+                {
+                    v128_t r = wasm_v128_load(rptr[p] + idx * vstep);
+                    for (int n = 0; n < scount; n++)
+                    {
+                        v128_t k = wasm_v128_load(kernels + (sgroupIdx * scount + n) * cin * cpos + cin * p + idx * vstep);
+                        s[n] = wasm_f32x4_add(wasm_f32x4_mul(r, k), s[n]);
+                    }
+                }
+                if constexpr (remain)
+                    for (int c = count * vstep; c < cin; c++)
+                        for (int n = 0; n < scount; n++)
+                            out[sgroupIdx * scount + n] += rptr[p][c] * kernels[(sgroupIdx * scount + n) * cin * cpos + cin * p + c];
+            }
+            for (int n = 0; n < scount; n++) out[sgroupIdx * scount + n] += hsum(s[n]);
+        }
+
     public:
         template <int vsize>
         static float dot(const float* const v1, const float* const v2) noexcept
@@ -73,31 +100,20 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 4;
-            constexpr int count = cin / vstep;
-            constexpr int remain = cin % vstep;
+            constexpr int scount = 8;
+            constexpr int sgroup = cout / scount;
+            constexpr int sremian = cout % scount;
 
             std::memcpy(out, biases, sizeof(float) * cout);
 
-            v128_t s[cout];
-            for (int n = 0; n < cout; n++) s[n] = wasm_f32x4_splat(0.0f);
-            for (int p = 0; p < cpos; p++)
-            {
-                for (int idx = 0; idx < count; idx++)
-                {
-                    v128_t r = wasm_v128_load(rptr[p] + idx * vstep);
-                    for (int n = 0; n < cout; n++)
-                    {
-                        v128_t k = wasm_v128_load(kernels + n * cin * cpos + cin * p + idx * vstep);
-                        s[n] = wasm_f32x4_add(wasm_f32x4_mul(r, k), s[n]);
-                    }
-                }
-                if constexpr (remain)
-                    for (int c = count * vstep; c < cin; c++)
-                        for (int n = 0; n < cout; n++) out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
-            }
-            for (int n = 0; n < cout; n++) out[n] += hsum(s[n]);
-        }   
+            v128_t s[sgroup > 0 ? scount : sremian];
+
+            if constexpr (sgroup)
+                for (int i = 0; i < sgroup; i++)
+                    convKernel<cin, scount, cpos>(i, rptr, s, out, kernels);
+            if constexpr (sremian)
+                convKernel<cin, sremian, cpos>(sgroup, rptr, s, out, kernels);
+        }  
     };
 
     void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases)
