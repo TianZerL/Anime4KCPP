@@ -22,7 +22,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, float32x2_t* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, float32x4_t* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
@@ -33,10 +33,10 @@ namespace ac::core::cpu
             {
                 for (int idx = 0; idx < count; idx++)
                 {
-                    float32x2_t r = vld1q_f32(rptr[p] + idx * vstep);
+                    float32x4_t r = vld1q_f32(rptr[p] + idx * vstep);
                     for (int n = 0; n < scount; n++)
                     {
-                        float32x2_t k = vld1q_f32(kernels + (sgroupIdx * scount + n) * cin * cpos + cin * p + idx * vstep);
+                        float32x4_t k = vld1q_f32(kernels + (sgroupIdx * scount + n) * cin * cpos + cin * p + idx * vstep);
                         s[n] = vmlaq_f32(s[n], r, k);
                     }
                 }
