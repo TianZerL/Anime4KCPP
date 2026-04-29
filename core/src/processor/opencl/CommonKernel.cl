@@ -104,11 +104,11 @@ inline void conv3x3(
     {
         WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
         float8 s = (float8)(0.0f);
-        for(int ypos = -1; ypos <= 1; ypos++)
+        for(int idx = 0; idx < count; idx++)
         {
-            for(int xpos = -1; xpos <= 1; xpos++)
+            for(int ypos = -1; ypos <= 1; ypos++)
             {
-                for(int idx = 0; idx < count; idx++)
+                for(int xpos = -1; xpos <= 1; xpos++)
                 {
                     float8 r = (float8)(read_imagef(src, n_sampler, (int4)(x + xpos, y + ypos, idx * 2 + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, idx * 2 + 1, 0)));
                     float8 k = vload8(count * ((ypos + 1) * 3 + xpos + 1) + idx, kptr);
