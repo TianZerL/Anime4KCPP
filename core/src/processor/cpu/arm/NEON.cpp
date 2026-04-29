@@ -2,6 +2,7 @@
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
+#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
 
@@ -10,7 +11,7 @@ namespace ac::core::cpu
     struct OpImplNEON
     {
     private:
-        static inline float hsum(const float32x4_t& v) noexcept
+        static AC_FORCE_INLINE float hsum(const float32x4_t& v) noexcept
         {
         #if defined(__aarch64__) || defined(_M_ARM64)
             return vaddvq_f32(v);
@@ -21,7 +22,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static void convKernel(const int sgroupIdx, const float** const rptr, float32x2_t* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, float32x2_t* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;

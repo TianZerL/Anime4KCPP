@@ -2,6 +2,7 @@
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
+#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
 
@@ -10,7 +11,7 @@ namespace ac::core::cpu
     struct OpImplSSE
     {
     private:
-        static float hsum(const __m128& v) noexcept
+        static AC_FORCE_INLINE float hsum(const __m128& v) noexcept
         {
             __m128 v64 = _mm_add_ps(v, _mm_movehl_ps(v, v));
             __m128 v32 = _mm_add_ss(v64, _mm_shuffle_ps(v64, v64, _MM_SHUFFLE(3, 3, 1, 1)));
@@ -18,7 +19,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static void convKernel(const int sgroupIdx, const float** const rptr, __m128* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, __m128* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;

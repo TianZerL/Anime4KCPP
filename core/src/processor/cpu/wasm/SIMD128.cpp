@@ -2,6 +2,7 @@
 
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
+#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
 
@@ -10,7 +11,7 @@ namespace ac::core::cpu
     struct OpImplWASM
     {
     private:
-        static inline float hsum(const v128_t& v) noexcept
+        static AC_FORCE_INLINE float hsum(const v128_t& v) noexcept
         {
             v128_t v64 = wasm_f32x4_add(v, wasm_i32x4_shuffle(v, v, 2, 3, 0, 0));
             v128_t v32 = wasm_f32x4_add(v64, wasm_i32x4_shuffle(v64, v64, 1, 0, 0, 0));
@@ -18,7 +19,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static void convKernel(const int sgroupIdx, const float** const rptr, v128_t* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, v128_t* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;

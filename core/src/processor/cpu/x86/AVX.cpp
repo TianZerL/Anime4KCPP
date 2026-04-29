@@ -3,6 +3,7 @@
 #include "AC/Core/SIMD.hpp"
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
+#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
 
@@ -12,7 +13,7 @@ namespace ac::core::cpu
     struct OpImplAVX
     {
     private:
-        static inline float hsum(const __m256& v) noexcept
+        static AC_FORCE_INLINE float hsum(const __m256& v) noexcept
         {
             __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
             __m128 v64 = _mm_add_ps(v128, _mm_movehl_ps(v128, v128));
@@ -21,7 +22,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static void convKernel(const int sgroupIdx, const float** const rptr, __m256* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void convKernel(const int sgroupIdx, const float** const rptr, __m256* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 8;
             constexpr int count = cin / vstep;
