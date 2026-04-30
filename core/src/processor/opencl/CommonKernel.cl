@@ -227,7 +227,7 @@ inline void conv3x3_cin8_chunk(
         s0 = mad(r6, k6, s0);
         s1 = mad(r7, k7, s1) + r8 * k8;
 
-        out[n] = dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f));
+        out[n] += dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f));
 #   else
         float8 s0 = r0 * k0 +
                     r1 * k1 +
@@ -239,9 +239,21 @@ inline void conv3x3_cin8_chunk(
                     r7 * k7 +
                     r8 * k8 ;
 
-        out[n] = dot(s0.lo + s0.hi, (float4)(1.0f));
+        out[n] += dot(s0.lo + s0.hi, (float4)(1.0f));
 #   endif
     }
+}
+
+inline void conv3x3_cin_chunk(
+    read_only image2d_array_t src, float* const out,
+    const int cin, const int cout,
+    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_SPACE const float* const restrict biases,
+    const int x, const int y)
+{
+    const int chunks = cin / 8;
+    for(int n = 0; n < cout; n++) out[n] = biases[n];
+    for(int c = 0; c < chunks; c++) conv3x3_cin8_chunk(src, out, c, cin, cout, kernels, x, y);
 }
 
 inline void conv3x3_cin1(
