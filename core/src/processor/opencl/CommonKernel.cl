@@ -60,6 +60,59 @@ inline void conv3x3_cin8_chunk(
     const int count = cin / 8;
     const int layer = chunk * 2;
 
+#if defined (ARCH_AMD_GCN) || defined (ARCH_INTEL)
+    float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, layer + 1, 0)));
+    float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, layer + 1, 0)));
+    float8 r2 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y-1, layer + 1, 0)));
+    float8 r3 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y  , layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y  , layer + 1, 0)));
+    float8 r4 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y  , layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y  , layer + 1, 0)));
+    float8 r5 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y  , layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y  , layer + 1, 0)));
+    float8 r6 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y+1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y+1, layer + 1, 0)));
+    float8 r7 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y+1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y+1, layer + 1, 0)));
+    float8 r8 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y+1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y+1, layer + 1, 0)));
+
+    for(int n = 0; n < cout; n++)
+    {
+        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
+
+        float8 k0 = vload8(count * 0 + chunk, kptr);
+        float8 k1 = vload8(count * 1 + chunk, kptr);
+        float8 k2 = vload8(count * 2 + chunk, kptr);
+        float8 k3 = vload8(count * 3 + chunk, kptr);
+        float8 k4 = vload8(count * 4 + chunk, kptr);
+        float8 k5 = vload8(count * 5 + chunk, kptr);
+        float8 k6 = vload8(count * 6 + chunk, kptr);
+        float8 k7 = vload8(count * 7 + chunk, kptr);
+        float8 k8 = vload8(count * 8 + chunk, kptr);
+
+#   if defined (ARCH_AMD_GCN)
+        float8 s0 = (float8)(0.0f);
+        float8 s1 = (float8)(0.0f);
+        s0 = mad(r0, k0, s0);
+        s1 = mad(r1, k1, s1);
+        s0 = mad(r2, k2, s0);
+        s1 = mad(r3, k3, s1);
+        s0 = mad(r4, k4, s0);
+        s1 = mad(r5, k5, s1);
+        s0 = mad(r6, k6, s0);
+        s1 = mad(r7, k7, s1) + r8 * k8;
+
+        out[n] += dot(s0.lo + s0.hi + s1.lo + s1.hi, (float4)(1.0f));
+#   else
+        float8 s0 = r0 * k0 +
+                    r1 * k1 +
+                    r2 * k2 +
+                    r3 * k3 +
+                    r4 * k4 +
+                    r5 * k5 +
+                    r6 * k6 +
+                    r7 * k7 +
+                    r8 * k8 ;
+
+        out[n] += dot(s0.lo + s0.hi, (float4)(1.0f));
+#   endif
+    }
+#else
     for(int n = 0; n < cout; n++)
     {
         float8 s = (float8)(0.0f);
@@ -77,6 +130,7 @@ inline void conv3x3_cin8_chunk(
         }
         out[n] += dot(s.lo + s.hi, (float4)(1.0f));
     }
+#endif
 }
 
 inline void conv3x3(
