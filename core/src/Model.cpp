@@ -50,6 +50,30 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept
             this->bptr = param::ACNet_F8B8_HDN_NHWC_biases;
             this->aptr = param::ACNet_F8B8_HDN_NHWC_alphas;
             break;
+        case Variant::B8_BOX:
+            this->blockNum = 8;
+            this->kptr = param::ACNet_F8B8_Box_NHWC_kernels;
+            this->bptr = param::ACNet_F8B8_Box_NHWC_biases;
+            this->aptr = param::ACNet_F8B8_Box_NHWC_alphas;
+            break;
+        case Variant::B16_NORMAL:
+            this->blockNum = 16;
+            this->kptr = param::ACNet_F8B16_NHWC_kernels;
+            this->bptr = param::ACNet_F8B16_NHWC_biases;
+            this->aptr = param::ACNet_F8B16_NHWC_alphas;
+            break;
+        case Variant::B16_HDN:
+            this->blockNum = 16;
+            this->kptr = param::ACNet_F8B16_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B16_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B16_HDN_NHWC_alphas;
+            break;
+        case Variant::B16_BOX:
+            this->blockNum = 16;
+            this->kptr = param::ACNet_F8B16_Box_NHWC_kernels;
+            this->bptr = param::ACNet_F8B16_Box_NHWC_biases;
+            this->aptr = param::ACNet_F8B16_Box_NHWC_alphas;
+            break;
         }
     }
     else static_assert(F == 8, "Unsupported ACNet model");
@@ -76,6 +100,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->bptr = param::ARNet_F8B8_HDN_NHWC_biases;
             this->aptr = param::ARNet_F8B8_HDN_NHWC_alphas;
             break;
+        case Variant::B8_BOX:
+            this->blockNum = 8;
+            this->kptr = param::ARNet_F8B8_Box_NHWC_kernels;
+            this->bptr = param::ARNet_F8B8_Box_NHWC_biases;
+            this->aptr = param::ARNet_F8B8_Box_NHWC_alphas;
+            break;
         case Variant::B16_NORMAL:
             this->blockNum = 16;
             this->kptr = param::ARNet_F8B16_NHWC_kernels;
@@ -87,6 +117,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->kptr = param::ARNet_F8B16_HDN_NHWC_kernels;
             this->bptr = param::ARNet_F8B16_HDN_NHWC_biases;
             this->aptr = param::ARNet_F8B16_HDN_NHWC_alphas;
+            break;
+        case Variant::B16_BOX:
+            this->blockNum = 16;
+            this->kptr = param::ARNet_F8B16_Box_NHWC_kernels;
+            this->bptr = param::ARNet_F8B16_Box_NHWC_biases;
+            this->aptr = param::ARNet_F8B16_Box_NHWC_alphas;
             break;
         case Variant::B32_NORMAL:
             this->blockNum = 32;
@@ -100,6 +136,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->bptr = param::ARNet_F8B32_HDN_NHWC_biases;
             this->aptr = param::ARNet_F8B32_HDN_NHWC_alphas;
             break;
+        case Variant::B32_BOX:
+            this->blockNum = 32;
+            this->kptr = param::ARNet_F8B32_Box_NHWC_kernels;
+            this->bptr = param::ARNet_F8B32_Box_NHWC_biases;
+            this->aptr = param::ARNet_F8B32_Box_NHWC_alphas;
+            break;
         case Variant::B64_NORMAL:
             this->blockNum = 64;
             this->kptr = param::ARNet_F8B64_NHWC_kernels;
@@ -111,6 +153,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->kptr = param::ARNet_F8B64_HDN_NHWC_kernels;
             this->bptr = param::ARNet_F8B64_HDN_NHWC_biases;
             this->aptr = param::ARNet_F8B64_HDN_NHWC_alphas;
+            break;
+        case Variant::B64_BOX:
+            this->blockNum = 64;
+            this->kptr = param::ARNet_F8B64_Box_NHWC_kernels;
+            this->bptr = param::ARNet_F8B64_Box_NHWC_biases;
+            this->aptr = param::ARNet_F8B64_Box_NHWC_alphas;
             break;
         }
     }

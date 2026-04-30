@@ -87,6 +87,17 @@ namespace ac::core::detail
 
                     return ac::core::model::ARNet<8>{ variant };
                 }
+                else if (modelString.find("box") != std::string::npos)
+                {
+                    auto variant = ac::core::model::ARNet<8>::Variant::B8_BOX;
+
+                    if (modelString.find("b8") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B8_BOX;
+                    else if (modelString.find("b16") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B16_BOX;
+                    else if (modelString.find("b32") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B32_BOX;
+                    else if (modelString.find("b64") != std::string::npos) variant = ac::core::model::ARNet<8>::Variant::B64_BOX;
+
+                    return ac::core::model::ARNet<8>{ variant };
+                }
 
                 auto variant = ac::core::model::ARNet<8>::Variant::B8_NORMAL;
 
@@ -104,6 +115,16 @@ namespace ac::core::detail
                     auto variant = ac::core::model::ACNet<8>::Variant::B8_NORMAL;
 
                     if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B8_HDN;
+                    else if (modelString.find("box") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B8_BOX;
+
+                    return ac::core::model::ACNet<8>{ variant };
+                }
+                else if (modelString.find("b16") != std::string::npos)
+                {
+                    auto variant = ac::core::model::ACNet<8>::Variant::B16_NORMAL;
+
+                    if (modelString.find("hdn") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B16_HDN;
+                    else if (modelString.find("box") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B16_BOX;
 
                     return ac::core::model::ACNet<8>{ variant };
                 }

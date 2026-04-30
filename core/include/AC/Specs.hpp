@@ -48,12 +48,32 @@ namespace ac::specs
         {
             "acnet-f8b8",
             "Lightweight CNN, without denoising.",
-            5044
+            5116
         },
         {
             "acnet-f8b8-hdn",
             "Lightweight CNN, mild denoising.",
-            5044
+            5116
+        },
+        {
+            "acnet-f8b8-box",
+            "Lightweight CNN, without denoising.",
+            5116
+        },
+        {
+            "acnet-f8b16",
+            "Lightweight CNN, without denoising.",
+            9852
+        },
+        {
+            "acnet-f8b16-hdn",
+            "Lightweight CNN, mild denoising.",
+            9852
+        },
+        {
+            "acnet-f8b16-box",
+            "Lightweight CNN, without denoising.",
+            9852
         },
         {
             "arnet-f8b8",
@@ -63,6 +83,11 @@ namespace ac::specs
         {
             "arnet-f8b8-hdn",
             "ResNet for real-time tasks, mild denoising.",
+            9860
+        },
+        {
+            "arnet-f8b8-box",
+            "ResNet for real-time tasks, without denoising.",
             9860
         },
         {
@@ -76,6 +101,11 @@ namespace ac::specs
             19268
         },
         {
+            "arnet-f8b16-box",
+            "ResNet for real-time tasks, without denoising.",
+            19268
+        },
+        {
             "arnet-f8b32",
             "ResNet for real-time tasks, without denoising.",
             38084
@@ -86,6 +116,11 @@ namespace ac::specs
             38084
         },
         {
+            "arnet-f8b32-box",
+            "ResNet for real-time tasks, without denoising.",
+            38084
+        },
+        {
             "arnet-f8b64",
             "ResNet for real-time tasks, without denoising.",
             75716
@@ -93,6 +128,11 @@ namespace ac::specs
         {
             "arnet-f8b64-hdn",
             "ResNet for real-time tasks, mild denoising.",
+            75716
+        },
+        {
+            "arnet-f8b64-box",
+            "ResNet for real-time tasks, without denoising.",
             75716
         },
         {
