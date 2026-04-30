@@ -16,12 +16,15 @@ kernel void conv3x3_1to32_identity(
     biases += boffset;
 #endif
 
-    float s[4];
+    float s[16];
 
-    for (int i = 0; i < 8; i++)
+    for(int n = 0; n < 2; n++)
     {
-        conv3x3_cin1(src, s, 4, kernels + 1 * 9 * 4 * i, biases + 4 * i, x, y);
-        write_imagef(dst, (int4)(x, y, i, 0), Identity(vload4(0, s)));
+        conv3x3_cin1(src, s, 4, kernels + n * 1 * 9 * 16, biases + n * 16, x, y);
+        write_imagef(dst, (int4)(x, y, n * 4 + 0, 0), Identity(vload4(0, s)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 1, 0), Identity(vload4(1, s)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 2, 0), Identity(vload4(2, s)));
+        write_imagef(dst, (int4)(x, y, n * 4 + 3, 0), Identity(vload4(3, s)));
     }
 }
 
@@ -48,7 +51,7 @@ kernel void conv3x3_32to32_relu(
         float16 s = vload16(n, biases);
         for(int c = 0; c < 4; c++)
         {
-            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + 32 * 9 * 16 * n, x, y);
+            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + n * 32 * 9 * 16, x, y);
             s += vload16(0, buffer);
         }
         write_imagef(dst, (int4)(x, y, n * 4 + 0, 0), ReLU(s.s0123));
@@ -82,7 +85,7 @@ kernel void conv3x3_32to32_identity_add(
         float16 s = vload16(n, biases);
         for(int c = 0; c < 4; c++)
         {
-            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + 32 * 9 * 16 * n, x, y);
+            conv3x3_cin8_chunk(src, buffer, c, 32, 16, kernels + n * 32 * 9 * 16, x, y);
             s += vload16(0, buffer);
         }
         write_imagef(dst, (int4)(x, y, n * 4 + 0, 0), Identity(s.s0123) + read_imagef(feat, n_sampler, (int4)(x, y, n * 4 + 0, 0)));
