@@ -122,13 +122,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1_wasm_simd128<std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplWASM, std::uint8_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::UInt16:
-            conv3x3_cin1_wasm_simd128<std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplWASM, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
         case Image::Float32:
-            conv3x3_cin1_wasm_simd128<float, 8>(src, dst, kernels, biases, ReLU{});
+            conv3x3_cin1<OpImplWASM, float, 8>(src, dst, kernels, biases, ReLU{});
             break;
         }
     }
@@ -157,13 +157,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1_wasm_simd128<std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplWASM, std::uint8_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::UInt16:
-            conv3x3_cin1_wasm_simd128<std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplWASM, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         case Image::Float32:
-            conv3x3_cin1_wasm_simd128<float, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            conv3x3_cin1<OpImplWASM, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -173,13 +173,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1_wasm_simd128<std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1_wasm_simd128<std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1_wasm_simd128<float, 8>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -225,13 +225,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1_wasm_simd128<std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1_wasm_simd128<std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1_wasm_simd128<float, 16>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -264,13 +264,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv3x3_cin1_wasm_simd128<std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint8_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv3x3_cin1_wasm_simd128<std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv3x3_cin1_wasm_simd128<float, 32>(src, dst, kernels, biases, Identity{});
+            conv3x3_cin1<OpImplWASM, float, 32>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -303,13 +303,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1_wasm_simd128<std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, std::uint8_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1_wasm_simd128<std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1_wasm_simd128<float, 8>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, float, 8>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
@@ -346,13 +346,13 @@ namespace ac::core::cpu
         switch (src.type())
         {
         case Image::UInt8:
-            conv5x5_cin1_wasm_simd128<std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, std::uint8_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::UInt16:
-            conv5x5_cin1_wasm_simd128<std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
-            conv5x5_cin1_wasm_simd128<float, 16>(src, dst, kernels, biases, Identity{});
+            conv5x5_cin1<OpImplWASM, float, 16>(src, dst, kernels, biases, Identity{});
             break;
         }
     }
