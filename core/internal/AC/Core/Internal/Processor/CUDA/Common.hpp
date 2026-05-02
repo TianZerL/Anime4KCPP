@@ -1,6 +1,8 @@
 #ifndef AC_CORE_INTERNAL_PROCESSOR_CUDA_COMMON_HPP
 #define AC_CORE_INTERNAL_PROCESSOR_CUDA_COMMON_HPP
 
+#include <cstdint>
+
 #include <cuda_runtime.h>
 
 namespace ac::core::cuda

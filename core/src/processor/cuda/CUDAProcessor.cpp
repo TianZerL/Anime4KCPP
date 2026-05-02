@@ -406,7 +406,6 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
     for (int i = 0; i < 4; i++)
     {
         conv3x3_8to8_relu_cuda(tmp1, tmp2,  kernel(l), bias(l), stream); l++;
-
         conv3x3_8to8_relu_cuda(tmp2, tmp1, kernel(l), bias(l), stream); l++;
     }
 
@@ -549,8 +548,10 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::process(const Ima
         conv3x3_8to8_prelu_cuda(tmp2, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
         conv3x3_8to8_identity_residual_cuda(tmp1, tmp2, kernel(l), bias(l), tmp2, 0.2f, stream); l++;
     }
-    conv3x3_8to8_prelu_cuda( tmp2, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(tmp1, tmp2, kernel(l), bias(l), tmp2, 0.2f, kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l+=2;
+    conv3x3_8to8_prelu_cuda(tmp2, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(tmp1, tmp2,
+        kernel(l), bias(l), tmp2, 0.2f,
+        kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l+=2;
 
     conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(tmp2, out, kernel(l), bias(l), in, stream);
 
@@ -777,7 +778,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
         conv3x3_8to8_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l += 2;
+    conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(*tmpI, *tmpO,
+        kernel(l), bias(l), alpha(l),
+        kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l += 2;
     std::swap(tmpI, tmpO);
 
     conv3x3_8to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);
@@ -853,7 +856,9 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
         conv3x3_16to16_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l += 2;
+    conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(*tmpI, *tmpO,
+        kernel(l), bias(l), alpha(l), kernel(l + 1),
+        bias(l + 1), alpha(l + 1), feat, stream); l += 2;
     std::swap(tmpI, tmpO);
 
     conv3x3_16to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);

@@ -1,7 +1,8 @@
+#include <cstdint>
+
 #include <xmmintrin.h>
 
 #include "AC/Core/Image.hpp"
-#include "AC/Core/Util.hpp"
 #include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"

@@ -960,8 +960,7 @@ void ac::core::cpu::CPUProcessor<ac::core::model::FSRCNNX<8>>::process(const Ima
     conv3x3_8to8_prelu_conv1x1_8to8_add_prelu(
         *tmpI, *tmpO,
         model.kernel(l), model.bias(l), model.alpha(l),
-        model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat
-    ); l += 2;
+        model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat); l += 2;
     std::swap(tmpI, tmpO);
     // upscale
     conv3x3_8to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));
@@ -1019,8 +1018,7 @@ void ac::core::cpu::CPUProcessor<ac::core::model::FSRCNNX<16>>::process(const Im
     conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
         *tmpI, *tmpO,
         model.kernel(l), model.bias(l), model.alpha(l),
-        model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat
-    ); l += 2;
+        model.kernel(l + 1), model.bias(l + 1), model.alpha(l + 1), feat); l += 2;
     std::swap(tmpI, tmpO);
     // upscale
     conv3x3_16to4_identity_pixelshuffle_4to1(*tmpI, dst, model.kernel(l), model.bias(l));

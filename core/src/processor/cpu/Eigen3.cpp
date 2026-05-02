@@ -1,7 +1,8 @@
+#include <cstdint>
+
 #include <Eigen/Core>
 
 #include "AC/Core/Image.hpp"
-#include "AC/Core/Util.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
 

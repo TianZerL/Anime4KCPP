@@ -1,7 +1,6 @@
 #ifndef AC_CORE_UTIL_HPP
 #define AC_CORE_UTIL_HPP
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -15,49 +14,6 @@
 
 namespace ac::core
 {
-    struct ResidualArg
-    {
-        const Image& image;
-        float scale;
-    };
-
-    constexpr float identity(float v) noexcept;
-    constexpr float relu(float v) noexcept;
-    constexpr float lrelu(float v, float n) noexcept;
-    constexpr float prelu(float v, float n) noexcept;
-
-    class Identity
-    {
-    public:
-        constexpr Identity() noexcept = default;
-        float operator() (const float v, const int /*c*/) const noexcept { return identity(v); }
-    };
-    class ReLU
-    {
-    public:
-        constexpr ReLU() noexcept = default;
-        float operator() (const float v, const int /*c*/) const noexcept { return relu(v); }
-    };
-    class LReLU
-    {
-    public:
-        constexpr LReLU(const float negativeSlope) noexcept : negativeSlope(negativeSlope) {}
-        float operator() (const float v, const int /*c*/) const noexcept { return lrelu(v, negativeSlope); }
-
-    private:
-        const float negativeSlope;
-    };
-
-    class PReLU
-    {
-    public:
-        constexpr PReLU(const float* const alphas) noexcept : alphas(alphas) {}
-        float operator() (const float v, const int c) const noexcept { return prelu(v, alphas[c]); }
-
-    private:
-        const float* alphas;
-    };
-
     /**
      * @brief Align a value to a multiple of a power-of-two boundary.
      *
@@ -154,23 +110,6 @@ namespace ac::core
      * @param ptr A pointer from `fastMalloc`.
      */
     void fastFree(void* ptr) noexcept;
-}
-
-inline constexpr float ac::core::identity(const float v) noexcept
-{
-    return v;
-}
-inline constexpr float ac::core::relu(const float v) noexcept
-{
-    return v < 0.0f ? 0.0f : v;
-}
-inline constexpr float ac::core::lrelu(const float v, const float n) noexcept
-{
-    return v < v * n ? v * n : v;
-}
-inline constexpr float ac::core::prelu(const float v, const float n) noexcept
-{
-    return std::max(v, 0.0f) + n * std::min(v, 0.0f);
 }
 
 template <typename Integer>

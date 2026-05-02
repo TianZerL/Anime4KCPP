@@ -1,8 +1,8 @@
 #ifndef AC_CORE_INTERNAL_PROCESSOR_CPU_COMMON_HPP
 #define AC_CORE_INTERNAL_PROCESSOR_CPU_COMMON_HPP
 
+#include <algorithm>
 #include <array>
-#include <cstring>
 #include <type_traits>
 
 #include "AC/Core/Image.hpp"
@@ -10,6 +10,43 @@
 
 namespace ac::core::cpu
 {
+    struct ResidualArg
+    {
+        const Image& image;
+        float scale;
+    };
+
+    class Identity
+    {
+    public:
+        constexpr Identity() noexcept = default;
+        float operator() (const float v, const int /*c*/) const noexcept { return v; }
+    };
+    class ReLU
+    {
+    public:
+        constexpr ReLU() noexcept = default;
+        float operator() (const float v, const int /*c*/) const noexcept { return std::max(v, 0.0f); }
+    };
+    class LReLU
+    {
+    public:
+        constexpr LReLU(const float negativeSlope) noexcept : negativeSlope(negativeSlope) {}
+        float operator() (const float v, const int /*c*/) const noexcept { return std::max(v, v * negativeSlope); }
+
+    private:
+        const float negativeSlope;
+    };
+    class PReLU
+    {
+    public:
+        constexpr PReLU(const float* const alphas) noexcept : alphas(alphas) {}
+        float operator() (const float v, const int c) const noexcept { return std::max(v, 0.0f) + alphas[c] * std::min(v, 0.0f); }
+
+    private:
+        const float* alphas;
+    };
+
     template <typename OpImpl, typename OUT, int cin, int cout>
     inline void deconv2x2(const Image& src, Image& dst, const float* const kernels) noexcept
     {
