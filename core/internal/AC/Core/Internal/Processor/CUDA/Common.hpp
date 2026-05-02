@@ -46,42 +46,50 @@ namespace ac::core::cuda
         void* pixels = nullptr;
     };
 
+    template<int outType = DeviceImage::Float16>
     void conv3x3_1to8_relu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_8to8_relu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void deconv2x2_8to1_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv3x3_1to8_prelu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv3x3_1to8_identity_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_8to8_prelu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_8to8_identity_residual_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         const DeviceImage& idt, const float scale,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1,
@@ -90,59 +98,70 @@ namespace ac::core::cuda
         const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept;
+    template<int inType = DeviceImage::Float16>
     void conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         const DeviceImage& idt,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv3x3_1to16_identity_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_16to16_relu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_16to16_identity_add_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept;
+    template<int inType = DeviceImage::Float16>
     void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv3x3_1to32_identity_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_32to32_relu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_32to32_identity_add_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept;
+    template<int inType = DeviceImage::Float16>
     void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv5x5_1to8_identity_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1, const float* alphas1,
@@ -150,21 +169,25 @@ namespace ac::core::cuda
         const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept;
+    template<int inType = DeviceImage::Float16>
     void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int outType = DeviceImage::Float16>
     void conv5x5_1to16_identity_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_16to16_prelu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept;
+    template<int inoutType = DeviceImage::Float16>
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
         const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1, const float* alphas1,

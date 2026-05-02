@@ -82,12 +82,12 @@ namespace ac::core::cuda
         return contextList;
     }
 
-    static inline cudaError_t copyImageHostToDevice(const Image& dst, DeviceImage& src, const cudaStream_t stream) noexcept
+    static inline cudaError_t copyImageHostToDevice(DeviceImage& dst, const Image& src, const cudaStream_t stream) noexcept
     {
         auto lineSize = src.width() * src.pixelSize();
         return cudaMemcpy2DAsync(dst.ptr(), dst.stride(), src.ptr(), src.stride(), lineSize, src.height(), cudaMemcpyHostToDevice, stream);
     }
-    static inline cudaError_t copyImageDeviceToHost(const DeviceImage& dst, Image& src, const cudaStream_t stream) noexcept
+    static inline cudaError_t copyImageDeviceToHost(Image& dst, const DeviceImage& src, const cudaStream_t stream) noexcept
     {
         auto lineSize = src.width() * src.pixelSize();
         return cudaMemcpy2DAsync(dst.ptr(), dst.stride(), src.ptr(), src.stride(), lineSize, src.height(), cudaMemcpyDeviceToHost, stream);
@@ -399,7 +399,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
 
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to8_relu_cuda(in, tmp1, kernel(l), bias(l), stream); l++;
 
@@ -413,7 +413,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -468,7 +468,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::process(const Ima
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to8_prelu_cuda(in, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
     std::swap(tmpI, tmpO);
@@ -481,7 +481,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::process(const Ima
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -537,7 +537,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::process(const Ima
 
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to8_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
@@ -557,7 +557,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::process(const Ima
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -615,7 +615,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to16_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
@@ -633,7 +633,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -691,7 +691,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv3x3_1to32_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
@@ -709,7 +709,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -767,7 +767,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv5x5_1to8_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
@@ -787,7 +787,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -845,7 +845,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
     conv5x5_1to16_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
@@ -865,7 +865,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(dst, out, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
