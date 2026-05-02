@@ -21,6 +21,7 @@ if(NOT AC_CORE_VERSION_STR)
 endif()
 
 # third-party
+include(${DEPENDENCY_DIR}/half.cmake)
 include(${DEPENDENCY_DIR}/ruapu.cmake)
 include(${DEPENDENCY_DIR}/stb.cmake)
 if(AC_CORE_WITH_EIGEN3)
@@ -165,6 +166,7 @@ check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
 
 target_link_libraries(ac PRIVATE
     ac_util_misc ac_util_threads ac_util_parallel
+    dep::half
     dep::ruapu
     dep::stb
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:dep::eigen3>

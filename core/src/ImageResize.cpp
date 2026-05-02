@@ -186,8 +186,9 @@ namespace ac::core::detail
                 {
                 case Image::UInt8: return STBIR_TYPE_UINT8;
                 case Image::UInt16: return STBIR_TYPE_UINT16;
+                case Image::Float16: return STBIR_TYPE_HALF_FLOAT;
                 case Image::Float32: return STBIR_TYPE_FLOAT;
-                default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
+                default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
                 }
             }()
            );

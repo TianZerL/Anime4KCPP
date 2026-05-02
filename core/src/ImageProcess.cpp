@@ -3,6 +3,8 @@
 #include <cstring>
 #include <type_traits>
 
+#include <half.hpp>
+
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Util.hpp"
 
@@ -371,6 +373,7 @@ void ac::core::rgb2yuv(const ac::core::Image& rgb, ac::core::Image& yuv)
     {
     case Image::UInt8: return detail::rgb2yuv<std::uint8_t>(rgb, yuv);
     case Image::UInt16: return detail::rgb2yuv<std::uint16_t>(rgb, yuv);
+    case Image::Float16: return detail::rgb2yuv<half_float::half>(rgb, yuv);
     case Image::Float32: return detail::rgb2yuv<float>(rgb, yuv);
     }
 }
@@ -383,6 +386,7 @@ void ac::core::rgb2yuv(const Image& rgb, Image& y, Image& uv)
     {
     case Image::UInt8: return detail::rgb2yuv<std::uint8_t>(rgb, y, uv);
     case Image::UInt16: return detail::rgb2yuv<std::uint16_t>(rgb, y, uv);
+    case Image::Float16: return detail::rgb2yuv<half_float::half>(rgb, y, uv);
     case Image::Float32: return detail::rgb2yuv<float>(rgb, y, uv);
     }
 }
@@ -396,6 +400,7 @@ void ac::core::rgb2yuv(const Image& rgb, Image& y, Image& u, Image& v)
     {
     case Image::UInt8: return detail::rgb2yuv<std::uint8_t>(rgb, y, u, v);
     case Image::UInt16: return detail::rgb2yuv<std::uint16_t>(rgb, y, u, v);
+    case Image::Float16: return detail::rgb2yuv<half_float::half>(rgb, y, u, v);
     case Image::Float32: return detail::rgb2yuv<float>(rgb, y, u, v);
     }
 }
@@ -408,6 +413,7 @@ void ac::core::rgba2yuva(const Image& rgba, Image& yuva)
     {
     case Image::UInt8: return detail::rgba2yuva<std::uint8_t>(rgba, yuva);
     case Image::UInt16: return detail::rgba2yuva<std::uint16_t>(rgba, yuva);
+    case Image::Float16: return detail::rgba2yuva<half_float::half>(rgba, yuva);
     case Image::Float32: return detail::rgba2yuva<float>(rgba, yuva);
     }
 }
@@ -420,6 +426,7 @@ void ac::core::rgba2yuva(const Image& rgba, Image& y, Image& uva)
     {
     case Image::UInt8: return detail::rgba2yuva<std::uint8_t>(rgba, y, uva);
     case Image::UInt16: return detail::rgba2yuva<std::uint16_t>(rgba, y, uva);
+    case Image::Float16: return detail::rgba2yuva<half_float::half>(rgba, y, uva);
     case Image::Float32: return detail::rgba2yuva<float>(rgba, y, uva);
     }
 }
@@ -434,6 +441,7 @@ void ac::core::rgba2yuva(const Image& rgba, Image& y, Image& u, Image& v, Image&
     {
     case Image::UInt8: return detail::rgba2yuva<std::uint8_t>(rgba, y, u, v, a);
     case Image::UInt16: return detail::rgba2yuva<std::uint16_t>(rgba, y, u, v, a);
+    case Image::Float16: return detail::rgba2yuva<half_float::half>(rgba, y, u, v, a);
     case Image::Float32: return detail::rgba2yuva<float>(rgba, y, u, v, a);
     }
 }
@@ -446,6 +454,7 @@ void ac::core::yuv2rgb(const ac::core::Image& yuv, ac::core::Image& rgb)
     {
     case Image::UInt8: return detail::yuv2rgb<std::uint8_t>(yuv, rgb);
     case Image::UInt16: return detail::yuv2rgb<std::uint16_t>(yuv, rgb);
+    case Image::Float16: return detail::yuv2rgb<half_float::half>(yuv, rgb);
     case Image::Float32: return detail::yuv2rgb<float>(yuv, rgb);
     }
 }
@@ -457,6 +466,7 @@ void ac::core::yuv2rgb(const ac::core::Image& y, const ac::core::Image& uv, ac::
     {
     case Image::UInt8: return detail::yuv2rgb<std::uint8_t>(y, uv, rgb);
     case Image::UInt16: return detail::yuv2rgb<std::uint16_t>(y, uv, rgb);
+    case Image::Float16: return detail::yuv2rgb<half_float::half>(y, uv, rgb);
     case Image::Float32: return detail::yuv2rgb<float>(y, uv, rgb);
     }
 }
@@ -468,6 +478,7 @@ void ac::core::yuv2rgb(const Image& y, const Image& u, const Image& v, Image& rg
     {
     case Image::UInt8: return detail::yuv2rgb<std::uint8_t>(y, u, v, rgb);
     case Image::UInt16: return detail::yuv2rgb<std::uint16_t>(y, u, v, rgb);
+    case Image::Float16: return detail::yuv2rgb<half_float::half>(y, u, v, rgb);
     case Image::Float32: return detail::yuv2rgb<float>(y, u, v, rgb);
     }
 }
@@ -480,6 +491,7 @@ void ac::core::yuva2rgba(const Image& yuva, Image& rgba)
     {
     case Image::UInt8: return detail::yuva2rgba<std::uint8_t>(yuva, rgba);
     case Image::UInt16: return detail::yuva2rgba<std::uint16_t>(yuva, rgba);
+    case Image::Float16: return detail::yuva2rgba<half_float::half>(yuva, rgba);
     case Image::Float32: return detail::yuva2rgba<float>(yuva, rgba);
     }
 }
@@ -491,6 +503,7 @@ void ac::core::yuva2rgba(const Image& y, const Image& uva, Image& rgba)
     {
     case Image::UInt8: return detail::yuva2rgba<std::uint8_t>(y, uva, rgba);
     case Image::UInt16: return detail::yuva2rgba<std::uint16_t>(y, uva, rgba);
+    case Image::Float16: return detail::yuva2rgba<half_float::half>(y, uva, rgba);
     case Image::Float32: return detail::yuva2rgba<float>(y, uva, rgba);
     }
 }
@@ -502,6 +515,7 @@ void ac::core::yuva2rgba(const Image& y, const Image& u, const Image& v, const I
     {
     case Image::UInt8: return detail::yuva2rgba<std::uint8_t>(y, u, v, a, rgba);
     case Image::UInt16: return detail::yuva2rgba<std::uint16_t>(y, u, v, a, rgba);
+    case Image::Float16: return detail::yuva2rgba<half_float::half>(y, u, v, a, rgba);
     case Image::Float32: return detail::yuva2rgba<float>(y, u, v, a, rgba);
     }
 }
@@ -551,7 +565,18 @@ ac::core::Image ac::core::astype(const Image& src, const int type) noexcept
         detail::copy<std::uint8_t, std::uint16_t>(src, dst);
     else if (src.type() == Image::UInt16 && dst.type() == Image::UInt8)
         detail::copy<std::uint16_t, std::uint8_t>(src, dst);
-
+    else if (src.type() == Image::Float16 && dst.type() == Image::Float32)
+        detail::copy<half_float::half, float>(src, dst);
+    else if (src.type() == Image::Float32 && dst.type() == Image::Float16)
+        detail::copy<float, half_float::half>(src, dst);
+    else if (src.type() == Image::UInt8 && dst.type() == Image::Float16)
+        detail::copy<std::uint8_t, half_float::half>(src, dst);
+    else if (src.type() == Image::Float16 && dst.type() == Image::UInt8)
+        detail::copy<half_float::half, std::uint8_t>(src, dst);
+    else if (src.type() == Image::UInt16 && dst.type() == Image::Float16)
+        detail::copy<std::uint16_t, half_float::half>(src, dst);
+    else if (src.type() == Image::Float16 && dst.type() == Image::UInt16)
+        detail::copy<half_float::half, std::uint16_t>(src, dst);
     return dst;
 }
 void ac::core::copy(const Image& src, Image& dst) noexcept
@@ -583,6 +608,18 @@ void ac::core::copy(const Image& src, Image& dst) noexcept
         detail::copy<float, std::uint16_t>(src, tmp);
     else if (src.type() == Image::UInt8 && tmp.type() == Image::UInt16)
         detail::copy<std::uint8_t, std::uint16_t>(src, tmp);
+    else if (src.type() == Image::Float16 && tmp.type() == Image::Float32)
+        detail::copy<half_float::half, float>(src, tmp);
+    else if (src.type() == Image::Float32 && tmp.type() == Image::Float16)
+        detail::copy<float, half_float::half>(src, tmp);
+    else if (src.type() == Image::UInt8 && tmp.type() == Image::Float16)
+        detail::copy<std::uint8_t, half_float::half>(src, tmp);
+    else if (src.type() == Image::Float16 && tmp.type() == Image::UInt8)
+        detail::copy<half_float::half, std::uint8_t>(src, tmp);
+    else if (src.type() == Image::UInt16 && tmp.type() == Image::Float16)
+        detail::copy<std::uint16_t, half_float::half>(src, tmp);
+    else if (src.type() == Image::Float16 && tmp.type() == Image::UInt16)
+        detail::copy<half_float::half, std::uint16_t>(src, tmp);
 
     if (dst != tmp) dst = tmp;
 }

@@ -34,7 +34,8 @@ PYBIND11_MODULE(pyac, m)
             if (src.format == py::format_descriptor<std::uint8_t>::format()) return ac::core::Image::UInt8;
             if (src.format == py::format_descriptor<std::uint16_t>::format()) return ac::core::Image::UInt16;
             if (src.format == py::format_descriptor<float>::format()) return ac::core::Image::Float32;
-            throw py::buffer_error{ "Incompatible type: expected uint8, uint16 or float32." };
+            if (src.format == "e") return ac::core::Image::Float16;
+            throw py::buffer_error{ "Incompatible type: expected uint8, uint16, float16 or float32." };
         }();
         py::array out{ in.dtype(), dstC == 1 ? py::array::ShapeContainer{ dstH, dstW } : py::array::ShapeContainer{ dstH, dstW, dstC } };
         auto dst = out.request();
@@ -117,7 +118,8 @@ PYBIND11_MODULE(pyac, m)
             if (src.format == py::format_descriptor<std::uint8_t>::format()) return ac::core::Image::UInt8;
             if (src.format == py::format_descriptor<std::uint16_t>::format()) return ac::core::Image::UInt16;
             if (src.format == py::format_descriptor<float>::format()) return ac::core::Image::Float32;
-            throw py::buffer_error{ "Incompatible type: expected uint8, uint16 or float32." };
+            if (src.format == "e") return ac::core::Image::Float16;
+            throw py::buffer_error{ "Incompatible type: expected uint8, uint16, float16 or float32." };
         }();
 
         py::array out{ in.dtype(), dstC == 1 ? py::array::ShapeContainer{ dstH, dstW } : py::array::ShapeContainer{ dstH, dstW, dstC } };

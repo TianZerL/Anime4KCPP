@@ -348,6 +348,7 @@ public:
     using ElementType = int;
     static constexpr ElementType UInt8   = 0 << 8 | 1;
     static constexpr ElementType UInt16  = 0 << 8 | 2;
+    static constexpr ElementType Float16 = 2 << 8 | 2;
     static constexpr ElementType Float32 = 2 << 8 | 4;
 
 public:

@@ -29,34 +29,20 @@ namespace ac::core
     constexpr Integer align(Integer v, int n) noexcept;
 
     /**
-     * @brief Convert a value to float.
-     * @param v Input float point value.
-     * @return A float value.
-     */
-    template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool> = true>
-    constexpr float toFloat(Float v) noexcept;
-    /**
      * @brief Convert a value to normalized float.
-     * @param v Input unsigned integer value.
+     * @param v Input value.
      * @return A normalized float value.
      */
-    template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
-    constexpr float toFloat(Unsigned v) noexcept;
+    template<typename T>
+    constexpr float toFloat(T v) noexcept;
 
     /**
-     * @brief Convert a float value to `Float` type and clamp the value between 0.0f and 1.0f.
+     * @brief Clamp the float value between 0.0f and 1.0f, then convert it to type `T`, denormalizing if necessary.
      * @param v Input float value.
-     * @return A value between 0.0f and 1.0f.
+     * @return A unnormalized value.
      */
-    template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool> = true>
-    constexpr Float fromFloat(float v) noexcept;
-    /**
-     * @brief Convert a float value to `Unsigned` type and clamp the value between 0 and the max of `Unsigned`.
-     * @param v Input float value.
-     * @return A value between 0 and the max of `Unsigned`.
-     */
-    template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
-    constexpr Unsigned fromFloat(float v) noexcept;
+    template<typename T>
+    constexpr T fromFloat(float v) noexcept;
 
     /**
      * @brief Compute `ceil(log2(v))` as fast as possible.
@@ -118,26 +104,23 @@ inline constexpr Integer ac::core::align(const Integer v, const int n) noexcept
     return (v + n - 1) & -n;
 }
 
-template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool>>
-inline constexpr float ac::core::toFloat(const Float v) noexcept
+template<typename T>
+inline constexpr float ac::core::toFloat(const T v) noexcept
 {
-    return static_cast<float>(v);
-}
-template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>>
-inline constexpr float ac::core::toFloat(const Unsigned v) noexcept
-{
-    return static_cast<float>(v) / static_cast<float>(std::numeric_limits<Unsigned>::max());
+    if constexpr (std::is_unsigned_v<T>)
+        return static_cast<float>(v) / static_cast<float>(std::numeric_limits<T>::max());
+    else
+        return static_cast<float>(v);
 }
 
-template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool>>
-inline constexpr Float ac::core::fromFloat(const float v) noexcept
+template<typename T>
+inline constexpr T ac::core::fromFloat(const float v) noexcept
 {
-    return v < 0.0f ? 0.0f : (v < 1.0f ? v : 1.0f);
-}
-template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>>
-inline constexpr Unsigned ac::core::fromFloat(const float v) noexcept
-{
-    return static_cast<Unsigned>(fromFloat<float>(v) * std::numeric_limits<Unsigned>::max() + 0.5f);
+    float saturated = v < 0.0f ? 0.0f : (v < 1.0f ? v : 1.0f);
+    if constexpr (std::is_unsigned_v<T>)
+        return static_cast<T>(saturated * std::numeric_limits<T>::max() + 0.5f);
+    else 
+        return static_cast<T>(saturated);
 }
 
 inline int ac::core::ceilLog2(const double v) noexcept

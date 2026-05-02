@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 
+#include <half.hpp>
+
 #include "AC/Core/Image.hpp"
 
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
@@ -55,6 +57,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, ReLU{});
             break;
+        case Image::Float16:
+            conv3x3_cin1<OpImplEigen3, half_float::half, 8>(src, dst, kernels, biases, ReLU{});
+            break;
         case Image::Float32:
             conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, ReLU{});
             break;
@@ -74,6 +79,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             deconv2x2<OpImplEigen3, std::uint16_t, 8, 1>(src, dst, kernels);
             break;
+        case Image::Float16:
+            deconv2x2<OpImplEigen3, half_float::half, 8, 1>(src, dst, kernels);
+            break;
         case Image::Float32:
             deconv2x2<OpImplEigen3, float, 8, 1>(src, dst, kernels);
             break;
@@ -90,6 +98,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
+        case Image::Float16:
+            conv3x3_cin1<OpImplEigen3, half_float::half, 8>(src, dst, kernels, biases, PReLU{ alphas });
+            break;
         case Image::Float32:
             conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, PReLU{ alphas });
             break;
@@ -105,6 +116,9 @@ namespace ac::core::cpu
             break;
         case Image::UInt16:
             conv3x3_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            break;
+        case Image::Float16:
+            conv3x3_cin1<OpImplEigen3, half_float::half, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
             conv3x3_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
@@ -142,6 +156,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
+        case Image::Float16:
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, half_float::half, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            break;
         case Image::Float32:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
             break;
@@ -157,6 +174,9 @@ namespace ac::core::cpu
             break;
         case Image::UInt16:
             conv3x3_cin1<OpImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            break;
+        case Image::Float16:
+            conv3x3_cin1<OpImplEigen3, half_float::half, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
             conv3x3_cin1<OpImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
@@ -181,6 +201,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
+        case Image::Float16:
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, half_float::half, 16, 2>(src, dst, kernels, biases, nullptr);
+            break;
         case Image::Float32:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 16, 2>(src, dst, kernels, biases, nullptr);
             break;
@@ -196,6 +219,9 @@ namespace ac::core::cpu
             break;
         case Image::UInt16:
             conv3x3_cin1<OpImplEigen3, std::uint16_t, 32>(src, dst, kernels, biases, Identity{});
+            break;
+        case Image::Float16:
+            conv3x3_cin1<OpImplEigen3, half_float::half, 32>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
             conv3x3_cin1<OpImplEigen3, float, 32>(src, dst, kernels, biases, Identity{});
@@ -220,6 +246,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
+        case Image::Float16:
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, half_float::half, 32, 2>(src, dst, kernels, biases, nullptr);
+            break;
         case Image::Float32:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 32, 2>(src, dst, kernels, biases, nullptr);
             break;
@@ -235,6 +264,9 @@ namespace ac::core::cpu
             break;
         case Image::UInt16:
             conv5x5_cin1<OpImplEigen3, std::uint16_t, 8>(src, dst, kernels, biases, Identity{});
+            break;
+        case Image::Float16:
+            conv5x5_cin1<OpImplEigen3, half_float::half, 8>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
             conv5x5_cin1<OpImplEigen3, float, 8>(src, dst, kernels, biases, Identity{});
@@ -263,6 +295,9 @@ namespace ac::core::cpu
         case Image::UInt16:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, std::uint16_t, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
+        case Image::Float16:
+            conv3x3_identity_pixelshuffle_float<OpImplEigen3, half_float::half, 8, 2>(src, dst, kernels, biases, nullptr);
+            break;
         case Image::Float32:
             conv3x3_identity_pixelshuffle_float<OpImplEigen3, float, 8, 2>(src, dst, kernels, biases, nullptr);
             break;
@@ -278,6 +313,9 @@ namespace ac::core::cpu
             break;
         case Image::UInt16:
             conv5x5_cin1<OpImplEigen3, std::uint16_t, 16>(src, dst, kernels, biases, Identity{});
+            break;
+        case Image::Float16:
+            conv5x5_cin1<OpImplEigen3, half_float::half, 16>(src, dst, kernels, biases, Identity{});
             break;
         case Image::Float32:
             conv5x5_cin1<OpImplEigen3, float, 16>(src, dst, kernels, biases, Identity{});
