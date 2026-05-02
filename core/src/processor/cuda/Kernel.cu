@@ -200,7 +200,7 @@ namespace ac::core::cuda
     struct OpImplCUDA
     {
         template <int vsize, typename T1, typename T2>
-        __device__ static float dot(const T1* const v1, const T2* const v2) noexcept
+        __device__ static float dot(const T1* const __restrict__ v1, const T2* const __restrict__ v2) noexcept
         {
             float sum = 0.0f;
 
@@ -210,7 +210,7 @@ namespace ac::core::cuda
         }
 
         template <int cout, int cpos, typename T>
-        __device__ static void conv_cin1(const T* const rptr, float* const __restrict__ out, const float* const __restrict__ kernels, const float* const __restrict__ biases) noexcept
+        __device__ static void conv_cin1(const T* const __restrict__ rptr, float* const __restrict__ out, const float* const __restrict__ kernels, const float* const __restrict__ biases) noexcept
         {
             for (int n = 0; n < cout; n++)
             {
