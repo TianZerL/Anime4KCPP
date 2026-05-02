@@ -4,7 +4,7 @@
 #include <cuda/std/type_traits>
 #include <cuda_fp16.h>
 
-#include "AC/Core/Image.hpp"
+#include "AC/Core/Internal/Processor/CUDA/Common.hpp"
 
 namespace ac::core::cuda
 {
@@ -93,38 +93,27 @@ namespace ac::core::cuda
     }
 
     template<typename Float, ::cuda::std::enable_if_t<::cuda::std::is_floating_point_v<Float>, bool> = true>
-    __device__ static inline float toFloat(const Float v) noexcept
+    __device__ static inline Float saturate(const Float v) noexcept
     {
-        return static_cast<float>(v);
-    }
-    template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
-    __device__ static inline float toFloat(const Unsigned v) noexcept
-    {
-        return static_cast<float>(v) / static_cast<float>(::cuda::std::numeric_limits<Unsigned>::max());
-    }
-    __device__ static inline float toFloat(const half v) noexcept
-    {
-        return __half2float(v);
-    }
-
-    template<typename T>
-    __device__ static inline auto toHalf(const T v) noexcept
-    {
-        if constexpr (::cuda::std::is_same_v<T, half>)
-            return v;
+        if constexpr (::cuda::std::is_same_v<Float, float>)
+            return __saturatef(v);
+        else if constexpr (::cuda::std::is_same_v<Float, half>)
+            return __hmin(__hmax(v, 0.0f), 1.0f);
         else
-            return __float2half(toFloat(v));
+            return min(max(v, 0.0f), 1.0f);
     }
 
-    template<typename Float, ::cuda::std::enable_if_t<::cuda::std::is_floating_point_v<Float>, bool> = true>
-    __device__ static inline Float fromFloat(const float v) noexcept
+    template<typename To, typename From>
+    __device__ static inline To cast(const From v) noexcept
     {
-        return __saturatef(v);
-    }
-    template<typename Unsigned, ::cuda::std::enable_if_t<::cuda::std::is_unsigned_v<Unsigned>, bool> = true>
-    __device__ static inline Unsigned fromFloat(const float v) noexcept
-    {
-        return static_cast<Unsigned>(fromFloat<float>(v) * ::cuda::std::numeric_limits<Unsigned>::max() + 0.5f);
+        if constexpr (::cuda::std::is_same_v<To, From>)
+            return v;
+        else if constexpr (::cuda::std::is_unsigned_v<From> && (::cuda::std::is_floating_point_v<To> || ::cuda::std::is_same_v<To, half>))
+            return static_cast<To>(v) / static_cast<To>(::cuda::std::numeric_limits<From>::max());
+        else if constexpr ((::cuda::std::is_floating_point_v<From> || ::cuda::std::is_same_v<From, half>) && ::cuda::std::is_unsigned_v<To>)
+            return static_cast<To>(v * static_cast<From>(::cuda::std::numeric_limits<To>::max()) + static_cast<From>(0.5f));
+        else
+            return static_cast<To>(v);
     }
 
     template <typename T, int cin, int padx, int pady, int limit = 8192>
@@ -232,7 +221,7 @@ namespace ac::core::cuda
         {
             float sum = 0.0f;
 
-            for (int i = 0; i < vsize; i++) sum += toFloat(v1[i]) * toFloat(v2[i]);
+            for (int i = 0; i < vsize; i++) sum += cast<float>(v1[i]) * cast<float>(v2[i]);
 
             return sum;
         }
@@ -244,7 +233,7 @@ namespace ac::core::cuda
             {
                 auto kptr = kernels + n * cpos;
                 out[n] = biases[n];
-                for (int i = 0; i < cpos; i++) out[n] += toFloat(rptr[i]) * kptr[i];
+                for (int i = 0; i < cpos; i++) out[n] += cast<float>(rptr[i]) * kptr[i];
             }
         }
 
@@ -256,7 +245,7 @@ namespace ac::core::cuda
                 out[n] = biases[n];
                 for (int p = 0; p < cpos; p++)
                     for (int c = 0; c < cin; c++)
-                        out[n] += toFloat(rptr[p][c]) * kernels[n * cin * cpos + cin * p + c];
+                        out[n] += cast<float>(rptr[p][c]) * kernels[n * cin * cpos + cin * p + c];
             }
         }
     };
@@ -283,10 +272,10 @@ namespace ac::core::cuda
 
             auto index = (y % upscale) * upscale + (x % upscale);
 
-            for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index));
+            for (int n = 0; n < cout; n++) out[n] = cast<OUT>(saturate(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index)));
         }
 
-        template <typename OpImpl, typename IN, int kw, int kh, int cout, typename ActiveFunc>
+        template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cout, typename ActiveFunc>
         __global__ void conv_cin1(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -314,17 +303,17 @@ namespace ac::core::cuda
             float rptr[kw * kh];
             for (int ypos = -hkh; ypos <= hkh; ypos++)
                 for (int xpos = -hkw; xpos <= hkw; xpos++)
-                    rptr[(ypos + hkh) * kw + xpos + hkw] = toFloat(*getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + xpos, y + ypos));
+                    rptr[(ypos + hkh) * kw + xpos + hkw] = cast<float>(*getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x + xpos, y + ypos));
 
             float sum[cout];
 
             OpImpl::template conv_cin1<cout, kw * kh>(rptr, sum, kptr, bptr);
 
-            auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
-            for (int n = 0; n < cout; n++) out[n] = toHalf(activeFunc(sum[n], n));
+            auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
+            for (int n = 0; n < cout; n++) out[n] = cast<OUT>(activeFunc(sum[n], n));
         }
 
-        template <typename OpImpl, typename IN, int kw, int kh, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
+        template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
         __global__ void conv(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -359,7 +348,7 @@ namespace ac::core::cuda
 
             OpImpl::template conv<cin, cout, kw * kh>(rptr, sum, kptr, bptr);
 
-            auto out = getWritePtr<half>(dptr, dstW, dstH, dstC, dpitch, x, y);
+            auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
 
             for (int n = 0; n < cout; n++)
             {
@@ -367,11 +356,11 @@ namespace ac::core::cuda
 
                 if constexpr (sizeof...(ResidualArgs))
                     for (int idx = 0; idx < sizeof...(ResidualArgs); idx++)
-                        sum[n] = sum[n] * residualArgs[idx].scale + toFloat(getReadPtr<IN>(residualArgs[idx].ptr, residualArgs[idx].w, residualArgs[idx].h, residualArgs[idx].c, residualArgs[idx].pitch, x, y)[n]);
+                        sum[n] = sum[n] * residualArgs[idx].scale + cast<float>(getReadPtr<IN>(residualArgs[idx].ptr, residualArgs[idx].w, residualArgs[idx].h, residualArgs[idx].c, residualArgs[idx].pitch, x, y)[n]);
 
                 if constexpr (postactive) sum[n] = activeFunc(sum[n], n);
 
-                out[n] = toHalf(sum[n]);
+                out[n] = cast<OUT>(sum[n]);
             }
         }
 
@@ -416,13 +405,13 @@ namespace ac::core::cuda
             for (int n = 0; n < cout; n++)
             {
                 if constexpr (::cuda::std::is_same_v<NearestInterpolationArg, ResidualArg>)
-                    sum[n] = sum[n] * nearestInterpolationArg.scale + toFloat(*getReadPtr<OUT>(nearestInterpolationArg.ptr, nearestInterpolationArg.w, nearestInterpolationArg.h, nearestInterpolationArg.c, nearestInterpolationArg.pitch, x, y));
+                    sum[n] = sum[n] * nearestInterpolationArg.scale + cast<float>(*getReadPtr<OUT>(nearestInterpolationArg.ptr, nearestInterpolationArg.w, nearestInterpolationArg.h, nearestInterpolationArg.c, nearestInterpolationArg.pitch, x, y));
 
-                *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = fromFloat<OUT>(sum[n]);
+                *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = cast<OUT>(saturate(sum[n]));
             }
         }
 
-        template <typename OpImpl, typename IN, int cin, int ctemp, int cout, bool postactive3x3 = false, bool postactive1x1 = false, typename ActiveFunc3x3, typename ResidualArgs3x3, typename ActiveFunc1x1, typename ResidualArgs1x1>
+        template <typename OpImpl, typename IN, typename OUT, int cin, int ctemp, int cout, bool postactive3x3 = false, bool postactive1x1 = false, typename ActiveFunc3x3, typename ResidualArgs3x3, typename ActiveFunc1x1, typename ResidualArgs1x1>
         __global__ void conv3x3_conv1x1(
             const void* const __restrict__ sptr,
             const int srcW, const int srcH, const int srcC, const int spitch,
@@ -466,7 +455,7 @@ namespace ac::core::cuda
                 if constexpr (!postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
 
                 if constexpr (::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>)
-                    buffer[n] = buffer[n] * residualArg3x3.scale + toFloat(getReadPtr<half>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
+                    buffer[n] = buffer[n] * residualArg3x3.scale + cast<float>(getReadPtr<IN>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
 
                 if constexpr (postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
             }
@@ -480,473 +469,446 @@ namespace ac::core::cuda
             const float* rptr1x1[] = { buffer };
             OpImpl::template conv<ctemp, cout, 1 * 1>(rptr1x1, sum, kptr, bptr);
 
-            auto out = getWritePtr<IN>(dptr, dstW, dstH, dstC, dpitch, x, y);
+            auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
 
             for (int n = 0; n < cout; n++)
             {
                 if constexpr (!postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
 
                 if constexpr (::cuda::std::is_same_v<ResidualArgs1x1, ResidualArg>)
-                    sum[n] = sum[n] * residualArg1x1.scale + toFloat(getReadPtr<half>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
+                    sum[n] = sum[n] * residualArg1x1.scale + cast<float>(getReadPtr<IN>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
 
                 if constexpr (postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
 
-                out[n] = toHalf(sum[n]);
+                out[n] = cast<OUT>(sum[n]);
             }
         }
 }
 
     void conv3x3_1to8_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> << < grid, block, 0, stream >> > (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
         }
     }
     void conv3x3_8to8_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     void deconv2x2_8to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const DeviceImage& src, DeviceImage& dst,
         const float* kernels,
-        Image::ElementType dtype,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (dstW + block.x - 1) / block.x, (dstH + block.y - 1) / block.y };
-        switch (dtype)
+        dim3 grid{ (dst.width() + block.x - 1) / block.x, (dst.height() + block.y - 1) / block.y };
+        switch (dst.type())
         {
-        case Image::UInt8:
-            return kernel::deconv2x2_cuda<OpImplCUDA, half, std::uint8_t, 8, 1> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels);
-        case Image::UInt16:
-            return kernel::deconv2x2_cuda<OpImplCUDA, half, std::uint16_t, 8, 1> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels);
-        case Image::Float32:
-            return kernel::deconv2x2_cuda<OpImplCUDA, half, float, 8, 1> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels);
+        case DeviceImage::UInt8:
+            return kernel::deconv2x2_cuda<OpImplCUDA, half, std::uint8_t, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+        case DeviceImage::UInt16:
+            return kernel::deconv2x2_cuda<OpImplCUDA, half, std::uint16_t, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+        case DeviceImage::Float16:
+            return kernel::deconv2x2_cuda<OpImplCUDA, half, half, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+        case DeviceImage::Float32:
+            return kernel::deconv2x2_cuda<OpImplCUDA, half, float, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
         }
     }
 
     void conv3x3_1to8_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
         }
     }
 
     void conv3x3_1to8_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 3, 3, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_8to8_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
     }
     void conv3x3_8to8_identity_residual_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* iptr, int idW, int idH, int idC, int ipitch,
-        const float scale,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
+        const DeviceImage& idt, const float scale,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
             Identity{},
-            ResidualArg{ iptr, idW, idH, idC, ipitch, scale }
+            ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), scale }
         );
     }
     void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1,
-        const void* iptr, int idW, int idH, int idC, int ipitch, const float scale,
+        const DeviceImage& idt, const float scale,
         const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
+        const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, 8, 8, 8, false, false> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
-            kernels1, biases1, Identity{}, ResidualArg{iptr, idW, idH, idC, ipitch, scale },
-            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 8, 8, 8, false, false> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
+            kernels1, biases1, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), scale },
+            kernels2, biases2, PReLU{ alphas2 }, ResidualArg{ feat.ptr(), feat.width(), feat.height(), feat.channels(), feat.stride(), 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* iptr, int idW, int idH, int idC, int ipitch,
-        Image::ElementType dtype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
+        const DeviceImage& idt,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (dtype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (dst.type())
         {
-        case Image::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
-        case Image::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
-        case Image::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ResidualArg{ iptr, idW, idH, idC, ipitch, 1.0f });
+        case DeviceImage::UInt8:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+        case DeviceImage::UInt16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+        case DeviceImage::Float16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+        case DeviceImage::Float32:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
         }
     }
 
     void conv3x3_1to16_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 3, 3, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 3, 3, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 3, 3, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     void conv3x3_16to16_identity_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
+        const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
             Identity{},
-            ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
+            ResidualArg{ feat.ptr(), feat.width(), feat.height(), feat.channels(), feat.stride(), 1.0f });
     }
     void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (dtype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (dst.type())
         {
-        case Image::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        case DeviceImage::UInt8:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::UInt16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float32:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         }
     }
 
     void conv3x3_1to32_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 3, 3, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 3, 3, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 3, 3, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_32to32_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, ReLU{});
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     void conv3x3_32to32_identity_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
+        const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
             Identity{},
-            ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f });
+            ResidualArg{ feat.ptr(), feat.width(), feat.height(), feat.channels(), feat.stride(), 1.0f });
     }
     void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (dtype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (dst.type())
         {
-        case Image::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        case DeviceImage::UInt8:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::UInt16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float32:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         }
     }
 
     void conv5x5_1to8_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 5, 5, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 5, 5, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 5, 5, 8> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
+        const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, 8, 8, 8, false, true> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 8, 8, 8, false, true> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat.ptr(), feat.width(), feat.height(), feat.channels(), feat.stride(), 1.0f }
         );
     }
     void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (dtype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (dst.type())
         {
-        case Image::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
-        case Image::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, nullptr);
+        case DeviceImage::UInt8:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::UInt16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float16:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+        case DeviceImage::Float32:
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         }
     }
 
     void conv5x5_1to16_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        switch (stype)
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        switch (src.type())
         {
-        case Image::UInt8:
-            kernel::conv_cin1<OpImplCUDA, std::uint8_t, 5, 5, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt8:
+            kernel::conv_cin1<OpImplCUDA, std::uint8_t, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::UInt16:
-            kernel::conv_cin1<OpImplCUDA, std::uint16_t, 5, 5, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::UInt16:
+            kernel::conv_cin1<OpImplCUDA, std::uint16_t, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
-        case Image::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, 5, 5, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, Identity{});
+        case DeviceImage::Float16:
+            kernel::conv_cin1<OpImplCUDA, half, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            break;
+        case DeviceImage::Float32:
+            kernel::conv_cin1<OpImplCUDA, float, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
     void conv3x3_16to16_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
+        const DeviceImage& src, DeviceImage& dst,
+        const float* kernels, const float* biases, const float* alphas,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (sptr, srcW, srcH, srcC, spitch, dptr, dstW, dstH, dstC, dpitch, kernels, biases, PReLU{ alphas });
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
     }
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
+        const DeviceImage& src, DeviceImage& dst,
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
+        const DeviceImage& feat,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (srcW + block.x - 1) / block.x, (srcH + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, 16, 16, 16, false, true> <<< grid, block, 0, stream >>> (
-            sptr, srcW, srcH, srcC, spitch,
-            dptr, dstW, dstH, dstC, dpitch,
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
+        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 16, 16, 16, false, true> <<< grid, block, 0, stream >>> (
+            src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
+            dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels1, biases1, PReLU(alphas1), nullptr,
-            kernels2, biases2, PReLU(alphas2), ResidualArg{ fptr, featW, featH, featC, fpitch, 1.0f }
+            kernels2, biases2, PReLU(alphas2), ResidualArg{ feat.ptr(), feat.width(), feat.height(), feat.channels(), feat.stride(), 1.0f }
         );
     }
 }

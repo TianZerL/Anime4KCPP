@@ -24,191 +24,6 @@
 
 namespace ac::core::cuda
 {
-    void conv3x3_1to8_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        cudaStream_t stream
-    ) noexcept;
-    void deconv2x2_8to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to8_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to8_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_identity_residual_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* iptr, int idW, int idH, int idC, int ipitch,
-        const float scale,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels1, const float* biases1,
-        const void* iptr, int idW, int idH, int idC, int ipitch, const float scale,
-        const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* iptr, int idW, int idH, int idC, int ipitch,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to16_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_identity_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_1to32_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to32_relu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to32_identity_add_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv5x5_1to8_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels1, const float* biases1, const float* alphas1,
-        const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType dtype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv5x5_1to16_identity_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        Image::ElementType stype,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels,
-        const float* biases,
-        const float* alphas,
-        cudaStream_t stream
-    ) noexcept;
-    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
-        const void* sptr, int srcW, int srcH, int srcC, int spitch,
-        void* dptr, int dstW, int dstH, int dstC, int dpitch,
-        const float* kernels1, const float* biases1, const float* alphas1,
-        const float* kernels2, const float* biases2, const float* alphas2,
-        const void* fptr, int featW, int featH, int featC, int fpitch,
-        cudaStream_t stream
-    ) noexcept;
-
     struct Context
     {
         std::string name{};
@@ -267,7 +82,18 @@ namespace ac::core::cuda
         return contextList;
     }
 
-    class DeviceImageAllocator
+    static inline cudaError_t copyImageHostToDevice(const Image& dst, DeviceImage& src, const cudaStream_t stream) noexcept
+    {
+        auto lineSize = src.width() * src.pixelSize();
+        return cudaMemcpy2DAsync(dst.ptr(), dst.stride(), src.ptr(), src.stride(), lineSize, src.height(), cudaMemcpyHostToDevice, stream);
+    }
+    static inline cudaError_t copyImageDeviceToHost(const DeviceImage& dst, Image& src, const cudaStream_t stream) noexcept
+    {
+        auto lineSize = src.width() * src.pixelSize();
+        return cudaMemcpy2DAsync(dst.ptr(), dst.stride(), src.ptr(), src.stride(), lineSize, src.height(), cudaMemcpyDeviceToHost, stream);
+    }
+
+    class DeviceAllocator
     {
     public:
         cudaError_t init(const Context& ctx) noexcept
@@ -311,18 +137,17 @@ namespace ac::core::cuda
             return err;
         }
 
-        cudaError_t allocate(DeviceImage& buffer, const cudaStream_t stream) const noexcept
+        cudaError_t allocate(void** const devPtr, const std::size_t size, const cudaStream_t stream) const noexcept
         {
-            auto size = buffer.pitch * buffer.h;
-            return deviceMalloc(&buffer.ptr, size, stream);
+            return deviceMalloc(devPtr, size, stream);
         }
-        cudaError_t deallocate(DeviceImage& buffer, const cudaStream_t stream) const noexcept
+        cudaError_t deallocate(void** const devPtr, const cudaStream_t stream) const noexcept
         {
             auto err = cudaSuccess;
-            if (buffer.ptr)
+            if (devPtr && *devPtr)
             {
-                err = deviceFree(buffer.ptr, stream);
-                if (err == cudaSuccess) buffer.ptr = nullptr;
+                err = deviceFree(*devPtr, stream);
+                if (err == cudaSuccess) *devPtr = nullptr;
             }
             return err;
         }
@@ -352,52 +177,54 @@ namespace ac::core::cuda
         bool memoryPoolsSupported = false;
     };
 
-    class ImageBuffer
+    class ImageBuffer : private DeviceImage
     {
     public:
-        ImageBuffer() noexcept = default;
+        ImageBuffer(const DeviceAllocator& allocator, const cudaStream_t stream) noexcept : allocator(allocator), stream(stream) {}
         ImageBuffer(const ImageBuffer&) = delete;
-        ImageBuffer(ImageBuffer&& other) = delete;
+        ImageBuffer(ImageBuffer&&) = delete;
         ImageBuffer& operator=(const ImageBuffer&) = delete;
-        ImageBuffer& operator=(ImageBuffer&& other) = delete;
+        ImageBuffer& operator=(ImageBuffer&&) = delete;
         ~ImageBuffer() noexcept
         {
-            if (buffer.ptr)
+            if (pixels)
             {   // There should not be any errors here.
-                auto err = cudaFree(buffer.ptr);
-                if (err == cudaSuccess) buffer.ptr = nullptr;
+                auto err = allocator.deallocate(&this->pixels, stream);
                 assert(err == cudaSuccess);
             }
         }
 
-        const DeviceImage& get(
+        DeviceImage& get(
             const int width,
             const int height,
             const int channels,
-            const int elementSize,
-            const DeviceImageAllocator& allocator,
-            const cudaStream_t stream,
+            const ElementType elementType,
             cudaError_t& err) noexcept
         {
-            if (!buffer.ptr || buffer.w != width || buffer.h != height || buffer.elementSize != elementSize)
+            if (!this->pixels || this->width() != width || this->height() != height || this->type() != elementType)
             {
-                if (buffer.ptr)
+                if (this->pixels)
                 {
-                    err = allocator.deallocate(buffer, stream);
-                    if (err != cudaSuccess) return buffer;
+                    err = allocator.deallocate(&this->pixels, stream);
+                    if (err != cudaSuccess) return *this;
                 }
                 // update shapes
-                buffer.create(width, height, channels, elementSize);
+                this->w = width;
+                this->h = height;
+                this->c = channels;
+                this->elementType = elementType;
+                this->pitch = align(this->width() * this->pixelSize(), 128);
 
-                err = allocator.allocate(buffer, stream);
-                if (err != cudaSuccess) buffer = {};
+                err = allocator.allocate(&this->pixels, this->size(), stream);
+                if (err != cudaSuccess) this->pixels = nullptr;
             }
 
-            return buffer;
+            return *this;
         }
 
     private:
-        DeviceImage buffer{};
+        cudaStream_t stream;
+        DeviceAllocator allocator;
     };
 
     class CUDAProcessorBase : public Processor
@@ -453,7 +280,7 @@ namespace ac::core::cuda
 
     protected:
         Context context{};
-        DeviceImageAllocator allocator{};
+        DeviceAllocator allocator{};
         util::ThreadLocal<cudaError_t> errors{};
     };
 
@@ -560,50 +387,34 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to8_relu_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv3x3_1to8_relu_cuda(in, tmp1, kernel(l), bias(l), stream); l++;
 
     for (int i = 0; i < 4; i++)
     {
-        conv3x3_8to8_relu_cuda(
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            kernel(l), bias(l),
-            stream); l++;
+        conv3x3_8to8_relu_cuda(tmp1, tmp2,  kernel(l), bias(l), stream); l++;
 
-        conv3x3_8to8_relu_cuda(
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernel(l), bias(l),
-            stream); l++;
+        conv3x3_8to8_relu_cuda(tmp2, tmp1, kernel(l), bias(l), stream); l++;
     }
 
-    deconv2x2_8to1_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l),
-        dst.type(), stream);
+    deconv2x2_8to1_cuda(tmp1, out, kernel(l), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -644,47 +455,34 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNet<8>>::process(const Ima
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     auto tmpI = &tmp2;
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to8_prelu_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), alpha(l),
-        src.type(), stream); l++;
+    conv3x3_1to8_prelu_cuda(in, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
     std::swap(tmpI, tmpO);
     for (int i = 0; i < model.blocks(); i++)
     {
-        conv3x3_8to8_prelu_cuda(
-            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-            kernel(l), bias(l), alpha(l),
-            stream); l++;
+        conv3x3_8to8_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        dst.type(), stream);
+    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(*tmpI, out, kernel(l), bias(l), in, stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -726,72 +524,39 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ARNet<8>>::process(const Ima
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& featImageBuffer = featImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& featImageBuffer = featImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& feat = featImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to8_identity_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv3x3_1to8_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
-    conv3x3_8to8_prelu_cuda(
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_8to8_identity_residual_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch, 0.2f, stream); l++;
+    conv3x3_8to8_prelu_cuda(feat, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_8to8_identity_residual_cuda(tmp1, tmp2, kernel(l), bias(l), feat, 0.2f, stream); l++;
     for (int i = 0; i < model.blocks() - 2; i++)
     {
-        conv3x3_8to8_prelu_cuda(
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            kernel(l), bias(l), alpha(l), stream); l++;
-        conv3x3_8to8_identity_residual_cuda(
-            tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-            kernel(l), bias(l),
-            tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f, stream); l++;
+        conv3x3_8to8_prelu_cuda(tmp2, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
+        conv3x3_8to8_identity_residual_cuda(tmp1, tmp2, kernel(l), bias(l), tmp2, 0.2f, stream); l++;
     }
-    conv3x3_8to8_prelu_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
-    conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(
-        tmp1.ptr, tmp1.w, tmp1.h, tmp1.c, tmp1.pitch,
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        kernel(l), bias(l),
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch, 0.2f,
-        kernel(l + 1), bias(l + 1), alpha(l + 1),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l+=2;
+    conv3x3_8to8_prelu_cuda( tmp2, tmp1, kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_cuda(tmp1, tmp2, kernel(l), bias(l), tmp2, 0.2f, kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l+=2;
 
-    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(
-        tmp2.ptr, tmp2.w, tmp2.h, tmp2.c, tmp2.pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        dst.type(), stream);
+    conv3x3_8to4_identity_pixelshuffle_4to1_add_cuda(tmp2, out, kernel(l), bias(l), in, stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -833,60 +598,41 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<16>>::process(const I
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& featImageBuffer = featImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& featImageBuffer = featImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& feat = featImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     auto tmpI = &tmp2;
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to16_identity_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv3x3_1to16_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
-    conv3x3_16to16_relu_cuda(
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), stream); l++;
+    conv3x3_16to16_relu_cuda(feat, *tmpO, kernel(l), bias(l), stream); l++;
     std::swap(tmpI, tmpO);
     for (int i = 0; i < model.blocks() - 1; i++)
     {
-        conv3x3_16to16_relu_cuda(
-            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-            kernel(l), bias(l), stream); l++;
+        conv3x3_16to16_relu_cuda(*tmpI, *tmpO, kernel(l), bias(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_16to16_identity_add_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l++;
+    conv3x3_16to16_identity_add_cuda(*tmpI, *tmpO, kernel(l), bias(l), feat, stream); l++;
     std::swap(tmpI, tmpO);
 
-    conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        dst.type(), stream);
+    conv3x3_16to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -928,60 +674,41 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ArtCNN<32>>::process(const I
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& featImageBuffer = featImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& featImageBuffer = featImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 32, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 32, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& feat = featImageBuffer.get(src.width(), src.height(), 32, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 32, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 32, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 32, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     auto tmpI = &tmp2;
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to32_identity_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv3x3_1to32_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
-    conv3x3_32to32_relu_cuda(
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), stream); l++;
+    conv3x3_32to32_relu_cuda(feat, *tmpO, kernel(l), bias(l), stream); l++;
     std::swap(tmpI, tmpO);
     for (int i = 0; i < model.blocks() - 1; i++)
     {
-        conv3x3_32to32_relu_cuda(
-            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-            kernel(l), bias(l), stream); l++;
+        conv3x3_32to32_relu_cuda(*tmpI, *tmpO, kernel(l), bias(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_32to32_identity_add_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l++;
+    conv3x3_32to32_identity_add_cuda(*tmpI, *tmpO, kernel(l), bias(l), feat, stream); l++;
     std::swap(tmpI, tmpO);
 
-    conv3x3_32to4_identity_pixelshuffle_4to1_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        dst.type(), stream);
+    conv3x3_32to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -1023,61 +750,41 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<8>>::process(const I
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& featImageBuffer = featImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& featImageBuffer = featImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& feat = featImageBuffer.get(src.width(), src.height(), 8, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     auto tmpI = &tmp2;
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv5x5_1to8_identity_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv5x5_1to8_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
-    conv3x3_8to8_prelu_cuda(
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_8to8_prelu_cuda(feat, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
     std::swap(tmpI, tmpO);
     for (int i = 0; i < model.blocks() - 2; i++)
     {
-        conv3x3_8to8_prelu_cuda(
-            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-            kernel(l), bias(l), alpha(l), stream); l++;   
+        conv3x3_8to8_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), alpha(l),
-        kernel(l + 1), bias(l + 1), alpha(l + 1),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l += 2;
+    conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l += 2;
     std::swap(tmpI, tmpO);
 
-    conv3x3_8to4_identity_pixelshuffle_4to1_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        dst.type(), stream);
+    conv3x3_8to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 
@@ -1119,61 +826,41 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::FSRCNNX<16>>::process(const 
 
     err = cudaSetDevice(idx); if (err != cudaSuccess) return;
 
-    auto& inImageBuffer = inImageBuffers.local();
-    auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
-    auto& tmp2ImageBuffer = tmp2ImageBuffers.local();
-    auto& featImageBuffer = featImageBuffers.local();
-    auto& outImageBuffer = outImageBuffers.local();
+    auto& inImageBuffer = inImageBuffers.local(allocator, stream);
+    auto& tmp1ImageBuffer = tmp1ImageBuffers.local(allocator, stream);
+    auto& tmp2ImageBuffer = tmp2ImageBuffers.local(allocator, stream);
+    auto& featImageBuffer = featImageBuffers.local(allocator, stream);
+    auto& outImageBuffer = outImageBuffers.local(allocator, stream);
 
-    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& feat = featImageBuffer.get(src.width(), src.height(), 16, 2, allocator, stream, err); if (err != cudaSuccess) return;
-    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.elementSize(), allocator, stream, err); if (err != cudaSuccess) return;
+    auto& in = inImageBuffer.get(src.width(), src.height(), src.channels(), src.type(), err); if (err != cudaSuccess) return;
+    auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& feat = featImageBuffer.get(src.width(), src.height(), 16, DeviceImage::Float16, err); if (err != cudaSuccess) return;
+    auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
     auto tmpI = &tmp2;
     auto tmpO = &tmp1;
     int l = 0;
 
-    err = in.fromHost(src, stream); if (err != cudaSuccess) return;
+    err = copyImageHostToDevice(src, in, stream); if (err != cudaSuccess) return;
 
-    conv5x5_1to16_identity_cuda(
-        in.ptr, in.w, in.h, in.c, in.pitch,
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        kernel(l), bias(l),
-        src.type(), stream); l++;
+    conv5x5_1to16_identity_cuda(in, feat, kernel(l), bias(l), stream); l++;
 
-    conv3x3_16to16_prelu_cuda(
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), alpha(l), stream); l++;
+    conv3x3_16to16_prelu_cuda(feat, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
     std::swap(tmpI, tmpO);
     for (int i = 0; i < model.blocks() - 2; i++)
     {
-        conv3x3_16to16_prelu_cuda(
-            tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-            tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-            kernel(l), bias(l), alpha(l), stream); l++;
+        conv3x3_16to16_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), stream); l++;
         std::swap(tmpI, tmpO);
     }
-    conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        tmpO->ptr, tmpO->w, tmpO->h, tmpO->c, tmpO->pitch,
-        kernel(l), bias(l), alpha(l),
-        kernel(l + 1), bias(l + 1), alpha(l + 1),
-        feat.ptr, feat.w, feat.h, feat.c, feat.pitch,
-        stream); l += 2;
+    conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda(*tmpI, *tmpO, kernel(l), bias(l), alpha(l), kernel(l + 1), bias(l + 1), alpha(l + 1), feat, stream); l += 2;
     std::swap(tmpI, tmpO);
 
-    conv3x3_16to4_identity_pixelshuffle_4to1_cuda(
-        tmpI->ptr, tmpI->w, tmpI->h, tmpI->c, tmpI->pitch,
-        out.ptr, out.w, out.h, out.c, out.pitch,
-        kernel(l), bias(l),
-        dst.type(), stream);
+    conv3x3_16to4_identity_pixelshuffle_4to1_cuda(*tmpI, out, kernel(l), bias(l), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return;
 
-    err = out.toHost(dst, stream); if (err != cudaSuccess) return;
+    err = copyImageDeviceToHost(out, dst, stream); if (err != cudaSuccess) return;
 
     err = cudaStreamSynchronize(stream); if (err != cudaSuccess) return;
 

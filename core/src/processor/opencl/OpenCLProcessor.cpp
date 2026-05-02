@@ -222,7 +222,7 @@ namespace ac::core::opencl
             const cl::size_type channels,
             const cl::size_type width,
             const cl::size_type height,
-            cl_int* const err)
+            cl_int* const err) noexcept
         {
             if (!object_ || w != width || h != height || type != channelType)
             {
