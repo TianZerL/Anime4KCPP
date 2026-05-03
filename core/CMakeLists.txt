@@ -164,10 +164,9 @@ check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLO
 check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
 #float16
 include(CheckCXXSourceCompiles)
-check_cxx_source_compiles("int main() { _Float16 h = static_cast<_Float16>(1.0f); float f = static_cast<float>(h); return 0; }" AC_CORE_HAVE_GCC_FLOAT16)
 check_cxx_source_compiles("int main() { __fp16 h = static_cast<__fp16>(1.0f); float f = static_cast<float>(h); return 0; }" AC_CORE_HAVE_ARM_FP16)
 
-if (NOT AC_CORE_HAVE_GCC_FLOAT16 AND NOT AC_CORE_HAVE_ARM_FP16)
+if (NOT AC_CORE_HAVE_ARM_FP16)
     include(${DEPENDENCY_DIR}/half.cmake)
     set(AC_CORE_WITH_HALF ON)
 endif()
@@ -213,7 +212,6 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_HAVE_STD_ALIGNED_ALLOC}>:AC_CORE_HAVE_STD_ALIGNED_ALLOC>
     $<$<BOOL:${AC_CORE_HAVE_POSIX_MEMALIGN}>:AC_CORE_HAVE_POSIX_MEMALIGN>
     $<$<BOOL:${AC_CORE_HAVE_BSD_MEMALIGN}>:AC_CORE_HAVE_BSD_MEMALIGN>
-    $<$<BOOL:${AC_CORE_HAVE_GCC_FLOAT16}>:AC_CORE_HAVE_GCC_FLOAT16>
     $<$<BOOL:${AC_CORE_HAVE_ARM_FP16}>:AC_CORE_HAVE_ARM_FP16>
     $<$<BOOL:${AC_CORE_WITH_HALF}>:AC_CORE_WITH_HALF>
 
