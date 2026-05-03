@@ -109,8 +109,13 @@ inline constexpr float ac::core::toFloat(const T v) noexcept
 {
     if constexpr (std::is_unsigned_v<T>)
         return static_cast<float>(v) / static_cast<float>(std::numeric_limits<T>::max());
-    else
-        return static_cast<float>(v);
+    else if constexpr (std::is_integral_v<T>)
+    {
+        constexpr float l = static_cast<float>(std::numeric_limits<T>::min());
+        constexpr float r = static_cast<float>(std::numeric_limits<T>::max());
+        return (static_cast<float>(v) - l) / (r - l);
+    }
+    else return static_cast<float>(v);
 }
 
 template<typename T>
@@ -119,8 +124,15 @@ inline constexpr T ac::core::fromFloat(const float v) noexcept
     float saturated = v < 0.0f ? 0.0f : (v < 1.0f ? v : 1.0f);
     if constexpr (std::is_unsigned_v<T>)
         return static_cast<T>(saturated * std::numeric_limits<T>::max() + 0.5f);
-    else 
-        return static_cast<T>(saturated);
+    else if constexpr (std::is_integral_v<T>)
+    {
+        constexpr float l = static_cast<float>(std::numeric_limits<T>::min());
+        constexpr float r = static_cast<float>(std::numeric_limits<T>::max());
+        float x = saturated * (r - l) + l;
+        x += (x >= 0.0f) ? 0.5f : -0.5f;
+        return static_cast<T>(x);
+    }
+    else return static_cast<T>(saturated);
 }
 
 inline int ac::core::ceilLog2(const double v) noexcept
