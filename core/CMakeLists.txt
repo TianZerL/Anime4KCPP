@@ -21,7 +21,6 @@ if(NOT AC_CORE_VERSION_STR)
 endif()
 
 # third-party
-include(${DEPENDENCY_DIR}/half.cmake)
 include(${DEPENDENCY_DIR}/ruapu.cmake)
 include(${DEPENDENCY_DIR}/stb.cmake)
 if(AC_CORE_WITH_EIGEN3)
@@ -163,12 +162,21 @@ if (AC_CORE_HAVE_MALLOC_H)
 endif()
 check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLOC)
 check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
+#float16
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles("int main() { _Float16 h = static_cast<_Float16>(1.0f); float f = static_cast<float>(h); return 0; }" AC_CORE_HAVE_GCC_FLOAT16)
+check_cxx_source_compiles("int main() { __fp16 h = static_cast<__fp16>(1.0f); float f = static_cast<float>(h); return 0; }" AC_CORE_HAVE_ARM_FP16)
+
+if (NOT AC_CORE_HAVE_GCC_FLOAT16 AND NOT AC_CORE_HAVE_ARM_FP16)
+    include(${DEPENDENCY_DIR}/half.cmake)
+    set(AC_CORE_WITH_HALF ON)
+endif()
 
 target_link_libraries(ac PRIVATE
     ac_util_misc ac_util_threads ac_util_parallel
-    dep::half
     dep::ruapu
     dep::stb
+    $<$<BOOL:${AC_CORE_WITH_HALF}>:dep::half>
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:dep::eigen3>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:dep::opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:dep::cuda>
@@ -205,6 +213,9 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_HAVE_STD_ALIGNED_ALLOC}>:AC_CORE_HAVE_STD_ALIGNED_ALLOC>
     $<$<BOOL:${AC_CORE_HAVE_POSIX_MEMALIGN}>:AC_CORE_HAVE_POSIX_MEMALIGN>
     $<$<BOOL:${AC_CORE_HAVE_BSD_MEMALIGN}>:AC_CORE_HAVE_BSD_MEMALIGN>
+    $<$<BOOL:${AC_CORE_HAVE_GCC_FLOAT16}>:AC_CORE_HAVE_GCC_FLOAT16>
+    $<$<BOOL:${AC_CORE_HAVE_ARM_FP16}>:AC_CORE_HAVE_ARM_FP16>
+    $<$<BOOL:${AC_CORE_WITH_HALF}>:AC_CORE_WITH_HALF>
 
     AC_CORE_MALLOC_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>
     AC_CORE_STRIDE_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>

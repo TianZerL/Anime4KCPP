@@ -8,6 +8,14 @@
 
 namespace ac::core::cuda
 {
+    struct DataType
+    {
+        using UInt8 = ::cuda::std::uint8_t;
+        using UInt16 = ::cuda::std::uint16_t;
+        using Float16 = half;
+        using Float32 = float;
+    };
+
     struct BlockSize
     {
         static constexpr int x = 16;
@@ -480,16 +488,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> << < grid, block, 0, stream >> > (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8> << < grid, block, 0, stream >> > (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
             break;
         }
     }
@@ -502,7 +510,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     template<>
     void deconv2x2_8to1_cuda<DeviceImage::Float16>(
@@ -516,16 +524,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::deconv2x2_cuda<OpImplCUDA, half, ::cuda::std::uint8_t, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::UInt8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
             break;
         case DeviceImage::UInt16:
-            kernel::deconv2x2_cuda<OpImplCUDA, half, ::cuda::std::uint16_t, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::UInt16, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
             break;
         case DeviceImage::Float16:
-            kernel::deconv2x2_cuda<OpImplCUDA, half, half, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::Float16, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
             break;
         case DeviceImage::Float32:
-            kernel::deconv2x2_cuda<OpImplCUDA, half, float, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::Float32, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
             break;
         }
     }
@@ -542,16 +550,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
             break;
         }
     }
@@ -568,16 +576,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 3, 3, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
@@ -590,7 +598,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
     }
     template<>
     void conv3x3_8to8_identity_residual_cuda<DeviceImage::Float16>(
@@ -602,7 +610,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
@@ -621,7 +629,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 8, 8, 8, false, false> <<< grid, block, 0, stream >>> (
+        kernel::conv3x3_conv1x1<OpImplCUDA, DataType::Float16, DataType::Float16, 8, 8, 8, false, false> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels1, biases1, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), scale },
@@ -640,16 +648,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         }
     }
@@ -666,16 +674,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 3, 3, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
@@ -688,7 +696,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     template<>
     void conv3x3_16to16_identity_add_cuda<DeviceImage::Float16>(
@@ -700,7 +708,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
@@ -719,16 +727,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint8_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint16_t, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         }
     }
@@ -745,16 +753,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 3, 3, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
@@ -767,7 +775,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     template<>
     void conv3x3_32to32_identity_add_cuda<DeviceImage::Float16>(
@@ -779,7 +787,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32, 32> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels, biases,
@@ -798,16 +806,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint8_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint16_t, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
             break;
         }
     }
@@ -824,16 +832,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 5, 5, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
@@ -848,7 +856,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 8, 8, 8, false, true> <<< grid, block, 0, stream >>> (
+        kernel::conv3x3_conv1x1<OpImplCUDA, DataType::Float16, DataType::Float16, 8, 8, 8, false, true> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels1, biases1, PReLU(alphas1), nullptr,
@@ -866,13 +874,13 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint8_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         case DeviceImage::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, ::cuda::std::uint16_t, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         case DeviceImage::Float16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, half, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         case DeviceImage::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, half, float, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
         }
     }
 
@@ -888,16 +896,16 @@ namespace ac::core::cuda
         switch (src.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint8_t, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt8, DataType::Float16, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_cin1<OpImplCUDA, ::cuda::std::uint16_t, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::UInt16, DataType::Float16, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float16:
-            kernel::conv_cin1<OpImplCUDA, half, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float16, DataType::Float16, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         case DeviceImage::Float32:
-            kernel::conv_cin1<OpImplCUDA, float, half, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
+            kernel::conv_cin1<OpImplCUDA, DataType::Float32, DataType::Float16, 5, 5, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{});
             break;
         }
     }
@@ -910,7 +918,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv<OpImplCUDA, half, half, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
+        kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 16> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, PReLU{ alphas });
     }
     template<>
     void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_cuda<DeviceImage::Float16>(
@@ -923,7 +931,7 @@ namespace ac::core::cuda
     {
         dim3 block{ BlockSize::x, BlockSize::y };
         dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
-        kernel::conv3x3_conv1x1<OpImplCUDA, half, half, 16, 16, 16, false, true> <<< grid, block, 0, stream >>> (
+        kernel::conv3x3_conv1x1<OpImplCUDA, DataType::Float16, DataType::Float16, 16, 16, 16, false, true> <<< grid, block, 0, stream >>> (
             src.ptr(), src.width(), src.height(), src.channels(), src.stride(),
             dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(),
             kernels1, biases1, PReLU(alphas1), nullptr,
