@@ -33,7 +33,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             Eigen::Matrix<float, cin * cpos, 1> r;
             for (int p = 0; p < cpos; p++) r.template segment<cin>(p * cin) = Eigen::Map<const Eigen::Matrix<float, cin, 1>>{ rptr[p] };

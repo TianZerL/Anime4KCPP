@@ -29,7 +29,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             std::memcpy(out, biases, sizeof(float) * cout);
 

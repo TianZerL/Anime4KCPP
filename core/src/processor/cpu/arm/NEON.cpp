@@ -22,7 +22,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int scount, int cpos>
-        static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float** const rptr, float32x4_t* const s, float* const out, const float* const kernels) noexcept
+        static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float* const* const rptr, float32x4_t* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cin / vstep;
@@ -102,7 +102,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float** const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
+        static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int scount = 16;
             constexpr int sgroup = cout / scount;
