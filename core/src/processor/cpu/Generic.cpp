@@ -1,4 +1,9 @@
+#include <array>
+#include <cstddef>
+#include <utility>
+
 #include "AC/Core/Image.hpp"
+#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/DataType.hpp"
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
@@ -7,14 +12,52 @@ namespace ac::core::cpu
 {
     struct OpImplGeneric
     {
+    private:
+        template <std::size_t l, std::size_t r>
+        static AC_FORCE_INLINE auto sum_tree(const float* const v1, const float* const v2) noexcept
+        {
+            if constexpr (r - l == 1) return v1[l] * v2[l];
+            else
+            {
+                constexpr auto m = (l + r) / 2;
+                return sum_tree<l, m>(v1, v2) + sum_tree<m, r>(v1, v2);
+            }
+        }
+
+        template <std::size_t l, std::size_t r>
+        static AC_FORCE_INLINE auto sum_tree(const float* const* const v1, const float* const* const v2, const int k) noexcept
+        {
+            if constexpr (r - l == 1) return v1[l][k] * v2[l][k];
+            else
+            {
+                constexpr auto m = (l + r) / 2;
+                return sum_tree<l, m>(v1, v2, k) + sum_tree<m, r>(v1, v2, k);
+            }
+        }
+
+        template <int cpos, typename K>
+        static AC_FORCE_INLINE auto block_sum(const float* const* const rptr, K&& kptr, const int c) noexcept
+        {
+            return sum_tree<0, cpos>(rptr, kptr.data(), c);
+        }
+
+        template <int cin, std::size_t... p>
+        static AC_FORCE_INLINE auto make_kptr_impl(const float* const kernels, const int n, std::index_sequence<p...>) noexcept
+        {
+            return std::array<const float*, sizeof...(p)>{ (kernels + n * cin * sizeof...(p) + cin * p)... };
+        }
+
+        template <int cin, int cpos>
+        static AC_FORCE_INLINE auto make_kptr(const float* const kernels, const int n) noexcept
+        {
+            return make_kptr_impl<cin>(kernels, n, std::make_index_sequence<cpos>{});
+        }
+
+    public:
         template <int vsize>
         static float dot(const float* const v1, const float* const v2) noexcept
         {
-            float sum = 0.0f;
-
-            for (int i = 0; i < vsize; i++) sum += v1[i] * v2[i];
-
-            return sum;
+            return sum_tree<0, vsize>(v1, v2);
         }
 
         template <int cout, int cpos>
@@ -23,20 +66,20 @@ namespace ac::core::cpu
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cpos;
-                out[n] = biases[n];
-                for (int i = 0; i < cpos; i++) out[n] += rptr[i] * kptr[i];
+                out[n] = sum_tree<0, cpos>(rptr, kptr) + biases[n];
             }
         }
 
         template <int cin, int cout, int cpos>
         static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            std::memcpy(out, biases, sizeof(float) * cout);
-
-            for (int p = 0; p < cpos; p++)
-                for (int c = 0; c < cin; c++)
-                    for (int n = 0; n < cout; n++)
-                        out[n] += rptr[p][c] * kernels[n * cin * cpos + cin * p + c];
+            for (int n = 0; n < cout; n++)
+            {
+                float sum = biases[n];
+                auto kptr = make_kptr<cin, cpos>(kernels, n);
+                for (int c = 0; c < cin; c++) sum += block_sum<cpos>(rptr, kptr, c);
+                out[n] = sum;
+            }
         }
     };
 
