@@ -1,4 +1,4 @@
-alignas(32) constexpr float FSRCNNX_F8_NHWC_kernels[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_NHWC_kernels[] = {
   -0.0047900f, +0.0073145f, +0.0591701f, -0.0011764f, +0.0098101f, -0.0168330f, +0.0239934f, +0.0094800f,
   +0.0297285f, -0.0318185f, -0.0253142f, -0.1103616f, +1.1100435f, +0.1229331f, -0.0090443f, +0.0031942f,
   -0.0995150f, +0.0060519f, +0.0244008f, +0.0075713f, -0.0166876f, -0.0058461f, -0.0972402f, -0.0216837f,
@@ -358,7 +358,7 @@ alignas(32) constexpr float FSRCNNX_F8_NHWC_kernels[] = {
   -0.0037851f, +0.0834671f, -0.0093917f, -0.0067489f, +0.0053523f, -0.0701237f, -0.0052856f, -0.0182560f,
 };
 
-alignas(32) constexpr float FSRCNNX_F8_NHWC_biases[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_NHWC_biases[] = {
   -0.1572492f, -0.0120897f, +0.0061488f, -0.2852849f, +0.0541448f, +0.0088307f, -0.0112390f, -0.0127861f,
   -0.0445120f, -0.7632357f, +0.0156329f, -0.2424549f, +0.0713459f, -0.1403962f, -0.0019563f, +0.0153339f,
   +0.0203564f, +0.1902437f, -0.0757935f, +0.0393618f, -0.0448397f, -0.1649268f, -0.1192544f, -0.0061074f,
@@ -368,7 +368,7 @@ alignas(32) constexpr float FSRCNNX_F8_NHWC_biases[] = {
   +0.2010385f, +0.2058133f, +0.1918809f, +0.1961364f,
 };
 
-alignas(32) constexpr float FSRCNNX_F8_NHWC_alphas[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_NHWC_alphas[] = {
   +1.0311058f, +0.1051209f, +0.1158761f, +0.0466635f, +0.7142408f, +0.0686190f, +0.3999933f, -1.0247213f,
   -0.2459529f, +0.7563465f, -0.0705637f, -0.0094821f, -0.6312189f, -0.1215369f, +0.2487444f, +0.4051704f,
   +0.1991519f, -0.1275757f, -0.0622864f, +0.1586370f, +0.7366525f, +1.0013851f, -0.0276312f, +0.0734842f,
@@ -376,7 +376,7 @@ alignas(32) constexpr float FSRCNNX_F8_NHWC_alphas[] = {
   +0.9927187f, +0.0570580f, +1.3226752f, +1.0069467f, +0.1391340f, +0.0960328f, +0.6235341f, +0.1177273f,
 };
 
-alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_kernels[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_DistortPlus_NHWC_kernels[] = {
   -0.0096295f, +0.0381346f, +0.0654739f, +0.0279380f, +0.0009686f, +0.0211104f, +0.1420462f, +0.2668787f,
   +0.1226944f, +0.0366025f, +0.0584064f, +0.2783062f, +0.4093463f, +0.2611963f, +0.0916755f, +0.0264024f,
   +0.1555020f, +0.2608800f, +0.1681678f, +0.0415217f, +0.0043236f, +0.0464921f, +0.0468478f, +0.0374111f,
@@ -736,7 +736,7 @@ alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_kernels[] = {
   -0.0019482f, +0.0189437f, +0.0069552f, +0.0025936f, +0.0218273f, +0.0029698f, +0.0169666f, +0.0039712f,
 };
 
-alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_biases[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_DistortPlus_NHWC_biases[] = {
   -0.1928467f, +0.0039161f, +0.0081195f, -0.0023753f, +0.0265350f, +0.0710347f, -0.0046554f, -0.0493372f,
   +0.0028001f, -0.0601251f, +0.1444961f, +0.1604225f, +0.0117465f, +0.3719358f, +0.1884086f, +0.0047083f,
   +0.1066233f, +0.0925762f, -0.1219665f, -0.1393420f, -0.4043111f, -0.2330143f, +0.0846805f, +0.1777116f,
@@ -746,7 +746,7 @@ alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_biases[] = {
   +0.0909043f, +0.0894977f, +0.0896587f, +0.0883741f,
 };
 
-alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_alphas[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F8_DistortPlus_NHWC_alphas[] = {
   +0.8428708f, -0.9543713f, +1.1189890f, +0.0706302f, -0.6713104f, +2.9067931f, -1.0553678f, +0.0154301f,
   -0.6865647f, +1.0981947f, -0.6679677f, +0.1641036f, +0.2131114f, -0.5472123f, -0.2799939f, +0.4791506f,
   +0.2476254f, +1.3325959f, +1.5371761f, +0.0817967f, -8.3348122f, +0.4545237f, +0.1148802f, +0.0461532f,
@@ -754,7 +754,7 @@ alignas(32) constexpr float FSRCNNX_F8_DistortPlus_NHWC_alphas[] = {
   +0.9877841f, +0.0405866f, +2.2439649f, +0.3284466f, +0.1004024f, +0.4499900f, +1.3149757f, +0.1613716f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_NHWC_kernels[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_NHWC_kernels[] = {
   +0.0055716f, -0.0511216f, +0.0568219f, +0.0749030f, +0.0059168f, +0.0023136f, +0.0796200f, +0.3913436f,
   -0.2875826f, +0.0118880f, -0.0703229f, +0.1257768f, -0.7917575f, +0.2019260f, -0.0255547f, +0.0327996f,
   -0.0523804f, +0.4495397f, -0.0275334f, -0.0302287f, -0.0078709f, -0.0093700f, -0.1118478f, +0.0107029f,
@@ -2063,7 +2063,7 @@ alignas(32) constexpr float FSRCNNX_F16_NHWC_kernels[] = {
   +0.0154050f, -0.0006315f, +0.0365500f, -0.0330690f, -0.0043931f, -0.0194584f, -0.0068496f, -0.0256906f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_NHWC_biases[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_NHWC_biases[] = {
   -0.0158583f, +0.0481608f, +0.0216744f, +0.0327518f, +0.0035126f, -0.1424804f, +0.0098019f, -0.2324348f,
   -0.0074676f, -0.0112728f, -0.0078150f, +0.0054601f, +0.0231405f, +0.0264000f, -0.0196782f, +0.0193342f,
   +0.2535822f, -0.2086673f, -0.1971910f, -0.0509870f, -0.1381223f, -0.0308195f, +0.1110134f, -0.0683282f,
@@ -2079,7 +2079,7 @@ alignas(32) constexpr float FSRCNNX_F16_NHWC_biases[] = {
   +0.2004896f, +0.1965623f, +0.2031264f, +0.1992818f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_NHWC_alphas[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_NHWC_alphas[] = {
   +0.4853515f, +0.0194640f, +0.0559235f, +0.9239076f, -0.0506039f, -1.0047781f, -0.4045023f, +0.9032985f,
   +0.0190296f, +0.0706401f, +0.7972528f, +0.0644450f, -0.8224552f, +0.0907780f, -0.8194684f, +0.7123060f,
   -0.0138329f, +0.6884090f, -0.3778790f, +0.0335069f, -0.0941419f, +0.3569963f, +0.1796773f, +0.1741173f,
@@ -2092,7 +2092,7 @@ alignas(32) constexpr float FSRCNNX_F16_NHWC_alphas[] = {
   +0.0984693f, -0.0528434f, +0.1861928f, -0.0793913f, +0.9187455f, +0.3813512f, +1.0033931f, +0.1104509f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_DistortPlus_NHWC_kernels[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_DistortPlus_NHWC_kernels[] = {
   +0.0071856f, -0.0112706f, -0.0277674f, +0.0095607f, +0.0104544f, -0.0197227f, +0.0741184f, +0.1724745f,
   +0.0227171f, +0.0078250f, -0.0247682f, +0.1309810f, +0.4049822f, +0.3384916f, +0.0339720f, -0.0576274f,
   -0.1760349f, -0.4403077f, -0.0711169f, -0.0076167f, -0.0623662f, -0.0070752f, -0.2756125f, -0.0472524f,
@@ -3401,7 +3401,7 @@ alignas(32) constexpr float FSRCNNX_F16_DistortPlus_NHWC_kernels[] = {
   +0.0110406f, -0.0078700f, -0.0388829f, -0.0209079f, +0.0025532f, -0.0007974f, -0.0318830f, +0.0124818f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_DistortPlus_NHWC_biases[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_DistortPlus_NHWC_biases[] = {
   -0.0000672f, -0.0250502f, -0.0234197f, +0.0121055f, +0.0135019f, -0.0156335f, -0.0163481f, -0.0557958f,
   +0.0113608f, -0.0105006f, +0.0100349f, +0.0133596f, -0.0116859f, -0.0009034f, +0.0089438f, +0.0090716f,
   +0.0269342f, -0.0061606f, +0.0813348f, -0.0288518f, -0.0277859f, -0.1834152f, +0.0420480f, +0.0276463f,
@@ -3417,7 +3417,7 @@ alignas(32) constexpr float FSRCNNX_F16_DistortPlus_NHWC_biases[] = {
   +0.0160266f, +0.0167244f, +0.0146740f, +0.0154024f,
 };
 
-alignas(32) constexpr float FSRCNNX_F16_DistortPlus_NHWC_alphas[] = {
+alignas(AC_CORE_PARAM_ALIGN) constexpr float FSRCNNX_F16_DistortPlus_NHWC_alphas[] = {
   -0.3147417f, -0.7614030f, -0.0357757f, +0.9328412f, -0.0593993f, -0.2033035f, +0.9414877f, +0.0535117f,
   +1.0295658f, -0.4497550f, +0.0198628f, -0.7081685f, +0.9185221f, +0.1672330f, +0.9607188f, -0.0224755f,
   +0.9612450f, -0.1720273f, -0.2175701f, +0.9672394f, -0.4797066f, -0.1588688f, -0.3893769f, +0.7523693f,
