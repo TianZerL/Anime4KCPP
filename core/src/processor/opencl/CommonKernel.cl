@@ -60,7 +60,7 @@ inline void conv3x3_cin8_chunk(
     const int count = cin / 8;
     const int layer = chunk * 2;
 
-#if defined (ARCH_AMD_GCN) || defined (ARCH_INTEL)
+#if defined (ARCH_AMD_GCN) || defined (ARCH_INTEL) || defined (ARCH_ADRENO)
     float8 r0 = (float8)(read_imagef(src, n_sampler, (int4)(x-1, y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x-1, y-1, layer + 1, 0)));
     float8 r1 = (float8)(read_imagef(src, n_sampler, (int4)(x  , y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x  , y-1, layer + 1, 0)));
     float8 r2 = (float8)(read_imagef(src, n_sampler, (int4)(x+1, y-1, layer + 0, 0)), read_imagef(src, n_sampler, (int4)(x+1, y-1, layer + 1, 0)));
