@@ -14,15 +14,15 @@ namespace ac::core::cpu
     {
     private:
         template <std::size_t... i>
-        static AC_FORCE_INLINE auto vector_sum_impl(const float* const v1, const float* const v2, std::index_sequence<i...>) noexcept
+        static AC_FORCE_INLINE auto vector_dot_impl(const float* const v1, const float* const v2, std::index_sequence<i...>) noexcept
         {
             return (... + (v1[i] * v2[i]));
         }
 
         template <int vsize>
-        static AC_FORCE_INLINE auto vector_sum(const float* const v1, const float* const v2) noexcept
+        static AC_FORCE_INLINE auto vector_dot(const float* const v1, const float* const v2) noexcept
         {
-            return vector_sum_impl(v1, v2, std::make_index_sequence<vsize>{});
+            return vector_dot_impl(v1, v2, std::make_index_sequence<vsize>{});
         }
 
         template <std::size_t... p>
@@ -53,7 +53,7 @@ namespace ac::core::cpu
         template <int vsize>
         static float dot(const float* const v1, const float* const v2) noexcept
         {
-            return vector_sum<vsize>(v1, v2);
+            return vector_dot<vsize>(v1, v2);
         }
 
         template <int cout, int cpos>
@@ -62,7 +62,7 @@ namespace ac::core::cpu
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cpos;
-                out[n] = vector_sum<cpos>(rptr, kptr) + biases[n];
+                out[n] = vector_dot<cpos>(rptr, kptr) + biases[n];
             }
         }
 
@@ -71,10 +71,10 @@ namespace ac::core::cpu
         {
             for (int n = 0; n < cout; n++)
             {
-                float sum = biases[n];
                 auto kptr = make_kptr<cin, cpos>(kernels, n);
+                float sum = 0.0f;
                 for (int c = 0; c < cin; c++) sum += block_sum<cpos>(rptr, kptr, c);
-                out[n] = sum;
+                out[n] = sum + biases[n];
             }
         }
     };
