@@ -28,7 +28,7 @@ namespace ac::core::cpu
         #endif
         }
 
-        template <int cin, int scount, int cpos>
+        template <int cin, int cpos, int sgroupSize, int scount>
         static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float* const* const rptr, float32x4_t* const s, float* const out, const float* const kernels) noexcept
         {
             constexpr int vstep = 4;
@@ -43,16 +43,16 @@ namespace ac::core::cpu
                     float32x4_t r = vld1q_f32(rptr[p] + idx * vstep);
                     for (int n = 0; n < scount; n++)
                     {
-                        float32x4_t k = vld1q_f32(kernels + (sgroupIdx * scount + n) * cin * cpos + cin * p + idx * vstep);
+                        float32x4_t k = vld1q_f32(kernels + (sgroupIdx * sgroupSize + n) * cin * cpos + cin * p + idx * vstep);
                         s[n] = vmlaq_f32(s[n], r, k);
                     }
                 }
                 if constexpr (remain)
                     for (int c = count * vstep; c < cin; c++)
                         for (int n = 0; n < scount; n++)
-                            out[sgroupIdx * scount + n] += rptr[p][c] * kernels[(sgroupIdx * scount + n) * cin * cpos + cin * p + c];
+                            out[sgroupIdx * sgroupSize + n] += rptr[p][c] * kernels[(sgroupIdx * sgroupSize + n) * cin * cpos + cin * p + c];
             }
-            for (int n = 0; n < scount; n++) out[sgroupIdx * scount + n] += hsum(s[n]);
+            for (int n = 0; n < scount; n++) out[sgroupIdx * sgroupSize + n] += hsum(s[n]);
         }
 
     public:
@@ -154,9 +154,9 @@ namespace ac::core::cpu
 
                 if constexpr (sgroup)
                     for (int i = 0; i < sgroup; i++)
-                        conv_kernel<cin, scount, cpos>(i, rptr, s, out, kernels);
+                        conv_kernel<cin, cpos, scount, scount>(i, rptr, s, out, kernels);
                 if constexpr (sremian)
-                    conv_kernel<cin, sremian, cpos>(sgroup, rptr, s, out, kernels);
+                    conv_kernel<cin, cpos, scount, sremian>(sgroup, rptr, s, out, kernels);
             }
         }
     };
