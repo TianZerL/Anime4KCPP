@@ -182,11 +182,7 @@ namespace ac::core::opencl
 
         std::string options{};
         if (buildData.passWeightsByConstant) options.append("-DPASS_WEIGHTS_BY_CONSTANT ");
-#   ifdef AC_CORE_ENABLE_FAST_MATH
-        options.append("-cl-fast-relaxed-math ");
-#   endif
         options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
-
 
         cl::Program kernelProgram{ context.ctx, buildData.kernelString, false, &err }; if (err != CL_SUCCESS) return err;
         cl::Program commonProgram{ context.ctx, kernel::CommonKernelString, false, &err }; if (err != CL_SUCCESS) return err;
