@@ -14,6 +14,7 @@ namespace ac::core::simd::detail
         bool sse2;
         bool avx;
         bool avx2;
+        bool avx512;
         bool fma;
         bool neon;
     public:
@@ -30,6 +31,7 @@ namespace ac::core::simd::detail
             sse2 = ruapu_supports("sse2");
             avx = ruapu_supports("avx");
             avx2 = ruapu_supports("avx2");
+            avx512 = ruapu_supports("avx512f");
             fma = ruapu_supports("fma");
             neon = ruapu_supports("neon");
         }
@@ -51,6 +53,10 @@ bool ac::core::simd::supportAVX() noexcept
 bool ac::core::simd::supportAVX2() noexcept
 {
     return gISA.avx2;
+}
+bool ac::core::simd::supportAVX512() noexcept
+{
+    return gISA.avx512;
 }
 bool ac::core::simd::supportFMA() noexcept
 {

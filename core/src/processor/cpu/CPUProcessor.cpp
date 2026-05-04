@@ -26,6 +26,9 @@ namespace ac::core::cpu
 #       ifdef AC_CORE_WITH_AVX
             AVX,
 #       endif
+#       ifdef AC_CORE_WITH_AVX512
+            AVX512,
+#       endif
 #       ifdef AC_CORE_WITH_NEON
             NEON,
 #       endif
@@ -46,6 +49,9 @@ namespace ac::core::cpu
 #       endif
 #       ifdef AC_CORE_WITH_AVX
             "AVX",
+#       endif
+#       ifdef AC_CORE_WITH_AVX512
+            "AVX512",
 #       endif
 #       ifdef AC_CORE_WITH_NEON
             "NEON",
@@ -232,6 +238,50 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat);
 #endif
+#ifdef AC_CORE_WITH_AVX512
+    void conv3x3_1to8_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void deconv2x2_8to1_avx512(const Image& src, Image& dst, const float* kernels);
+
+    void conv3x3_1to8_prelu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+
+    void conv3x3_1to8_identity_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_prelu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+    void conv3x3_8to8_identity_residual_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
+    void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_avx512(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1,
+        const Image& id, const float scale,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_add_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id);
+
+    void conv3x3_1to16_identity_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_identity_add_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat);
+    void conv3x3_16to4_identity_pixelshuffle_4to1_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv3x3_1to32_identity_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_32to32_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_32to32_identity_add_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat);
+    void conv3x3_32to4_identity_pixelshuffle_4to1_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv5x5_1to8_identity_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_avx512(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv5x5_1to16_identity_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_prelu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx512(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+#endif
 #ifdef AC_CORE_WITH_NEON
     void conv3x3_1to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -349,6 +399,9 @@ namespace ac::core::cpu
         {
             idx = (arch > arch::Begin && arch < arch::End) ? arch : []() -> int {
                 // x86
+#           ifdef AC_CORE_WITH_AVX512
+                if (simd::supportAVX512()) return arch::AVX512;
+#           endif
 #           ifdef AC_CORE_WITH_AVX
                 if (simd::supportAVX()) return arch::AVX;
 #           endif
@@ -474,6 +527,41 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_avx;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_avx;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx;
+
+                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
+                break;
+#       endif
+#       ifdef AC_CORE_WITH_AVX512
+            case arch::AVX512:
+                conv3x3_1to8_relu = conv3x3_1to8_relu_avx512;
+                conv3x3_8to8_relu = conv3x3_8to8_relu_avx512;
+                deconv2x2_8to1 = deconv2x2_8to1_avx512;
+
+                conv3x3_1to8_prelu = conv3x3_1to8_prelu_avx512;
+
+                conv3x3_1to8_identity = conv3x3_1to8_identity_avx512;
+                conv3x3_8to8_prelu = conv3x3_8to8_prelu_avx512;
+                conv3x3_8to8_identity_residual = conv3x3_8to8_identity_residual_avx512;
+                conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add = conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_avx512;
+                conv3x3_8to4_identity_pixelshuffle_4to1_add = conv3x3_8to4_identity_pixelshuffle_4to1_add_avx512;
+
+                conv3x3_1to16_identity = conv3x3_1to16_identity_avx512;
+                conv3x3_16to16_relu = conv3x3_16to16_relu_avx512;
+                conv3x3_16to16_identity_add = conv3x3_16to16_identity_add_avx512;
+                conv3x3_16to4_identity_pixelshuffle_4to1 = conv3x3_16to4_identity_pixelshuffle_4to1_avx512;
+
+                conv3x3_1to32_identity = conv3x3_1to32_identity_avx512;
+                conv3x3_32to32_relu = conv3x3_32to32_relu_avx512;
+                conv3x3_32to32_identity_add = conv3x3_32to32_identity_add_avx512;
+                conv3x3_32to4_identity_pixelshuffle_4to1 = conv3x3_32to4_identity_pixelshuffle_4to1_avx512;
+
+                conv5x5_1to8_identity = conv5x5_1to8_identity_avx512;
+                conv3x3_8to8_prelu_conv1x1_8to8_add_prelu = conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_avx512;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_avx512;
+
+                conv5x5_1to16_identity = conv5x5_1to16_identity_avx512;
+                conv3x3_16to16_prelu = conv3x3_16to16_prelu_avx512;
+                conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx512;
 
                 pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;

@@ -1,10 +1,8 @@
-#include <arm_neon.h>
-
 #include "AC/Core/Image.hpp"
-#include "AC/Util/Macro.hpp"
 
 #include "AC/Core/Internal/DataType.hpp"
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
+#include "AC/Core/Internal/Processor/CPU/ARM/NEON.hpp"
 
 namespace ac::core::cpu
 {
@@ -50,7 +48,7 @@ namespace ac::core::cpu
 
     public:
         template <int vsize>
-        static float dot(const float* const v1, const float* const v2) noexcept
+        static AC_FORCE_INLINE float dot(const float* const v1, const float* const v2) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = vsize / vstep;
@@ -75,7 +73,7 @@ namespace ac::core::cpu
         }
 
         template <int cout, int cpos>
-        static void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
+        static AC_FORCE_INLINE void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int vstep = 4;
             constexpr int count = cpos / vstep;
@@ -102,7 +100,7 @@ namespace ac::core::cpu
         }
 
         template <int cin, int cout, int cpos>
-        static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
+        static AC_FORCE_INLINE void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
             constexpr int scount = 16;
             constexpr int sgroup = cout / scount;

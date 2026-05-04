@@ -1,51 +1,11 @@
-#include <cstdint>
-
-#include <Eigen/Core>
-
 #include "AC/Core/Image.hpp"
 
 #include "AC/Core/Internal/DataType.hpp"
 #include "AC/Core/Internal/Processor/CPU/Common.hpp"
+#include "AC/Core/Internal/Processor/CPU/Eigen3.hpp"
 
 namespace ac::core::cpu
 {
-    struct OpImplEigen3
-    {
-        template <int vsize>
-        static float dot(const float* const v1, const float* const v2) noexcept
-        {
-            Eigen::Map<const Eigen::Vector<float, vsize>> r1{ v1 };
-            Eigen::Map<const Eigen::Vector<float, vsize>> r2{ v2 };
-
-            return r1.dot(r2);
-        }
-
-        template <int cout, int cpos>
-        static void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
-        {
-            Eigen::Map<const Eigen::Vector<float, cpos>> r{ rptr };
-
-            for (int n = 0; n < cout; n++)
-            {
-                Eigen::Map<const Eigen::Vector<float, cpos>> k{ kernels + n * cpos };
-                out[n] = r.dot(k) + biases[n];
-            }
-        }
-
-        template <int cin, int cout, int cpos>
-        static void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
-        {
-            Eigen::Matrix<float, cin * cpos, 1> r;
-            for (int p = 0; p < cpos; p++) r.template segment<cin>(p * cin) = Eigen::Map<const Eigen::Matrix<float, cin, 1>>{ rptr[p] };
-
-            Eigen::Map<const Eigen::Matrix<float, cout, cin * cpos, Eigen::RowMajor>> k{ kernels };
-            Eigen::Map<const Eigen::Matrix<float, cout, 1>> b{ biases };
-            Eigen::Map<Eigen::Matrix<float, cout, 1>> s{ out };
-
-            s.noalias() = k * r + b;
-        }
-    };
-
     void conv3x3_1to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases)
     {
         switch (src.type())

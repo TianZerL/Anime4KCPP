@@ -81,6 +81,7 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:${CORE_SOURCE_DIR}/src/processor/cpu/Eigen3.cpp>
     $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/SSE.cpp>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX.cpp>
+    $<$<BOOL:${AC_CORE_WITH_AVX512}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_SOURCE_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:${CORE_SOURCE_DIR}/src/processor/opencl/OpenCLProcessor.cpp>
@@ -123,6 +124,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC
     if(AC_CORE_WITH_AVX2)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX2.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX2")
     endif()
+    if(AC_CORE_WITH_AVX512)
+        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX512")
+    endif()
     if(AC_CORE_WITH_NEON)
         set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "/arch:armv8.0")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeNEON.cpp PROPERTIES COMPILE_OPTIONS "/arch:armv8.0")
@@ -140,6 +144,9 @@ elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     endif()
     if(AC_CORE_WITH_AVX2)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma")
+    endif()
+    if(AC_CORE_WITH_AVX512)
+        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "-mavx512f;-mfma")
     endif()
     if(AC_CORE_WITH_NEON)
         set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
@@ -188,6 +195,7 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:sse2>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:avx>
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:avx2>
+    $<$<BOOL:${AC_CORE_WITH_AVX512}>:avx512>
     $<$<BOOL:${AC_CORE_WITH_FMA}>:fma>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:neon>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
@@ -201,6 +209,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:AC_CORE_WITH_SSE2>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:AC_CORE_WITH_AVX>
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:AC_CORE_WITH_AVX2>
+    $<$<BOOL:${AC_CORE_WITH_AVX512}>:AC_CORE_WITH_AVX512>
     $<$<BOOL:${AC_CORE_WITH_FMA}>:AC_CORE_WITH_FMA>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:AC_CORE_WITH_NEON>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>

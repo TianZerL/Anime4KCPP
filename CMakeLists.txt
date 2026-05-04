@@ -40,6 +40,7 @@ option(AC_CORE_WITH_SSE "build core with x86 sse" ${AC_COMPILER_SUPPORT_SSE})
 option(AC_CORE_WITH_SSE2 "build core with x86 sse2" ${AC_COMPILER_SUPPORT_SSE2})
 option(AC_CORE_WITH_AVX "build core with x86 avx" ${AC_COMPILER_SUPPORT_AVX})
 option(AC_CORE_WITH_AVX2 "build core with x86 avx2" ${AC_COMPILER_SUPPORT_AVX2})
+option(AC_CORE_WITH_AVX512 "build core with x86 avx512" ${AC_COMPILER_SUPPORT_AVX512})
 option(AC_CORE_WITH_FMA "build core with x86 fma and avx" ${AC_COMPILER_SUPPORT_FMA})
 option(AC_CORE_WITH_NEON "build core with arm neon" ${AC_COMPILER_SUPPORT_NEON})
 option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
@@ -112,6 +113,7 @@ message(STATUS
     SSE2: ${AC_CORE_WITH_SSE2}
     AVX: ${AC_CORE_WITH_AVX}
     AVX2: ${AC_CORE_WITH_AVX2}
+    AVX512: ${AC_CORE_WITH_AVX512}
     FMA: ${AC_CORE_WITH_FMA}
     NEON: ${AC_CORE_WITH_NEON}
     WASM_SIMD128: ${AC_CORE_WITH_WASM_SIMD128}
