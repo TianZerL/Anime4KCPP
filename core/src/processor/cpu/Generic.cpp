@@ -13,32 +13,28 @@ namespace ac::core::cpu
     struct OpImplGeneric
     {
     private:
-        template <std::size_t l, std::size_t r>
-        static AC_FORCE_INLINE auto sum_tree(const float* const v1, const float* const v2) noexcept
+        template <std::size_t... i>
+        static AC_FORCE_INLINE auto vector_sum_impl(const float* const v1, const float* const v2, std::index_sequence<i...>) noexcept
         {
-            if constexpr (r - l == 1) return v1[l] * v2[l];
-            else
-            {
-                constexpr auto m = (l + r) / 2;
-                return sum_tree<l, m>(v1, v2) + sum_tree<m, r>(v1, v2);
-            }
+            return (... + (v1[i] * v2[i]));
         }
 
-        template <std::size_t l, std::size_t r>
-        static AC_FORCE_INLINE auto sum_tree(const float* const* const v1, const float* const* const v2, const int k) noexcept
+        template <int vsize>
+        static AC_FORCE_INLINE auto vector_sum(const float* const v1, const float* const v2) noexcept
         {
-            if constexpr (r - l == 1) return v1[l][k] * v2[l][k];
-            else
-            {
-                constexpr auto m = (l + r) / 2;
-                return sum_tree<l, m>(v1, v2, k) + sum_tree<m, r>(v1, v2, k);
-            }
+            return vector_sum_impl(v1, v2, std::make_index_sequence<vsize>{});
+        }
+
+        template <std::size_t... p>
+        static AC_FORCE_INLINE auto block_sum_impl(const float* const* const rptr, const float* const* const kptr, const int c, std::index_sequence<p...>) noexcept
+        {
+            return (... + (rptr[p][c] * kptr[p][c]));
         }
 
         template <int cpos, typename K>
         static AC_FORCE_INLINE auto block_sum(const float* const* const rptr, K&& kptr, const int c) noexcept
         {
-            return sum_tree<0, cpos>(rptr, kptr.data(), c);
+            return block_sum_impl(rptr, kptr.data(), c, std::make_index_sequence<cpos>{});
         }
 
         template <int cin, std::size_t... p>
@@ -57,7 +53,7 @@ namespace ac::core::cpu
         template <int vsize>
         static float dot(const float* const v1, const float* const v2) noexcept
         {
-            return sum_tree<0, vsize>(v1, v2);
+            return vector_sum<vsize>(v1, v2);
         }
 
         template <int cout, int cpos>
@@ -66,7 +62,7 @@ namespace ac::core::cpu
             for (int n = 0; n < cout; n++)
             {
                 auto kptr = kernels + n * cpos;
-                out[n] = sum_tree<0, cpos>(rptr, kptr) + biases[n];
+                out[n] = vector_sum<cpos>(rptr, kptr) + biases[n];
             }
         }
 
