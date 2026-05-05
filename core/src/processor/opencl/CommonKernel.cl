@@ -1,10 +1,12 @@
 #ifndef AC_CORE_OPENCL_COMMON_KERNEL_CL
 #define AC_CORE_OPENCL_COMMON_KERNEL_CL
 
-#ifdef PASS_WEIGHTS_BY_CONSTANT
-#   define WEIGHTS_SPACE constant
-#else
-#   define WEIGHTS_SPACE global
+#ifndef WEIGHTS_PASS_SPACE
+#   define WEIGHTS_PASS_SPACE global
+#endif
+
+#ifndef WEIGHTS_STORAGE_SPACE
+#   define WEIGHTS_STORAGE_SPACE WEIGHTS_PASS_SPACE
 #endif
 
 #define Identity(v) (v)
@@ -14,18 +16,49 @@
 
 constant sampler_t n_sampler = CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
 
+inline void copy_to_local(
+    local float* const restrict lptr,
+    WEIGHTS_PASS_SPACE const float* const restrict pptr,
+    const int size)
+{
+    const int local_x = get_local_id(0);
+    const int local_y = get_local_id(1);
+    const int local_size_x = get_local_size(0);
+    const int local_size_y = get_local_size(1);
+
+    const int threads = local_size_x * local_size_y;
+    const int tid = local_y * local_size_x + local_x;
+
+    if (threads < size)
+    {
+        const int line = size / threads;
+        const int remain = size % threads;
+        for (int i = 0; i < line; ++i)
+        {
+            const int idx = tid + i * threads;
+            lptr[idx] = pptr[idx];
+        }
+        if (remain > 0 && tid < remain)
+        {
+            const int idx = tid + line * threads;
+            lptr[idx] = pptr[idx];
+        }
+    }
+    else if (tid < size) lptr[tid] = pptr[tid];
+}
+
 inline void conv1x1_from_array(
     const float* const in, float* const out,
     const int cin, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     const int count = cin / 8;
 
     for(int n = 0; n < cout; n++)
     {
-        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin;
+        WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels + n * cin;
         float8 s = (float8)(0.0f);
         for(int idx = 0; idx < count; idx++)
         {
@@ -39,8 +72,8 @@ inline void conv1x1_from_array(
 
 inline void conv1x1_cin8_from_vector(
     const float8 r,  float* const out, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     for(int n = 0; n < cout; n++)
@@ -54,7 +87,7 @@ inline void conv1x1_cin8_from_vector(
 inline void conv3x3_cin8_chunk(
     read_only image2d_array_t src, float* const out,
     const int chunk, const int cin, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
     const int x, const int y)
 {
     const int count = cin / 8;
@@ -73,7 +106,7 @@ inline void conv3x3_cin8_chunk(
 
     for(int n = 0; n < cout; n++)
     {
-        WEIGHTS_SPACE const float* const restrict kptr = kernels + n * cin * 9;
+        WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels + n * cin * 9;
 
         float8 k0 = vload8(count * 0 + chunk, kptr);
         float8 k1 = vload8(count * 1 + chunk, kptr);
@@ -136,8 +169,8 @@ inline void conv3x3_cin8_chunk(
 inline void conv3x3(
     read_only image2d_array_t src, float* const out,
     const int cin, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     const int count = cin / 8;
@@ -172,8 +205,8 @@ inline void conv3x3(
 inline void conv3x3_cin1(
     read_only image2d_t src,
     float* const out, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     float8 r0 = (float8)(
@@ -199,8 +232,8 @@ inline void conv3x3_cin1(
 inline void conv5x5_cin1(
     read_only image2d_t src,
     float* const out, const int cout,
-    WEIGHTS_SPACE const float* const restrict kernels,
-    WEIGHTS_SPACE const float* const restrict biases,
+    WEIGHTS_STORAGE_SPACE const float* const restrict kernels,
+    WEIGHTS_STORAGE_SPACE const float* const restrict biases,
     const int x, const int y)
 {
     float8 r0 = (float8)(

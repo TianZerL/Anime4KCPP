@@ -256,6 +256,10 @@ namespace ac::core::cuda
             auto x = blockIdx.x * BlockSize::x + threadIdx.x;
             auto y = blockIdx.y * BlockSize::y + threadIdx.y;
 
+            auto kptr = copyToShared<cout * 2 * 2 * cin>(kernels);
+
+            __syncthreads();
+
             if (x >= dstW || y >= dstH) return;
 
             auto in = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x / 2, y / 2);
@@ -263,7 +267,7 @@ namespace ac::core::cuda
 
             auto index = (y % upscale) * upscale + (x % upscale);
 
-            for (int n = 0; n < cout; n++) out[n] = cast<OUT>(saturate(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index)));
+            for (int n = 0; n < cout; n++) out[n] = cast<OUT>(saturate(OpImpl::template dot<cin>(in, kptr + n * cin * 4 + cin * index)));
         }
 
         template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cout, typename ActiveFunc>
@@ -433,22 +437,25 @@ namespace ac::core::cuda
 
             __syncthreads();
 
-            if (x >= srcW || y >= srcH) return;
-
-            const IN* rptr3x3[9];
-            loadImageBlockAdaptive<IN, 3, 3, cin, padx, pady>(rptr3x3, x, y, iptr, srcW, srcH, srcC, spitch);
-
             float buffer[ctemp];
-            OpImpl::template conv<cin, ctemp, 3 * 3>(rptr3x3, buffer, kptr, bptr);
 
-            for (int n = 0; n < ctemp; n++)
+            // conv3x3
+            if (x < srcW && y < srcH)
             {
-                if constexpr (!postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
+                const IN* rptr3x3[9];
+                loadImageBlockAdaptive<IN, 3, 3, cin, padx, pady>(rptr3x3, x, y, iptr, srcW, srcH, srcC, spitch);
 
-                if constexpr (::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>)
-                    buffer[n] = buffer[n] * residualArg3x3.scale + cast<float>(getReadPtr<IN>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
+                OpImpl::template conv<cin, ctemp, 3 * 3>(rptr3x3, buffer, kptr, bptr);
 
-                if constexpr (postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
+                for (int n = 0; n < ctemp; n++)
+                {
+                    if constexpr (!postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
+
+                    if constexpr (::cuda::std::is_same_v<ResidualArgs3x3, ResidualArg>)
+                        buffer[n] = buffer[n] * residualArg3x3.scale + cast<float>(getReadPtr<IN>(residualArg3x3.ptr, residualArg3x3.w, residualArg3x3.h, residualArg3x3.c, residualArg3x3.pitch, x, y)[n]);
+
+                    if constexpr (postactive3x3) buffer[n] = activeFunc3x3(buffer[n], n);
+                }
             }
 
             copyToShared<knum1x1>(kptr, kernels1x1);
@@ -456,25 +463,29 @@ namespace ac::core::cuda
 
             __syncthreads();
 
-            float sum[cout];
-            const float* rptr1x1[] = { buffer };
-            OpImpl::template conv<ctemp, cout, 1 * 1>(rptr1x1, sum, kptr, bptr);
-
-            auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
-
-            for (int n = 0; n < cout; n++)
+            // conv1x1
+            if (x < srcW && y < srcH)
             {
-                if constexpr (!postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
+                float sum[cout];
+                const float* rptr1x1[] = { buffer };
+                OpImpl::template conv<ctemp, cout, 1 * 1>(rptr1x1, sum, kptr, bptr);
 
-                if constexpr (::cuda::std::is_same_v<ResidualArgs1x1, ResidualArg>)
-                    sum[n] = sum[n] * residualArg1x1.scale + cast<float>(getReadPtr<IN>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
+                auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
 
-                if constexpr (postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
+                for (int n = 0; n < cout; n++)
+                {
+                    if constexpr (!postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
 
-                out[n] = cast<OUT>(sum[n]);
+                    if constexpr (::cuda::std::is_same_v<ResidualArgs1x1, ResidualArg>)
+                        sum[n] = sum[n] * residualArg1x1.scale + cast<float>(getReadPtr<IN>(residualArg1x1.ptr, residualArg1x1.w, residualArg1x1.h, residualArg1x1.c, residualArg1x1.pitch, x, y)[n]);
+
+                    if constexpr (postactive1x1) sum[n] = activeFunc1x1(sum[n], n);
+
+                    out[n] = cast<OUT>(sum[n]);
+                }
             }
         }
-}
+    }
 
     template<>
     void conv3x3_1to8_relu_cuda<DeviceImage::Float16>(

@@ -72,7 +72,8 @@ namespace ac::core::opencl
     {
         const char* kernelString;
         std::string compileOptions;
-        bool passWeightsByConstant;
+        bool constantWeightsPassSpace;
+        bool localWeightsStorageSpace;
     };
 
     struct Context
@@ -181,7 +182,14 @@ namespace ac::core::opencl
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
 
         std::string options{};
-        if (buildData.passWeightsByConstant) options.append("-DPASS_WEIGHTS_BY_CONSTANT ");
+        if (buildData.constantWeightsPassSpace)
+            options.append("-DWEIGHTS_PASS_SPACE=constant -DCONSTANT_WEIGHTS_PASS_SPACE ");
+        else
+            options.append("-DWEIGHTS_PASS_SPACE=global ");
+        if (buildData.localWeightsStorageSpace)
+            options.append("-DWEIGHTS_STORAGE_SPACE=local -DLOCAL_WEIGHTS_STORAGE_SPACE ");
+        else
+            options.append("-DWEIGHTS_STORAG_SPACE=WEIGHTS_PASS_SPACE ");
         options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
 
         cl::Program kernelProgram{ context.ctx, buildData.kernelString, false, &err }; if (err != CL_SUCCESS) return err;
@@ -402,7 +410,8 @@ namespace ac::core::opencl
             KernelBuildData buildData {
                 kernelString,
                 splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
-                splitWeights || (model.kernelSize() + model.biasSize() + model.alphaSize() <= context.constantMemorySize)
+                splitWeights || (model.kernelSize() + model.biasSize() + model.alphaSize() <= context.constantMemorySize),
+                (context.arch == Arch::NVIDIA)
             };
 
             err = init(context, buildData); if (err != CL_SUCCESS) return;

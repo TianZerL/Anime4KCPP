@@ -3,21 +3,32 @@
 kernel void conv5x5_1to16_identity(
     read_only image2d_t src,
     write_only image2d_array_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset,
-    WEIGHTS_SPACE const float* restrict biases,
+    WEIGHTS_PASS_SPACE const float* restrict biases,
     const int boffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
     biases += boffset;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[16 * 5 * 5 * 1];
+    local float bptr[16];
+    copy_to_local(kptr, kernels, 16 * 5 * 5 * 1);
+    copy_to_local(bptr, biases, 16);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float s[16];
-    conv5x5_cin1(src, s, 16, kernels, biases, x, y);
+    conv5x5_cin1(src, s, 16, kptr, bptr, x, y);
 
     write_imagef(dst, (int4)(x, y, 0, 0), Identity(vload4(0, s)));
     write_imagef(dst, (int4)(x, y, 1, 0), Identity(vload4(1, s)));
@@ -28,27 +39,41 @@ kernel void conv5x5_1to16_identity(
 kernel void conv3x3_16to16_prelu(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset,
-    WEIGHTS_SPACE const float* restrict biases,
+    WEIGHTS_PASS_SPACE const float* restrict biases,
     const int boffset,
-    WEIGHTS_SPACE const float* restrict alphas,
+    WEIGHTS_PASS_SPACE const float* restrict alphas,
     const int aoffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
     biases += boffset;
     alphas += aoffset;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[16 * 3 * 3 * 16];
+    local float bptr[16];
+    local float aptr[16];
+    copy_to_local(kptr, kernels, 16 * 3 * 3 * 16);
+    copy_to_local(bptr, biases, 16);
+    copy_to_local(aptr, alphas, 16);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
+    WEIGHTS_STORAGE_SPACE const float* const restrict aptr = alphas;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float s[16];
-    conv3x3(src, s, 16, 16, kernels, biases, x, y);
+    conv3x3(src, s, 16, 16, kptr, bptr, x, y);
 
     float16 v = vload16(0, s);
-    v = PReLU(v, vload16(0, alphas));
+    v = PReLU(v, vload16(0, aptr));
 
     write_imagef(dst, (int4)(x, y, 0, 0), v.lo.lo);
     write_imagef(dst, (int4)(x, y, 1, 0), v.lo.hi);
@@ -59,17 +84,14 @@ kernel void conv3x3_16to16_prelu(
 kernel void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
-    WEIGHTS_SPACE const float* restrict kernels1, const int koffset1,
-    WEIGHTS_SPACE const float* restrict biases1, const int boffset1,
-    WEIGHTS_SPACE const float* restrict alphas1, const int aoffset1,
-    WEIGHTS_SPACE const float* restrict kernels2, const int koffset2,
-    WEIGHTS_SPACE const float* restrict biases2, const int boffset2,
-    WEIGHTS_SPACE const float* restrict alphas2, const int aoffset2,
+    WEIGHTS_PASS_SPACE const float* restrict kernels1, const int koffset1,
+    WEIGHTS_PASS_SPACE const float* restrict biases1, const int boffset1,
+    WEIGHTS_PASS_SPACE const float* restrict alphas1, const int aoffset1,
+    WEIGHTS_PASS_SPACE const float* restrict kernels2, const int koffset2,
+    WEIGHTS_PASS_SPACE const float* restrict biases2, const int boffset2,
+    WEIGHTS_PASS_SPACE const float* restrict alphas2, const int aoffset2,
     read_only image2d_array_t feat)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels1 += koffset1;
     biases1 += boffset1;
@@ -80,22 +102,48 @@ kernel void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
     alphas2 += aoffset2;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr1[16 * 3 * 3 * 16];
+    local float bptr1[16];
+    local float aptr1[16];
+    local float kptr2[16 * 1 * 1 * 16];
+    local float bptr2[16];
+    local float aptr2[16];
+    copy_to_local(kptr1, kernels1, 16 * 3 * 3 * 16);
+    copy_to_local(bptr1, biases1, 16);
+    copy_to_local(aptr1, alphas1, 16);
+    copy_to_local(kptr2, kernels2, 16 * 1 * 1 * 16);
+    copy_to_local(bptr2, biases2, 16);
+    copy_to_local(aptr2, alphas2, 16);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr1 = kernels1;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr1 = biases1;
+    WEIGHTS_STORAGE_SPACE const float* const restrict aptr1 = alphas1;
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr2 = kernels2;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr2 = biases2;
+    WEIGHTS_STORAGE_SPACE const float* const restrict aptr2 = alphas2;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float buffer[16];
-    conv3x3(src, buffer, 16, 16, kernels1, biases1, x, y);
+    conv3x3(src, buffer, 16, 16, kptr1, bptr1, x, y);
 
     float16 v = vload16(0, buffer);
-    v = PReLU(v, vload16(0, alphas1));
+    v = PReLU(v, vload16(0, aptr1));
     vstore16(v, 0, buffer);
 
     float s[16];
-    conv1x1_from_array(buffer, s, 16, 16, kernels2, biases2, x, y);
+    conv1x1_from_array(buffer, s, 16, 16, kptr2, bptr2, x, y);
 
     v = vload16(0, s);
     v = v + (float16)(
         read_imagef(feat, n_sampler, (int4)(x, y, 0, 0)), read_imagef(feat, n_sampler, (int4)(x, y, 1, 0)),
         read_imagef(feat, n_sampler, (int4)(x, y, 2, 0)), read_imagef(feat, n_sampler, (int4)(x, y, 3, 0))
     );
-    v = PReLU(v, vload16(0, alphas2));
+    v = PReLU(v, vload16(0, aptr2));
 
     write_imagef(dst, (int4)(x, y, 0, 0), v.lo.lo);
     write_imagef(dst, (int4)(x, y, 1, 0), v.lo.hi);
@@ -106,21 +154,32 @@ kernel void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
 kernel void conv3x3_16to4_identity_pixelshuffle_4to1(
     read_only image2d_array_t src,
     write_only image2d_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset,
-    WEIGHTS_SPACE const float* restrict biases,
+    WEIGHTS_PASS_SPACE const float* restrict biases,
     const int boffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
     biases += boffset;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[4 * 3 * 3 * 16];
+    local float bptr[4];
+    copy_to_local(kptr, kernels, 4 * 3 * 3 * 16);
+    copy_to_local(bptr, biases, 4);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float s[4];
-    conv3x3(src, s, 16, 4, kernels, biases, x, y);
+    conv3x3(src, s, 16, 4, kptr, bptr, x, y);
 
     float4 pixel = clamp(Identity(vload4(0, s)), 0.0f, 1.0f);
     int2 dst_coord = (int2)(x, y) * 2;

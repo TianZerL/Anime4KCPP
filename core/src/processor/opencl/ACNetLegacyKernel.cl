@@ -3,21 +3,32 @@
 kernel void conv3x3_1to8_relu(
     read_only image2d_t src,
     write_only image2d_array_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset,
-    WEIGHTS_SPACE const float* restrict biases,
+    WEIGHTS_PASS_SPACE const float* restrict biases,
     const int boffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
     biases += boffset;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[8 * 3 * 3 * 1];
+    local float bptr[8];
+    copy_to_local(kptr, kernels, 8 * 3 * 3 * 1);
+    copy_to_local(bptr, biases, 8);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float s[8];
-    conv3x3_cin1(src, s, 8, kernels, biases, x, y);
+    conv3x3_cin1(src, s, 8, kptr, bptr, x, y);
 
     write_imagef(dst, (int4)(x, y, 0, 0), ReLU(vload4(0, s)));
     write_imagef(dst, (int4)(x, y, 1, 0), ReLU(vload4(1, s)));
@@ -26,21 +37,32 @@ kernel void conv3x3_1to8_relu(
 kernel void conv3x3_8to8_relu(
     read_only image2d_array_t src,
     write_only image2d_array_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset,
-    WEIGHTS_SPACE const float* restrict biases,
+    WEIGHTS_PASS_SPACE const float* restrict biases,
     const int boffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
     biases += boffset;
 #endif
 
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[8 * 3 * 3 * 8];
+    local float bptr[8];
+    copy_to_local(kptr, kernels, 8 * 3 * 3 * 8);
+    copy_to_local(bptr, biases, 8);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+    WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
+
     float s[8];
-    conv3x3(src, s, 8, 8, kernels, biases, x, y);
+    conv3x3(src, s, 8, 8, kptr, bptr, x, y);
 
     write_imagef(dst, (int4)(x, y, 0, 0), ReLU(vload4(0, s)));
     write_imagef(dst, (int4)(x, y, 1, 0), ReLU(vload4(1, s)));
@@ -49,15 +71,23 @@ kernel void conv3x3_8to8_relu(
 kernel void deconv2x2_8to1(
     read_only image2d_array_t src,
     write_only image2d_t dst,
-    WEIGHTS_SPACE const float* restrict kernels,
+    WEIGHTS_PASS_SPACE const float* restrict kernels,
     const int koffset)
 {
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(dst) || y >= get_image_height(dst)) return;
-
 #ifdef USE_WEIGHTS_OFFSET
     kernels += koffset;
 #endif
+
+#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+    local float kptr[1 * 2 * 2 * 8];
+    copy_to_local(kptr, kernels, 1 * 2 * 2 * 8);
+    barrier(CLK_LOCAL_MEM_FENCE);
+#else
+    WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
+#endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(dst) || y >= get_image_height(dst)) return;
 
     int2 dst_coord = (int2)(x, y);
     int2 src_coord = dst_coord / 2;
@@ -65,7 +95,7 @@ kernel void deconv2x2_8to1(
     int index = pos.y * 2 + pos.x;
 
     float8 r = (float8)(read_imagef(src, n_sampler, (int4)(src_coord, 0, 0)), read_imagef(src, n_sampler, (int4)(src_coord, 1, 0)));
-    float8 k = vload8(0, kernels + 8 * index);
+    float8 k = vload8(0, kptr + 8 * index);
     float4 s = (float4)(clamp(dot(r.lo, k.lo) + dot(r.hi, k.hi), 0.0f, 1.0f), 0.0f, 0.0f, 1.0f);
     write_imagef(dst, dst_coord, s);
 }
