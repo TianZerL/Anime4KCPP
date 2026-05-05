@@ -42,6 +42,32 @@ if(AC_CORE_WITH_OPENCL)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/FSRCNNXF8Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/FSRCNNXF8Kernel.hpp FSRCNNXF8)
     generate_opencl_kernel_header(${CORE_SOURCE_DIR}/src/processor/opencl/FSRCNNXF16Kernel.cl ${CORE_BINARY_DIR}/include/AC/Core/Processor/OpenCL/FSRCNNXF16Kernel.hpp FSRCNNXF16)
 endif()
+
+include(${CMAKE_DIR}/GenCPUProcessorBackend.cmake)
+
+generate_cpu_processor_backend(Generic generic Generic.hpp ${CORE_BINARY_DIR}/src/processor/cpu/Generic.cpp)
+if(AC_CORE_WITH_EIGEN3)
+    generate_cpu_processor_backend(Eigen3 eigen3 Eigen3.hpp ${CORE_BINARY_DIR}/src/processor/cpu/Eigen3.cpp)
+endif()
+if(AC_CORE_WITH_SSE)
+    generate_cpu_processor_backend(SSE sse X86/SSE.hpp ${CORE_BINARY_DIR}/src/processor/cpu/x86/SSE.cpp)
+endif()
+if(AC_CORE_WITH_AVX)
+    generate_cpu_processor_backend(AVX avx X86/AVX.hpp ${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX.cpp)
+endif()
+if(AC_CORE_WITH_FMA)
+    generate_cpu_processor_backend(FMA fma X86/AVX.hpp ${CORE_BINARY_DIR}/src/processor/cpu/x86/FMA.cpp)
+endif()
+if(AC_CORE_WITH_AVX512)
+    generate_cpu_processor_backend(AVX512 avx512 X86/AVX512.hpp ${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX512.cpp)
+endif()
+if(AC_CORE_WITH_NEON)
+    generate_cpu_processor_backend(NEON neon ARM/NEON.hpp ${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp)
+endif()
+if(AC_CORE_WITH_WASM_SIMD128)
+    generate_cpu_processor_backend(WASM wasm_simd128 WASM/SIMD128.hpp ${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp)
+endif()
+
 include(${CMAKE_DIR}/GenImageResizeSIMD.cmake)
 
 if(AC_CORE_WITH_SSE2)
@@ -77,16 +103,18 @@ target_sources(ac PRIVATE
     ${CORE_SOURCE_DIR}/src/SIMD.cpp
     ${CORE_SOURCE_DIR}/src/processor/Processor.cpp
     ${CORE_SOURCE_DIR}/src/processor/cpu/CPUProcessor.cpp
-    ${CORE_SOURCE_DIR}/src/processor/cpu/Generic.cpp
-    $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:${CORE_SOURCE_DIR}/src/processor/cpu/Eigen3.cpp>
-    $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/SSE.cpp>
-    $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX.cpp>
-    $<$<BOOL:${AC_CORE_WITH_AVX512}>:${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp>
-    $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp>
-    $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_SOURCE_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:${CORE_SOURCE_DIR}/src/processor/opencl/OpenCLProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/processor/cuda/CUDAProcessor.cpp>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:${CORE_SOURCE_DIR}/src/processor/cuda/Kernel.cu>
+
+    ${CORE_BINARY_DIR}/src/processor/cpu/Generic.cpp
+    $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:${CORE_BINARY_DIR}/src/processor/cpu/Eigen3.cpp>
+    $<$<BOOL:${AC_CORE_WITH_SSE}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/SSE.cpp>
+    $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX.cpp>
+    $<$<BOOL:${AC_CORE_WITH_FMA}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/FMA.cpp>
+    $<$<BOOL:${AC_CORE_WITH_AVX512}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX512.cpp>
+    $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp>
+    $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
 
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:${CORE_BINARY_DIR}/src/simd/ImageResizeAVX.cpp>
@@ -112,48 +140,54 @@ endif()
 # But we must set cpu arch flag for ClangCL.
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     if(AC_CORE_WITH_SSE AND BUILD_ARCH_32BIT)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "/arch:SSE")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "/arch:SSE")
     endif()
     if(AC_CORE_WITH_SSE2 AND BUILD_ARCH_32BIT)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp PROPERTIES COMPILE_OPTIONS "/arch:SSE2")
     endif()
     if(AC_CORE_WITH_AVX)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${AC_CORE_WITH_FMA}>,/arch:AVX2,/arch:AVX>")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX")
+    endif()
+    if(AC_CORE_WITH_FMA)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/FMA.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX2")
     endif()
     if(AC_CORE_WITH_AVX2)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX2.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX2")
     endif()
     if(AC_CORE_WITH_AVX512)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX512")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "/arch:AVX512")
     endif()
     if(AC_CORE_WITH_NEON)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "/arch:armv8.0")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "/arch:armv8.0")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeNEON.cpp PROPERTIES COMPILE_OPTIONS "/arch:armv8.0")
     endif()
 elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(AC_CORE_WITH_SSE)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "-msse")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "-msse")
     endif()
     if(AC_CORE_WITH_SSE2)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp PROPERTIES COMPILE_OPTIONS "-msse2")
     endif()
     if(AC_CORE_WITH_AVX)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX.cpp PROPERTIES COMPILE_OPTIONS "-mavx;$<$<BOOL:${AC_CORE_WITH_FMA}>:-mfma>")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX.cpp PROPERTIES COMPILE_OPTIONS "-mavx")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX.cpp PROPERTIES COMPILE_OPTIONS "-mavx")
+    endif()
+    if(AC_CORE_WITH_FMA)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/FMA.cpp PROPERTIES COMPILE_OPTIONS "-mavx;-mfma")
     endif()
     if(AC_CORE_WITH_AVX2)
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeAVX2.cpp PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma")
     endif()
     if(AC_CORE_WITH_AVX512)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "-mavx512f;-mfma")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX512.cpp PROPERTIES COMPILE_OPTIONS "-mavx512f;-mfma")
     endif()
     if(AC_CORE_WITH_NEON)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeNEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
     endif()
     if(AC_CORE_WITH_WASM_SIMD128)
-        set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeWASM.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
     endif()
 endif()
@@ -194,9 +228,9 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_SSE}>:sse>
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:sse2>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:avx>
+    $<$<BOOL:${AC_CORE_WITH_FMA}>:fma>
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:avx2>
     $<$<BOOL:${AC_CORE_WITH_AVX512}>:avx512>
-    $<$<BOOL:${AC_CORE_WITH_FMA}>:fma>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:neon>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
@@ -208,9 +242,9 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_SSE}>:AC_CORE_WITH_SSE>
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:AC_CORE_WITH_SSE2>
     $<$<BOOL:${AC_CORE_WITH_AVX}>:AC_CORE_WITH_AVX>
+    $<$<BOOL:${AC_CORE_WITH_FMA}>:AC_CORE_WITH_FMA>
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:AC_CORE_WITH_AVX2>
     $<$<BOOL:${AC_CORE_WITH_AVX512}>:AC_CORE_WITH_AVX512>
-    $<$<BOOL:${AC_CORE_WITH_FMA}>:AC_CORE_WITH_FMA>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:AC_CORE_WITH_NEON>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>

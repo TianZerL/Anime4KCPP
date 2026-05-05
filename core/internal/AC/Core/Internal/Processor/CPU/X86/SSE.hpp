@@ -15,7 +15,8 @@
 
 namespace ac::core::cpu
 {
-    struct OpImplSSE
+    template <bool fma = false>
+    struct OpImplX86SIMD128
     {
     private:
         static AC_FORCE_INLINE float hsum(const __m128& v) noexcept
@@ -41,7 +42,10 @@ namespace ac::core::cpu
                     for (int n = 0; n < scount; n++)
                     {
                         __m128 k = _mm_loadu_ps(kernels + (sgroupIdx * sgroupSize + n) * cin * cpos + cin * p + idx * vstep);
-                        s[n] = _mm_add_ps(_mm_mul_ps(r, k), s[n]);
+                        if constexpr (fma)
+                            s[n] = _mm_fmadd_ps(r, k, s[n]);
+                        else
+                            s[n] = _mm_add_ps(_mm_mul_ps(r, k), s[n]);
                     }
                 }
                 if constexpr (remain)
@@ -77,7 +81,10 @@ namespace ac::core::cpu
                 {
                     __m128 r1 = _mm_loadu_ps(v1 + idx * vstep);
                     __m128 r2 = _mm_loadu_ps(v2 + idx * vstep);
-                    s = _mm_add_ps(_mm_mul_ps(r1, r2), s);
+                    if constexpr (fma)
+                        s = _mm_fmadd_ps(r1, r2, s);
+                    else
+                        s = _mm_add_ps(_mm_mul_ps(r1, r2), s);
                 }
                 sum += hsum(s);
 
@@ -116,7 +123,10 @@ namespace ac::core::cpu
                     for (int idx = 0; idx < count; idx++)
                     {
                         __m128 k = _mm_loadu_ps(kptr + idx * vstep);
-                        s = _mm_add_ps(_mm_mul_ps(r[idx], k), s);
+                        if constexpr (fma)
+                            s = _mm_fmadd_ps(r[idx], k, s);
+                        else
+                            s = _mm_add_ps(_mm_mul_ps(r[idx], k), s);
                     }
                     auto sum = hsum(s);
 
@@ -157,6 +167,8 @@ namespace ac::core::cpu
             }
         }
     };
+
+    using OpImplSSE = OpImplX86SIMD128<false>;
 }
 
 #endif
