@@ -14,6 +14,7 @@ struct Options
     std::string processor{ ac::specs::ProcessorList[0].name };
     double factor = 2.0;
     int device = 0;
+    unsigned int threads = 0;
 
     struct {
         // decoder hints
@@ -38,6 +39,6 @@ struct Options
     } list;
 };
 
-Options parse(int argc, const char* const* argv) noexcept;
+Options parse(int argc, char** const argv) noexcept;
 
 #endif

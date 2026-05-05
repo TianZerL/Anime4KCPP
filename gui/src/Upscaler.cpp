@@ -158,7 +158,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         return false;
                     }
                     return true;
-                }, &data, ac::video::FILTER_AUTO);
+                }, &data, AC_VIDEO_FILTER_MODE_AUTO);
                 stopwatch.stop();
                 pipeline.close();
                 if (data.error.load(std::memory_order_relaxed)) gLogger.error() << task->path.input << ": Failed due to " << data.error.load(std::memory_order_relaxed);

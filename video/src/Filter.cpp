@@ -30,9 +30,9 @@ namespace ac::video::detail
         pipeline.release(dst);
     }
 
-    static inline void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata)
+    static inline void filterParallel(Pipeline& pipeline, bool (* const callback)(Frame& /*src*/, Frame& /*dst*/, void* /*userdata*/), void* const userdata, unsigned int workers)
     {
-        auto threads = util::ThreadPool::hardwareThreads();
+        auto threads = workers > 0 ? workers : util::ThreadPool::hardwareThreads();
         util::Channel<Frame> decodeChan{ threads };
         util::AscendingChannel<Frame> encodeChan{ threads };
         util::ThreadPool pool{ threads + 1 };
@@ -125,8 +125,17 @@ void ac::video::filter(Pipeline& pipeline, bool (* const callback)(Frame& /*src*
 {
     if (!callback) return;
 
-    if (flag == FILTER_PARALLEL || (flag == FILTER_AUTO && util::ThreadPool::hardwareThreads() > 1))
-        detail::filterParallel(pipeline, callback, userdata);
+    auto model = flag & AC_VIDEO_FILTER_MODE_MASK;
+    unsigned int workers = (flag & AC_VIDEO_FILTER_MODE_PARALLEL_WORKERS_MASK) >> AC_VIDEO_FILTER_MODE_PARALLEL_WORKERS_SHIFT;
+
+    if (model == AC_VIDEO_FILTER_MODE_AUTO)
+    {
+        workers = util::ThreadPool::hardwareThreads();
+        model = (workers > 1) ? AC_VIDEO_FILTER_MODE_PARALLEL : AC_VIDEO_FILTER_MODE_SERIAL;
+    }
+
+    if (model == AC_VIDEO_FILTER_MODE_PARALLEL)
+        detail::filterParallel(pipeline, callback, userdata, workers);
     else
         detail::filterSerial(pipeline, callback, userdata);
 }

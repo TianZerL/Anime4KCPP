@@ -68,8 +68,8 @@ static void list(const Options& options)
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
     auto batch = options.inputs.size();
-    auto threads = ac::util::ThreadPool::hardwareThreads();
-    auto targetThreads = processor->type() == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1;
+    auto hardwareThreads = ac::util::ThreadPool::hardwareThreads();
+    auto targetThreads = options.threads > 0 ? options.threads : ((processor->type() == ac::core::Processor::CPU) ? hardwareThreads / 4 + 1 : hardwareThreads / 2 + 1);
     auto poolSize = batch > targetThreads ? targetThreads : batch;
     auto task = [&](const int i) {
         auto& input = options.inputs[i];
@@ -165,6 +165,10 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         data.progressBar = &progressBar;
         data.error = nullptr;
 
+        auto videoFilterModel = AC_VIDEO_FILTER_MODE_AUTO;
+        if (options.threads == 1) videoFilterModel = AC_VIDEO_FILTER_MODE_SERIAL;
+        else if (options.threads > 1) videoFilterModel = AC_VIDEO_FILTER_MODE_PARALLEL_WITH_WORKERS(options.threads);
+
         progressBar.reset();
         stopwatch.reset();
         ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
@@ -190,7 +194,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             // a beautiful progress bar
             if (src.number % 32 == 0) ctx->progressBar->print(src.number / ctx->frames);
             return true;
-        }, &data, ac::video::FILTER_AUTO);
+        }, &data, videoFilterModel);
         stopwatch.stop();
         progressBar.finish();
         pipeline.close();
