@@ -19,6 +19,7 @@
 #include <QSpacerItem>
 #include <QStyleFactory>
 #include <QTextBrowser>
+#include <QThread>
 #include <QVariant>
 #include <QVBoxLayout>
 #include <QWeakPointer>
@@ -105,6 +106,11 @@ void MainWindow::init()
         [](const QString& value) { gConfig.video.encoder = value; });
     QObject::connect(ui->spin_box_codec_hints_bitrate, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.video.bitrate = value; });
+
+    ui->spin_box_misc_threads->setMaximum(QThread::idealThreadCount() * 2);
+    ui->spin_box_misc_threads->setValue(gConfig.upscaler.threads);
+    QObject::connect(ui->spin_box_misc_threads, qOverload<int>(&QSpinBox::valueChanged), this,
+        [](const int value) { gConfig.upscaler.threads = value; });
 
     ui->spin_box_device->setValue(gConfig.upscaler.device);
     ui->double_spin_box_factor->setMinimum(1.0);

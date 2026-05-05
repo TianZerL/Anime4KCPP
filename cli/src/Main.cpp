@@ -124,6 +124,10 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
     ehints.format = options.video.format.c_str();
     ehints.bitrate = options.video.bitrate * 1000;
 
+    auto videoFilterModel = AC_VIDEO_FILTER_MODE_AUTO;
+    if (options.threads == 1) videoFilterModel = AC_VIDEO_FILTER_MODE_SERIAL;
+    else if (options.threads > 1) videoFilterModel = AC_VIDEO_FILTER_MODE_PARALLEL_WITH_WORKERS(options.threads);
+
     for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
     {
         auto& input = options.inputs[i];
@@ -164,10 +168,6 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         data.processor = processor;
         data.progressBar = &progressBar;
         data.error = nullptr;
-
-        auto videoFilterModel = AC_VIDEO_FILTER_MODE_AUTO;
-        if (options.threads == 1) videoFilterModel = AC_VIDEO_FILTER_MODE_SERIAL;
-        else if (options.threads > 1) videoFilterModel = AC_VIDEO_FILTER_MODE_PARALLEL_WITH_WORKERS(options.threads);
 
         progressBar.reset();
         stopwatch.reset();
