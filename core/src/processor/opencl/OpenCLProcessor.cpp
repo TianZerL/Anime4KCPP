@@ -546,7 +546,7 @@ private:
 private:
     util::ThreadLocal<cl::Kernel> conv3x3_1to8_relu_kernels{};
     util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_kernels{};
-    util::ThreadLocal<cl::Kernel> deconv2x2_8to1_kernels{};
+    util::ThreadLocal<cl::Kernel> conv3x3_8to8_relu_deconv2x2_8to1_kernels{};
 
     util::ThreadLocal<ImageBuffer> inImageBuffers{};
     util::ThreadLocal<ImageBuffer> tmp1ImageBuffers{};
@@ -569,7 +569,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetLegacy>::process(co
 
     auto& conv3x3_1to8_relu = conv3x3_1to8_relu_kernels.local(context.program, "conv3x3_1to8_relu", &err); if (err != CL_SUCCESS) return;
     auto& conv3x3_8to8_relu = conv3x3_8to8_relu_kernels.local(context.program, "conv3x3_8to8_relu", &err); if (err != CL_SUCCESS) return;
-    auto& deconv2x2_8to1 = deconv2x2_8to1_kernels.local(context.program, "deconv2x2_8to1", &err); if (err != CL_SUCCESS) return;
+    auto& conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_kernels.local(context.program, "conv3x3_8to8_relu_deconv2x2_8to1", &err); if (err != CL_SUCCESS) return;
 
     auto& inImageBuffer = inImageBuffers.local();
     auto& tmp1ImageBuffer = tmp1ImageBuffers.local();
@@ -581,38 +581,38 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetLegacy>::process(co
     auto& tmp2 = tmp2ImageBuffer.get(context.ctx, CL_MEM_READ_WRITE, CL_RGBA, CL_HALF_FLOAT, 8, srcW, srcH, &err); if (err != CL_SUCCESS) return;
     auto& out = outImageBuffer.get(context.ctx, CL_MEM_WRITE_ONLY | CL_MEM_HOST_READ_ONLY, CL_R, channelType(dst.type()), 1, dstW, dstH, &err); if (err != CL_SUCCESS) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
     err = cmdq.enqueueWriteImage(in, CL_FALSE, { 0,0,0 }, { srcW,srcH,1 }, src.stride(), 0, src.ptr()); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(0, in); if (err != CL_SUCCESS) return;
-    err = conv3x3_1to8_relu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
+    err = conv3x3_1to8_relu.setArg(1, *tmpO); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
     err = conv3x3_1to8_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
-    for (int i = 0; i < 4; i++)
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < 7; i++)
     {
-        err = conv3x3_8to8_relu.setArg(0, tmp1); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(1, tmp2); if (err != CL_SUCCESS) return;
+        err = conv3x3_8to8_relu.setArg(0, *tmpI); if (err != CL_SUCCESS) return;
+        err = conv3x3_8to8_relu.setArg(1, *tmpO); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
         err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
-
-        err = conv3x3_8to8_relu.setArg(0, tmp2); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(1, tmp1); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
-        err = conv3x3_8to8_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
-        err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
+        std::swap(tmpI, tmpO);
     }
-    err = deconv2x2_8to1.setArg(0, tmp1); if (err != CL_SUCCESS) return;
-    err = deconv2x2_8to1.setArg(1, out); if (err != CL_SUCCESS) return;
-    err = deconv2x2_8to1.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
-    err = deconv2x2_8to1.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
-    err = cmdq.enqueueNDRangeKernel(deconv2x2_8to1, cl::NullRange, { dstRangeW, dstRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(0, *tmpI); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(1, out); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(2, kernel(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(3, kernelOffset(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(4, bias(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(6, kernel(l + 1)); if (err != CL_SUCCESS) return;
+    err = conv3x3_8to8_relu_deconv2x2_8to1.setArg(7, kernelOffset(l + 1)); if (err != CL_SUCCESS) return;
+    err = cmdq.enqueueNDRangeKernel(conv3x3_8to8_relu_deconv2x2_8to1, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueReadImage(out, CL_TRUE, { 0,0,0 }, { dstW,dstH,1 }, dst.stride(), 0, dst.ptr());
 }
 
