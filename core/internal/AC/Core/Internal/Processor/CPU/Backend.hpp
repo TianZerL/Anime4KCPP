@@ -33,21 +33,21 @@ namespace ac::core::cpu
     {
         conv3x3_float<OP_IMPL(BACKEND_NAME), 8, 8>(src, dst, kernels, biases, ReLU{});
     }
-    void LAYER_DEFINE(deconv2x2_8to1, LAYER_SUFFIX)(const Image& src, Image& dst, const float* kernels)
+    void LAYER_DEFINE(conv3x3_8to8_relu_deconv2x2_8to1, LAYER_SUFFIX)(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2)
     {
         switch (dst.type())
         {
         case Image::UInt8:
-            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 1>(src, dst, kernels);
+            conv3x3_deconv2x2_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 8, 1>(src, dst, kernels1, biases1, kernels2, ReLU{});
             break;
         case Image::UInt16:
-            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 1>(src, dst, kernels);
+            conv3x3_deconv2x2_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 8, 1>(src, dst, kernels1, biases1, kernels2, ReLU{});
             break;
         case Image::Float16:
-            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 1>(src, dst, kernels);
+            conv3x3_deconv2x2_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 8, 1>(src, dst, kernels1, biases1, kernels2, ReLU{});
             break;
         case Image::Float32:
-            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 1>(src, dst, kernels);
+            conv3x3_deconv2x2_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 8, 1>(src, dst, kernels1, biases1, kernels2, ReLU{});
             break;
         }
     }
@@ -115,16 +115,16 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 2>(src, dst, kernels, biases, Identity{}, ResidualArg{ id, 1.0f });
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 2>(src, dst, kernels, biases, Identity{}, ResidualArg{id, 1.0f});
             break;
         case Image::Float16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 2>(src, dst, kernels, biases, Identity{}, ResidualArg{id, 1.0f});
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 2>(src, dst, kernels, biases, ResidualArg{id, 1.0f});
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 2>(src, dst, kernels, biases, Identity{}, ResidualArg{id, 1.0f});
             break;
         }
     }
@@ -160,16 +160,16 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 16, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 16, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 16, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 16, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 16, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         }
     }
@@ -205,16 +205,16 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 32, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 32, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 32, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 32, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 32, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         }
     }
@@ -254,16 +254,16 @@ namespace ac::core::cpu
         switch (dst.type())
         {
         case Image::UInt8:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::UInt16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float16:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         case Image::Float32:
-            conv3x3_identity_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 2>(src, dst, kernels, biases, nullptr);
+            conv3x3_pixelshuffle_float<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 2>(src, dst, kernels, biases, Identity{}, nullptr);
             break;
         }
     }
@@ -303,7 +303,25 @@ namespace ac::core::cpu
         );
     }
 
-    void LAYER_DEFINE(pixelshuffle_4to1, LAYER_SUFFIX)(const Image& src, Image& dst)
+    void LAYER_DEFINE(deconv2x2_8to1, LAYER_SUFFIX)(const Image& src, Image& dst, const float* kernels)
+    {
+        switch (dst.type())
+        {
+        case Image::UInt8:
+            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::UInt8, 8, 1>(src, dst, kernels);
+            break;
+        case Image::UInt16:
+            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::UInt16, 8, 1>(src, dst, kernels);
+            break;
+        case Image::Float16:
+            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::Float16, 8, 1>(src, dst, kernels);
+            break;
+        case Image::Float32:
+            deconv2x2<OP_IMPL(BACKEND_NAME), DataType::Float32, 8, 1>(src, dst, kernels);
+            break;
+        }
+    }
+    inline void pixelshuffle_4to1(const Image& src, Image& dst)
     {
         switch (dst.type())
         {

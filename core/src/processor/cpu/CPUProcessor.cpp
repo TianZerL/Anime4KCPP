@@ -68,9 +68,12 @@ namespace ac::core::cpu
             "Generic"
         };
     }
+    void pixelshuffle_4to1(const Image& src, Image& dst);
+
     void conv3x3_1to8_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_generic(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_generic(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_generic(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -110,12 +113,11 @@ namespace ac::core::cpu
         const float* kernels1, const float* biases1, const float* alphas1,
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat);
-
-    void pixelshuffle_4to1_generic(const Image& src, Image& dst);
 #ifdef AC_CORE_WITH_EIGEN3
     void conv3x3_1to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_eigen3(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_eigen3(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_eigen3(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -160,6 +162,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_sse(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_sse(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_sse(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_sse(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -204,6 +207,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_avx(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_avx(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_avx(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_avx(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -248,6 +252,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_fma(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_fma(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_fma(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_fma(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_fma(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -292,6 +297,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_avx512(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_avx512(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_avx512(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -336,6 +342,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_neon(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_neon(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_neon(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -380,6 +387,7 @@ namespace ac::core::cpu
     void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
     void deconv2x2_8to1_wasm_simd128(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_wasm_simd128(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
     void conv3x3_1to8_prelu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -483,7 +491,7 @@ namespace ac::core::cpu
             case arch::Eigen3:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_eigen3;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_eigen3;
-                deconv2x2_8to1 = deconv2x2_8to1_eigen3;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_eigen3;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_eigen3;
 
@@ -510,15 +518,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_eigen3;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_eigen3;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_eigen3;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_SSE
             case arch::SSE:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_sse;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_sse;
-                deconv2x2_8to1 = deconv2x2_8to1_sse;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_sse;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_sse;
 
@@ -545,15 +551,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_sse;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_sse;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_sse;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_AVX
             case arch::AVX:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_avx;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_avx;
-                deconv2x2_8to1 = deconv2x2_8to1_avx;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_avx;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_avx;
 
@@ -580,15 +584,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_avx;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_avx;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_FMA
             case arch::FMA:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_fma;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_fma;
-                deconv2x2_8to1 = deconv2x2_8to1_fma;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_fma;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_fma;
 
@@ -615,15 +617,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_fma;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_fma;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_fma;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_AVX512
             case arch::AVX512:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_avx512;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_avx512;
-                deconv2x2_8to1 = deconv2x2_8to1_avx512;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_avx512;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_avx512;
 
@@ -650,15 +650,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_avx512;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_avx512;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_avx512;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_NEON
             case arch::NEON:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_neon;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_neon;
-                deconv2x2_8to1 = deconv2x2_8to1_neon;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_neon;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_neon;
 
@@ -685,15 +683,13 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_neon;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_neon;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_neon;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_WASM_SIMD128
             case arch::WASM_SIMD128:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_wasm_simd128;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_wasm_simd128;
-                deconv2x2_8to1 = deconv2x2_8to1_wasm_simd128;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_wasm_simd128;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_wasm_simd128;
 
@@ -720,14 +716,12 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_wasm_simd128;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_wasm_simd128;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_wasm_simd128;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
 #       endif
             default:
                 conv3x3_1to8_relu = conv3x3_1to8_relu_generic;
                 conv3x3_8to8_relu = conv3x3_8to8_relu_generic;
-                deconv2x2_8to1 = deconv2x2_8to1_generic;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_generic;
 
                 conv3x3_1to8_prelu = conv3x3_1to8_prelu_generic;
 
@@ -754,8 +748,6 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_generic;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_generic;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_generic;
-
-                pixelshuffle_4to1 = pixelshuffle_4to1_generic;
                 break;
             }
         }
@@ -776,7 +768,7 @@ namespace ac::core::cpu
     protected:
         void (*conv3x3_1to8_relu)(const Image& src, Image& dst, const float* kernels, const float* biases);
         void (*conv3x3_8to8_relu)(const Image& src, Image& dst, const float* kernels, const float* biases);
-        void (*deconv2x2_8to1)(const Image& src, Image& dst, const float* kernels);
+        void (*conv3x3_8to8_relu_deconv2x2_8to1)(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
 
         void (*conv3x3_1to8_prelu)(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
 
@@ -816,8 +808,6 @@ namespace ac::core::cpu
             const float* kernels1, const float* biases1, const float* alphas1,
             const float* kernels2, const float* biases2, const float* alphas2,
             const Image& feat);
-
-        void (*pixelshuffle_4to1)(const Image& src, Image& dst);
     };
 
     template<typename Model>
@@ -869,8 +859,7 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::process(const Im
     conv3x3_8to8_relu(tmp1, tmp2, model.kernel(5), model.bias(5));
     conv3x3_8to8_relu(tmp2, tmp1, model.kernel(6), model.bias(6));
     conv3x3_8to8_relu(tmp1, tmp2, model.kernel(7), model.bias(7));
-    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(8), model.bias(8));
-    deconv2x2_8to1(tmp1, dst, model.kernel(9));
+    conv3x3_8to8_relu_deconv2x2_8to1(tmp2, dst, model.kernel(8), model.bias(8), model.kernel(9));
 }
 
 template<>

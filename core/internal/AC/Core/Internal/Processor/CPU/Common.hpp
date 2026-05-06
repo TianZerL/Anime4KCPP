@@ -50,26 +50,32 @@ namespace ac::core::cpu
     template <typename OpImpl, typename OUT, int cin, int cout>
     inline void deconv2x2(const Image& src, Image& dst, const float* const kernels) noexcept
     {
-        constexpr int upscale = 2;
-        for (int i = 0; i < dst.height(); i++)
-        {
-            for (int j = 0; j < dst.width(); j++)
+        static constexpr int upscale = 2;
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                auto in = static_cast<const float*>(src.ptr(j / upscale, i / upscale));
-                auto out = static_cast<OUT*>(dst.ptr(j, i));
+                auto dstY = i * upscale;
+                auto dstX = j * upscale;
 
-                auto index = (i % upscale) * upscale + (j % upscale);
+                auto in = static_cast<const float*>(src.ptr(j, i));
 
-                for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * index));
+                for (int dy = 0; dy < upscale; dy++)
+                {
+                    for (int dx = 0; dx < upscale; dx++)
+                    {
+                        auto out = static_cast<OUT*>(dst.ptr(dstX + dx, dstY + dy));
+                        for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<cin>(in, kernels + n * cin * 4 + cin * (dy * upscale + dx)));
+                    }
+                }
             }
-        }
+        });
     }
 
     template <typename OUT, int cin, int upscale>
     inline void pixelshuffle(const Image& src, Image& dst) noexcept
     {
-        constexpr int group = upscale * upscale;
-        constexpr int cout = cin / group;
+        static constexpr int group = upscale * upscale;
+        static constexpr int cout = cin / group;
         static_assert(cin % group == 0 && cout > 0);
 
         for (int i = 0; i < dst.height(); i++)
@@ -300,10 +306,11 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename OpImpl, typename OUT, int cin, int upscale, typename NearestInterpolationArg>
-    inline void conv3x3_identity_pixelshuffle_float(
+    template <typename OpImpl, typename OUT, int cin, int upscale, typename ActiveFunc, typename NearestInterpolationArg>
+    inline void conv3x3_pixelshuffle_float(
         const Image& src, Image& dst,
         const float* const kernels, const float* const biases,
+        ActiveFunc&& activeFunc,
         NearestInterpolationArg&& nearestInterpolationArg)
     {
         static constexpr int cout = upscale * upscale;
@@ -343,9 +350,62 @@ namespace ac::core::cpu
 
                 for (int n = 0; n < cout; n++)
                 {
+                    sum[n] = activeFunc(sum[n], n);
+
                     if constexpr (addNearestInterpolation) sum[n] = sum[n] * nearestInterpolationArg.scale + nearestInterpolationData;
 
                     *static_cast<OUT*>(dst.ptr(dstX + (n & 1), dstY + (n >> 1))) = fromFloat<OUT>(sum[n]);
+                }
+            }
+        });
+    }
+
+    template <typename OpImpl, typename OUT, int cin, int ctemp, int cout, typename ActiveFunc>
+    inline void conv3x3_deconv2x2_float(
+        const Image& src, Image& dst,
+        const float* const kernels1, const float* const biases1,
+        const float* const kernels2,
+        ActiveFunc&& activeFunc)
+    {
+        static constexpr int upscale = 2;
+
+        util::parallelFor(0, src.height(), [&](const int i) {
+            auto tp = i > 0 ? 1 : 0;
+            auto bp = i < src.height() - 1 ? 1 : 0;
+
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto dstY = i * upscale;
+                auto dstX = j * upscale;
+
+                auto lp = j > 0 ? 1 : 0;
+                auto rp = j < src.width() - 1 ? 1 : 0;
+
+                const float* rptr[] = {
+                    static_cast<const float*>(src.ptr(j - lp, i - tp)),
+                    static_cast<const float*>(src.ptr(j     , i - tp)),
+                    static_cast<const float*>(src.ptr(j + rp, i - tp)),
+                    static_cast<const float*>(src.ptr(j - lp, i     )),
+                    static_cast<const float*>(src.ptr(j     , i     )),
+                    static_cast<const float*>(src.ptr(j + rp, i     )),
+                    static_cast<const float*>(src.ptr(j - lp, i + bp)),
+                    static_cast<const float*>(src.ptr(j     , i + bp)),
+                    static_cast<const float*>(src.ptr(j + rp, i + bp)),
+                };
+
+                alignas(OpImpl::alignment) float sum[ctemp]{};
+
+                OpImpl::template conv<cin, ctemp, 3 * 3>(rptr, sum, kernels1, biases1);
+
+                for (int n = 0; n < ctemp; n++) sum[n] = activeFunc(sum[n], n);
+
+                for (int dy = 0; dy < upscale; dy++)
+                {
+                    for (int dx = 0; dx < upscale; dx++)
+                    {
+                        auto out = static_cast<OUT*>(dst.ptr(dstX + dx, dstY + dy));
+                        for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(OpImpl::template dot<ctemp>(sum, kernels2 + n * ctemp * 4 + ctemp * (dy * upscale + dx)));
+                    }
                 }
             }
         });
