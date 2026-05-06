@@ -18,6 +18,12 @@ namespace ac::core::cpu
     struct OpImplNEON
     {
     private:
+        static constexpr int vstep = 4;
+
+    public:
+        static constexpr int alignment = vstep * sizeof(float);
+
+    private:
         static AC_FORCE_INLINE float hsum(const float32x4_t& v) noexcept
         {
         #if defined(__aarch64__) || defined(_M_ARM64)
@@ -31,7 +37,6 @@ namespace ac::core::cpu
         template <int cin, int cpos, int sgroupSize, int scount>
         static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float* const* const rptr, float32x4_t* const s, float* const out, const float* const kernels) noexcept
         {
-            constexpr int vstep = 4;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
@@ -59,7 +64,6 @@ namespace ac::core::cpu
         template <int vsize>
         static AC_FORCE_INLINE float dot(const float* const v1, const float* const v2) noexcept
         {
-            constexpr int vstep = 4;
             if constexpr (vsize < vstep)
             {
 #ifdef AC_CORE_WITH_EIGEN3
@@ -95,7 +99,6 @@ namespace ac::core::cpu
         template <int cout, int cpos>
         static AC_FORCE_INLINE void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 4;
             if constexpr (cpos < vstep)
             {
 #ifdef AC_CORE_WITH_EIGEN3
@@ -133,7 +136,6 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static AC_FORCE_INLINE void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 4;
             if constexpr (cin < vstep)
             {
 #ifdef AC_CORE_WITH_EIGEN3

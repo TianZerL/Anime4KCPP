@@ -15,6 +15,12 @@ namespace ac::core::cpu
     struct OpImplX86SIMD256
     {
     private:
+        static constexpr int vstep = 8;
+
+    public:
+        static constexpr int alignment = vstep * sizeof(float);
+
+    private:
         static AC_FORCE_INLINE float hsum(const __m256& v) noexcept
         {
             __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
@@ -26,7 +32,6 @@ namespace ac::core::cpu
         template <int cin, int cpos, int sgroupSize, int scount>
         static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float* const* const rptr, __m256* const s, float* const out, const float* const kernels) noexcept
         {
-            constexpr int vstep = 8;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
@@ -57,7 +62,6 @@ namespace ac::core::cpu
         template <int vsize>
         static float AC_FORCE_INLINE dot(const float* const v1, const float* const v2) noexcept
         {
-            constexpr int vstep = 8;
             if constexpr (vsize < vstep) return OpImplX86SIMD128<fma>::template dot<vsize>(v1, v2);
             else
             {
@@ -90,7 +94,6 @@ namespace ac::core::cpu
         template <int cout, int cpos>
         static void AC_FORCE_INLINE conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 8;
             if constexpr (cpos < vstep) OpImplX86SIMD128<fma>::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
             else
             {
@@ -125,7 +128,6 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static void AC_FORCE_INLINE conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 8;
             if constexpr (cin < vstep) OpImplX86SIMD128<fma>::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
             else
             {

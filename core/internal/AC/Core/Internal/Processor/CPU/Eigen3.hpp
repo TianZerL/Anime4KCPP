@@ -9,6 +9,10 @@ namespace ac::core::cpu
 {
     struct OpImplEigen3
     {
+    public:
+        static constexpr int alignment = 4 * sizeof(float);
+
+    public:
         template <int vsize>
         static AC_FORCE_INLINE float dot(const float* const v1, const float* const v2) noexcept
         {

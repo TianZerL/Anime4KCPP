@@ -14,6 +14,12 @@ namespace ac::core::cpu
     struct OpImplX86SIMD512
     {
     private:
+        static constexpr int vstep = 16;
+
+    public:
+        static constexpr int alignment = vstep * sizeof(float);
+
+    private:
         static AC_FORCE_INLINE float hsum(const __m512& v) noexcept
         {
             return _mm512_reduce_add_ps(v);
@@ -22,7 +28,6 @@ namespace ac::core::cpu
         template <int cin, int cpos, int sgroupSize, int scount>
         static AC_FORCE_INLINE void conv_kernel(const int sgroupIdx, const float* const* const rptr, __m512* const s, float* const out, const float* const kernels) noexcept
         {
-            constexpr int vstep = 16;
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
@@ -50,7 +55,6 @@ namespace ac::core::cpu
         template <int vsize>
         static AC_FORCE_INLINE float dot(const float* const v1, const float* const v2) noexcept
         {
-            constexpr int vstep = 16;
             if constexpr (vsize < vstep) return OpImplX86SIMD256<true>::template dot<vsize>(v1, v2);
             else
             {
@@ -79,7 +83,6 @@ namespace ac::core::cpu
         template <int cout, int cpos>
         static AC_FORCE_INLINE void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 16;
             if constexpr (cpos < vstep) OpImplX86SIMD256<true>::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
             else
             {
@@ -110,7 +113,6 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static AC_FORCE_INLINE void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            constexpr int vstep = 16;
             if constexpr (cin < vstep) OpImplX86SIMD256<true>::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
             else
             {

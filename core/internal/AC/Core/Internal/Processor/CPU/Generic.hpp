@@ -11,6 +11,9 @@ namespace ac::core::cpu
 {
     struct OpImplGeneric
     {
+    public:
+        static constexpr int alignment = sizeof(float);
+
     private:
         template <std::size_t... i>
         static AC_FORCE_INLINE auto vector_dot_impl(const float* const v1, const float* const v2, std::index_sequence<i...>) noexcept

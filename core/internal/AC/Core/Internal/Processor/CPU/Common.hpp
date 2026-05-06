@@ -106,7 +106,7 @@ namespace ac::core::cpu
 
                 const float* rptr[] = { static_cast<const float*>(src.ptr(j, i)) };
 
-                float sum[cout]{};
+                alignas(OpImpl::alignment) float sum[cout]{};
 
                 OpImpl::template conv<cin, cout, 1 * 1>(rptr, sum, kernels, biases);
 
@@ -156,7 +156,7 @@ namespace ac::core::cpu
                     static_cast<const float*>(src.ptr(j + rp, i + bp)),
                 };
 
-                float sum[cout]{};
+                alignas(OpImpl::alignment) float sum[cout]{};
 
                 OpImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
 
@@ -190,7 +190,7 @@ namespace ac::core::cpu
                 auto lp = j > 0 ? 1 : 0;
                 auto rp = j < src.width() - 1 ? 1 : 0;
 
-                const float rptr[] = {
+                alignas(OpImpl::alignment) const float rptr[] = {
                     toFloat(*static_cast<const IN*>(src.ptr(j - lp, i - tp))),
                     toFloat(*static_cast<const IN*>(src.ptr(j     , i - tp))),
                     toFloat(*static_cast<const IN*>(src.ptr(j + rp, i - tp))),
@@ -221,7 +221,7 @@ namespace ac::core::cpu
 
                 int joffsets[] = { j > 1 ? -2 : (j > 0 ? -1 : 0), j > 0 ? -1 : 0, 0, j < src.width() - 1 ? 1 : 0 ,j < src.width() - 2 ? 2 : (j < src.width() - 1 ? 1 : 0) };
 
-                float rptr[25];
+                alignas(OpImpl::alignment) float rptr[25];
                 for (int in = 0; in < 5; in++)
                     for (int jn = 0; jn < 5; jn++)
                         rptr[in * 5 + jn] = toFloat(*static_cast<const IN*>(src.ptr(j + joffsets[jn], i + ioffsets[in])));
@@ -266,7 +266,7 @@ namespace ac::core::cpu
                     static_cast<const float*>(src.ptr(j + rp, i + bp)),
                 };
 
-                float buffer[ctemp]{};
+                alignas(OpImpl::alignment) float buffer[ctemp]{};
 
                 OpImpl::template conv<cin, ctemp, 3 * 3>(rptr, buffer, kernels3x3, biases3x3);
 
@@ -281,7 +281,7 @@ namespace ac::core::cpu
                 }
 
                 rptr[0] = buffer;
-                float sum[cout]{};
+                alignas(OpImpl::alignment) float sum[cout]{};
 
                 OpImpl::template conv<ctemp, cout, 1 * 1>(rptr, sum, kernels1x1, biases1x1);
 
@@ -332,7 +332,7 @@ namespace ac::core::cpu
                     static_cast<const float*>(src.ptr(j + rp, i + bp)),
                 };
 
-                float sum[cout]{};
+                alignas(OpImpl::alignment) float sum[cout]{};
 
                 OpImpl::template conv<cin, cout, 3 * 3>(rptr, sum, kernels, biases);
 
