@@ -122,9 +122,6 @@ kernel void conv3x3_16to4_identity_pixelshuffle_4to1(
     biases += boffset;
 #endif
 
-    const int x = get_global_id(0), y = get_global_id(1);
-    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
-
 #ifdef LOCAL_WEIGHTS_STORAGE_SPACE
     local float kptr[4 * 3 * 3 * 16];
     local float bptr[4];
@@ -135,6 +132,9 @@ kernel void conv3x3_16to4_identity_pixelshuffle_4to1(
     WEIGHTS_STORAGE_SPACE const float* const restrict kptr = kernels;
     WEIGHTS_STORAGE_SPACE const float* const restrict bptr = biases;
 #endif
+
+    const int x = get_global_id(0), y = get_global_id(1);
+    if(x >= get_image_width(src) || y >= get_image_height(src)) return;
 
     float s[4];
     conv3x3(src, s, 16, 4, kptr, bptr, x, y);
