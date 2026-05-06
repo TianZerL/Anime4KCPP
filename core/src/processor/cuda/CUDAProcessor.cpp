@@ -397,19 +397,20 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, DeviceImage::Float16, err); if (err != cudaSuccess) return;
     auto& out = outImageBuffer.get(dst.width(), dst.height(), dst.channels(), dst.type(), err); if (err != cudaSuccess) return;
 
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
     int l = 0;
 
     err = copyImageHostToDevice(in, src, stream); if (err != cudaSuccess) return;
 
-    conv3x3_1to8_relu_cuda(in, tmp1, kernel(l), bias(l), stream); l++;
-
-    for (int i = 0; i < 4; i++)
+    conv3x3_1to8_relu_cuda(in, *tmpO, kernel(l), bias(l), stream); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < 7; i++)
     {
-        conv3x3_8to8_relu_cuda(tmp1, tmp2,  kernel(l), bias(l), stream); l++;
-        conv3x3_8to8_relu_cuda(tmp2, tmp1, kernel(l), bias(l), stream); l++;
+        conv3x3_8to8_relu_cuda(*tmpI, *tmpO,  kernel(l), bias(l), stream); l++;
+        std::swap(tmpI, tmpO);
     }
-
-    deconv2x2_8to1_cuda(tmp1, out, kernel(l), stream);
+    conv3x3_8to8_relu_deconv2x2_8to1_cuda(*tmpI, out, kernel(l), bias(l), kernel(l + 1), stream);
 
     err = cudaPeekAtLastError(); if (err != cudaSuccess) return; // check any launch error.
 

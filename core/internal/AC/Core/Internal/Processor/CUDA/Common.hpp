@@ -59,9 +59,10 @@ namespace ac::core::cuda
         cudaStream_t stream
     ) noexcept;
     template<int outType = DeviceImage::Float16>
-    void deconv2x2_8to1_cuda(
+    void conv3x3_8to8_relu_deconv2x2_8to1_cuda(
         const DeviceImage& src, DeviceImage& dst,
-        const float* kernels,
+        const float* kernels1, const float* biases1,
+        const float* kernels2,
         cudaStream_t stream
     ) noexcept;
     template<int outType = DeviceImage::Float16>

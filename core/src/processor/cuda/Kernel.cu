@@ -243,33 +243,6 @@ namespace ac::core::cuda
 
     namespace kernel
     {
-        template<typename OpImpl, typename IN, typename OUT, int cin, int cout>
-        __global__ void deconv2x2_cuda(
-            const void* const __restrict__ sptr,
-            const int srcW, const int srcH, const int srcC, const int spitch,
-            void* const __restrict__ dptr,
-            const int dstW, const int dstH, const int dstC, const int dpitch,
-            const float* const __restrict__ kernels)
-        {
-            constexpr int upscale = 2;
-
-            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
-            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
-
-            auto kptr = copyToShared<cout * 2 * 2 * cin>(kernels);
-
-            __syncthreads();
-
-            if (x >= dstW || y >= dstH) return;
-
-            auto in = getReadPtr<IN>(sptr, srcW, srcH, srcC, spitch, x / 2, y / 2);
-            auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, x, y);
-
-            auto index = (y % upscale) * upscale + (x % upscale);
-
-            for (int n = 0; n < cout; n++) out[n] = cast<OUT>(saturate(OpImpl::template dot<cin>(in, kptr + n * cin * 4 + cin * index)));
-        }
-
         template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cout, typename ActiveFunc>
         __global__ void conv_cin1(
             const void* const __restrict__ sptr,
@@ -359,53 +332,6 @@ namespace ac::core::cuda
             }
         }
 
-        template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cin, int upscale, typename NearestInterpolationArg>
-        __global__ void conv_identity_pixelshuffle(
-            const void* const __restrict__ sptr,
-            const int srcW, const int srcH, const int srcC, const int spitch,
-            void* const __restrict__ dptr,
-            const int dstW, const int dstH, const int dstC, const int dpitch,
-            const float* const __restrict__ kernels,
-            const float* const __restrict__ biases,
-            NearestInterpolationArg nearestInterpolationArg)
-        {
-            static_assert(kw % 2 == 1 && kh % 2 == 1, "kw and kh must be odd");
-
-            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
-            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
-
-            constexpr auto cout = upscale * upscale;
-
-            constexpr auto hkw = kw / 2;
-            constexpr auto hkh = kh / 2;
-
-            auto kptr = copyToShared<cout * kw * kh * cin>(kernels);
-            auto bptr = copyToShared<cout>(biases);
-            auto iptr = imageBlockToSharedAdaptive<IN, cin, hkw, hkh>(sptr, srcW, srcH, srcC, spitch);
-
-            __syncthreads();
-
-            if (x >= srcW || y >= srcH) return;
-
-            const IN* rptr[kw * kh];
-            loadImageBlockAdaptive<IN, kw, kh, cin, hkw, hkh>(rptr, x, y, iptr, srcW, srcH, srcC, spitch);
-
-            float sum[cout];
-
-            OpImpl::template conv<cin, cout, kw * kh>(rptr, sum, kptr, bptr);
-
-            auto dstX = x * upscale;
-            auto dstY = y * upscale;
-
-            for (int n = 0; n < cout; n++)
-            {
-                if constexpr (::cuda::std::is_same_v<NearestInterpolationArg, ResidualArg>)
-                    sum[n] = sum[n] * nearestInterpolationArg.scale + cast<float>(*getReadPtr<OUT>(nearestInterpolationArg.ptr, nearestInterpolationArg.w, nearestInterpolationArg.h, nearestInterpolationArg.c, nearestInterpolationArg.pitch, x, y));
-
-                *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = cast<OUT>(saturate(sum[n]));
-            }
-        }
-
         template <typename OpImpl, typename IN, typename OUT, int cin, int ctemp, int cout, bool postactive3x3 = false, bool postactive1x1 = false, typename ActiveFunc3x3, typename ResidualArgs3x3, typename ActiveFunc1x1, typename ResidualArgs1x1>
         __global__ void conv3x3_conv1x1(
             const void* const __restrict__ sptr,
@@ -485,6 +411,107 @@ namespace ac::core::cuda
                 }
             }
         }
+    
+        template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cin, int upscale, typename ActiveFunc, typename NearestInterpolationArg>
+        __global__ void conv_pixelshuffle(
+            const void* const __restrict__ sptr,
+            const int srcW, const int srcH, const int srcC, const int spitch,
+            void* const __restrict__ dptr,
+            const int dstW, const int dstH, const int dstC, const int dpitch,
+            const float* const __restrict__ kernels,
+            const float* const __restrict__ biases,
+            ActiveFunc activeFunc,
+            NearestInterpolationArg nearestInterpolationArg)
+        {
+            static_assert(kw % 2 == 1 && kh % 2 == 1, "kw and kh must be odd");
+
+            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
+            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+
+            constexpr auto cout = upscale * upscale;
+
+            constexpr auto hkw = kw / 2;
+            constexpr auto hkh = kh / 2;
+
+            auto kptr = copyToShared<cout * kw * kh * cin>(kernels);
+            auto bptr = copyToShared<cout>(biases);
+            auto iptr = imageBlockToSharedAdaptive<IN, cin, hkw, hkh>(sptr, srcW, srcH, srcC, spitch);
+
+            __syncthreads();
+
+            if (x >= srcW || y >= srcH) return;
+
+            const IN* rptr[kw * kh];
+            loadImageBlockAdaptive<IN, kw, kh, cin, hkw, hkh>(rptr, x, y, iptr, srcW, srcH, srcC, spitch);
+
+            float sum[cout];
+
+            OpImpl::template conv<cin, cout, kw* kh>(rptr, sum, kptr, bptr);
+
+            auto dstX = x * upscale;
+            auto dstY = y * upscale;
+
+            for (int n = 0; n < cout; n++)
+            {
+                sum[n] = activeFunc(sum[n], n);
+
+                if constexpr (::cuda::std::is_same_v<NearestInterpolationArg, ResidualArg>)
+                    sum[n] = sum[n] * nearestInterpolationArg.scale + cast<float>(*getReadPtr<OUT>(nearestInterpolationArg.ptr, nearestInterpolationArg.w, nearestInterpolationArg.h, nearestInterpolationArg.c, nearestInterpolationArg.pitch, x, y));
+
+                *getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + (n & 1), dstY + (n >> 1)) = cast<OUT>(saturate(sum[n]));
+            }
+        }
+
+        template <typename OpImpl, typename IN, typename OUT, int kw, int kh, int cin, int ctemp, int cout, typename ActiveFunc>
+        __global__ void conv_deconv2x2(
+            const void* const __restrict__ sptr,
+            const int srcW, const int srcH, const int srcC, const int spitch,
+            void* const __restrict__ dptr,
+            const int dstW, const int dstH, const int dstC, const int dpitch,
+            const float* const __restrict__ kernels1,
+            const float* const __restrict__ biases1,
+            const float* const __restrict__ kernels2,
+            ActiveFunc activeFunc)
+        {
+            static_assert(kw % 2 == 1 && kh % 2 == 1, "kw and kh must be odd");
+
+            auto x = blockIdx.x * BlockSize::x + threadIdx.x;
+            auto y = blockIdx.y * BlockSize::y + threadIdx.y;
+
+            constexpr auto upscale = 2;
+
+            constexpr auto hkw = kw / 2;
+            constexpr auto hkh = kh / 2;
+
+            auto kptr1 = copyToShared<ctemp * kw * kh * cin>(kernels1);
+            auto bptr1 = copyToShared<ctemp>(biases1);
+            auto kptr2 = copyToShared<cout * 2 * 2 * ctemp>(kernels2);
+            auto iptr = imageBlockToSharedAdaptive<IN, cin, hkw, hkh>(sptr, srcW, srcH, srcC, spitch);
+
+            __syncthreads();
+
+            if (x >= srcW || y >= srcH) return;
+
+            const IN* rptr[kw * kh];
+            loadImageBlockAdaptive<IN, kw, kh, cin, hkw, hkh>(rptr, x, y, iptr, srcW, srcH, srcC, spitch);
+
+            float sum[ctemp];
+
+            OpImpl::template conv<cin, ctemp, kw* kh>(rptr, sum, kptr1, bptr1);
+
+            for (int n = 0; n < ctemp; n++) sum[n] = activeFunc(sum[n], n);
+
+            auto dstX = x * upscale;
+            auto dstY = y * upscale;
+            for (int dy = 0; dy < upscale; dy++)
+            {
+                for (int dx = 0; dx < upscale; dx++)
+                {
+                    auto out = getWritePtr<OUT>(dptr, dstW, dstH, dstC, dpitch, dstX + dx, dstY + dy);
+                    for (int n = 0; n < cout; n++) out[n] = cast<OUT>(saturate(OpImpl::template dot<ctemp>(sum, kptr2 + n * ctemp * 4 + ctemp * (dy * upscale + dx))));
+                }
+            }
+        }
     }
 
     template<>
@@ -524,27 +551,28 @@ namespace ac::core::cuda
         kernel::conv<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 8> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ReLU{});
     }
     template<>
-    void deconv2x2_8to1_cuda<DeviceImage::Float16>(
+    void conv3x3_8to8_relu_deconv2x2_8to1_cuda<DeviceImage::Float16>(
         const DeviceImage& src, DeviceImage& dst,
-        const float* kernels,
+        const float* kernels1, const float* biases1,
+        const float* kernels2,
         cudaStream_t stream
     ) noexcept
     {
         dim3 block{ BlockSize::x, BlockSize::y };
-        dim3 grid{ (dst.width() + block.x - 1) / block.x, (dst.height() + block.y - 1) / block.y };
+        dim3 grid{ (src.width() + block.x - 1) / block.x, (src.height() + block.y - 1) / block.y };
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::UInt8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::conv_deconv2x2<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels1, biases1, kernels2, ReLU{});
             break;
         case DeviceImage::UInt16:
-            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::UInt16, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::conv_deconv2x2<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels1, biases1, kernels2, ReLU{});
             break;
         case DeviceImage::Float16:
-            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::Float16, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::conv_deconv2x2<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels1, biases1, kernels2, ReLU{});
             break;
         case DeviceImage::Float32:
-            kernel::deconv2x2_cuda<OpImplCUDA, DataType::Float16, DataType::Float32, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels);
+            kernel::conv_deconv2x2<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 8, 1> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels1, biases1, kernels2, ReLU{});
             break;
         }
     }
@@ -659,16 +687,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f});
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, ResidualArg{ idt.ptr(), idt.width(), idt.height(), idt.channels(), idt.stride(), 1.0f });
             break;
         }
     }
@@ -738,16 +766,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 16, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         }
     }
@@ -817,16 +845,16 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::UInt16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::Float16:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         case DeviceImage::Float32:
-            kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 32, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
             break;
         }
     }
@@ -885,13 +913,13 @@ namespace ac::core::cuda
         switch (dst.type())
         {
         case DeviceImage::UInt8:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt8, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
         case DeviceImage::UInt16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::UInt16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
         case DeviceImage::Float16:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float16, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
         case DeviceImage::Float32:
-            return kernel::conv_identity_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, nullptr);
+            return kernel::conv_pixelshuffle<OpImplCUDA, DataType::Float16, DataType::Float32, 3, 3, 8, 2> <<< grid, block, 0, stream >>> (src.ptr(), src.width(), src.height(), src.channels(), src.stride(), dst.ptr(), dst.width(), dst.height(), dst.channels(), dst.stride(), kernels, biases, Identity{}, nullptr);
         }
     }
 

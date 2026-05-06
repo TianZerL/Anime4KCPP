@@ -411,7 +411,7 @@ namespace ac::core::opencl
                 kernelString,
                 splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
                 splitWeights || (model.kernelSize() + model.biasSize() + model.alphaSize() <= context.constantMemorySize),
-                (context.arch == Arch::NVIDIA)
+                context.arch == Arch::NVIDIA
             };
 
             err = init(context, buildData); if (err != CL_SUCCESS) return;
@@ -562,7 +562,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetLegacy>::process(co
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
     cl::size_type srcRangeW = align(srcW, WorkGroupSize::x), srcRangeH = align(srcH, WorkGroupSize::y);
-    cl::size_type dstRangeW = align(dstW, WorkGroupSize::x), dstRangeH = align(dstH, WorkGroupSize::y);
 
     auto& err = errors.local();
     auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
@@ -652,7 +651,6 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNet<8>>::process(const
     cl::size_type srcW = src.width(), srcH = src.height();
     cl::size_type dstW = dst.width(), dstH = dst.height();
     cl::size_type srcRangeW = align(srcW, WorkGroupSize::x), srcRangeH = align(srcH, WorkGroupSize::y);
-    cl::size_type dstRangeW = align(dstW, WorkGroupSize::x), dstRangeH = align(dstH, WorkGroupSize::y);
 
     auto& err = errors.local();
     auto& cmdq = queues.local(context.ctx, context.device, 0, &err); if (err != CL_SUCCESS) return;
