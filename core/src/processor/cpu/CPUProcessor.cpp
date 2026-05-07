@@ -68,7 +68,6 @@ namespace ac::core::cpu
             "Generic"
         };
     }
-    void pixelshuffle_4to1(const Image& src, Image& dst);
 
     void conv3x3_1to8_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_generic(const Image& src, Image& dst, const float* kernels, const float* biases);

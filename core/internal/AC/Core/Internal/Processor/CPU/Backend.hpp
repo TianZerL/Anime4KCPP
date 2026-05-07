@@ -321,22 +321,4 @@ namespace ac::core::cpu
             break;
         }
     }
-    inline void pixelshuffle_4to1(const Image& src, Image& dst)
-    {
-        switch (dst.type())
-        {
-        case Image::UInt8:
-            pixelshuffle<DataType::UInt8, 4, 2>(src, dst);
-            break;
-        case Image::UInt16:
-            pixelshuffle<DataType::UInt16, 4, 2>(src, dst);
-            break;
-        case Image::Float16:
-            pixelshuffle<DataType::Float16, 4, 2>(src, dst);
-            break;
-        case Image::Float32:
-            pixelshuffle<DataType::Float32, 4, 2>(src, dst);
-            break;
-        }
-    }
 }

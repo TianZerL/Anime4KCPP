@@ -71,27 +71,6 @@ namespace ac::core::cpu
         });
     }
 
-    template <typename OUT, int cin, int upscale>
-    inline void pixelshuffle(const Image& src, Image& dst) noexcept
-    {
-        static constexpr int group = upscale * upscale;
-        static constexpr int cout = cin / group;
-        static_assert(cin % group == 0 && cout > 0);
-
-        for (int i = 0; i < dst.height(); i++)
-        {
-            for (int j = 0; j < dst.width(); j++)
-            {
-                auto in = static_cast<const float*>(src.ptr(j / upscale, i / upscale));
-                auto out = static_cast<OUT*>(dst.ptr(j, i));
-
-                auto index = (i % upscale) * upscale + (j % upscale);
-
-                for (int n = 0; n < cout; n++) out[n] = fromFloat<OUT>(in[n * group + index]);
-            }
-        }
-    }
-
     template <typename OpImpl, int cin, int cout, bool postactive = false, typename ActiveFunc, typename... ResidualArgs>
     inline void conv1x1_float(const Image& src, Image& dst, const float* const kernels, const float* const biases, ActiveFunc&& activeFunc, ResidualArgs&& ...residualArg)
     {

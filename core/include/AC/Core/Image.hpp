@@ -250,6 +250,24 @@ namespace ac::core
      */
     AC_CORE_EXPORT Image insert(const Image& src, const Image& image, int channel) noexcept;
 
+    /**
+     * @brief Rearranges elements of a feature map from channel dimension to spatial dimensions (Pixel Shuffle).
+     *
+     * This operation is commonly used as the upsampling layer in super-resolution models.
+     * For an upscale factor @p upscale, the input shape (H, W, C) is transformed into
+     * (H * upscale, W * upscale, C / ((upscale * upscale)). The function supports conversion
+     * between different data types
+     *
+     * @param src Source image. Must contain a valid image and its channel count must be divisible by (upscale * upscale).
+     * @param dst Destination image. If empty, it will be automatically created with
+     *            dimensions (src.width * upscale, src.height * upscale) and channel count
+     *            src.channels() / (upscale * upscale), using the same data type as @p src.
+     *            If `dst` is not empty, its dimensions, number of channels and data type
+     *            must exactly match the above values; otherwise the function does nothing.
+     * @param upscale Positive integer greater than 0.
+     */
+    AC_CORE_EXPORT void pixelShuffle(const Image& src, Image& dst, int upscale) noexcept;
+
     /// @brief Resize interpolation modes.
     enum ResizeModes
     {
