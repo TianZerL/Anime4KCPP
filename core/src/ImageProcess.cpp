@@ -336,7 +336,7 @@ namespace ac::core::detail
     }
 
     template <typename IN, typename OUT>
-    inline void pixelshuffle(const Image& src, Image& dst, const int upscale) noexcept
+    static inline void pixelshuffle(const Image& src, Image& dst, const int upscale) noexcept
     {
         int group = upscale * upscale;
 
@@ -731,14 +731,6 @@ void ac::core::pixelShuffle(const Image& src, Image& dst, const int upscale) noe
         detail::pixelshuffle<DataType::Float32, DataType::UInt16>(src, dst, upscale);
     else if (src.type() == Image::Float32 && dst.type() == Image::Float16)
         detail::pixelshuffle<DataType::Float32, DataType::Float16>(src, dst, upscale);
-    else if (src.type() == Image::Float16 && dst.type() == Image::Float16)
-        detail::pixelshuffle<DataType::Float16, DataType::Float16>(src, dst, upscale);
-    else if (src.type() == Image::Float16 && dst.type() == Image::Float32)
-        detail::pixelshuffle<DataType::Float16, DataType::Float32>(src, dst, upscale);
-    else if (src.type() == Image::Float16 && dst.type() == Image::UInt8)
-        detail::pixelshuffle<DataType::Float16, DataType::UInt8>(src, dst, upscale);
-    else if (src.type() == Image::Float16 && dst.type() == Image::UInt16)
-        detail::pixelshuffle<DataType::Float16, DataType::UInt16>(src, dst, upscale);
     else if (src.type() == Image::UInt8 && dst.type() == Image::UInt8)
         detail::pixelshuffle<DataType::UInt8, DataType::UInt8>(src, dst, upscale);
     else if (src.type() == Image::UInt8 && dst.type() == Image::Float32)
@@ -755,4 +747,12 @@ void ac::core::pixelShuffle(const Image& src, Image& dst, const int upscale) noe
         detail::pixelshuffle<DataType::UInt16, DataType::UInt8>(src, dst, upscale);
     else if (src.type() == Image::UInt16 && dst.type() == Image::Float16)
         detail::pixelshuffle<DataType::UInt16, DataType::Float16>(src, dst, upscale);
+    else if (src.type() == Image::Float16 && dst.type() == Image::Float16)
+        detail::pixelshuffle<DataType::Float16, DataType::Float16>(src, dst, upscale);
+    else if (src.type() == Image::Float16 && dst.type() == Image::Float32)
+        detail::pixelshuffle<DataType::Float16, DataType::Float32>(src, dst, upscale);
+    else if (src.type() == Image::Float16 && dst.type() == Image::UInt8)
+        detail::pixelshuffle<DataType::Float16, DataType::UInt8>(src, dst, upscale);
+    else if (src.type() == Image::Float16 && dst.type() == Image::UInt16)
+        detail::pixelshuffle<DataType::Float16, DataType::UInt16>(src, dst, upscale);
 }
