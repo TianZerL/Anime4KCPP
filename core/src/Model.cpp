@@ -6,6 +6,7 @@ ac::core::model::BaseModel<Model>::BaseModel() noexcept : blockNum(0), kptr(null
 
 ac::core::model::ACNetLegacy::ACNetLegacy(const Variant v) noexcept
 {
+    this->blockNum = 8;
     switch (v)
     {
     case Variant::GAN:

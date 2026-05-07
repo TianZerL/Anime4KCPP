@@ -405,7 +405,7 @@ void ac::core::cuda::CUDAProcessor<ac::core::model::ACNetLegacy>::process(const 
 
     conv3x3_1to8_relu_cuda(in, *tmpO, kernel(l), bias(l), stream); l++;
     std::swap(tmpI, tmpO);
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < model.blocks() - 1; i++)
     {
         conv3x3_8to8_relu_cuda(*tmpI, *tmpO,  kernel(l), bias(l), stream); l++;
         std::swap(tmpI, tmpO);

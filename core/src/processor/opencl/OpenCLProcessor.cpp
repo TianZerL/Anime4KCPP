@@ -592,7 +592,7 @@ void ac::core::opencl::OpenCLProcessor<ac::core::model::ACNetLegacy>::process(co
     err = conv3x3_1to8_relu.setArg(5, biasOffset(l)); if (err != CL_SUCCESS) return;
     err = cmdq.enqueueNDRangeKernel(conv3x3_1to8_relu, cl::NullRange, { srcRangeW, srcRangeH }, { WorkGroupSize::x, WorkGroupSize::y }); if (err != CL_SUCCESS) return; l++;
     std::swap(tmpI, tmpO);
-    for (int i = 0; i < 7; i++)
+    for (int i = 0; i < model.blocks() - 1; i++)
     {
         err = conv3x3_8to8_relu.setArg(0, *tmpI); if (err != CL_SUCCESS) return;
         err = conv3x3_8to8_relu.setArg(1, *tmpO); if (err != CL_SUCCESS) return;

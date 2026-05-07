@@ -31,13 +31,13 @@ public:
     AC_CORE_EXPORT ACNetLegacy(Variant v) noexcept;
 
 public:
-    int kernelLength() const noexcept { return 8 * 9 + 8 * 8 * 9 * 8 + 8 * 4; }
-    int kernelLength(const int layer) const noexcept { return (layer == 0) ? 8 * 9 : ((layer > 0 && layer < 9) ? 8 * 8 * 9 : ((layer == 9) ? 8 * 4 : 0)); }
-    int biasLength() const noexcept { return 8 * 9; }
-    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < 9) ? 8 : 0; }
+    int kernelLength() const noexcept { return 8 * 9 + 8 * 8 * 9 * this->blockNum + 8 * 4; }
+    int kernelLength(const int layer) const noexcept { return (layer == 0) ? 8 * 9 : ((layer > 0 && layer < (this->blockNum + 1)) ? 8 * 8 * 9 : ((layer == (this->blockNum + 1)) ? 8 * 4 : 0)); }
+    int biasLength() const noexcept { return 8 + 8 * this->blockNum; }
+    int biasLength(const int layer) const noexcept { return (layer >= 0 && layer < (this->blockNum + 1)) ? 8 : 0; }
 
-    int kernels() const noexcept { return 10; }
-    int biases() const noexcept { return 9; }
+    int kernels() const noexcept { return this->blockNum + 1 + 1; }
+    int biases() const noexcept { return this->blockNum + 1; }
 
     int kernelIndex(const int layer) const  noexcept { return std::clamp(layer, 0, kernels() - 1); }
     int biasIndex(const int layer) const noexcept { return std::clamp(layer, 0, biases() - 1); }

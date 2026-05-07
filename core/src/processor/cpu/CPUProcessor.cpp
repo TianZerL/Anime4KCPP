@@ -850,15 +850,17 @@ void ac::core::cpu::CPUProcessor<ac::core::model::ACNetLegacy>::process(const Im
     auto& tmp1 = tmp1ImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
     auto& tmp2 = tmp2ImageBuffer.get(src.width(), src.height(), 8, ac::core::Image::Float32);
 
-    conv3x3_1to8_relu(src, tmp1, model.kernel(0), model.bias(0));
-    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(1), model.bias(1));
-    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(2), model.bias(2));
-    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(3), model.bias(3));
-    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(4), model.bias(4));
-    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(5), model.bias(5));
-    conv3x3_8to8_relu(tmp2, tmp1, model.kernel(6), model.bias(6));
-    conv3x3_8to8_relu(tmp1, tmp2, model.kernel(7), model.bias(7));
-    conv3x3_8to8_relu_deconv2x2_8to1(tmp2, dst, model.kernel(8), model.bias(8), model.kernel(9));
+    auto tmpI = &tmp2;
+    auto tmpO = &tmp1;
+    int l = 0;
+    conv3x3_1to8_relu(src, *tmpO, model.kernel(l), model.bias(l)); l++;
+    std::swap(tmpI, tmpO);
+    for (int i = 0; i < model.blocks() - 1; i++)
+    {
+        conv3x3_8to8_relu(*tmpI, *tmpO, model.kernel(l), model.bias(l)); l++;
+        std::swap(tmpI, tmpO);
+    }
+    conv3x3_8to8_relu_deconv2x2_8to1(*tmpI, dst, model.kernel(l), model.bias(l), model.kernel(l + 1));
 }
 
 template<>
