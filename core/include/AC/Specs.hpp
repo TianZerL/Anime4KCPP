@@ -46,6 +46,26 @@ namespace ac::specs
             4784
         },
         {
+            "acnet-f8b4",
+            "Lightweight CNN, without denoising.",
+            2748
+        },
+        {
+            "acnet-f8b4-hdn",
+            "Lightweight CNN, mild denoising.",
+            2748
+        },
+        {
+            "acnet-f8b4-box",
+            "Lightweight CNN, without denoising.",
+            2748
+        },
+        {
+            "acnet-f8b4-box-hdn",
+            "Lightweight CNN, mild denoising.",
+            2748
+        },
+        {
             "acnet-f8b8",
             "Lightweight CNN, without denoising.",
             5116
@@ -61,19 +81,29 @@ namespace ac::specs
             5116
         },
         {
-            "acnet-f8b16",
-            "Lightweight CNN, without denoising.",
-            9852
-        },
-        {
-            "acnet-f8b16-hdn",
+            "acnet-f8b8-box-hdn",
             "Lightweight CNN, mild denoising.",
-            9852
+            5116
         },
         {
-            "acnet-f8b16-box",
+            "acnet-f8b18",
             "Lightweight CNN, without denoising.",
-            9852
+            11036
+        },
+        {
+            "acnet-f8b18-hdn",
+            "Lightweight CNN, mild denoising.",
+            11036
+        },
+        {
+            "acnet-f8b18-box",
+            "Lightweight CNN, without denoising.",
+            11036
+        },
+        {
+            "acnet-f8b18-box-hdn",
+            "Lightweight CNN, mild denoising.",
+            11036
         },
         {
             "arnet-f8b8",
@@ -88,6 +118,11 @@ namespace ac::specs
         {
             "arnet-f8b8-box",
             "ResNet for real-time tasks, without denoising.",
+            9860
+        },
+        {
+            "arnet-f8b8-box-hdn",
+            "ResNet for real-time tasks, mild denoising.",
             9860
         },
         {
@@ -106,6 +141,11 @@ namespace ac::specs
             19268
         },
         {
+            "arnet-f8b16-box-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            19268
+        },
+        {
             "arnet-f8b32",
             "ResNet for real-time tasks, without denoising.",
             38084
@@ -121,6 +161,11 @@ namespace ac::specs
             38084
         },
         {
+            "arnet-f8b32-box-hdn",
+            "ResNet for real-time tasks, mild denoising.",
+            38084
+        },
+        {
             "arnet-f8b64",
             "ResNet for real-time tasks, without denoising.",
             75716
@@ -133,6 +178,11 @@ namespace ac::specs
         {
             "arnet-f8b64-box",
             "ResNet for real-time tasks, without denoising.",
+            75716
+        },
+        {
+            "arnet-f8b64-box-hdn",
+            "ResNet for real-time tasks, mild denoising.",
             75716
         },
         {

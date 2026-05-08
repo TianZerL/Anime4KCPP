@@ -39,6 +39,30 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept
     {
         switch (v)
         {
+        case Variant::B4_NORMAL:
+            this->blockNum = 4;
+            this->kptr = param::ACNet_F8B4_NHWC_kernels;
+            this->bptr = param::ACNet_F8B4_NHWC_biases;
+            this->aptr = param::ACNet_F8B4_NHWC_alphas;
+            break;
+        case Variant::B4_HDN:
+            this->blockNum = 4;
+            this->kptr = param::ACNet_F8B4_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B4_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B4_HDN_NHWC_alphas;
+            break;
+        case Variant::B4_BOX:
+            this->blockNum = 4;
+            this->kptr = param::ACNet_F8B4_Box_NHWC_kernels;
+            this->bptr = param::ACNet_F8B4_Box_NHWC_biases;
+            this->aptr = param::ACNet_F8B4_Box_NHWC_alphas;
+            break;
+        case Variant::B4_BOX_HDN:
+            this->blockNum = 4;
+            this->kptr = param::ACNet_F8B4_Box_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B4_Box_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B4_Box_HDN_NHWC_alphas;
+            break;
         case Variant::B8_NORMAL:
             this->blockNum = 8;
             this->kptr = param::ACNet_F8B8_NHWC_kernels;
@@ -57,23 +81,35 @@ ac::core::model::ACNet<F>::ACNet(const Variant v) noexcept
             this->bptr = param::ACNet_F8B8_Box_NHWC_biases;
             this->aptr = param::ACNet_F8B8_Box_NHWC_alphas;
             break;
-        case Variant::B16_NORMAL:
-            this->blockNum = 16;
-            this->kptr = param::ACNet_F8B16_NHWC_kernels;
-            this->bptr = param::ACNet_F8B16_NHWC_biases;
-            this->aptr = param::ACNet_F8B16_NHWC_alphas;
+        case Variant::B8_BOX_HDN:
+            this->blockNum = 8;
+            this->kptr = param::ACNet_F8B8_Box_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B8_Box_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B8_Box_HDN_NHWC_alphas;
             break;
-        case Variant::B16_HDN:
-            this->blockNum = 16;
-            this->kptr = param::ACNet_F8B16_HDN_NHWC_kernels;
-            this->bptr = param::ACNet_F8B16_HDN_NHWC_biases;
-            this->aptr = param::ACNet_F8B16_HDN_NHWC_alphas;
+        case Variant::B18_NORMAL:
+            this->blockNum = 18;
+            this->kptr = param::ACNet_F8B18_NHWC_kernels;
+            this->bptr = param::ACNet_F8B18_NHWC_biases;
+            this->aptr = param::ACNet_F8B18_NHWC_alphas;
             break;
-        case Variant::B16_BOX:
-            this->blockNum = 16;
-            this->kptr = param::ACNet_F8B16_Box_NHWC_kernels;
-            this->bptr = param::ACNet_F8B16_Box_NHWC_biases;
-            this->aptr = param::ACNet_F8B16_Box_NHWC_alphas;
+        case Variant::B18_HDN:
+            this->blockNum = 18;
+            this->kptr = param::ACNet_F8B18_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B18_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B18_HDN_NHWC_alphas;
+            break;
+        case Variant::B18_BOX:
+            this->blockNum = 18;
+            this->kptr = param::ACNet_F8B18_Box_NHWC_kernels;
+            this->bptr = param::ACNet_F8B18_Box_NHWC_biases;
+            this->aptr = param::ACNet_F8B18_Box_NHWC_alphas;
+            break;
+        case Variant::B18_BOX_HDN:
+            this->blockNum = 18;
+            this->kptr = param::ACNet_F8B18_Box_HDN_NHWC_kernels;
+            this->bptr = param::ACNet_F8B18_Box_HDN_NHWC_biases;
+            this->aptr = param::ACNet_F8B18_Box_HDN_NHWC_alphas;
             break;
         }
     }
@@ -107,6 +143,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->bptr = param::ARNet_F8B8_Box_NHWC_biases;
             this->aptr = param::ARNet_F8B8_Box_NHWC_alphas;
             break;
+        case Variant::B8_BOX_HDN:
+            this->blockNum = 8;
+            this->kptr = param::ARNet_F8B8_Box_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B8_Box_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B8_Box_HDN_NHWC_alphas;
+            break;
         case Variant::B16_NORMAL:
             this->blockNum = 16;
             this->kptr = param::ARNet_F8B16_NHWC_kernels;
@@ -124,6 +166,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->kptr = param::ARNet_F8B16_Box_NHWC_kernels;
             this->bptr = param::ARNet_F8B16_Box_NHWC_biases;
             this->aptr = param::ARNet_F8B16_Box_NHWC_alphas;
+            break;
+        case Variant::B16_BOX_HDN:
+            this->blockNum = 16;
+            this->kptr = param::ARNet_F8B16_Box_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B16_Box_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B16_Box_HDN_NHWC_alphas;
             break;
         case Variant::B32_NORMAL:
             this->blockNum = 32;
@@ -143,6 +191,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->bptr = param::ARNet_F8B32_Box_NHWC_biases;
             this->aptr = param::ARNet_F8B32_Box_NHWC_alphas;
             break;
+        case Variant::B32_BOX_HDN:
+            this->blockNum = 32;
+            this->kptr = param::ARNet_F8B32_Box_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B32_Box_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B32_Box_HDN_NHWC_alphas;
+            break;
         case Variant::B64_NORMAL:
             this->blockNum = 64;
             this->kptr = param::ARNet_F8B64_NHWC_kernels;
@@ -160,6 +214,12 @@ ac::core::model::ARNet<F>::ARNet(const Variant v) noexcept
             this->kptr = param::ARNet_F8B64_Box_NHWC_kernels;
             this->bptr = param::ARNet_F8B64_Box_NHWC_biases;
             this->aptr = param::ARNet_F8B64_Box_NHWC_alphas;
+            break;
+        case Variant::B64_BOX_HDN:
+            this->blockNum = 64;
+            this->kptr = param::ARNet_F8B64_Box_HDN_NHWC_kernels;
+            this->bptr = param::ARNet_F8B64_Box_HDN_NHWC_biases;
+            this->aptr = param::ARNet_F8B64_Box_HDN_NHWC_alphas;
             break;
         }
     }

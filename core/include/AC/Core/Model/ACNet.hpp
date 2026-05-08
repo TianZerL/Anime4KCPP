@@ -66,8 +66,9 @@ class ac::core::model::ACNet : public BaseModel<ACNet<F>>
 public:
     enum class Variant
     {
-        B8_NORMAL, B8_HDN, B8_BOX,
-        B16_NORMAL, B16_HDN, B16_BOX
+        B4_NORMAL, B4_HDN, B4_BOX, B4_BOX_HDN,
+        B8_NORMAL, B8_HDN, B8_BOX, B8_BOX_HDN,
+        B18_NORMAL, B18_HDN, B18_BOX, B18_BOX_HDN
     };
 
 public:

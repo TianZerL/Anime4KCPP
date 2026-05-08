@@ -19,10 +19,10 @@ class ac::core::model::ARNet : public BaseModel<ARNet<F>>
 public:
     enum class Variant
     {
-        B8_NORMAL, B8_HDN, B8_BOX,
-        B16_NORMAL, B16_HDN, B16_BOX,
-        B32_NORMAL, B32_HDN, B32_BOX,
-        B64_NORMAL, B64_HDN, B64_BOX
+        B8_NORMAL, B8_HDN, B8_BOX, B8_BOX_HDN,
+        B16_NORMAL, B16_HDN, B16_BOX, B16_BOX_HDN,
+        B32_NORMAL, B32_HDN, B32_BOX, B32_BOX_HDN,
+        B64_NORMAL, B64_HDN, B64_BOX, B64_BOX_HDN
     };
 
 public:
