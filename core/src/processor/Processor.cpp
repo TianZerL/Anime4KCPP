@@ -99,7 +99,7 @@ namespace ac::core::detail
 
                     return ac::core::model::ARNet<8>{ variant };
                 }
-                else if (modelString.find("hdn") != std::string::npos)
+                if (modelString.find("hdn") != std::string::npos)
                 {
                     auto variant = ac::core::model::ARNet<8>::Variant::B8_HDN;
 
@@ -122,6 +122,25 @@ namespace ac::core::detail
             }
             if (modelString.find("acnet") != std::string::npos) // ACNet
             {
+                if (modelString.find("legacy") != std::string::npos)  // ACNetLegcay
+                {
+                    auto variant = ac::core::model::ACNetLegacy::Variant::GAN;
+                    if (modelString.find("hdn") != std::string::npos)
+                    {
+                        variant = ac::core::model::ACNetLegacy::Variant::HDN0;
+                        for (char ch : modelString)
+                        {
+                            if (ch == '0') variant = ac::core::model::ACNetLegacy::Variant::HDN0;
+                            else if (ch == '1') variant = ac::core::model::ACNetLegacy::Variant::HDN1;
+                            else if (ch == '2') variant = ac::core::model::ACNetLegacy::Variant::HDN2;
+                            else if (ch == '3') variant = ac::core::model::ACNetLegacy::Variant::HDN3;
+                            else continue;
+
+                            break;
+                        }
+                    }
+                    return ac::core::model::ACNetLegacy{ variant };
+                }
                 if (modelString.find("box") != std::string::npos)
                 {
                     if (modelString.find("hdn") != std::string::npos)
@@ -143,7 +162,7 @@ namespace ac::core::detail
 
                     return ac::core::model::ACNet<8>{ variant };
                 }
-                else if (modelString.find("hdn") != std::string::npos)
+                if (modelString.find("hdn") != std::string::npos)
                 {
                     auto variant = ac::core::model::ACNet<8>::Variant::B8_HDN;
 
@@ -154,26 +173,13 @@ namespace ac::core::detail
                     return ac::core::model::ACNet<8>{ variant };
                 }
 
-                if (modelString.find("b4") != std::string::npos) return ac::core::model::ACNet<8>{ ac::core::model::ACNet<8>::Variant::B4_NORMAL };
-                else if (modelString.find("b8") != std::string::npos) return ac::core::model::ACNet<8>{ ac::core::model::ACNet<8>::Variant::B8_NORMAL };
-                else if (modelString.find("b18") != std::string::npos) return ac::core::model::ACNet<8>{ ac::core::model::ACNet<8>::Variant::B18_NORMAL };
+                auto variant = ac::core::model::ACNet<8>::Variant::B8_NORMAL;
 
-                auto variant = ac::core::model::ACNetLegacy::Variant::GAN; // ACNetLegcay
-                if (modelString.find("hdn") != std::string::npos)
-                {
-                    variant = ac::core::model::ACNetLegacy::Variant::HDN0;
-                    for (char ch : modelString)
-                    {
-                        if (ch == '0') variant = ac::core::model::ACNetLegacy::Variant::HDN0;
-                        else if (ch == '1') variant = ac::core::model::ACNetLegacy::Variant::HDN1;
-                        else if (ch == '2') variant = ac::core::model::ACNetLegacy::Variant::HDN2;
-                        else if (ch == '3') variant = ac::core::model::ACNetLegacy::Variant::HDN3;
-                        else continue;
+                if (modelString.find("b4") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B4_NORMAL;
+                else if (modelString.find("b8") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B8_NORMAL;
+                else if (modelString.find("b18") != std::string::npos) variant = ac::core::model::ACNet<8>::Variant::B18_NORMAL;
 
-                        break;
-                    }
-                }
-                return ac::core::model::ACNetLegacy{ variant };
+                return ac::core::model::ACNet<8>{ variant };
             }
         }
         return ac::core::model::ACNetLegacy{ ac::core::model::ACNetLegacy::Variant::GAN };

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "AC/Core.hpp"
+#include "AC/Specs.hpp"
 #include "AC/Util/Stopwatch.hpp"
 #include "AC/Util/ThreadPool.hpp"
 
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
     std::printf("\n");
     std::printf("%s\n", ac::core::Processor::listInfo());
 
-    auto model = argc > 1 ? argv[1] : "acnet";
+    auto model = argc > 1 ? argv[1] : ac::specs::ModelList[0].name;
     auto processorType = argc > 2 ? argv[2] : "cpu";
     auto processor = ac::core::Processor::create(processorType, argc > 3 ? std::atoi(argv[3]) : 0, model);
     if (!processor->ok())

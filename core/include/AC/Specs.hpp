@@ -27,17 +27,17 @@ namespace ac::specs
         },
         {
             "acnet-legacy-hdn0",
-            "Lightweight CNN, mild denoising.",
-            4784
-        },
-        {
-            "acnet-legacy-hdn1",
             "Lightweight CNN, moderate denoising.",
             4784
         },
         {
+            "acnet-legacy-hdn1",
+            "Lightweight CNN, strong denoising.",
+            4784
+        },
+        {
             "acnet-legacy-hdn2",
-            "Lightweight CNN, heavy denoising.",
+            "Lightweight CNN, aggressive denoising.",
             4784
         },
         {
@@ -47,147 +47,154 @@ namespace ac::specs
         },
         {
             "acnet-f8b4",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral.",
             2748
         },
         {
             "acnet-f8b4-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise.",
             2748
         },
         {
             "acnet-f8b4-box",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             2748
         },
         {
             "acnet-f8b4-box-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
             2748
         },
         {
             "acnet-f8b8",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral.",
             5116
         },
         {
             "acnet-f8b8-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise.",
             5116
         },
         {
             "acnet-f8b8-box",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             5116
         },
         {
             "acnet-f8b8-box-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
             5116
         },
         {
             "acnet-f8b18",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral.",
             11036
         },
         {
             "acnet-f8b18-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise.",
             11036
         },
         {
             "acnet-f8b18-box",
-            "Lightweight CNN, without denoising.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             11036
         },
         {
             "acnet-f8b18-box-hdn",
-            "Lightweight CNN, mild denoising.",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
             11036
         },
         {
             "arnet-f8b8",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral.",
             9860
         },
         {
             "arnet-f8b8-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
             9860
         },
         {
             "arnet-f8b8-box",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             9860
         },
         {
             "arnet-f8b8-box-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
             9860
         },
         {
             "arnet-f8b16",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral.",
             19268
         },
         {
             "arnet-f8b16-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
             19268
         },
         {
             "arnet-f8b16-box",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             19268
         },
         {
             "arnet-f8b16-box-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
             19268
         },
         {
             "arnet-f8b32",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral.",
             38084
         },
         {
             "arnet-f8b32-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
             38084
         },
         {
             "arnet-f8b32-box",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             38084
         },
         {
             "arnet-f8b32-box-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
             38084
         },
         {
             "arnet-f8b64",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral.",
             75716
         },
         {
             "arnet-f8b64-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
             75716
         },
         {
             "arnet-f8b64-box",
-            "ResNet for real-time tasks, without denoising.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation "
+            "which is better for line restoration, but it may appear slightly blurry.",
             75716
         },
         {
             "arnet-f8b64-box-hdn",
-            "ResNet for real-time tasks, mild denoising.",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
             75716
         },
         {
             "artcnn-c4f16",
-            "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks.",
+            "Artoriuz's ArtCNN_C4F16 (integrated as-is), trained to be neutral.",
             12340,
             "v1.6.2",
             "Artoriuz",
@@ -195,7 +202,7 @@ namespace ac::specs
         },
         {
             "artcnn-c4f16-dn",
-            "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften.",
+            "Artoriuz's ArtCNN_C4F16_DN (integrated as-is), trained to denoise and soften.",
             12340,
             "v1.6.2",
             "Artoriuz",
@@ -203,7 +210,7 @@ namespace ac::specs
         },
         {
             "artcnn-c4f16-ds",
-            "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen.",
+            "Artoriuz's ArtCNN_C4F16_DS (integrated as-is), trained to denoise and sharpen.",
             12340,
             "v1.6.2",
             "Artoriuz",
@@ -211,7 +218,7 @@ namespace ac::specs
         },
         {
             "artcnn-c4f32",
-            "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows.",
+            "Artoriuz's ArtCNN_C4F32 (integrated as-is), trained to be neutral.",
             47716,
             "v1.6.2",
             "Artoriuz",
@@ -219,7 +226,7 @@ namespace ac::specs
         },
         {
             "artcnn-c4f32-dn",
-            "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften.",
+            "Artoriuz's ArtCNN_C4F32_DN (integrated as-is), trained to denoise and soften.",
             47716,
             "v1.6.2",
             "Artoriuz",
@@ -227,7 +234,7 @@ namespace ac::specs
         },
         {
             "artcnn-c4f32-ds",
-            "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen.",
+            "Artoriuz's ArtCNN_C4F32_DS (integrated as-is), trained to denoise and sharpen.",
             47716,
             "v1.6.2",
             "Artoriuz",
@@ -235,7 +242,7 @@ namespace ac::specs
         },
         {
             "fsrcnnx-f8b4",
-            "FSRCNNX-8-0-4-1 from igv.",
+            "igv's FSRCNNX_x2_8-0-4-1 (integrated as-is), trained to slightly denoise.",
             2948,
             "v1.1",
             "igv",
@@ -243,7 +250,7 @@ namespace ac::specs
         },
         {
             "fsrcnnx-f8b4-distort-plus",
-            "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin.",
+            "nessotrin's FSRCNNX-x2-2-8-0-4-1.v1.fastv2 (integrated as-is), trained to strongly denoise.",
             2948,
             "v1.3_distort_plus",
             "nessotrin",
@@ -251,7 +258,7 @@ namespace ac::specs
         },
         {
             "fsrcnnx-f16b4",
-            "FSRCNNX-16-0-4-1 from igv.",
+            "igv's FSRCNNX_x2_16-0-4-1 (integrated as-is), trained to slightly denoise.",
             10628,
             "v1.1",
             "igv",
@@ -259,7 +266,7 @@ namespace ac::specs
         },
         {
             "fsrcnnx-f16b4-distort-plus",
-            "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin.",
+            "nessotrin's FSRCNNX-x2-2-16-0-4-1.v1.fastv2 (integrated as-is), trained to strongly denoise.",
             10628,
             "v1.3_distort_plus",
             "nessotrin",
