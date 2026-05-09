@@ -57,8 +57,7 @@ namespace ac::specs
         },
         {
             "acnet-f8b4-box",
-            "Lightweight VGG-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             2748
         },
         {
@@ -78,8 +77,7 @@ namespace ac::specs
         },
         {
             "acnet-f8b8-box",
-            "Lightweight VGG-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             5116
         },
         {
@@ -99,8 +97,7 @@ namespace ac::specs
         },
         {
             "acnet-f8b18-box",
-            "Lightweight VGG-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             11036
         },
         {
@@ -120,8 +117,7 @@ namespace ac::specs
         },
         {
             "arnet-f8b8-box",
-            "Lightweight ResNet-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             9860
         },
         {
@@ -141,8 +137,7 @@ namespace ac::specs
         },
         {
             "arnet-f8b16-box",
-            "Lightweight ResNet-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             19268
         },
         {
@@ -162,8 +157,7 @@ namespace ac::specs
         },
         {
             "arnet-f8b32-box",
-            "Lightweight ResNet-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             38084
         },
         {
@@ -183,8 +177,7 @@ namespace ac::specs
         },
         {
             "arnet-f8b64-box",
-            "Lightweight ResNet-style network, trained to be neutral through box degradation "
-            "which is better for line restoration, but it may appear slightly blurry.",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
             75716
         },
         {
