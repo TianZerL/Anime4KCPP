@@ -50,6 +50,7 @@ Manual configuration (optional):
 | [pybind11](https://github.com/pybind/pybind11)                                                                                       | AC_BUILD_BINDING_PYTHON     | binding(python)     | Automatic   | find_package                         |
 | [ruapu](https://github.com/nihui/ruapu)                                                                                              | N/A                         | core                | Automatic   | AC_PATH_RUAPU                        |
 | [stb](https://github.com/nothings/stb)                                                                                               | N/A                         | core                | Automatic   | AC_PATH_STB                          |
+| [half](https://half.sourceforge.net)                                                                                                 | N/A                         | core                | Automatic   | AC_PATH_HALF                         |
 | [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                    | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) | Automatic   | pkg-config / AC_PATH_VAPOURSYNTH_SDK |
 
 - The minimum tested version of the CUDA Toolkit is 11.
@@ -135,8 +136,11 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 | AC_SHARED_LIB                        | build as a shared library                          | OFF         |
 | AC_CORE_WITH_EIGEN3                  | build core with eigen3                             | OFF         |
 | AC_CORE_WITH_SSE                     | build core with x86 sse                            | Auto detect |
+| AC_CORE_WITH_SSE2                    | build core with x86 sse2                           | Auto detect |
 | AC_CORE_WITH_AVX                     | build core with x86 avx                            | Auto detect |
-| AC_CORE_WITH_FMA                     | build core with x86 fma and avx                    | Auto detect |
+| AC_CORE_WITH_AVX2                    | build core with x86 avx2                           | Auto detect |
+| AC_CORE_WITH_AVX512                  | build core with x86 avx512                         | Auto detect |
+| AC_CORE_WITH_FMA                     | build core with x86 fma                            | Auto detect |
 | AC_CORE_WITH_NEON                    | build core with arm neon                           | Auto detect |
 | AC_CORE_WITH_WASM_SIMD128            | build core with wasm simd128                       | Auto detect |
 | AC_CORE_WITH_OPENCL                  | build core with opencl                             | OFF         |
