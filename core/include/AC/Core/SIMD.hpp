@@ -8,6 +8,7 @@ namespace ac::core::simd
     bool supportSSE2() noexcept;
     bool supportAVX() noexcept;
     bool supportAVX2() noexcept;
+    bool supportAVX512() noexcept;
     bool supportFMA() noexcept;
     // arm
     bool supportNEON() noexcept;

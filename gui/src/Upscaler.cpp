@@ -1,9 +1,10 @@
 #include <atomic>
 
+#include <QThreadPool>
+
 #include "AC/Core.hpp"
 #include "AC/Util/Defer.hpp"
 #include "AC/Util/Stopwatch.hpp"
-#include "AC/Util/ThreadPool.hpp"
 
 #include "Config.hpp"
 #include "Logger.hpp"
@@ -73,11 +74,11 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             videoTaskList << task;
     }
 
-    static auto threads = ac::util::ThreadPool::hardwareThreads();
-    static ac::util::ThreadPool pool{ dptr->processor->type() == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1 };
+    static QThreadPool pool{};
+    pool.setMaxThreadCount((gConfig.upscaler.threads > 0) ? gConfig.upscaler.threads : QThread::idealThreadCount());
 
 #ifdef AC_CLI_ENABLE_VIDEO
-    pool.exec([=](){
+    pool.start([=](){
         auto decoder = gConfig.video.decoder.toLocal8Bit();
         auto format = gConfig.video.format.toLocal8Bit();
         auto encoder = gConfig.video.encoder.toLocal8Bit();
@@ -89,6 +90,10 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
         ehints.encoder = encoder;
         ehints.format = format;
         ehints.bitrate = bitrate;
+
+        auto videoFilterModel = AC_VIDEO_FILTER_MODE_AUTO;
+        if (gConfig.upscaler.threads == 1) videoFilterModel = AC_VIDEO_FILTER_MODE_SERIAL;
+        else if (gConfig.upscaler.threads > 1) videoFilterModel = AC_VIDEO_FILTER_MODE_PARALLEL_WITH_WORKERS(gConfig.upscaler.threads);
 
         for (auto&& task : videoTaskList)
         {
@@ -158,7 +163,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                         return false;
                     }
                     return true;
-                }, &data, ac::video::FILTER_AUTO);
+                }, &data, videoFilterModel);
                 stopwatch.stop();
                 pipeline.close();
                 if (data.error.load(std::memory_order_relaxed)) gLogger.error() << task->path.input << ": Failed due to " << data.error.load(std::memory_order_relaxed);
@@ -180,7 +185,7 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
 
     for (auto&& task : imageTaskList)
     {
-        pool.exec([=]() {
+        pool.start([=]() {
             ac::util::Defer defer([this]() { if (dptr->total.fetch_sub(1, std::memory_order_relaxed) == 1) emit stopped(); });
             if (!dptr->stopFlag.load(std::memory_order_relaxed))
             {

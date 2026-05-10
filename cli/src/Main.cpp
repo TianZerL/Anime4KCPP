@@ -24,12 +24,12 @@ static void list(const Options& options)
             "  core version: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
             "  video module: "
 #           ifdef AC_CLI_ENABLE_VIDEO
-                AC_VIDEO_VERSION_STR "\n"
+                "enabled\n"
 #           else
                 "disabled\n"
 #           endif
             "  build date: " AC_BUILD_DATE "\n"
-            "  toolchain: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n"
+            "  toolchain: " AC_COMPILER_ID " (" AC_COMPILER_VERSION ")\n"
             "  license: "
 #           ifdef AC_CLI_ENABLE_VIDEO
                 "GPLv3\n\n"
@@ -48,20 +48,28 @@ static void list(const Options& options)
     if (options.list.processors)
     {
         printf("Processors:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ProcessorList); i++) printf("  %-16s  %s\n", ac::specs::ProcessorList[i], ac::specs::ProcessorDescriptionList[i]);
+        for (auto&& processor : ac::specs::ProcessorList) printf("  %-16s  %s\n", processor.name, processor.description);
     }
     if (options.list.models)
     {
         printf("Models:\n");
-        for (std::size_t i = 0; i < std::size(ac::specs::ModelList); i++) printf("  %-16s  %s\n", ac::specs::ModelList[i], ac::specs::ModelDescriptionList[i]);
+        for (auto&& model : ac::specs::ModelList)
+        {
+            printf("  %s:\n", model.name);
+            printf("    parameter count: %d\n", model.parameterCount);
+            if (model.version) printf("    version: %s\n", model.version);
+            if (model.author) printf("    author: %s\n", model.author);
+            if (model.homepage) printf("    homepage: %s\n", model.homepage);
+            printf("    description: %s\n", model.description);
+        }
     }
 }
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
     auto batch = options.inputs.size();
-    auto threads = ac::util::ThreadPool::hardwareThreads();
-    auto targetThreads = processor->type() == ac::core::Processor::CPU ? threads / 4 + 1 : threads / 2 + 1;
+    auto hardwareThreads = ac::util::ThreadPool::hardwareThreads();
+    auto targetThreads = options.threads > 0 ? options.threads : ((processor->type() == ac::core::Processor::CPU) ? hardwareThreads / 4 + 1 : hardwareThreads / 2 + 1);
     auto poolSize = batch > targetThreads ? targetThreads : batch;
     auto task = [&](const int i) {
         auto& input = options.inputs[i];
@@ -115,6 +123,10 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
     ehints.encoder = options.video.encoder.c_str();
     ehints.format = options.video.format.c_str();
     ehints.bitrate = options.video.bitrate * 1000;
+
+    auto videoFilterModel = AC_VIDEO_FILTER_MODE_AUTO;
+    if (options.threads == 1) videoFilterModel = AC_VIDEO_FILTER_MODE_SERIAL;
+    else if (options.threads > 1) videoFilterModel = AC_VIDEO_FILTER_MODE_PARALLEL_WITH_WORKERS(options.threads);
 
     for (decltype(options.inputs.size()) i = 0; i < options.inputs.size(); i++)
     {
@@ -182,7 +194,7 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             // a beautiful progress bar
             if (src.number % 32 == 0) ctx->progressBar->print(src.number / ctx->frames);
             return true;
-        }, &data, ac::video::FILTER_AUTO);
+        }, &data, videoFilterModel);
         stopwatch.stop();
         progressBar.finish();
         pipeline.close();

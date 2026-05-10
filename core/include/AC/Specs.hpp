@@ -3,115 +3,290 @@
 
 namespace ac::specs
 {
-    constexpr const char* ModelList[] = {
-        "acnet-gan",
-        "acnet-hdn0",
-        "acnet-hdn1",
-        "acnet-hdn2",
-        "acnet-hdn3",
-        "arnet-b4-hdn",
-        "arnet-b4-hdns",
-        "arnet-b4-le",
-        "arnet-b4-ls",
-        "arnet-b8-hdn",
-        "arnet-b8-hdns",
-        "arnet-b8-le",
-        "arnet-b8-ls",
-        "arnet-b16-hdn",
-        "arnet-b16-hdns",
-        "arnet-b16-le",
-        "arnet-b16-ls",
-        "arnet-b24-hdn",
-        "arnet-b24-hdns",
-        "arnet-b24-le",
-        "arnet-b24-ls",
-        "arnet-b32-hdn",
-        "arnet-b32-hdns",
-        "arnet-b32-le",
-        "arnet-b32-ls",
-        "arnet-b48-hdn",
-        "arnet-b48-hdns",
-        "arnet-b48-le",
-        "arnet-b48-ls",
-        "arnet-b64-hdn",
-        "arnet-b64-hdns",
-        "arnet-b64-le",
-        "arnet-b64-ls",
-        "artcnn-c4f16",
-        "artcnn-c4f16-dn",
-        "artcnn-c4f16-ds",
-        "artcnn-c4f32",
-        "artcnn-c4f32-dn",
-        "artcnn-c4f32-ds",
-        "fsrcnnx-f8",
-        "fsrcnnx-f8-distort-plus",
-        "fsrcnnx-f16",
-        "fsrcnnx-f16-distort-plus",
+    struct Model
+    {
+        const char* name;
+        const char* description;
+        int parameterCount;
+        const char* version = nullptr;
+        const char* author = nullptr;
+        const char* homepage = nullptr;
     };
 
-    constexpr const char* ModelDescriptionList[] = {
-        "Lightweight CNN, detail enhancement.",         // acnet-gan
-        "Lightweight CNN, mild denoising.",             // acnet-hdn0
-        "Lightweight CNN, moderate denoising.",         // acnet-hdn1
-        "Lightweight CNN, heavy denoising.",            // acnet-hdn2
-        "Lightweight CNN, extreme denoising.",          // acnet-hdn3
-        "Lightweight ResNet, mild denoising.",          // arnet-b4-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b4-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b4-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b4-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b8-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b8-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b8-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b4-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b16-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b16-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b16-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b16-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b24-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b24-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b24-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b24-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b32-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b32-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b32-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b32-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b48-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b48-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b48-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b48-ls
-        "Lightweight ResNet, mild denoising.",          // arnet-b64-hdn
-        "Lightweight ResNet, hdn with sharpening.",     // arnet-b64-hdns
-        "Lightweight ResNet, line enhancing.",          // arnet-b64-le
-        "Lightweight ResNet, line sharpening.",         // arnet-b64-ls
-        "ArtCNN-C4F16 from Artoriuz, lightweight option for real-time tasks. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16
-        "ArtCNN-C4F16-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-dn
-        "ArtCNN-C4F16-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f16-ds
-        "ArtCNN-C4F32 from Artoriuz, real-time tasks if hardware allows. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32
-        "ArtCNN-C4F32-DN from Artoriuz, trained to denoise and soften. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-dn
-        "ArtCNN-C4F32-DS from Artoriuz, trained to denoise and sharpen. (v1.6.2) (https://github.com/Artoriuz/ArtCNN)", // artcnn-c4f32-ds
-        "FSRCNNX-8-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)",  // fsrcnnx-f8
-        "FSRCNNX-Distort-Plus-8-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f8-distort-plus
-        "FSRCNNX-16-0-4-1 from igv. (https://github.com/igv/FSRCNN-TensorFlow)", // fsrcnnx-f16
-        "FSRCNNX-Distort-Plus-16-0-4-1 from nessotrin. (https://github.com/nessotrin/FSRCNN-TensorFlow)", // fsrcnnx-f16-distort-plus
+    struct Processor
+    {
+        const char* name;
+        const char* description;
     };
 
-    constexpr const char* ProcessorList[] = {
-        "cpu",
+    constexpr Model ModelList[] = {
+        {
+            "acnet-legacy-gan",
+            "Lightweight CNN, detail enhancement.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn0",
+            "Lightweight CNN, moderate denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn1",
+            "Lightweight CNN, strong denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn2",
+            "Lightweight CNN, aggressive denoising.",
+            4784
+        },
+        {
+            "acnet-legacy-hdn3",
+            "Lightweight CNN, extreme denoising.",
+            4784
+        },
+        {
+            "acnet-f8b4",
+            "Lightweight VGG-style network, trained to be neutral.",
+            2748
+        },
+        {
+            "acnet-f8b4-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise.",
+            2748
+        },
+        {
+            "acnet-f8b4-box",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            2748
+        },
+        {
+            "acnet-f8b4-box-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
+            2748
+        },
+        {
+            "acnet-f8b8",
+            "Lightweight VGG-style network, trained to be neutral.",
+            5116
+        },
+        {
+            "acnet-f8b8-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise.",
+            5116
+        },
+        {
+            "acnet-f8b8-box",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            5116
+        },
+        {
+            "acnet-f8b8-box-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
+            5116
+        },
+        {
+            "acnet-f8b18",
+            "Lightweight VGG-style network, trained to be neutral.",
+            11036
+        },
+        {
+            "acnet-f8b18-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise.",
+            11036
+        },
+        {
+            "acnet-f8b18-box",
+            "Lightweight VGG-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            11036
+        },
+        {
+            "acnet-f8b18-box-hdn",
+            "Lightweight VGG-style network, trained to mildly denoise based on the box variant.",
+            11036
+        },
+        {
+            "arnet-f8b8",
+            "Lightweight ResNet-style network, trained to be neutral.",
+            9860
+        },
+        {
+            "arnet-f8b8-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
+            9860
+        },
+        {
+            "arnet-f8b8-box",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            9860
+        },
+        {
+            "arnet-f8b8-box-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
+            9860
+        },
+        {
+            "arnet-f8b16",
+            "Lightweight ResNet-style network, trained to be neutral.",
+            19268
+        },
+        {
+            "arnet-f8b16-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
+            19268
+        },
+        {
+            "arnet-f8b16-box",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            19268
+        },
+        {
+            "arnet-f8b16-box-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
+            19268
+        },
+        {
+            "arnet-f8b32",
+            "Lightweight ResNet-style network, trained to be neutral.",
+            38084
+        },
+        {
+            "arnet-f8b32-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
+            38084
+        },
+        {
+            "arnet-f8b32-box",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            38084
+        },
+        {
+            "arnet-f8b32-box-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
+            38084
+        },
+        {
+            "arnet-f8b64",
+            "Lightweight ResNet-style network, trained to be neutral.",
+            75716
+        },
+        {
+            "arnet-f8b64-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise.",
+            75716
+        },
+        {
+            "arnet-f8b64-box",
+            "Lightweight ResNet-style network, trained to be neutral through box degradation which is better for line restoration, but it may appear slightly blurry.",
+            75716
+        },
+        {
+            "arnet-f8b64-box-hdn",
+            "Lightweight ResNet-style network, trained to mildly denoise based on the box variant.",
+            75716
+        },
+        {
+            "artcnn-c4f16",
+            "Artoriuz's ArtCNN_C4F16 (integrated as-is), trained to be neutral.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f16-dn",
+            "Artoriuz's ArtCNN_C4F16_DN (integrated as-is), trained to denoise and soften.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f16-ds",
+            "Artoriuz's ArtCNN_C4F16_DS (integrated as-is), trained to denoise and sharpen.",
+            12340,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32",
+            "Artoriuz's ArtCNN_C4F32 (integrated as-is), trained to be neutral.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32-dn",
+            "Artoriuz's ArtCNN_C4F32_DN (integrated as-is), trained to denoise and soften.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "artcnn-c4f32-ds",
+            "Artoriuz's ArtCNN_C4F32_DS (integrated as-is), trained to denoise and sharpen.",
+            47716,
+            "v1.6.2",
+            "Artoriuz",
+            "https://github.com/Artoriuz/ArtCNN"
+        },
+        {
+            "fsrcnnx-f8b4",
+            "igv's FSRCNNX_x2_8-0-4-1 (integrated as-is), trained to slightly denoise.",
+            2948,
+            "v1.1",
+            "igv",
+            "https://github.com/igv/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f8b4-distort-plus",
+            "nessotrin's FSRCNNX-x2-2-8-0-4-1.v1.fastv2 (integrated as-is), trained to strongly denoise.",
+            2948,
+            "v1.3_distort_plus",
+            "nessotrin",
+            "https://github.com/nessotrin/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f16b4",
+            "igv's FSRCNNX_x2_16-0-4-1 (integrated as-is), trained to slightly denoise.",
+            10628,
+            "v1.1",
+            "igv",
+            "https://github.com/igv/FSRCNN-TensorFlow"
+        },
+        {
+            "fsrcnnx-f16b4-distort-plus",
+            "nessotrin's FSRCNNX-x2-2-16-0-4-1.v1.fastv2 (integrated as-is), trained to strongly denoise.",
+            10628,
+            "v1.3_distort_plus",
+            "nessotrin",
+            "https://github.com/nessotrin/FSRCNN-TensorFlow"
+        }
+    };
+
+    constexpr Processor ProcessorList[] = {
+        {
+            "auto",
+            "Auto-detect reasonable processor and device."
+        },
+        {
+            "cpu",
+            "General-purpose CPU processing with optional SIMD acceleration."
+        },
 #   ifdef AC_CORE_WITH_OPENCL
-        "opencl",
+        {
+            "opencl",
+            "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices."
+        },
 #   endif
 #   ifdef AC_CORE_WITH_CUDA
-        "cuda",
-#   endif
-    };
-
-    constexpr const char* ProcessorDescriptionList[] = {
-        "General-purpose CPU processing with optional SIMD acceleration.",      // cpu
-#   ifdef AC_CORE_WITH_OPENCL
-        "Cross-platform acceleration requiring OpenCL 1.2+ compliant devices.", // opencl
-#   endif
-#   ifdef AC_CORE_WITH_CUDA
-        "NVIDIA GPU acceleration requiring Compute Capability 5.0+.",           // cuda
+        {
+            "cuda",
+            "NVIDIA GPU acceleration requiring Compute Capability 5.0+."
+        },
 #   endif
     };
 }

@@ -36,6 +36,13 @@ endif()
 check_cxx_source_compiles("#include <immintrin.h>\nint main() { __m256 s0, s1, s2; s0 = _mm256_fmadd_ps(s1, s2, s0); return 0; }" AC_COMPILER_SUPPORT_FMA)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
+elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_REQUIRED_FLAGS "-mavx512f -mfma")
+endif()
+check_cxx_source_compiles("#include <immintrin.h>\nint main() { __m512 s0, s1, s2; s0 = _mm512_fmadd_ps(s1, s2, s0); return 0; }" AC_COMPILER_SUPPORT_AVX512)
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     set(CMAKE_REQUIRED_FLAGS "/arch:armv8.0")
 elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(BUILD_ARCH_32BIT)

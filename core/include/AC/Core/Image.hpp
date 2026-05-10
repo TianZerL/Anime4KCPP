@@ -210,7 +210,7 @@ namespace ac::core
      * If `dst` has different dimensions or type than `src`, it will be reallocated.
      *
      * If `dst` is not empty, convert data type to match `dst`.
-     * 
+     *
      * @param src Source image.
      * @param dst Destination image.
      */
@@ -250,10 +250,28 @@ namespace ac::core
      */
     AC_CORE_EXPORT Image insert(const Image& src, const Image& image, int channel) noexcept;
 
+    /**
+     * @brief Rearranges elements of a feature map from channel dimension to spatial dimensions (Pixel Shuffle).
+     *
+     * This operation is commonly used as the upsampling layer in super-resolution models.
+     * For an upscale factor @p upscale, the input shape (H, W, C) is transformed into
+     * (H * upscale, W * upscale, C / ((upscale * upscale)). The function supports conversion
+     * between different data types
+     *
+     * @param src Source image. Must contain a valid image and its channel count must be divisible by (upscale * upscale).
+     * @param dst Destination image. If empty, it will be automatically created with
+     *            dimensions (src.width * upscale, src.height * upscale) and channel count
+     *            src.channels() / (upscale * upscale), using the same data type as @p src.
+     *            If `dst` is not empty, its dimensions, number of channels and data type
+     *            must exactly match the above values; otherwise the function does nothing.
+     * @param upscale Positive integer greater than 0.
+     */
+    AC_CORE_EXPORT void pixelShuffle(const Image& src, Image& dst, int upscale) noexcept;
+
     /// @brief Resize interpolation modes.
     enum ResizeModes
     {
-        RESIZE_POINT,               ///< Nearest neighbor interpolation
+        RESIZE_POINT,               ///< Same as nearest interpolation for upscaling and box resampling for downscaling
         RESIZE_CATMULL_ROM,         ///< Bicubic interpolation (b = 0; c = 0.5 or a = -0.5)
         RESIZE_MITCHELL_NETRAVALI,  ///< Bicubic interpolation (b = 1/3; c = 1/3)
         RESIZE_BICUBIC_0_60,        ///< Bicubic interpolation (b = 0; c = 0.6 or a = -0.6)
@@ -284,9 +302,9 @@ namespace ac::core
      * @param dst Destination image (will be resized to appropriate dimensions).
      * @param fx Horizontal scale factor (if > 0, overrides dst width).
      * @param fy Vertical scale factor (if > 0, overrides dst height).
-     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     * @param mode Interpolation mode (default: `RESIZE_CATMULL_ROM`).
      */
-    AC_CORE_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
+    AC_CORE_EXPORT void resize(const Image& src, Image& dst, double fx, double fy, int mode = RESIZE_CATMULL_ROM) noexcept;
     /**
      * @brief Resize the `src` image and return a new image.
      *
@@ -295,10 +313,10 @@ namespace ac::core
      * @param src Source image.
      * @param fx Horizontal scale factor.
      * @param fy Vertical scale factor.
-     * @param mode Interpolation mode (default: `RESIZE_BILINEAR`).
+     * @param mode Interpolation mode (default: `RESIZE_CATMULL_ROM`).
      * @return Resized image, or `src` if scale factors invalid.
      */
-    AC_CORE_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_BILINEAR) noexcept;
+    AC_CORE_EXPORT Image resize(const Image& src, double fx, double fy, int mode = RESIZE_CATMULL_ROM) noexcept;
 
     /// @brief Image reading modes.
     enum ImreadModes
@@ -348,6 +366,7 @@ public:
     using ElementType = int;
     static constexpr ElementType UInt8   = 0 << 8 | 1;
     static constexpr ElementType UInt16  = 0 << 8 | 2;
+    static constexpr ElementType Float16 = 2 << 8 | 2;
     static constexpr ElementType Float32 = 2 << 8 | 4;
 
 public:

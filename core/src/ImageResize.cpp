@@ -77,10 +77,9 @@ namespace ac::core::detail
 
         if (x < 1.0f)
             return poly3(x, p0, p1, p2, p3);
-        else if (x < 2.0f)
+        if (x < 2.0f)
             return poly3(x, q0, q1, q2, q3);
-        else
-            return 0.0f;
+        return 0.0f;
     }
     template<int taps>
     static inline float lanczos(const float v) noexcept
@@ -95,10 +94,9 @@ namespace ac::core::detail
 
         if (x < 1.0f)
             return poly3(x, 1.0f, -1.0f / 5.0f, -9.0f / 5.0f, 1.0f);
-        else if (x < 2.0f)
+        if (x < 2.0f)
             return poly3(x - 1.0f, 0.0f, -7.0f / 15.0f, 4.0f / 5.0f, -1.0f / 3.0f);
-        else
-            return 0.0f;
+        return 0.0f;
     }
     static inline float spine36(const float v) noexcept
     {
@@ -106,12 +104,11 @@ namespace ac::core::detail
 
         if (x < 1.0f)
             return poly3(x, 1.0f, -3.0f / 209.0f, -453.0f / 209.0f, 13.0f / 11.0f);
-        else if (x < 2.0f)
+        if (x < 2.0f)
             return poly3(x - 1.0f, 0.0f, -156.0f / 209.0f, 270.0f / 209.0f, -6.0f / 11.0f);
-        else if (x < 3.0f)
+        if (x < 3.0f)
             return poly3(x - 2.0f, 0.0f, 26.0f / 209.0f, -45.0f / 209.0f, 1.0f / 11.0f);
-        else
-            return 0.0f;
+        return 0.0f;
     }
     static inline float spine64(const float v) noexcept
     {
@@ -119,23 +116,21 @@ namespace ac::core::detail
 
         if (x < 1.0f)
             return poly3(x, 1.0f, -3.0f / 2911.0f, -6387.0f / 2911.0f, 49.0f / 41.0f);
-        else if (x < 2.0f)
+        if (x < 2.0f)
             return poly3(x - 1.0f, 0.0f, -2328.0f / 2911.0f, 4032.0f / 2911.0f, -24.0f / 41.0f);
-        else if (x < 3.0f)
+        if (x < 3.0f)
             return poly3(x - 2.0f, 0.0f, 582.0f / 2911.0f, -1008.0f / 2911.0f, 6.0f / 41.0f);
-        else if (x < 4.0f)
+        if (x < 4.0f)
             return poly3(x - 3.0f, 0.0f, -97.0f / 2911.0f, 168.0f / 2911.0f, -1.0f / 41.0f);
-        else
-            return 0.0f;
+        return 0.0f;
     }
     static inline float bilinear(const float v) noexcept
     {
         auto x = std::abs(v);
 
-        if (x <= 1.0f)
+        if (x < 1.0f)
             return 1.0f - x;
-        else
-            return 0.0f;
+        return 0.0f;
     }
 
     static inline void resize(const Image& src, Image& dst, const double fx, const double fy, const int mode) noexcept
@@ -191,8 +186,9 @@ namespace ac::core::detail
                 {
                 case Image::UInt8: return STBIR_TYPE_UINT8;
                 case Image::UInt16: return STBIR_TYPE_UINT16;
+                case Image::Float16: return STBIR_TYPE_HALF_FLOAT;
                 case Image::Float32: return STBIR_TYPE_FLOAT;
-                default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
+                default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
                 }
             }()
            );

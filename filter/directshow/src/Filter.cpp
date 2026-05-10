@@ -460,6 +460,44 @@ INT_PTR PropertyPage::OnReceiveMessage(const HWND hwnd, const UINT msg, const WP
     {
     case WM_COMMAND:
     {
+        WORD id = LOWORD(wparam);
+        WORD code = HIWORD(wparam);
+
+        if (((id == IDC_COMBO_MODEL || id == IDC_COMBO_PROCESSOR) && code == CBN_SELCHANGE) || (id == IDC_EDIT_DEVICE && code == EN_SETFOCUS))
+        {
+            TCHAR buffer[StringBufferSize]{};
+
+            auto pos = 0;
+            auto len = NUMELMS(buffer);
+
+            if (id == IDC_COMBO_MODEL)
+            {
+                int idx = ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_MODEL));
+                auto&& model = ac::specs::ModelList[idx];
+
+                pos += _stprintf_s(buffer + pos, len - pos, TEXT("%s\r\n"), A2T(model.name));
+                pos += _stprintf_s(buffer + pos, len - pos, TEXT("parameter count: %d\r\n"), model.parameterCount);
+                if (model.version) pos += _stprintf_s(buffer + pos, len - pos, TEXT("version: %s\r\n"), A2T(model.version));
+                if (model.author) pos += _stprintf_s(buffer + pos, len - pos, TEXT("author: %s\r\n"), A2T(model.author));
+                if (model.homepage) pos += _stprintf_s(buffer + pos, len - pos, TEXT("homepage: %s\r\n"), A2T(model.homepage));
+                _stprintf_s(buffer + pos, len - pos, TEXT("description: %s\r\n"), A2T(model.description));
+            }
+            else if (id == IDC_COMBO_PROCESSOR)
+            {
+                int idx = ComboBox_GetCurSel(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR));
+                auto&& processor = ac::specs::ProcessorList[idx];
+
+                _stprintf_s(buffer, len, TEXT("%s\r\n%s\r\n"), A2T(processor.name), A2T(processor.description));
+            }
+            else if (id == IDC_EDIT_DEVICE)
+            {
+                util::asciiToWindowsAscii(ac::core::Processor::listInfo(), buffer, NUMELMS(buffer));
+                Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
+            }
+
+            Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_INFO), buffer);
+        }
+
         if (isInitialized)
         {
             m_bDirty = TRUE;
@@ -478,7 +516,7 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%.2lf"), factor);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_FACTOR), buffer);
 
-    for (auto item : ac::specs::ProcessorList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), A2T(item));
+    for (auto&& item : ac::specs::ProcessorList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), A2T(item.name));
     auto ProcessorType = gRegArgument.getProcessorType();
     ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_PROCESSOR), -1, ProcessorType);
 
@@ -486,7 +524,7 @@ HRESULT PropertyPage::OnActivate()
     _stprintf_s(buffer, NUMELMS(buffer), TEXT("%d"), device);
     Edit_SetText(GetDlgItem(m_Dlg, IDC_EDIT_DEVICE), buffer);
 
-    for (auto item : ac::specs::ModelList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), A2T(item));
+    for (auto&& item : ac::specs::ModelList) ComboBox_AddString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), A2T(item.name));
     auto modelName = gRegArgument.getModelName();
     ComboBox_SelectString(GetDlgItem(m_Dlg, IDC_COMBO_MODEL), -1, modelName);
 

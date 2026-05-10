@@ -19,6 +19,7 @@
 #include <QSpacerItem>
 #include <QStyleFactory>
 #include <QTextBrowser>
+#include <QThread>
 #include <QVariant>
 #include <QVBoxLayout>
 #include <QWeakPointer>
@@ -106,16 +107,35 @@ void MainWindow::init()
     QObject::connect(ui->spin_box_codec_hints_bitrate, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.video.bitrate = value; });
 
+    ui->spin_box_misc_threads->setMaximum(QThread::idealThreadCount() * 2);
+    ui->spin_box_misc_threads->setValue(gConfig.upscaler.threads);
+    QObject::connect(ui->spin_box_misc_threads, qOverload<int>(&QSpinBox::valueChanged), this,
+        [](const int value) { gConfig.upscaler.threads = value; });
+
     ui->spin_box_device->setValue(gConfig.upscaler.device);
     ui->double_spin_box_factor->setMinimum(1.0);
     ui->double_spin_box_factor->setValue(gConfig.upscaler.factor);
-    ui->combo_box_processor->addItems({ std::begin(ac::specs::ProcessorList), std::end(ac::specs::ProcessorList) });
-    for (std::size_t i = 0; i < std::size(ac::specs::ProcessorDescriptionList); i++) ui->combo_box_processor->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ProcessorDescriptionList[i]), Qt::ToolTipRole);
+    for (auto&& processor : ac::specs::ProcessorList)
+    {
+        ui->combo_box_processor->addItem(processor.name);
+        ui->combo_box_processor->setItemData(ui->combo_box_processor->count() - 1, QCoreApplication::translate("ExternI18N", processor.description), Qt::ToolTipRole);
+    }
     ui->combo_box_processor->setCurrentText(gConfig.upscaler.processor);
     ui->combo_box_model->setStyleSheet("combobox-popup: 0;");
     ui->combo_box_model->view()->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    ui->combo_box_model->addItems({ std::begin(ac::specs::ModelList), std::end(ac::specs::ModelList) });
-    for (std::size_t i = 0; i < std::size(ac::specs::ModelDescriptionList); i++) ui->combo_box_model->setItemData(i, QCoreApplication::translate("ExternI18N", ac::specs::ModelDescriptionList[i]), Qt::ToolTipRole);
+    for (auto&& model : ac::specs::ModelList)
+    {
+        QString modelInfo{};
+        modelInfo.append(QString{ "%1\n" }.arg(model.name));
+        modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Parameter count")).arg(model.parameterCount));
+        if (model.version) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Version")).arg(QCoreApplication::translate("ExternI18N", model.version)));
+        if (model.author) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Author")).arg(QCoreApplication::translate("ExternI18N", model.author)));
+        if (model.homepage) modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Homepage")).arg(QCoreApplication::translate("ExternI18N", model.homepage)));
+        modelInfo.append(QString{ "%1: %2\n" }.arg(tr("Description")).arg(QCoreApplication::translate("ExternI18N", model.description)));
+
+        ui->combo_box_model->addItem(model.name);
+        ui->combo_box_model->setItemData(ui->combo_box_model->count() - 1, modelInfo, Qt::ToolTipRole);
+    }
     ui->combo_box_model->setCurrentText(gConfig.upscaler.model);
     QObject::connect(ui->spin_box_device, qOverload<int>(&QSpinBox::valueChanged), this,
         [](const int value) { gConfig.upscaler.device = value; });
@@ -191,7 +211,7 @@ void MainWindow::init()
 
     setAcceptDrops(true);
 
-    gLogger.info() << "Anime4KCPP GUI v" AC_CORE_VERSION_STR " started";
+    gLogger.info() << "Anime4KCPP GUI " AC_CORE_VERSION_STR " started";
     gLogger.info() << '\n' << gUpscaler.listProcessorInfo();
 }
 
@@ -356,25 +376,25 @@ void MainWindow::on_action_about_triggered()
             "%1\n\n"
             "Anime4KCPP GUI:\n"
             "  %2: " AC_CORE_VERSION_STR " (" AC_CORE_FEATURES ")\n"
-            "  %3: "
-#           ifdef AC_CLI_ENABLE_VIDEO
-                AC_VIDEO_VERSION_STR "\n"
-#           else
-                "${DISABLED}\n"
-#           endif
-            "  %4: " AC_BUILD_DATE "\n"
-            "  %5: " AC_COMPILER_ID " (v" AC_COMPILER_VERSION ")\n\n"
-            "%6 (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
+            "  %3: %4\n"
+            "  %5: " AC_BUILD_DATE "\n"
+            "  %6: " AC_COMPILER_ID " (" AC_COMPILER_VERSION ")\n\n"
+            "%7 (c) 2020-" AC_BUILD_YEAR " the Anime4KCPP project\n\n"
             "<a href='https://github.com/TianZerL/Anime4KCPP'>https://github.com/TianZerL/Anime4KCPP</a>\n"
             "</p>"
         }.arg(
             tr("Anime4KCPP: A high performance anime upscaler"),
             tr("core version"),
             tr("video module"),
+#       ifdef AC_CLI_ENABLE_VIDEO
+            tr("enabled"),
+#       else
+            tr("disabled"),
+#       endif
             tr("build date"),
             tr("toolchain"),
             tr("Copyright")
-        ).replace("${DISABLED}", tr("disabled"))
+        )
     );
 }
 

@@ -1,0 +1,133 @@
+name: windows-msvc-build
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  windows-msvc-build-release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: setup CUDA toolkit
+        uses: Jimver/cuda-toolkit@v0.2.35
+        with:
+          cuda: '12.9.1'
+
+      - name: setup Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+
+      - name: setup ffmpeg libraries
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl-shared.zip" -OutFile "ffmpeg.zip"
+          7z x ffmpeg.zip
+          mv ffmpeg-master-latest-win64-gpl-shared ffmpeg
+          mkdir ffmpeg_dll
+          @('avcodec','avformat','avutil','swscale','swresample') | ForEach-Object { cp "./ffmpeg/bin/$_*.dll" ./ffmpeg_dll/ }
+
+      - name: Checkout Anime4KCPP repository
+        uses: actions/checkout@v6
+        with:
+          path: Anime4KCPP
+
+      - name: setup release dirs
+        run: |
+          mkdir release
+          cd release
+          mkdir cli, gui, filter_avs_vs, filter_ds, benchmark
+          mkdir filter_avs_vs/x86, filter_avs_vs/x64, filter_ds/x86, filter_ds/x64
+
+      - name: build x64
+        run: |
+          cd Anime4KCPP
+          mkdir build_msvc_x64
+          cd build_msvc_x64
+          cmake -G "Visual Studio 17 2022" -A x64 .. -DAC_PRESET_RELEASE=ON -DAC_TOOLS_BENCHMARK=ON -DAC_FETCH_OPENCL=ON -DAC_PATH_FFMPEG='../../ffmpeg'
+          cmake --build . --config Release -j 4
+          cd ./bin/Release/
+          cp ./ac_cli.exe ../../../../release/cli/
+          cp ./ac_gui.exe ../../../../release/gui/
+          cp ./ac_filter_avs_vs.dll ../../../../release/filter_avs_vs/x64
+          cp ./ac_filter_ds.dll ../../../../release/filter_ds/x64
+          cp ./ac_benchmark.exe ../../../../release/benchmark
+
+      - name: build x86
+        run: |
+          cd Anime4KCPP
+          mkdir build_msvc_x86
+          cd build_msvc_x86
+          cmake -G "Visual Studio 17 2022" -A Win32 .. -DAC_CORE_WITH_OPENCL=ON -DAC_FETCH_OPENCL=ON -DAC_CORE_ENABLE_FAST_MATH=ON -DAC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH=ON -DAC_BUILD_FILTER_DIRECTSHOW=ON -DAC_BUILD_CLI=OFF
+          cmake --build . --config Release -j 4
+          cd ./bin/Release/
+          cp ./ac_filter_avs_vs.dll ../../../../release/filter_avs_vs/x86
+          cp ./ac_filter_ds.dll ../../../../release/filter_ds/x86
+
+      - name: zip cli files
+        run: |
+          cp ./ffmpeg_dll/* ./release/cli/
+          cd ./release/cli/
+          7z a -tzip ../Anime4KCPP-CLI-${{ github.ref_name }}-x64-MSVC.zip *
+
+      - name: zip gui files
+        run: |
+          cp ./ffmpeg_dll/* ./release/gui/
+          cd ./release/gui/
+          windeployqt --release ac_gui.exe
+          7z a -tzip ../Anime4KCPP-GUI-${{ github.ref_name }}-x64-MSVC.zip *
+
+      - name: zip filter avs_vs files
+        run: |
+          cd ./release/filter_avs_vs/
+          7z a -tzip ../Anime4KCPP-Filter-AVS-VS-${{ github.ref_name }}-x86-x64-MSVC.zip *
+
+      - name: zip filter ds files
+        run: |
+          cd ./release/filter_ds/
+          7z a -tzip ../Anime4KCPP-Filter-DS-${{ github.ref_name }}-x86-x64-MSVC.zip *
+
+      - name: zip benchmark files
+        run: |
+          cd ./release/benchmark/
+          7z a -tzip ../Anime4KCPP-Benchmark-${{ github.ref_name }}-x64-MSVC.zip *
+
+      - name: upload cli zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./release/Anime4KCPP-CLI-${{ github.ref_name }}-x64-MSVC.zip
+          archive: false
+
+      - name: upload gui zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./release/Anime4KCPP-GUI-${{ github.ref_name }}-x64-MSVC.zip
+          archive: false
+
+      - name: upload filter avs_vs zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./release/Anime4KCPP-Filter-AVS-VS-${{ github.ref_name }}-x86-x64-MSVC.zip
+          archive: false
+
+      - name: upload filter ds zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./release/Anime4KCPP-Filter-DS-${{ github.ref_name }}-x86-x64-MSVC.zip
+          archive: false
+
+      - name: upload benchmark zip
+        uses: actions/upload-artifact@v7
+        with:
+          path: ./release/Anime4KCPP-Benchmark-${{ github.ref_name }}-x64-MSVC.zip
+          archive: false
+
+      - name: create draft release
+        uses: softprops/action-gh-release@v3
+        if: github.ref_type == 'tag'
+        with:
+          draft: true
+          files: ./release/*.zip

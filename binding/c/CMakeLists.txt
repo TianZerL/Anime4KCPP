@@ -1,4 +1,4 @@
-project(ac_binding_c VERSION 3.1.0.0 LANGUAGES CXX)
+project(ac_binding_c LANGUAGES CXX)
 
 set(BINDING_C_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(BINDING_C_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -16,7 +16,11 @@ target_include_directories(ac_c PUBLIC
 
 target_link_libraries(ac_c PRIVATE ac)
 
-set_target_properties(ac_c PROPERTIES EXPORT_NAME "Binding::C")
+set_target_properties(ac_c PROPERTIES
+    EXPORT_NAME "Binding::C"
+    VERSION ${AC_VERSION_STR}
+    SOVERSION ${AC_SOVERSION_STR}
+)
 
 include(GenerateExportHeader)
 generate_export_header(ac_c

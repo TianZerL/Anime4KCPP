@@ -38,7 +38,7 @@
 *.app
 
 # CMake
-*[bB]uild*
+**/[bB]uild*/
 
 # VSCode
 *vscode*

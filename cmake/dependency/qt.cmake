@@ -12,7 +12,7 @@ if(NOT TARGET dep::qt)
         cmake_parse_arguments(
             ARG
             ""
-            ""
+            "VERSION_STR"
             "SRC_FILES;TS_FILES;INCLUDE_DIRECTORY"
             ${ARGN}
         )
@@ -31,9 +31,9 @@ if(NOT TARGET dep::qt)
         endif()
 
         set_target_properties(${ARG_TARGET} PROPERTIES
-            MACOSX_BUNDLE_GUI_IDENTIFIER tianzerl.anime4kcpp.gui
-            MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-            MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+            MACOSX_BUNDLE_GUI_IDENTIFIER com.github.tianzerl.anime4kcpp.gui
+            MACOSX_BUNDLE_BUNDLE_VERSION ${ARG_VERSION_STR}
+            MACOSX_BUNDLE_SHORT_VERSION_STRING ${ARG_VERSION_STR}
             MACOSX_BUNDLE TRUE
             WIN32_EXECUTABLE TRUE
         )

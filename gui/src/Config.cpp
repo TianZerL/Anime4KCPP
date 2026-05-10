@@ -24,8 +24,8 @@ Config::Config() noexcept
     io.imageOutputPath = dir.canonicalPath();
     io.videoOutputPath = dir.canonicalPath();
 
-    upscaler.model = ac::specs::ModelList[0];
-    upscaler.processor = ac::specs::ProcessorList[0];
+    upscaler.model = ac::specs::ModelList[0].name;
+    upscaler.processor = ac::specs::ProcessorList[0].name;
 
     load();
 }
@@ -57,6 +57,7 @@ void Config::save() noexcept
     settings.setValue("Device", upscaler.device);
     settings.setValue("Factor", upscaler.factor);
     settings.setValue("Model", upscaler.model);
+    settings.setValue("Threads", upscaler.threads);
     settings.endGroup();
 
     settings.beginGroup("VIDEO");
@@ -89,6 +90,7 @@ void Config::load() noexcept
     upscaler.device = settings.value("Device", upscaler.device).toInt();
     upscaler.factor = settings.value("Factor", upscaler.factor).toDouble();
     upscaler.model = settings.value("Model", upscaler.model).toString();
+    upscaler.threads = settings.value("Threads", upscaler.model).toInt();
     settings.endGroup();
 
     settings.beginGroup("VIDEO");

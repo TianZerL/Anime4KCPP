@@ -66,11 +66,12 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
         {
             if (vi->format.sampleType == stInteger && vi->format.bitsPerSample == 8) return ac::core::Image::UInt8;
             if (vi->format.sampleType == stInteger && vi->format.bitsPerSample == 16) return ac::core::Image::UInt16;
+            if (vi->format.sampleType == stFloat && vi->format.bitsPerSample == 16) return ac::core::Image::Float16;
             if (vi->format.sampleType == stFloat && vi->format.bitsPerSample == 32) return ac::core::Image::Float32;
         }
         return 0;
     }();
-    if (!type) EXIT_WITH_ERROR("Anime4KCPP: only planar YUV uint8, uint16 and float32 input supported");
+    if (!type) EXIT_WITH_ERROR("Anime4KCPP: only planar YUV uint8, uint16, float16 and float32 input supported");
 
     auto factor = static_cast<double>(vsapi->mapGetFloat(in, "factor", 0, &err));
     if (err != peSuccess) factor = 2.0;

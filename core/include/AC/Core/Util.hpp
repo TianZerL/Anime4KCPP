@@ -1,7 +1,6 @@
 #ifndef AC_CORE_UTIL_HPP
 #define AC_CORE_UTIL_HPP
 
-#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -15,49 +14,6 @@
 
 namespace ac::core
 {
-    struct ResidualArg
-    {
-        const Image& image;
-        float scale;
-    };
-
-    constexpr float identity(float v) noexcept;
-    constexpr float relu(float v) noexcept;
-    constexpr float lrelu(float v, float n) noexcept;
-    constexpr float prelu(float v, float n) noexcept;
-
-    class Identity
-    {
-    public:
-        constexpr Identity() noexcept = default;
-        float operator() (const float v, const int /*c*/) const noexcept { return identity(v); }
-    };
-    class ReLU
-    {
-    public:
-        constexpr ReLU() noexcept = default;
-        float operator() (const float v, const int /*c*/) const noexcept { return relu(v); }
-    };
-    class LReLU
-    {
-    public:
-        constexpr LReLU(const float negativeSlope) noexcept : negativeSlope(negativeSlope) {}
-        float operator() (const float v, const int /*c*/) const noexcept { return lrelu(v, negativeSlope); }
-
-    private:
-        const float negativeSlope;
-    };
-
-    class PReLU
-    {
-    public:
-        constexpr PReLU(const float* const alphas) noexcept : alphas(alphas) {}
-        float operator() (const float v, const int c) const noexcept { return prelu(v, alphas[c]); }
-
-    private:
-        const float* alphas;
-    };
-
     /**
      * @brief Align a value to a multiple of a power-of-two boundary.
      *
@@ -73,34 +29,20 @@ namespace ac::core
     constexpr Integer align(Integer v, int n) noexcept;
 
     /**
-     * @brief Convert a value to float.
-     * @param v Input float point value.
-     * @return A float value.
-     */
-    template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool> = true>
-    constexpr float toFloat(Float v) noexcept;
-    /**
      * @brief Convert a value to normalized float.
-     * @param v Input unsigned integer value.
+     * @param v Input value.
      * @return A normalized float value.
      */
-    template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
-    constexpr float toFloat(Unsigned v) noexcept;
+    template<typename T>
+    constexpr float toFloat(T v) noexcept;
 
     /**
-     * @brief Convert a float value to `Float` type and clamp the value between 0.0f and 1.0f.
+     * @brief Clamp the float value between 0.0f and 1.0f, then convert it to type `T`, denormalizing if necessary.
      * @param v Input float value.
-     * @return A value between 0.0f and 1.0f.
+     * @return A unnormalized value.
      */
-    template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool> = true>
-    constexpr Float fromFloat(float v) noexcept;
-    /**
-     * @brief Convert a float value to `Unsigned` type and clamp the value between 0 and the max of `Unsigned`.
-     * @param v Input float value.
-     * @return A value between 0 and the max of `Unsigned`.
-     */
-    template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool> = true>
-    constexpr Unsigned fromFloat(float v) noexcept;
+    template<typename T>
+    constexpr T fromFloat(float v) noexcept;
 
     /**
      * @brief Compute `ceil(log2(v))` as fast as possible.
@@ -156,49 +98,41 @@ namespace ac::core
     void fastFree(void* ptr) noexcept;
 }
 
-inline constexpr float ac::core::identity(const float v) noexcept
-{
-    return v;
-}
-inline constexpr float ac::core::relu(const float v) noexcept
-{
-    return v < 0.0f ? 0.0f : v;
-}
-inline constexpr float ac::core::lrelu(const float v, const float n) noexcept
-{
-    return v < v * n ? v * n : v;
-}
-inline constexpr float ac::core::prelu(const float v, const float n) noexcept
-{
-    return std::max(v, 0.0f) + n * std::min(v, 0.0f);
-}
-
 template <typename Integer>
 inline constexpr Integer ac::core::align(const Integer v, const int n) noexcept
 {
     return (v + n - 1) & -n;
 }
 
-template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool>>
-inline constexpr float ac::core::toFloat(const Float v) noexcept
+template<typename T>
+inline constexpr float ac::core::toFloat(const T v) noexcept
 {
-    return static_cast<float>(v);
-}
-template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>>
-inline constexpr float ac::core::toFloat(const Unsigned v) noexcept
-{
-    return static_cast<float>(v) / static_cast<float>(std::numeric_limits<Unsigned>::max());
+    if constexpr (std::is_unsigned_v<T>)
+        return static_cast<float>(v) / static_cast<float>(std::numeric_limits<T>::max());
+    else if constexpr (std::is_integral_v<T>)
+    {
+        constexpr float l = static_cast<float>(std::numeric_limits<T>::min());
+        constexpr float r = static_cast<float>(std::numeric_limits<T>::max());
+        return (static_cast<float>(v) - l) / (r - l);
+    }
+    else return static_cast<float>(v);
 }
 
-template<typename Float, std::enable_if_t<std::is_floating_point_v<Float>, bool>>
-inline constexpr Float ac::core::fromFloat(const float v) noexcept
+template<typename T>
+inline constexpr T ac::core::fromFloat(const float v) noexcept
 {
-    return v < 0.0f ? 0.0f : (v < 1.0f ? v : 1.0f);
-}
-template<typename Unsigned, std::enable_if_t<std::is_unsigned_v<Unsigned>, bool>>
-inline constexpr Unsigned ac::core::fromFloat(const float v) noexcept
-{
-    return static_cast<Unsigned>(fromFloat<float>(v) * std::numeric_limits<Unsigned>::max() + 0.5f);
+    float saturated = v < 0.0f ? 0.0f : (v < 1.0f ? v : 1.0f);
+    if constexpr (std::is_unsigned_v<T>)
+        return static_cast<T>(saturated * std::numeric_limits<T>::max() + 0.5f);
+    else if constexpr (std::is_integral_v<T>)
+    {
+        constexpr float l = static_cast<float>(std::numeric_limits<T>::min());
+        constexpr float r = static_cast<float>(std::numeric_limits<T>::max());
+        float x = saturated * (r - l) + l;
+        x += (x >= 0.0f) ? 0.5f : -0.5f;
+        return static_cast<T>(x);
+    }
+    else return static_cast<T>(saturated);
 }
 
 inline int ac::core::ceilLog2(const double v) noexcept
