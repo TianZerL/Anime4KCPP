@@ -205,7 +205,7 @@ check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLO
 check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
 #float16
 include(CheckCXXSourceCompiles)
-check_cxx_source_compiles("int main() { __fp16 h = static_cast<__fp16>(1.0f); float f = static_cast<float>(h); return 0; }" AC_CORE_HAVE_ARM_FP16)
+check_cxx_source_compiles("__fp16 toHalf(float v) { return static_cast<__fp16>(v); } float toFloat(__fp16 v) { return static_cast<float>(v); } int main() { __fp16 h = toHalf(1.0f); float f = toFloat(h); return 0; }" AC_CORE_HAVE_ARM_FP16)
 
 if (NOT AC_CORE_HAVE_ARM_FP16)
     include(${DEPENDENCY_DIR}/half.cmake)
@@ -279,6 +279,9 @@ endif()
 
 if(EMSCRIPTEN)
     target_link_options(ac PUBLIC -sALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=64MB)
+    if (AC_CORE_WITH_HALF)
+        target_compile_definitions(ac PRIVATE HALF_ENABLE_CPP11_CFENV=0)
+    endif()
 endif()
 
 ac_check_disable_flags(ac)
