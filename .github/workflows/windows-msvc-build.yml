@@ -16,7 +16,7 @@ jobs:
         with:
           cuda: '12.9.1'
 
-      - name: Install Qt
+      - name: setup Qt
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.8.3'
@@ -36,91 +36,91 @@ jobs:
         with:
           path: Anime4KCPP
 
-      - name: Setup release dirs
+      - name: setup release dirs
         run: |
           mkdir release
           cd release
           mkdir cli, gui, filter_avs_vs, filter_ds, benchmark
           mkdir filter_avs_vs/x86, filter_avs_vs/x64, filter_ds/x86, filter_ds/x64
 
-      - name: Build x64
+      - name: build x64
         run: |
           cd Anime4KCPP
           mkdir build_msvc_x64
           cd build_msvc_x64
-          cmake -G "Visual Studio 17 2022" -A x64 .. -DAC_PRESET_RELEASE=ON -DAC_TOOLS_BENCHMARK=ON -DAC_PATH_FFMPEG='../../ffmpeg'
+          cmake -G "Visual Studio 17 2022" -A x64 .. -DAC_PRESET_RELEASE=ON -DAC_TOOLS_BENCHMARK=ON -DAC_FETCH_OPENCL=ON -DAC_PATH_FFMPEG='../../ffmpeg'
           cmake --build . --config Release -j 4
-          cd bin
-          cp ./ac_cli.exe ../../../release/cli/
-          cp ./ac_gui.exe ../../../release/gui/
-          cp ./ac_filter_avs_vs.dll ../../../release/filter_avs_vs/x64
-          cp ./ac_filter_ds.dll ../../../release/filter_ds/x64
-          cp ./ac_benchmark.exe ../../../release/benchmark
+          cd ./bin/Release/
+          cp ./ac_cli.exe ../../../../release/cli/
+          cp ./ac_gui.exe ../../../../release/gui/
+          cp ./ac_filter_avs_vs.dll ../../../../release/filter_avs_vs/x64
+          cp ./ac_filter_ds.dll ../../../../release/filter_ds/x64
+          cp ./ac_benchmark.exe ../../../../release/benchmark
 
-      - name: Build x86
+      - name: build x86
         run: |
           cd Anime4KCPP
           mkdir build_msvc_x86
           cd build_msvc_x86
-          cmake -G "Visual Studio 17 2022" -A win32 .. -DAC_BUILD_CLI=OFF -DAC_CORE_ENABLE_FAST_MATH=ON -DAC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH=ON -DAC_BUILD_FILTER_DIRECTSHOW=ON
+          cmake -G "Visual Studio 17 2022" -A win32 .. -DAC_BUILD_CLI=OFF -DAC_CORE_ENABLE_FAST_MATH=ON -DAC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH=ON -DAC_BUILD_FILTER_DIRECTSHOW=ON -DAC_FETCH_OPENCL=ON
           cmake --build . --config Release -j 4
-          cd bin
-          cp ./ac_filter_avs_vs.dll ../../../release/filter_avs_vs/x86
-          cp ./ac_filter_ds.dll ../../../release/filter_ds/x86
+          cd ./bin/Release/
+          cp ./ac_filter_avs_vs.dll ../../../../release/filter_avs_vs/x86
+          cp ./ac_filter_ds.dll ../../../../release/filter_ds/x86
 
-      - name: Setup cli
+      - name: zip cli files
         run: |
           cp ./ffmpeg_dll/* ./release/cli/
           cd ./release/cli/
           7z a -tzip ../Anime4KCPP-CLI-${{ github.ref_name }}-x64-MSVC.zip *
 
-      - name: Setup gui
+      - name: zip gui files
         run: |
           cp ./ffmpeg_dll/* ./release/gui/
           cd ./release/gui/
           windeployqt --release ac_gui.exe
           7z a -tzip ../Anime4KCPP-GUI-${{ github.ref_name }}-x64-MSVC.zip *
 
-      - name: Setup filter avs_vs
+      - name: zip filter avs_vs files
         run: |
           cd ./release/filter_avs_vs/
           7z a -tzip ../Anime4KCPP-Filter-AVS-VS-${{ github.ref_name }}-x86-x64-MSVC.zip *
 
-      - name: Setup filter ds
+      - name: zip filter ds files
         run: |
           cd ./release/filter_ds/
           7z a -tzip ../Anime4KCPP-Filter-DS-${{ github.ref_name }}-x86-x64-MSVC.zip *
 
-      - name: Setup benchmark
+      - name: zip benchmark files
         run: |
           cd ./release/benchmark/
           7z a -tzip ../Anime4KCPP-Benchmark-${{ github.ref_name }}-x64-MSVC.zip *
 
-      - name: Upload cli
+      - name: upload cli zip
         uses: actions/upload-artifact@v7
         with:
           path: ./release/Anime4KCPP-CLI-${{ github.ref_name }}-x64-MSVC.zip
           archive: false
 
-      - name: Upload gui
+      - name: upload gui zip
         uses: actions/upload-artifact@v7
         with:
           path: ./release/Anime4KCPP-GUI-${{ github.ref_name }}-x64-MSVC.zip
           archive: false
 
-      - name: Upload filter avs_vs
+      - name: upload filter avs_vs zip
         uses: actions/upload-artifact@v7
         with:
           path: ./release/Anime4KCPP-Filter-AVS-VS-${{ github.ref_name }}-x86-x64-MSVC.zip
           archive: false
 
-      - name: Upload filter ds
+      - name: upload filter ds zip
         uses: actions/upload-artifact@v7
         with:
           path: ./release/Anime4KCPP-Filter-DS-${{ github.ref_name }}-x86-x64-MSVC.zip
           archive: false
 
-      - name: Upload filter benchmark
+      - name: upload filter benchmark zip
         uses: actions/upload-artifact@v7
         with:
           path: ./release/Anime4KCPP-Benchmark-${{ github.ref_name }}-x64-MSVC.zip
