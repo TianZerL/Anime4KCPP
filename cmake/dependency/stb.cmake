@@ -2,11 +2,11 @@ if(NOT TARGET dep::stb)
     add_library(dep_stb INTERFACE IMPORTED)
     if(AC_PATH_STB)
         set(dep_stb_PATH ${AC_PATH_STB})
+        find_path(dep_stb_INCLUDE
+            NAMES stb_image.h
+            PATHS ${dep_stb_PATH}
+        )
     endif()
-    find_path(dep_stb_INCLUDE
-        NAMES stb_image.h
-        PATHS ${dep_stb_PATH}
-    )
     if(dep_stb_INCLUDE)
         target_include_directories(dep_stb INTERFACE $<BUILD_INTERFACE:${dep_stb_INCLUDE}>)
     else()

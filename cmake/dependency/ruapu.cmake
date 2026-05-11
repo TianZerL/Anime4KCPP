@@ -2,11 +2,11 @@ if(NOT TARGET dep::ruapu)
     add_library(dep_ruapu INTERFACE IMPORTED)
     if(AC_PATH_RUAPU)
         set(dep_ruapu_PATH ${AC_PATH_RUAPU})
+        find_path(dep_ruapu_INCLUDE
+            NAMES ruapu.h
+            PATHS ${dep_ruapu_PATH}
+        )
     endif()
-    find_path(dep_ruapu_INCLUDE
-        NAMES ruapu.h
-        PATHS ${dep_ruapu_PATH}
-    )
     if(dep_ruapu_INCLUDE)
         target_include_directories(dep_ruapu INTERFACE $<BUILD_INTERFACE:${dep_ruapu_INCLUDE}>)
     else()

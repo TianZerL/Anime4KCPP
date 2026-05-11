@@ -2,11 +2,11 @@ if(NOT TARGET dep::half)
     add_library(dep_half INTERFACE IMPORTED)
     if(AC_PATH_HALF)
         set(dep_half_PATH ${AC_PATH_HALF})
+        find_path(dep_half_INCLUDE
+            NAMES half.hpp
+            PATHS ${dep_half_PATH}
+        )
     endif()
-    find_path(dep_half_INCLUDE
-        NAMES half.hpp
-        PATHS ${dep_half_PATH}
-    )
     if(dep_half_INCLUDE)
         target_include_directories(dep_half INTERFACE $<BUILD_INTERFACE:${dep_half_INCLUDE}>)
     else()

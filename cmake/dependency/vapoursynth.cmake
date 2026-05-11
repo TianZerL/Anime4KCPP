@@ -2,11 +2,11 @@ if(NOT TARGET dep::vapoursynth)
     add_library(dep_vapoursynth INTERFACE IMPORTED)
     if(AC_PATH_VAPOURSYNTH_SDK)
         set(dep_vapoursynth_PATH ${AC_PATH_VAPOURSYNTH_SDK}/include)
+        find_path(dep_vapoursynth_INCLUDE
+            NAMES VapourSynth4.h
+            PATHS ${dep_vapoursynth_PATH}
+        )
     endif()
-    find_path(dep_vapoursynth_INCLUDE
-        NAMES VapourSynth4.h
-        PATHS ${dep_vapoursynth_PATH}
-    )
     if(dep_vapoursynth_INCLUDE)
         target_include_directories(dep_vapoursynth INTERFACE $<BUILD_INTERFACE:${dep_vapoursynth_INCLUDE}>)
     else()

@@ -1,6 +1,10 @@
 #include <cstdlib>
 
-#include <CLI/CLI.hpp>
+#if __has_include(<CLI11.hpp>)
+#   include <CLI11.hpp>
+#else
+#   include <CLI/CLI.hpp>
+#endif
 
 #include "Options.hpp"
 
