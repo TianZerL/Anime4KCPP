@@ -1,8 +1,8 @@
 if(NOT TARGET dep::cli11)
     add_library(dep_cli11 INTERFACE IMPORTED)
-    find_package(CLI11 QUIET)
+    find_package(CLI11 2.4.0 QUIET)
     if(NOT CLI11_FOUND)
-        message(STATUS "dep: cli11 not found, will be fetched online.")
+        message(STATUS "dep: cli11 not found or too old, will be fetched online.")
         include(FetchContent)
         FetchContent_Declare(
             cli11
