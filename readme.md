@@ -50,6 +50,7 @@ Manual configuration (optional):
 | [pybind11](https://github.com/pybind/pybind11)                                                                                       | AC_BUILD_BINDING_PYTHON     | binding(python)     | Automatic   | find_package                         |
 | [ruapu](https://github.com/nihui/ruapu)                                                                                              | N/A                         | core                | Automatic   | AC_PATH_RUAPU                        |
 | [stb](https://github.com/nothings/stb)                                                                                               | N/A                         | core                | Automatic   | AC_PATH_STB                          |
+| [fpng](https://github.com/richgel999/fpng)                                                                                           | AC_CORE_WITH_FPNG           | core                | Automatic   | AC_PATH_FPNG                         |
 | [half](https://half.sourceforge.net)                                                                                                 | N/A                         | core                | Automatic   | AC_PATH_HALF                         |
 | [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                    | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) | Automatic   | pkg-config / AC_PATH_VAPOURSYNTH_SDK |
 
@@ -145,6 +146,7 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 | AC_CORE_WITH_WASM_SIMD128            | build core with wasm simd128                       | Auto detect |
 | AC_CORE_WITH_OPENCL                  | build core with opencl                             | OFF         |
 | AC_CORE_WITH_CUDA                    | build core with cuda                               | OFF         |
+| AC_CORE_WITH_FPNG                    | build core with fpng                               | ON          |
 | AC_CORE_ENABLE_FAST_MATH             | enable fast math for core                          | OFF         |
 | AC_CORE_DISABLE_IMAGE_IO             | disable image file read and write for core         | OFF         |
 | AC_BUILD_CLI                         | build cli                                          | ON          |
@@ -170,6 +172,7 @@ There are some convenient presets:
 `AC_PRESET_RELEASE`
 - AC_CORE_WITH_OPENCL
 - AC_CORE_WITH_CUDA
+- AC_CORE_WITH_FPNG
 - AC_CORE_ENABLE_FAST_MATH
 - AC_BUILD_CLI
 - AC_BUILD_GUI

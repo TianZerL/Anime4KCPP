@@ -23,6 +23,9 @@ endif()
 # third-party
 include(${DEPENDENCY_DIR}/ruapu.cmake)
 include(${DEPENDENCY_DIR}/stb.cmake)
+if(AC_CORE_WITH_FPNG)
+    include(${DEPENDENCY_DIR}/fpng.cmake)
+endif()
 if(AC_CORE_WITH_EIGEN3)
     include(${DEPENDENCY_DIR}/eigen3.cmake)
 endif()
@@ -136,9 +139,9 @@ if (AC_CORE_WITH_CUDA AND CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_CUDA_CO
     set_source_files_properties(${CORE_SOURCE_DIR}/src/processor/cuda/Kernel.cu PROPERTIES COMPILE_OPTIONS "-Xcompiler=/Zc:preprocessor")
 endif()
 
-# We don't need setting any cpu arch flag for MSVC, setting it may actually degrade performance.
-# But we must set cpu arch flag for ClangCL.
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
+# We don't need setting any cpu arch flag for the real MSVC, setting it may actually degrade performance.
+# But we must set cpu arch flag for a fake MSVC (e.g., ClangCL).
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     if(AC_CORE_WITH_SSE AND BUILD_ARCH_32BIT)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/x86/SSE.cpp PROPERTIES COMPILE_OPTIONS "/arch:SSE")
     endif()
@@ -216,6 +219,7 @@ target_link_libraries(ac PRIVATE
     ac_util_misc ac_util_threads ac_util_parallel
     dep::ruapu
     dep::stb
+    $<$<BOOL:${AC_CORE_WITH_FPNG}>:dep::fpng>
     $<$<BOOL:${AC_CORE_WITH_HALF}>:dep::half>
     $<$<BOOL:${AC_CORE_WITH_EIGEN3}>:dep::eigen3>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:dep::opencl>
@@ -257,6 +261,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_HAVE_BSD_MEMALIGN}>:AC_CORE_HAVE_BSD_MEMALIGN>
     $<$<BOOL:${AC_CORE_HAVE_ARM_FP16}>:AC_CORE_HAVE_ARM_FP16>
     $<$<BOOL:${AC_CORE_WITH_HALF}>:AC_CORE_WITH_HALF>
+    $<$<BOOL:${AC_CORE_WITH_FPNG}>:AC_CORE_WITH_FPNG>
 
     AC_CORE_MALLOC_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX512}>,64,$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>>
     AC_CORE_PARAM_ALIGN=$<IF:$<BOOL:${AC_CORE_WITH_AVX512}>,64,$<IF:$<BOOL:${AC_CORE_WITH_AVX}>,32,16>>

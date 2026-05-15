@@ -6,11 +6,14 @@
 #   define STBI_NO_STDIO
 #else
 #   define STB_IMAGE_WRITE_IMPLEMENTATION
-#   include "stb_image_write.h"
+#   include <stb_image_write.h>
+#   ifdef AC_CORE_WITH_FPNG
+#       include <fpng.h>
+#   endif
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include <stb_image.h>
 
 #include "AC/Core/Image.hpp"
 
@@ -44,23 +47,23 @@ ac::core::Image ac::core::imread(const char* const filename, const int mode) noe
 }
 bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
 {
-    int idx = -1;
-    int count = 0;
-    for (auto p = filename; *p != '\0'; p++)
-    {
-        if (*p == '.') idx = count;
-        count++;
-    }
+    auto point = std::strrchr(filename, '.');
 
-    if ((idx != -1) && (idx + 1 < count))
+    if (point && *(++point))
     {
         char ext[5] = "";
-        for (int i = 0; i < 4 && idx + 1 + i < count; i++) ext[i] = static_cast<char>(std::tolower(static_cast<unsigned char>((filename + idx + 1)[i])));
+        for (int i = 0; point[i] && i < 4; i++) ext[i] = static_cast<char>(std::tolower(static_cast<unsigned char>(point[i])));
 
         if (!std::strcmp(ext, "png"))
         {
+#       ifdef AC_CORE_WITH_FPNG
+            [[maybe_unused]] static const bool fpngInitFlag = (fpng::fpng_init(), true);
+            Image out = unpadding(image);
+            return fpng::fpng_encode_image_to_file(filename, out.ptr(), out.width(), out.height(), out.channels());
+#       else
             Image out = image;
             return stbi_write_png(filename, out.width(), out.height(), out.channels(), out.ptr(), out.stride());
+#       endif
         }
         if (!std::strcmp(ext, "jpg") || !std::strcmp(ext, "jpeg"))
         {
@@ -78,7 +81,6 @@ bool ac::core::imwrite(const char* const filename, const Image& image) noexcept
             return stbi_write_tga(filename, out.width(), out.height(), out.channels(), out.ptr());
         }
     }
-    else return stbi_write_png(filename, image.width(), image.height(), image.channels(), image.ptr(), image.stride());
 
     return false;
 }
