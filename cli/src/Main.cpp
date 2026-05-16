@@ -1,5 +1,5 @@
+#include <atomic>
 #include <cstdio>
-#include <iterator>
 #include <memory>
 
 #include "AC/Core.hpp"
@@ -8,11 +8,10 @@
 #include "AC/Util/ThreadPool.hpp"
 
 #include "Options.hpp"
+#include "ProgressBar.hpp"
 
 #ifdef AC_CLI_ENABLE_VIDEO
-#   include <atomic>
 #   include "AC/Video.hpp"
-#   include "ProgressBar.hpp"
 #endif
 
 static void list(const Options& options)
@@ -67,51 +66,78 @@ static void list(const Options& options)
 
 static void image(const std::shared_ptr<ac::core::Processor>& processor, Options& options)
 {
-    auto batch = options.inputs.size();
+    auto batch = static_cast<int>(options.inputs.size());
     auto hardwareThreads = ac::util::ThreadPool::hardwareThreads();
     auto targetThreads = options.threads > 0 ? options.threads : ((processor->type() == ac::core::Processor::CPU) ? hardwareThreads / 4 + 1 : hardwareThreads / 2 + 1);
     auto poolSize = batch > targetThreads ? targetThreads : batch;
-    auto task = [&](const int i) {
+
+    std::atomic_bool success = true;
+    std::atomic_int count = 0;
+    ProgressBar progressBar{};
+
+    auto task = [&](const int i) -> bool {
         auto& input = options.inputs[i];
         auto& output = options.outputs[i];
 
-        if (output.empty()) output = input + ".out.jpg";
+        if (output.empty()) output = input + ".out.png";
 
         auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
-        if (!src.empty())
-            std::printf("Load image from %s\n", input.c_str());
-        else
+        if (src.empty())
         {
-            std::printf("Failed to load image from %s\n", input.c_str());
-            return;
+            std::printf("%s: Failed to load.\n", input.c_str());
+            return false;
         }
 
-        ac::util::Stopwatch stopwatch{};
         auto dst = processor->process(src, options.factor);
-        stopwatch.stop();
         if (!processor->ok())
         {
             std::printf("%s: Failed due to %s\n", input.c_str(), processor->error());
-            return;
+            return false;
         }
-        auto elapsed = stopwatch.elapsed();
-        ac::util::Stopwatch::FormatBuffer elapsedBuffer{};
-        std::printf("%s: Finished in %lfs (%s)\n", input.c_str(), elapsed, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed));
 
-        if (ac::core::imwrite(output.c_str(), dst))
-            std::printf("Save image to %s\n", output.c_str());
-        else
+        if (!ac::core::imwrite(output.c_str(), dst))
         {
-            std::printf("Failed to save image to %s\n", output.c_str());
-            return;
+            std::printf("%s: Failed to save.\n", output.c_str());
+            return false;
         }
+
+        if (count.fetch_add(1, std::memory_order_relaxed) % 32 == 0) progressBar.print(count / static_cast<double>(batch));
+        return true;
     };
+
+    if (batch > 1) std::printf("Load %d images.\n", batch);
+    else if (batch == 1) std::printf("Load image from %s\n", options.inputs[0].c_str());
+    progressBar.reset();
     if (poolSize > 1)
     {
         ac::util::ThreadPool pool{ poolSize };
-        for (decltype(batch) i = 0; i < batch; i++) pool.exec([i, &task]() { task(i); });
+        for (decltype(batch) i = 0; success.load(std::memory_order_relaxed) && i < batch; i++)
+            pool.exec([i, &success, &task]() {
+            if (success.load(std::memory_order_relaxed))
+            {
+                bool ret = task(i);
+                if (!ret)
+                {
+                    bool expected = true;
+                    success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
+                }
+            }
+        });
     }
-    else for (decltype(batch) i = 0; i < batch; i++) task(i);
+    else for (decltype(batch) i = 0; success.load(std::memory_order_relaxed) && i < batch; i++) success.store(task(i), std::memory_order_relaxed);
+    progressBar.finish();
+    if (count.load(std::memory_order_relaxed))
+    {
+        if (batch > 1)
+        {
+            if (!success.load(std::memory_order_relaxed))
+            {
+                std::printf("Failed to process %d images.\n", batch - count.load(std::memory_order_relaxed));
+            }
+            std::printf("Saved %d images.\n", count.load(std::memory_order_relaxed));
+        }
+        else if (batch == 1) std::printf("Saved image to %s\n", options.outputs[0].c_str());
+    }
 }
 
 static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& processor, [[maybe_unused]] Options& options)
@@ -151,7 +177,6 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
 
         auto info = pipeline.getInfo();
 
-        ac::util::Stopwatch stopwatch{};
         ProgressBar progressBar{};
 
         struct {
@@ -170,7 +195,6 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
         data.error = nullptr;
 
         progressBar.reset();
-        stopwatch.reset();
         ac::video::filter(pipeline, [](ac::video::Frame& src, ac::video::Frame& dst, void* userdata) -> bool {
             auto ctx = static_cast<decltype(data)*>(userdata);
             // y
@@ -195,17 +219,12 @@ static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& p
             if (src.number % 32 == 0) ctx->progressBar->print(src.number / ctx->frames);
             return true;
         }, &data, videoFilterModel);
-        stopwatch.stop();
         progressBar.finish();
         pipeline.close();
-        if (data.error.load(std::memory_order_relaxed)) std::printf("%s: Failed due to %s\n", input.c_str(), data.error.load(std::memory_order_relaxed));
+        if (data.error.load(std::memory_order_relaxed))
+            std::printf("%s: Failed due to %s\n", input.c_str(), data.error.load(std::memory_order_relaxed));
         else
-        {
-            auto elapsed = stopwatch.elapsed();
-            ac::util::Stopwatch::FormatBuffer elapsedBuffer{};
-            std::printf("%s: Finished in %lfs (%s)\n", input.c_str(), elapsed, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed));
-        }
-        std::printf("Save video to %s\n", output.c_str());
+            std::printf("Saved video to %s\n", output.c_str());
     }
 #else
     std::printf("This build does not support video processing\n");
