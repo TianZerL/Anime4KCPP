@@ -71,11 +71,10 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
     auto targetThreads = options.threads > 0 ? options.threads : ((processor->type() == ac::core::Processor::CPU) ? hardwareThreads / 4 + 1 : hardwareThreads / 2 + 1);
     auto poolSize = batch > targetThreads ? targetThreads : batch;
 
-    std::atomic_bool success = true;
     std::atomic_int count = 0;
     ProgressBar progressBar{};
 
-    auto task = [&](const int i) -> bool {
+    auto task = [&](const int i) {
         auto& input = options.inputs[i];
         auto& output = options.outputs[i];
 
@@ -85,24 +84,23 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
         if (src.empty())
         {
             std::printf("%s: Failed to load.\n", input.c_str());
-            return false;
+            return;
         }
 
         auto dst = processor->process(src, options.factor);
         if (!processor->ok())
         {
             std::printf("%s: Failed due to %s\n", input.c_str(), processor->error());
-            return false;
+            return;
         }
 
         if (!ac::core::imwrite(output.c_str(), dst))
         {
             std::printf("%s: Failed to save.\n", output.c_str());
-            return false;
+            return;
         }
 
         if (count.fetch_add(1, std::memory_order_relaxed) % 32 == 0) progressBar.print(count / static_cast<double>(batch));
-        return true;
     };
 
     if (batch > 1) std::printf("Load %d images.\n", batch);
@@ -111,33 +109,17 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
     if (poolSize > 1)
     {
         ac::util::ThreadPool pool{ poolSize };
-        for (decltype(batch) i = 0; success.load(std::memory_order_relaxed) && i < batch; i++)
-            pool.exec([i, &success, &task]() {
-            if (success.load(std::memory_order_relaxed))
-            {
-                bool ret = task(i);
-                if (!ret)
-                {
-                    bool expected = true;
-                    success.compare_exchange_strong(expected, false, std::memory_order_relaxed, std::memory_order_relaxed);
-                }
-            }
-        });
+        for (decltype(batch) i = 0; i < batch; i++) pool.exec([i, &task]() { task(i); });
     }
-    else for (decltype(batch) i = 0; success.load(std::memory_order_relaxed) && i < batch; i++) success.store(task(i), std::memory_order_relaxed);
+    else for (decltype(batch) i = 0; i < batch; i++) task(i);
     progressBar.finish();
-    if (count.load(std::memory_order_relaxed))
+    if (batch > 1)
     {
-        if (batch > 1)
-        {
-            if (!success.load(std::memory_order_relaxed))
-            {
-                std::printf("Failed to process %d images.\n", batch - count.load(std::memory_order_relaxed));
-            }
-            std::printf("Saved %d images.\n", count.load(std::memory_order_relaxed));
-        }
-        else if (batch == 1) std::printf("Saved image to %s\n", options.outputs[0].c_str());
+        auto failed = batch - count.load(std::memory_order_relaxed);
+        if (failed > 0) std::printf("Failed to process %d images.\n", failed);
+        if (count.load(std::memory_order_relaxed)) std::printf("Saved %d images.\n", count.load(std::memory_order_relaxed));
     }
+    else if (batch == 1 && count.load(std::memory_order_relaxed)) std::printf("Saved image to %s\n", options.outputs[0].c_str());
 }
 
 static void video([[maybe_unused]] const std::shared_ptr<ac::core::Processor>& processor, [[maybe_unused]] Options& options)
@@ -262,7 +244,7 @@ int main(int argc, char* argv[])
 
     auto elapsed = stopwatch.elapsed();
     ac::util::Stopwatch::FormatBuffer elapsedBuffer{};
-    std::printf("\nInputs %d files, takes %lfs (%s)\n", static_cast<int>(options.inputs.size()), elapsed, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed));
+    std::printf("\nProcessed %d files in %lfs (%s)\n", static_cast<int>(options.inputs.size()), elapsed, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed));
 
     return 0;
 }

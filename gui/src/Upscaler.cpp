@@ -103,7 +103,6 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             {
                 ac::video::Pipeline pipeline{};
 
-                gLogger.info() << "Load video from " << task->path.input;
                 if (!pipeline.openDecoder(task->path.input.toUtf8(), dhints)) // ffmpeg api uses utf8 for io
                 {
                     gLogger.error() << task->path.input << ": Failed to open decoder";
@@ -167,8 +166,6 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                 stopwatch.stop();
                 pipeline.close();
                 if (data.error.load(std::memory_order_relaxed)) gLogger.error() << task->path.input << ": Failed due to " << data.error.load(std::memory_order_relaxed);
-                else gLogger.info() << task->path.input << ": Finished in " << stopwatch.elapsed() << "s [" << dptr->processor->typeName() << ' ' << dptr->processor->name() << ']';
-                gLogger.info() << "Save video to " << task->path.output;
             }
             emit progress(100);
             emit task->finished(!dptr->stopFlag.load(std::memory_order_relaxed) && dptr->processor->ok());
@@ -190,11 +187,9 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
             if (!dptr->stopFlag.load(std::memory_order_relaxed))
             {
                 auto src = ac::core::imread(task->path.input.toLocal8Bit(), ac::core::IMREAD_UNCHANGED);
-                if (!src.empty())
-                    gLogger.info() << "Load image from " << task->path.input;
-                else
+                if (src.empty())
                 {
-                    gLogger.error() << "Failed to load image from " << task->path.input;
+                    gLogger.error() << task->path.input << ": Failed to load.";
                     emit task->finished(false);
                     return;
                 }
@@ -208,12 +203,10 @@ void Upscaler::start(const QList<QSharedPointer<TaskData>>& taskList)
                     emit task->finished(false);
                     return;
                 }
-                gLogger.info() << task->path.input << ": Finished in " << stopwatch.elapsed() << "s [" << dptr->processor->typeName() << ' ' << dptr->processor->name() << ']';
 
-                if (ac::core::imwrite(task->path.output.toLocal8Bit(), dst)) gLogger.info() << "Save image to " << task->path.output;
-                else
+                if (!ac::core::imwrite(task->path.output.toLocal8Bit(), dst))
                 {
-                    gLogger.error() << "Failed to save image to " << task->path.output;
+                    gLogger.error() << task->path.output << ": Failed to save.";
                     emit task->finished(false);
                     return;
                 }

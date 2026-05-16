@@ -187,13 +187,26 @@ void MainWindow::init()
     ui->progress_bar_task_list->reset();
     ui->progress_bar_video_task->reset();
     QObject::connect(&gUpscaler, &Upscaler::started, ui->progress_bar_task_list, [=]() {
-        taskListModel.setHeaderData(0, Qt::Horizontal, 0, Qt::UserRole);
+        taskListModel.setHeaderData(0, Qt::Horizontal, 0, Qt::UserRole); // total tasks
+        taskListModel.setHeaderData(1, Qt::Horizontal, 0, Qt::UserRole); // succeeded tasks
+        taskListModel.setHeaderData(2, Qt::Horizontal, 0, Qt::UserRole); // failed tasks
         ui->progress_bar_task_list->reset();
+        gLogger.info() << "Start " << taskListModel.rowCount() << " tasks.";
     });
     QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_add, &QPushButton::clicked, ui->progress_bar_video_task, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_task_list, &QProgressBar::reset);
     QObject::connect(ui->push_button_task_list_clear, &QPushButton::clicked, ui->progress_bar_video_task, &QProgressBar::reset);
+    QObject::connect(ui->progress_bar_task_list, &QProgressBar::valueChanged, ui->progress_bar_video_task, [this, stopwatchTotalTask = QSharedPointer<ac::util::Stopwatch>::create()](const int value) {
+        if (value == 0) stopwatchTotalTask->reset();
+        else
+        {
+            double elapsed = stopwatchTotalTask->elapsed();
+            double remaining = elapsed / (value / 100.0) - elapsed;
+            ac::util::Stopwatch::FormatBuffer elapsedBuffer{}, remainingBuffer{};
+            ui->progress_bar_task_list->setFormat(QString{ "%p% (%1 < %2)" }.arg(ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed), ac::util::Stopwatch::formatDuration(remainingBuffer, remaining)));
+        }
+    });
     QObject::connect(&gUpscaler, &Upscaler::progress, ui->progress_bar_video_task, [this, stopwatchVideoTask = QSharedPointer<ac::util::Stopwatch>::create()](const int value) {
         ui->progress_bar_video_task->setValue(value);
 
@@ -234,8 +247,16 @@ void MainWindow::addTask(const QFileInfo& fileInfo)
         itemStatus->setText(success ? tr("succeeded") : tr("failed"));
         itemStatus->setForeground(success ? QColorConstants::Green : QColorConstants::Red);
         auto count = taskListModel.headerData(0, Qt::Horizontal, Qt::UserRole).toInt() + 1;
+        auto succeeded = taskListModel.headerData(1, Qt::Horizontal, Qt::UserRole).toInt();
+        auto failed = taskListModel.headerData(2, Qt::Horizontal, Qt::UserRole).toInt();
         ui->progress_bar_task_list->setValue(100 * count / taskListModel.rowCount());
+        if (success) succeeded++;
+        else failed++;
         taskListModel.setHeaderData(0, Qt::Horizontal, count, Qt::UserRole);
+        taskListModel.setHeaderData(1, Qt::Horizontal, succeeded, Qt::UserRole);
+        taskListModel.setHeaderData(2, Qt::Horizontal, failed, Qt::UserRole);
+        if (count == taskListModel.rowCount())
+            gLogger.info() << "Finished " << count << " tasks (" << succeeded << " successful, " << failed << " failed).";
     });
 
     auto updateOutputInfo = [taskDataWeakPointer = QWeakPointer<TaskData>(taskData), baseName = fileInfo.completeBaseName(), itemOutputName, itemPath]() {

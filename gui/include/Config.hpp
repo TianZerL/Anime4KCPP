@@ -15,7 +15,7 @@ public:
     } gui{};
 
     struct {
-        QString imageSuffix{ ".jpg" };
+        QString imageSuffix{ ".png" };
         QString videoSuffix{ ".mkv" };
         QString imagePrefix{ "ac_" };
         QString videoPrefix{ "ac_" };
