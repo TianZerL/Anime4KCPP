@@ -48,7 +48,9 @@ namespace ac::video
 
         private:
             bool writeHeaderFlag = false;
-            SwsContext* swsCtx = nullptr;
+            AVPixelFormat filterPixFmt = AV_PIX_FMT_NONE;
+            SwsContext* dSwsCtx = nullptr;
+            SwsContext* eSwsCtx = nullptr;
             AVFormatContext* dfmtCtx = nullptr;
             AVFormatContext* efmtCtx = nullptr;
             AVPacket* dpacket = nullptr;
@@ -103,8 +105,17 @@ namespace ac::video
             auto codec = (hints.encoder && *hints.encoder) ? avcodec_find_encoder_by_name(hints.encoder) : avcodec_find_encoder(AV_CODEC_ID_H264); if (!codec) return false;
             encoderCtx = avcodec_alloc_context3(codec); if (!encoderCtx) return false;
 
-            encoderCtx->pix_fmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
-            switch (encoderCtx->pix_fmt)
+            filterPixFmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
+
+            if (codec->pix_fmts)
+            {
+                for (auto pfmt = codec->pix_fmts; *pfmt != AV_PIX_FMT_NONE; pfmt++)
+                    if (*pfmt == filterPixFmt) encoderCtx->pix_fmt = filterPixFmt;
+                if (encoderCtx->pix_fmt != filterPixFmt) encoderCtx->pix_fmt = codec->pix_fmts[0];
+            }
+            else encoderCtx->pix_fmt = filterPixFmt;
+
+            switch (filterPixFmt)
             {
             case AV_PIX_FMT_GRAY8:
             case AV_PIX_FMT_GRAY10:
@@ -166,6 +177,7 @@ namespace ac::video
             encoderCtx->color_trc = decoderCtx->color_trc;
             encoderCtx->colorspace = decoderCtx->colorspace;
             encoderCtx->color_range = decoderCtx->color_range;
+            encoderCtx->thread_count = 0;
             if (efmtCtx->oformat->flags & AVFMT_GLOBALHEADER) encoderCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             ret = avcodec_open2(encoderCtx, codec, nullptr); if (ret < 0) return false;
             // copy all streams
@@ -174,8 +186,9 @@ namespace ac::video
             for (unsigned int i = 0; i < dfmtCtx->nb_streams; i++)
             {
                 bool isOtherStream = (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_ATTACHMENT) || (dfmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_DATA);
-                if ((isOtherStream && (strcmp(efmtCtx->oformat->name, "matroska") != 0)) || // check if mkv
-                    (!isOtherStream && (avformat_query_codec(efmtCtx->oformat, dfmtCtx->streams[i]->codecpar->codec_id, FF_COMPLIANCE_NORMAL) < 1))) // check if the given container can store a codec
+                if (dfmtCtx->streams[i]->codecpar->codec_type != AVMEDIA_TYPE_VIDEO &&
+                    ((isOtherStream && (strcmp(efmtCtx->oformat->name, "matroska") != 0)) || // check if mkv
+                    (!isOtherStream && (avformat_query_codec(efmtCtx->oformat, dfmtCtx->streams[i]->codecpar->codec_id, FF_COMPLIANCE_NORMAL) < 1)))) // check if the given container can store a codec
                 {
                     streamIdxMap[i] = -1;
                     continue;
@@ -212,7 +225,11 @@ namespace ac::video
             }
 
             ret = avcodec_parameters_from_context(evideoStream->codecpar, encoderCtx); if (ret < 0) return false;
-            ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr); if (ret < 0) return false;
+            if (!(efmtCtx->oformat->flags & AVFMT_NOFILE))
+            {
+                ret = avio_open2(&efmtCtx->pb, filename, AVIO_FLAG_WRITE, &efmtCtx->interrupt_callback, nullptr);
+                if (ret < 0) return false;
+            }
             ret = avformat_write_header(efmtCtx, nullptr); if (ret < 0) return false;
             writeHeaderFlag = true;
 
@@ -232,12 +249,12 @@ namespace ac::video
                 else return false;
             }
 
-            if (!swsCtx && (frame->format != encoderCtx->pix_fmt))// I think it can be assumed that the frame format will not change during decoding.
+            if (!dSwsCtx && (frame->format != filterPixFmt)) // I think it can be assumed that the frame format will not change during decoding.
             {
-                swsCtx = sws_getContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
-                if (!swsCtx) return false;
+                dSwsCtx = sws_getContext(frame->width, frame->height, static_cast<AVPixelFormat>(frame->format), frame->width, frame->height, filterPixFmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
+                if (!dSwsCtx) return false;
             }
-            if (swsCtx)
+            if (dSwsCtx)
             {
                 auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
                 bool finishDstFrame = false;
@@ -245,12 +262,12 @@ namespace ac::video
                 ret = av_frame_copy_props(dstFrame, frame); if (ret < 0) return false;
                 dstFrame->width = frame->width;
                 dstFrame->height = frame->height;
-                dstFrame->format = encoderCtx->pix_fmt;
+                dstFrame->format = filterPixFmt;
     #   if LIBAVUTIL_VERSION_MAJOR < 57 // ffmpeg 5, libavutil 57
                 ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
-                if (sws_scale(swsCtx, frame->data, frame->linesize, 0, frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
+                if (sws_scale(dSwsCtx, frame->data, frame->linesize, 0, frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
     #   else
-                if (sws_scale_frame(swsCtx, dstFrame, frame) >= 0)
+                if (sws_scale_frame(dSwsCtx, dstFrame, frame) >= 0)
     #   endif
                 {
                     av_frame_free(&frame);
@@ -275,6 +292,35 @@ namespace ac::video
             int ret = 0;
             if (!src.dptr) return false;
             if (!remux(src.dptr->packets)) return false;
+
+            if (!eSwsCtx && (filterPixFmt != encoderCtx->pix_fmt)) // Assume that the frame format will not change during encoding as well.
+            {
+                eSwsCtx = sws_getContext(src.dptr->frame->width, src.dptr->frame->height, filterPixFmt, src.dptr->frame->width, src.dptr->frame->height, encoderCtx->pix_fmt, SWS_FAST_BILINEAR | SWS_PRINT_INFO, nullptr, nullptr, nullptr);
+                if (!eSwsCtx) return false;
+            }
+            if (eSwsCtx)
+            {
+                auto dstFrame = av_frame_alloc(); if (!dstFrame) return false;
+                bool finishDstFrame = false;
+                util::Defer deferFreeDstFrame{ [&]() { if (!finishDstFrame) av_frame_free(&dstFrame); } };
+                ret = av_frame_copy_props(dstFrame, src.dptr->frame); if (ret < 0) return false;
+                dstFrame->width = src.dptr->frame->width;
+                dstFrame->height = src.dptr->frame->height;
+                dstFrame->format = encoderCtx->pix_fmt;
+#   if LIBAVUTIL_VERSION_MAJOR < 57 // ffmpeg 5, libavutil 57
+                ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
+                if (sws_scale(eSwsCtx, src.dptr->frame->data, src.dptr->frame->linesize, 0, src.dptr->frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
+#   else
+                if (sws_scale_frame(eSwsCtx, dstFrame, src.dptr->frame) >= 0)
+#   endif
+                {
+                    av_frame_free(&src.dptr->frame);
+                    src.dptr->frame = dstFrame;
+                    finishDstFrame = true;
+                }
+                else return false;
+            }
+
             ret = avcodec_send_frame(encoderCtx, src.dptr->frame); if (ret < 0) return false;
             for (;;)
             {
@@ -295,7 +341,7 @@ namespace ac::video
 
             dstFrame->width = encoderCtx->width;
             dstFrame->height = encoderCtx->height;
-            dstFrame->format = encoderCtx->pix_fmt;
+            dstFrame->format = filterPixFmt;
 
             dstFrame->pts = srcFrame->pts;
 
@@ -355,16 +401,22 @@ namespace ac::video
                 av_write_trailer(efmtCtx);
                 writeHeaderFlag = false;
             }
-            if (swsCtx)
+            filterPixFmt = AV_PIX_FMT_NONE;
+            if (eSwsCtx)
             {
-                sws_freeContext(swsCtx);
-                swsCtx = nullptr;
+                sws_freeContext(eSwsCtx);
+                eSwsCtx = nullptr;
+            }
+            if (dSwsCtx)
+            {
+                sws_freeContext(dSwsCtx);
+                dSwsCtx = nullptr;
             }
             if (encoderCtx) avcodec_free_context(&encoderCtx);
             if (decoderCtx) avcodec_free_context(&decoderCtx);
             if (efmtCtx)
             {
-                avio_closep(&efmtCtx->pb);
+                if (!(efmtCtx->oformat->flags & AVFMT_NOFILE) && efmtCtx->pb) avio_closep(&efmtCtx->pb);
                 avformat_free_context(efmtCtx);
                 efmtCtx = nullptr;
             }
@@ -382,7 +434,7 @@ namespace ac::video
             Info info{};
             info.width = decoderCtx->width;
             info.height = decoderCtx->height;
-            info.bitDepth = getBitDepth(encoderCtx->pix_fmt);
+            info.bitDepth = getBitDepth(filterPixFmt);
             info.fps = av_q2d(av_inv_q(timeBase));
 
             if (dvideoStream->duration != AV_NOPTS_VALUE) info.duration = dvideoStream->duration * av_q2d(dvideoStream->time_base);
