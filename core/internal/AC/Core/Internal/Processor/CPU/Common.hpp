@@ -6,8 +6,8 @@
 #include <type_traits>
 
 #include "AC/Core/Image.hpp"
-#include "AC/Util/Parallel.hpp"
 #include "AC/Core/Util.hpp"
+#include "AC/Util/Parallel.hpp"
 
 namespace ac::core::cpu
 {
