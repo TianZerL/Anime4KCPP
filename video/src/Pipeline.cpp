@@ -107,11 +107,15 @@ namespace ac::video
 
             filterPixFmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
 
-            if (codec->pix_fmts)
+#       if LIBAVCODEC_VERSION_MAJOR >= 61 && LIBAVCODEC_VERSION_MINOR >= 19 // FFmpeg 7.1, libavcodec 61.19.101
+            if (const AVPixelFormat* fmts = nullptr; avcodec_get_supported_config(encoderCtx, nullptr, AV_CODEC_CONFIG_PIX_FORMAT, 0, reinterpret_cast<const void**>(&fmts), nullptr) >= 0 && fmts)
+#       else
+            if (const AVPixelFormat* fmts = codec->pix_fmts)
+#       endif
             {
-                for (auto pfmt = codec->pix_fmts; *pfmt != AV_PIX_FMT_NONE; pfmt++)
+                for (auto pfmt = fmts; *pfmt != AV_PIX_FMT_NONE; pfmt++)
                     if (*pfmt == filterPixFmt) encoderCtx->pix_fmt = filterPixFmt;
-                if (encoderCtx->pix_fmt != filterPixFmt) encoderCtx->pix_fmt = codec->pix_fmts[0];
+                if (encoderCtx->pix_fmt != filterPixFmt) encoderCtx->pix_fmt = fmts[0];
             }
             else encoderCtx->pix_fmt = filterPixFmt;
 
