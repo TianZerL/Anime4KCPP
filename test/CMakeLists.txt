@@ -1,6 +1,0 @@
-if (AC_TEST_UTIL)
-    add_subdirectory(util)
-endif()
-if (AC_TEST_VIDEO)
-    add_subdirectory(video)
-endif()

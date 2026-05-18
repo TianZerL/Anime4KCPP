@@ -53,6 +53,7 @@ Manual configuration (optional):
 | [fpng](https://github.com/richgel999/fpng)                                                                                           | AC_CORE_WITH_FPNG           | core                | Automatic   | AC_PATH_FPNG                         |
 | [half](https://half.sourceforge.net)                                                                                                 | N/A                         | core                | Automatic   | AC_PATH_HALF                         |
 | [VapourSynth SDK](https://github.com/vapoursynth/vapoursynth/tree/master/include)                                                    | AC_BUILD_FILTER_VAPOURSYNTH | filter(vapoursynth) | Automatic   | pkg-config / AC_PATH_VAPOURSYNTH_SDK |
+| [doctest](https://github.com/doctest/doctest)                                                                                        | AC_BUILD_TESTS              | tests               | Automatic   | find_package / AC_PATH_DOCTEST       |
 
 - The minimum tested version of the CUDA Toolkit is 11.
 - The minimum version of FFmpeg libraries is FFmpeg 4.
@@ -159,8 +160,7 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 | AC_BUILD_BINDING_C                   | build c binding for core                           | OFF         |
 | AC_BUILD_BINDING_PYTHON              | build python binding for core                      | OFF         |
 | AC_TOOLS_BENCHMARK                   | build benchmark                                    | OFF         |
-| AC_TEST_UTIL                         | build util module test                             | OFF         |
-| AC_TEST_VIDEO                        | build video module test                            | OFF         |
+| AC_BUILD_TESTS                       | build tests                                        | OFF         |
 | AC_ENABLE_LTO                        | enable LTO                                         | OFF         |
 | AC_ENABLE_STATIC_CRT                 | enable static link crt                             | OFF         |
 | AC_DISABLE_RTTI                      | disable rtti                                       | OFF         |
