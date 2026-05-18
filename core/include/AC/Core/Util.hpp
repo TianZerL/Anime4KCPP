@@ -6,11 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
-#include <tuple>
 #include <type_traits>
-
-#include "AC/Core/Image.hpp"
-#include "AC/Util/Parallel.hpp"
 
 namespace ac::core
 {
@@ -50,40 +46,6 @@ namespace ac::core
      * @return result of `ceil(log2(v))`.
      */
     int ceilLog2(double v) noexcept;
-
-    /**
-     * @brief Apply a parallel pixel-wise operation to multiple images with integer scaling.
-     *
-     * This function processes multiple images in parallel, applying a user-defined operation
-     * to each pixel position in the destination image(s). It supports integer upscaling from
-     * source to destination images.
-     *
-     * This function operates on destination image dimensions (w x h). For each destination
-     * pixel at (j, i), source pixel coordinates are computed as (j/scale, i/scale) where
-     * `scale = dst.width() / src.width()`.
-     * 
-     * @tparam F Type of the callable operation function.
-     * @tparam Images Variadic template parameter pack for image references.
-     *
-     * @param f Callable operation function that will be called for each pixel in the destination.
-     * @param images Variadic list of image references, the first image must be `const Image&`
-     *        (`src`) and last image must be `Image&` (`dst`), images in between can be
-     *        either const (sources) or non-const (destinations)
-     *
-     * @note All images must be valid (non-empty) `ac::core::Image` (with const/ref qualifiers).
-     * @note Processing is parallelized over rows.
-     * @note The function assumes uniform integer scaling, the scale factor must be an integer > 0,
-     *       and same in bothdimensions; non-integer scaling or different horizontal/vertical scaling 
-     *       factors result in undefined behavior.
-     */
-    template<typename F, typename ...Images>
-    auto filter(F&& f, Images& ...images) ->
-        std::enable_if_t<(
-            (sizeof...(Images) > 1) &&
-            (std::is_const_v<std::tuple_element_t<0, std::tuple<Images...>>>) &&
-            (!std::is_const_v<std::tuple_element_t<sizeof...(Images) - 1, std::tuple<Images...>>>) &&
-            (std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...)),
-        void>;
 
     /**
      * @brief allocate memory with internal alignment.
@@ -144,27 +106,6 @@ inline int ac::core::ceilLog2(const double v) noexcept
         return static_cast<int>((((data >> 52) & 0x7ff) - 1023) + ((data << 12) != 0));
     }
     else return static_cast<int>(std::ceil(std::log2(v)));
-}
-
-template<typename F, typename ...Images>
-inline auto ac::core::filter(F&& f, Images& ...images) ->
-    std::enable_if_t<(
-        (sizeof...(Images) > 1) &&
-        (std::is_const_v<std::tuple_element_t<0, std::tuple<Images...>>>) &&
-        (!std::is_const_v<std::tuple_element_t<sizeof...(Images) - 1, std::tuple<Images...>>>) &&
-        (std::is_same_v<ac::core::Image, std::remove_cv_t<Images>> && ...)),
-    void>
-{
-    const auto& src = std::get<0>(std::forward_as_tuple(images...));
-    const auto& dst = std::get<sizeof...(Images) - 1>(std::forward_as_tuple(images...));
-
-    const int w = dst.width(), h = dst.height();
-    const int scale = dst.width() / src.width();
-
-    util::parallelFor(0, h,
-        [&](const int i) {
-            for (int j = 0; j < w; j++) f(i, j, (std::is_const_v<Images> ? images.ptr(j / scale, i / scale) : images.ptr(j, i))...);
-        });
 }
 
 #endif

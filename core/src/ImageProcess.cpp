@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include "AC/Core/Image.hpp"
+#include "AC/Util/Parallel.hpp"
 #include "AC/Core/Util.hpp"
 
 #include "AC/Core/Internal/DataType.hpp"
@@ -13,295 +14,332 @@ namespace ac::core::detail
     template<typename IN, typename OUT = IN>
     static inline void rgb2yuv(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+                float r = toFloat(in[0]);
+                float g = toFloat(in[1]);
+                float b = toFloat(in[2]);
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            out[0] = fromFloat<OUT>(y);
-            out[1] = fromFloat<OUT>(u);
-            out[2] = fromFloat<OUT>(v);
-        }, src, dst);
+                out[0] = fromFloat<OUT>(y);
+                out[1] = fromFloat<OUT>(u);
+                out[2] = fromFloat<OUT>(v);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void rgb2yuv(const Image& src, Image& dsty, Image& dstuv)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto yout = static_cast<OUT*>(yptr);
-            auto uvout = static_cast<OUT*>(uvptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto yout = static_cast<OUT*>(dsty.ptr(j, i));
+                auto uvout = static_cast<OUT*>(dstuv.ptr(j, i));
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+                float r = toFloat(in[0]);
+                float g = toFloat(in[1]);
+                float b = toFloat(in[2]);
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            yout[0] = fromFloat<OUT>(y);
-            uvout[0] = fromFloat<OUT>(u);
-            uvout[1] = fromFloat<OUT>(v);
-        }, src, dsty, dstuv);
+                yout[0] = fromFloat<OUT>(y);
+                uvout[0] = fromFloat<OUT>(u);
+                uvout[1] = fromFloat<OUT>(v);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void rgb2yuv(const Image& src, Image& dsty, Image& dstu, Image& dstv)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto yout = static_cast<OUT*>(yptr);
-            auto uout = static_cast<OUT*>(uptr);
-            auto vout = static_cast<OUT*>(vptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto yout = static_cast<OUT*>(dsty.ptr(j, i));
+                auto uout = static_cast<OUT*>(dstu.ptr(j, i));
+                auto vout = static_cast<OUT*>(dstv.ptr(j, i));
 
-            float r = toFloat(in[0]);
-            float g = toFloat(in[1]);
-            float b = toFloat(in[2]);
+                float r = toFloat(in[0]);
+                float g = toFloat(in[1]);
+                float b = toFloat(in[2]);
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            *yout = fromFloat<OUT>(y);
-            *uout = fromFloat<OUT>(u);
-            *vout = fromFloat<OUT>(v);
-        }, src, dsty, dstu, dstv);
+                *yout = fromFloat<OUT>(y);
+                *uout = fromFloat<OUT>(u);
+                *vout = fromFloat<OUT>(v);
+            }
+        });
     }
 
     template<typename IN, typename OUT = IN>
     static inline void rgba2yuva(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            float a = toFloat(in[3]);
-            float r = toFloat(in[0]) * a;
-            float g = toFloat(in[1]) * a;
-            float b = toFloat(in[2]) * a;
+                float a = toFloat(in[3]);
+                float r = toFloat(in[0]) * a;
+                float g = toFloat(in[1]) * a;
+                float b = toFloat(in[2]) * a;
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            out[0] = fromFloat<OUT>(y);
-            out[1] = fromFloat<OUT>(u);
-            out[2] = fromFloat<OUT>(v);
-            out[3] = fromFloat<OUT>(a);
-        }, src, dst);
+                out[0] = fromFloat<OUT>(y);
+                out[1] = fromFloat<OUT>(u);
+                out[2] = fromFloat<OUT>(v);
+                out[3] = fromFloat<OUT>(a);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void rgba2yuva(const Image& src, Image& dsty, Image& dstuva)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uvaptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto yout = static_cast<OUT*>(yptr);
-            auto uvaout = static_cast<OUT*>(uvaptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto yout = static_cast<OUT*>(dsty.ptr(j, i));
+                auto uvaout = static_cast<OUT*>(dstuva.ptr(j, i));
 
-            float a = toFloat(in[3]);
-            float r = toFloat(in[0]) * a;
-            float g = toFloat(in[1]) * a;
-            float b = toFloat(in[2]) * a;
+                float a = toFloat(in[3]);
+                float r = toFloat(in[0]) * a;
+                float g = toFloat(in[1]) * a;
+                float b = toFloat(in[2]) * a;
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            yout[0] = fromFloat<OUT>(y);
-            uvaout[0] = fromFloat<OUT>(u);
-            uvaout[1] = fromFloat<OUT>(v);
-            uvaout[2] = fromFloat<OUT>(a);
-        }, src, dsty, dstuva);
+                yout[0] = fromFloat<OUT>(y);
+                uvaout[0] = fromFloat<OUT>(u);
+                uvaout[1] = fromFloat<OUT>(v);
+                uvaout[2] = fromFloat<OUT>(a);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void rgba2yuva(const Image& src, Image& dsty, Image& dstu, Image& dstv, Image& dsta)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const yptr, void* const uptr, void* const vptr, void* const aptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto yout = static_cast<OUT*>(yptr);
-            auto uout = static_cast<OUT*>(uptr);
-            auto vout = static_cast<OUT*>(vptr);
-            auto aout = static_cast<OUT*>(aptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto yout = static_cast<OUT*>(dsty.ptr(j, i));
+                auto uout = static_cast<OUT*>(dstu.ptr(j, i));
+                auto vout = static_cast<OUT*>(dstv.ptr(j, i));
+                auto aout = static_cast<OUT*>(dsta.ptr(j, i));
 
-            float a = toFloat(in[3]);
-            float r = toFloat(in[0]) * a;
-            float g = toFloat(in[1]) * a;
-            float b = toFloat(in[2]) * a;
+                float a = toFloat(in[3]);
+                float r = toFloat(in[0]) * a;
+                float g = toFloat(in[1]) * a;
+                float b = toFloat(in[2]) * a;
 
-            float y = 0.299f * r + 0.587f * g + 0.114f * b;
-            float u = 0.564f * (b - y) + 0.5f;
-            float v = 0.713f * (r - y) + 0.5f;
+                float y = 0.299f * r + 0.587f * g + 0.114f * b;
+                float u = 0.564f * (b - y) + 0.5f;
+                float v = 0.713f * (r - y) + 0.5f;
 
-            *yout = fromFloat<OUT>(y);
-            *uout = fromFloat<OUT>(u);
-            *vout = fromFloat<OUT>(v);
-            *aout = fromFloat<OUT>(a);
-        }, src, dsty, dstu, dstv, dsta);
+                *yout = fromFloat<OUT>(y);
+                *uout = fromFloat<OUT>(u);
+                *vout = fromFloat<OUT>(v);
+                *aout = fromFloat<OUT>(a);
+            }
+        });
     }
 
     template<typename IN, typename OUT = IN>
     static inline void yuv2rgb(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
+            {
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            float y = toFloat(in[0]);
-            float u = toFloat(in[1]) - 0.5f;
-            float v = toFloat(in[2]) - 0.5f;
+                float y = toFloat(in[0]);
+                float u = toFloat(in[1]) - 0.5f;
+                float v = toFloat(in[2]) - 0.5f;
 
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-        }, src, dst);
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void yuv2rgb(const Image& srcy, const Image& srcuv, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvptr, void* const dptr) {
-            auto yin = static_cast<const IN*>(yptr);
-            auto uvin = static_cast<const IN*>(uvptr);
-            auto out = static_cast<OUT*>(dptr);
+        const int w = srcy.width();
+        util::parallelFor(0, srcy.height(), [&](const int i) {
+            for (int j = 0; j < w; j++)
+            {
+                auto yin = static_cast<const IN*>(srcy.ptr(j, i));
+                auto uvin = static_cast<const IN*>(srcuv.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            float y = toFloat(yin[0]);
-            float u = toFloat(uvin[0]) - 0.5f;
-            float v = toFloat(uvin[1]) - 0.5f;
+                float y = toFloat(yin[0]);
+                float u = toFloat(uvin[0]) - 0.5f;
+                float v = toFloat(uvin[1]) - 0.5f;
 
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-        }, srcy, srcuv, dst);
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void yuv2rgb(const Image& srcy, const Image& srcu, const Image& srcv, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, void* const dptr) {
-            auto yin = static_cast<const IN*>(yptr);
-            auto uin = static_cast<const IN*>(uptr);
-            auto vin = static_cast<const IN*>(vptr);
-            auto out = static_cast<OUT*>(dptr);
+        util::parallelFor(0, srcy.height(), [&](const int i) {
+            for (int j = 0; j < srcy.width(); j++)
+            {
+                auto yin = static_cast<const IN*>(srcy.ptr(j, i));
+                auto uin = static_cast<const IN*>(srcu.ptr(j, i));
+                auto vin = static_cast<const IN*>(srcv.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            float y = toFloat(*yin);
-            float u = toFloat(*uin) - 0.5f;
-            float v = toFloat(*vin) - 0.5f;
+                float y = toFloat(*yin);
+                float u = toFloat(*uin) - 0.5f;
+                float v = toFloat(*vin) - 0.5f;
 
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-        }, srcy, srcu, srcv, dst);
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+            }
+        });
     }
 
     template<typename IN, typename OUT = IN>
     static inline void yuva2rgba(const Image& src, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const sptr, void* const dptr) {
-            auto in = static_cast<const IN*>(sptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            float y = toFloat(in[0]);
-            float u = toFloat(in[1]) - 0.5f;
-            float v = toFloat(in[2]) - 0.5f;
-            float a = toFloat(in[3]);
-
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
-
-            if (a > 1e-6f) // 1/65535 ~ 1e-5
+        util::parallelFor(0, src.height(), [&](const int i) {
+            for (int j = 0; j < src.width(); j++)
             {
-                r /= a;
-                g /= a;
-                b /= a;
-            }
-            else r = g = b = 0.0f;
+                auto in = static_cast<const IN*>(src.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-            out[3] = fromFloat<OUT>(a);
-        }, src, dst);
+                float y = toFloat(in[0]);
+                float u = toFloat(in[1]) - 0.5f;
+                float v = toFloat(in[2]) - 0.5f;
+                float a = toFloat(in[3]);
+
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
+
+                if (a > 1e-6f) // 1/65535 ~ 1e-5
+                {
+                    r /= a;
+                    g /= a;
+                    b /= a;
+                }
+                else r = g = b = 0.0f;
+
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+                out[3] = fromFloat<OUT>(a);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void yuva2rgba(const Image& srcy, const Image& srcuva, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uvaptr, void* const dptr) {
-            auto yin = static_cast<const IN*>(yptr);
-            auto uvain = static_cast<const IN*>(uvaptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            float y = toFloat(yin[0]);
-            float u = toFloat(uvain[0]) - 0.5f;
-            float v = toFloat(uvain[1]) - 0.5f;
-            float a = toFloat(uvain[2]);
-
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
-
-            if (a > 1e-6f)
+        util::parallelFor(0, srcy.height(), [&](const int i) {
+            for (int j = 0; j < srcy.width(); j++)
             {
-                r /= a;
-                g /= a;
-                b /= a;
-            }
-            else r = g = b = 0.0f;
+                auto yin = static_cast<const IN*>(srcy.ptr(j, i));
+                auto uvain = static_cast<const IN*>(srcuva.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-            out[3] = fromFloat<OUT>(a);
-        }, srcy, srcuva, dst);
+                float y = toFloat(yin[0]);
+                float u = toFloat(uvain[0]) - 0.5f;
+                float v = toFloat(uvain[1]) - 0.5f;
+                float a = toFloat(uvain[2]);
+
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
+
+                if (a > 1e-6f)
+                {
+                    r /= a;
+                    g /= a;
+                    b /= a;
+                }
+                else r = g = b = 0.0f;
+
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+                out[3] = fromFloat<OUT>(a);
+            }
+        });
     }
     template<typename IN, typename OUT = IN>
     static inline void yuva2rgba(const Image& srcy, const Image& srcu, const Image& srcv, const Image& srca, Image& dst)
     {
-        filter([](const int /*i*/, const int /*j*/, const void* const yptr, const void* const uptr, const void* const vptr, const void* const aptr, void* const dptr) {
-            auto yin = static_cast<const IN*>(yptr);
-            auto uin = static_cast<const IN*>(uptr);
-            auto vin = static_cast<const IN*>(vptr);
-            auto ain = static_cast<const IN*>(aptr);
-            auto out = static_cast<OUT*>(dptr);
-
-            float y = toFloat(*yin);
-            float u = toFloat(*uin) - 0.5f;
-            float v = toFloat(*vin) - 0.5f;
-            float a = toFloat(*ain);
-
-            float r = y + 1.403f * v;
-            float g = y - 0.344f * u - 0.714f * v;
-            float b = y + 1.773f * u;
-
-            if (a > 1e-6f)
+        util::parallelFor(0, srcy.height(), [&](const int i) {
+            for (int j = 0; j < srcy.width(); j++)
             {
-                r /= a;
-                g /= a;
-                b /= a;
-            }
-            else r = g = b = 0.0f;
+                auto yin = static_cast<const IN*>(srcy.ptr(j, i));
+                auto uin = static_cast<const IN*>(srcu.ptr(j, i));
+                auto vin = static_cast<const IN*>(srcv.ptr(j, i));
+                auto ain = static_cast<const IN*>(srca.ptr(j, i));
+                auto out = static_cast<OUT*>(dst.ptr(j, i));
 
-            out[0] = fromFloat<OUT>(r);
-            out[1] = fromFloat<OUT>(g);
-            out[2] = fromFloat<OUT>(b);
-            out[3] = fromFloat<OUT>(a);
-        }, srcy, srcu, srcv, srca, dst);
+                float y = toFloat(*yin);
+                float u = toFloat(*uin) - 0.5f;
+                float v = toFloat(*vin) - 0.5f;
+                float a = toFloat(*ain);
+
+                float r = y + 1.403f * v;
+                float g = y - 0.344f * u - 0.714f * v;
+                float b = y + 1.773f * u;
+
+                if (a > 1e-6f)
+                {
+                    r /= a;
+                    g /= a;
+                    b /= a;
+                }
+                else r = g = b = 0.0f;
+
+                out[0] = fromFloat<OUT>(r);
+                out[1] = fromFloat<OUT>(g);
+                out[2] = fromFloat<OUT>(b);
+                out[3] = fromFloat<OUT>(a);
+            }
+        });
     }
 
     template<typename IN, typename OUT = IN, typename OP>
