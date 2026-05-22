@@ -170,6 +170,7 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 There are some convenient presets:
 
 `AC_PRESET_RELEASE`
+- AC_CORE_WITH_EIGEN3
 - AC_CORE_WITH_OPENCL
 - AC_CORE_WITH_CUDA
 - AC_CORE_WITH_FPNG

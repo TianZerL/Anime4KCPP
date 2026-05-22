@@ -67,6 +67,7 @@ option(AC_DISABLE_EXCEPTION "disable exception" OFF)
 option(AC_DISABLE_PIC "disable pic or pie" OFF)
 
 if(AC_PRESET_RELEASE)
+    set(AC_CORE_WITH_EIGEN3 ON)
     set(AC_CORE_WITH_OPENCL ON)
     set(AC_CORE_WITH_CUDA ON)
     set(AC_CORE_WITH_FPNG ON)

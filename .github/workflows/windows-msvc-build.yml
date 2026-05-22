@@ -61,7 +61,7 @@ jobs:
           cd Anime4KCPP
           mkdir build_msvc_x86
           cd build_msvc_x86
-          cmake -G "Visual Studio 17 2022" -A Win32 .. -DAC_CORE_WITH_OPENCL=ON -DAC_FETCH_OPENCL=ON -DAC_CORE_ENABLE_FAST_MATH=ON -DAC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH=ON -DAC_BUILD_FILTER_DIRECTSHOW=ON -DAC_BUILD_CLI=OFF
+          cmake -G "Visual Studio 17 2022" -A Win32 .. -DAC_CORE_WITH_EIGEN3=ON -DAC_CORE_WITH_OPENCL=ON -DAC_FETCH_OPENCL=ON -DAC_CORE_ENABLE_FAST_MATH=ON -DAC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH=ON -DAC_BUILD_FILTER_DIRECTSHOW=ON -DAC_BUILD_CLI=OFF
           cmake --build . --config Release -j 4
           cd ./bin/Release/
           cp ./ac_filter_avs_vs.dll ../../../../release/filter_avs_vs/x86
