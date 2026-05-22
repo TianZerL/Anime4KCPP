@@ -107,7 +107,7 @@ namespace ac::video
 
             filterPixFmt = targetPixFmt != AV_PIX_FMT_NONE ? targetPixFmt : decoderCtx->pix_fmt;
 
-#       if LIBAVCODEC_VERSION_MAJOR >= 61 && LIBAVCODEC_VERSION_MINOR >= 19 // FFmpeg 7.1, libavcodec 61.19.101
+#       if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 19, 101) // FFmpeg 7.1, libavcodec 61.19.101
             if (const AVPixelFormat* fmts = nullptr; avcodec_get_supported_config(encoderCtx, nullptr, AV_CODEC_CONFIG_PIX_FORMAT, 0, reinterpret_cast<const void**>(&fmts), nullptr) >= 0 && fmts)
 #       else
             if (const AVPixelFormat* fmts = codec->pix_fmts)
@@ -147,16 +147,16 @@ namespace ac::video
             case AV_PIX_FMT_P010:
             case AV_PIX_FMT_P016:
             case AV_PIX_FMT_NV20:
-#       if LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+#       if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 17, 100) // ffmpeg 5.0, libavutil 57.17.100
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P216:
             case AV_PIX_FMT_P416:
 #       endif
-#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
+#       if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 2, 100) // ffmpeg 6.0, libavutil 58.2.100
             case AV_PIX_FMT_P012:
 #       endif
-#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
+#       if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 29, 100) // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P212:
             case AV_PIX_FMT_P412:
 #       endif
@@ -267,12 +267,12 @@ namespace ac::video
                 dstFrame->width = frame->width;
                 dstFrame->height = frame->height;
                 dstFrame->format = filterPixFmt;
-    #   if LIBAVUTIL_VERSION_MAJOR < 57 // ffmpeg 5, libavutil 57
+#           if LIBSWSCALE_VERSION_INT < AV_VERSION_INT(6, 4, 100) // ffmpeg 5.0, libswscale 6.4.100
                 ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
                 if (sws_scale(dSwsCtx, frame->data, frame->linesize, 0, frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
-    #   else
+#           else
                 if (sws_scale_frame(dSwsCtx, dstFrame, frame) >= 0)
-    #   endif
+#           endif
                 {
                     av_frame_free(&frame);
                     frame = dstFrame;
@@ -284,11 +284,11 @@ namespace ac::video
             finishFrame = true;
             fill(dst, frame, packetBuffer);
 
-    #   if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
+#       if LIBAVCODEC_VERSION_MAJOR < 60 // ffmpeg 6, libavcodec 60
             dst.number = decoderCtx->frame_number;
-    #   else
+#       else
             dst.number = decoderCtx->frame_num;
-    #   endif
+#       endif
             return true;
         }
         inline bool PipelineImpl::encode(const Frame& src) noexcept
@@ -311,12 +311,12 @@ namespace ac::video
                 dstFrame->width = src.dptr->frame->width;
                 dstFrame->height = src.dptr->frame->height;
                 dstFrame->format = encoderCtx->pix_fmt;
-#   if LIBAVUTIL_VERSION_MAJOR < 57 // ffmpeg 5, libavutil 57
+#           if LIBSWSCALE_VERSION_INT < AV_VERSION_INT(6, 4, 100) // ffmpeg 5.0, libswscale 6.4.100
                 ret = av_frame_get_buffer(dstFrame, 0); if (ret < 0) return false;
                 if (sws_scale(eSwsCtx, src.dptr->frame->data, src.dptr->frame->linesize, 0, src.dptr->frame->height, dstFrame->data, dstFrame->linesize) == dstFrame->height)
-#   else
+#           else
                 if (sws_scale_frame(eSwsCtx, dstFrame, src.dptr->frame) >= 0)
-#   endif
+#           endif
                 {
                     av_frame_free(&src.dptr->frame);
                     src.dptr->frame = dstFrame;
@@ -518,7 +518,7 @@ namespace ac::video
             case AV_PIX_FMT_NV16: hscale = 1; [[fallthrough]];
             case AV_PIX_FMT_NV21:
             case AV_PIX_FMT_NV12: planes = 2; break;
-#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
+#       if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 29, 100) // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P412:
             case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
@@ -527,20 +527,19 @@ namespace ac::video
             case AV_PIX_FMT_P212:
             case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
             case AV_PIX_FMT_P012:
-#       elif LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
+#       elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 2, 100) // ffmpeg 6.0, libavutil 58.2.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
             case AV_PIX_FMT_NV20:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
             case AV_PIX_FMT_P012:
-#       elif LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+#       elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 17, 100) // ffmpeg 5.0, libavutil 57.17.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P416: wscale = 1; [[fallthrough]];
             case AV_PIX_FMT_NV20:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P216: hscale = 1; [[fallthrough]];
-
 #       else
             case AV_PIX_FMT_NV20: hscale = 1; [[fallthrough]];
 #       endif
@@ -574,7 +573,7 @@ namespace ac::video
             case AV_PIX_FMT_YUV422P10:
             case AV_PIX_FMT_YUV444P10:
             case AV_PIX_FMT_NV20: bitDepth.lsb = true; [[fallthrough]];
-#       if LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 29 // ffmpeg 6.1, libavutil 58.29.100
+#       if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 29, 100) // ffmpeg 6.1, libavutil 58.29.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
@@ -587,7 +586,7 @@ namespace ac::video
             case AV_PIX_FMT_P012: bitDepth.bits = 12; break;
             case AV_PIX_FMT_P416:
             case AV_PIX_FMT_P216:
-#       elif LIBAVUTIL_VERSION_MAJOR >= 58 && LIBAVUTIL_VERSION_MINOR >= 2 // ffmpeg 6.0, libavutil 58.2.100
+#       elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 2, 100) // ffmpeg 6.0, libavutil 58.2.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
@@ -598,7 +597,7 @@ namespace ac::video
             case AV_PIX_FMT_P012: bitDepth.bits = 12; break;
             case AV_PIX_FMT_P416:
             case AV_PIX_FMT_P216:
-#       elif LIBAVUTIL_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MINOR >= 17 // ffmpeg 5.0, libavutil 57.17.100
+#       elif LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 17, 100) // ffmpeg 5.0, libavutil 57.17.100
             case AV_PIX_FMT_P410:
             case AV_PIX_FMT_P210:
             case AV_PIX_FMT_P010: bitDepth.bits = 10; break;
