@@ -26,12 +26,12 @@ namespace ac::core::cpu
     private:
         static AC_FORCE_INLINE float hsum(const float32x4_t& v) noexcept
         {
-        #if defined(__aarch64__) || defined(_M_ARM64)
+#       if defined(__aarch64__) || defined(_M_ARM64)
             return vaddvq_f32(v);
-        #else
+#       else
             float32x2_t x64 = vadd_f32(vget_low_f32(v), vget_high_f32(v));
             return vget_lane_f32(vpadd_f32(x64, x64), 0);
-        #endif
+#       endif
         }
 
         template <int cin, int cpos, int sgroupSize, int scount>
@@ -66,11 +66,11 @@ namespace ac::core::cpu
         {
             if constexpr (vsize < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 return OpImplEigen3::template dot<vsize>(v1, v2);
-#else
+#           else
                 return OpImplGeneric::template dot<vsize>(v1, v2);
-#endif
+#           endif
             }
             else
             {
@@ -101,11 +101,11 @@ namespace ac::core::cpu
         {
             if constexpr (cpos < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
-#else
+#           else
                 OpImplGeneric::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
-#endif
+#           endif
             }
             else
             {
@@ -138,11 +138,11 @@ namespace ac::core::cpu
         {
             if constexpr (cin < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
-#else
+#           else
                 OpImplGeneric::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
-#endif
+#           endif
             }
             else
             {

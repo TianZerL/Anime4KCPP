@@ -63,11 +63,11 @@ namespace ac::core::cpu
         {
             if constexpr (vsize < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 return OpImplEigen3::template dot<vsize>(v1, v2);
-#else
+#           else
                 return OpImplGeneric::template dot<vsize>(v1, v2);
-#endif
+#           endif
             }
             else
             {
@@ -98,11 +98,11 @@ namespace ac::core::cpu
         {
             if constexpr (cpos < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
-#else
+#           else
                 OpImplGeneric::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
-#endif
+#           endif
             }
             else
             {
@@ -135,11 +135,11 @@ namespace ac::core::cpu
         {
             if constexpr (cin < vstep)
             {
-#ifdef AC_CORE_WITH_EIGEN3
+#           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
-#else
+#           else
                 OpImplGeneric::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
-#endif
+#           endif
             }
             else
             {
@@ -157,7 +157,7 @@ namespace ac::core::cpu
                 if constexpr (sremian)
                     conv_kernel<cin, cpos, scount, sremian>(sgroup, rptr, s, out, kernels);
             }
-        }  
+        }
     };
 }
 
