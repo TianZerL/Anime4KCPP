@@ -13,7 +13,7 @@ kernel void conv3x3_1to8_relu(
     biases += boffset;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr[8 * 3 * 3 * 1];
     local float bptr[8];
     copy_to_local(kptr, kernels, 8 * 3 * 3 * 1);
@@ -47,7 +47,7 @@ kernel void conv3x3_8to8_relu(
     biases += boffset;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr[8 * 3 * 3 * 8];
     local float bptr[8];
     copy_to_local(kptr, kernels, 8 * 3 * 3 * 8);
@@ -81,7 +81,7 @@ kernel void conv3x3_8to8_relu_deconv2x2_8to1(
     kernels2 += koffset2;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr1[8 * 3 * 3 * 8];
     local float bptr1[8];
     local float kptr2[1 * 2 * 2 * 8];

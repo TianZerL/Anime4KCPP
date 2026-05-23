@@ -13,7 +13,7 @@ kernel void conv5x5_1to16_identity(
     biases += boffset;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr[16 * 5 * 5 * 1];
     local float bptr[16];
     copy_to_local(kptr, kernels, 16 * 5 * 5 * 1);
@@ -52,7 +52,7 @@ kernel void conv3x3_16to16_prelu(
     alphas += aoffset;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr[16 * 3 * 3 * 16];
     local float bptr[16];
     local float aptr[16];
@@ -102,7 +102,7 @@ kernel void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu(
     alphas2 += aoffset2;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr1[16 * 3 * 3 * 16];
     local float bptr1[16];
     local float aptr1[16];
@@ -164,7 +164,7 @@ kernel void conv3x3_16to4_identity_pixelshuffle_4to1(
     biases += boffset;
 #endif
 
-#ifdef LOCAL_WEIGHTS_STORAGE_SPACE
+#ifdef WEIGHTS_STORAGE_SPACE_LOCAL
     local float kptr[4 * 3 * 3 * 16];
     local float bptr[4];
     copy_to_local(kptr, kernels, 4 * 3 * 3 * 16);

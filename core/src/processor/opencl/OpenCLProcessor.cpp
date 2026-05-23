@@ -83,8 +83,8 @@ namespace ac::core::opencl
         cl::Device device{};
         cl::Context ctx{};
         cl::Program program{};
-        Arch arch{};
         cl_ulong constantMemorySize{};
+        Arch arch{};
         unsigned int performanceScore{};
 
         Context() noexcept = default;
@@ -183,11 +183,11 @@ namespace ac::core::opencl
 
         std::string options{};
         if (buildData.constantWeightsPassSpace)
-            options.append("-DWEIGHTS_PASS_SPACE=constant -DCONSTANT_WEIGHTS_PASS_SPACE ");
+            options.append("-DWEIGHTS_PASS_SPACE=constant -DWEIGHTS_PASS_SPACE_CONSTANT ");
         else
             options.append("-DWEIGHTS_PASS_SPACE=global ");
         if (buildData.localWeightsStorageSpace)
-            options.append("-DWEIGHTS_STORAGE_SPACE=local -DLOCAL_WEIGHTS_STORAGE_SPACE ");
+            options.append("-DWEIGHTS_STORAGE_SPACE=local -DWEIGHTS_STORAGE_SPACE_LOCAL ");
         else
             options.append("-DWEIGHTS_STORAGE_SPACE=WEIGHTS_PASS_SPACE ");
         options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
