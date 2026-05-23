@@ -1,4 +1,4 @@
-#include "CommonKernel.cl"
+/* #include "CommonKernel.cl" */
 
 kernel void conv3x3_1to8_prelu(
     read_only image2d_t src,

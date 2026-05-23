@@ -189,14 +189,11 @@ namespace ac::core::opencl
         if (buildData.localWeightsStorageSpace)
             options.append("-DWEIGHTS_STORAGE_SPACE=local -DLOCAL_WEIGHTS_STORAGE_SPACE ");
         else
-            options.append("-DWEIGHTS_STORAG_SPACE=WEIGHTS_PASS_SPACE ");
+            options.append("-DWEIGHTS_STORAGE_SPACE=WEIGHTS_PASS_SPACE ");
         options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
 
-        cl::Program kernelProgram{ context.ctx, buildData.kernelString, false, &err }; if (err != CL_SUCCESS) return err;
-        cl::Program commonProgram{ context.ctx, kernel::CommonKernelString, false, &err }; if (err != CL_SUCCESS) return err;
-
-        err = kernelProgram.compile(options.c_str(), { context.device }, { commonProgram }, { "CommonKernel.cl" }); if (err != CL_SUCCESS) return err;
-        context.program = cl::linkProgram({ kernelProgram }, nullptr, nullptr, nullptr, &err);
+        context.program = cl::Program{ context.ctx, { kernel::CommonKernelString, buildData.kernelString }, &err }; if (err != CL_SUCCESS) return err;
+        err = context.program.build(context.device, options.c_str());
         return err;
     }
     static inline cl_channel_type channelType(const Image::ElementType elementType) noexcept

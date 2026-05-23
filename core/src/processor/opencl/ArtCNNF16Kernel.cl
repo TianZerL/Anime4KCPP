@@ -1,4 +1,4 @@
-#include "CommonKernel.cl"
+/* #include "CommonKernel.cl" */
 
 kernel void conv3x3_1to16_identity(
     read_only image2d_t src,

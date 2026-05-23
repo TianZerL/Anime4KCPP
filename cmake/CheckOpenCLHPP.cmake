@@ -26,7 +26,7 @@ macro(check_opencl_hpp_support RESULT_VAR)
         platforms[0].getDevices(CL_DEVICE_TYPE_ALL, &devices);
 
         cl::Context context(devices[0], nullptr, nullptr, nullptr, &err);
-        cl::CommandQueue queue(context, devices[0], 0, err);
+        cl::CommandQueue queue(context, devices[0], 0, &err);
         return 0;
     }
     " ${RESULT_VAR})
