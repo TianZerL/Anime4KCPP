@@ -71,9 +71,9 @@ namespace ac::core::opencl
     struct KernelBuildData
     {
         const char* kernelString;
-        std::string compileOptions;
-        bool constantWeightsPassSpace;
-        bool localWeightsStorageSpace;
+        bool useWeightsOffset;
+        bool weightsPassSpaceConstant;
+        bool weightsStorageSpaceLocal;
     };
 
     struct Context
@@ -182,15 +182,17 @@ namespace ac::core::opencl
         context.ctx = cl::Context{ context.device, nullptr, nullptr, nullptr, &err }; if (err != CL_SUCCESS) return err;
 
         std::string options{};
-        if (buildData.constantWeightsPassSpace)
+        if (buildData.useWeightsOffset)
+            options.append("-DUSE_WEIGHTS_OFFSET ");
+        if (buildData.weightsPassSpaceConstant)
             options.append("-DWEIGHTS_PASS_SPACE=constant -DWEIGHTS_PASS_SPACE_CONSTANT ");
         else
             options.append("-DWEIGHTS_PASS_SPACE=global ");
-        if (buildData.localWeightsStorageSpace)
+        if (buildData.weightsStorageSpaceLocal)
             options.append("-DWEIGHTS_STORAGE_SPACE=local -DWEIGHTS_STORAGE_SPACE_LOCAL ");
         else
             options.append("-DWEIGHTS_STORAGE_SPACE=WEIGHTS_PASS_SPACE ");
-        options.append("-DARCH_").append(context.arch.name()).append(" ").append(buildData.compileOptions);
+        options.append("-DARCH_").append(context.arch.name());
 
         context.program = cl::Program{ context.ctx, { kernel::CommonKernelString, buildData.kernelString }, &err }; if (err != CL_SUCCESS) return err;
         err = context.program.build(context.device, options.c_str());
@@ -406,7 +408,7 @@ namespace ac::core::opencl
             //   Note: AMD RDNA with oversized weights cannot use constant memory (fallback to global)
             KernelBuildData buildData {
                 kernelString,
-                splitWeights ? "" : "-DUSE_WEIGHTS_OFFSET",
+                !splitWeights,
                 splitWeights || (model.kernelSize() + model.biasSize() + model.alphaSize() <= context.constantMemorySize),
                 context.arch == Arch::NVIDIA
             };
