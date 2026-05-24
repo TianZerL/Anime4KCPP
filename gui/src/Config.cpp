@@ -24,8 +24,8 @@ Config::Config() noexcept
     io.imageOutputPath = dir.canonicalPath();
     io.videoOutputPath = dir.canonicalPath();
 
-    upscaler.model = ac::specs::ModelList[0].name;
-    upscaler.processor = ac::specs::ProcessorList[0].name;
+    upscaler.model = "acnet-f8b8-hdn";
+    upscaler.processor = "auto";
 
     load();
 }

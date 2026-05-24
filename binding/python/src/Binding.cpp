@@ -49,7 +49,7 @@ PYBIND11_MODULE(pyac, m)
     py::class_<ac::core::Processor, std::shared_ptr<ac::core::Processor>>(core, "Processor")
         .def(py::init([](const char* type, const int device, const char* model) {
             return ac::core::Processor::create(type, device, model);
-        }), py::arg("type") = "cpu", py::arg("device") = 0, py::arg("model") = ac::specs::ModelList[0])
+        }), py::arg("type") = "auto", py::arg("device") = 0, py::arg("model") = "acnet-f8b8-hdn")
         .def("process", processNumpyArray, py::arg("src"), py::arg("factor") = 2.0)
         .def("ok", &ac::core::Processor::ok)
         .def("error", &ac::core::Processor::error)
@@ -151,9 +151,9 @@ PYBIND11_MODULE(pyac, m)
 
     core.def("imwrite", [](const char* filename, const py::array_t<std::uint8_t> in) {
         auto src = in.request();
-        if (src.ndim != 3) throw py::buffer_error{ "Incompatible dimension: expected 3." };
+        if (src.ndim != 2 && src.ndim != 3) throw py::buffer_error{ "Incompatible dimension: expected 2 or 3." };
 
-        return ac::core::imwrite(filename, { static_cast<int>(src.shape[1]), static_cast<int>(src.shape[0]), static_cast<int>(src.shape[2]), ac::core::Image::UInt8, src.ptr, static_cast<int>(src.strides[0]) });
+        return ac::core::imwrite(filename, { static_cast<int>(src.shape[1]), static_cast<int>(src.shape[0]), (src.ndim == 3) ? static_cast<int>(src.shape[2]) : 1, ac::core::Image::UInt8, src.ptr, static_cast<int>(src.strides[0]) });
     }, py::arg("filename"), py::arg("image"));
 
     auto specs = m.def_submodule("specs");
