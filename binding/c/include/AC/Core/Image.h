@@ -12,14 +12,14 @@
 #   define AC_C_API AC_C_EXPORT
 #endif
 
-enum ac_image_element_type
+enum ACImageElementType
 {
     AC_IMAGE_UINT8   = 0 << 8 | 1,
     AC_IMAGE_UINT16  = 0 << 8 | 2,
     AC_IMAGE_FLOAT32 = 2 << 8 | 4
 };
 
-enum ac_imread_modes
+enum ACImreadModes
 {
     AC_IMREAD_UNCHANGED = 0,
     AC_IMREAD_GRAYSCALE = 1,
@@ -28,7 +28,7 @@ enum ac_imread_modes
     AC_IMREAD_RGBA      = 4,
 };
 
-enum ac_resize_modes
+enum ACResizeModes
 {
     AC_RESIZE_POINT,
     AC_RESIZE_CATMULL_ROM,
@@ -49,7 +49,7 @@ enum ac_resize_modes
     AC_RESIZE_BILINEAR,
 };
 
-typedef struct ac_image
+typedef struct ACImage
 {
     int width;
     int height;
@@ -57,68 +57,68 @@ typedef struct ac_image
     int stride;
     int element_type;
     void* ptr;
-    struct ac_image_handle* hptr;
-} ac_image;
+    struct ACImageHandle* hptr;
+} ACImage;
 
-AC_C_API ac_image* ac_image_alloc(void);
-AC_C_API void ac_image_free(ac_image** image);
-AC_C_API int ac_image_ref(const ac_image* src, ac_image* dst);
-AC_C_API void ac_image_unref(ac_image* image);
-AC_C_API int ac_image_create(ac_image* image);
-AC_C_API int ac_image_map(ac_image* image);
-AC_C_API int ac_image_from(ac_image* image, const void* data);
-AC_C_API int ac_image_view(const ac_image* src, ac_image* dst, int x, int y, int w, int h);
-AC_C_API int ac_image_clone(const ac_image* src, ac_image* dst);
-AC_C_API int ac_image_to(const ac_image* image, void* data, int stride);
+AC_C_API ACImage* ac_image_alloc(void);
+AC_C_API void ac_image_free(ACImage** image);
+AC_C_API int ac_image_ref(const ACImage* src, ACImage* dst);
+AC_C_API void ac_image_unref(ACImage* image);
+AC_C_API int ac_image_create(ACImage* image);
+AC_C_API int ac_image_map(ACImage* image);
+AC_C_API int ac_image_from(ACImage* image, const void* data);
+AC_C_API int ac_image_view(const ACImage* src, ACImage* dst, int x, int y, int w, int h);
+AC_C_API int ac_image_clone(const ACImage* src, ACImage* dst);
+AC_C_API int ac_image_to(const ACImage* image, void* data, int stride);
 
 #ifndef AC_CORE_DISABLE_IMAGE_IO
-AC_C_API int ac_imread(const char* filename, int mode, ac_image* image);
-AC_C_API int ac_imwrite(const char* filename, const ac_image* image);
+AC_C_API int ac_imread(const char* filename, int mode, ACImage* image);
+AC_C_API int ac_imwrite(const char* filename, const ACImage* image);
 #endif
 
-AC_C_API int ac_resize(const ac_image* src, ac_image* dst, double fx, double fy, int mode);
-AC_C_API int ac_rgb2yuv(const ac_image* rgb, ac_image* yuv);
-AC_C_API int ac_rgba2yuva(const ac_image* rgba, ac_image* yuva);
-AC_C_API int ac_yuv2rgb(const ac_image* yuv, ac_image* rgb);
-AC_C_API int ac_yuva2rgba(const ac_image* yuva, ac_image* rgba);
+AC_C_API int ac_resize(const ACImage* src, ACImage* dst, double fx, double fy, int mode);
+AC_C_API int ac_rgb2yuv(const ACImage* rgb, ACImage* yuv);
+AC_C_API int ac_rgba2yuva(const ACImage* rgba, ACImage* yuva);
+AC_C_API int ac_yuv2rgb(const ACImage* yuv, ACImage* rgb);
+AC_C_API int ac_yuva2rgba(const ACImage* yuva, ACImage* rgba);
 
-static int ac_image_size(const ac_image* image)
+static int ac_image_size(const ACImage* image)
 {
     return image->height * image->stride;
 }
-static int ac_image_element_size(const ac_image* image)
+static int ac_image_element_size(const ACImage* image)
 {
     return image->element_type & 0xff;
 }
-static int ac_image_pixel_size(const ac_image* image)
+static int ac_image_pixel_size(const ACImage* image)
 {
     return image->channels * ac_image_element_size(image);
 }
-static uint8_t* ac_image_data(const ac_image* image)
+static uint8_t* ac_image_data(const ACImage* image)
 {
     return (uint8_t*)image->ptr;
 }
-static uint8_t* ac_image_line(const ac_image* image, int y)
+static uint8_t* ac_image_line(const ACImage* image, int y)
 {
     return ac_image_data(image) + image->stride * y;
 }
-static uint8_t* ac_image_pixel(const ac_image* image, int x, int y)
+static uint8_t* ac_image_pixel(const ACImage* image, int x, int y)
 {
     return ac_image_line(image, y) + x * ac_image_pixel_size(image);
 }
-static int ac_image_empty(const ac_image* image)
+static int ac_image_empty(const ACImage* image)
 {
     return image->ptr == NULL;
 }
-static int ac_image_is_uint(const ac_image* image)
+static int ac_image_is_uint(const ACImage* image)
 {
     return (image->element_type >> 8) == 0;
 }
-static int ac_image_is_int(const ac_image* image)
+static int ac_image_is_int(const ACImage* image)
 {
     return (image->element_type >> 8) == 1;
 }
-static int ac_image_is_float(const ac_image* image)
+static int ac_image_is_float(const ACImage* image)
 {
     return (image->element_type >> 8) == 2;
 }
