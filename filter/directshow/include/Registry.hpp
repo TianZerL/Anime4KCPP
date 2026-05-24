@@ -37,15 +37,17 @@ public:
     static constexpr int DeviceDefault = 0;
     static constexpr int LimitWidthDefault = 1280;
     static constexpr int LimitHeightDefault = 720;
-private:
     static constexpr const TCHAR* ProcessorTypeDefault = TEXT("auto");
-    static constexpr const TCHAR* ModelNameDefault = TEXT("acnet-legacy-hdn0");
+    static constexpr const TCHAR* ModelNameDefault = TEXT("acnet-f8b8-hdn");
+
+private:
     static constexpr const TCHAR* FactorValueName = TEXT("Factor");
     static constexpr const TCHAR* DeviceValueName = TEXT("Device");
     static constexpr const TCHAR* LimitWidthValueName = TEXT("LimitWidth");
     static constexpr const TCHAR* LimitHeightValueName = TEXT("LimitHeight");
     static constexpr const TCHAR* ProcessorTypeValueName = TEXT("ProcessorType");
     static constexpr const TCHAR* ModelNameValueName = TEXT("ModelName");
+
 private:
     HKEY key{};
     double factor{};

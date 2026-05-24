@@ -78,14 +78,14 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     if (factor <= 1.0) EXIT_WITH_ERROR("Anime4KCPP: this is a upscaler, so make sure factor > 1.0");
 
     auto processorType = vsapi->mapGetData(in, "processor", 0, &err);
-    if (err != peSuccess) processorType = "cpu";
+    if (err != peSuccess) processorType = "auto";
 
     auto device = static_cast<int>(vsapi->mapGetInt(in, "device", 0, &err));
     if (err != peSuccess) device = 0;
     if (device < 0) EXIT_WITH_ERROR("Anime4KCPP: the device index cannot be negative");
 
     auto model = vsapi->mapGetData(in, "model", 0, &err);
-    if (err != peSuccess) model = "acnet-hdn0";
+    if (err != peSuccess) model = "acnet-f8b8-hdn";
 
     auto processor = ac::core::Processor::create(processorType, device, model);
     if (!processor->ok()) EXIT_WITH_ERROR(processor->error());
@@ -105,7 +105,7 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
 
 VS_EXTERNAL_API(void) VapourSynthPluginInit2(VSPlugin* plugin, const VSPLUGINAPI* vspapi)
 {
-    vspapi->configPlugin("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VS_MAKE_VERSION(3, 1), VAPOURSYNTH_API_VERSION, 0, plugin);
+    vspapi->configPlugin("github.tianzerl.anime4kcpp", "anime4kcpp", "Anime4KCPP for VapourSynth", VS_MAKE_VERSION(3, 2), VAPOURSYNTH_API_VERSION, 0, plugin);
     vspapi->registerFunction("ACUpscale",
         "clip:vnode;"
         "factor:float:opt;"

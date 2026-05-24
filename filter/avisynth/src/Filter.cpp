@@ -42,12 +42,12 @@ Filter::Filter(const AVSValue& args, IScriptEnvironment* const env) : GenericVid
     vi.width = static_cast<decltype(vi.width)>(vi.width * factor);
     vi.height = static_cast<decltype(vi.height)>(vi.height * factor);
 
-    auto processorType = args[2].Defined() ? args[2].AsString() : "cpu";
+    auto processorType = args[2].Defined() ? args[2].AsString() : "auto";
 
     auto device = args[3].Defined() ? args[3].AsInt() : 0;
     if (device < 0) env->ThrowError("Anime4KCPP: %s", "the device index cannot be negative");
 
-    auto model = args[4].Defined() ? args[4].AsString() : "acnet-hdn0";
+    auto model = args[4].Defined() ? args[4].AsString() : "acnet-f8b8-hdn";
 
     processor = ac::core::Processor::create(processorType, device, model);
     if (!processor->ok()) env->ThrowError("Anime4KCPP: %s", processor->error());
