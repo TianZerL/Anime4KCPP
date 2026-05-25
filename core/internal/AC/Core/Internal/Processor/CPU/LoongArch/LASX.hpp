@@ -1,18 +1,17 @@
-#ifndef AC_CORE_INTERNAL_PROCESSOR_CPU_X86_AVX_HPP
-#define AC_CORE_INTERNAL_PROCESSOR_CPU_X86_AVX_HPP
+#ifndef AC_CORE_INTERNAL_PROCESSOR_CPU_LOONGARCH_LASX_HPP
+#define AC_CORE_INTERNAL_PROCESSOR_CPU_LOONGARCH_LASX_HPP
 
 #include <cstring>
 
-#include <immintrin.h>
+#include <lasxintrin.h>
 
 #include "AC/Util/Macro.hpp"
 
-#include "AC/Core/Internal/Processor/CPU/X86/SSE.hpp"
+#include "AC/Core/Internal/Processor/CPU/LoongArch/LSX.hpp"
 
 namespace ac::core::cpu
 {
-    template <bool fma = false>
-    struct OpImplX86SIMD256
+    struct OpImplLASX
     {
     private:
         static constexpr int vstep = 8;
@@ -23,10 +22,15 @@ namespace ac::core::cpu
     private:
         static AC_FORCE_INLINE float hsum(const __m256& v) noexcept
         {
-            __m128 v128 = _mm_add_ps(_mm256_castps256_ps128(v), _mm256_extractf128_ps(v, 0x01));
-            __m128 v64 = _mm_add_ps(v128, _mm_movehl_ps(v128, v128));
-            __m128 v32 = _mm_add_ss(v64, _mm_movehdup_ps(v64));
-            return _mm_cvtss_f32(v32);
+            __m256 v64x2 = __lasx_xvfadd_s(v, (__m256)__lasx_xvbsrl_v((__m256i)v, 8));
+            __m256 v32x2 = __lasx_xvfadd_s(v64x2, (__m256)__lasx_xvbsrl_v((__m256i)v64x2, 4));
+            int i32lo = __lasx_xvpickve2gr_w((__m256i)v32x2, 0);
+            float f32lo;
+            std::memcpy(&f32lo, &i32lo, sizeof(float));
+            int i32hi = __lasx_xvpickve2gr_w((__m256i)v32x2, 4);
+            float f32hi;
+            std::memcpy(&f32hi, &i32hi, sizeof(float));
+            return f32lo + f32hi;
         }
 
         template <int cin, int cpos, int sgroupSize, int scount>
@@ -35,19 +39,16 @@ namespace ac::core::cpu
             constexpr int count = cin / vstep;
             constexpr int remain = cin % vstep;
 
-            for (int n = 0; n < scount; n++) s[n] = _mm256_setzero_ps();
+            for (int n = 0; n < scount; n++) s[n] = (__m256)__lasx_xvrepli_w(0);
             for (int p = 0; p < cpos; p++)
             {
                 for (int idx = 0; idx < count; idx++)
                 {
-                    __m256 r = _mm256_loadu_ps(rptr[p] + idx * vstep);
+                    __m256 r = (__m256)__lasx_xvld(rptr[p] + idx * vstep, 0);
                     for (int n = 0; n < scount; n++)
                     {
-                        __m256 k = _mm256_loadu_ps(kernels + (sgroupIdx * sgroupSize + n) * cin * cpos + cin * p + idx * vstep);
-                        if constexpr (fma)
-                            s[n] = _mm256_fmadd_ps(r, k, s[n]);
-                        else
-                            s[n] = _mm256_add_ps(_mm256_mul_ps(r, k), s[n]);
+                        __m256 k = (__m256)__lasx_xvld(kernels + (sgroupIdx * sgroupSize + n) * cin * cpos + cin * p + idx * vstep, 0);
+                        s[n] = __lasx_xvfmadd_s(r, k, s[n]);
                     }
                 }
                 if constexpr (remain)
@@ -62,7 +63,7 @@ namespace ac::core::cpu
         template <int vsize>
         static float AC_FORCE_INLINE dot(const float* const v1, const float* const v2) noexcept
         {
-            if constexpr (vsize < vstep) return OpImplX86SIMD128<fma>::template dot<vsize>(v1, v2);
+            if constexpr (vsize < vstep) return OpImplLSX::template dot<vsize>(v1, v2);
             else
             {
                 constexpr int count = vsize / vstep;
@@ -70,15 +71,12 @@ namespace ac::core::cpu
 
                 float sum = 0.0f;
 
-                __m256 s = _mm256_setzero_ps();
+                __m256 s = (__m256)__lasx_xvrepli_w(0);
                 for (int idx = 0; idx < count; idx++)
                 {
-                    __m256 r1 = _mm256_loadu_ps(v1 + idx * vstep);
-                    __m256 r2 = _mm256_loadu_ps(v2 + idx * vstep);
-                    if constexpr (fma)
-                        s = _mm256_fmadd_ps(r1, r2, s);
-                    else
-                        s = _mm256_add_ps(_mm256_mul_ps(r1, r2), s);
+                    __m256 r1 = (__m256)__lasx_xvld(v1 + idx * vstep, 0);
+                    __m256 r2 = (__m256)__lasx_xvld(v2 + idx * vstep, 0);
+                    s = __lasx_xvfmadd_s(r1, r2, s);
                 }
                 sum += hsum(s);
 
@@ -93,26 +91,23 @@ namespace ac::core::cpu
         template <int cout, int cpos>
         static void AC_FORCE_INLINE conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            if constexpr (cpos < vstep) OpImplX86SIMD128<fma>::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
+            if constexpr (cpos < vstep) OpImplLSX::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
             else
             {
                 constexpr int count = cpos / vstep;
                 constexpr int remain = cpos % vstep;
 
                 __m256 r[count];
-                for (int idx = 0; idx < count; idx++) r[idx] = _mm256_loadu_ps(rptr + idx * vstep);
+                for (int idx = 0; idx < count; idx++) r[idx] = (__m256)__lasx_xvld(rptr + idx * vstep, 0);
 
                 for (int n = 0; n < cout; n++)
                 {
-                    __m256 s = _mm256_setzero_ps();
+                    __m256 s = (__m256)__lasx_xvrepli_w(0);
                     auto kptr = kernels + n * cpos;
                     for (int idx = 0; idx < count; idx++)
                     {
-                        __m256 k = _mm256_loadu_ps(kptr + idx * vstep);
-                        if constexpr (fma)
-                            s = _mm256_fmadd_ps(r[idx], k, s);
-                        else
-                            s = _mm256_add_ps(_mm256_mul_ps(r[idx], k), s);
+                        __m256 k = (__m256)__lasx_xvld(kptr + idx * vstep, 0);
+                        s = __lasx_xvfmadd_s(r[idx], k, s);
                     }
                     auto sum = hsum(s);
 
@@ -126,7 +121,7 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static void AC_FORCE_INLINE conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            if constexpr (cin < vstep) OpImplX86SIMD128<fma>::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
+            if constexpr (cin < vstep) OpImplLSX::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
             else
             {
                 constexpr int scount = 8;
@@ -145,9 +140,6 @@ namespace ac::core::cpu
             }
         }
     };
-
-    using OpImplAVX = OpImplX86SIMD256<false>;
-    using OpImplFMA = OpImplX86SIMD256<true>;
 }
 
 #endif

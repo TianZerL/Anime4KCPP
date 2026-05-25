@@ -76,11 +76,6 @@ endif()
 check_cxx_source_compiles("#include <arm_neon.h>\nint main() { float32x4_t a = vdupq_n_f32(0.0f); return 0; }" AC_COMPILER_SUPPORT_NEON)
 
 if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
-    set(CMAKE_REQUIRED_FLAGS "-msimd128")
-endif()
-check_cxx_source_compiles("#include <wasm_simd128.h>\nint main() { v128_t a = wasm_f32x4_make(1.2f, 3.4f, 5.6f, 7.8f); return 0; }" AC_COMPILER_SUPPORT_WASM_SIMD128)
-
-if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
     if(BUILD_ARCH_32BIT)
         set(CMAKE_REQUIRED_FLAGS "-march=rv32gcv")
     else()
@@ -88,6 +83,21 @@ if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARI
     endif()
 endif()
 check_cxx_source_compiles("#include <riscv_vector.h>\nint main() { vfloat32m1_t v = __riscv_vfmv_v_f_f32m1(0.0f, __riscv_vsetvl_e32m1(4)); return 0; }" AC_COMPILER_SUPPORT_RVV)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-mlsx")
+endif()
+check_cxx_source_compiles("#include <lsxintrin.h>\nint main() { __m128 a = (__m128)__lsx_vreplgr2vr_w(0); return 0; }" AC_COMPILER_SUPPORT_LSX)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-mlasx")
+endif()
+check_cxx_source_compiles("#include <lasxintrin.h>\nint main() { __m256 a = (__m256)__lasx_xvreplgr2vr_w(0); return 0; }" AC_COMPILER_SUPPORT_LASX)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-msimd128")
+endif()
+check_cxx_source_compiles("#include <wasm_simd128.h>\nint main() { v128_t a = wasm_f32x4_make(1.2f, 3.4f, 5.6f, 7.8f); return 0; }" AC_COMPILER_SUPPORT_WASM_SIMD128)
 
 if (NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     unset(CMAKE_REQUIRED_FLAGS)

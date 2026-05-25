@@ -18,6 +18,8 @@ namespace ac::core::simd::detail
         bool fma;
         bool neon;
         bool rvv;
+        bool lsx;
+        bool lasx;
     public:
         static const ISA& instance() noexcept
         {
@@ -36,6 +38,8 @@ namespace ac::core::simd::detail
             fma = ruapu_supports("fma");
             neon = ruapu_supports("neon");
             rvv = ruapu_supports("v");
+            lsx = ruapu_supports("lsx");
+            lasx = ruapu_supports("lasx");
         }
     };
 }
@@ -71,4 +75,12 @@ bool ac::core::simd::supportNEON() noexcept
 bool ac::core::simd::supportRVV() noexcept
 {
     return gISA.rvv;
+}
+bool ac::core::simd::supportLSX() noexcept
+{
+    return gISA.lsx;
+}
+bool ac::core::simd::supportLASX() noexcept
+{
+    return gISA.lasx;
 }

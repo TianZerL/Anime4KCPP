@@ -14,6 +14,9 @@ namespace ac::core::simd
     bool supportNEON() noexcept;
     // risc-v
     bool supportRVV() noexcept;
+    // loongarch
+    bool supportLSX() noexcept;
+    bool supportLASX() noexcept;
 }
 
 #endif
