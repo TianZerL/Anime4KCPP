@@ -1,3 +1,6 @@
+#ifndef AC_CORE_INTERNAL_PROCESSOR_CPU_BACKEND_HPP
+#define AC_CORE_INTERNAL_PROCESSOR_CPU_BACKEND_HPP
+
 #include "AC/Core/Image.hpp"
 
 #include "AC/Core/Internal/DataType.hpp"
@@ -322,3 +325,5 @@ namespace ac::core::cpu
         }
     }
 }
+
+#endif
