@@ -35,6 +35,9 @@ namespace ac::core::cpu
 #       ifdef AC_CORE_WITH_NEON
             NEON,
 #       endif
+#       ifdef AC_CORE_WITH_RVV
+            RVV,
+#       endif
 #       ifdef AC_CORE_WITH_WASM_SIMD128
             WASM_SIMD128,
 #       endif
@@ -61,6 +64,9 @@ namespace ac::core::cpu
 #       endif
 #       ifdef AC_CORE_WITH_NEON
             "NEON",
+#       endif
+#       ifdef AC_CORE_WITH_RVV
+            "RVV",
 #       endif
 #       ifdef AC_CORE_WITH_WASM_SIMD128
             "WASM_SIMD128",
@@ -382,6 +388,51 @@ namespace ac::core::cpu
         const float* kernels2, const float* biases2, const float* alphas2,
         const Image& feat);
 #endif
+#ifdef AC_CORE_WITH_RVV
+    void conv3x3_1to8_relu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_relu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void deconv2x2_8to1_rvv(const Image& src, Image& dst, const float* kernels);
+    void conv3x3_8to8_relu_deconv2x2_8to1_rvv(const Image& src, Image& dst, const float* kernels1, const float* biases1, const float* kernels2);
+
+    void conv3x3_1to8_prelu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+
+    void conv3x3_1to8_identity_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_prelu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+    void conv3x3_8to8_identity_residual_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id, float scale);
+    void conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_rvv(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1,
+        const Image& id, const float scale,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_add_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& id);
+
+    void conv3x3_1to16_identity_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_relu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_identity_add_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat);
+    void conv3x3_16to4_identity_pixelshuffle_4to1_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv3x3_1to32_identity_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_32to32_relu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_32to32_identity_add_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const Image& feat);
+    void conv3x3_32to4_identity_pixelshuffle_4to1_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv5x5_1to8_identity_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_rvv(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+    void conv3x3_8to4_identity_pixelshuffle_4to1_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+
+    void conv5x5_1to16_identity_rvv(const Image& src, Image& dst, const float* kernels, const float* biases);
+    void conv3x3_16to16_prelu_rvv(const Image& src, Image& dst, const float* kernels, const float* biases, const float* alphas);
+    void conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_rvv(
+        const Image& src, Image& dst,
+        const float* kernels1, const float* biases1, const float* alphas1,
+        const float* kernels2, const float* biases2, const float* alphas2,
+        const Image& feat);
+#endif
 #ifdef AC_CORE_WITH_WASM_SIMD128
     void conv3x3_1to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
     void conv3x3_8to8_relu_wasm_simd128(const Image& src, Image& dst, const float* kernels, const float* biases);
@@ -471,6 +522,10 @@ namespace ac::core::cpu
                 // arm
 #           ifdef AC_CORE_WITH_NEON
                 if (simd::supportNEON()) return arch::NEON;
+#           endif
+                // risc-v
+#           ifdef AC_CORE_WITH_RVV
+                if (simd::supportRVV()) return arch::RVV;
 #           endif
                 // wasm
 #           ifdef AC_CORE_WITH_WASM_SIMD128
@@ -682,6 +737,39 @@ namespace ac::core::cpu
                 conv5x5_1to16_identity = conv5x5_1to16_identity_neon;
                 conv3x3_16to16_prelu = conv3x3_16to16_prelu_neon;
                 conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_neon;
+                break;
+#       endif
+#       ifdef AC_CORE_WITH_RVV
+            case arch::RVV:
+                conv3x3_1to8_relu = conv3x3_1to8_relu_rvv;
+                conv3x3_8to8_relu = conv3x3_8to8_relu_rvv;
+                conv3x3_8to8_relu_deconv2x2_8to1 = conv3x3_8to8_relu_deconv2x2_8to1_rvv;
+
+                conv3x3_1to8_prelu = conv3x3_1to8_prelu_rvv;
+
+                conv3x3_1to8_identity = conv3x3_1to8_identity_rvv;
+                conv3x3_8to8_prelu = conv3x3_8to8_prelu_rvv;
+                conv3x3_8to8_identity_residual = conv3x3_8to8_identity_residual_rvv;
+                conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add = conv3x3_8to8_identity_residual_conv1x1_8to8_prelu_add_rvv;
+                conv3x3_8to4_identity_pixelshuffle_4to1_add = conv3x3_8to4_identity_pixelshuffle_4to1_add_rvv;
+
+                conv3x3_1to16_identity = conv3x3_1to16_identity_rvv;
+                conv3x3_16to16_relu = conv3x3_16to16_relu_rvv;
+                conv3x3_16to16_identity_add = conv3x3_16to16_identity_add_rvv;
+                conv3x3_16to4_identity_pixelshuffle_4to1 = conv3x3_16to4_identity_pixelshuffle_4to1_rvv;
+
+                conv3x3_1to32_identity = conv3x3_1to32_identity_rvv;
+                conv3x3_32to32_relu = conv3x3_32to32_relu_rvv;
+                conv3x3_32to32_identity_add = conv3x3_32to32_identity_add_rvv;
+                conv3x3_32to4_identity_pixelshuffle_4to1 = conv3x3_32to4_identity_pixelshuffle_4to1_rvv;
+
+                conv5x5_1to8_identity = conv5x5_1to8_identity_rvv;
+                conv3x3_8to8_prelu_conv1x1_8to8_add_prelu = conv3x3_8to8_prelu_conv1x1_8to8_add_prelu_rvv;
+                conv3x3_8to4_identity_pixelshuffle_4to1 = conv3x3_8to4_identity_pixelshuffle_4to1_rvv;
+
+                conv5x5_1to16_identity = conv5x5_1to16_identity_rvv;
+                conv3x3_16to16_prelu = conv3x3_16to16_prelu_rvv;
+                conv3x3_16to16_prelu_conv1x1_16to16_add_prelu = conv3x3_16to16_prelu_conv1x1_16to16_add_prelu_rvv;
                 break;
 #       endif
 #       ifdef AC_CORE_WITH_WASM_SIMD128

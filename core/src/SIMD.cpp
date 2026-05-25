@@ -17,6 +17,7 @@ namespace ac::core::simd::detail
         bool avx512;
         bool fma;
         bool neon;
+        bool rvv;
     public:
         static const ISA& instance() noexcept
         {
@@ -34,6 +35,7 @@ namespace ac::core::simd::detail
             avx512 = ruapu_supports("avx512f");
             fma = ruapu_supports("fma");
             neon = ruapu_supports("neon");
+            rvv = ruapu_supports("v");
         }
     };
 }
@@ -65,4 +67,8 @@ bool ac::core::simd::supportFMA() noexcept
 bool ac::core::simd::supportNEON() noexcept
 {
     return gISA.neon;
+}
+bool ac::core::simd::supportRVV() noexcept
+{
+    return gISA.rvv;
 }

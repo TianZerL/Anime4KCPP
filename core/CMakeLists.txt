@@ -67,6 +67,9 @@ endif()
 if(AC_CORE_WITH_NEON)
     generate_cpu_processor_backend(NEON neon ARM/NEON.hpp ${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp)
 endif()
+if(AC_CORE_WITH_RVV)
+    generate_cpu_processor_backend(RVV rvv RISCV/RVV.hpp ${CORE_BINARY_DIR}/src/processor/cpu/riscv/RVV.cpp)
+endif()
 if(AC_CORE_WITH_WASM_SIMD128)
     generate_cpu_processor_backend(WASM wasm_simd128 WASM/SIMD128.hpp ${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp)
 endif()
@@ -117,6 +120,7 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_FMA}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/FMA.cpp>
     $<$<BOOL:${AC_CORE_WITH_AVX512}>:${CORE_BINARY_DIR}/src/processor/cpu/x86/AVX512.cpp>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp>
+    $<$<BOOL:${AC_CORE_WITH_RVV}>:${CORE_BINARY_DIR}/src/processor/cpu/riscv/RVV.cpp>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
 
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp>
@@ -189,6 +193,9 @@ elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/arm/NEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeNEON.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-mfpu=neon-vfpv4,-march=armv8-a>")
     endif()
+    if(AC_CORE_WITH_RVV)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/riscv/RVV.cpp PROPERTIES COMPILE_OPTIONS "$<IF:$<BOOL:${BUILD_ARCH_32BIT}>,-march=rv32gcv,-march=rv64gcv>")
+    endif()
     if(AC_CORE_WITH_WASM_SIMD128)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeWASM.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
@@ -236,6 +243,7 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:avx2>
     $<$<BOOL:${AC_CORE_WITH_AVX512}>:avx512>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:neon>
+    $<$<BOOL:${AC_CORE_WITH_RVV}>:rvv>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
@@ -250,6 +258,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_AVX2}>:AC_CORE_WITH_AVX2>
     $<$<BOOL:${AC_CORE_WITH_AVX512}>:AC_CORE_WITH_AVX512>
     $<$<BOOL:${AC_CORE_WITH_NEON}>:AC_CORE_WITH_NEON>
+    $<$<BOOL:${AC_CORE_WITH_RVV}>:AC_CORE_WITH_RVV>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>

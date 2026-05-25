@@ -12,6 +12,8 @@ namespace ac::core::simd
     bool supportFMA() noexcept;
     // arm
     bool supportNEON() noexcept;
+    // risc-v
+    bool supportRVV() noexcept;
 }
 
 #endif
