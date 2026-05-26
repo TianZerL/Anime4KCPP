@@ -174,8 +174,8 @@ namespace ac::video
             encoderCtx->rc_buffer_size = encoderCtx->rc_max_rate * 5; // 10s
             encoderCtx->gop_size = static_cast<decltype(encoderCtx->gop_size)>(10 * av_q2d(decoderCtx->framerate) + 0.5); // 10s gop size, maybe we should use dynamic gop size.
             encoderCtx->time_base = timeBase;
-            encoderCtx->width = static_cast<decltype(encoderCtx->width)>(decoderCtx->width * factor) & ~1;
-            encoderCtx->height = static_cast<decltype(encoderCtx->height)>(decoderCtx->height * factor) & ~1;
+            encoderCtx->width = (static_cast<decltype(encoderCtx->width)>(decoderCtx->width * factor) + 1) & ~1;
+            encoderCtx->height = (static_cast<decltype(encoderCtx->height)>(decoderCtx->height * factor) + 1) & ~1;
             encoderCtx->sample_aspect_ratio = decoderCtx->sample_aspect_ratio;
             encoderCtx->color_primaries = decoderCtx->color_primaries;
             encoderCtx->color_trc = decoderCtx->color_trc;
