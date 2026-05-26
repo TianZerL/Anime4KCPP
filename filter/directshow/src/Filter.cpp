@@ -75,6 +75,7 @@ private:
     {
         Size src, dst;
         int channels;
+        int planes;
         int part;
     } luma{}, chroma{};
 
@@ -347,19 +348,23 @@ HRESULT Filter::GetMediaType(const int pos, CMediaType* const mt)
     if (FAILED(hr)) return hr;
 
     auto setVideoInfo = [&](auto* vi) {
+        luma.channels = 1;
+        luma.planes = 1;
+        luma.part = format.subsampling.w * format.subsampling.h;
+
         luma.src.width = vi->bmiHeader.biWidth;
         luma.src.height = vi->bmiHeader.biHeight;
         luma.dst.width = static_cast<decltype(luma.dst.width)>(luma.src.width * factor);
         luma.dst.height = static_cast<decltype(luma.dst.height)>(luma.src.height * factor);
-        luma.channels = 1;
-        luma.part = format.subsampling.w * format.subsampling.h;
+
+        chroma.channels = format.packed ? 2 : 1;
+        chroma.planes = format.packed ? 1 : 2;
+        chroma.part = 2;
 
         chroma.src.width = luma.src.width / format.subsampling.w;
-        chroma.src.height = (luma.src.height / format.subsampling.h) * (format.packed ? 1 : 2);
+        chroma.src.height = (luma.src.height / format.subsampling.h) * chroma.planes;
         chroma.dst.width = luma.dst.width / format.subsampling.w;
-        chroma.dst.height = (luma.dst.height / format.subsampling.h) * (format.packed ? 1 : 2);
-        chroma.channels = format.packed ? 2 : 1;
-        chroma.part = 2;
+        chroma.dst.height = (luma.dst.height / format.subsampling.h) * chroma.planes;
 
         totalParts = luma.part + chroma.part;
 
@@ -412,8 +417,8 @@ HRESULT Filter::Transform(IMediaSample* const in, IMediaSample* const out)
     processor->process(srcy, dsty, factor);
     if (!processor->ok()) return E_FAIL;
 
-    ac::core::Image srcuv{ chroma.src.width, chroma.src.height, chroma.channels, format.type, src + srcy.size(), ((in->GetActualDataLength() * chroma.part) / totalParts) / chroma.src.height };
-    ac::core::Image dstuv{ chroma.dst.width, chroma.dst.height, chroma.channels, format.type, dst + dsty.size(), ((out->GetActualDataLength() * chroma.part) / totalParts) / chroma.dst.height };
+    ac::core::Image srcuv{ chroma.src.width, chroma.src.height, chroma.channels, format.type, src + srcy.size(), (((in->GetActualDataLength() * chroma.part) / totalParts) * format.subsampling.h) / (luma.src.height * chroma.planes) };
+    ac::core::Image dstuv{ chroma.dst.width, chroma.dst.height, chroma.channels, format.type, dst + dsty.size(), (((out->GetActualDataLength() * chroma.part) / totalParts) * format.subsampling.h) / (luma.dst.height * chroma.planes) };
     ac::core::resize(srcuv, dstuv, 0.0, 0.0);
 
     Microsoft::WRL::ComPtr<IMediaSideData> inputSideData{};

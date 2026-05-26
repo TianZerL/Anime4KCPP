@@ -146,7 +146,7 @@ namespace ac::core::cpu
             }
             else
             {
-                constexpr int scount = 8;
+                constexpr int scount = 16;
                 constexpr int sgroup = cout / scount;
                 constexpr int sremian = cout % scount;
 
