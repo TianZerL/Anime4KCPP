@@ -201,6 +201,22 @@ STDMETHODIMP CSideDataInputPin::ReceiveConnection(IPin* const connector, const A
 
         CMediaType mtIn{ *amt };
         hr = CheckMediaType(&mtIn); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
+
+        if (m_pAllocator) // resize buffer if needed.
+        {
+            ALLOCATOR_PROPERTIES props{};
+            hr = m_pAllocator->GetProperties(&props); if (FAILED(hr)) return E_FAIL;
+            if (mtIn.GetSampleSize() > props.cbBuffer)
+            {
+                ALLOCATOR_PROPERTIES actual{};
+                props.cbBuffer = mtIn.GetSampleSize();
+                hr = m_pAllocator->Decommit(); if (FAILED(hr)) return E_FAIL;
+                hr = m_pAllocator->SetProperties(&props, &actual); if (FAILED(hr)) return E_FAIL;
+                hr = m_pAllocator->Commit(); if (FAILED(hr)) return E_FAIL;
+                if (actual.cbBuffer < props.cbBuffer) return E_FAIL;
+            }
+        }
+
         hr = SetMediaType(&mtIn); if (FAILED(hr)) return VFW_E_TYPE_NOT_ACCEPTED;
 
         auto outputPin = static_cast<CBaseOutputPin*>(m_pTransformFilter->GetPin(1));
