@@ -121,7 +121,7 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static void AC_FORCE_INLINE conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            if constexpr (cin < vstep) OpImplLSX::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
+            if constexpr (cin % vstep) OpImplLSX::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
             else
             {
                 constexpr int scount = 16;
