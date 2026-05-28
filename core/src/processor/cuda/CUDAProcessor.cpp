@@ -13,7 +13,7 @@
 #include "AC/Core/Image.hpp"
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
-#include "AC/Core/Util.hpp"
+#include "AC/Util/Misc.hpp"
 #include "AC/Util/ThreadLocal.hpp"
 
 #include "AC/Core/Internal/Processor/CUDA/Common.hpp"
@@ -213,7 +213,7 @@ namespace ac::core::cuda
                 this->h = height;
                 this->c = channels;
                 this->elementType = elementType;
-                this->pitch = align(this->width() * this->pixelSize(), 128);
+                this->pitch = ac::util::align(this->width() * this->pixelSize(), 128);
 
                 err = allocator.allocate(&this->pixels, this->size(), stream);
                 if (err != cudaSuccess) this->pixels = nullptr;

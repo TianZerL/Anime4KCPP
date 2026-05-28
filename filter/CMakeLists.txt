@@ -22,7 +22,7 @@ if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)
         ${FILTER_SOURCE_DIR}/vapoursynth/src/Filter.cpp
     )
 
-    target_link_libraries(ac_filter_avs_vs PRIVATE ac dep::avisynth dep::vapoursynth)
+    target_link_libraries(ac_filter_avs_vs PRIVATE ac ac_util_misc dep::avisynth dep::vapoursynth)
 
     ac_check_enable_static_crt(ac_filter_avs_vs)
 

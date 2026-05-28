@@ -10,7 +10,9 @@
 #   include <cstdlib>
 #endif
 
-#include "AC/Core/Util.hpp"
+#include "AC/Util/Misc.hpp"
+
+#include "AC/Core/Internal/Util.hpp"
 
 #ifndef AC_CORE_MALLOC_ALIGN
 #   define AC_CORE_MALLOC_ALIGN 32
@@ -25,7 +27,7 @@ namespace ac::core::detail
     template <typename T>
     static inline constexpr T* alignPtr(T* const ptr, const int n) noexcept
     {
-        return reinterpret_cast<T*>(align(reinterpret_cast<std::uintptr_t>(ptr), n));
+        return reinterpret_cast<T*>(ac::util::align(reinterpret_cast<std::uintptr_t>(ptr), n));
     }
 
     static inline void* alignedAlloc(const std::size_t size, const int alignment) noexcept
@@ -45,7 +47,7 @@ namespace ac::core::detail
 
 void* ac::core::fastMalloc(const std::size_t size) noexcept
 {
-    auto alignedSize = align(size, AC_CORE_MALLOC_ALIGN); // size must be an integral multiple of alignment.
+    auto alignedSize = ac::util::align(size, AC_CORE_MALLOC_ALIGN); // size must be an integral multiple of alignment.
 #if defined(AC_CORE_HAVE_STD_ALIGNED_ALLOC)
     return std::aligned_alloc(AC_CORE_MALLOC_ALIGN, alignedSize);
 #elif defined(AC_CORE_HAVE_WIN32_ALIGNED_MALLOC)

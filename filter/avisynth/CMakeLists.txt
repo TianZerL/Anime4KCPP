@@ -9,7 +9,7 @@ add_library(ac_filter_avs MODULE
     ${FILTER_AVISYNTH_SOURCE_DIR}/src/Filter.cpp
 )
 
-target_link_libraries(ac_filter_avs PRIVATE ac dep::avisynth)
+target_link_libraries(ac_filter_avs PRIVATE ac ac_util_misc dep::avisynth)
 
 ac_check_enable_static_crt(ac_filter_avs)
 

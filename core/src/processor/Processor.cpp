@@ -4,7 +4,8 @@
 
 #include "AC/Core/Model.hpp"
 #include "AC/Core/Processor.hpp"
-#include "AC/Core/Util.hpp"
+
+#include "AC/Core/Internal/Util.hpp"
 
 namespace ac::core::detail
 {

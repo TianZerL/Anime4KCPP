@@ -2,7 +2,9 @@
 #include <cstring>
 
 #include "AC/Core/Image.hpp"
-#include "AC/Core/Util.hpp"
+#include "AC/Util/Misc.hpp"
+
+#include "AC/Core/Internal/Util.hpp"
 
 #ifndef AC_CORE_STRIDE_ALIGN
 #   define AC_CORE_STRIDE_ALIGN 4
@@ -38,7 +40,7 @@ void ac::core::Image::create(const int w, const int h, const int c, const Elemen
 {
     int lineSize = w * c * (elementType & 0xff);
     if (!(h > 0 && lineSize > 0)) return;
-    int pitch = (stride >= lineSize) ? stride : align(lineSize, AC_CORE_STRIDE_ALIGN);
+    int pitch = (stride >= lineSize) ? stride : ac::util::align(lineSize, AC_CORE_STRIDE_ALIGN);
     int size = h * pitch;
     this->w = w;
     this->h = h;

@@ -1,5 +1,5 @@
-#ifndef AC_UTIL_THREADPOOL_HPP
-#define AC_UTIL_THREADPOOL_HPP
+#ifndef AC_UTIL_THREAD_POOL_HPP
+#define AC_UTIL_THREAD_POOL_HPP
 
 #include <condition_variable>
 #include <cstddef>

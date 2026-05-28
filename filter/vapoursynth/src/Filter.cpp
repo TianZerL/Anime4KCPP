@@ -5,6 +5,7 @@
 #include <VSHelper4.h>
 
 #include "AC/Core.hpp"
+#include "AC/Util/Misc.hpp"
 
 #define EXIT_WITH_ERROR(msg) do { vsapi->mapSetError(out, (msg)); if (node) vsapi->freeNode(node); return; } while(0)
 
@@ -93,8 +94,8 @@ static void VS_CC create(const VSMap* in, VSMap* out, void* /*userData*/, VSCore
     auto ctx = new Context{};
     ctx->node = node;
     ctx->vi = *vi;
-    ctx->vi.width = static_cast<decltype(ctx->vi.width)>(vi->width * factor);
-    ctx->vi.height = static_cast<decltype(ctx->vi.height)>(vi->height * factor);
+    ctx->vi.width = ac::util::align(static_cast<decltype(ctx->vi.width)>(vi->width * factor), 2);
+    ctx->vi.height = ac::util::align(static_cast<decltype(ctx->vi.height)>(vi->height * factor), 2);
     ctx->type = type;
     ctx->factor = factor;
     ctx->processor = processor;

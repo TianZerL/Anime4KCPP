@@ -4,6 +4,7 @@
 #include <avisynth.h>
 
 #include "AC/Core.hpp"
+#include "AC/Util/Misc.hpp"
 
 #ifdef _WIN32
 #   define EXPORT_API extern "C" __declspec(dllexport)
@@ -39,8 +40,8 @@ Filter::Filter(const AVSValue& args, IScriptEnvironment* const env) : GenericVid
 
     factor = args[1].Defined() ? args[1].AsFloat() : 2.0;
     if (factor <= 1.0) env->ThrowError("Anime4KCPP: %s", "this is a upscaler, so make sure factor > 1.0");
-    vi.width = static_cast<decltype(vi.width)>(vi.width * factor);
-    vi.height = static_cast<decltype(vi.height)>(vi.height * factor);
+    vi.width = ac::util::align(static_cast<decltype(vi.width)>(vi.width * factor), 2);
+    vi.height = ac::util::align(static_cast<decltype(vi.height)>(vi.height * factor), 2);
 
     auto processorType = args[2].Defined() ? args[2].AsString() : "auto";
 

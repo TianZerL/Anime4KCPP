@@ -47,7 +47,7 @@ inline double ac::util::Stopwatch::elapsed() noexcept
 }
 
 inline char* ac::util::Stopwatch::formatDuration(FormatBuffer& buffer, const double duration) noexcept
-{   // these bitmask eliminates spurious GCC truncation warnings(-Wformat-truncation). 
+{   // these bitmask eliminates spurious GCC truncation warnings(-Wformat-truncation).
     if (duration < 0) std::snprintf(buffer, sizeof(buffer), "#ERROR");
     else if (duration < 3600)
     {

@@ -4,30 +4,7 @@
 
 #include <doctest/doctest.h>
 
-#include "AC/Core/Util.hpp"
-
-TEST_CASE("align")
-{
-    CHECK(ac::core::align(0, 4) == 0);
-    CHECK(ac::core::align(1, 4) == 4);
-    CHECK(ac::core::align(3, 4) == 4);
-    CHECK(ac::core::align(4, 4) == 4);
-    CHECK(ac::core::align(5, 4) == 8);
-
-    CHECK(ac::core::align(0, 8) == 0);
-    CHECK(ac::core::align(1, 8) == 8);
-    CHECK(ac::core::align(7, 8) == 8);
-    CHECK(ac::core::align(8, 8) == 8);
-
-    CHECK(ac::core::align(10, 2) == 10);
-    CHECK(ac::core::align(11, 2) == 12);
-
-    CHECK(ac::core::align(0, 1) == 0);
-    CHECK(ac::core::align(5, 1) == 5);
-
-    CHECK(ac::core::align(static_cast<std::size_t>(7), 8) == 8);
-    CHECK(ac::core::align(static_cast<std::size_t>(8), 8) == 8);
-}
+#include "AC/Core/Internal/Util.hpp"
 
 TEST_CASE("toFloat uint8_t")
 {

@@ -19,7 +19,7 @@ target_include_directories(ac_filter_ds PRIVATE
     $<BUILD_INTERFACE:${FILTER_DIRECTSHOW_BINARY_DIR}/include>
 )
 
-target_link_libraries(ac_filter_ds PRIVATE ac dep::directshow)
+target_link_libraries(ac_filter_ds PRIVATE ac ac_util_misc dep::directshow)
 
 ac_check_enable_static_crt(ac_filter_ds)
 

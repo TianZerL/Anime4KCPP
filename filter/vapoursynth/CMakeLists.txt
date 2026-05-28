@@ -9,7 +9,7 @@ add_library(ac_filter_vs MODULE
     ${FILTER_VAPOURSYNTH_SOURCE_DIR}/src/Filter.cpp
 )
 
-target_link_libraries(ac_filter_vs PRIVATE ac dep::vapoursynth)
+target_link_libraries(ac_filter_vs PRIVATE ac ac_util_misc dep::vapoursynth)
 
 ac_check_enable_static_crt(ac_filter_vs)
 

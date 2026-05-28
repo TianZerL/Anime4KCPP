@@ -11,6 +11,7 @@
 
 #include "AC/Core.hpp"
 #include "AC/Specs.hpp"
+#include "AC/Util/Misc.hpp"
 
 #include "Registry.hpp"
 #include "SideData.hpp"
@@ -382,8 +383,8 @@ HRESULT Filter::SetMediaType(PIN_DIRECTION direction, const CMediaType* const mt
         auto setVideoInfo = [&](auto* vi) {
             luma.src.width = vi->bmiHeader.biWidth;
             luma.src.height = vi->bmiHeader.biHeight < 0 ? -vi->bmiHeader.biHeight : vi->bmiHeader.biHeight;
-            luma.dst.width = (static_cast<decltype(luma.dst.width)>(luma.src.width * factor) + 1) & ~1;
-            luma.dst.height = (static_cast<decltype(luma.dst.height)>(luma.src.height * factor) + 1) & ~1;
+            luma.dst.width = ac::util::align(static_cast<decltype(luma.dst.width)>(luma.src.width * factor), 2);
+            luma.dst.height = ac::util::align(static_cast<decltype(luma.dst.height)>(luma.src.height * factor), 2);
             luma.channels = 1;
 
             chroma.src.width = luma.src.width / format.subsampling.w;
