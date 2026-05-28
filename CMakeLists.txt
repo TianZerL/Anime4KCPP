@@ -41,6 +41,7 @@ option(AC_CORE_WITH_NEON "build core with arm neon" ${AC_COMPILER_SUPPORT_NEON})
 option(AC_CORE_WITH_RVV "build core with risc-v vector" ${AC_COMPILER_SUPPORT_RVV})
 option(AC_CORE_WITH_LSX "build core with loongarch lsx" ${AC_COMPILER_SUPPORT_LSX})
 option(AC_CORE_WITH_LASX "build core with loongarch lasx" ${AC_COMPILER_SUPPORT_LASX})
+option(AC_CORE_WITH_MSA "build core with mips msa" ${AC_COMPILER_SUPPORT_MSA})
 option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
@@ -119,6 +120,7 @@ message(STATUS
     RVV: ${AC_CORE_WITH_RVV}
     LSX: ${AC_CORE_WITH_LSX}
     LASX: ${AC_CORE_WITH_LASX}
+    MSA: ${AC_CORE_WITH_MSA}
     WASM_SIMD128: ${AC_CORE_WITH_WASM_SIMD128}
 ")
 

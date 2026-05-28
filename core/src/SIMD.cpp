@@ -20,6 +20,7 @@ namespace ac::core::simd::detail
         bool rvv;
         bool lsx;
         bool lasx;
+        bool msa;
     public:
         static const ISA& instance() noexcept
         {
@@ -40,6 +41,7 @@ namespace ac::core::simd::detail
             rvv = ruapu_supports("v");
             lsx = ruapu_supports("lsx");
             lasx = ruapu_supports("lasx");
+            msa = ruapu_supports("msa");
         }
     };
 }
@@ -83,4 +85,8 @@ bool ac::core::simd::supportLSX() noexcept
 bool ac::core::simd::supportLASX() noexcept
 {
     return gISA.lasx;
+}
+bool ac::core::simd::supportMSA() noexcept
+{
+    return gISA.msa;
 }

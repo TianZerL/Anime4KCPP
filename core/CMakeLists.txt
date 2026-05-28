@@ -76,6 +76,9 @@ endif()
 if(AC_CORE_WITH_LASX)
     generate_cpu_processor_backend(LASX lasx LoongArch/LASX.hpp ${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LASX.cpp)
 endif()
+if(AC_CORE_WITH_MSA)
+    generate_cpu_processor_backend(MSA msa MIPS/MSA.hpp ${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp)
+endif()
 if(AC_CORE_WITH_WASM_SIMD128)
     generate_cpu_processor_backend(WASM wasm_simd128 WASM/SIMD128.hpp ${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp)
 endif()
@@ -129,6 +132,7 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_RVV}>:${CORE_BINARY_DIR}/src/processor/cpu/riscv/RVV.cpp>
     $<$<BOOL:${AC_CORE_WITH_LSX}>:${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LSX.cpp>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LASX.cpp>
+    $<$<BOOL:${AC_CORE_WITH_MSA}>:${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
 
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp>
@@ -210,6 +214,9 @@ elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(AC_CORE_WITH_LASX)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LASX.cpp PROPERTIES COMPILE_OPTIONS "-mlasx")
     endif()
+    if(AC_CORE_WITH_MSA)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp PROPERTIES COMPILE_OPTIONS "-mmsa")
+    endif()
     if(AC_CORE_WITH_WASM_SIMD128)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeWASM.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
@@ -260,6 +267,7 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_RVV}>:rvv>
     $<$<BOOL:${AC_CORE_WITH_LSX}>:lsx>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:lasx>
+    $<$<BOOL:${AC_CORE_WITH_MSA}>:msa>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
@@ -277,6 +285,7 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_RVV}>:AC_CORE_WITH_RVV>
     $<$<BOOL:${AC_CORE_WITH_LSX}>:AC_CORE_WITH_LSX>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:AC_CORE_WITH_LASX>
+    $<$<BOOL:${AC_CORE_WITH_MSA}>:AC_CORE_WITH_MSA>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>

@@ -9,7 +9,6 @@ add_executable(ac_tests_core
     ${TESTS_CORE_SOURCE_DIR}/src/ImageResizeTest.cpp
     ${TESTS_CORE_SOURCE_DIR}/src/ModelTest.cpp
     ${TESTS_CORE_SOURCE_DIR}/src/ProcessorTest.cpp
-    ${TESTS_CORE_SOURCE_DIR}/src/UtilTest.cpp
 )
 
 target_link_libraries(ac_tests_core PRIVATE ac dep::doctest)

@@ -95,6 +95,11 @@ endif()
 check_cxx_source_compiles("#include <lasxintrin.h>\nint main() { __m256 a = (__m256)__lasx_xvreplgr2vr_w(0); return 0; }" AC_COMPILER_SUPPORT_LASX)
 
 if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-mmsa")
+endif()
+check_cxx_source_compiles("#include <msa.h>\nint main() { v4f32 a = (v4f32)__msa_ldi_w(0); return 0; }" AC_COMPILER_SUPPORT_MSA)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
     set(CMAKE_REQUIRED_FLAGS "-msimd128")
 endif()
 check_cxx_source_compiles("#include <wasm_simd128.h>\nint main() { v128_t a = wasm_f32x4_make(1.2f, 3.4f, 5.6f, 7.8f); return 0; }" AC_COMPILER_SUPPORT_WASM_SIMD128)

@@ -17,6 +17,8 @@ namespace ac::core::simd
     // loongarch
     bool supportLSX() noexcept;
     bool supportLASX() noexcept;
+    // mips
+    bool supportMSA() noexcept;
 }
 
 #endif
