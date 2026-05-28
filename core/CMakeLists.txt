@@ -79,6 +79,12 @@ endif()
 if(AC_CORE_WITH_MSA)
     generate_cpu_processor_backend(MSA msa MIPS/MSA.hpp ${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp)
 endif()
+if(AC_CORE_WITH_ALTIVEC)
+    generate_cpu_processor_backend(AltiVec altivec PowerPC/AltiVec.hpp ${CORE_BINARY_DIR}/src/processor/cpu/powerpc/AltiVec.cpp)
+endif()
+if(AC_CORE_WITH_VSX)
+    generate_cpu_processor_backend(VSX vsx PowerPC/AltiVec.hpp ${CORE_BINARY_DIR}/src/processor/cpu/powerpc/VSX.cpp)
+endif()
 if(AC_CORE_WITH_WASM_SIMD128)
     generate_cpu_processor_backend(WASM wasm_simd128 WASM/SIMD128.hpp ${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp)
 endif()
@@ -133,6 +139,8 @@ target_sources(ac PRIVATE
     $<$<BOOL:${AC_CORE_WITH_LSX}>:${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LSX.cpp>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:${CORE_BINARY_DIR}/src/processor/cpu/loongarch/LASX.cpp>
     $<$<BOOL:${AC_CORE_WITH_MSA}>:${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp>
+    $<$<BOOL:${AC_CORE_WITH_ALTIVEC}>:${CORE_BINARY_DIR}/src/processor/cpu/powerpc/AltiVec.cpp>
+    $<$<BOOL:${AC_CORE_WITH_VSX}>:${CORE_BINARY_DIR}/src/processor/cpu/powerpc/VSX.cpp>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp>
 
     $<$<BOOL:${AC_CORE_WITH_SSE2}>:${CORE_BINARY_DIR}/src/simd/ImageResizeSSE2.cpp>
@@ -217,6 +225,12 @@ elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     if(AC_CORE_WITH_MSA)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/mips/MSA.cpp PROPERTIES COMPILE_OPTIONS "-mmsa")
     endif()
+    if(AC_CORE_WITH_ALTIVEC)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/powerpc/AltiVec.cpp PROPERTIES COMPILE_OPTIONS "-maltivec")
+    endif()
+    if(AC_CORE_WITH_VSX)
+        set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/powerpc/VSX.cpp PROPERTIES COMPILE_OPTIONS "-mvsx")
+    endif()
     if(AC_CORE_WITH_WASM_SIMD128)
         set_source_files_properties(${CORE_BINARY_DIR}/src/processor/cpu/wasm/SIMD128.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
         set_source_files_properties(${CORE_BINARY_DIR}/src/simd/ImageResizeWASM.cpp PROPERTIES COMPILE_OPTIONS "-msimd128")
@@ -268,6 +282,8 @@ set(AC_CORE_FEATURE_LIST
     $<$<BOOL:${AC_CORE_WITH_LSX}>:lsx>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:lasx>
     $<$<BOOL:${AC_CORE_WITH_MSA}>:msa>
+    $<$<BOOL:${AC_CORE_WITH_ALTIVEC}>:altivec>
+    $<$<BOOL:${AC_CORE_WITH_VSX}>:vsx>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:wasm_simd128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:opencl>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:cuda>
@@ -286,6 +302,8 @@ target_compile_definitions(ac PUBLIC
     $<$<BOOL:${AC_CORE_WITH_LSX}>:AC_CORE_WITH_LSX>
     $<$<BOOL:${AC_CORE_WITH_LASX}>:AC_CORE_WITH_LASX>
     $<$<BOOL:${AC_CORE_WITH_MSA}>:AC_CORE_WITH_MSA>
+    $<$<BOOL:${AC_CORE_WITH_ALTIVEC}>:AC_CORE_WITH_ALTIVEC>
+    $<$<BOOL:${AC_CORE_WITH_VSX}>:AC_CORE_WITH_VSX>
     $<$<BOOL:${AC_CORE_WITH_WASM_SIMD128}>:AC_CORE_WITH_WASM_SIMD128>
     $<$<BOOL:${AC_CORE_WITH_OPENCL}>:AC_CORE_WITH_OPENCL>
     $<$<BOOL:${AC_CORE_WITH_CUDA}>:AC_CORE_WITH_CUDA>

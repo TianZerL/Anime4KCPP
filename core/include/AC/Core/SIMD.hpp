@@ -19,6 +19,9 @@ namespace ac::core::simd
     bool supportLASX() noexcept;
     // mips
     bool supportMSA() noexcept;
+    // powerpc
+    bool supportAltiVec() noexcept;
+    bool supportVSX() noexcept;
 }
 
 #endif

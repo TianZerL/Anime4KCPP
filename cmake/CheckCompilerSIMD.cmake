@@ -95,6 +95,16 @@ endif()
 check_cxx_source_compiles("#include <lasxintrin.h>\nint main() { __m256 a = (__m256)__lasx_xvreplgr2vr_w(0); return 0; }" AC_COMPILER_SUPPORT_LASX)
 
 if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-maltivec")
+endif()
+check_cxx_source_compiles("#include <altivec.h>\nint main() { __vector float a = vec_splats(0.0f); return 0; }" AC_COMPILER_SUPPORT_ALTIVEC)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
+    set(CMAKE_REQUIRED_FLAGS "-mvsx")
+endif()
+check_cxx_source_compiles("#include <altivec.h>\nint main() { float a[4]; __vector float b = vec_xl(0, a); return 0; }" AC_COMPILER_SUPPORT_VSX)
+
+if(NOT (CMAKE_CXX_COMPILER_ID MATCHES "MSVC" OR CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC"))
     set(CMAKE_REQUIRED_FLAGS "-mmsa")
 endif()
 check_cxx_source_compiles("#include <msa.h>\nint main() { v4f32 a = (v4f32)__msa_ldi_w(0); return 0; }" AC_COMPILER_SUPPORT_MSA)

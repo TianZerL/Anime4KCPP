@@ -42,6 +42,8 @@ option(AC_CORE_WITH_RVV "build core with risc-v vector" ${AC_COMPILER_SUPPORT_RV
 option(AC_CORE_WITH_LSX "build core with loongarch lsx" ${AC_COMPILER_SUPPORT_LSX})
 option(AC_CORE_WITH_LASX "build core with loongarch lasx" ${AC_COMPILER_SUPPORT_LASX})
 option(AC_CORE_WITH_MSA "build core with mips msa" ${AC_COMPILER_SUPPORT_MSA})
+option(AC_CORE_WITH_ALTIVEC "build core with powerpc altivec" ${AC_COMPILER_SUPPORT_ALTIVEC})
+option(AC_CORE_WITH_VSX "build core with powerpc vsx" ${AC_COMPILER_SUPPORT_VSX})
 option(AC_CORE_WITH_WASM_SIMD128 "build core with wasm simd128" ${AC_COMPILER_SUPPORT_WASM_SIMD128})
 option(AC_CORE_WITH_OPENCL "build core with opencl" OFF)
 option(AC_CORE_WITH_CUDA "build core with cuda" OFF)
@@ -104,6 +106,10 @@ if(AC_CORE_WITH_FMA)
     set(AC_CORE_WITH_AVX ON)
 endif()
 
+if(AC_CORE_WITH_VSX)
+    set(AC_CORE_WITH_ALTIVEC ON)
+endif()
+
 if(AC_CORE_DISABLE_IMAGE_IO)
     set(AC_CORE_WITH_FPNG OFF)
 endif()
@@ -121,6 +127,8 @@ message(STATUS
     LSX: ${AC_CORE_WITH_LSX}
     LASX: ${AC_CORE_WITH_LASX}
     MSA: ${AC_CORE_WITH_MSA}
+    ALTIVEC: ${AC_CORE_WITH_ALTIVEC}
+    VSX: ${AC_CORE_WITH_VSX}
     WASM_SIMD128: ${AC_CORE_WITH_WASM_SIMD128}
 ")
 
