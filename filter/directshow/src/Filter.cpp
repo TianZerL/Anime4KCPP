@@ -57,20 +57,19 @@ public:
 
     STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void** ppv) override;
     CBasePin* GetPin(int n) override;
-
     HRESULT CheckInputType(const CMediaType* mtIn) override;
     HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut) override;
     HRESULT GetMediaType(int pos, CMediaType* mt) override;
     HRESULT SetMediaType(PIN_DIRECTION direction, const CMediaType* mt) override;
     HRESULT DecideBufferSize(IMemAllocator* alloctor, ALLOCATOR_PROPERTIES* request) override;
     HRESULT Transform(IMediaSample* in, IMediaSample* out) override;
-
+    STDMETHODIMP Pause() override;
     STDMETHODIMP GetPages(CAUUID* pages) override;
 
 private:
     Filter(TCHAR* name, LPUNKNOWN punk, HRESULT* phr) noexcept;
 
-    void updateStrides(IMediaSample* in, IMediaSample* out) noexcept;
+    void updateOutputStride() noexcept;
 
 private:
     struct { int width, height; } limit{};
@@ -80,8 +79,6 @@ private:
         struct { int width, height, stride; } src, dst;
         int channels;
     } luma{}, chroma{};
-
-    bool initStrides{};
 
     struct Format
     {
@@ -381,24 +378,28 @@ HRESULT Filter::SetMediaType(PIN_DIRECTION direction, const CMediaType* const mt
         if (!format) return E_FAIL;
 
         auto setVideoInfo = [&](auto* vi) {
+            luma.channels = 1;
             luma.src.width = vi->bmiHeader.biWidth;
             luma.src.height = vi->bmiHeader.biHeight < 0 ? -vi->bmiHeader.biHeight : vi->bmiHeader.biHeight;
+            luma.src.stride = luma.src.width * luma.channels * (format.type & 0xff);
             luma.dst.width = ac::util::align(static_cast<decltype(luma.dst.width)>(luma.src.width * factor), 2);
             luma.dst.height = ac::util::align(static_cast<decltype(luma.dst.height)>(luma.src.height * factor), 2);
-            luma.channels = 1;
+            luma.dst.stride = luma.dst.width * luma.channels * (format.type & 0xff);
 
+            chroma.channels = format.packed ? 2 : 1;
             chroma.src.width = luma.src.width / format.subsampling.w;
             chroma.src.height = (luma.src.height / format.subsampling.h) * (format.packed ? 1 : 2);
+            chroma.src.stride = luma.src.stride / format.subsampling.w * chroma.channels;
             chroma.dst.width = luma.dst.width / format.subsampling.w;
             chroma.dst.height = (luma.dst.height / format.subsampling.h) * (format.packed ? 1 : 2);
-            chroma.channels = format.packed ? 2 : 1;
+            chroma.dst.stride = luma.dst.stride / format.subsampling.w * chroma.channels;
         };
         if (*mt->FormatType() == FORMAT_VideoInfo2)
             setVideoInfo(reinterpret_cast<VIDEOINFOHEADER2*>(mt->Format()));
         else
             setVideoInfo(reinterpret_cast<VIDEOINFOHEADER*>(mt->Format()));
     }
-    else if (direction == PINDIR_OUTPUT) initStrides = false;
+    else if (direction == PINDIR_OUTPUT) updateOutputStride();
 
     return S_OK;
 }
@@ -425,8 +426,6 @@ HRESULT Filter::Transform(IMediaSample* const in, IMediaSample* const out)
 {
     CheckPointer(in, E_POINTER);
     CheckPointer(out, E_POINTER);
-
-    updateStrides(in, out);
 
     BYTE* src{};
     BYTE* dst{};
@@ -462,6 +461,16 @@ HRESULT Filter::Transform(IMediaSample* const in, IMediaSample* const out)
 
     return S_OK;
 }
+STDMETHODIMP Filter::Pause()
+{
+    auto initState = m_State;
+
+    auto hr = CTransformFilter::Pause();
+
+    if (SUCCEEDED(hr) && (initState == State_Stopped)) updateOutputStride();
+
+    return hr;
+}
 STDMETHODIMP Filter::GetPages(CAUUID* const pages)
 {
     CheckPointer(pages, E_POINTER);
@@ -472,45 +481,27 @@ STDMETHODIMP Filter::GetPages(CAUUID* const pages)
     pages->pElems[0] = CLSID_AC_PROPERTY_PAGE;
     return S_OK;
 }
-void Filter::updateStrides(IMediaSample* const in, IMediaSample* const out) noexcept
+void Filter::updateOutputStride() noexcept
 {
-    if (initStrides) return;
-
     auto getBitmapInfo = [](auto* vi) { return &vi->bmiHeader; };
-    auto elementSize = format.type & 0xff;
-    BITMAPINFOHEADER* bi = nullptr;
-    AM_MEDIA_TYPE* amt = nullptr;
-    if (SUCCEEDED(in->GetMediaType(&amt)) && amt)
+    Microsoft::WRL::ComPtr<IMediaSample> sample{};
+    if (SUCCEEDED(m_pOutput->GetDeliveryBuffer(&sample, nullptr, nullptr, 0)) && sample)
     {
-        if (amt->formattype == FORMAT_VideoInfo2)
-            bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER2*>(amt->pbFormat));
-        else
-            bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER*>(amt->pbFormat));
+        BITMAPINFOHEADER* bi = nullptr;
+        AM_MEDIA_TYPE* amt = nullptr;
+        if (SUCCEEDED(sample->GetMediaType(&amt)) && amt)
+        {
+            if (amt->formattype == FORMAT_VideoInfo2)
+                bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER2*>(amt->pbFormat));
+            else
+                bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER*>(amt->pbFormat));
 
-        luma.src.stride = bi->biWidth * luma.channels * elementSize;
+            luma.dst.stride = bi->biWidth * luma.channels * (format.type & 0xff);
+            chroma.dst.stride = luma.dst.stride / format.subsampling.w * chroma.channels;
 
-        DeleteMediaType(amt);
-        amt = nullptr;
+            DeleteMediaType(amt);
+        }
     }
-    else luma.src.stride = luma.src.width * luma.channels * elementSize;
-    if (SUCCEEDED(out->GetMediaType(&amt)) && amt)
-    {
-        if (amt->formattype == FORMAT_VideoInfo2)
-            bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER2*>(amt->pbFormat));
-        else
-            bi = getBitmapInfo(reinterpret_cast<VIDEOINFOHEADER*>(amt->pbFormat));
-
-        luma.dst.stride = bi->biWidth * luma.channels * elementSize;
-
-        DeleteMediaType(amt);
-        amt = nullptr;
-    }
-    else luma.dst.stride = luma.dst.width * luma.channels * elementSize;
-
-    chroma.src.stride = luma.src.stride / format.subsampling.w * chroma.channels;
-    chroma.dst.stride = luma.dst.stride / format.subsampling.w * chroma.channels;
-
-    initStrides = true;
 }
 
 CUnknown* PropertyPage::CreateInstance(const LPUNKNOWN punk, HRESULT* const phr)
