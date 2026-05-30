@@ -2,7 +2,7 @@
 
 #include "ProgressBar.hpp"
 
-#define PROGRESS_BAR_TOKEN "=================================================="
+#define PROGRESS_BAR_TOKEN "==============================="
 
 ProgressBar::ProgressBar(const ac::util::Stopwatch& stopwatch) noexcept : stopwatch(stopwatch) {}
 
