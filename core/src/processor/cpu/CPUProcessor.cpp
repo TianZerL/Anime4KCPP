@@ -17,6 +17,7 @@ namespace ac::core::cpu
         enum
         {
             Begin,
+            Generic,
 #       ifdef AC_CORE_WITH_EIGEN3
             Eigen3,
 #       endif
@@ -56,12 +57,12 @@ namespace ac::core::cpu
 #       ifdef AC_CORE_WITH_WASM_SIMD128
             WASM_SIMD128,
 #       endif
-            Generic,
             End
         };
         constexpr const char* NameList[] =
         {
             "Auto",
+            "Generic",
 #       ifdef AC_CORE_WITH_EIGEN3
             "Eigen3",
 #       endif
@@ -101,7 +102,6 @@ namespace ac::core::cpu
 #       ifdef AC_CORE_WITH_WASM_SIMD128
             "WASM_SIMD128",
 #       endif
-            "Generic"
         };
     }
 

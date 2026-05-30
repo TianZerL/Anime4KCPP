@@ -24,6 +24,11 @@ if(AC_BUILD_FILTER_AVISYNTH_VAPOURSYNTH)
 
     target_link_libraries(ac_filter_avs_vs PRIVATE ac ac_util_misc dep::avisynth dep::vapoursynth)
 
+    target_compile_definitions(ac_filter_avs_vs PRIVATE
+        AC_VERSION_MAJOR=${AC_VERSION_MAJOR}
+        AC_VERSION_MINOR=${AC_VERSION_MINOR}
+    )
+
     ac_check_enable_static_crt(ac_filter_avs_vs)
 
     install(
