@@ -10,6 +10,7 @@ public:
 
     void reset() noexcept;
     void print(double p) noexcept;
+    void clear() noexcept;
     void finish() noexcept;
 private:
     ac::util::Stopwatch stopwatch;

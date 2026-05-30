@@ -83,6 +83,7 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
         auto src = ac::core::imread(input.c_str(), ac::core::IMREAD_UNCHANGED);
         if (src.empty())
         {
+            progressBar.clear();
             std::printf("%s: Failed to load.\n", input.c_str());
             return;
         }
@@ -90,12 +91,14 @@ static void image(const std::shared_ptr<ac::core::Processor>& processor, Options
         auto dst = processor->process(src, options.factor);
         if (!processor->ok())
         {
+            progressBar.clear();
             std::printf("%s: Failed due to %s\n", input.c_str(), processor->error());
             return;
         }
 
         if (!ac::core::imwrite(output.c_str(), dst))
         {
+            progressBar.clear();
             std::printf("%s: Failed to save.\n", output.c_str());
             return;
         }

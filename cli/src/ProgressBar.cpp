@@ -19,8 +19,13 @@ void ProgressBar::print(const double p) noexcept
     double elapsed = p > 0.0 ? stopwatch.elapsed() : 0.0;
     double remaining = p > 0.0 ? (elapsed / p - elapsed) : 0.0;
     ac::util::Stopwatch::FormatBuffer elapsedBuffer{}, remainingBuffer{};
-    std::printf("\r[%.*s%-*s] %6.2lf%% [%s < %s]", done, PROGRESS_BAR_TOKEN, left, ">", p * 100.0, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed), ac::util::Stopwatch::formatDuration(remainingBuffer, remaining));
+    std::printf("\r[%.*s%-*s] %6.2lf%% [%s < %s]", done, PROGRESS_BAR_TOKEN, left, left ? ">" : "", p * 100.0, ac::util::Stopwatch::formatDuration(elapsedBuffer, elapsed), ac::util::Stopwatch::formatDuration(remainingBuffer, remaining));
     std::fflush(stdout);
+}
+void ProgressBar::clear() noexcept
+{
+    constexpr int linesize = sizeof(PROGRESS_BAR_TOKEN) - 1 + 2 + 1 + 7 + 1 + (sizeof(ac::util::Stopwatch::FormatBuffer) - 1) * 2 + 5;
+    std::printf("\r%*c\r", linesize, ' ');
 }
 void ProgressBar::finish() noexcept
 {
