@@ -244,7 +244,7 @@ check_include_file_cxx(malloc.h AC_CORE_HAVE_MALLOC_H)
 if (AC_CORE_HAVE_MALLOC_H)
     check_cxx_symbol_exists(_aligned_malloc malloc.h AC_CORE_HAVE_WIN32_ALIGNED_MALLOC)
     check_cxx_symbol_exists(_aligned_free malloc.h AC_CORE_HAVE_WIN32_ALIGNED_FREE)
-    check_cxx_symbol_exists(memalign malloc.h AC_CORE_HAVE_BSD_MEMALIGN)
+    check_cxx_symbol_exists(memalign malloc.h AC_CORE_HAVE_UNIX_MEMALIGN)
 endif()
 check_cxx_symbol_exists(std::aligned_alloc cstdlib AC_CORE_HAVE_STD_ALIGNED_ALLOC)
 check_cxx_symbol_exists(posix_memalign stdlib.h AC_CORE_HAVE_POSIX_MEMALIGN)
@@ -312,7 +312,7 @@ target_compile_definitions(ac PUBLIC
     $<$<AND:$<BOOL:${AC_CORE_HAVE_WIN32_ALIGNED_MALLOC}>,$<BOOL:${AC_CORE_HAVE_WIN32_ALIGNED_FREE}>>:AC_CORE_HAVE_WIN32_ALIGNED_MALLOC>
     $<$<BOOL:${AC_CORE_HAVE_STD_ALIGNED_ALLOC}>:AC_CORE_HAVE_STD_ALIGNED_ALLOC>
     $<$<BOOL:${AC_CORE_HAVE_POSIX_MEMALIGN}>:AC_CORE_HAVE_POSIX_MEMALIGN>
-    $<$<BOOL:${AC_CORE_HAVE_BSD_MEMALIGN}>:AC_CORE_HAVE_BSD_MEMALIGN>
+    $<$<BOOL:${AC_CORE_HAVE_UNIX_MEMALIGN}>:AC_CORE_HAVE_UNIX_MEMALIGN>
     $<$<BOOL:${AC_CORE_HAVE_ARM_FP16}>:AC_CORE_HAVE_ARM_FP16>
     $<$<BOOL:${AC_CORE_WITH_HALF}>:AC_CORE_WITH_HALF>
     $<$<BOOL:${AC_CORE_WITH_FPNG}>:AC_CORE_WITH_FPNG>

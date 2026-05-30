@@ -4,7 +4,8 @@
 #   include <malloc.h>
 #elif defined(AC_CORE_HAVE_POSIX_MEMALIGN)
 #   include <stdlib.h>
-#elif defined(AC_CORE_HAVE_BSD_MEMALIGN)
+#elif defined(AC_CORE_HAVE_UNIX_MEMALIGN)
+#   include <stdlib.h>
 #   include <malloc.h>
 #else
 #   include <cstdlib>
@@ -21,7 +22,7 @@
 #if !defined(AC_CORE_HAVE_STD_ALIGNED_ALLOC) && \
     !defined(AC_CORE_HAVE_WIN32_ALIGNED_MALLOC) && \
     !defined(AC_CORE_HAVE_POSIX_MEMALIGN) && \
-    !defined(AC_CORE_HAVE_BSD_MEMALIGN)
+    !defined(AC_CORE_HAVE_UNIX_MEMALIGN)
 namespace ac::core::detail
 {
     template <typename T>
@@ -55,7 +56,7 @@ void* ac::core::fastMalloc(const std::size_t size) noexcept
 #elif defined(AC_CORE_HAVE_POSIX_MEMALIGN)
     void* ptr = nullptr;
     return posix_memalign(&ptr, AC_CORE_MALLOC_ALIGN, alignedSize) ? nullptr : ptr;
-#elif defined(AC_CORE_HAVE_BSD_MEMALIGN)
+#elif defined(AC_CORE_HAVE_UNIX_MEMALIGN)
     return memalign(AC_CORE_MALLOC_ALIGN, alignedSize);
 #else
     return detail::alignedAlloc(alignedSize, AC_CORE_MALLOC_ALIGN);
@@ -68,8 +69,8 @@ void ac::core::fastFree(void* const ptr) noexcept
     std::free(ptr);
 #elif defined(AC_CORE_HAVE_WIN32_ALIGNED_MALLOC)
     _aligned_free(ptr);
-#elif defined(AC_CORE_HAVE_POSIX_MEMALIGN) || defined(AC_CORE_HAVE_BSD_MEMALIGN)
-    std::free(ptr);
+#elif defined(AC_CORE_HAVE_POSIX_MEMALIGN) || defined(AC_CORE_HAVE_UNIX_MEMALIGN)
+    free(ptr);
 #else
     detail::alignedFree(ptr);
 #endif
