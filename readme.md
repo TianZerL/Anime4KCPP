@@ -144,6 +144,12 @@ Tested with Apple Clang via github actions, `MACOSX_DEPLOYMENT_TARGET` >= 10.12 
 | AC_CORE_WITH_AVX512                  | build core with x86 avx512                         | Auto detect |
 | AC_CORE_WITH_FMA                     | build core with x86 fma                            | Auto detect |
 | AC_CORE_WITH_NEON                    | build core with arm neon                           | Auto detect |
+| AC_CORE_WITH_RVV                     | build core with risc-v vector                      | Auto detect |
+| AC_CORE_WITH_LSX                     | build core with loongarch lsx                      | Auto detect |
+| AC_CORE_WITH_LASX                    | build core with loongarch lasx                     | Auto detect |
+| AC_CORE_WITH_MSA                     | build core with mips msa                           | Auto detect |
+| AC_CORE_WITH_ALTIVEC                 | build core with powerpc altivec                    | Auto detect |
+| AC_CORE_WITH_VSX                     | build core with powerpc vsx                        | Auto detect |
 | AC_CORE_WITH_WASM_SIMD128            | build core with wasm simd128                       | Auto detect |
 | AC_CORE_WITH_OPENCL                  | build core with opencl                             | OFF         |
 | AC_CORE_WITH_CUDA                    | build core with cuda                               | OFF         |
