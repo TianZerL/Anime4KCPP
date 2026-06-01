@@ -9,10 +9,6 @@ function(generate_image_resize_simd SIMD_VAR OUTPUT_FILE_PATH_VAR)
 #   define STBIR_USE_FMA
 #endif
 
-#ifdef STBIR_USE_FMA
-#   define STBIR_AVX
-#endif
-
 #define STB_IMAGE_RESIZE2_IMPLEMENTATION
 #define STB_IMAGE_RESIZE_STATIC
 #include <stb_image_resize2.h>

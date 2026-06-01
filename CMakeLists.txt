@@ -82,6 +82,10 @@ if(AC_PRESET_RELEASE)
     endif()
 endif()
 
+if(AC_CORE_DISABLE_IMAGE_IO)
+    set(AC_CORE_WITH_FPNG OFF)
+endif()
+
 if(AC_ENABLE_LTO)
     include(CheckIPOSupported)
     check_ipo_supported(RESULT LTO_CHECK OUTPUT LTO_ERROR)
@@ -92,26 +96,6 @@ if(AC_ENABLE_LTO)
     else()
         message(STATUS "LTO not supported: ${LTO_ERROR}")
     endif()
-endif()
-
-if(AC_CORE_WITH_SSE2)
-    set(AC_CORE_WITH_SSE ON)
-endif()
-
-if(AC_CORE_WITH_AVX2)
-    set(AC_CORE_WITH_FMA ON)
-endif()
-
-if(AC_CORE_WITH_FMA)
-    set(AC_CORE_WITH_AVX ON)
-endif()
-
-if(AC_CORE_WITH_VSX)
-    set(AC_CORE_WITH_ALTIVEC ON)
-endif()
-
-if(AC_CORE_DISABLE_IMAGE_IO)
-    set(AC_CORE_WITH_FPNG OFF)
 endif()
 
 message(STATUS
