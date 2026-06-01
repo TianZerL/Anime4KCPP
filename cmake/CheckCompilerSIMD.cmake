@@ -58,6 +58,13 @@ endif()
 check_cxx_source_compiles("#include <immintrin.h>\nint main() { __m256 s0, s1, s2; s0 = _mm256_fmadd_ps(s1, s2, s0); return 0; }" AC_COMPILER_SUPPORT_FMA)
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
+    set(CMAKE_REQUIRED_FLAGS "/arch:AVX2")
+elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CMAKE_REQUIRED_FLAGS "-mf16c")
+endif()
+check_cxx_source_compiles("#include <immintrin.h>\nint main() { __m256 a = _mm256_cvtph_ps(_mm_setzero_si128()); }" AC_COMPILER_SUPPORT_F16C)
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT MATCHES "MSVC")
     set(CMAKE_REQUIRED_FLAGS "/arch:AVX512")
 elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     set(CMAKE_REQUIRED_FLAGS "-mavx512f -mfma")
