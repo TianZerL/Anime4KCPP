@@ -18,7 +18,7 @@ template <typename IndexType, typename F>
 inline void ac::util::parallelFor(const IndexType first, const IndexType last, F&& func)
 {
 #if defined(AC_DEP_PARALLEL_PPL)
-    Concurrency::parallel_for(first, last, std::forward<F>(func));
+    Concurrency::parallel_for(first, last, std::forward<F>(func), Concurrency::static_partitioner());
 #elif defined(AC_DEP_PARALLEL_OPENMP)
 #   pragma omp parallel for
     for (IndexType i = first; i < last; i++) func(i);
