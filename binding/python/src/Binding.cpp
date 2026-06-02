@@ -37,7 +37,7 @@ PYBIND11_MODULE(pyac, m)
             if (src.format == "e") return ac::core::Image::Float16;
             throw py::buffer_error{ "Incompatible type: expected uint8, uint16, float16 or float32." };
         }();
-        py::array out{ in.dtype(), dstC == 1 ? py::array::ShapeContainer{ dstH, dstW } : py::array::ShapeContainer{ dstH, dstW, dstC } };
+        py::array out{ in.dtype(), (src.ndim == 2) ? py::array::ShapeContainer{ dstH, dstW } : py::array::ShapeContainer{ dstH, dstW, dstC } };
         auto dst = out.request();
         ac::core::Image srci{ srcW, srcH, srcC, type, src.ptr, static_cast<int>(src.strides[0]) };
         ac::core::Image dsti{ dstW, dstH, dstC, type, dst.ptr, static_cast<int>(dst.strides[0]) };
