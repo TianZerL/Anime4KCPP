@@ -20,7 +20,7 @@ inline void ac::util::parallelFor(const IndexType first, const IndexType last, F
 #if defined(AC_DEP_PARALLEL_PPL)
     Concurrency::parallel_for(first, last, std::forward<F>(func), Concurrency::static_partitioner());
 #elif defined(AC_DEP_PARALLEL_OPENMP)
-#   pragma omp parallel for
+#   pragma omp parallel for schedule(guided)
     for (IndexType i = first; i < last; i++) func(i);
 #else
     static const std::size_t threads = ThreadPool::hardwareThreads();
