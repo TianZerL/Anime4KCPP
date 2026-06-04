@@ -99,7 +99,7 @@ namespace ac::core::cpu
         template <int cout, int cpos>
         static AC_FORCE_INLINE void conv_cin1(const float* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            if constexpr (cpos % vstep)
+            if constexpr (cpos < vstep)
             {
 #           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv_cin1<cout, cpos>(rptr, out, kernels, biases);
@@ -136,7 +136,7 @@ namespace ac::core::cpu
         template <int cin, int cout, int cpos>
         static AC_FORCE_INLINE void conv(const float* const* const rptr, float* const out, const float* const kernels, const float* const biases) noexcept
         {
-            if constexpr (cin % vstep)
+            if constexpr (cin < vstep)
             {
 #           ifdef AC_CORE_WITH_EIGEN3
                 OpImplEigen3::template conv<cin, cout, cpos>(rptr, out, kernels, biases);
