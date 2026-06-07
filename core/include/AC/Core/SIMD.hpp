@@ -1,5 +1,5 @@
-#ifndef AC_CORE_DISPATCH_HPP
-#define AC_CORE_DISPATCH_HPP
+#ifndef AC_CORE_SIMD_HPP
+#define AC_CORE_SIMD_HPP
 
 namespace ac::core::simd
 {

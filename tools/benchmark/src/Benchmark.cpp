@@ -34,7 +34,6 @@ struct ImagePool
 
             images.emplace_back(image);
         }
-
     }
 
     const ac::core::Image& select(const int idx) const

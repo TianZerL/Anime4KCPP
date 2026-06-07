@@ -1,5 +1,5 @@
-#ifndef AC_CORE_MODEL_BASE_MODE_HPP
-#define AC_CORE_MODEL_BASE_MODE_HPP
+#ifndef AC_CORE_MODEL_BASE_HPP
+#define AC_CORE_MODEL_BASE_HPP
 
 #include <cstddef>
 
