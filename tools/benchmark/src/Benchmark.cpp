@@ -14,16 +14,13 @@
 struct ImagePool
 {
     std::vector<ac::core::Image> images{};
-    std::vector<int> indices{};
 
-    ImagePool(const int w, const int h, const int batch, const int size)
+    ImagePool(const int w, const int h, const int size)
     {
         std::random_device rd{};
         std::mt19937 gen{ rd() };
-        std::uniform_int_distribution<int> indice{ 0, size - 1 };
 
         images.reserve(size);
-        indices.reserve(batch);
 
         for (int idx = 0; idx < size; idx++)
         {
@@ -38,12 +35,11 @@ struct ImagePool
             images.emplace_back(image);
         }
 
-        for (int idx = 0; idx < batch; idx++) indices.emplace_back(indice(gen));
     }
 
     const ac::core::Image& select(const int idx) const
     {
-        return images[indices[idx]];
+        return images[idx % images.size()];
     }
 };
 
@@ -86,15 +82,18 @@ int main(int argc, char* argv[])
         std::printf("%s\n", processor->error());
         return 0;
     }
-    int w = argc > 4 ? std::max(std::atoi(argv[4]), 3) : 720;
-    int h = argc > 5 ? std::max(std::atoi(argv[5]), 3) : 480;
+    int w = argc > 4 ? std::clamp(std::atoi(argv[4]), 3, 10240) : 720;
+    int h = argc > 5 ? std::clamp(std::atoi(argv[5]), 3, 10240) : 480;
     int batch = argc > 6 ? std::max(std::atoi(argv[6]), 1) : processor->type() == ac::core::Processor::CPU ? 60 : 600;
     int threads = argc > 7 ? std::max(std::atoi(argv[7]), 1) : ac::util::ThreadPool::hardwareThreads();
 
+    // max image pool size: 128m
+    auto memoryLimit = 128 * 1024 * 1024 / (w * h);
+    threads = std::min(threads, memoryLimit);
+
     std::printf("model: %s, processor: %s, device: %s, input: %d x %d x %d, threads: %d\n", model, processor->typeName(), processor->name(), w, h, batch, threads);
 
-    // max image pool size: 128m
-    ImagePool images{ w, h, batch, std::min(128 * 1024 * 1024 / (w * h), batch) };
+    ImagePool images{ w, h, std::clamp(batch, threads, memoryLimit) };
 
     benchmark(processor, images, batch, threads);
 
