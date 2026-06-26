@@ -1,5 +1,6 @@
 #include "AC/Core/Model.hpp"
-#include "AC/Core/Model/Param.hpp"
+
+#include "AC/Core/Internal/Model/Param.hpp"
 
 template <typename Model>
 ac::core::model::BaseModel<Model>::BaseModel() noexcept : blockNum(0), kptr(nullptr), bptr(nullptr), aptr(nullptr) {}

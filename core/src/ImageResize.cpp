@@ -191,7 +191,7 @@ namespace ac::core::detail
                 default: return assert(src.type() == Image::UInt8 || src.type() == Image::UInt16 || src.type() == Image::Float16 || src.type() == Image::Float32), STBIR_TYPE_UINT8;
                 }
             }()
-           );
+        );
 
         switch (mode)
         {
