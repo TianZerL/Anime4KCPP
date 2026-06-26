@@ -141,7 +141,7 @@ TEST_CASE("shl and shr")
     ac::core::Image img{ 2, 2, 1, ac::core::Image::UInt8 };
     for (int i = 0; i < img.height(); i++)
         for (int j = 0; j < img.width(); j++)
-            *img.pixel(j, i) = 0x0F;
+            *img.pixel(j, i) = 0x0f;
 
     ac::core::shl(img, 4);
     CHECK(*img.pixel(0, 0) == 0xf0);

@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <type_traits>
+#include <utility>
 
 #include "AC/Core/Image.hpp"
 #include "AC/Util/Parallel.hpp"
@@ -343,13 +344,13 @@ namespace ac::core::detail
     }
 
     template<typename IN, typename OUT = IN, typename OP>
-    static inline void elementwise(const Image& src, Image& dst, const int n, OP&& op) noexcept
+    static inline void elementwise(const Image& src, Image& dst, OP&& op) noexcept
     {
         for (int i = 0; i < src.height(); i++)
         {
             auto in = static_cast<const IN*>(src.ptr(i));
             auto out = static_cast<OUT*>(dst.ptr(i));
-            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = op(*in++, n);
+            for (int j = 0; j < src.width() * src.channels(); j++) *out++ = op(*in++);
         }
     }
 
@@ -406,27 +407,27 @@ namespace ac::core::detail
 namespace ac::core::impl
 {
     template <typename OP>
-    void bitwise(Image& image, const int n, OP&& op) noexcept
+    void elementwise(Image& image, OP&& op) noexcept
     {
-        if (image.empty() || image.isFloat() || n <= 0) return;
+        if (image.empty() || image.isFloat()) return;
         switch (image.type())
         {
-        case Image::UInt8: detail::elementwise<DataType::UInt8>(image, image, n, op); break;
-        case Image::UInt16: detail::elementwise<DataType::UInt16>(image, image, n, op); break;
+        case Image::UInt8: detail::elementwise<DataType::UInt8>(image, image, std::forward<OP>(op)); break;
+        case Image::UInt16: detail::elementwise<DataType::UInt16>(image, image, std::forward<OP>(op)); break;
         }
     }
     template <typename OP>
-    void bitwise(const Image& src, Image& dst, const int n, OP&& op) noexcept
+    void elementwise(const Image& src, Image& dst, OP&& op) noexcept
     {
-        if (src.empty() || src.isFloat() || n <= 0) return;
+        if (src.empty() || src.isFloat()) return;
         Image tmp{};
         if (dst.empty() || (src == dst) || (dst.width() != src.width()) || (dst.height() != src.height()) || (dst.channels() != src.channels()) || (dst.type() != src.type()))
             tmp.create(src.width(), src.height(), src.channels(), src.type());
         else tmp = dst;
         switch (src.type())
         {
-        case Image::UInt8: detail::elementwise<DataType::UInt8>(src, tmp, n, op); break;
-        case Image::UInt16: detail::elementwise<DataType::UInt16>(src, tmp, n, op); break;
+        case Image::UInt8: detail::elementwise<DataType::UInt8>(src, tmp, std::forward<OP>(op)); break;
+        case Image::UInt16: detail::elementwise<DataType::UInt16>(src, tmp, std::forward<OP>(op)); break;
         }
         if (dst != tmp) dst = tmp;
     }
@@ -599,19 +600,19 @@ ac::core::Image ac::core::unpadding(const Image& src) noexcept
 }
 void ac::core::shl(Image& image, const int n) noexcept
 {
-    impl::bitwise(image, n, [](auto a, auto b) { return a << b; });
+    impl::elementwise(image, [=](auto a) { return a << n; });
 }
 void ac::core::shl(const Image& src, Image& dst, const int n) noexcept
 {
-    impl::bitwise(src, dst, n, [](auto a, auto b) { return a << b; });
+    impl::elementwise(src, dst, [=](auto a) { return a << n; });
 }
 void ac::core::shr(Image& image, const int n) noexcept
 {
-    impl::bitwise(image, n, [](auto a, auto b) { return a >> b; });
+    impl::elementwise(image, [=](auto a) { return a >> n; });
 }
 void ac::core::shr(const Image& src, Image& dst, const int n) noexcept
 {
-    impl::bitwise(src, dst, n, [](auto a, auto b) { return a >> b; });
+    impl::elementwise(src, dst, [=](auto a) { return a >> n; });
 }
 
 ac::core::Image ac::core::astype(const Image& src, const int type) noexcept
