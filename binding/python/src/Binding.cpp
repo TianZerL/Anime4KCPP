@@ -158,13 +158,6 @@ PYBIND11_MODULE(pyac, m)
 
     auto specs = m.def_submodule("specs");
 
-    auto makeTuple = [](auto& arr) {
-        auto size = std::size(arr);
-        py::tuple tuple{ size };
-        for (decltype(size) i = 0; i < size; i++) tuple[i] = arr[i];
-        return tuple;
-    };
-
     specs.attr("ModelList") = []() {
         auto size = std::size(ac::specs::ModelList);
         py::tuple tuple{ size };

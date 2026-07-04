@@ -7,7 +7,7 @@
 #include "Config.hpp"
 #include "Logger.hpp"
 
-#define AC_GUI_SETTINGS_FILE "ac_gui.log"
+#define AC_GUI_LOG_FILE "ac_gui.log"
 
 Logger& Logger::instance() noexcept
 {
@@ -59,5 +59,5 @@ QDebug Logger::error() const noexcept
 
 QString Logger::logFilePath()
 {
-    return gConfig.userDataDir().filePath(AC_GUI_SETTINGS_FILE);
+    return gConfig.userDataDir().filePath(AC_GUI_LOG_FILE);
 }

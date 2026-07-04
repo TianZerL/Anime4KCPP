@@ -75,7 +75,7 @@ PVideoFrame STDCALL Filter::GetFrame(const int n, IScriptEnvironment* const env)
     return dst;
 }
 
-const AVS_Linkage* AVS_linkage = 0;
+const AVS_Linkage* AVS_linkage = nullptr;
 
 EXPORT_API const char* STDCALL AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors)
 {
