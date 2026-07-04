@@ -41,25 +41,25 @@ static void list(const Options& options)
     }
     if (options.list.devices)
     {
-        printf("Devices:\n");
+        std::printf("Devices:\n");
         std::printf("%s", ac::core::Processor::listInfo());
     }
     if (options.list.processors)
     {
-        printf("Processors:\n");
-        for (auto&& processor : ac::specs::ProcessorList) printf("  %-16s  %s\n", processor.name, processor.description);
+        std::printf("Processors:\n");
+        for (auto&& processor : ac::specs::ProcessorList) std::printf("  %-16s  %s\n", processor.name, processor.description);
     }
     if (options.list.models)
     {
-        printf("Models:\n");
+        std::printf("Models:\n");
         for (auto&& model : ac::specs::ModelList)
         {
-            printf("  %s:\n", model.name);
-            printf("    parameter count: %d\n", model.parameterCount);
-            if (model.version) printf("    version: %s\n", model.version);
-            if (model.author) printf("    author: %s\n", model.author);
-            if (model.homepage) printf("    homepage: %s\n", model.homepage);
-            printf("    description: %s\n", model.description);
+            std::printf("  %s:\n", model.name);
+            std::printf("    parameter count: %d\n", model.parameterCount);
+            if (model.version) std::printf("    version: %s\n", model.version);
+            if (model.author) std::printf("    author: %s\n", model.author);
+            if (model.homepage) std::printf("    homepage: %s\n", model.homepage);
+            std::printf("    description: %s\n", model.description);
         }
     }
 }

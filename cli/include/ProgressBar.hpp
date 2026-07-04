@@ -1,5 +1,5 @@
-#ifndef AC_CLI_PROGRESS_BAR_CPP
-#define AC_CLI_PROGRESS_BAR_CPP
+#ifndef AC_CLI_PROGRESS_BAR_HPP
+#define AC_CLI_PROGRESS_BAR_HPP
 
 #include "AC/Util/Stopwatch.hpp"
 
