@@ -90,7 +90,7 @@ void Config::load() noexcept
     upscaler.device = settings.value("Device", upscaler.device).toInt();
     upscaler.factor = settings.value("Factor", upscaler.factor).toDouble();
     upscaler.model = settings.value("Model", upscaler.model).toString();
-    upscaler.threads = settings.value("Threads", upscaler.model).toInt();
+    upscaler.threads = settings.value("Threads", upscaler.threads).toInt();
     settings.endGroup();
 
     settings.beginGroup("VIDEO");
